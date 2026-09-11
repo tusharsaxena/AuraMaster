@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-171%2F171_passing-green)
+![Tests](https://img.shields.io/badge/Tests-176%2F176_passing-green)
 
 ![Ka0s Aura Master](media/logos/auramaster.logo.png)
 
@@ -48,7 +48,7 @@ spacing, scale and tooltips, and right-clicking one of your own buffs cancels it
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
 chat too: `/am new target debuffs icons` makes a container, `/am select` changes which one you're
 editing, and `/am set` changes any single setting. If you change something mid-fight, it waits until
-combat ends, and chat tells you so once.
+combat ends (or, inside a key, encounter or match, until that's over), and chat tells you which.
 
 Everything else is on the addon's page under Settings → AddOns, and `/am help` (or `/auramaster help`)
 lists every command.

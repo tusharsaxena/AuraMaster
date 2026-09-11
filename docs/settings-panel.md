@@ -75,7 +75,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Enable Aura Master | `enabled` | bool | Gates every container; applied as a visibility pass, legal in combat |
 | General visibility | `visibility` | string | `always` / `inCombat` / `outOfCombat` / `never`; combat read with `UnitAffectingCombat("player")` |
 | Master scale | `scale` | number | Multiplies each container's own Layout → Frame scale |
-| Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity |
+| Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every handle and the preview; locking ends preview mode |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
 

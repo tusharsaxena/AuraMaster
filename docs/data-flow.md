@@ -16,15 +16,17 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 ```
  1  a control, /am set, a Defaults button or a drag handle
         │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:270
-        │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId }
+        │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
+        │    (a session row stops after the debug line: it sends nothing)
         ▼
  2  ContainerManager (listener)                                modules/ContainerManager.lua:291
-        │  RequestApply(containerId)   nil = every container
+        │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
+        │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
  3  ContainerManager.FlushPending                              modules/ContainerManager.lua:91
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
-        │     yes → keep the request, print the one-time notice, return
+        │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
  4  Container:Apply                                            modules/Container.lua:227
@@ -48,6 +50,17 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         ▼
  7  the engine fills every bound region with the (secret) aura data and animates it
 ```
+
+## When an apply waits
+
+`FlushPending` holds the whole queue while `MustDefer()` is true and says so once per held stretch,
+naming the cause: "…will apply when combat ends." under lockdown, "…will apply once aura information
+is available again (after the encounter, key or match)." when secrecy alone holds it. One escalation
+only: a stretch announced as combat that secrecy still holds afterwards prints the restriction line
+once, on the next held request. The `PLAYER_REGEN_ENABLED` flush passes `"regen"` and never escalates,
+because that event's order against `ADDON_RESTRICTION_STATE_CHANGED` is unverified. Secret then
+combat prints nothing more. A successful flush clears the stretch, and every deferral writes one
+gated `[Apply] deferred: secret=… lockdown=… edge=…` line.
 
 ## Step 4 in detail: the filter plan
 
@@ -96,7 +109,8 @@ container `enabled`, preview (unlocked or `/am preview`), then General visibilit
 `UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
 clears the preview, and shows the drag handle while unlocked. It runs after every apply, on every
-`VISIBILITY_CHANGED` (world entry, combat start and end) and on the master rows' `onChange`.
+`VISIBILITY_CHANGED` (world entry, combat start and end) and whenever a row whose `effect` is
+`"visibility"` is written (the master enable, visibility, lock and alpha).
 
 ## Preview
 

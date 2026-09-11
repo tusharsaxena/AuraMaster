@@ -136,9 +136,13 @@ suite covers what only the client can show.
 
 46. **Enter combat** (a training dummy) and change a container's bar width or a filter → chat prints
     once: `[AM] Aura Master settings changes will apply when combat ends.`; nothing changes on screen.
-    Leave combat → the change lands with no reload and no error. Repeat inside a Mythic+ key or a boss
-    encounter → the change waits until the key or encounter ends, even if you drop combat between
-    pulls.
+    Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am preview`
+    and a rename print no notice. Repeat inside a Mythic+ key or a boss encounter → the change waits
+    until the key or encounter ends, even if you drop combat between pulls. A change made out of
+    combat inside the key prints once: `[AM] Aura Master settings changes will apply once aura
+    information is available again (after the encounter, key or match).` A change made in combat
+    there prints the combat line; nothing more prints the moment combat ends, and the next change
+    still held after the pull prints the restriction line once.
 47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
     warning, and the panel does not pop open when combat ends. `/am resetall`, and General → **Reset
     all settings** → **Yes**, are refused with the gray "cannot reset settings during combat — the

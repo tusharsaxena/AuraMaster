@@ -36,15 +36,18 @@ local masterRows, masterTail = H.MasterControls({
 -- The composer emits DATA; the host attaches behavior, keyed by PATH so an upstream reorder cannot
 -- move a handler onto the wrong row.
 local masterOnChange = {
-    -- enabled / visibility / locked change only whether containers show, which is a visibility
-    -- pass: legal in combat, unlike a rebuild. CONFIG_CHANGED still queues the ordinary apply.
-    ["enabled"]    = function() NS.ContainerManager.ApplyVisibility() end,
-    ["visibility"] = function() NS.ContainerManager.ApplyVisibility() end,
-    ["locked"]     = function(v)
-        -- Locking ends preview mode (preview-mode); unlocking starts it by itself.
-        if v and NS.State then NS.State.preview = false end
-        NS.ContainerManager.ApplyVisibility()
+    -- Locking ends preview mode (preview-mode), through the seam; unlocking starts it by itself.
+    ["locked"] = function(v)
+        if v and NS.State and NS.State.preview then NS.SetByPath("state.preview", false) end
     end,
+}
+
+-- What each master row changes, read by modules/ContainerManager.lua off CONFIG_CHANGED's `path`.
+-- These four change only whether and how brightly containers show, which is a visibility pass: legal
+-- in combat, and no apply is queued. Master scale is NOT here: SetScale runs in Container:Apply.
+local masterEffect = {
+    ["enabled"] = "visibility", ["visibility"] = "visibility",
+    ["locked"]  = "visibility", ["alpha"]      = "visibility",
 }
 
 -- The console row is SESSION state: it mirrors the console window, never the profile.
@@ -53,6 +56,7 @@ local console = NS.DebugLog:ConsoleCheckbox()
 for _, row in ipairs(masterRows) do
     local fn = masterOnChange[row.path]
     if fn then row.onChange = fn end
+    row.effect = masterEffect[row.path]
     if row.path == DEBUG_CONSOLE_PATH then
         row.get, row.set = console.get, console.set
         -- Explicitly nothing: toggling a window re-applies no container.
@@ -76,14 +80,15 @@ NS.RegisterSchemaRows({
         type = "bool", startsLine = true,
         label = L["Hide Blizzard buffs"],
         desc  = L["Hide the default buff frame (your weapon enchants go with it). Applied out of combat."],
-        onChange = function() NS.BlizzardFrames.Apply() end,
+        -- BlizzardFrames.Apply is the whole effect; no container reads this, so none re-applies.
+        onChange = function() NS.BlizzardFrames.Apply() end, effect = "none",
     },
     {
         path = "hideBlizzardDebuffs", page = "general", group = L["Display"], subgroup = L["Blizzard frames"],
         type = "bool",
         label = L["Hide Blizzard debuffs"],
         desc  = L["Hide the default debuff frame. Applied out of combat."],
-        onChange = function() NS.BlizzardFrames.Apply() end,
+        onChange = function() NS.BlizzardFrames.Apply() end, effect = "none",
     },
 })
 

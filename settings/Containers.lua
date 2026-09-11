@@ -33,7 +33,9 @@ NS.RegisterSchemaRows({
         maxLetters = 40, label = L["Name"],
         desc = L["What this container is called in the picker, on its drag handle and in /am containers. Press Enter to apply."],
         validate = function(v) return type(v) == "string" and v:match("%S") ~= nil end,
-        onChange = function() CM.NotifyRenamed() end,
+        -- NotifyRenamed is the whole effect (handles and pickers); Container:Apply never reads the
+        -- name, so a rename queues no apply and, in combat, announces no deferral.
+        onChange = function() CM.NotifyRenamed() end, effect = "none",
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",

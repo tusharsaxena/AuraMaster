@@ -32,8 +32,9 @@ NS.MSG = {
     -- renamed or duplicated, one container's settings were replaced wholesale (copy-from, reset
     -- positions), or the profile under the registry changed.
     CONTAINERS_CHANGED = "Ka0s_AuraMaster_ContainersChanged",
-    -- Sender: settings/Schema.lua (the single write seam). Payload: ({ section, containerId }).
-    -- A setting changed; `containerId` is nil for an addon-wide row.
+    -- Sender: settings/Schema.lua (the single write seam). Payload: ({ section, containerId, path }).
+    -- A setting changed; `containerId` is nil for an addon-wide row, and `path` is the row (or
+    -- spell-set) path written, whose `effect` the receiver reads. Session rows send nothing.
     CONFIG_CHANGED     = "Ka0s_AuraMaster_ConfigChanged",
     -- Sender: core/AuraMaster.lua. Payload: none. Combat started or ended, or the world was entered —
     -- anything that can flip the General visibility gate.

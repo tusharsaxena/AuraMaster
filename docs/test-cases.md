@@ -38,7 +38,7 @@ badge and any count quoted in the docs must agree with it.
 - database: an existing SavedVariables file keeps its containers
 - database: a non-numeric container key is dropped and the profile loads
 
-### test_schema.lua (19)
+### test_schema.lua (20)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -56,6 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: every write announces CONFIG_CHANGED once, naming the container
 - schema: a failed validation writes nothing
 - schema: a session row is stored by its own set, never in the profile
+- schema: a session row announces no CONFIG_CHANGED and queues no apply
 - schema: ApplyDefault restores the shipped value without sharing a table
 - schema: a spell set is written whole and normalized to positive integer ids
 - schema: category spell edits keep only real spell categories
@@ -107,7 +108,7 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine nothing is built and preview still works
 - container: deleting a container disables its engine and hides its anchor
 
-### test_containermanager.lua (14)
+### test_containermanager.lua (18)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -117,6 +118,10 @@ badge and any count quoted in the docs must agree with it.
 - manager: CopyFrom copies the chosen section, never the name or the position
 - manager: many apply requests in one frame schedule one pass
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
+- manager: /am preview, /am lock and a rename under lockdown print no deferral notice
+- manager: a master visibility row hides containers at once, with no apply pass
+- manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line
+- manager: the regen edge never escalates the notice; a later held request does
 - manager: a container deleted under lockdown is parked — disabled, nothing hidden — and destroyed after combat
 - manager: a parked id that comes back before combat ends reuses its instance and draws again
 - manager: a profile switch under lockdown parks departing containers and tears them down after combat
@@ -241,10 +246,10 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 6 |
 | test_setups.lua | 7 |
 | test_database.lua | 10 |
-| test_schema.lua | 19 |
+| test_schema.lua | 20 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 14 |
-| test_containermanager.lua | 14 |
+| test_containermanager.lua | 18 |
 | test_anchors.lua | 10 |
 | test_style.lua | 10 |
 | test_timedspells.lua | 5 |
@@ -257,4 +262,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **171** |
+| **Total** | **176** |

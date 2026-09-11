@@ -105,7 +105,7 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, copy-from, reset positions, profile change | none | `settings/OptionsSetup.lua:237` — a coalesced panel re-render (every banner lists containers) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:255` — the write seam, once per write | `{ section, containerId }`; `containerId` nil for an addon-wide row | `modules/ContainerManager.lua:291` — `RequestApply(containerId)` (nil re-applies all) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:255` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:291` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:295` — `ApplyVisibility()` over every container |
 
 Three messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -211,7 +211,14 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;
   the set only grows until `/am forgettimed`. Because only buffs are scanned, the mode narrows
   nothing on a debuff container.
-- **Settings changes wait for secrecy and lockdown to lift.** The player is told once per deferral.
+- **Settings changes wait for secrecy and lockdown to lift.** The player is told once per deferral,
+  and the line names the cause: "…will apply when combat ends." under lockdown, or "…will apply once
+  aura information is available again (after the encounter, key or match)." when secrecy alone holds
+  the change. A stretch announced as combat that secrecy still holds afterwards says so once more, on
+  the next held change and never on the `PLAYER_REGEN_ENABLED` edge itself, whose order against
+  `ADDON_RESTRICTION_STATE_CHANGED` is unverified. Writes that apply no container never wait: the
+  master enable, visibility, lock and alpha run the visibility pass at once, and the Blizzard-frame
+  toggles, a rename and the session toggles queue nothing.
 - **A container deleted or switched away in combat draws nothing until combat ends, and is torn
   down then.** Its frames stay parked in the meantime; creating, deleting and resetting from our own
   surfaces are refused in combat instead.

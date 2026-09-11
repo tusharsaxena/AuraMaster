@@ -246,14 +246,17 @@ end
 -- The write seam
 -- ---------------------------------------------------------------------------
 
---- The tail every write shares: log once, announce once, re-sync an open panel in place.
-local function announceWrite(section, containerId, path, value)
+--- The tail every write shares: log once, announce once, re-sync an open panel in place. A session
+--- row announces nothing: it is not a setting, its own set() already did everything it does, and a
+--- CONFIG_CHANGED would re-apply every container for a toggle that changes none of them.
+local function announceWrite(section, containerId, path, value, sessionOnly)
     -- Logged ONCE, here, with the format deferred into the sink (debug-logging-§10).
     if NS.Debug then NS.Debug("Set", "%s = %s", path, value) end
-    -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row,
-    -- which modules/ContainerManager.lua reads as "re-apply every container".
-    if NS.bus then
-        NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED, { section = section, containerId = containerId })
+    -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row;
+    -- `path` lets modules/ContainerManager.lua read the row's `effect` and skip an apply it needs not.
+    if NS.bus and not sessionOnly then
+        NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED,
+            { section = section, containerId = containerId, path = path })
     end
     -- Scalar, never structural: rebuilding the page under a slider mid-drag is what writing a value
     -- emphatically does not need.
@@ -279,7 +282,7 @@ function NS.SetByPath(path, value, containerId)
         local root, first, id = resolveRoot(parts, containerId)
         if not root then return false, NO_CONTAINER end
         writeInto(root, parts, first, v)
-        announceWrite("filters", id, path, v)
+        announceWrite("filters", id, path, v, false)
         return true
     end
 
@@ -304,7 +307,7 @@ function NS.SetByPath(path, value, containerId)
     end
 
     if row.onChange then row.onChange(value, id) end
-    announceWrite(row.page, id, path, value)
+    announceWrite(row.page, id, path, value, row.sessionOnly)
     return true
 end
 

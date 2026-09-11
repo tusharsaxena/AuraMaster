@@ -115,6 +115,94 @@ test("manager: an apply under combat lockdown waits, says so once, and runs afte
     assertTrue(NS.ContainerManager.FlushPending() > 0, "the queued apply runs once combat ends")
 end)
 
+local COMBAT_LINE = "will apply when combat ends"
+local SECRET_LINE = "will apply once aura information is available again"
+
+--- How many captured chat lines contain `needle`.
+local function countLines(lines, needle)
+    local n = 0
+    for _, l in ipairs(lines) do if l:find(needle, 1, true) then n = n + 1 end end
+    return n
+end
+
+--- Wrap CM.RequestApply with a counter, still calling through. Returns a one-slot box.
+local function countRequests(CM)
+    local n, orig = { 0 }, CM.RequestApply
+    CM.RequestApply = function(...) n[1] = n[1] + 1; return orig(...) end
+    return n
+end
+
+test("manager: /am preview, /am lock and a rename under lockdown print no deferral notice", function()
+    local NS, mocks = fresh()
+    local lines = chat(mocks)
+    mocks.__lockdown = true
+    assertTrue(NS.SetByPath("state.preview", true))
+    assertTrue(NS.SetByPath("locked", true))
+    assertTrue(NS.SetByPath("container.name", "Renamed", 1))
+    mocks.__fireTimers()
+    -- red under: the receiver calling RequestApply for effect="visibility" rows
+    -- red under: the container.name row without effect = "none"
+    assertEqual(countLines(lines, "will apply"), 0, "nothing was held, so nothing is announced")
+    assertEqual(NS.Database.FindContainer(1).name, "Renamed")
+    assertFalse(NS.State.preview, "locking ended preview")
+end)
+
+test("manager: a master visibility row hides containers at once, with no apply pass", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    local requests = countRequests(CM)
+    assertTrue(NS.SetByPath("visibility", "never"))
+    for id, inst in pairs(CM.instances) do
+        assertFalse(inst.engine.__enabled, "container " .. id .. " hidden in the same frame")
+    end
+    -- red under: the receiver calling RequestApply for effect="visibility" rows
+    assertEqual(requests[1], 0, "a visibility row queues no apply")
+    assertEqual(CM.FlushPending(), 0)
+end)
+
+test("manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line", function()
+    local NS, mocks = fresh()
+    local lines = chat(mocks)
+    mocks.__aurasSecret, mocks.__lockdown = true, false
+    NS.ContainerManager.RequestApply()
+    mocks.__fireTimers()
+    assertEqual(countLines(lines, SECRET_LINE), 1, "the restriction is named")
+    assertEqual(countLines(lines, COMBAT_LINE), 0, "combat is not blamed out of combat")
+    mocks.__lockdown = true
+    NS.ContainerManager.RequestApply()
+    mocks.__fireTimers()
+    -- red under: noteDeferred printing on every reason change
+    assertEqual(countLines(lines, "will apply"), 1, "the restriction wording already covers combat")
+end)
+
+test("manager: the regen edge never escalates the notice; a later held request does", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local lines = chat(mocks)
+    mocks.__lockdown = true
+    CM.RequestApply()
+    mocks.__fireTimers()
+    assertEqual(countLines(lines, COMBAT_LINE), 1)
+    mocks.__lockdown, mocks.__aurasSecret = false, true
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: noteDeferred escalating on the regen edge
+    assertEqual(countLines(lines, "will apply"), 1, "a momentary secret reading at the regen edge says nothing")
+    CM.RequestApply()
+    mocks.__fireTimers()
+    assertEqual(countLines(lines, SECRET_LINE), 1, "a request still held after combat names the restriction")
+    assertEqual(countLines(lines, "will apply"), 2)
+    mocks.__aurasSecret = false
+    local flushed, orig = {}, CM.FlushPending
+    CM.FlushPending = function(...) local n = orig(...); flushed[#flushed + 1] = n; return n end
+    NS.addon:OnRestrictionChanged()
+    CM.FlushPending = orig
+    assertTrue((flushed[1] or 0) > 0, "the held apply runs once secrecy lifts")
+    mocks.__lockdown = true
+    CM.RequestApply()
+    mocks.__fireTimers()
+    assertEqual(countLines(lines, COMBAT_LINE), 2, "a later deferral is announced afresh")
+end)
+
 --- Count calls to `frame[method]`, still calling through. Returns a one-slot box.
 local function counted(frame, method)
     local n, orig = { 0 }, frame[method]

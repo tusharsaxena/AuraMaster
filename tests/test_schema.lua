@@ -140,6 +140,7 @@ test("schema: every write announces CONFIG_CHANGED once, naming the container", 
     assertEqual(#got, 1)
     assertEqual(got[1].containerId, 3)
     assertEqual(got[1].section, "icons")
+    assertEqual(got[1].path, "container.icons.width")
     NS2.SetByPath("alpha", 0.5)
     assertNil(got[2].containerId, "an addon-wide row names no container")
 end)
@@ -158,6 +159,22 @@ test("schema: a session row is stored by its own set, never in the profile", fun
     assertEqual(NS2.GetSetting("state.preview"), true)
     assertNil(NS2.db.profile.state)
     NS2.SetByPath("state.preview", false)
+end)
+
+test("schema: a session row announces no CONFIG_CHANGED and queues no apply", function()
+    local NS2, mocks = fresh()
+    local CM = NS2.ContainerManager
+    local requests, orig = { 0 }, CM.RequestApply
+    CM.RequestApply = function(...) requests[1] = requests[1] + 1; return orig(...) end
+    local announced = { 0 }
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function() announced[1] = announced[1] + 1 end)
+    assertTrue(NS2.SetByPath("state.preview", true))
+    assertTrue(NS2.SetByPath("state.debugConsole", true))
+    mocks.__fireTimers()
+    -- red under: announceWrite sending for sessionOnly rows
+    assertEqual(announced[1], 0, "a session row is not a setting")
+    assertEqual(requests[1], 0, "and re-applies no container")
+    NS2.SetByPath("state.debugConsole", false)
 end)
 
 test("schema: ApplyDefault restores the shipped value without sharing a table", function()

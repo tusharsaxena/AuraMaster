@@ -11,8 +11,12 @@ local _, NS = ...
 -- (RequestApply); the request is batched to the next frame, so a slider drag or a whole-profile reset
 -- applies once. And an apply that would touch aura buttons while auras are secret — or rebuild frames
 -- during combat lockdown — waits: FlushPending runs again on PLAYER_REGEN_ENABLED and on
--- ADDON_RESTRICTION_STATE_CHANGED (core/AuraMaster.lua), and the player is told once that their
--- change will land after combat.
+-- ADDON_RESTRICTION_STATE_CHANGED (core/AuraMaster.lua), and the player is told once, naming the
+-- cause: combat, or aura information being withheld (an encounter, a key or a match).
+--
+-- NOT EVERY WRITE NEEDS AN APPLY. A row may declare `effect`: "visibility" rows (the master enable,
+-- visibility, lock and alpha) run the combat-legal visibility pass at once, and "none" rows (the
+-- Blizzard-frame toggles, a container's name) did their whole effect in their own onChange.
 
 NS.ContainerManager = NS.ContainerManager or {}
 local CM = NS.ContainerManager
@@ -25,7 +29,7 @@ CM.instances = CM.instances or {}
 local pending = {}        -- [id] = true
 local pendingAll = false
 local scheduled = false
-local deferNoticeShown = false
+local shownReason = nil   -- the cause the deferral notice last named: nil, "combat" or "secret"
 
 local function print_(line)
     if NS.Print then NS.Print(line) end
@@ -128,11 +132,25 @@ function CM.MustDefer()
     return NS.Compat.AurasAreSecret() or InCombatLockdown()
 end
 
---- Say ONCE per blocked stretch that a change will land after combat — not once per change.
-local function noteDeferred()
-    if deferNoticeShown then return end
-    deferNoticeShown = true
-    print_(NS.L["Aura Master settings changes will apply when combat ends."])
+--- Say ONCE per blocked stretch why a change is waiting — not once per change. The one escalation:
+--- a stretch announced as combat that is still held after combat, by secrecy, says so once more.
+--- Never on the PLAYER_REGEN_ENABLED edge itself (`edge == "regen"`): the order of that event and
+--- ADDON_RESTRICTION_STATE_CHANGED is unverified, and a momentary secret reading there after an
+--- ordinary fight must not print a false restriction line. Secret then combat prints nothing more:
+--- the restriction wording already covers combat.
+local function noteDeferred(edge)
+    local lockdown = InCombatLockdown()
+    local reason = lockdown and "combat" or "secret"
+    if NS.Debug then
+        NS.Debug("Apply", "deferred: secret=%s lockdown=%s edge=%s",
+            NS.Compat.AurasAreSecret(), lockdown, edge or "-")
+    end
+    local escalate = shownReason == "combat" and reason == "secret" and edge ~= "regen"
+    if shownReason == nil or escalate then
+        shownReason = reason
+        print_(reason == "combat" and L["Aura Master settings changes will apply when combat ends."]
+            or L["Aura Master settings changes will apply once aura information is available again (after the encounter, key or match)."])
+    end
 end
 
 --- Apply every container that is pending (or all of them). Returns how many were applied.
@@ -158,16 +176,17 @@ local function replaceAttached()
 end
 
 --- Destroy what was parked, then apply everything pending — unless it has to wait. Returns how many
---- containers were applied.
-function CM.FlushPending()
+--- containers were applied. `edge` names the event that asked ("regen" for PLAYER_REGEN_ENABLED);
+--- the coalescing timer passes nothing.
+function CM.FlushPending(edge)
     scheduled = false
     if Perf.suspended then return 0 end   -- performance-§6: held; resume's RequestApply drains it
     if not pendingAll and next(pending) == nil and next(retiring) == nil then return 0 end
     if CM.MustDefer() then
-        noteDeferred()
+        noteDeferred(edge)
         return 0
     end
-    deferNoticeShown = false
+    shownReason = nil
     destroyParked()
 
     local t0 = Perf.on and debugprofilestop()
@@ -354,10 +373,14 @@ function CM.Init()
     end
     if not ev then
         ev = NS.NewBusTarget()
-        -- A setting changed: re-apply the container it belongs to, or all of them for an addon-wide row.
+        -- A setting changed: run what its row's `effect` says — the visibility pass, nothing, or (the
+        -- default) re-apply the container it belongs to, or all of them for an addon-wide row.
         ev:RegisterMessage(NS.MSG.CONFIG_CHANGED, function(_, payload)
-            local id = type(payload) == "table" and payload.containerId or nil
-            CM.RequestApply(id)
+            local p = type(payload) == "table" and payload or {}
+            local row = p.path and NS.FindSchemaRow(p.path)
+            local effect = row and row.effect
+            if effect == "visibility" then CM.ApplyVisibility()
+            elseif effect ~= "none" then CM.RequestApply(p.containerId) end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)
     end

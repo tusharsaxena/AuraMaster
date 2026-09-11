@@ -71,7 +71,8 @@ end
 function addon:OnCombatChanged(event)
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if event == "PLAYER_REGEN_ENABLED" then
-        if NS.ContainerManager then NS.ContainerManager.FlushPending() end
+        -- "regen": the deferral notice never escalates on this edge (modules/ContainerManager.lua).
+        if NS.ContainerManager then NS.ContainerManager.FlushPending("regen") end
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     end
 end

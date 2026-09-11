@@ -179,6 +179,14 @@ same path out of the template (for `container.` paths) or `NS.defaults.profile` 
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
 
+A row may also declare `effect`, which tells `modules/ContainerManager.lua` what a write needs beyond
+the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`) runs the
+combat-legal visibility pass and queues no apply. `"none"` (`hideBlizzardBuffs`,
+`hideBlizzardDebuffs`, `container.name`) queues nothing, because the row's `onChange` is its whole
+effect. Absent, the write re-applies its container, or every container for a global row. A
+`sessionOnly` row announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs
+in `Container:Apply`.
+
 ## Migration path
 
 The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:192`: one `{ to = N, apply = fn }`
