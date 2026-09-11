@@ -141,9 +141,9 @@ end
 
 function runResetAll()
     -- Not refused in combat: this is Profiles → Reset Profile (options-ui-§12), which takes the
-    -- parked teardown there. The acknowledgment lives INSIDE the guard: on a load where settings/OptionsSetup.lua never
-    -- ran there is nothing to delegate to, and printing it anyway would claim work that did not
-    -- happen.
+    -- parked teardown there. The acknowledgment lives INSIDE the guard: on a load where
+    -- settings/OptionsSetup.lua never ran there is nothing to delegate to, and printing it anyway
+    -- would claim work that did not happen.
     if NS.Helpers and NS.Helpers.RestoreAllDefaults then
         NS.Helpers.RestoreAllDefaults()
         -- The same keys the General page's Reset Profile prints: one message, one key (F-018).

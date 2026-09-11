@@ -104,7 +104,8 @@ The registry (which containers exist, their order and the id counter: `container
 `containerOrder`, `nextContainerId`) is not a settings path. No schema row addresses it, and none
 can, since a row is a leaf. Its only writers are `ContainerManager.Create`, `ContainerManager.Delete`,
 `ContainerManager.Duplicate` (through `Create`) and `Database.PrepareProfile`'s load repair
-(`normalizeKeys`).
+(`normalizeKeys`). Those writes bypass `NS.SetByPath`, which is the `architecture-§5` row in
+Documented deviations.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
@@ -214,7 +215,9 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **Reset all is Profiles → Reset Profile, in combat as well (options-ui-§12).** `/am resetall` and
   the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
   makes, and neither is refused. In combat all three take the parked teardown above: a container the
-  reset drops draws nothing until combat ends and is torn down then.
+  reset drops draws nothing until combat ends and is torn down then. Ours also restore the session
+  rows, so preview turns off through `ApplyVisibility` (combat-safe); AceDBOptions' button leaves
+  session rows alone.
 - **A profile switch, copy or reset in combat may create anchor frames.** Those are plain frames,
   which is combat-legal; their engines are built by the deferred apply once combat ends.
 - **Every engine and button binding is `pcall`-guarded** (`callEngine`, `Style.Bind`), so a binding
@@ -246,8 +249,9 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   master enable, visibility, lock and alpha run the visibility pass at once, and the Blizzard-frame
   toggles, a rename and the session toggles queue nothing.
 - **A container deleted or switched away in combat, or while aura information is withheld (an
-  encounter, key or match), draws nothing until that ends, and is torn down then.** Its frames stay parked in the meantime. Creating and deleting from our own
-  surfaces are refused in combat instead; Reset all, like Reset Profile, takes this parked path.
+  encounter, key or match), draws nothing until that ends, and is torn down then.** Its frames stay
+  parked in the meantime. Creating and deleting from our own surfaces are refused in combat instead;
+  Reset all, like Reset Profile, takes this parked path.
 - **After a profile switch, copy or reset in combat, a container whose id the new profile shares
   draws nothing until combat ends** (or, while aura information is withheld, until that ends). Its
   engine was built for the old container, so it stays parked rather than show stale auras under the
@@ -262,9 +266,10 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   `Preview.Offset`'s arithmetic rather than by the engine.
 - **Class colors follow the container's unit, snapshotted per apply.** After a target, focus or pet
   swap under combat lockdown or while auras are secret, a class-colored container keeps the previous
-  unit's class until the restriction lifts and it re-applies; engine buttons cannot be re-dressed
-  while auras are secret. That residual is ratified by the `options-ui-§17` row in Documented
-  deviations.
+  unit's class until it re-applies. Under lockdown alone (open world, auras readable) that happens
+  on `PLAYER_REGEN_ENABLED` (`ReapplyStaleClass`). While auras are secret it happens when the
+  restriction lifts, since engine buttons cannot be re-dressed until then. That residual is ratified
+  by the `options-ui-§17` row in Documented deviations.
 - **Unpublished; README `## Screenshots` is owed before first publish** — see Documented deviations.
 - **A frame anchor needs a global name.** The picker walks up to the nearest named ancestor
   (`modules/FramePicker.lua:26`); an unnamed frame cannot be re-found after a `/reload`.
@@ -318,5 +323,6 @@ None.
 
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
-| `options-ui-§17` | A unit-scoped container resolves its class color once per apply; after a target, focus or pet swap while auras are secret or under combat lockdown it keeps the previous unit's class until secrecy lifts and the container re-applies | The engine dresses buttons in initializeFrame and forbids restyling them while auras are secret (DenyTaintedAccessWhenAurasAreSecret), so a re-dress on an in-combat swap is impossible; audit docs/audits/2026-09-11 AM-03 | 2026-09-11 | The aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret |
+| `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | The engine dresses buttons in initializeFrame and forbids restyling them while auras are secret (DenyTaintedAccessWhenAurasAreSecret), and every restyle waits out combat lockdown (`ContainerManager.MustDefer`), so a re-dress on an in-combat swap is impossible; audit docs/audits/2026-09-11 AM-03 | 2026-09-11 | The aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret |
+| `architecture-§5` | The container registry (`containers` membership, `containerOrder`, `nextContainerId`) is written outside `NS.SetByPath`: by `ContainerManager.Create`, `.Delete` and `.Duplicate` (through `Create`), and by `Database.PrepareProfile`'s load repair (`normalizeKeys`) | The registry is not addressable by any schema row, since a row is a leaf; membership changes are structural and go through ContainerManager's one registry writer, and the load repair only normalizes what AceDB loaded; review docs/reviews/2026-09-11 F-006 | 2026-09-11 | A schema row (or the seam) gains a registry address, or architecture-§5 scopes the rule to schema rows |
 | `documentation-§1` | README has no `## Screenshots` section (item 5) | Screenshots can only be captured in a live client and none exist yet; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20 | 2026-09-11 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when the section lands |

@@ -166,8 +166,8 @@ return function()
 
     -- ── AceGUI:Release ─────────────────────────────────────────────────────────────────────
     -- The kit's factory never takes a widget back; the chrome block releases its own. Modeled on
-    -- the real one's observable effect plus a recorder, and reported upstream rather than patched
-    -- into the vendored kit.
+    -- the real one's observable effect plus a recorder, and reported upstream
+    -- (tusharsaxena/LibKa0s#27) rather than patched into the vendored kit.
     local aceGUI = M.__libs["AceGUI-3.0"]
     aceGUI.__released = {}
     function aceGUI:Release(widget)
@@ -178,8 +178,8 @@ return function()
     end
 
     -- ── AceConsole's Printf ────────────────────────────────────────────────────────────────
-    -- The LibKa0s v1.29.0 kit's NewAddon stamps Print but not Printf; delete on the re-vendor that
-    -- adds it. The real AceConsole-3.0 Embed stamps both mixins, so NS.Printf is clobbered exactly as
+    -- The LibKa0s v1.29.0 kit's NewAddon stamps Print but not Printf (tusharsaxena/LibKa0s#30);
+    -- delete on the re-vendor that adds it. The real AceConsole-3.0 Embed stamps both mixins, so NS.Printf is clobbered exactly as
     -- NS.Print is, and core/AuraMaster.lua must reclaim both. Mirrored as the real one behaves when
     -- called bare (`NS.Printf(fmt, …)`): the format string lands in `self`, green with a trailing
     -- colon, and the rest are formatted without it.
@@ -197,8 +197,8 @@ return function()
     end
 
     -- ── AceEvent's event half on an embed ──────────────────────────────────────────────────
-    -- The LibKa0s v1.29.0 kit's AceEvent Embed has no RegisterEvent; delete this on the re-vendor
-    -- that adds it. The real Embed stamps RegisterEvent, UnregisterEvent and UnregisterAllEvents on
+    -- The LibKa0s v1.29.0 kit's AceEvent Embed has no RegisterEvent (tusharsaxena/LibKa0s#29);
+    -- delete this on the re-vendor that adds it. The real Embed stamps RegisterEvent, UnregisterEvent and UnregisterAllEvents on
     -- every target, and a module's own target from NS.NewBusTarget() registers game events on it.
     -- Recorded rather than no-opped, so a test can see what is registered right now and fire a
     -- handler as CallbackHandler would: `handler(event, ...)`. Cleared in place, so a table a test

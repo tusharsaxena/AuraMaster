@@ -20,7 +20,7 @@ suite covers what only the client can show.
 
 ## B. Slash surface
 
-5. `/am` → the version line and the 20-command list. `/auramaster` → identical.
+5. `/am` → the version line and the 22-command list. `/auramaster` → identical.
 6. `/am help` → each row is a gold `/am verb`, an em dash and a white description.
 7. `/am wibble` → the unknown-command line, then the help block.
 8. `/am options` → opens the settings (alias of `config`).
@@ -194,3 +194,11 @@ suite covers what only the client can show.
 56. With a target container, change target several times, and target and clear focus with a focus
     container → each shows the new unit's auras at once, never the previous unit's. Summon and dismiss
     a pet with a pet container → it follows.
+
+## O. Master switch from chat
+
+57. Out of combat, `/am disable` → `Aura Master disabled — /am enable turns it back on` and every
+    container hides; General → **Enable Aura Master** is unticked. `/am enable` → `Aura Master
+    enabled` and every enabled container shows again. Repeat both **in combat** → the same lines, no
+    gray refusal, no "will apply when combat ends" notice and no taint warning; containers hide and
+    return at once.

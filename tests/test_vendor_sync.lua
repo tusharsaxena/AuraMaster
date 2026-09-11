@@ -22,7 +22,8 @@ local T = _G.AM_TEST
 -- The vendored runner's recorded mode (automated-tests-§2). Byte identity above cannot see it: the
 -- mode lives in the git index, not in the file's bytes, and a checkout on a filesystem without an
 -- executable bit keeps whatever the index says. This case is local until the LibKa0s kit gate asserts
--- the mode itself (audit docs/audits/2026-09-11, AM-18); drop it once a re-vendored kit does.
+-- the mode itself (tusharsaxena/LibKa0s#28; audit docs/audits/2026-09-11, AM-18); drop it once a
+-- re-vendored kit does.
 T.test("vendor: the automated-test runner is recorded executable (100755)", function()
     -- red under: git update-index --chmod=-x tests/_kit/run-automated-tests.sh
     if not io.popen then T.skip("io.popen is unavailable, so the git index cannot be read") end
