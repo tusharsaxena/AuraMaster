@@ -62,6 +62,14 @@ preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the 
 own button creation sit outside every other bracket. Read `styleElement` as the dressing cost wherever
 it happened, not as a disjoint slice.
 
+The preview is dressed only when it changed: after an apply of its container's settings, or when it
+was hidden and is shown again. A visibility pass alone (a combat transition, the master alpha) leaves
+the placeholders as they are, so `visibilityPass` carries preview dressing only on the pass that
+first shows it. Dressing itself allocates little. The duration text's formatter and expiring-color
+curve, and a bar's dispel color map, are built once for each distinct format, threshold or set of
+colors and handed to every button of that look (`modules/Style.lua`), not built again per button per
+dress.
+
 ## Taking a capture
 
 `/am perf` with no sub-verb prints the current phase and opens the library's step panel, which only

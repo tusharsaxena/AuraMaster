@@ -283,6 +283,8 @@ function ContainerClass:Apply()
         end
     end
 
+    -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
+    self.previewDirty = true
     self:ApplyVisibility()
     if t0 then Perf.Note("applyContainer", debugprofilestop() - t0, "applyPass") end
     return plan

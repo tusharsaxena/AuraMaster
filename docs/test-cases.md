@@ -94,7 +94,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
 
-### test_container.lua (14)
+### test_container.lua (15)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -106,6 +106,7 @@ badge and any count quoted in the docs must agree with it.
 - container: nothing touches the engine while auras are secret, and it catches up after
 - container: the show ladder — suspend, the master switch, the container switch, visibility
 - container: unlocking previews placeholders through the style code and disables the engine
+- container: a visibility pass re-dresses no preview element unless the settings changed
 - container: a new target refreshes only the containers tracking the target
 - container: Blizzard's load-on-demand aura container is loaded before the first engine
 - container: on a client without the aura engine nothing is built and preview still works
@@ -148,7 +149,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (10)
+### test_style.lua (11)
 
 - style: an element's size comes from its style's settings
 - preview: a column of bars grows down from the top left
@@ -160,6 +161,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a preview element is dressed but never bound to the engine
 - style: a class color keeps the stored alpha; off, the stored swatch is used
 - style: the Blizzard time format asks for no formatter of our own
+- style: buttons of one look share one formatter and curve; a new color builds a new curve
 
 ### test_timedspells.lua (9)
 
@@ -259,10 +261,10 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 10 |
 | test_schema.lua | 23 |
 | test_filtercompiler.lua | 27 |
-| test_container.lua | 14 |
+| test_container.lua | 15 |
 | test_containermanager.lua | 20 |
 | test_anchors.lua | 11 |
-| test_style.lua | 10 |
+| test_style.lua | 11 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
 | test_optionssetup.lua | 12 |
@@ -273,4 +275,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **187** |
+| **Total** | **189** |

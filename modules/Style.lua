@@ -99,15 +99,76 @@ function Style.Bind(frame, method, ...)
     return ok
 end
 
+-- ---------------------------------------------------------------------------
+-- Built once per look
+-- ---------------------------------------------------------------------------
+-- A formatter, a color curve and a dispel color map are the same for every button of one look, so
+-- each is built once per distinct input and handed to every button, with no allocation on a hit.
+-- The memos are validated by INPUT IDENTITY, which is sound because a settings write never edits a
+-- stored table in place: NS.SetByPath stores a copy of the value, and a whole-section write stores
+-- deep copies. A changed color is therefore a new table, and a new table misses. Keys are weak, so
+-- the entries for a replaced color go when the color does.
+
+local WEAK_KEYS = { __mode = "k" }
+local NO_COLOR = {}
+local formatters = {}
+local curves = setmetatable({}, WEAK_KEYS)
+local dispelMaps = setmetatable({}, WEAK_KEYS)
+
+--- The engine's text formatter for one time format, shared by every button that uses it.
+local function formatterFor(fmt)
+    local key = fmt or false
+    local f = formatters[key]
+    if f == nil then
+        f = NS.Compat.CreateSecondsFormatter(fmt)
+        formatters[key] = f
+    end
+    return f
+end
+
+--- The expiring-text color curve for one threshold and color pair: `curves[expiring][normal][threshold]`.
+local function curveFor(threshold, expiring, normal)
+    local byNormal = curves[expiring]
+    if not byNormal then
+        byNormal = setmetatable({}, WEAK_KEYS)
+        curves[expiring] = byNormal
+    end
+    local byThreshold = byNormal[normal]
+    if not byThreshold then
+        byThreshold = {}
+        byNormal[normal] = byThreshold
+    end
+    local tc = byThreshold[threshold]
+    if tc == nil then
+        tc = NS.Compat.ExpiringTextColor(threshold, expiring, normal)
+        byThreshold[threshold] = tc
+    end
+    return tc
+end
+
+--- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now.
+local function dispelMapCurrent(entry, stored)
+    local types, src = C.DISPEL_TYPES, entry.src
+    for i = 1, #types do
+        if stored[types[i]] ~= src[types[i]] then return false end
+    end
+    return true
+end
+
 --- A color map for AddDispelTypeTexture's `customDispelColorMap`, from a stored { Magic = {r,g,b,a} }.
+--- Built once per set of color leaves and shared by every button that shows it.
 function Style.DispelColorMap(stored)
-    local out = {}
-    if type(stored) ~= "table" or not _G.CreateColor then return out end
+    if type(stored) ~= "table" or not _G.CreateColor then return {} end
+    local entry = dispelMaps[stored]
+    if entry and dispelMapCurrent(entry, stored) then return entry.map end
+    local map, src = {}, {}
     for _, name in ipairs(C.DISPEL_TYPES) do
         local c = stored[name]
-        if type(c) == "table" then out[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1) end
+        src[name] = c
+        if type(c) == "table" then map[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1) end
     end
-    return out
+    dispelMaps[stored] = { map = map, src = src }
+    return map
 end
 
 --- The size one element occupies, from the container's style settings — what the engine's flow layout
@@ -153,15 +214,13 @@ function Style.ApplyBehavior(frame, cfg)
     Style.Bind(frame, "SetHideTooltipInCombat", b.tooltipInCombat == false)
 end
 
---- Bind the duration text with the configured formatter and expiring color.
+--- Bind the duration text with the configured formatter and expiring color, both shared across every
+--- button of the same look (formatterFor, curveFor).
 function Style.BindDurationText(frame, fs, s)
-    local opts = {}
-    local formatter = NS.Compat.CreateSecondsFormatter(s.timeFormat)
-    if formatter then opts.textFormatter = formatter end
+    local opts = { textFormatter = formatterFor(s.timeFormat) }
     if s.expiringColorOn then
-        local tc = NS.Compat.ExpiringTextColor(tonumber(s.expiringThreshold) or 5, s.expiringColor or {},
-            (s.time and s.time.fontColor) or {})
-        if tc then opts.textColor = tc end
+        opts.textColor = curveFor(tonumber(s.expiringThreshold) or 5, s.expiringColor or NO_COLOR,
+            (s.time and s.time.fontColor) or NO_COLOR)
     end
     Style.Bind(frame, "SetDurationText", fs, opts)
 end

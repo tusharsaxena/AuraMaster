@@ -117,7 +117,9 @@ clears the preview, and shows the drag handle while unlocked. It runs after ever
 While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:59`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
 `engine = false`, fills in invented names, times and stacks, and positions it with
-`Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly.
+`Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders
+are dressed again only after an apply of the container's settings (which marks the preview dirty) or
+after they were hidden; a visibility pass alone leaves them as they are.
 
 ## Lifecycle
 

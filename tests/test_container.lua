@@ -150,6 +150,27 @@ test("container: unlocking previews placeholders through the style code and disa
     assertEqual(after, 0)
 end)
 
+test("container: a visibility pass re-dresses no preview element unless the settings changed", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local dressed = 0
+    local element = NS.Style.Element
+    NS.Style.Element = function(f, c, engine)
+        if not engine then dressed = dressed + 1 end
+        return element(f, c, engine)
+    end
+    NS.ContainerManager.ApplyVisibility()
+    -- red under: Preview.Show without its early return
+    assertEqual(dressed, 0, "the look did not change, so the placeholders are not dressed again")
+    NS.SetByPath("container.bars.width", 250, 1)
+    mocks.__fireTimers()
+    local _, active = NS.Pool.Counts(inst.previewPool)
+    assertTrue(active > 0)
+    assertEqual(dressed, active, "an applied setting re-dresses every placeholder of that container, once")
+end)
+
 test("container: a new target refreshes only the containers tracking the target", function()
     local NS = fresh()
     NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")

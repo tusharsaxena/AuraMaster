@@ -127,3 +127,73 @@ end)
 test("style: the Blizzard time format asks for no formatter of our own", function()
     assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
 end)
+
+test("style: buttons of one look share one formatter and curve; a new color builds a new curve", function()
+    -- Its own environment: the formatter, curve and color constructors are planted with counters
+    -- there, never on the shared mock, so a failing case cannot leak them into later suites.
+    local built = { formatters = 0, curves = 0, colors = 0 }
+    local nop = function() end
+    local NS2, m2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.SecondsFormatterAbbreviation = { OneLetter = 1 }
+        m.Enum.SecondsFormatterRounding = { Truncate = 1 }
+        m.Enum.SecondsFormatterInterval = { Seconds = 1, Days = 4 }
+        m.Enum.DurationTextBindingProperty = { RemainingDuration = 1 }
+        m.Enum.LuaCurveType = { Step = 1 }
+        m.C_StringUtil = { CreateSecondsFormatter = function()
+            built.formatters = built.formatters + 1
+            return setmetatable({}, { __index = function() return nop end })
+        end }
+        m.C_CurveUtil = { CreateColorCurve = function()
+            built.curves = built.curves + 1
+            return { SetType = nop, AddPoint = nop }
+        end }
+        local base = m.CreateColor
+        m.CreateColor = function(...)
+            built.colors = built.colors + 1
+            return base(...)
+        end
+    end })
+    local function button()
+        local b = m2.__stubFrame()
+        b.__bound = {}
+        for _, name in ipairs(BINDINGS) do
+            b[name] = function(_, ...) b.__bound[#b.__bound + 1] = { name, ... } end
+        end
+        return b
+    end
+    local function last(b, name)
+        local hit
+        for _, c in ipairs(b.__bound) do if c[1] == name then hit = c end end
+        return hit
+    end
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), {
+        style = "bars", bars = { timeFormat = "short", expiringColorOn = true, colorMode = "dispel" } })
+    local dispelLeaves = 0
+    for _, name in ipairs(NS2.Constants.DISPEL_TYPES) do
+        if type(c.bars.dispelColors[name]) == "table" then dispelLeaves = dispelLeaves + 1 end
+    end
+    local f0, c0, k0 = built.formatters, built.curves, built.colors
+    local b1, b2 = button(), button()
+    NS2.Style.Element(b1, c, true)
+    NS2.Style.Element(b2, c, true)
+    -- red under: BindDurationText calling Compat directly
+    assertEqual(built.formatters - f0, 1, "one formatter for two buttons of one look")
+    assertEqual(built.curves - c0, 1, "one curve for two buttons of one look")
+    -- red under: Style.DispelColorMap without its memo
+    assertEqual(built.colors - k0, dispelLeaves + 2, "one dispel map and one curve's two colors")
+    assertTrue(last(b1, "AddDispelTypeTexture")[3].customDispelColorMap
+        == last(b2, "AddDispelTypeTexture")[3].customDispelColorMap, "the two buttons share one map")
+    assertTrue(last(b1, "SetDurationText")[3].textColor == last(b2, "SetDurationText")[3].textColor)
+
+    -- A write replaces the leaf table, so a new expiring color is a new identity: a new curve.
+    c.bars.expiringColor = { r = 0, g = 1, b = 0, a = 1 }
+    NS2.Style.Element(b1, c, true)
+    assertEqual(built.curves - c0, 2, "a new expiring color builds a new curve")
+    assertEqual(built.formatters - f0, 1, "the format did not change, so neither did the formatter")
+    -- A replaced dispel leaf invalidates the memoized map.
+    c.bars.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
+    local k1 = built.colors
+    NS2.Style.Element(b1, c, true)
+    assertEqual(built.colors - k1, dispelLeaves, "a new dispel color rebuilds the map")
+end)

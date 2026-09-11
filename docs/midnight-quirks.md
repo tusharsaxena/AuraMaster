@@ -166,7 +166,10 @@ enchants with it, and the setting's description says so.
 - **Duration text** is formatted by the engine from a `C_StringUtil.CreateSecondsFormatter` the addon
   builds, and recolored in the last seconds by a `C_CurveUtil` step color curve over remaining time —
   neither needs the addon to see the duration (`Compat.CreateSecondsFormatter`,
-  `Compat.ExpiringTextColor`).
+  `Compat.ExpiringTextColor`). Both are built once per look and the same object is handed to every
+  button that shares it (`modules/Style.lua`). That the engine accepts one formatter or curve shared
+  across buttons is not yet verified in the client; if it does not, the memo moves to one per
+  container.
 - **`GetMouseFocus` was removed in 11.0** in favor of `GetMouseFoci`; the frame picker uses the first
   frame it returns (`Compat.GetMouseFocus`).
 - **Right-click cancel** is `SetCancelAuraButtons("RightButtonUp")` — one phase, so a button
