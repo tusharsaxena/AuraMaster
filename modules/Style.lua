@@ -46,7 +46,8 @@ local dressClass
 --- snapshotted at its last apply (modules/Container.lua's SnapshotClass), because buttons cannot be
 --- re-dressed while auras are secret and every button of one container must show one class. A
 --- tracked unit whose class does not resolve (an NPC) falls through to the stored swatch; a player
---- container reads the player's class. The stored alpha always survives.
+--- container reads the player's class. The stored alpha always survives. The in-combat staleness
+--- after a unit swap is the residual ratified in docs/ARCHITECTURE.md → Documented deviations.
 function Style.Color(stored, useClass)
     if useClass and dressClass then
         local r, g, b, a = NS.ResolveColor(stored, false)

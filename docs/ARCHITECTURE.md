@@ -249,7 +249,9 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **Class colors follow the container's unit, snapshotted per apply.** After a target, focus or pet
   swap under combat lockdown or while auras are secret, a class-colored container keeps the previous
   unit's class until the restriction lifts and it re-applies; engine buttons cannot be re-dressed
-  while auras are secret.
+  while auras are secret. That residual is ratified by the `options-ui-§17` row in Documented
+  deviations.
+- **Unpublished; README `## Screenshots` is owed before first publish** — see Documented deviations.
 - **A frame anchor needs a global name.** The picker walks up to the nearest named ancestor
   (`modules/FramePicker.lua:26`); an unnamed frame cannot be re-found after a `/reload`.
 
@@ -300,4 +302,7 @@ None.
 
 ## Documented deviations
 
-None.
+| Rule | What differs | Why | Decided | Re-check trigger |
+|---|---|---|---|---|
+| `options-ui-§17` | A unit-scoped container resolves its class color once per apply; after a target, focus or pet swap while auras are secret or under combat lockdown it keeps the previous unit's class until secrecy lifts and the container re-applies | The engine dresses buttons in initializeFrame and forbids restyling them while auras are secret (DenyTaintedAccessWhenAurasAreSecret), so a re-dress on an in-combat swap is impossible; audit docs/audits/2026-09-11 AM-03 | 2026-09-11 | The aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret |
+| `documentation-§1` | README has no `## Screenshots` section (item 5) | Screenshots can only be captured in a live client and none exist yet; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20 | 2026-09-11 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when the section lands |
