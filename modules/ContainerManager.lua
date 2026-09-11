@@ -247,7 +247,7 @@ end
 local function classChanged(inst, unit)
     local snap = inst.classColor
     if not snap then return true end
-    local r, g, b = NS.ClassColor(unit)
+    local r, g, b = NS.Container.ClassOf(unit)
     return snap.r ~= r or snap.g ~= g or snap.b ~= b
 end
 

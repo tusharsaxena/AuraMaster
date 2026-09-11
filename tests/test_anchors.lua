@@ -271,8 +271,35 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     mocks.__lockdown = true
     NS.Anchors.UpdateHandle(inst, true)
     mocks.__lockdown = false
-    -- red under: dropping the InCombatLockdown gate before SetClampRectInsets
+    -- red under: dropping the InCombatLockdown gate in UpdateHandle
     assertNil(insets, "the anchor parents an aura engine: no layout work on it in combat")
+end)
+
+test("handle: under lockdown a changed layout does not re-place the handle; the next pass after it does", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = NS.Database.FindContainer(1)
+    local h = recordedHandle(mocks, NS, inst)
+    cfg.layout.growV, cfg.layout.growH = "down", "right"
+    NS.Anchors.UpdateHandle(inst, true)
+    local _, clears = last(h, "ClearAllPoints")
+    local _, points = last(h, "SetPoint")
+    local _, widths = last(h, "SetWidth")
+    cfg.layout.growV = "up"
+    mocks.__lockdown = true
+    NS.Anchors.UpdateHandle(inst, true)
+    -- red under: dropping the InCombatLockdown gate in UpdateHandle
+    assertEqual(select(2, last(h, "ClearAllPoints")), clears, "no ClearAllPoints under lockdown")
+    assertEqual(select(2, last(h, "SetPoint")), points, "no SetPoint under lockdown")
+    assertEqual(select(2, last(h, "SetWidth")), widths, "no SetWidth under lockdown")
+    assertTrue(h:IsShown(), "showing still happens under lockdown")
+    NS.Anchors.UpdateHandle(inst, false)
+    assertFalse(h:IsShown(), "and so does hiding")
+    mocks.__lockdown = false
+    NS.Anchors.UpdateHandle(inst, true)
+    local p = last(h, "SetPoint")
+    assertEqual(p[1], "TOPLEFT", "after lockdown the handle moves below the anchor")
+    assertEqual(p[3], "BOTTOMLEFT")
 end)
 
 test("handle: a visibility pass that changes nothing re-sets no clamp insets", function()

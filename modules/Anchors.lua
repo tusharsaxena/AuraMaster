@@ -291,10 +291,8 @@ local function setClamp(container, l, r, t, b)
 end
 
 --- The anchor is clamped to the screen; while its handle shows, the clamp rect reaches over the strip
---- too, so the handle cannot be dragged off-screen. Never in combat: the anchor parents an aura engine,
---- and no layout work touches it under lockdown. The next visibility pass after combat catches up.
+--- too, so the handle cannot be dragged off-screen. Out of combat only (Anchors.UpdateHandle).
 local function clampToHandle(container, cfg, overhang)
-    if InCombatLockdown() then return end
     if not overhang then
         setClamp(container, 0, 0, 0, 0)
         return
@@ -309,13 +307,18 @@ local function clampToHandle(container, cfg, overhang)
 end
 
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
---- name sets its width and the layout's growth sets its side.
+--- name sets its width and the layout's growth sets its side. Placing the strip and clamping the
+--- anchor are layout work beside an aura engine's parent, so neither runs under lockdown: the handle
+--- keeps its last placement and only shows or hides, and the next visibility pass after combat
+--- catches both up.
 function Anchors.UpdateHandle(container, show)
     local handle = container.handle
     if not handle then return end
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
     handle.label:SetText(cfg and cfg.name or "")
-    clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
+    if not InCombatLockdown() then
+        clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
+    end
     handle:SetShown(show)
 end

@@ -10,7 +10,7 @@ marked as such rather than listed as a requirement.
 | Group | Who needs it | Short answer |
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
-| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls`, `grep` and `nproc`. |
+| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
 | Release / assets | Nobody, locally | None. |
 
 ## Runtime (in-game) — what a player needs
@@ -19,7 +19,7 @@ marked as such rather than listed as a requirement.
   only. The addon needs the 12.1 aura container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:28`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:19`). On a client
-  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:471`) and draws
+  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:472`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
@@ -98,7 +98,8 @@ git -C ../LibKa0s rev-parse --short v1.29.0   # verify: prints a commit
   itself, which is LuaRocks' business rather than this addon's.
 - **A CI runner.** There is none; every gate is local and hand-run (testing-§5).
 - **The vendored libraries.** LibStub, CallbackHandler-1.0, the Ace3 modules, LibKa0s,
-  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed under `libs/`. Listing them here does not license fetching them at build time.
+  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed under `libs/`. Listing them
+  here does not license fetching them at build time.
 
 ## Release / assets
 

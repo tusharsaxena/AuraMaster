@@ -22,7 +22,7 @@ Example: a bar option.
    which re-applies that container and restyles its buttons once auras are readable.
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
-   the structure key in `Container:Apply` (`modules/Container.lua:318`).
+   the structure key in `Container:Apply` (`modules/Container.lua:327`).
 6. `NS.ValidateSchema` fails the load if the path does not resolve against the template. Update the
    row lists in `docs/settings-panel.md` and the defaults in `docs/schema.md`.
 

@@ -133,12 +133,21 @@ end
 -- different class re-applies the container (modules/ContainerManager.lua's RefreshUnit), or marks it
 -- stale while that has to wait.
 
+--- A unit's class color, or nil when it does not resolve. Guarded, because the unit is not the
+--- player: a class token the client withholds (a secret) raises where the library indexes
+--- RAID_CLASS_COLORS with it, and that failure is an unresolved class, painted with the swatch.
+function NS.Container.ClassOf(unit)
+    local ok, r, g, b = pcall(NS.ClassColor, unit)
+    if not ok then return nil end
+    return r, g, b
+end
+
 --- The tracked unit's class as { r, g, b }, in a table reused per instance. When the class does not
 --- resolve (an NPC, no such unit) the channels are nil, and Style.Color falls through to the swatch.
 function ContainerClass:ResolveUnitClass(unit)
     local c = self.classBuf or {}
     self.classBuf = c
-    c.r, c.g, c.b = NS.ClassColor(unit)
+    c.r, c.g, c.b = NS.Container.ClassOf(unit)
     return c
 end
 

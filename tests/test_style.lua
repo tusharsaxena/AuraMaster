@@ -264,6 +264,38 @@ test("style: a target container's class color is the target's, snapshotted at ap
         "a player container keeps the player's class")
 end)
 
+test("style: a tracked unit whose class lookup raises paints the swatch, and nothing raises", function()
+    -- A class token the client withholds (a secret) raises where the library indexes
+    -- RAID_CLASS_COLORS with it. A Lua string cannot be made secret here, so the table's index raises
+    -- for the token instead. Planted in the case's own environment, never on the shared mock.
+    local NS2, m2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.UnitClass = function(u)
+            if u == "target" then return "Secret", "SECRET" end
+            return "Mage", "MAGE"
+        end
+        setmetatable(m.RAID_CLASS_COLORS, { __index = function(_, k)
+            if k == "SECRET" then error("attempt to index a table with a secret value") end
+        end })
+    end })
+    local swatch = { r = 0.1, g = 0.2, b = 0.3, a = 0.6 }
+    local inst = NS2.ContainerManager.instances[3]   -- Target debuffs (mine)
+    local c = inst:Cfg()
+    c.style, c.bars.useClassColorBar, c.bars.barColor = "bars", true, swatch
+    local ok, err = pcall(inst.Apply, inst)
+    -- red under: ResolveUnitClass calling NS.ClassColor unguarded
+    assertTrue(ok, tostring(err))
+    assertTrue(inst.classColor ~= nil and inst.classColor.r == nil, "the class is unresolved")
+    local btn, fill = m2.__stubFrame(), m2.__stubFrame()
+    inst:InitFrame(btn)
+    rawset(fill, "SetVertexColor", function(_, ...) fill.__color = { ... } end)
+    btn.__am.fill = fill
+    inst:InitFrame(btn)
+    assertEqual(table.concat(fill.__color, ","), "0.1,0.2,0.3,0.6", "the stored swatch, as for an NPC")
+    ok, err = pcall(NS2.ContainerManager.RefreshUnit, "target")
+    -- red under: classChanged calling NS.ClassColor unguarded
+    assertTrue(ok, tostring(err))
+end)
+
 test("style: a dress that raises still clears its class color, and the error reaches the caller", function()
     -- Its own environment: the styler is replaced there, never on the shared one.
     local NS2, m2 = dofile("tests/fresh_env.lua")()

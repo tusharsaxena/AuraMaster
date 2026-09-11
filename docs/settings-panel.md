@@ -30,7 +30,7 @@ is a defect in this doc (documentation-§3).
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:402`): the page's schema groups become tabs, the page's bespoke tabs
+  (`settings/OptionsSetup.lua:401`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a

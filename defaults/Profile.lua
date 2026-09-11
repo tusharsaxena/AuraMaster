@@ -38,7 +38,8 @@ NS.defaults.profile = {
     -- The container registry. `containers` is keyed by id; `containerOrder` is display order (the
     -- settings picker, the CLI, and the order containers are built in). Both are written at runtime by
     -- modules/ContainerManager.lua, and on load by core/Database.lua's PrepareProfile (repair and
-    -- first-run seeding). `seeded` records that a fresh profile has had its starter containers created, so deleting them all does not bring them back on the next login.
+    -- first-run seeding). `seeded` records that a fresh profile has had its starter containers
+    -- created, so deleting them all does not bring them back on the next login.
     containers      = {},
     containerOrder  = {},
     nextContainerId = 1,

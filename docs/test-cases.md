@@ -42,7 +42,7 @@ badge and any count quoted in the docs must agree with it.
 - database: PrepareProfile seeds an empty profile from its own counter, in declaration order
 - database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
 
-### test_schema.lua (25)
+### test_schema.lua (26)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -64,6 +64,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: a session row announces no CONFIG_CHANGED and queues no apply
 - schema: ApplyDefault restores the shipped value without sharing a table
 - schema: a spell set is written whole and normalized to positive integer ids
+- schema: a carve-out's refusal is the locale's sentence
 - schema: category spell edits keep only real spell categories
 - schema: a whole section written through the seam replaces it, backfills it, logs once and announces once
 - schema: a section write refuses a non-section path, a non-table, and a value a row rejects
@@ -160,7 +161,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 
-### test_anchors.lua (21)
+### test_anchors.lua (22)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -174,6 +175,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: above the anchor when auras grow down, below when up, edge-aligned where they start
 - handle: at least as wide as its container's element, and as its label with room for the help mark
 - handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
+- handle: under lockdown a changed layout does not re-place the handle; the next pass after it does
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
@@ -184,7 +186,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (18)
+### test_style.lua (19)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -199,6 +201,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a preview element is dressed but never bound to the engine
 - style: a class color keeps the stored alpha; off, the stored swatch is used
 - style: a target container's class color is the target's, snapshotted at apply
+- style: a tracked unit whose class lookup raises paints the swatch, and nothing raises
 - style: a dress that raises still clears its class color, and the error reaches the caller
 - style: a dress that raises hands the error handler the failing styler's stack
 - style: a dress that raises a non-string value hands that value on unchanged
@@ -317,12 +320,12 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 8 |
 | test_database.lua | 12 |
-| test_schema.lua | 25 |
+| test_schema.lua | 26 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 37 |
-| test_anchors.lua | 21 |
-| test_style.lua | 18 |
+| test_anchors.lua | 22 |
+| test_style.lua | 19 |
 | test_timedspells.lua | 10 |
 | test_slash.lua | 23 |
 | test_optionssetup.lua | 16 |
@@ -333,4 +336,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **247** |
+| **Total** | **250** |

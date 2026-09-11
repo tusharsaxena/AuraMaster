@@ -219,6 +219,21 @@ test("schema: a spell set is written whole and normalized to positive integer id
     assertFalse((NS2.SetByPath("container.filter.blacklist", "12")), "a non-set is refused")
 end)
 
+test("schema: a carve-out's refusal is the locale's sentence", function()
+    local NS2 = fresh()
+    -- The case's own environment: its locale table is rebuilt per case, so these stand-ins end here.
+    rawset(NS2.L, "Expected a set of spell ids", "ID SET REFUSED")
+    rawset(NS2.L, "Expected per-category spell edits", "EDITS REFUSED")
+    local ok, err = NS2.SetByPath("container.filter.whitelist", "x", 1)
+    assertFalse(ok)
+    -- red under: normalizeIdSet returning an English literal instead of its L key
+    assertEqual(err, "ID SET REFUSED")
+    ok, err = NS2.SetByPath("container.filter.categorySpells", 5, 1)
+    assertFalse(ok)
+    -- red under: normalizeCategoryEdits returning an English literal instead of its L key
+    assertEqual(err, "EDITS REFUSED")
+end)
+
 test("schema: category spell edits keep only real spell categories", function()
     local NS2 = fresh()
     NS2.State.SetActiveContainer(1)

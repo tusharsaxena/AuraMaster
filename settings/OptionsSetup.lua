@@ -69,12 +69,11 @@ local descriptor = {
 -- The degradation stub — LOAD-COMPLETING, not member-answering (options-ui-§1)
 -- ---------------------------------------------------------------------------
 --
--- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD. With any of those nil
--- the page file raises, its rows
--- never register, and most of the schema — with /am list, /am set and the profile defaults —
--- silently vanishes. So this stub publishes every member a page file touches at load, measured by
--- deleting one and re-running tests/degraded_env.lua, and nothing else: no widget maker, no flow
--- engine, no header, no LAYOUT constant.
+-- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD. With any of those
+-- nil the page file raises, its rows never register, and most of the schema — with /am list,
+-- /am set and the profile defaults — silently vanishes. So this stub publishes every member a page
+-- file touches at load, measured by deleting one and re-running tests/degraded_env.lua, and
+-- nothing else: no widget maker, no flow engine, no header, no LAYOUT constant.
 --
 -- The composers reproduce the STORED SURFACE only — one row per canonical leaf at the path the live
 -- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this

@@ -216,7 +216,7 @@ end
 --- A set of spell ids: positive integer keys, `true` values. Anything else is dropped rather than
 --- stored, because the filter compiler hands these keys to the aura engine as they are.
 local function normalizeIdSet(value)
-    if type(value) ~= "table" then return nil, "expected a set of spell ids" end
+    if type(value) ~= "table" then return nil, L["Expected a set of spell ids"] end
     local out = {}
     for k, v in pairs(value) do
         local id = tonumber(k)
@@ -228,7 +228,7 @@ end
 --- Per-category spell edits: [categoryKey] = { [spellId] = true (added) | false (removed) }. A key
 --- that is not a spell category of this build is dropped, and an empty edit set is not stored.
 local function normalizeCategoryEdits(value)
-    if type(value) ~= "table" then return nil, "expected per-category spell edits" end
+    if type(value) ~= "table" then return nil, L["Expected per-category spell edits"] end
     local out = {}
     for key, edits in pairs(value) do
         if type(key) == "string" and NS.Categories.IsSpellCategory(key) and type(edits) == "table" then
