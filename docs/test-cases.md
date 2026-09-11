@@ -184,12 +184,13 @@ badge and any count quoted in the docs must agree with it.
 - style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
 
-### test_timedspells.lua (9)
+### test_timedspells.lua (10)
 
 - timed: nothing is needed until a container shows only timeless auras
 - timed: it hears UNIT_AURA through AceEvent only while needed and readable
 - timed: UNIT_AURA for another unit schedules nothing
 - timed: combat drops UNIT_AURA and its end restores it with a scan
+- timed: a scan queued before combat is dropped in combat, and the gate reopening scans again
 - timed: secret auras out of combat keep UNIT_AURA unregistered until the restriction lifts
 - timed: learning a spell is announced on the bus to every receiver, and the manager re-applies
 - timed: a readable scan learns every timed buff once, and skips permanent ones
@@ -299,7 +300,7 @@ badge and any count quoted in the docs must agree with it.
 | test_containermanager.lua | 28 |
 | test_anchors.lua | 13 |
 | test_style.lua | 15 |
-| test_timedspells.lua | 9 |
+| test_timedspells.lua | 10 |
 | test_slash.lua | 21 |
 | test_optionssetup.lua | 16 |
 | test_perf.lua | 5 |
@@ -309,4 +310,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **223** |
+| **Total** | **224** |

@@ -78,6 +78,44 @@ test("timed: combat drops UNIT_AURA and its end restores it with a scan", functi
     assertEqual(#mocks.__timers, before + 1, "reopening scheduled one scan")
 end)
 
+test("timed: a scan queued before combat is dropped in combat, and the gate reopening scans again", function()
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers(); mocks.__fireTimers()   -- drain the sync's scan and the apply it queued
+    withAuras(mocks, { { spellId = 77, duration = 8 } })
+    local lines = {}
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        table.insert(lines, tostring(msg))
+    end)
+    local heard = { 0 }
+    NS.NewBusTarget():RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function() heard[1] = heard[1] + 1 end)
+    local ev = NS.TimedSpells.__events()
+    local onUnitAura = ev.__events.UNIT_AURA   -- kept: combat unregisters it
+    onUnitAura("UNIT_AURA", "player")   -- the player's buffs changed: a scan is queued
+    -- red under: scanTick without its readable-state gate (the lockdown check).
+    mocks.__inCombat, mocks.__lockdown = true, true
+    mocks.__fireTimers(); mocks.__fireTimers()
+    assertEqual(NS.TimedSpells.Count(), 0, "a queued scan ran in combat")
+    assertEqual(heard[1], 0, "a scan in combat announced TIMED_SPELLS_CHANGED")
+    for _, l in ipairs(lines) do
+        assertFalse(l:find("will apply", 1, true), "a scan in combat produced a deferral notice: " .. l)
+    end
+    -- The tick can also come due between PLAYER_REGEN_DISABLED and the lockdown it announces.
+    -- red under: scanTick reading InCombatLockdown alone, without the closed gate.
+    mocks.__lockdown = false
+    ev.__events.PLAYER_REGEN_DISABLED("PLAYER_REGEN_DISABLED")
+    onUnitAura("UNIT_AURA", "player")   -- a late delivery re-queues it: the tick must not trust that
+    mocks.__fireTimers(); mocks.__fireTimers()
+    assertEqual(NS.TimedSpells.Count(), 0, "a scan queued before combat ran at the combat edge")
+    assertEqual(heard[1], 0, "a scan at the combat edge announced TIMED_SPELLS_CHANGED")
+    -- red under: the dropped tick leaving its scan marked scheduled (every later scan is swallowed).
+    mocks.__inCombat, mocks.__lockdown = false, false
+    ev.__events.PLAYER_REGEN_ENABLED("PLAYER_REGEN_ENABLED")
+    mocks.__fireTimers()
+    assertEqual(NS.TimedSpells.Count(), 1, "the gate reopening after combat did not scan")
+    assertEqual(heard[1], 1, "the scan after combat was not announced")
+end)
+
 test("timed: secret auras out of combat keep UNIT_AURA unregistered until the restriction lifts", function()
     -- red under: syncAuraListen ignoring AurasAreSecret.
     local NS, mocks = fresh()

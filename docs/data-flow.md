@@ -166,8 +166,9 @@ duration" and the addon is not suspended. It registers through AceEvent on its o
 one gate, and `UNIT_AURA` is registered only while that gate is open (no combat lockdown, auras not
 secret). `PLAYER_REGEN_DISABLED` closes it on the event itself: it fires before the lockdown begins. The vendored AceEvent has no unit filter, so `UNIT_AURA` arrives for every unit; the handler
 proves the unit a safe key and keeps only the player and pet. Such an event, or the gate reopening,
-schedules a scan half a second later, bracketed `timedScan`. The scan runs only when
-`Compat.AurasAreSecret()` is false, reads the player's and pet's buffs by index, and records every
+schedules a scan half a second later, bracketed `timedScan`. A scan that comes due after the gate
+closed (in combat, or while auras are secret) is dropped, and the gate reopening schedules a fresh
+one. The scan runs only when `Compat.AurasAreSecret()` is false, reads the player's and pet's buffs by index, and records every
 readable spell id with a readable positive duration into `global.timedSpells` (through
 `Secrets.IsSafeKey` and `Secrets.IsReadableNumber`). A scan that learned something sends
 `TIMED_SPELLS_CHANGED`; `ContainerManager` hears it and re-applies every container, which updates

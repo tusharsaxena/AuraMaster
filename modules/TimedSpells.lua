@@ -17,7 +17,8 @@ local _, NS = ...
 -- lockdown and while auras are not secret. PLAYER_REGEN_DISABLED closes that gate (lockdown begins
 -- only after it fires); PLAYER_REGEN_ENABLED and ADDON_RESTRICTION_STATE_CHANGED re-check it, and
 -- reopening it schedules one scan. In combat and in every secret stretch UNIT_AURA is not registered
--- at all.
+-- at all, and a scan queued before the gate closed is dropped when it comes due, so combat never
+-- learns a spell, announces one, or queues an apply.
 --
 -- It only listens while some container actually uses the mode, so an addon with none pays nothing.
 -- What it learned is announced on the bus (TIMED_SPELLS_CHANGED), never pushed into another module.
@@ -81,8 +82,19 @@ function TS.Scan()
     return learned
 end
 
---- One scan, bracketed (bucket `timedScan`, performance-§3).
+--- Whether a scan could read anything right now: no combat lockdown, auras not secret.
+local function readable()
+    return not InCombatLockdown() and not NS.Compat.AurasAreSecret()
+end
+
+--- One scan, bracketed (bucket `timedScan`, performance-§3). A tick queued before the gate closed
+--- (combat, a secret stretch, suspend) is dropped, unmarked, so it neither reads nor announces
+--- anything; the gate reopening schedules a fresh scan.
 local function scanTick()
+    if not (listening and readable()) then
+        scanScheduled = false
+        return
+    end
     local t0 = Perf.on and debugprofilestop()
     TS.Scan()
     if t0 then Perf.Note("timedScan", debugprofilestop() - t0) end
@@ -104,8 +116,7 @@ end
 --- fires PLAYER_REGEN_DISABLED before its combat lockdown begins, so InCombatLockdown() still answers
 --- false inside that handler: the event itself closes the gate (docs/midnight-quirks.md, combat state).
 local function syncAuraListen(event)
-    local open = event ~= "PLAYER_REGEN_DISABLED" and not InCombatLockdown()
-        and not NS.Compat.AurasAreSecret()
+    local open = event ~= "PLAYER_REGEN_DISABLED" and readable()
     if open and not listening then
         events:RegisterEvent("UNIT_AURA", onUnitAura)
         listening = true
