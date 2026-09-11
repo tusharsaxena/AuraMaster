@@ -6,8 +6,9 @@
 -- the `## Title`, never the chat prefix, never a hand-typed literal. A wrong name reads some other
 -- addon's manifest, or none, and answers nil without raising.
 --
--- A degraded install (libs/LibKa0s missing) falls back to the same C_AddOns → deprecated global →
--- nil ladder the library runs, so `/am version` and the landing page's Notes line still work.
+-- A degraded install (libs/LibKa0s missing) falls back to C_AddOns.GetAddOnMetadata, then nil, so
+-- `/am version` and the landing page's Notes line still work. The deprecated global is never read:
+-- the TOC is Retail-only, where C_AddOns always exists.
 --
 -- Nothing here is resolved at load beyond the LibStub lookup, so the TOC position is conventional.
 
@@ -15,17 +16,15 @@ local addonName, NS = ...
 
 local Env = LibStub and LibStub("LibKa0s-Env-1.0", true)
 
---- One field of this addon's TOC manifest, or nil. Nil is a real answer: the library may be absent,
---- the client may expose no reader (a headless run), or the TOC may not carry the field.
+--- One field of this addon's TOC manifest, or nil. Two sources, in order: LibKa0s-Env, then
+--- C_AddOns.GetAddOnMetadata. Nil is a real answer: the library may be absent, the client may expose
+--- no reader (a headless run), or the TOC may not carry the field.
 --- @param field string  a TOC key: "Version", "Title", "Notes", …
 --- @return string|nil
 function NS.Meta(field)
     if Env then return Env.GetAddOnMetadata(addonName, field) end
     if C_AddOns and C_AddOns.GetAddOnMetadata then
         return C_AddOns.GetAddOnMetadata(addonName, field)
-    end
-    if GetAddOnMetadata then
-        return GetAddOnMetadata(addonName, field)
     end
     return nil
 end

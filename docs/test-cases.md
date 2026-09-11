@@ -15,13 +15,14 @@ badge and any count quoted in the docs must agree with it.
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
 - loadorder: the library registered — NS.Perf is the real probe, not the stub
 
-### test_setups.lua (7)
+### test_setups.lua (8)
 
 - core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] tag
 - core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer
 - core: every close control goes through the one NS.MakeCloseButton wrapper
 - media: icons and the monospace face resolve inside this addon's folder
 - env: the version falls back to NS.version where the TOC cannot be read
+- env: the metadata reader never calls the deprecated global
 - debug: the logging flag is ours, session-only, and never written to the profile
 - degraded: without LibKa0s the addon still loads and every seam answers
 
@@ -260,7 +261,7 @@ badge and any count quoted in the docs must agree with it.
 | Suite | Cases |
 |-------|------:|
 | test_loadorder.lua | 6 |
-| test_setups.lua | 7 |
+| test_setups.lua | 8 |
 | test_database.lua | 10 |
 | test_schema.lua | 23 |
 | test_filtercompiler.lua | 27 |
@@ -278,4 +279,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **192** |
+| **Total** | **193** |
