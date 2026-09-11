@@ -23,16 +23,17 @@ The **Tests** cell reads `passed/skipped/total`.
 
 | Run | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20260912-015750`](20260912-015750/) | 0.1.0 | 0/0 | 62 | 244/0/244 | pass | 9483 | 1026 | 7.5 | 2.7 | 15 | 0 | **green** |
 | [`20260912-004826`](20260912-004826/) | 0.1.0 | 0/0 | 62 | 233/0/233 | pass | 9178 | 981 | 7.6 | 2.8 | 15 | 0 | **green** |
 | [`20260911-141809`](20260911-141809/) | 0.1.0 | 0/0 | 62 | 154/0/154 | pass | 6820 | 676 | 6.6 | 2.8 | 15 | 0 | **green** |
 
 ## Test suite
 
-**233 cases** — 233 passed, 0 failed, 0 skipped. The generated inventory
-[`20260912-004826/test-cases.md`](20260912-004826/test-cases.md) is the authority on which cases existed at this run;
+**244 cases** — 244 passed, 0 failed, 0 skipped. The generated inventory
+[`20260912-015750/test-cases.md`](20260912-015750/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **154 → 233** since the previous run.
+Moved **233 → 244** since the previous run.
 
 No case reported a `skip`, so passed and total agree and nothing in this row claims coverage
 that was not exercised.
@@ -48,14 +49,14 @@ is why the exclusion is restated on every run.
 ## Perf
 
 **9 scenarios** from `tests/perf.lua`; the measurements are in
-[`20260912-004826/perf.json`](20260912-004826/perf.json).
+[`20260912-015750/perf.json`](20260912-015750/perf.json).
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20260912-004826`](20260912-004826/) — **this run's measurement, not its diff.** Max CCN **15** across 981
+Current as of [`20260912-015750`](20260912-015750/) — **this run's measurement, not its diff.** Max CCN **15** across 1026
 functions, **0** of them warned on; 0 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
