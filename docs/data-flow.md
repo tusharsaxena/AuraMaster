@@ -19,12 +19,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:469
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:477
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:207
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:214
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones

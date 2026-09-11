@@ -142,10 +142,10 @@ suite covers what only the client can show.
     Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am preview`
     and a rename print no notice. With a target container's border on class color, target a player
     of another class and pull at once → no notice prints (you changed no setting), and the border
-    takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter → the change waits
-    until the key or encounter ends, even if you drop combat between pulls. A change made out of
-    combat inside the key prints once: `[AM] Aura Master settings changes will apply once aura
-    information is available again (after the encounter, key or match).` A change made in combat
+    takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →
+    the change waits until the key or encounter ends, even if you drop combat between pulls. A change
+    made out of combat inside the key prints once: `[AM] Aura Master settings changes will apply once
+    aura information is available again (after the encounter, key or match).` A change made in combat
     there prints the combat line; nothing more prints the moment combat ends, and the next change
     still held after the pull prints the restriction line once.
 47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
