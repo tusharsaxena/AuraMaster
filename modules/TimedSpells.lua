@@ -14,9 +14,10 @@ local _, NS = ...
 -- (events-frames-taint-§1). The vendored AceEvent has no RegisterUnitEvent, so UNIT_AURA arrives for
 -- every unit, raid members and nameplates included, and the handler keeps only the player and pet.
 -- That cost is bounded by registering UNIT_AURA only while a scan could read anything: out of combat
--- lockdown and while auras are not secret. PLAYER_REGEN_DISABLED, PLAYER_REGEN_ENABLED and
--- ADDON_RESTRICTION_STATE_CHANGED re-check that gate; reopening it schedules one scan. In combat and
--- in every secret stretch UNIT_AURA is not registered at all.
+-- lockdown and while auras are not secret. PLAYER_REGEN_DISABLED closes that gate (lockdown begins
+-- only after it fires); PLAYER_REGEN_ENABLED and ADDON_RESTRICTION_STATE_CHANGED re-check it, and
+-- reopening it schedules one scan. In combat and in every secret stretch UNIT_AURA is not registered
+-- at all.
 --
 -- It only listens while some container actually uses the mode, so an addon with none pays nothing.
 -- What it learned is announced on the bus (TIMED_SPELLS_CHANGED), never pushed into another module.
@@ -99,9 +100,12 @@ local function onUnitAura(_, unit)
     if NS.Secrets.IsSafeKey(unit) and (unit == "player" or unit == "pet") then scheduleScan() end
 end
 
---- Register UNIT_AURA while a scan could read anything, and drop it while none could.
-local function syncAuraListen()
-    local open = not InCombatLockdown() and not NS.Compat.AurasAreSecret()
+--- Register UNIT_AURA while a scan could read anything, and drop it while none could. The client
+--- fires PLAYER_REGEN_DISABLED before its combat lockdown begins, so InCombatLockdown() still answers
+--- false inside that handler: the event itself closes the gate (docs/midnight-quirks.md, combat state).
+local function syncAuraListen(event)
+    local open = event ~= "PLAYER_REGEN_DISABLED" and not InCombatLockdown()
+        and not NS.Compat.AurasAreSecret()
     if open and not listening then
         events:RegisterEvent("UNIT_AURA", onUnitAura)
         listening = true

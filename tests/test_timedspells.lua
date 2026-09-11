@@ -34,28 +34,44 @@ end)
 
 test("timed: UNIT_AURA for another unit schedules nothing", function()
     -- red under: onUnitAura without its unit filter.
-    local NS, mocks = fresh()
+    local secretUnit = false   -- while true, the client reports the unit "player" as a secret value
+    local NS, mocks = fresh({ before = function(m)
+        m.issecretvalue = function(v) return secretUnit and v == "player" end
+    end })
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
     mocks.__fireTimers()   -- drain the sync's own scan and the apply it queued
     local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
     local before = #mocks.__timers
     onUnitAura("UNIT_AURA", "nameplate1")
     assertEqual(#mocks.__timers, before, "a nameplate's aura change scheduled a scan")
+    -- red under: onUnitAura without IsSafeKey.
+    secretUnit = true
+    onUnitAura("UNIT_AURA", "player")
+    secretUnit = false
+    assertEqual(#mocks.__timers, before, "a secret unit was compared and scheduled a scan")
     onUnitAura("UNIT_AURA", "player")
     assertEqual(#mocks.__timers, before + 1, "the player's own aura change schedules one scan")
 end)
 
 test("timed: combat drops UNIT_AURA and its end restores it with a scan", function()
-    -- red under: syncAuraListen ignoring InCombatLockdown.
     local NS, mocks = fresh()
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
     mocks.__fireTimers()
     local ev = NS.TimedSpells.__events()
     assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard before combat")
-    mocks.__lockdown = true
+    -- The client fires PLAYER_REGEN_DISABLED before its combat lockdown begins, so InCombatLockdown()
+    -- still answers false inside the handler (docs/midnight-quirks.md, "Combat state").
+    -- red under: syncAuraListen reading InCombatLockdown alone at the PLAYER_REGEN_DISABLED edge.
+    mocks.__lockdown = false
+    mocks.__inCombat = true
     ev.__events.PLAYER_REGEN_DISABLED("PLAYER_REGEN_DISABLED")
     assertTrue(ev.__events.UNIT_AURA == nil, "still heard in combat")
+    -- red under: syncAuraListen ignoring InCombatLockdown.
+    mocks.__lockdown = true
+    ev.__events.ADDON_RESTRICTION_STATE_CHANGED("ADDON_RESTRICTION_STATE_CHANGED")
+    assertTrue(ev.__events.UNIT_AURA == nil, "a mid-combat restriction change reopened it")
     mocks.__lockdown = false
+    mocks.__inCombat = false
     local before = #mocks.__timers
     ev.__events.PLAYER_REGEN_ENABLED("PLAYER_REGEN_ENABLED")
     assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard again after combat")
@@ -67,10 +83,10 @@ test("timed: secret auras out of combat keep UNIT_AURA unregistered until the re
     local NS, mocks = fresh()
     mocks.__aurasSecret = true
     mocks.__lockdown = false
-    NS.SetByPath("container.filter.durationMode", "timeless", 1)
-    NS.TimedSpells.Sync()
-    mocks.__fireTimers()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)   -- its CONFIG_CHANGED syncs
     local ev = NS.TimedSpells.__events()
+    assertTrue(ev.__events.UNIT_AURA == nil, "the settings-driven sync heard while auras are secret")
+    mocks.__fireTimers()
     assertTrue(ev.__events.UNIT_AURA == nil, "heard while auras are secret")
     mocks.__aurasSecret = false
     local before = #mocks.__timers

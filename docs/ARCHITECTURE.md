@@ -166,7 +166,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | `ADDON_LOADED` | `core/AuraMaster.lua:48` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:50` | `OnRestrictionChanged` → `FlushPending` (a deferred apply runs when secrecy lifts) |
 | `UNIT_AURA` | `modules/TimedSpells.lua` (AceEvent, on its own target) — only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret) | `onUnitAura`: a safe-key `player`/`pet` schedules a scan 0.5 s later (bucket `timedScan`); every other unit is dropped |
-| `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: re-checks the readable gate, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
+| `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:171-173` | `NS.OnProfileChanged` → re-prepare the registry, rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:161`) and

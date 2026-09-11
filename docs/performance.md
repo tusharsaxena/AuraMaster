@@ -26,7 +26,9 @@ members and nameplates included, where a private frame's unit-filtered registrat
 the client drop them.
 
 - **The gate bounds it.** `UNIT_AURA` is registered only while a container needs the scan, the addon
-  is not suspended, there is no combat lockdown and auras are not secret. In combat and in every
+  is not suspended, there is no combat lockdown and auras are not secret. `PLAYER_REGEN_DISABLED`
+  drops it on the event itself, because the client fires it before its lockdown begins and
+  `InCombatLockdown()` still reads false in the handler. In combat and in every
   secret stretch (encounters, keys, PvP matches, restricted maps) it is not registered at all, so the
   cost there is **zero**.
 - **Registered and readable, each event costs** one AceEvent dispatch, one `Secrets.IsSafeKey` and
