@@ -119,7 +119,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (23)
+### test_containermanager.lua (27)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -139,6 +139,10 @@ badge and any count quoted in the docs must agree with it.
 - manager: a parked id that comes back before combat ends reuses its instance and draws again
 - manager: a profile switch under lockdown parks departing containers and tears them down after combat
 - manager: a profile reset under lockdown parks departing containers and tears them down after combat
+- manager: a profile reset in combat keeps a reused id parked until the deferred apply rebuilds it
+- manager: a profile switch in combat keeps a reused id parked until the deferred apply rebuilds it
+- manager: a profile copy in combat keeps a reused id parked until the deferred apply rebuilds it
+- manager: a parked id revived by a profile change in combat stays parked until the deferred apply
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 - manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
@@ -291,7 +295,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 24 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 23 |
+| test_containermanager.lua | 27 |
 | test_anchors.lua | 13 |
 | test_style.lua | 15 |
 | test_timedspells.lua | 9 |
@@ -304,4 +308,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **218** |
+| **Total** | **222** |

@@ -151,7 +151,9 @@ suite covers what only the client can show.
     all settings** → **Yes**, reset the profile in combat just as Profiles → Reset Profile does: the
     acknowledgment prints and no gray line. After either reset, or a switch to a profile without one
     of your containers, in combat → that container stops drawing, is torn down when combat ends, and
-    no taint warning appears.
+    no taint warning appears. Point container 1 at focus first: after the reset (or a switch or copy)
+    in combat it draws nothing, never focus auras under the reset container's name, and once combat
+    ends it draws the new container 1 (player buffs).
 
 ## J. Blizzard frames
 

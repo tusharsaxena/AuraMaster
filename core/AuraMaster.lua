@@ -120,7 +120,7 @@ function NS.OnProfileChanged()
     if NS.State then NS.State.SetActiveContainer(nil) end
     NS.Debug("Profile", "changed -> %s",
         (NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()) or "?")
-    if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce() end
+    if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
 end

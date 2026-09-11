@@ -19,12 +19,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:431
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:445
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:181
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:195
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -105,7 +105,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:346`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:350`) answers, in order — perf suspend, profile and
 container `enabled`, preview (unlocked or `/am preview`), then General visibility against
 `UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
@@ -149,6 +149,9 @@ seam. Under `MustDefer`, an instance that leaves
 the registry is parked rather than destroyed: `Container:Park` disables its engine and hides only
 the preview and handle. The next `FlushPending` that may touch frames destroys every parked
 instance before it applies; a parked id that returns first is revived in place and redrawn at once.
+A profile switch, copy or reset (`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception: ids
+are reused across profiles, so under `MustDefer` every kept or revived instance is parked, and
+`Container:ShouldShow` keeps it off until the deferred apply rebuilds it for the new data.
 Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is
 Profiles → Reset Profile, so in combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open
 panel, because every banner lists containers.

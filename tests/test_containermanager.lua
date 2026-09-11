@@ -338,6 +338,83 @@ test("manager: a profile reset under lockdown parks departing containers and tea
     departsUnderLockdown(function(NS) NS.db:ResetProfile() end)
 end)
 
+--- Point container 1 at focus and let it build, then run `change` under lockdown. The new profile
+--- also has a container 1, so the id is kept, but the instance was built for the OLD container 1. It
+--- must stay parked (disabled, nothing hidden) through every visibility pass until the deferred apply
+--- rebuilds it for the new container 1 (unit "player") once combat ends.
+local function keptIdStaysParked(change, prepare)
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    if prepare then prepare(NS, mocks) end
+    assertTrue(NS.SetByPath("container.unit", "focus", 1))
+    mocks.__fireTimers()
+    local inst = CM.instances[1]
+    local e = inst.engine
+    assertTrue(e.__enabled, "drawing for the old container 1")
+    assertEqual(inst.unit, "focus")
+    inst.anchor:Show()
+    local hides, clears = counted(inst.anchor, "Hide"), counted(inst.anchor, "ClearAllPoints")
+    local engineHides = counted(e, "Hide")
+    mocks.__lockdown = true
+    change(NS)
+    assertTrue(CM.instances[1] == inst, "the id is kept")
+    -- red under: CM.Sync leaving a kept instance live on a profile change under MustDefer
+    assertFalse(e.__enabled, "the old engine does not draw under the new container's name")
+    NS.addon:OnCombatChanged("PLAYER_REGEN_DISABLED")
+    -- red under: ContainerClass:ShouldShow ignoring self.parked
+    assertFalse(e.__enabled, "a visibility pass in combat does not re-enable it")
+    assertEqual(hides[1], 0)
+    assertEqual(clears[1], 0)
+    assertEqual(engineHides[1], 0)
+    assertTrue(inst.anchor:IsShown(), "nothing hidden under lockdown")
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertTrue(CM.instances[1] == inst)
+    assertNil(inst.parked, "the deferred apply unparks it")
+    assertEqual(NS.Database.FindContainer(1).unit, "player")
+    assertEqual(inst.unit, "player", "rebuilt for the new container 1")
+    assertTrue(inst.engine.__enabled, "and drawing again")
+end
+
+test("manager: a profile reset in combat keeps a reused id parked until the deferred apply rebuilds it", function()
+    keptIdStaysParked(function(NS) NS.db:ResetProfile() end)
+end)
+
+test("manager: a profile switch in combat keeps a reused id parked until the deferred apply rebuilds it", function()
+    keptIdStaysParked(function(NS) NS.db:SetProfile("Raid") end)
+end)
+
+test("manager: a profile copy in combat keeps a reused id parked until the deferred apply rebuilds it", function()
+    keptIdStaysParked(function(NS) NS.db:CopyProfile("Raid") end, function(NS, mocks)
+        local home = NS.db:GetCurrentProfile()
+        NS.db:SetProfile("Raid")
+        NS.db:SetProfile(home)
+        mocks.__fireTimers()
+    end)
+end)
+
+test("manager: a parked id revived by a profile change in combat stays parked until the deferred apply", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local home = NS.db:GetCurrentProfile()
+    local id = CM.Create({})
+    mocks.__fireTimers()
+    local inst4 = CM.instances[id]
+    local made = spyCreate(mocks, "AuraMasterAnchor4")
+    mocks.__lockdown = true
+    NS.db:SetProfile("Raid")
+    assertTrue(CM.__retiring()[4] == inst4, "parked: Raid has no container 4")
+    NS.db:SetProfile(home)
+    assertTrue(CM.instances[4] == inst4, "revived, not rebuilt")
+    assertEqual(made[1], 0)
+    -- red under: revive calling ApplyVisibility with the instance unparked on a profile change
+    assertFalse(inst4.engine.__enabled, "a revived engine stays disabled while its data may differ")
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertNil(inst4.parked)
+    assertTrue(inst4.engine.__enabled, "drawing again after the deferred apply")
+end)
+
 test("manager: creating or duplicating a container in combat is refused and creates nothing", function()
     local NS, mocks = fresh()
     local CM = NS.ContainerManager

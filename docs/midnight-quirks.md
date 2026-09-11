@@ -49,7 +49,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 - **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:34`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:131`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:145`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
@@ -150,7 +150,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:362`).
+  aura buttons (`modules/Container.lua:366`).
 
 ## Smaller API moves this addon absorbs
 

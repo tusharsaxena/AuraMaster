@@ -49,33 +49,46 @@ end
 -- true is PARKED instead (disabled, nothing hidden) and kept here until the next FlushPending that
 -- may touch frames destroys it. A parked id that comes back first is revived, not rebuilt: a second
 -- AuraMasterAnchor<id> global would be a second frame for the same container.
+--
+-- A PROFILE CHANGE REUSES IDS. A reset reseeds the starters from id 1, and a switch or copy lands on
+-- a profile with its own id 1, so an instance kept (or revived) under its id may be built for a
+-- different container than the one now stored there. Under CM.MustDefer() every such instance stays
+-- parked — engine disabled, nothing hidden, and ContainerClass:ShouldShow keeps it off through every
+-- visibility pass — until the deferred apply rebuilds it for the new data and unparks it.
 local retiring = {}       -- [id] = parked instance
 
---- Put a parked instance back in the registry and let it draw again at once: Park disabled its
---- engine, and the apply that re-enables it is itself deferred until combat ends.
-local function revive(id, inst)
+--- Put a parked instance back in the registry. It draws again at once (Park disabled its engine;
+--- the apply that re-enables it is itself deferred) unless `hold` keeps it parked: a profile change
+--- under MustDefer, when the data under its id may be another container's.
+local function revive(id, inst, hold)
     retiring[id] = nil
-    inst.parked = nil
+    inst.parked = hold or nil
     CM.instances[id] = inst
     inst:ApplyVisibility()
 end
 
+--- Keep, revive or build the instance for stored container `id`. `hold` parks a kept one.
+local function follow(id, hold)
+    local inst = CM.instances[id]
+    if inst then
+        if hold then inst:Park() end
+    elseif retiring[id] then
+        revive(id, retiring[id], hold)
+    else
+        CM.instances[id] = NS.Container.New(id)
+    end
+end
+
 --- Make the live instances match the stored registry: build (or revive) one for every new container,
 --- and destroy — or, under lockdown, park — the one for every container that is gone.
-function CM.Sync()
+--- `profileChanged` (the AceDB profile callbacks) also parks every kept id while an apply must wait.
+function CM.Sync(profileChanged)
     local defer = CM.MustDefer()
+    local hold = defer and profileChanged or false
     local wanted = {}
     for _, c in ipairs(NS.Database.GetContainers()) do
-        local id = c.id
-        wanted[id] = true
-        if not CM.instances[id] then
-            local parked = retiring[id]
-            if parked then
-                revive(id, parked)
-            else
-                CM.instances[id] = NS.Container.New(id)
-            end
-        end
+        wanted[c.id] = true
+        follow(c.id, hold)
     end
     for id, inst in pairs(CM.instances) do
         if not wanted[id] then
@@ -102,8 +115,9 @@ end
 function CM.__retiring() return retiring end
 
 --- The registry changed: follow it, re-apply everything, and tell whoever is listening.
-function CM.Announce()
-    CM.Sync()
+--- `profileChanged` is passed by NS.OnProfileChanged (see CM.Sync).
+function CM.Announce(profileChanged)
+    CM.Sync(profileChanged)
     CM.RequestApply()
     NS.bus:SendMessage(NS.MSG.CONTAINERS_CHANGED)
 end

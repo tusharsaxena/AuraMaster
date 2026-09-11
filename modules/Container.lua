@@ -321,6 +321,9 @@ function ContainerClass:Apply()
 
     -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
     self.previewDirty = true
+    -- Built for the data now stored under this id, so a container parked by a profile change in
+    -- combat (modules/ContainerManager.lua's CM.Sync) may draw again.
+    self.parked = nil
     self:ApplyVisibility()
     if t0 then Perf.Note("applyContainer", debugprofilestop() - t0, "applyPass") end
     return plan
@@ -341,10 +344,11 @@ local function visibilityAllows(vis)
 end
 
 --- The show ladder, in order. Step 0 is the perf probe's suspend (performance-§6): nothing below it
---- can re-enable a container behind suspend's back.
+--- can re-enable a container behind suspend's back. A parked container (Park) shows nothing either:
+--- its engine may still be built for a container that no longer lives under its id.
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
-    if NS.Perf.suspended then return false, false end
+    if NS.Perf.suspended or self.parked then return false, false end
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
     if not (p and cfg and p.enabled and cfg.enabled) then return false, false end

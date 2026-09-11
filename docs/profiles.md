@@ -46,7 +46,10 @@ NS.OnProfileChanged()
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
 - **A switch, copy or reset in combat** cannot be refused, since AceDB fires it. A container the new
   profile does not have is parked (its engine disabled, nothing hidden) and torn down after combat;
-  a container it adds gets a plain anchor frame now and its engine once combat ends.
+  a container it adds gets a plain anchor frame now and its engine once combat ends. Ids are reused
+  across profiles (a reset reseeds the starters from id 1), so a container whose id the new profile
+  also has stays parked too: its engine was built for the old container, and it draws again only
+  after the deferred apply rebuilds it for the new one.
 
 ## Reset all settings is a profile reset
 
