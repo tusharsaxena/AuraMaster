@@ -211,10 +211,14 @@ test("filter: Signature is independent of key insertion order and sees nested ch
     assertTrue(FC.Signature({ a = { c = 2 } }) ~= FC.Signature({ a = { c = 3 } }))
 end)
 
-test("filter: StructureKey tracks the group count and the enchant slots only", function()
+test("filter: StructureKey tracks the group count, the enchant slots and hide-permanent", function()
     local a = compile({})
     local b = compile({ filter = { castBy = "mine", maxDuration = 30 } })
     assertEqual(FC.StructureKey(a), FC.StructureKey(b), "a live-editable change is not structural")
     local c = compile({ filter = { includeEnchants = true } })
     assertTrue(FC.StructureKey(a) ~= FC.StructureKey(c))
+    -- AddItemEnchantment takes hidePermanent only at creation, so flipping it needs a new engine.
+    local hide = compile({ filter = { includeEnchants = true, hidePermanentEnchants = true } })
+    local keep = compile({ filter = { includeEnchants = true, hidePermanentEnchants = false } })
+    assertTrue(FC.StructureKey(hide) ~= FC.StructureKey(keep), "hide-permanent is structural")
 end)

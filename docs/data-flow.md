@@ -30,7 +30,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
  4  Container:Apply                                            modules/Container.lua:227
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
-        │  structure = #groups : enchant slots : style
+        │  structure = #groups : enchant slots (hide-permanent) : style
         │     same as the live engine → Update in place, then Restyle every button
         │     different              → Retire the old engine, Build a new one
         │  ApplyVisibility
@@ -78,8 +78,10 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
   a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit.
 - A player buff container with **Also show weapon enchants** gets the enchant slots after its groups.
 
-**Updating in place.** Filter strings, candidate filters, sort, cap and layout can change on a live
-engine, so a plan of the same shape calls only the setters whose values moved; candidate filters are
+**Updating in place.** Filter strings, candidate filters, sort (the enchant sort included, re-sent
+only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
+cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
+shape calls only the setters whose values moved; candidate filters are
 compared with `FilterCompiler.Signature` because the engine clears and re-gathers a group when they
 are set (`modules/Container.lua:166`). **Rebuilding.** Groups are add-only and a frame is never
 freed, so a new shape disables and hides the old engine, keeps it aside, and builds a new one: flow

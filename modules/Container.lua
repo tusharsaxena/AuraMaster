@@ -6,10 +6,10 @@ local _, NS = ...
 -- BUILD, UPDATE OR REBUILD. A container's settings compile (modules/FilterCompiler.lua) into a plan of
 -- aura groups. The engine lets most of a group change live — filter string, candidate filters,
 -- sorting, cap, layout — so a plan with the same SHAPE as the last one (same number of groups, same
--- enchant slots, same style) is applied in place and every existing button is restyled. A plan of a
--- different shape needs a new engine: groups are add-only and a frame once created is never
--- destroyed, so the old engine is disabled, hidden and set aside, and a fresh one is built. That only
--- happens on a settings change, never in play.
+-- enchant slots and hide-permanent flag, same style) is applied in place and every existing button is
+-- restyled. A plan of a different shape needs a new engine: groups are add-only and a frame once
+-- created is never destroyed, so the old engine is disabled, hidden and set aside, and a fresh one is
+-- built. That only happens on a settings change, never in play.
 --
 -- NEVER WHILE AURAS ARE SECRET. Building, updating and restyling all touch aura buttons, which the
 -- engine locks while auras are secret. modules/ContainerManager.lua holds every apply until secrecy
@@ -125,7 +125,7 @@ function ContainerClass:Retire()
     -- itself, and a disabled, hidden engine draws nothing wherever it is anchored.
     engine:Hide()
     self.retired[#self.retired + 1] = engine
-    self.engine, self.structure, self.plan = nil, nil, nil
+    self.engine, self.structure, self.plan, self.enchantDir = nil, nil, nil, nil
     self.enchantFrames = {}
 end
 
@@ -177,7 +177,25 @@ function ContainerClass:Build(cfg, plan, structure)
     -- already knows what it is looking for.
     callEngine(engine, "SetUnit", (cfg.auraType == "ENCHANT") and "player" or cfg.unit)
     self.unit = cfg.unit
+    self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
+end
+
+--- The enchant slots on a live engine: the layout every time, the sort only when the direction moved
+--- (recorded, so later updates do not re-send it). hidePermanent cannot change here; it is part of
+--- the structure key, so toggling it rebuilds.
+local function updateEnchants(self, engine, cfg, plan)
+    if not plan.enchants then return end
+    local Compat = NS.Compat
+    local layout = groupLayout(cfg, #plan.groups + 1)
+    layout.placement = Compat.EnchantPlacementAfter()
+    callEngine(engine, "SetItemEnchantmentLayout", layout)
+    local dir = cfg.filter and cfg.filter.sortDirection
+    if dir ~= self.enchantDir then
+        callEngine(engine, "SetItemEnchantmentSortMethod", Compat.EnchantSortByDuration(),
+            Compat.SortDirection(dir))
+        self.enchantDir = dir
+    end
 end
 
 function ContainerClass:Update(cfg, plan)
@@ -203,11 +221,7 @@ function ContainerClass:Update(cfg, plan)
         end
         callEngine(engine, "SetAuraGroupLayout", g.key, groupLayout(cfg, i))
     end
-    if plan.enchants then
-        local layout = groupLayout(cfg, #plan.groups + 1)
-        layout.placement = Compat.EnchantPlacementAfter()
-        callEngine(engine, "SetItemEnchantmentLayout", layout)
-    end
+    updateEnchants(self, engine, cfg, plan)
     local unit = (cfg.auraType == "ENCHANT") and "player" or cfg.unit
     if self.unit ~= cfg.unit then
         callEngine(engine, "SetUnit", unit)

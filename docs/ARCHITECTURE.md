@@ -198,7 +198,8 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   nothing on a debuff container.
 - **Settings changes wait for secrecy and lockdown to lift.** The player is told once per deferral.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
-  going, or a style switch retires the old engine and creates a new one; WoW never frees a frame, so
+  going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
+  one; WoW never frees a frame, so
   each such change leaves one hidden frame for the session.
 - **Preview elements are addon-owned frames**, dressed by the same `Style` code but laid out by
   `Preview.Offset`'s arithmetic rather than by the engine.

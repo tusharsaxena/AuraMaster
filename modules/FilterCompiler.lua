@@ -342,9 +342,11 @@ function FC.Signature(v)
 end
 
 --- A structural fingerprint of a plan: what cannot be changed on a live engine container without
---- rebuilding it (the number of groups, and whether enchant slots exist). Filter strings, candidate
+--- rebuilding it (the number of groups, whether enchant slots exist, and whether they hide permanent
+--- enchants — AddItemEnchantment takes that flag only at creation). Filter strings, candidate
 --- filters, sorting and caps are all live-editable, so they are deliberately NOT part of it.
 --- @return string
 function FC.StructureKey(plan)
-    return ("%d:%s"):format(#plan.groups, plan.enchants and "e" or "-")
+    local e = plan.enchants and (plan.enchants.hidePermanent and "E" or "e") or "-"
+    return ("%d:%s"):format(#plan.groups, e)
 end

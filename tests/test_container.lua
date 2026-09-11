@@ -60,6 +60,37 @@ test("container: a change of shape retires the engine and builds a new one", fun
     assertEqual(#inst.engine:__callsTo("AddAuraGroup"), 2)
 end)
 
+test("container: toggling hide-permanent rebuilds the engine with the new flag", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local old = inst.engine
+    NS.SetByPath("container.filter.hidePermanentEnchants", false, 1)
+    mocks.__fireTimers()
+    assertTrue(inst.engine ~= old, "hidePermanent is fixed at AddItemEnchantment, so only a new engine takes it")
+    assertEqual(#inst.retired, 1)
+    local added = inst.engine:__callsTo("AddItemEnchantment")
+    assertEqual(#added, 3)
+    for _, c in ipairs(added) do assertEqual(c[3].hidePermanent, false) end
+end)
+
+test("container: a sort-direction change reaches the enchant sort in place", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local e = inst.engine
+    local before = #e:__callsTo("SetItemEnchantmentSortMethod")
+    NS.SetByPath("container.filter.sortDirection", "reverse", 1)
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "the same engine: the enchant sort is live-editable")
+    local sent = e:__callsTo("SetItemEnchantmentSortMethod")
+    assertEqual(#sent, before + 1)
+    assertEqual(sent[#sent][3], NS.Compat.SortDirection("reverse"))
+    -- red under: updateEnchants not recording self.enchantDir after re-sending
+    NS.SetByPath("container.bars.width", 300, 1)
+    mocks.__fireTimers()
+    assertEqual(#e:__callsTo("SetItemEnchantmentSortMethod"), before + 1,
+        "an unrelated write does not re-send the enchant sort")
+end)
+
 test("container: a restyle re-dresses every button the engine has made", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]

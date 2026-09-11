@@ -76,7 +76,8 @@ never read back off an engine frame; the anchor is sized to one element from con
 **The restriction.** An engine cannot remove a group, and WoW never frees a frame.
 `SetAuraGroupCandidateFilters` clears and re-gathers the group's auras.
 
-**What this addon does.** A plan of the same shape (group count, enchant slots, style —
+**What this addon does.** A plan of the same shape (group count, enchant slots and their
+hide-permanent flag, style —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
 candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:166`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
@@ -135,8 +136,10 @@ also live inside Blizzard's `BuffFrame`.
 
 **What this addon does.** Enchant slots (`Compat.EnchantSlot`, main hand / off hand / ranged) are
 added after the groups, ordered by duration, with `hidePermanent`, and their frames are kept in
-`enchantFrames` so a restyle can reach them. Hiding Blizzard's buff frame takes its enchants with it,
-and the setting's description says so.
+`enchantFrames` so a restyle can reach them. `hidePermanent` is taken only when a slot is added, so
+toggling *Hide enchants without a duration* is a change of shape and rebuilds the engine; a change of
+sort direction re-sends the enchant sort in place, once. Hiding Blizzard's buff frame takes its
+enchants with it, and the setting's description says so.
 
 ## Combat state: which question to ask
 

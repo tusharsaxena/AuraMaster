@@ -87,14 +87,16 @@ badge and any count quoted in the docs must agree with it.
 - filter: max auras caps each group; 0 means no cap
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
-- filter: StructureKey tracks the group count and the enchant slots only
+- filter: StructureKey tracks the group count, the enchant slots and hide-permanent
 
-### test_container.lua (12)
+### test_container.lua (14)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
 - container: a filter change is applied in place, sending only what changed
 - container: a change of shape retires the engine and builds a new one
+- container: toggling hide-permanent rebuilds the engine with the new flag
+- container: a sort-direction change reaches the enchant sort in place
 - container: a restyle re-dresses every button the engine has made
 - container: nothing touches the engine while auras are secret, and it catches up after
 - container: the show ladder — suspend, the master switch, the container switch, visibility
@@ -228,7 +230,7 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 10 |
 | test_schema.lua | 19 |
 | test_filtercompiler.lua | 27 |
-| test_container.lua | 12 |
+| test_container.lua | 14 |
 | test_containermanager.lua | 9 |
 | test_anchors.lua | 10 |
 | test_style.lua | 10 |
@@ -242,4 +244,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **156** |
+| **Total** | **158** |
