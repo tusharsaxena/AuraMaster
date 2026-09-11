@@ -1,0 +1,87 @@
+-- core/Secrets.lua
+--
+-- THE ONLY FILE IN THIS ADDON THAT ASKS WHETHER A VALUE IS SECRET.
+--
+-- Retail 12.x ("Midnight") returns combat-sensitive values to tainted code — all of ours — as SECRET
+-- values while an addon restriction is active. Aura payloads are the case here: fields of an AuraData
+-- table (duration, expirationTime, applications, sometimes spellId and sourceUnit) can arrive secret
+-- in combat, depending on the unit and the aura.
+--
+-- Tainted code MAY: store a secret, pass it to Lua functions, put it in a table VALUE, hand it to a
+-- widget setter (FontString:SetText, StatusBar:SetValue, Cooldown setters), and call type() on it.
+--
+-- Tainted code MAY NOT (each raises): compare it, do arithmetic on it, boolean-test a secret boolean,
+-- use it as a table KEY, apply `#` to it, or index it. `table.concat` / `string.format` on one raises
+-- too, which is why every chat and debug line goes through NS.SafeToString (events-frames-taint-§8).
+--
+-- So every module that needs to KNOW something about an aura field — may I filter on this duration,
+-- may I key a table on this spell id, may I sort these two — asks here, and a caller that gets `false`
+-- takes its documented fallback instead of guessing. That is the rule the whole data layer is built on.
+--
+-- DEGRADATION: every function is correct when the secrets system is ABSENT (an older client, the
+-- headless harness): nothing is secret and everything is comparable.
+--
+-- WIDGET CONSEQUENCE: a frame that has been handed a secret (StatusBar:SetValue, SetText) can itself
+-- report secret geometry. Container layout is therefore computed from CONFIG, never read back off an
+-- element's GetWidth / GetPoint.
+
+local _, NS = ...
+
+local Secrets = {}
+NS.Secrets = Secrets
+
+--- Whether `v` is a secret value. False on a client without the secrets system.
+--- @param v any
+--- @return boolean
+function Secrets.IsSecret(v)
+    local fn = _G.issecretvalue
+    if not fn then return false end
+    return fn(v) and true or false
+end
+
+--- Whether the current execution context may look at `v` — the question that decides whether a
+--- comparison or arithmetic on it is legal. A plain value always answers true.
+--- @param v any
+--- @return boolean
+function Secrets.CanAccess(v)
+    local fn = _G.canaccessvalue
+    if fn then return fn(v) and true or false end
+    return not Secrets.IsSecret(v)
+end
+
+--- Whether `v` is a plain, readable NUMBER right now — the gate in front of every duration or
+--- expiration comparison the filter and the sorter make.
+--- @param v any
+--- @return boolean
+function Secrets.IsReadableNumber(v)
+    return type(v) == "number" and Secrets.CanAccess(v)
+end
+
+--- Whether ordering `a` against `b` is legal right now. Both operands have to be accessible: one
+--- secret operand is enough to raise.
+--- @param a any
+--- @param b any
+--- @return boolean
+function Secrets.CanCompare2(a, b)
+    return Secrets.CanAccess(a) and Secrets.CanAccess(b)
+end
+
+--- Whether `v` may be used as a TABLE KEY right now. The spell-id whitelist and blacklist are keyed
+--- tables, so a spell id is checked here before it is looked up; a caller that gets false treats the
+--- aura as "not on the list".
+--- @param v any
+--- @return boolean
+function Secrets.IsSafeKey(v)
+    if v == nil then return false end
+    return not Secrets.IsSecret(v)
+end
+
+--- The value of `v` when it is readable, otherwise `fallback`. Only for values whose unreadable state
+--- has an honest neutral answer (a missing stack count reads as "no stacks", never as a guess).
+--- @param v any
+--- @param fallback any
+--- @return any
+function Secrets.ReadOr(v, fallback)
+    if v == nil or not Secrets.CanAccess(v) then return fallback end
+    return v
+end

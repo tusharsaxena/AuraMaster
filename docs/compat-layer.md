@@ -1,0 +1,45 @@
+# Compat layer
+
+`core/Compat.lua` publishes **17** shims on `NS.Compat`, counted with the command documentation-§3
+fixes:
+
+```sh
+grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 17
+```
+
+A shim is the one entry point a feature module calls in place of a new-in-12.x, version-variant or
+enum-valued client API, so a renamed enum or a moved function is a one-file fix, and a headless run
+(where none of these globals exist) degrades to a plain answer (compat). Retail only: every shim
+covers a cross-**patch** difference, never a game flavor. What LibKa0s already supplies — the TOC
+metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`) and the secret-safe stringifier
+(`LibKa0s-Core-1.0`) — is not repeated here.
+
+## The shims
+
+| # | Shim | Wraps | Fallback | Why it exists | Called from |
+|---|---|---|---|---|---|
+| 1 | `HasAuraContainer()` | `AuraContainerSortMethod` and `CreateFrame` present | `false` | Without the 12.1 engine nothing can be drawn; say so once instead of erroring per render | `modules/ContainerManager.lua`, `modules/Container.lua` |
+| 2 | `AurasAreSecret()` | `C_Secrets.ShouldAurasBeSecret()` (pcall) | `false` | The gate in front of every apply, restyle and aura scan | `modules/ContainerManager.lua`, `modules/TimedSpells.lua` |
+| 3 | `SortMethod(key)` | `AuraContainerSortMethod[member]` via `SORT_METHOD_ENGINE` | `0` | The addon stores its own sort keys; the engine enum is looked up at call time | `modules/Container.lua` |
+| 4 | `SortDirection(key)` | `AuraContainerSortDirection.Normal/Reverse` | `0` / `1` | Same | `modules/Container.lua` |
+| 5 | `EnchantSlot(key)` | `AuraContainerItemEnchantmentSlot.MainHand/OffHand/Ranged` | `0` / `1` / `2` | Same, for `AddItemEnchantment` | `modules/Container.lua` |
+| 6 | `EnchantSortByDuration()` | `AuraContainerItemEnchantmentSortMethod.Duration` | `1` | Enchant ordering | `modules/Container.lua` |
+| 7 | `EnchantPlacementAfter()` | `CustomAuraContainerItemEnchantmentPlacement.AfterAuraGroups` | `1` | Enchants drawn after the aura groups | `modules/Container.lua` |
+| 8 | `FlowAxis(axis)` | `AnchorUtil.FlowLayoutAxis` | the string | The engine's flow layout axis | `modules/Container.lua` |
+| 9 | `FlowDirection(dir)` | `AnchorUtil.FlowDirection` | the string | The engine's growth directions | `modules/Container.lua` |
+| 10 | `TimerDirection(which)` | `Enum.StatusBarTimerDirection` | `nil` | The elapsed-time status bar behind the full-bar fill | `modules/Style_Bars.lua` |
+| 11 | `Interpolation(smooth)` | `Enum.StatusBarInterpolation` | `nil` | The Smooth animation option | `modules/Style_Bars.lua` |
+| 12 | `DispelStyle(member)` | `Enum.CustomAuraButtonDispelTypeTextureStyle` | `nil` | Dispel-colored fill (`PreserveAsset`) and icon border (`Border`) | `modules/Style_Bars.lua`, `modules/Style_Icons.lua` |
+| 13 | `CreateSecondsFormatter(format)` | `C_StringUtil.CreateSecondsFormatter` plus its setup (pcall) | `nil` (the engine's own format) | The engine formats a secret duration the addon never sees | `modules/Style.lua` |
+| 14 | `ExpiringTextColor(threshold, expiring, normal)` | `C_CurveUtil.CreateColorCurve` step curve over `DurationTextBindingProperty.RemainingDuration` | `nil` (text keeps its font color) | Recolor the time text in the last seconds without comparing a secret | `modules/Style.lua` |
+| 15 | `GetMouseFocus()` | `GetMouseFoci()[1]`, then the pre-11.0 `GetMouseFocus` | `nil` | `GetMouseFocus` was removed in 11.0 | `modules/FramePicker.lua` |
+| 16 | `GetSpellInfo(id)` | `C_Spell.GetSpellInfo` → name, `iconID`; then the old global | `nil` | The spell list editor's labels | `settings/Filters.lua` |
+| 17 | `EnsureAuraContainer()` | `C_AddOns.LoadAddOn("Blizzard_AuraContainer")` when it is not loaded (pcall), then `HasAuraContainer()` | `HasAuraContainer()` | `Blizzard_AuraContainer` is load-on-demand: until it loads, neither `CustomAuraContainerTemplate` nor the enums shims 3–7 read exist (`docs/midnight-quirks.md`) | `modules/ContainerManager.lua` (`CM.Init`) |
+
+## Rules for this file
+
+- A feature module calls `NS.Compat.X`, never the global it wraps.
+- Every shim answers something sensible when the API is absent, because the headless harness has
+  none of them.
+- No `WOW_PROJECT_ID` branching; Retail patch differences only.
+- A new shim adds a row here and moves the count in `docs/ARCHITECTURE.md`'s Documentation map.

@@ -1,0 +1,15 @@
+Ka0s Aura Master — offline perf  (v0.1.0, label 'offline')
+200 writes coalesced into 1 apply pass; 3 containers
+
+scenario                iters      ms/iter     api/iter   bytes/iter
+compile                  2000      0.00693          0.0        674.7
+applyPass                 200      0.14820         22.0      15243.3
+restyle                   200      0.29564          0.0      -1914.9
+visibilityPass           1000      0.00727          3.0        625.2
+unitSwap                 1000      0.00123          1.0         96.4
+probeOverheadOff         1000      0.00669          4.0        721.6
+probeOverheadOn          1000      0.00692          4.0        722.1
+
+timings are for orientation only — compare scenarios within a run, never across machines
+applyPass: 22.0 engine calls per pass over 3 containers
+wrote docs/automated-tests/20260911-141809/perf.json

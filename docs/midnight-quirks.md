@@ -1,0 +1,194 @@
+# Midnight quirks — the 12.1 aura restrictions and how this addon works around them
+
+Every behavior of the Retail 12.x client ("Midnight") this addon shapes itself around, and the code
+that does it. When something breaks at patch time, look here first. Retail only — these are
+cross-patch facts, never game-flavor branches.
+
+## Aura data is secret, and in 12.1 it is secret wholesale
+
+**The restriction.** While an addon restriction is active — the player in combat, an instance
+encounter in progress, a Mythic+ keystone running, a PvP match running, or a restricted map — the
+client returns aura data to addon code as **secret values**. From 12.1 an aura-data struct is fully
+secret while auras are secret, the `UNIT_AURA` payload is secret, and the by-index, by-slot and
+by-instance-id aura APIs error when an addon calls them. Tainted code may store a secret, pass it to
+a function or hand it to a widget setter; it may not compare it, do arithmetic on it, use it as a
+table key, index it or run `#` on it.
+
+**What this addon does.**
+- **It reads no aura in combat.** All display goes through Blizzard's aura engine (next section).
+- `core/Secrets.lua` is the only file that asks whether a value is secret (`IsSecret`, `CanAccess`,
+  `IsReadableNumber`, `IsSafeKey`), and it degrades to "nothing is secret" on a client without
+  `issecretvalue` / `canaccessvalue`.
+- `Compat.AurasAreSecret()` (`core/Compat.lua:27`) wraps `C_Secrets.ShouldAurasBeSecret()` and gates
+  everything that would touch an aura or an aura button.
+- The one place that does read auras, `modules/TimedSpells.lua`, runs only when that answers false,
+  and checks every field through `core/Secrets.lua` before comparing or keying on it.
+- Every chat and debug line goes through `NS.SafeToString` (LibKa0s-Core), so a secret can never
+  reach `table.concat` or `string.format`.
+
+## The display is Blizzard's AuraContainer
+
+**The restriction.** An addon that cannot read auras cannot decide what to draw. 12.1 supplies the
+replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which registers `UNIT_AURA`
+itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
+`SecureAuraHeaderTemplate` is no longer available on Retail.
+
+**What this addon does.** Every container is one engine (`modules/Container.lua:122`). The addon
+declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
+maxFrameCount, layout, initializeFrame })` — compiled from the settings by
+`modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
+engine owns everything per aura: gathering, sorting, layout, timers, the tooltip, cancel.
+
+## Aura buttons lock while auras are secret
+
+**The restriction.** An `AuraButton` becomes forbidden to tainted code whenever auras are secret —
+after its `initializeFrame` has run. Its child regions cannot be reparented afterwards. The engine
+applies these access restrictions from `PLAYER_ENTERING_WORLD`.
+
+**What this addon does.**
+- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:32`), before the restrictions apply, so every
+  button's first dressing has an unrestricted window.
+- **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:86`),
+  prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
+  **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
+  encounter finishing).
+- **Creates every region as a descendant of the button**, once, in `initializeFrame`, stored on
+  `frame.__am` (`modules/Style_Bars.lua:28`, `modules/Style_Icons.lua:19`).
+- **Guards every binding** with `pcall` (`Style.Bind`, `callEngine`), so a refusal costs one binding,
+  not the engine's frame batch.
+
+## Anchoring an aura container
+
+**The restriction.** Once an engine has an aura group, it forbids untrusted layout scripts, and an
+addon can no longer anchor it. Another frame may only anchor **to** an aura container if it inherits
+`DisableUntrustedLayoutScriptsTemplate`. Containers with groups no longer receive `OnSizeChanged`, and
+their geometry can be secret.
+
+**What this addon does.** The engine is anchored to its container's anchor frame *before* the first
+`AddAuraGroup` (`modules/Container.lua:126-130`). Every anchor frame, and the frame picker's outline,
+inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
+engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
+never read back off an engine frame; the anchor is sized to one element from config.
+
+## Groups are add-only, and some setters reset a group
+
+**The restriction.** An engine cannot remove a group, and WoW never frees a frame.
+`SetAuraGroupCandidateFilters` clears and re-gathers the group's auras.
+
+**What this addon does.** A plan of the same shape (group count, enchant slots, style —
+`FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:166`). A
+new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
+
+## Spell-id filters are honored only on one side of the friend/foe line
+
+**The restriction.** The engine applies identity candidate filters (`includeSpellIDs`,
+`excludeSpellIDs`) only to buffs on friendly units and debuffs on hostile units.
+
+**What this addon does.** The filters still compile, because a target or focus can be either, but
+`FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
+(`modules/FilterCompiler.lua:141`): ignored outright for debuffs on the player or pet, conditional on
+hostility or friendliness for target and focus. The Filters page prints them in orange. The starter
+spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
+
+## There is no "no duration" filter, and `maxDuration` drops permanent auras
+
+**The restriction.** Candidate filters include `maxDuration`, and setting it excludes permanent
+auras. Nothing selects auras *without* a duration.
+
+**What this addon does.** "Only auras with a duration" is `maxDuration = math.huge`. "Only auras
+without a duration" excludes every spell id the addon has seen carry a duration, learned out of
+combat by `modules/TimedSpells.lua` into `global.timedSpells` — TinyBuffBars' approach (MIT). A max
+duration is ignored in that mode, with a warning.
+
+## A permanent aura would draw an empty bar
+
+**The restriction.** The engine drives a `StatusBar` by time (`SetDurationBar`, direction elapsed or
+remaining). Driven by remaining time, a permanent aura has none and draws empty.
+
+**What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
+addon's own `fill` texture stretches from the bar's start to that texture's moving edge
+(`modules/Style_Bars.lua:99`). Zero elapsed is a full bar; a timed aura drains. The technique is
+TinyBuffBars' (MIT).
+
+## Additive bindings stack
+
+**The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
+
+**What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
+before adding again (`modules/Style_Bars.lua:178-188`, `modules/Style_Icons.lua:107-116`).
+
+## The engine does not notice a unit token changing
+
+**The restriction.** A container on `target` keeps showing the previous target's auras until told;
+`UpdateAllAuras` exists for external refreshes such as target changes.
+
+**What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:80-92`).
+
+## Weapon enchants
+
+**The restriction.** Temporary weapon enchants are not auras; the engine shows them per slot through
+`AddItemEnchantment(slot, options)`, which returns a frame outside any group. The player's enchants
+also live inside Blizzard's `BuffFrame`.
+
+**What this addon does.** Enchant slots (`Compat.EnchantSlot`, main hand / off hand / ranged) are
+added after the groups, ordered by duration, with `hidePermanent`, and their frames are kept in
+`enchantFrames` so a restyle can reach them. Hiding Blizzard's buff frame takes its enchants with it,
+and the setting's description says so.
+
+## Combat state: which question to ask
+
+- **`UnitAffectingCombat("player")`** answers General visibility (`Container:ShouldShow`) — the
+  player's combat state, available at the `PLAYER_REGEN_DISABLED` edge.
+- **`InCombatLockdown()`** gates secure-adjacent writes: building or rebuilding an engine,
+  reparenting Blizzard's frames, starting a drag, the frame picker, opening a settings category.
+- **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
+  aura buttons (`modules/Container.lua:286-290`).
+
+## Smaller API moves this addon absorbs
+
+- **Filter tokens.** 12.1 re-added `IMPORTANT`, added `DISPELLABLE` and `!` negation, and removed
+  `NOT_CANCELABLE` (use `!CANCELABLE`). The categories use `BIG_DEFENSIVE`, `EXTERNAL_DEFENSIVE`,
+  `IMPORTANT`, `RAID`, `CANCELABLE`, `CROWD_CONTROL`, `RAID_IN_COMBAT`, `RAID_PLAYER_DISPELLABLE` and
+  `DISPELLABLE`, and hide with `!TOKEN`.
+- **Engine enums** (`AuraContainerSortMethod`, `AuraContainerSortDirection`,
+  `AuraContainerItemEnchantmentSlot`, `AnchorUtil.FlowLayoutAxis`/`FlowDirection`,
+  `Enum.StatusBarTimerDirection`, `Enum.StatusBarInterpolation`,
+  `Enum.CustomAuraButtonDispelTypeTextureStyle`) are read through `core/Compat.lua`, each with a
+  plain fallback.
+- **Duration text** is formatted by the engine from a `C_StringUtil.CreateSecondsFormatter` the addon
+  builds, and recolored in the last seconds by a `C_CurveUtil` step color curve over remaining time —
+  neither needs the addon to see the duration (`Compat.CreateSecondsFormatter`,
+  `Compat.ExpiringTextColor`).
+- **`GetMouseFocus` was removed in 11.0** in favor of `GetMouseFoci`; the frame picker uses the first
+  frame it returns (`Compat.GetMouseFocus`).
+- **Right-click cancel** is `SetCancelAuraButtons("RightButtonUp")` — one phase, so a button
+  reassigned between press and release cannot cancel the wrong aura.
+- **Blizzard's buff display is an Edit Mode system**, so `Hide()` does not stick and spreads taint;
+  it is reparented to a hidden frame instead, out of combat (`modules/BlizzardFrames.lua`).
+
+## Creating a container
+
+Four client facts decide how `modules/Container.lua` builds an engine, each read from Blizzard's own
+`Blizzard_AuraContainer` source (and matching what EllesmereUI's aura kit does):
+
+- **The engine is a load-on-demand add-on.** `CustomAuraContainerTemplate` and every enum
+  `core/Compat.lua` reads live in `Blizzard_AuraContainer`, which is not loaded until something asks.
+  `Compat.EnsureAuraContainer()` calls `C_AddOns.LoadAddOn("Blizzard_AuraContainer")` before the first
+  container is built; without it `Compat.HasAuraContainer()` would answer false on a healthy client.
+- **It needs a size from the start.** The engine drains its parse and layout work from an `OnUpdate`
+  that runs only while visible, so a new engine gets a provisional `SetSize(1, 1)` right after it is
+  anchored; every layout pass replaces it with the real size.
+- **Anchor first, groups second, unit last.** `AddAuraGroup` forbids untrusted layout work on the
+  container, after which it can no longer be anchored — so the engine is anchored before its first
+  group, and never re-anchored or cleared afterwards (a retired engine is disabled and hidden where it
+  stands). `SetUnit` comes last, once every group exists, so `UNIT_AURA` is registered for a container
+  that already knows what it is looking for.
+- **A disabled engine draws nothing.** `SetEnabled(false)` unregisters its events and its next rebuild
+  clears every button (`ManagedAuraContainerPrivateMixin:ParseAllAuras`), which is why preview and the
+  General visibility gate disable the engine instead of hiding frames an aura button descends from.
+
+The frame picker cancels itself if combat starts mid-pick: its overlay toggles keyboard propagation,
+which is protected under combat lockdown (`modules/FramePicker.lua`).

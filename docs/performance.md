@@ -1,0 +1,112 @@
+# Performance
+
+How much Ka0s Aura Master costs, how to measure it, and what the measurements can and cannot see
+(performance). The harness is wired; this is the addon's own page. The shared protocol, the record
+schema and the step panel belong to `LibKa0s-Perf-1.0` and are documented with the library.
+
+## Where the cost is — and where it is not
+
+Most of the work of showing auras is **not this addon's code**. Every container is a Blizzard aura
+engine that handles `UNIT_AURA` for its unit, gathers and sorts auras, lays out buttons and animates
+every bar, countdown and swipe in Blizzard's own code. The addon has **no per-aura Lua path**: no aura
+event handler on the hot path, no ticker, no `OnUpdate` driving a display. What remains is
+configuration work, and one path that runs on ordinary play (a target, focus or pet change).
+
+Other timers and frames of the addon's own: a next-frame `C_Timer.After(0)` that coalesces applies
+(`modules/ContainerManager.lua:80`), a half-second scan timer in `modules/TimedSpells.lua` that exists
+only while a container uses "only auras without a duration", and the frame picker's `OnUpdate`, which
+runs only while a pick is in progress.
+
+## Buckets
+
+Declared in report order in `core/PerfSetup.lua:45`, each bracketed with the inline gated form
+(`local t0 = Perf.on and debugprofilestop()`, performance-§2) at a load-time `local Perf = NS.Perf`.
+
+| Bucket | Declared parent | Bracket | Why it is bracketed |
+|---|---|---|---|
+| `unitSwap` | — | `core/AuraMaster.lua:80`, `:87` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:103` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `applyContainer` | `applyPass` | `modules/Container.lua:230` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
+| `visibilityPass` | — | `modules/ContainerManager.lua:130` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `styleElement` | — | `modules/Style.lua:128` | Dressing one bar or icon: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+
+**Never sum `applyPass` and `applyContainer`**: the parent already contains its children
+(performance-§3). **`styleElement` is declared at the root because its callers differ**, and it
+overlaps two other buckets without saying so: a restyle runs it inside `applyContainer`, and the
+preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the engine makes from its
+own button creation sit outside every other bracket. Read `styleElement` as the dressing cost wherever
+it happened, not as a disjoint slice.
+
+## Taking a capture
+
+`/am perf` with no sub-verb prints the current phase and opens the library's step panel, which only
+offers the next legal step. The sub-verbs, as the library lists them:
+
+| Command | Effect |
+|---|---|
+| `/am perf start [label]` | Begin a run out of combat; records who and where you are |
+| `/am perf measure a` | Arm experiment A — the addon active; records only while combat lasts |
+| `/am perf measure b` | Arm experiment B — the same, with the addon suspended first |
+| `/am perf finish` | End the run and save it to `AuraMasterPerfDB`; prints nothing |
+| `/am perf cancel` | Abandon a run in flight, unsaved, and restore the addon |
+| `/am perf report` | Print the summary and the JSON line to copy; opens the log window |
+| `/am perf show` / `hide` / `toggle` | Drive the step panel without touching the run |
+
+**Protocol** (performance-§7): disable every other addon, pick a repeatable fight (a training dummy,
+same spec, same rotation), run arm A then arm B back to back in the same session with no `/reload`
+between them. Keep the capture: copy the report and the JSON out of the debug console and record it
+as described in `docs/perf-analysis/README.md`.
+
+### Suspend
+
+Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:65`)
+calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — and
+runs a visibility pass; `Container:ShouldShow` checks `NS.Perf.suspended` as **step 0**, so every engine is disabled and
+nothing — a combat transition, a target swap, a settings change — can enable one behind suspend's
+back. `resume` re-registers the events, runs a visibility pass and re-applies every container from the
+current settings. The suspended flag is session-only.
+
+## Reading the report
+
+- **The buckets are the addon's cost.** Each is `calls`, `totalMs` and `maxMs` of Lua time under the
+  bracket.
+- **The frame-time delta is unresolved below roughly 0.5 ms/frame** on a 60–80 s arm; below that it
+  is noise, not a null result (performance-§8).
+- **Expect the engine's cost in the delta, not in the buckets.** The difference between arm A and arm
+  B includes Blizzard's own per-aura work for every enabled container, because suspending disables
+  the engines. The buckets hold only what the addon's own Lua did.
+- A bucket that is absent never fired. `unitSwap` will be absent from a capture on a dummy you never
+  retarget; `applyPass` from one where nothing was changed.
+
+## The offline runner
+
+```sh
+lua tests/perf.lua
+```
+
+A headless scenario runner over the real addon code on the test mock, **outside the green gate**
+(testing-§7). It asserts only deterministic quantities — engine and API calls and bytes allocated per
+iteration — never wall-clock time, and its timings are for comparing scenarios within one run only.
+The vendored runner drives it as the `perf` suite and keeps its output in the run's bundle under
+`docs/automated-tests/` (automated-tests-§7).
+
+| Scenario | What it exercises |
+|---|---|
+| `compile` | `FilterCompiler.Compile` over a representative container |
+| `applyPass` | One coalesced apply over the registry (`ContainerManager.FlushPending`) |
+| `restyle` | Re-dressing every button of a live engine (`Container:Restyle`) |
+| `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`) |
+| `unitSwap` | A target change refreshing the containers on that unit |
+| `probeOverheadOff` | The hottest bracketed path with capture off — the evidence that a dormant bracket costs nothing (performance-§9) |
+| `probeOverheadOn` | The same path with capture on, for the comparison |
+
+**What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
+makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it
+makes, and nothing about gathering, sorting, drawing or animating auras. That half is only visible in
+game, in the frame-time arms.
+
+## Complexity
+
+The static half of "what does it cost" — where the code is getting hard to change — is the `lizard`
+run in every automated-test bundle (performance-§10), tracked in `docs/automated-tests/RESULTS.md`'s
+watch list. The release tag requires zero functions above CCN 15 (automated-tests-§3).

@@ -1,0 +1,156 @@
+  PASS  loadorder: the TOC lists the locale first and the Profiles page last
+  PASS  loadorder: every TOC path exists, and none is a library
+  PASS  loadorder: the load-bearing pairs are in order, and the TOC says why
+  PASS  loadorder: the runner loaded exactly the TOC's files and the XML's library files
+  PASS  loadorder: the offline perf runner and the degraded list derive from the TOC too
+  PASS  loadorder: the library registered — NS.Perf is the real probe, not the stub
+  PASS  core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] tag
+  PASS  core: every close control goes through the one NS.MakeCloseButton wrapper
+  PASS  media: icons and the monospace face resolve inside this addon's folder
+  PASS  env: the version falls back to NS.version where the TOC cannot be read
+  PASS  debug: the logging flag is ours, session-only, and never written to the profile
+  PASS  degraded: without LibKa0s the addon still loads and every seam answers
+  PASS  database: a fresh profile is seeded with the three starter containers, once
+  PASS  database: PrepareProfile is idempotent
+  PASS  database: string ids, dangling order entries and orphans are repaired
+  PASS  database: the backfill fills a missing leaf and keeps a stored false
+  PASS  database: every category key is present on a stored container, neutral
+  PASS  database: category keys are unique across the buff and debuff lists
+  PASS  database: a new container's data is a deep copy of the template with a fresh id
+  PASS  database: the migration runner stamps the schema and creates the timed-spell store
+  PASS  database: an existing SavedVariables file keeps its containers
+  PASS  schema: every row validates against defaults/Profile.lua
+  PASS  schema: the validator is falsifiable — an unresolvable path and a missing group each fail
+  PASS  schema: no path is registered twice
+  PASS  schema: every row has a label and a group (a row without a group belongs to no tab)
+  PASS  schema: a row's default comes from the template, never from a composer
+  PASS  schema: every color row has its class-color companion next to it, or is a palette swatch
+  PASS  schema: every category of both lists is a row, offered only for its aura type
+  PASS  schema: the Filters page offers the active container's categories and no others
+  PASS  schema: a container path writes the selected container and no other
+  PASS  schema: an explicit container id overrides the selection
+  PASS  schema: with nothing selected, a container path means the first container
+  PASS  schema: a container write with no containers refuses, naming why
+  PASS  schema: an unknown path refuses
+  PASS  schema: every write announces CONFIG_CHANGED once, naming the container
+  PASS  schema: a failed validation writes nothing
+  PASS  schema: a session row is stored by its own set, never in the profile
+  PASS  schema: ApplyDefault restores the shipped value without sharing a table
+  PASS  schema: a spell set is written whole and normalized to positive integer ids
+  PASS  schema: category spell edits keep only real spell categories
+  PASS  filter: an unfiltered buff container is one HELPFUL group with no candidate filters
+  PASS  filter: a debuff container starts from HARMFUL
+  PASS  filter: cast by me and by others compile to PLAYER and its negation
+  PASS  filter: a max duration becomes the engine's maxDuration candidate filter
+  PASS  filter: 'only timed' is maxDuration = huge, which drops permanent auras
+  PASS  filter: 'only timeless' excludes every learned timed spell and ignores a max duration
+  PASS  filter: 'only timeless' on a debuff container is reported and treated as any duration
+  PASS  filter: showing a token category adds the token
+  PASS  filter: hiding a token category adds its negation to every group
+  PASS  filter: hiding a flag category asks for the opposite value
+  PASS  filter: a dispel category shown includes, hidden excludes
+  PASS  filter: two shown categories are a union, and the second excludes the first
+  PASS  filter: a token shown after a token excludes it by negation
+  PASS  filter: a category's spell edits add and remove ids
+  PASS  filter: a shown spell category with every id removed can never match, and says so
+  PASS  filter: the whitelist is its own first group and every other group excludes it
+  PASS  filter: the blacklist is excluded everywhere and beats the whitelist
+  PASS  filter: spell lists on your own debuffs are flagged as ignored
+  PASS  filter: spell lists on a target's buffs only apply while it is friendly
+  PASS  filter: the player's own buffs carry no identity warning
+  PASS  filter: a weapon-enchant container has three slots and no aura groups
+  PASS  filter: an enchant container on another unit still shows the player's, and says so
+  PASS  filter: a player buff container may append weapon enchants; a target's may not
+  PASS  filter: max auras caps each group; 0 means no cap
+  PASS  filter: an unknown sort method falls back to Blizzard's default
+  PASS  filter: Signature is independent of key insertion order and sees nested changes
+  PASS  filter: StructureKey tracks the group count and the enchant slots only
+  PASS  container: the engine is anchored before its first group and given its unit last
+  PASS  container: a player buff container with enchants adds all three enchant slots
+  PASS  container: a filter change is applied in place, sending only what changed
+  PASS  container: a change of shape retires the engine and builds a new one
+  PASS  container: a restyle re-dresses every button the engine has made
+  PASS  container: nothing touches the engine while auras are secret, and it catches up after
+  PASS  container: the show ladder — suspend, the master switch, the container switch, visibility
+  PASS  container: unlocking previews placeholders through the style code and disables the engine
+  PASS  container: a new target refreshes only the containers tracking the target
+  PASS  container: Blizzard's load-on-demand aura container is loaded before the first engine
+  PASS  container: on a client without the aura engine nothing is built and preview still works
+  PASS  container: deleting a container disables its engine and hides its anchor
+  PASS  manager: Create appends a container, names it uniquely and announces it
+  PASS  manager: two containers with one name become 'X' and 'X (2)'
+  PASS  manager: deleting a container sends the ones attached to it back to the screen
+  PASS  manager: Rename trims, refuses an empty name and keeps names unique
+  PASS  manager: Duplicate copies every setting under a new id and name, offset on screen
+  PASS  manager: CopyFrom copies the chosen section, never the name or the position
+  PASS  manager: many apply requests in one frame schedule one pass
+  PASS  manager: an apply under combat lockdown waits, says so once, and runs after combat
+  PASS  manager: ResetPositions puts every container back on the screen, staggered
+  PASS  anchors: a chain that would loop is detected
+  PASS  anchors: a container attaches to another one, and a loop falls back to the screen
+  PASS  anchors: a named frame that does not exist yet waits, and attaches once it does
+  PASS  anchors: a forbidden frame, or something that is not a frame, is never a target
+  PASS  anchors: a drag saves the dragged container's position, rounded, whatever is selected
+  PASS  picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
+  PASS  picker: it arms on release, then a left-click on a named frame picks it
+  PASS  picker: combat starting mid-pick cancels it
+  PASS  picker: Escape cancels
+  PASS  style: an element's size comes from its style's settings
+  PASS  preview: a column of bars grows down from the top left
+  PASS  preview: rows of icons growing left and up wrap after perLine
+  PASS  style: a restyle clears the additive bindings before adding them again
+  PASS  style: a bar binds the engine's timer bar, icon, name, time and stacks
+  PASS  style: an icon binds the cooldown and the dispel border
+  PASS  style: right-click cancel is offered only on your own buffs, and never click-through
+  PASS  style: a preview element is dressed but never bound to the engine
+  PASS  style: a class color keeps the stored alpha; off, the stored swatch is used
+  PASS  style: the Blizzard time format asks for no formatter of our own
+  PASS  timed: nothing is needed until a container shows only timeless auras
+  PASS  timed: it listens to UNIT_AURA for the player and pet only, and only while needed
+  PASS  timed: a readable scan learns every timed buff once, and skips permanent ones
+  PASS  timed: while auras are secret nothing is read
+  PASS  timed: what was learned reaches the filter as excluded ids, and Forget clears it
+  PASS  slash: every command is a positional {name, desc, fn} triple
+  PASS  slash: the reserved verbs are all present
+  PASS  slash: /am new creates the described container and selects it
+  PASS  slash: /am new with a word it does not know creates nothing and says why
+  PASS  slash: /am select takes an id or a name; /am containers marks the selection
+  PASS  slash: /am set writes the selected container through the seam
+  PASS  slash: lock, unlock and preview drive the same settings the panel does
+  PASS  slash: /am delete removes a container by id
+  PASS  slash: /am pick starts the frame picker for the selected container
+  PASS  slash: /am debug on and off flip the session flag; it never reaches the profile
+  PASS  options: NS.Helpers IS the library instance
+  PASS  options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
+  PASS  options: every page renders without a reported error
+  PASS  options: the General page leads with Master controls, in canonical order
+  PASS  options: the Filters page offers the spell-list tab only for a buff container
+  PASS  options: the banner is the picker — choosing a container retargets every page
+  PASS  options: the Containers page's New button creates and selects a container
+  PASS  options: a page's Defaults button restores only the selected container
+  PASS  options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
+  PASS  options: the degraded stub completes the load — every page's rows still register
+  PASS  perf: every declared bucket is reached by a real bracket
+  PASS  perf: a dormant probe notes nothing
+  PASS  perf: suspend makes the addon inert without a reload, and resume restores it
+  PASS  perf: without the library, /am perf answers one honest line
+  PASS  locale: every L[...] subscript in the source is defined in enUS.lua
+  PASS  locale: every key enUS.lua defines is used somewhere in the source
+  PASS  README.md carries no angle-bracket argument placeholders
+  PASS  the addon's own files use US spellings (localization-§5's canonical lists)
+  PASS  the spelling gate is falsifiable: it flags a British word and passes its US twin
+  PASS  every Tier 2 documentation-map row agrees with docs/
+  PASS  every .md under docs/ appears in the documentation map
+  PASS  parity: the Core stub publishes everything core/CoreSetup.lua publishes live
+  PASS  parity: the DebugLog stub carries every member the addon calls
+  PASS  parity: the Options stub carries every helper a page file reaches at load
+  PASS  parity: the Slash stub carries every dispatcher member the addon calls
+  PASS  libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+  PASS  tests/_kit is the test kit that shipped with that release
+  PASS  lintconfig: .luacheckrc sets no top-level ignore
+  PASS  lintconfig: .luacheckrc switches no warning class off wholesale
+  PASS  lintconfig: every files[...] ignore is narrowed to a file or a name
+  PASS  lintconfig: no source file carries a bare inline luacheck ignore
+  PASS  eol: every tracked file carries the terminator .gitattributes declares for it
+
+154 passed, 0 failed, 0 skipped, 154 total

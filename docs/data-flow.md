@@ -1,0 +1,146 @@
+# Data flow
+
+How a setting becomes auras on screen. This is the engineer's version of the README's
+*How the containers work*; the two describe one pipeline and must not disagree.
+
+## The one rule the pipeline is built on
+
+On Retail 12.1 aura data is secret to addon code during combat, encounters, Mythic+ and PvP, and the
+engine's aura buttons refuse addon access while it is. So nothing in this addon reads an aura to
+decide what to draw. It **declares** each container to Blizzard's aura engine up front, and the
+engine does the reading, filtering, sorting, layout and timer animation in its own code
+(`docs/midnight-quirks.md`).
+
+## The pipeline
+
+```
+ 1  a control, /am set, a Defaults button or a drag handle
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:270
+        │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId }
+        ▼
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:291
+        │  RequestApply(containerId)   nil = every container
+        │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
+        ▼
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:91
+        │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
+        │     yes → keep the request, print the one-time notice, return
+        │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
+        ▼
+ 4  Container:Apply                                            modules/Container.lua:227
+        │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
+        │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
+        │  structure = #groups : enchant slots : style
+        │     same as the live engine → Update in place, then Restyle every button
+        │     different              → Retire the old engine, Build a new one
+        │  ApplyVisibility
+        ▼
+ 5  the engine (Blizzard's AuraContainer)
+        │  registers UNIT_AURA for its unit; gathers the auras matching each group's filter string
+        │  and candidate filters; sorts; lays out with the flow settings; creates buttons
+        │  and calls initializeFrame for each new one
+        ▼
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:127
+        │  build the regions once (icon, bar, fill, spark, text, border, pandemic wash)
+        │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
+        │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
+        │  SetCancelAuraButtons, tooltip options
+        ▼
+ 7  the engine fills every bound region with the (secret) aura data and animates it
+```
+
+## Step 4 in detail: the filter plan
+
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:177`) turns one container into
+`{ groups, enchants, warnings }`:
+
+- **A weapon-enchant container** compiles to no groups and three enchant slots (main hand, off hand,
+  ranged), with `hidePermanent` from the settings. A non-player unit only earns a warning: enchants are
+  always the player's.
+- **Every other container starts from a base**: the aura type token (`HELPFUL` or `HARMFUL`), plus
+  `PLAYER` or `!PLAYER` for Cast by, plus the duration rules — `maxDuration = N` for a limit,
+  `maxDuration = huge` for "only with a duration", or `excludeSpellIDs = <learned timed spells>` for
+  "only without".
+- **The never list** joins the base as `excludeSpellIDs`, and removes the same ids from the always
+  list.
+- **The always list** becomes its own group first: the aura type plus `includeSpellIDs`.
+- **Categories**, in declaration order: with none shown, one group ("All") minus every hidden
+  category; with some shown, one group per shown category, each minus the hidden ones and minus every
+  shown category before it, so an aura matching two appears once. Every group also excludes the
+  always list.
+- **A category applies by kind**: a token adds `TOKEN` or `!TOKEN`; a flag sets a boolean candidate
+  filter (`isBossAura`, `isRoleAura`, `isPriorityAura`, `isStealable`, `isFromPlayerOrPlayerPet`); a
+  dispel category adds `includeDispelTypes` or `excludeDispelTypes`; a spell category adds
+  `includeSpellIDs` or `excludeSpellIDs` from its starter list with the container's edits layered on.
+- **A group that contradicts itself** (it would need `X` and `!X`, or a shown spell category with no
+  ids left) is dropped; if every group drops, the plan warns that nothing can match.
+- **Warnings** record what the engine will silently not do: spell ids on a friendly unit's debuffs or
+  a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit.
+- A player buff container with **Also show weapon enchants** gets the enchant slots after its groups.
+
+**Updating in place.** Filter strings, candidate filters, sort, cap and layout can change on a live
+engine, so a plan of the same shape calls only the setters whose values moved; candidate filters are
+compared with `FilterCompiler.Signature` because the engine clears and re-gathers a group when they
+are set (`modules/Container.lua:166`). **Rebuilding.** Groups are add-only and a frame is never
+freed, so a new shape disables and hides the old engine, keeps it aside, and builds a new one: flow
+layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then `SetUnit` last
+(`modules/Container.lua:119`).
+
+## Visibility, separate from applying
+
+Whether a container shows is a cheaper question, and one that is legal in combat:
+`Container:ShouldShow` (`modules/Container.lua:267`) answers, in order — perf suspend, profile and
+container `enabled`, preview (unlocked or `/am preview`), then General visibility against
+`UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
+`Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
+clears the preview, and shows the drag handle while unlocked. It runs after every apply, on every
+`VISIBILITY_CHANGED` (world entry, combat start and end) and on the master rows' `onChange`.
+
+## Preview
+
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:59`) acquires one
+addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
+`engine = false`, fills in invented names, times and stacks, and positions it with
+`Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly.
+
+## Lifecycle
+
+| Moment | What runs |
+|---|---|
+| File load | Every file in TOC order; the options category registers its pages; LSM registration |
+| `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
+| `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them; `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
+| `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending |
+| `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies and apply the Blizzard-frame settings |
+| `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
+| `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
+| Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
+
+## Registry changes
+
+Create, delete, duplicate, rename, copy-from and reset positions all live in
+`modules/ContainerManager.lua`, the one writer of the registry. A structural change calls `Announce`
+(instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`); copy-from and
+reset positions re-apply and announce without rebuilding the instance list. Deleting a container
+drops any container attached to it back to the screen. `CONTAINERS_CHANGED` re-renders an open
+panel, because every banner lists containers.
+
+## Learning timed buffs
+
+`modules/TimedSpells.lua` listens only while an enabled buff container uses "only auras without a
+duration". On `UNIT_AURA` for the player or pet, and on combat end, it schedules a scan half a second
+later; the scan runs only when `Compat.AurasAreSecret()` is false, reads the player's and pet's buffs
+by index, and records every readable spell id with a readable positive duration into
+`global.timedSpells` (through `Secrets.IsSafeKey` and `Secrets.IsReadableNumber`). A scan that
+learned something asks for every container to re-apply, which updates their `excludeSpellIDs`.
+`/am forgettimed` empties the set.
+
+## Where a container sits
+
+`Anchors.Place` (`modules/Anchors.lua:59`) sizes the anchor to one element and attaches it: to
+another container's engine frame (or its anchor, before the engine exists), unless that would loop;
+to a named frame, if it exists and is not forbidden — otherwise the container is marked pending and
+re-placed on the next `ADDON_LOADED`; else to the screen at `container.position`. Positions are
+stored, never read back off an engine frame, whose geometry can be secret; the only position read is
+the anchor's own after a drag, saved through the write seam against that container's id.

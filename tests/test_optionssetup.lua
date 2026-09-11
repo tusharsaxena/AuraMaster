@@ -1,0 +1,145 @@
+-- tests/test_optionssetup.lua — settings/OptionsSetup.lua and the pages: the library instance, the
+-- page registry, the container banner, the global reset's blast radius, and the load-completing
+-- degradation stub.
+
+local T = _G.AM_TEST
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+local NS, mocks = T.NS, T.mocks
+local fresh = dofile("tests/fresh_env.lua")
+local loadDegraded = dofile("tests/degraded_env.lua")
+
+local PAGES = { "General", "Containers", "Filters", "Layout", "Bars", "Icons" }
+
+test("options: NS.Helpers IS the library instance", function()
+    assertEqual(type(NS.Helpers.RenderTabbedSchema), "function")
+    assertEqual(type(NS.Helpers.PageBanner), "function")
+end)
+
+test("options: every page registers, in TOC order, and Profiles opts out without AceDBOptions", function()
+    for _, name in ipairs(PAGES) do
+        assertTrue(mocks.__subcategories[name] ~= nil, "page " .. name)
+    end
+    assertNil(mocks.__subcategories.Profiles, "the harness has no AceDBOptions; the page returns nil")
+end)
+
+test("options: every page renders without a reported error", function()
+    local NS2, m = fresh()
+    local lines = {}
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    local aceGUI = m.LibStub("AceGUI-3.0")
+    for _, name in ipairs(PAGES) do
+        local before = #aceGUI.__created
+        m.__subcategories[name]:__fire("OnShow")
+        assertTrue(#aceGUI.__created > before, name .. " drew widgets")
+    end
+    for _, l in ipairs(lines) do
+        assertFalse(l:lower():find("error") or l:lower():find("failed"), "reported: " .. l)
+    end
+    assertTrue(NS2.Helpers ~= nil)
+end)
+
+test("options: the General page leads with Master controls, in canonical order", function()
+    local rows = NS.SchemaForPage("general")
+    local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole" }
+    for i, path in ipairs(want) do
+        assertEqual(rows[i].path, path)
+        assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)
+    end
+    assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
+end)
+
+test("options: the Filters page offers the spell-list tab only for a buff container", function()
+    local NS2, m = fresh()
+    local ctx = NS2.Helpers.__containerCtx.filters
+    local function tabs()
+        local keys = {}
+        for _, t in ipairs(ctx.__tabs or {}) do keys[t.key] = true end
+        return keys
+    end
+    NS2.State.SetActiveContainer(1)
+    m.__subcategories.Filters:__fire("OnShow")
+    assertTrue(tabs().spellLists)
+    assertTrue(tabs().alwaysNever)
+    NS2.Helpers.SelectContainer(2)
+    NS2.Helpers.RenderContainerPage(ctx, "filters", nil)
+    assertNil(tabs().spellLists)
+end)
+
+test("options: the banner is the picker — choosing a container retargets every page", function()
+    local NS2, m = fresh()
+    m.__subcategories.Bars:__fire("OnShow")
+    local ctx = NS2.Helpers.__containerCtx.bars
+    assertTrue(ctx.__bannerWidget ~= nil, "the page drew its banner")
+    ctx.__bannerWidget:__fire("OnValueChanged", 3)
+    assertEqual(NS2.State.activeContainerId, 3)
+    assertEqual(NS2.GetSetting("container.unit"), "target")
+end)
+
+test("options: the Containers page's New button creates and selects a container", function()
+    local NS2, m = fresh()
+    m.__subcategories.Containers:__fire("OnShow")
+    local ctx = NS2.Helpers.__containerCtx.containers
+    local newButton
+    for _, w in ipairs(ctx.__chromeWidgets or {}) do
+        if w.type == "Button" then newButton = w end
+    end
+    assertTrue(newButton ~= nil, "the chrome block carries the create control")
+    newButton:__fire("OnClick")
+    assertEqual(#NS2.Database.GetContainers(), 4)
+    local _, id = NS2.ActiveContainer()
+    assertEqual(id, NS2.db.profile.containerOrder[4])
+end)
+
+test("options: a page's Defaults button restores only the selected container", function()
+    local NS2, m = fresh()
+    m.__subcategories.Bars:__fire("OnShow")
+    local ctx = NS2.Helpers.__containerCtx.bars
+    NS2.SetByPath("container.bars.width", 300, 1)
+    NS2.SetByPath("container.bars.width", 300, 2)
+    NS2.State.SetActiveContainer(1)
+    NS2.Helpers.RestoreDefaults("bars", ctx)
+    assertEqual(NS2.Database.FindContainer(1).bars.width, NS2.CONTAINER_TEMPLATE.bars.width)
+    assertEqual(NS2.Database.FindContainer(2).bars.width, 300)
+end)
+
+test("options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)", function()
+    local NS2 = fresh()
+    local CM = NS2.ContainerManager
+    CM.Create({ name = "Extra one" })
+    CM.Create({ name = "Extra two" })
+    NS2.SetByPath("state.preview", true)
+    NS2.db:SetProfile("Raid")
+    NS2.db:SetProfile("Default")
+    local profilesBefore = table.concat(NS2.db:GetProfiles(), ",")
+    local changed = { 0 }
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONTAINERS_CHANGED, function() changed[1] = changed[1] + 1 end)
+
+    NS2.Helpers.RestoreAllDefaults()
+
+    local names = {}
+    for _, c in ipairs(NS2.Database.GetContainers()) do names[#names + 1] = c.name end
+    assertEqual(table.concat(names, "|"), "Player buffs|Player debuffs|Target debuffs (mine)",
+        "exactly the shipped set survives")
+    assertEqual(table.concat(NS2.db:GetProfiles(), ","), profilesBefore, "the profile list is untouched")
+    assertEqual(NS2.db:GetCurrentProfile(), "Default")
+    assertFalse(NS2.State.preview, "session rows are swept too")
+    assertTrue(changed[1] >= 1, "the registry change was announced")
+end)
+
+test("options: the degraded stub completes the load — every page's rows still register", function()
+    local NS2, m2 = loadDegraded()
+    for _, member in ipairs({ "LSMValues", "ColorPair", "FontGroup", "BorderGroup", "BarGroup",
+            "MasterControls", "RestoreAllDefaults" }) do
+        assertEqual(type(NS2.Helpers[member]), "function", member)
+    end
+    assertEqual(NS2.Helpers.MASTER_GROUP, "Master controls")
+    assertEqual(#NS2.Schema, #NS.Schema, "the degraded schema has every row the live one has")
+    local lines = {}
+    rawset(m2.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    NS2.CreateOptionsPanel()
+    -- The degraded printer names the missing library once, on the first line it ever prints
+    -- (core/CoreSetup.lua); the panel's own refusal is the line after it.
+    assertTrue(#lines >= 1 and #lines <= 2, "at most the one-time notice and the refusal")
+    assertTrue(lines[#lines]:find("settings panel is unavailable", 1, true) ~= nil, lines[#lines] or "")
+end)

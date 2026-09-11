@@ -1,0 +1,88 @@
+# Scope
+
+What Ka0s Aura Master is for, and — the load-bearing half — what it deliberately does not do. A
+feature request is answered here first: in scope, out of scope, or out of reach of any addon on this
+client. The player-facing contract is the README; the engineering boundary is this page.
+
+## What it does
+
+- **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
+  filters, placement and look (`defaults/Profile.lua:85`, `NS.CONTAINER_TEMPLATE`).
+- **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:33`).
+- **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
+  enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container may
+  also append the weapon enchants after its buffs (`container.filter.includeEnchants`).
+- **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
+  border, cooldown swipe, time and stack text).
+- **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
+  anyone but me), timed-only or permanent-only, a maximum full duration, 32 tri-state categories
+  (defined in `defaults/Categories.lua`: spell lists, Blizzard aura flags and filter tokens, dispel
+  types, player-or-creature source), editable per-container spell lists, an always-show list and a
+  never-show list, sort method and direction, and a per-group cap.
+- **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
+  or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
+- **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked or via
+  `/am preview` (preview-mode).
+- **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
+- **Profiles** through AceDB, with a Profiles sub-page.
+- **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through
+  `/am containers|select|new|delete`.
+- **Retail only**, Interface 120100 (Midnight 12.1), English as the source locale.
+
+## What it deliberately does not do
+
+### Deferred — tracked as GitHub issues
+
+- **Party units 1–5.** The engine can take any unit token; the settings model, the unit dropdown and
+  the swap events have not been widened yet. Tracked as a GitHub issue.
+- **A "Text" container style** — aura names and times as lines of text with no bar or icon. Tracked
+  as a GitHub issue.
+
+### Out of scope by decision
+
+- **Raid, arena, boss and nameplate units.** Containers are for a handful of units the player
+  watches, not a unit-frame replacement.
+- **Trigger logic, custom code or conditions.** No user-supplied Lua, no "show when X and Y", no
+  sounds, glows or per-spell colors. That is an aura framework, not a display addon.
+- **Cooldown tracking.** Spell cooldowns are not auras.
+- **An LDB feed or minimap button.** The settings panel and `/am` are the entry points.
+- **Profile import/export strings.** AceDB profiles persist in `AuraMasterDB`; there is no
+  serialization layer.
+- **Hiding Blizzard frames during combat.** Reparenting a Blizzard frame under lockdown is refused, so
+  the switch applies on the next `PLAYER_REGEN_ENABLED`.
+
+### Out of reach on this client (12.1)
+
+These are not declined; the game forbids them, and a request for one is answered with the rule.
+
+- **Reading an aura in combat.** Aura data is secret during combat, encounters, Mythic+ and PvP, and
+  aura buttons refuse addon access while it is (`core/Secrets.lua`). Everything the addon filters on
+  has to be a declaration the engine evaluates.
+- **A native "no duration" filter.** The engine can require a duration (`maxDuration`) but cannot
+  require its absence. "Only auras without a duration" is built by learning which buff spells are
+  timed while auras are readable (`modules/TimedSpells.lua`), so a timed buff not yet learned shows
+  once. On a debuff container the mode narrows nothing, because only buffs are learned.
+- **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
+  friendly units and debuffs on hostile units. The addon warns per container
+  (`modules/FilterCompiler.lua:141`) rather than letting the filter look broken.
+- **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
+  (`modules/ContainerManager.lua:86`).
+- **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
+  addon's own frames.
+
+## Resolved decisions
+
+- **The engine owns every aura container.** A hand-built aura display cannot see auras in combat on
+  12.1, and `SecureAuraHeaderTemplate` is gone from Retail; `CustomAuraContainerTemplate` is the one
+  supported path.
+- **A permanent aura draws a full bar.** The engine's status bar runs on elapsed time and the
+  addon's own fill is anchored to its moving edge (`modules/Style_Bars.lua`), the technique
+  TinyBuffBars (MIT) established.
+- **Class colors are the player's.** An element describes an aura, not a unit, and a container's unit
+  can change in combat when restyling is not allowed (`modules/Style.lua:36-42`).
+- **Container settings share one relative path model** (`container.…`) so one schema, one write seam
+  and one CLI serve every container (`settings/Schema.lua` header).
+- **Categories are tri-state** (`""` / `show` / `hide`). Showing any category narrows the container to
+  the union of the shown ones; hiding one excludes it; neutral leaves it alone.
+- **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
+  and the starter containers come back.

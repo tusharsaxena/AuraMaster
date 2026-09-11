@@ -1,0 +1,98 @@
+## Interface: 120100
+## Title: Ka0s Aura Master
+## Notes: Build your own buff, debuff and weapon enchant displays for player, target, focus and pet, as bars or icons.
+## Author: add1kted2ka0s
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\AuraMaster\media\logos\auramaster.logo.tga
+## SavedVariables: AuraMasterDB, AuraMasterPerfDB
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0
+## DefaultState: enabled
+## Category-enUS: Combat
+## X-License: MIT
+## X-Standard: https://github.com/tusharsaxena/WowAddonStandards
+# X-Curse-Project-ID: not published on CurseForge yet (toc-file-§1: omitted, never a placeholder id)
+
+# Libraries (vendored in libs/ — load first)
+#@no-lib-strip@
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+libs\AceAddon-3.0\AceAddon-3.0.xml
+libs\AceEvent-3.0\AceEvent-3.0.xml
+libs\AceTimer-3.0\AceTimer-3.0.xml
+libs\AceConsole-3.0\AceConsole-3.0.xml
+libs\AceDB-3.0\AceDB-3.0.xml
+libs\AceGUI-3.0\AceGUI-3.0.xml
+libs\AceConfig-3.0\AceConfig-3.0.xml
+libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+libs\LibKa0s\LibKa0s.xml
+libs\LibSharedMedia-3.0\lib.xml
+libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
+#@end-no-lib-strip@
+
+# Locales (first after the libraries: this file bootstraps NS.L for everything below)
+locales\enUS.lua
+
+# Core — dependency-correct order (layout-§1)
+# LOAD-BEARING: publishes NS.name, NS.version and NS.PREFIX, which every seam below reads.
+core\Namespace.lua
+# Conventional: its shims are reached at call time.
+core\Compat.lua
+# LOAD-BEARING: before Constants, deliberately. Constants.FONT_MONO is resolved from the
+# NS.MediaFont seam this file publishes, so a Constants that loaded first would take the fallback.
+core\MediaSetup.lua
+core\Constants.lua
+# Conventional: session-only state (the debug flag, the active container, preview).
+core\State.lua
+# Conventional: the LibKa0s-Env seam; nothing is resolved at load.
+core\EnvSetup.lua
+# LOAD-BEARING: after Namespace (NS.PREFIX) and before everything that prints; publishes
+# NS.LIBKA0S_MISSING, which every later degradation stub reads.
+core\CoreSetup.lua
+# LOAD-BEARING: publishes NS.bus and NS.MSG, read at load by settings/OptionsSetup.lua.
+core\Bus.lua
+# Conventional: NS.Pool, reached at render time.
+core\PoolSetup.lua
+# LOAD-BEARING: before core/AuraMaster.lua and every module taking NS.Perf as a load-time upvalue.
+core\PerfSetup.lua
+core\Secrets.lua
+# LOAD-BEARING: after Constants (the font), State (the flag) and CoreSetup (the printer), and before
+# anything that calls NS.Debug.
+core\DebugLogSetup.lua
+# LOAD-BEARING: the AceAddon promotion; reclaims NS.Print from AceConsole's embed.
+core\AuraMaster.lua
+core\Database.lua
+
+# Defaults
+# LOAD-BEARING: Categories before Profile — the container template's category states are built
+# from the category lists.
+defaults\Categories.lua
+defaults\Profile.lua
+
+# Modules
+modules\TimedSpells.lua
+modules\FilterCompiler.lua
+# LOAD-BEARING: Style before Style_Bars and Style_Icons, which decorate NS.Style at file scope.
+modules\Style.lua
+modules\Style_Bars.lua
+modules\Style_Icons.lua
+modules\Anchors.lua
+modules\Preview.lua
+modules\FramePicker.lua
+modules\BlizzardFrames.lua
+modules\Container.lua
+modules\ContainerManager.lua
+
+# Settings (last — depend on everything else being initialized)
+# LOAD-BEARING: the schema machinery every page registers rows into.
+settings\Schema.lua
+settings\Slash.lua
+# LOAD-BEARING: before every page file, which calls the composers and LSMValues at file load.
+settings\OptionsSetup.lua
+settings\About.lua
+settings\General.lua
+settings\Containers.lua
+settings\Filters.lua
+settings\Layout.lua
+settings\Bars.lua
+settings\Icons.lua
+settings\Profiles.lua
