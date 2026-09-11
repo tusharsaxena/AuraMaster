@@ -318,12 +318,13 @@ local function newContainerData(overrides)
 end
 
 --- Create a container from the template plus `overrides`. Returns its id, or nil, a message and — for
---- a refusal the caller should print gray — true. Refused under combat lockdown: a new container
---- creates its anchor frame, which options-ui-§2 keeps out of combat. That covers `/am new`, the
---- Containers page's New and Duplicate, and any later caller.
+--- a refusal the caller should print gray — true. Refused under combat lockdown (options-ui-§2): its
+--- apply, which places the anchor and builds the engine, waits for combat to end (CM.MustDefer), so
+--- it would not draw until then. That covers `/am new`, the Containers page's New and Duplicate, and
+--- any later caller.
 function CM.Create(overrides)
     if InCombatLockdown() then
-        return nil, L["cannot create a container during combat — a new display cannot be built until combat ends"], true
+        return nil, L["cannot create a container during combat — it would not be drawn or placed until combat ends"], true
     end
     local p = profile()
     if not p then return nil, L["No profile is loaded."] end

@@ -321,8 +321,8 @@ function ContainerClass:Apply()
 
     -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
     self.previewDirty = true
-    -- Built for the data now stored under this id, so a container parked by a profile change in
-    -- combat (modules/ContainerManager.lua's CM.Sync) may draw again.
+    -- Built for the data now stored under this id, so a container parked by a profile change while
+    -- an apply must wait (combat or aura secrecy), including one marked staleData, may draw again.
     self.parked, self.staleData = nil, nil
     self:ApplyVisibility()
     if t0 then Perf.Note("applyContainer", debugprofilestop() - t0, "applyPass") end

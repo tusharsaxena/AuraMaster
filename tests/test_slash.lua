@@ -292,7 +292,9 @@ test("slash: /am new in combat refuses in gray and creates nothing", function()
     NS2.Slash:OnSlash("new target debuffs icons")
     assertEqual(#NS2.Database.GetContainers(), 3)
     -- red under: runNew printing a refused err through the plain printer
-    assertTrue(grayLine(lines, "cannot create a container during combat"), lastLine(lines))
+    assertTrue(grayLine(lines,
+        "cannot create a container during combat — it would not be drawn or placed until combat ends"),
+        lastLine(lines))
     assertEqual(#lines, 1, "one line, not a gray one and a plain one")
 end)
 

@@ -86,7 +86,7 @@ suite covers what only the client can show.
 31. **Duplicate** → a *… (copy)* container with every setting, nudged 20 px; **Delete** → a confirmation
     popup; **Yes** removes it and any container attached to it falls back to the screen. In combat,
     **New container**, **Duplicate** and `/am new` are refused with the gray "cannot create a container
-    during combat — a new display cannot be built until combat ends" line, and the Delete popup's
+    during combat — it would not be drawn or placed until combat ends" line, and the Delete popup's
     **Yes** and `/am delete` with the gray "cannot delete a container during combat — its display
     cannot be torn down until combat ends" line; nothing is created or removed.
 32. **Copy settings from** → pick a source and *Bar style* → the selected container takes only the
