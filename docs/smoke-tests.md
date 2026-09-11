@@ -183,9 +183,12 @@ suite covers what only the client can show.
 54. `/am debug` → the debug console opens; the General page's **Debug console** checkbox follows it.
     `/am debug on` → lines such as `[Set] … = …` stream as you change settings; `/am debug off` stops
     them; `/reload` → logging off, window closed.
+55. Memory spot-check: `/run print(collectgarbage("count"))`, change a bar container's bar width 10
+    times, then print it again. Note the growth. Style objects are built once per look, so the growth
+    should be smaller than on a build from before that change. Record both numbers.
 
 ## N. Unit swaps
 
-55. With a target container, change target several times, and target and clear focus with a focus
+56. With a target container, change target several times, and target and clear focus with a focus
     container → each shows the new unit's auras at once, never the previous unit's. Summon and dismiss
     a pet with a pet container → it follows.
