@@ -225,3 +225,44 @@ test("schema: category spell edits keep only real spell categories", function()
     assertNil(edits.crowdControl)
     assertNil(edits.nonsense)
 end)
+
+-- ── whole-section writes ──────────────────────────────────────────────────────────────────────
+
+test("schema: a whole section written through the seam replaces it, backfills it, logs once and announces once", function()
+    local NS2 = fresh()
+    NS2.State.debug = true
+    local lines = {}
+    NS2.Debug = function(tag, fmt, ...)
+        if tag == "Set" then lines[#lines + 1] = fmt:format(...) end
+    end
+    local got = {}
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, p) got[#got + 1] = p end)
+    local given = { point = "TOP", x = 5 }
+    assertTrue(NS2.SetByPath("container.position", given, 1))
+    NS2.State.debug = false
+    local pos = NS2.Database.FindContainer(1).position
+    assertTrue(pos ~= given, "stored as a copy, never the caller's table")
+    assertEqual(pos.point, "TOP")
+    assertEqual(pos.x, 5)
+    assertEqual(pos.y, NS2.CONTAINER_TEMPLATE.position.y, "y backfilled from the template")
+    assertEqual(pos.relativePoint, NS2.CONTAINER_TEMPLATE.position.relativePoint, "relativePoint backfilled")
+    assertEqual(#lines, 1, "one [Set] line per section write")
+    assertTrue(lines[1]:find("x=5", 1, true) ~= nil, "the line renders the stored table: " .. lines[1])
+    assertEqual(#got, 1, "one CONFIG_CHANGED")
+    assertEqual(got[1].path, "container.position")
+    assertEqual(got[1].containerId, 1)
+    assertEqual(got[1].section, "layout")
+end)
+
+test("schema: a section write refuses a non-section path, a non-table, and a value a row rejects", function()
+    local NS2 = fresh()
+    assertTrue(NS2.IsSection("container.position"))
+    assertFalse(NS2.IsSection("container.attach"))
+    assertFalse((NS2.SetByPath("container.bars.name", { fontSize = 20 }, 1)), "not a section")
+    assertFalse((NS2.SetByPath("container.position", 5, 1)), "not a table")
+    local before = NS2.Database.FindContainer(1).filter
+    -- red under: writeSection skipping the carve-out normalize
+    assertFalse((NS2.SetByPath("container.filter", { whitelist = "x" }, 1)), "the carve-out rejects it")
+    assertTrue(NS2.Database.FindContainer(1).filter == before, "the stored section is untouched")
+    assertFalse((NS2.SetByPath("container.attach", { mode = "screen" }, 1)), "attach is not a section")
+end)

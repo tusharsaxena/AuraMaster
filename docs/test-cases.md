@@ -38,7 +38,7 @@ badge and any count quoted in the docs must agree with it.
 - database: an existing SavedVariables file keeps its containers
 - database: a non-numeric container key is dropped and the profile loads
 
-### test_schema.lua (21)
+### test_schema.lua (23)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -61,6 +61,8 @@ badge and any count quoted in the docs must agree with it.
 - schema: ApplyDefault restores the shipped value without sharing a table
 - schema: a spell set is written whole and normalized to positive integer ids
 - schema: category spell edits keep only real spell categories
+- schema: a whole section written through the seam replaces it, backfills it, logs once and announces once
+- schema: a section write refuses a non-section path, a non-table, and a value a row rejects
 
 ### test_filtercompiler.lua (27)
 
@@ -249,7 +251,7 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 6 |
 | test_setups.lua | 7 |
 | test_database.lua | 10 |
-| test_schema.lua | 21 |
+| test_schema.lua | 23 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 14 |
 | test_containermanager.lua | 19 |
@@ -265,4 +267,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **179** |
+| **Total** | **181** |

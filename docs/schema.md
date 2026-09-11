@@ -194,6 +194,18 @@ trimmed name made unique by `ContainerManager.UniqueName`, and that comparison i
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
 `/am set`, `ContainerManager.Rename` or a reset.
 
+The write seam also takes six **whole sections**: `container.filter`, `.layout`, `.behavior`,
+`.position`, `.bars` and `.icons` (`NS.IsSection`). `NS.SetByPath("container.position", tbl, id)`
+stores a deep copy of `tbl` in place of the section. First it backfills the copy from the template, so
+no key can be dropped. Then it runs the spell-set carve-outs under that section, and then every row
+`validate` under it. A single rejection refuses the whole write, and nothing gets stored. Once the
+section is written, `onChange` fires for each row whose leaf actually changed, compared by
+`FilterCompiler.Signature`. The write logs one `[Set]` line that renders the stored table (for example
+`container.position = {point=TOP, relativePoint=CENTER, x=5, y=0}`), built only while debug is on, and
+sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section. No
+caller writes it whole, and its `container` validator checks for cycles against the active container
+rather than the target.
+
 ## Migration path
 
 The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:192`: one `{ to = N, apply = fn }`

@@ -34,6 +34,14 @@ local _, NS = ...
 -- page builds the set it wants and hands all of it over — and normalized here, so a hand-edited
 -- SavedVariables file or a `/am set` cannot plant a non-numeric id the filter compiler would trip
 -- on. They take the same debug line and the same CONFIG_CHANGED every scalar write takes.
+--
+-- WHOLE SECTIONS
+-- --------------
+-- A position saved by a drag, or a filter copied from another container, is one act across many
+-- leaves. Written leaf by leaf it would announce once per leaf, and a rejection halfway would leave
+-- half of it moved. So a closed list of sections (SECTIONS below) can be written whole through this
+-- same seam: backfilled from the template, carve-outs normalized, every row under it validated, and
+-- only then stored — all of it or none — with one debug line and one CONFIG_CHANGED.
 
 NS.Schema = NS.Schema or {}
 
@@ -249,9 +257,10 @@ end
 --- The tail every write shares: log once, announce once, re-sync an open panel in place. A session
 --- row announces nothing: it is not a setting, its own set() already did everything it does, and a
 --- CONFIG_CHANGED would re-apply every container for a toggle that changes none of them.
-local function announceWrite(section, containerId, path, value, sessionOnly)
+--- `logged` says the caller already wrote the [Set] line (a section write renders its own).
+local function announceWrite(section, containerId, path, value, sessionOnly, logged)
     -- Logged ONCE, here, with the format deferred into the sink (debug-logging-§10).
-    if NS.Debug then NS.Debug("Set", "%s = %s", path, value) end
+    if NS.Debug and not logged then NS.Debug("Set", "%s = %s", path, value) end
     -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row;
     -- `path` lets modules/ContainerManager.lua read the row's `effect` and skip an apply it needs not.
     if NS.bus and not sessionOnly then
@@ -273,6 +282,101 @@ local function writeCarveOut(path, value, containerId)
     if not root then return false, NO_CONTAINER end
     writeInto(root, parts, first, v)
     announceWrite("filters", id, path, v, false)
+    return true
+end
+
+-- The sections a caller may write whole, each with the CONFIG_CHANGED section it announces as.
+-- `container.attach` is deliberately absent: no caller writes it whole, and its `.container`
+-- validator checks cycles against the ACTIVE container, not the target id.
+local SECTIONS = {
+    ["container.filter"]   = "filters",
+    ["container.layout"]   = "layout",
+    ["container.behavior"] = "layout",
+    ["container.position"] = "layout",
+    ["container.bars"]     = "bars",
+    ["container.icons"]    = "icons",
+}
+
+--- Whether `path` is one of the whole-section paths (a test seam, like NS.IsCarveOut).
+function NS.IsSection(path)
+    return SECTIONS[path] ~= nil
+end
+
+local function isUnder(p, section)
+    return p:sub(1, #section + 1) == section .. "."
+end
+
+--- Run every carve-out under `section` over its sub-key of `v`, in place. Returns an error or nil.
+local function normalizeSectionCarveOuts(section, v, depth)
+    for cpath, normalize in pairs(CARVE_OUTS) do
+        if isUnder(cpath, section) then
+            local cparts = splitPath(cpath)
+            local n = normalize(readFrom(v, cparts, depth + 1))
+            if not n then return L["Invalid value for %s"]:format(cpath) end
+            writeInto(v, cparts, depth + 1, n)
+        end
+    end
+    return nil
+end
+
+--- Validate every row under `section` against its leaf in `v`. Returns an error or nil.
+local function validateSectionRows(section, v, depth)
+    for _, row in ipairs(NS.Schema) do
+        if row.validate and isUnder(row.path, section)
+            and not row.validate(readFrom(v, splitPath(row.path), depth + 1)) then
+            return L["Invalid value for %s"]:format(row.path)
+        end
+    end
+    return nil
+end
+
+--- The onChange of every row under `section` whose leaf actually changed between `old` and `v`.
+local function fireSectionChanges(section, old, v, depth, id)
+    local Sig = NS.FilterCompiler.Signature
+    for _, row in ipairs(NS.Schema) do
+        if row.onChange and isUnder(row.path, section) then
+            local parts = splitPath(row.path)
+            local leaf = readFrom(v, parts, depth + 1)
+            if Sig(readFrom(old, parts, depth + 1)) ~= Sig(leaf) then row.onChange(leaf, id) end
+        end
+    end
+end
+
+--- `{k=v, sub={…}}` with sorted keys: what a section write's [Set] line shows.
+local function renderSection(v)
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = k end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    for i, k in ipairs(keys) do
+        local x = v[k]
+        keys[i] = tostring(k) .. "=" .. (type(x) == "table" and "{…}" or tostring(x))
+    end
+    return "{" .. table.concat(keys, ", ") .. "}"
+end
+
+--- The section's one [Set] line, built only when the debug flag is on (debug-logging-§4, §9).
+local function logSection(path, v)
+    if NS.State and NS.State.debug and NS.Debug then
+        NS.Debug("Set", "%s = %s", path, renderSection(v))
+    end
+end
+
+--- A whole section: a deep copy of `value`, backfilled, carve-outs normalized, rows validated, then
+--- stored in one write. All or nothing: nothing is stored unless every check passes.
+local function writeSection(path, value, containerId, sec)
+    if type(value) ~= "table" then return false, L["Invalid value for %s"]:format(path) end
+    local parts = splitPath(path)
+    local root, first, id = resolveRoot(parts, containerId)
+    if not root then return false, NO_CONTAINER end
+    local v = copy(value)
+    NS.Database.Backfill(v, readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
+    local err = normalizeSectionCarveOuts(path, v, #parts) or validateSectionRows(path, v, #parts)
+    if err then return false, err end
+    local old = readFrom(root, parts, first)
+    writeInto(root, parts, first, v)
+    fireSectionChanges(path, old, v, #parts, id)
+    logSection(path, v)
+    announceWrite(sec, id, path, nil, false, true)
     return true
 end
 
@@ -313,6 +417,8 @@ end
 function NS.SetByPath(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
     if CARVE_OUTS[path] then return writeCarveOut(path, value, containerId) end
+    local sec = SECTIONS[path]
+    if sec then return writeSection(path, value, containerId, sec) end
 
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
