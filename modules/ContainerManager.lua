@@ -161,6 +161,7 @@ end
 --- containers were applied.
 function CM.FlushPending()
     scheduled = false
+    if Perf.suspended then return 0 end   -- performance-§6: held; resume's RequestApply drains it
     if not pendingAll and next(pending) == nil and next(retiring) == nil then return 0 end
     if CM.MustDefer() then
         noteDeferred()

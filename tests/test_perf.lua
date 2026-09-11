@@ -67,6 +67,22 @@ test("perf: suspend makes the addon inert without a reload, and resume restores 
     assertTrue(mocks.__engines[1].__enabled)
 end)
 
+test("perf: suspend holds a queued apply until resume", function()
+    -- red under: FlushPending without its suspended gate.
+    local NS, mocks = fresh()
+    NS.Perf.Suspend()
+    for _, e in ipairs(mocks.__engines) do e.__calls = {} end
+    NS.SetByPath("container.bars.width", 250, 1)
+    mocks.__fireTimers()
+    local calls = 0
+    for _, e in ipairs(mocks.__engines) do calls = calls + #e.__calls end
+    assertEqual(calls, 0, "a suspended addon sent an engine call")
+    assertEqual(NS.ContainerManager.FlushPending(), 0)
+    NS.Perf.Resume()
+    mocks.__fireTimers()
+    assertTrue(#mocks.__engines[1]:__callsTo("SetAuraGroupLayout") > 0, "resume drained the queued apply")
+end)
+
 test("perf: without the library, /am perf answers one honest line", function()
     local NS2 = loadDegraded()
     local lines = NS2.Perf.OnCommand("")

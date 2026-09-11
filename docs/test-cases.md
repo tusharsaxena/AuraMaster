@@ -190,11 +190,12 @@ badge and any count quoted in the docs must agree with it.
 - options: the Delete and Reset-all popups refuse in combat
 - options: the degraded stub completes the load — every page's rows still register
 
-### test_perf.lua (4)
+### test_perf.lua (5)
 
 - perf: every declared bucket is reached by a real bracket
 - perf: a dormant probe notes nothing
 - perf: suspend makes the addon inert without a reload, and resume restores it
+- perf: suspend holds a queued apply until resume
 - perf: without the library, /am perf answers one honest line
 
 ### test_locale.lua (2)
@@ -249,11 +250,11 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 5 |
 | test_slash.lua | 14 |
 | test_optionssetup.lua | 12 |
-| test_perf.lua | 4 |
+| test_perf.lua | 5 |
 | test_locale.lua | 2 |
 | test_docs.lua | 5 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **170** |
+| **Total** | **171** |
