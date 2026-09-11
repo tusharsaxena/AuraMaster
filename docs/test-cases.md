@@ -24,7 +24,7 @@ badge and any count quoted in the docs must agree with it.
 - debug: the logging flag is ours, session-only, and never written to the profile
 - degraded: without LibKa0s the addon still loads and every seam answers
 
-### test_database.lua (9)
+### test_database.lua (10)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -35,6 +35,7 @@ badge and any count quoted in the docs must agree with it.
 - database: a new container's data is a deep copy of the template with a fresh id
 - database: the migration runner stamps the schema and creates the timed-spell store
 - database: an existing SavedVariables file keeps its containers
+- database: a non-numeric container key is dropped and the profile loads
 
 ### test_schema.lua (19)
 
@@ -223,7 +224,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 6 |
 | test_setups.lua | 6 |
-| test_database.lua | 9 |
+| test_database.lua | 10 |
 | test_schema.lua | 19 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 12 |
@@ -240,4 +241,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **154** |
+| **Total** | **155** |

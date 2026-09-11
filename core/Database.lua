@@ -92,6 +92,29 @@ function Database.NewContainerData(overrides)
     return c, id
 end
 
+--- Keys come back from SavedVariables as numbers, but a hand-edited file or an old export can carry
+--- string ids; normalize so FindContainer(3) and FindContainer("3") cannot disagree. A key that is
+--- neither a number nor a numeric string has no id to become, and every later pass compares ids as
+--- numbers, so it is dropped (one gated [Migrate] line each).
+--- Collected first, then moved: assigning a new key while `pairs` walks the same table is
+--- undefined in Lua and raises "invalid key to 'next'".
+local function normalizeKeys(p)
+    local renames, drops = {}, {}
+    for k in pairs(p.containers) do
+        if type(k) ~= "number" then
+            if tonumber(k) then renames[#renames + 1] = k else drops[#drops + 1] = k end
+        end
+    end
+    for _, k in ipairs(renames) do
+        p.containers[tonumber(k)] = p.containers[k]
+        p.containers[k] = nil
+    end
+    for _, k in ipairs(drops) do
+        p.containers[k] = nil
+        if NS.Debug then NS.Debug("Migrate", "dropped container key %s", k) end
+    end
+end
+
 --- Put a profile's registry into a shape every reader can trust: every stored container backfilled
 --- from the template, `containerOrder` holding exactly the ids that exist (orphans appended, dangling
 --- ids dropped), and — on a brand-new profile — the starter containers seeded once.
@@ -118,18 +141,7 @@ function Database.PrepareProfile(p)
         p.seeded = true
     end
 
-    -- Keys come back from SavedVariables as numbers, but a hand-edited file or an old export can carry
-    -- string ids; normalize so FindContainer(3) and FindContainer("3") cannot disagree.
-    -- Collected first, then moved: assigning a new key while `pairs` walks the same table is
-    -- undefined in Lua and raises "invalid key to 'next'".
-    local renames = {}
-    for k in pairs(p.containers) do
-        if type(k) ~= "number" and tonumber(k) then renames[#renames + 1] = k end
-    end
-    for _, k in ipairs(renames) do
-        p.containers[tonumber(k)] = p.containers[k]
-        p.containers[k] = nil
-    end
+    normalizeKeys(p)
 
     local maxId = 0
     for id, c in pairs(p.containers) do

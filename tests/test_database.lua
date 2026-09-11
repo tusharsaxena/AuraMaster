@@ -108,3 +108,22 @@ test("database: an existing SavedVariables file keeps its containers", function(
     assertEqual(list[1].bars.width, NS.CONTAINER_TEMPLATE.bars.width, "the missing sections are backfilled")
     assertFalse(list[1].id ~= 4)
 end)
+
+test("database: a non-numeric container key is dropped and the profile loads", function()
+    local seeded = {
+        profiles = { Default = {
+            seeded = true, nextContainerId = 5,
+            containers = {
+                [4] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars" },
+                abc = { name = "junk" },
+            },
+            containerOrder = { 4 },
+        } },
+        global = { schemaVersion = 1 },
+    }
+    -- red under: removing the drop branch in normalizeKeys (the env build raises comparing "abc" to a number)
+    local NS = fresh({ savedVariables = seeded })
+    assertEqual(#NS.Database.GetContainers(), 1)
+    assertNil(NS.db.profile.containers.abc, "a key that is neither a number nor a numeric string is dropped")
+    assertEqual(NS.db.profile.containers[4].name, "Mine")
+end)

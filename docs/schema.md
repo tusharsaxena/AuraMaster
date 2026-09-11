@@ -192,6 +192,8 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`
   past the highest id, and seeds the starter containers on a profile whose `seeded` flag is unset.
+  A container key that is neither a number nor a numeric string (a hand-edited file) is dropped,
+  with one `[Migrate] dropped container key` debug line each, so the profile still loads.
   A new category key reaches every container the same way, through `NeutralStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: bump to
   `to = 2`, transform the stored value, and remember that containers live in every profile, not only
