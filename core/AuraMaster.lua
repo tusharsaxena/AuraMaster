@@ -17,9 +17,11 @@ local AceAddon = LibStub("AceAddon-3.0")
 local addon = AceAddon:NewAddon(NS, addonName, "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 NS.addon = addon
 
--- Reclaim NS.Print from AceConsole's embed, which stamps its own :Print over ours (architecture-§2,
--- anti-pattern #36). core/CoreSetup.lua stashed the real printer at NS.Util.print, the same object.
+-- Reclaim NS.Print and NS.Printf from AceConsole's embed, which stamps its own :Print and :Printf
+-- over ours (architecture-§2, anti-pattern #36). core/CoreSetup.lua stashed the real printers at
+-- NS.Util.print and NS.Util.printf, the same objects.
 if NS.Util and NS.Util.print then NS.Print = NS.Util.print end
+if NS.Util and NS.Util.printf then NS.Printf = NS.Util.printf end
 
 function addon:OnInitialize()
     NS:InitDB()
@@ -69,8 +71,15 @@ end
 function addon:OnCombatChanged(event)
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if event == "PLAYER_REGEN_ENABLED" then
-        if NS.ContainerManager then NS.ContainerManager.FlushPending() end
+        -- "regen": the deferral notice never escalates on this edge (modules/ContainerManager.lua).
+        -- Then a container whose unit swapped during combat re-applies for its new unit's class.
+        if NS.ContainerManager then
+            NS.ContainerManager.FlushPending("regen")
+            NS.ContainerManager.ReapplyStaleClass()
+        end
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
+        -- A frame an add-on created during combat could not be resolved then (OnAddonLoaded).
+        if NS.Anchors and NS.Anchors.ResolvePending then NS.Anchors.ResolvePending() end
     end
 end
 
@@ -98,7 +107,10 @@ function addon:OnAddonLoaded()
 end
 
 function addon:OnRestrictionChanged()
-    if NS.ContainerManager then NS.ContainerManager.FlushPending() end
+    if NS.ContainerManager then
+        NS.ContainerManager.FlushPending()
+        NS.ContainerManager.ReapplyStaleClass()
+    end
 end
 
 --- AceDB profile callback (core/Database.lua): the new profile gets its registry prepared, every
@@ -108,7 +120,7 @@ function NS.OnProfileChanged()
     if NS.State then NS.State.SetActiveContainer(nil) end
     NS.Debug("Profile", "changed -> %s",
         (NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()) or "?")
-    if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce() end
+    if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
 end

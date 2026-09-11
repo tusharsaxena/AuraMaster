@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 192 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 193 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -24,16 +24,16 @@ is a defect in this doc (documentation-§3).
   descriptor (`get`/`set`/`applyDefault` over the write seam, `rowsForPage` over
   `NS.SchemaForPage`, `skipRestoreAll`, `resetProfile`, `scheduleTimer`, the color codec) and the
   library draws the canvas, header, tab strip, two-column flow and widgets. The parent category
-  registers eagerly at `PLAYER_LOGIN` (`core/AuraMaster.lua:36`) and every body is built on its first
+  registers eagerly at `PLAYER_LOGIN` (`core/AuraMaster.lua:38`) and every body is built on its first
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:357`): the page's schema groups become tabs, the page's bespoke tabs
+  (`settings/OptionsSetup.lua:401`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:158`): the buff categories are not offered on a debuff container, and a
+  (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
   weapon-enchant container sees only the rows that mean something for it.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -51,7 +51,7 @@ band holds **the picker itself** (options-ui-§14):
   page's only picker.
 - **Containers** has more page-wide acts than fit one row, so it takes the one-row-band escape: the
   band carries only the identity controls — the Container picker and **New container**
-  (`settings/Containers.lua:210`) — and every act on the selected container (Duplicate, Delete, Copy
+  (`settings/Containers.lua:232`) — and every act on the selected container (Duplicate, Delete, Copy
   settings from) sits on the page's first tab, named **General**. No page-wide act is drawn on any
   other tab. The band is not boxed a second time.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
@@ -75,7 +75,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Enable Aura Master | `enabled` | bool | Gates every container; applied as a visibility pass, legal in combat |
 | General visibility | `visibility` | string | `always` / `inCombat` / `outOfCombat` / `never`; combat read with `UnitAffectingCombat("player")` |
 | Master scale | `scale` | number | Multiplies each container's own Layout → Frame scale |
-| Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity |
+| Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every handle and the preview; locking ends preview mode |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
 
@@ -186,7 +186,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (70 rows, `settings/Bars.lua`)
+### Bars (71 rows, `settings/Bars.lua`)
 
 A notice in orange heads every tab when the selected container is drawn as icons.
 
@@ -194,19 +194,24 @@ A notice in orange heads every tab when the selected container is drawn as icons
 |---|---|
 | Size (6) | `width` 40–600, `height` 6–80; *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3 |
 | Bar (11) | *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark` |
-| Background & border (8) | *Background:* `bgTexture`, `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
+| Background & border (9) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
 | Highlights (11) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`; *Dispel type colors:* `dispelColors.Magic`, `.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None` |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:99`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:100`);
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
 as a dispel-type texture tinted from `dispelColors`; `timeFormat` other than Blizzard hands the engine
-a `SecondsFormatter`; the running-out color is a step color curve over remaining time
-(`core/Compat.lua:155`); the refresh-window highlight is an additive wash the engine shows only
-while the aura can be refreshed without loss.
+a `SecondsFormatter` (`core/Compat.lua:135`); the running-out color is a step color curve over
+remaining time (`core/Compat.lua:168`); the refresh-window highlight is an additive wash the engine
+shows only while the aura can be refreshed without loss.
+
+The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
+surface with no texture a swatch and its companion and nothing else, and this background has a live
+texture, so it takes the whole bar block with its own tooltips. `bgAlpha` multiplies onto the
+background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged.
 
 ### Icons (42 rows, `settings/Icons.lua`)
 
@@ -234,8 +239,10 @@ See `docs/profiles.md`.
 ## Colors and the class-color companion
 
 Every color that describes the player's taste has a **Use class color** checkbox immediately to its
-right, default off, declared with `classColorSource = "player"` on both rows and resolved through
-`NS.ResolveColor` (options-ui-§17). The swatch is never disabled; its alpha applies under both modes.
+right, default off, declared with `classColorSource = "unit"` on both rows (options-ui-§17). The
+class is that of the unit the container tracks, read once per apply: a player container shows the
+player's, a target container the target's, and a unit with no class (an NPC) falls through to the
+swatch. The swatch is never disabled; its alpha applies under both modes.
 With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `fontColor` on
 `name`/`time`/`stacks`; Icons `borderColor`, and `fontColor` on `time`/`stacks`.
 
@@ -246,7 +253,7 @@ pages, and the six `bars.dispelColors.*`.
 ## The degraded panel
 
 With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-completing** stub
-(options-ui-§1): `LSMValues`, the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
+(options-ui-§1): the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
 `MasterControls`), `MASTER_GROUP`, a real `RestoreAllDefaults`, and no-op refreshers — every member a
 page file touches at file load — so every row still registers and `/am list|get|set` and the defaults
 keep working. The panel itself answers one line naming the missing library. `tests/degraded_env.lua`

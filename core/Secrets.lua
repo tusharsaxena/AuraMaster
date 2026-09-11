@@ -57,15 +57,6 @@ function Secrets.IsReadableNumber(v)
     return type(v) == "number" and Secrets.CanAccess(v)
 end
 
---- Whether ordering `a` against `b` is legal right now. Both operands have to be accessible: one
---- secret operand is enough to raise.
---- @param a any
---- @param b any
---- @return boolean
-function Secrets.CanCompare2(a, b)
-    return Secrets.CanAccess(a) and Secrets.CanAccess(b)
-end
-
 --- Whether `v` may be used as a TABLE KEY right now. The spell-id whitelist and blacklist are keyed
 --- tables, so a spell id is checked here before it is looked up; a caller that gets false treats the
 --- aura as "not on the list".
@@ -74,14 +65,4 @@ end
 function Secrets.IsSafeKey(v)
     if v == nil then return false end
     return not Secrets.IsSecret(v)
-end
-
---- The value of `v` when it is readable, otherwise `fallback`. Only for values whose unreadable state
---- has an honest neutral answer (a missing stack count reads as "no stacks", never as a guess).
---- @param v any
---- @param fallback any
---- @return any
-function Secrets.ReadOr(v, fallback)
-    if v == nil or not Secrets.CanAccess(v) then return fallback end
-    return v
 end

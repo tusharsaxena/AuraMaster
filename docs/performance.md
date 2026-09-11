@@ -8,27 +8,52 @@ schema and the step panel belong to `LibKa0s-Perf-1.0` and are documented with t
 
 Most of the work of showing auras is **not this addon's code**. Every container is a Blizzard aura
 engine that handles `UNIT_AURA` for its unit, gathers and sorts auras, lays out buttons and animates
-every bar, countdown and swipe in Blizzard's own code. The addon has **no per-aura Lua path**: no aura
-event handler on the hot path, no ticker, no `OnUpdate` driving a display. What remains is
-configuration work, and one path that runs on ordinary play (a target, focus or pet change).
+every bar, countdown and swipe in Blizzard's own code. The addon has **no per-aura Lua path while
+auras are secret**: no ticker and no `OnUpdate` driving a display. Its one aura-driven path is the
+readable-state timed-spell scan, bracketed `timedScan` (below). What remains is configuration work,
+and one path that runs on ordinary play (a target, focus or pet change).
 
 Other timers and frames of the addon's own: a next-frame `C_Timer.After(0)` that coalesces applies
-(`modules/ContainerManager.lua:80`), a half-second scan timer in `modules/TimedSpells.lua` that exists
-only while a container uses "only auras without a duration", and the frame picker's `OnUpdate`, which
-runs only while a pick is in progress.
+(`modules/ContainerManager.lua:149`), the half-second timed-spell scan timer, armed by a player or pet
+`UNIT_AURA` only while a container uses "only auras without a duration" and auras are readable, and
+the frame picker's `OnUpdate`, which runs only while a pick is in progress.
+
+### The timed-spell listener's cost
+
+`modules/TimedSpells.lua` hears `UNIT_AURA` through AceEvent on its own target (events-frames-taint-§1).
+The vendored AceEvent has no `RegisterUnitEvent`, so the event arrives bare, for every unit, raid
+members and nameplates included, where a private frame's unit-filtered registration would have let
+the client drop them.
+
+- **The gate bounds it.** `UNIT_AURA` is registered only while a container needs the scan, the addon
+  is not suspended, there is no combat lockdown and auras are not secret. `PLAYER_REGEN_DISABLED`
+  drops it on the event itself, because the client fires it before its lockdown begins and
+  `InCombatLockdown()` still reads false in the handler. In combat and in every
+  secret stretch (encounters, keys, PvP matches, restricted maps) it is not registered at all, so the
+  cost there is **zero**.
+- **Registered and readable, each event costs** one AceEvent dispatch, one `Secrets.IsSafeKey` and
+  one string compare, with no allocation. Only a player or pet event arms the 0.5 s scan.
+- **The volume is not bounded.** In a city, or a raid group between pulls, out-of-combat `UNIT_AURA`
+  can exceed the ~1000 events/min guide figure (events-frames-taint-§1). The work per event is small
+  and fixed; the in-game figure is recorded below.
+
+| Where | Out-of-combat `UNIT_AURA`/min (`/etrace`) | Recorded |
+|---|---|---|
+| City, or a raid group between pulls, with a "without a duration" container enabled | _not yet measured_ | — |
 
 ## Buckets
 
-Declared in report order in `core/PerfSetup.lua:45`, each bracketed with the inline gated form
+Declared in report order in `core/PerfSetup.lua:47`, each bracketed with the inline gated form
 (`local t0 = Perf.on and debugprofilestop()`, performance-§2) at a load-time `local Perf = NS.Perf`.
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:80`, `:87` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:103` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
-| `applyContainer` | `applyPass` | `modules/Container.lua:230` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:130` | The show ladder over every container, on combat transitions, world entry and the master rows |
-| `styleElement` | — | `modules/Style.lua:128` | Dressing one bar or icon: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `unitSwap` | — | `core/AuraMaster.lua:90`, `:98` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:228` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `applyContainer` | `applyPass` | `modules/Container.lua:309` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
+| `visibilityPass` | — | `modules/ContainerManager.lua:240` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `styleElement` | — | `modules/Style.lua:243` | Dressing one bar or icon: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path; absent from a capture with no "without a duration" container |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children
 (performance-§3). **`styleElement` is declared at the root because its callers differ**, and it
@@ -36,6 +61,14 @@ overlaps two other buckets without saying so: a restyle runs it inside `applyCon
 preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the engine makes from its
 own button creation sit outside every other bracket. Read `styleElement` as the dressing cost wherever
 it happened, not as a disjoint slice.
+
+The preview is dressed only when it changed: after an apply of its container's settings, or when it
+was hidden and is shown again. A visibility pass alone (a combat transition, the master alpha) leaves
+the placeholders as they are, so `visibilityPass` carries preview dressing only on the pass that
+first shows it. Dressing itself allocates little. The duration text's formatter and expiring-color
+curve, and a bar's dispel color map, are built once for each distinct format, threshold or set of
+colors and handed to every button of that look (`modules/Style.lua`), not built again per button per
+dress.
 
 ## Taking a capture
 
@@ -59,11 +92,13 @@ as described in `docs/perf-analysis/README.md`.
 
 ### Suspend
 
-Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:65`)
-calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — and
+Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:70`)
+calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — then
+`NS.TimedSpells.Stop()`, which drops TimedSpells' own `UNIT_AURA` and its three gate events, and
 runs a visibility pass; `Container:ShouldShow` checks `NS.Perf.suspended` as **step 0**, so every engine is disabled and
 nothing — a combat transition, a target swap, a settings change — can enable one behind suspend's
-back. `resume` re-registers the events, runs a visibility pass and re-applies every container from the
+back, and a queued apply waits for resume: `ContainerManager.FlushPending` returns early while
+suspended and keeps the pending set. `resume` re-registers the events, calls `NS.TimedSpells.Sync()`, runs a visibility pass and re-applies every container from the
 current settings. The suspended flag is session-only.
 
 ## Reading the report
@@ -90,6 +125,11 @@ iteration — never wall-clock time, and its timings are for comparing scenarios
 The vendored runner drives it as the `perf` suite and keeps its output in the run's bundle under
 `docs/automated-tests/` (automated-tests-§7).
 
+Every measured loop runs with the garbage collector stopped (a full collect on either side), so
+bytes/iter is what the loop allocated and is never negative. The mock engine switches to count-only
+while a loop runs: it counts calls by name and does not log them, so its own bookkeeping is not
+charged to the addon. Figures from bundles recorded before this change are not comparable.
+
 | Scenario | What it exercises |
 |---|---|
 | `compile` | `FilterCompiler.Compile` over a representative container |
@@ -97,8 +137,10 @@ The vendored runner drives it as the `perf` suite and keeps its output in the ru
 | `restyle` | Re-dressing every button of a live engine (`Container:Restyle`) |
 | `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`) |
 | `unitSwap` | A target change refreshing the containers on that unit |
-| `probeOverheadOff` | The hottest bracketed path with capture off — the evidence that a dormant bracket costs nothing (performance-§9) |
-| `probeOverheadOn` | The same path with capture on, for the comparison |
+| `probeOverheadOff` | The hottest bracketed path with capture off |
+| `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
+| `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9) |
+| `unitAuraOther` | TimedSpells' `UNIT_AURA` handler for a unit it never scans (`nameplate1`); must allocate 0 B/iter and arm no scan |
 
 **What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
 makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it

@@ -34,6 +34,14 @@ local _, NS = ...
 -- page builds the set it wants and hands all of it over — and normalized here, so a hand-edited
 -- SavedVariables file or a `/am set` cannot plant a non-numeric id the filter compiler would trip
 -- on. They take the same debug line and the same CONFIG_CHANGED every scalar write takes.
+--
+-- WHOLE SECTIONS
+-- --------------
+-- A position saved by a drag, or a filter copied from another container, is one act across many
+-- leaves. Written leaf by leaf it would announce once per leaf, and a rejection halfway would leave
+-- half of it moved. So a closed list of sections (SECTIONS below) can be written whole through this
+-- same seam: backfilled from the template, carve-outs normalized, every row under it validated, and
+-- only then stored — all of it or none — with one debug line and one CONFIG_CHANGED.
 
 NS.Schema = NS.Schema or {}
 
@@ -53,14 +61,17 @@ local function splitPath(path)
     local parts = splitCache[path]
     if parts then return parts end
     parts = {}
-    for segment in tostring(path):gmatch("[^%.]+") do parts[#parts + 1] = segment end
+    for segment in tostring(path):gmatch("[^%.]+") do
+        parts[#parts + 1] = segment
+    end
     splitCache[path] = parts
     return parts
 end
 
 local function readFrom(root, parts, first)
     local node = root
-    for i = first, #parts do
+    local last = #parts
+    for i = first, last do
         if type(node) ~= "table" then return nil end
         node = node[parts[i]]
     end
@@ -69,7 +80,8 @@ end
 
 local function writeInto(root, parts, first, value)
     local node = root
-    for i = first, #parts - 1 do
+    local last = #parts - 1
+    for i = first, last do
         local key = parts[i]
         if type(node[key]) ~= "table" then node[key] = {} end
         node = node[key]
@@ -204,7 +216,7 @@ end
 --- A set of spell ids: positive integer keys, `true` values. Anything else is dropped rather than
 --- stored, because the filter compiler hands these keys to the aura engine as they are.
 local function normalizeIdSet(value)
-    if type(value) ~= "table" then return nil, "expected a set of spell ids" end
+    if type(value) ~= "table" then return nil, L["Expected a set of spell ids"] end
     local out = {}
     for k, v in pairs(value) do
         local id = tonumber(k)
@@ -216,7 +228,7 @@ end
 --- Per-category spell edits: [categoryKey] = { [spellId] = true (added) | false (removed) }. A key
 --- that is not a spell category of this build is dropped, and an empty edit set is not stored.
 local function normalizeCategoryEdits(value)
-    if type(value) ~= "table" then return nil, "expected per-category spell edits" end
+    if type(value) ~= "table" then return nil, L["Expected per-category spell edits"] end
     local out = {}
     for key, edits in pairs(value) do
         if type(key) == "string" and NS.Categories.IsSpellCategory(key) and type(edits) == "table" then
@@ -237,23 +249,22 @@ local CARVE_OUTS = {
     ["container.filter.categorySpells"] = normalizeCategoryEdits,
 }
 
---- Whether `path` is one of the whole-set carve-outs (a test seam and a CLI aid).
-function NS.IsCarveOut(path)
-    return CARVE_OUTS[path] ~= nil
-end
-
 -- ---------------------------------------------------------------------------
 -- The write seam
 -- ---------------------------------------------------------------------------
 
---- The tail every write shares: log once, announce once, re-sync an open panel in place.
-local function announceWrite(section, containerId, path, value)
+--- The tail every write shares: log once, announce once, re-sync an open panel in place. A session
+--- row announces nothing: it is not a setting, its own set() already did everything it does, and a
+--- CONFIG_CHANGED would re-apply every container for a toggle that changes none of them.
+--- `logged` says the caller already wrote the [Set] line (a section write renders its own).
+local function announceWrite(section, containerId, path, value, sessionOnly, logged)
     -- Logged ONCE, here, with the format deferred into the sink (debug-logging-§10).
-    if NS.Debug then NS.Debug("Set", "%s = %s", path, value) end
-    -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row,
-    -- which modules/ContainerManager.lua reads as "re-apply every container".
-    if NS.bus then
-        NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED, { section = section, containerId = containerId })
+    if NS.Debug and not logged then NS.Debug("Set", "%s = %s", path, value) end
+    -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row;
+    -- `path` lets modules/ContainerManager.lua read the row's `effect` and skip an apply it needs not.
+    if NS.bus and not sessionOnly then
+        NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED,
+            { section = section, containerId = containerId, path = path })
     end
     -- Scalar, never structural: rebuilding the page under a slider mid-drag is what writing a value
     -- emphatically does not need.
@@ -261,51 +272,223 @@ local function announceWrite(section, containerId, path, value)
     if H and H.RefreshScalars then H.RefreshScalars() end
 end
 
+--- A carve-out: the whole set, normalized by its CARVE_OUTS entry, written, then announced.
+local function writeCarveOut(path, value, containerId)
+    local v, err = CARVE_OUTS[path](value)
+    if not v then return false, err end
+    local parts = splitPath(path)
+    local root, first, id = resolveRoot(parts, containerId)
+    if not root then return false, NO_CONTAINER end
+    writeInto(root, parts, first, v)
+    announceWrite("filters", id, path, v, false)
+    return true
+end
+
+-- The sections a caller may write whole, each with the CONFIG_CHANGED section it announces as.
+-- `container.attach` is deliberately absent: no caller writes it whole, and its `.container`
+-- validator checks cycles against the ACTIVE container, not the target id.
+local SECTIONS = {
+    ["container.filter"]   = "filters",
+    ["container.layout"]   = "layout",
+    ["container.behavior"] = "layout",
+    ["container.position"] = "layout",
+    ["container.bars"]     = "bars",
+    ["container.icons"]    = "icons",
+}
+
+--- Whether `path` is one of the whole-section paths (a test seam: tests/test_schema.lua).
+function NS.IsSection(path)
+    return SECTIONS[path] ~= nil
+end
+
+local function isUnder(p, section)
+    return p:sub(1, #section + 1) == section .. "."
+end
+
+--- Run every carve-out under `section` over its sub-key of `v`, in place. Returns an error or nil.
+local function normalizeSectionCarveOuts(section, v, depth)
+    for cpath, normalize in pairs(CARVE_OUTS) do
+        if isUnder(cpath, section) then
+            local cparts = splitPath(cpath)
+            local n = normalize(readFrom(v, cparts, depth + 1))
+            if not n then return L["Invalid value for %s"]:format(cpath) end
+            writeInto(v, cparts, depth + 1, n)
+        end
+    end
+    return nil
+end
+
+--- Validate every row under `section` against its leaf in `v`. Returns an error or nil.
+local function validateSectionRows(section, v, depth)
+    for _, row in ipairs(NS.Schema) do
+        if row.validate and isUnder(row.path, section)
+            and not row.validate(readFrom(v, splitPath(row.path), depth + 1)) then
+            return L["Invalid value for %s"]:format(row.path)
+        end
+    end
+    return nil
+end
+
+--- Run the `normalize(value, id)` hook of every row under `section` over its leaf of `v`, in place,
+--- after validation — the order writeRow uses — so a section write stores what a row write would.
+local function normalizeSectionRows(section, v, depth, id)
+    for _, row in ipairs(NS.Schema) do
+        if row.normalize and isUnder(row.path, section) then
+            local parts = splitPath(row.path)
+            writeInto(v, parts, depth + 1, row.normalize(readFrom(v, parts, depth + 1), id))
+        end
+    end
+end
+
+--- The onChange of every row under `section` whose leaf actually changed between `old` and `v`.
+local function fireSectionChanges(section, old, v, depth, id)
+    local Sig = NS.FilterCompiler.Signature
+    for _, row in ipairs(NS.Schema) do
+        if row.onChange and isUnder(row.path, section) then
+            local parts = splitPath(row.path)
+            local leaf = readFrom(v, parts, depth + 1)
+            if Sig(readFrom(old, parts, depth + 1)) ~= Sig(leaf) then row.onChange(leaf, id) end
+        end
+    end
+end
+
+--- `{k=v, sub={…}}` with sorted keys: what a section write's [Set] line shows.
+local function renderSection(v)
+    local keys = {}
+    for k in pairs(v) do
+        keys[#keys + 1] = k
+    end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    for i, k in ipairs(keys) do
+        local x = v[k]
+        keys[i] = tostring(k) .. "=" .. (type(x) == "table" and "{…}" or tostring(x))
+    end
+    return "{" .. table.concat(keys, ", ") .. "}"
+end
+
+--- The section's one [Set] line, built only when the debug flag is on (debug-logging-§4, §9).
+local function logSection(path, v)
+    if NS.State and NS.State.debug and NS.Debug then
+        NS.Debug("Set", "%s = %s", path, renderSection(v))
+    end
+end
+
+--- The checks a whole-section write runs before it stores anything: a deep copy of `value`,
+--- backfilled, carve-outs normalized, rows validated. Returns the copy, the root, the path's parts,
+--- the first index and the container id — or nil and the refusal. Nothing is stored.
+local function prepareSection(path, value, containerId)
+    if type(value) ~= "table" then return nil, L["Invalid value for %s"]:format(path) end
+    local parts = splitPath(path)
+    local root, first, id = resolveRoot(parts, containerId)
+    if not root then return nil, NO_CONTAINER end
+    local v = copy(value)
+    NS.Database.Backfill(v, readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
+    local depth = #parts
+    local err = normalizeSectionCarveOuts(path, v, depth) or validateSectionRows(path, v, depth)
+    if err then return nil, err end
+    return v, root, parts, first, id
+end
+
+--- A whole section: prepareSection's checked copy, its rows normalized, then stored in one write.
+--- All or nothing: nothing is stored unless every check passes.
+local function writeSection(path, value, containerId, sec)
+    local v, root, parts, first, id = prepareSection(path, value, containerId)
+    if not v then return false, root end   -- `root` carries the refusal here
+    normalizeSectionRows(path, v, #parts, id)
+    local old = readFrom(root, parts, first)
+    writeInto(root, parts, first, v)
+    fireSectionChanges(path, old, v, #parts, id)
+    logSection(path, v)
+    announceWrite(sec, id, path, nil, false, true)
+    return true
+end
+
+--- A schema row's storage step: validate the raw value, resolve the container, normalize, store.
+--- `row.normalize(value, id)` is an optional hook that runs after the id is known, so a row can
+--- rewrite a valid value against its container (the name row makes it unique). It returns ok,
+--- err|nil, the container id, and the value as stored (what onChange and the announcement see).
+local function writeRow(row, path, value, containerId)
+    if row.validate and not row.validate(value) then
+        return false, L["Invalid value for %s"]:format(path)
+    end
+    local parts, root, first, id
+    if not row.sessionOnly then
+        parts = splitPath(path)
+        root, first, id = resolveRoot(parts, containerId)
+        if not root then return false, NO_CONTAINER end
+    end
+    if row.normalize then value = row.normalize(value, id) end
+    if row.sessionOnly then
+        -- No database write by definition; the row's own set() IS its storage.
+        if row.set then row.set(value) end
+    else
+        -- copy() on the way in: a color table handed straight from a widget or from a row's
+        -- default would otherwise be shared, and editing one container would edit another.
+        writeInto(root, parts, first, copy(value))
+    end
+    return true, nil, id, value
+end
+
 --- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
 --- Defaults buttons and a drag handle all land here. `containerId` targets a specific container
 --- instead of the active one.
 ---
---- Order is load-bearing: write, react, log once, announce. Reacting before the write would hand a
---- reactor the old value; logging in the reactor would log it once per subscriber.
+--- Order is load-bearing: validate, resolve, normalize, write, react, log once, announce. Reacting
+--- before the write would hand a reactor the old value; logging in the reactor would log it once
+--- per subscriber.
 --- @return boolean ok, string|nil err
 function NS.SetByPath(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+    if CARVE_OUTS[path] then return writeCarveOut(path, value, containerId) end
+    local sec = SECTIONS[path]
+    if sec then return writeSection(path, value, containerId, sec) end
 
-    local normalize = CARVE_OUTS[path]
-    if normalize then
-        local v, err = normalize(value)
-        if not v then return false, err end
-        local parts = splitPath(path)
-        local root, first, id = resolveRoot(parts, containerId)
-        if not root then return false, NO_CONTAINER end
-        writeInto(root, parts, first, v)
-        announceWrite("filters", id, path, v)
-        return true
-    end
+    local row = index[path]
+    if not row then return false, L["Setting not found: %s"]:format(path) end
+    local ok, err, id, stored = writeRow(row, path, value, containerId)
+    if not ok then return false, err end
 
+    if row.onChange then row.onChange(stored, id) end
+    announceWrite(row.page, id, path, stored, row.sessionOnly)
+    return true
+end
+
+--- Whether a spell set would be stored: the carve-out's normalizer accepts it and the container exists.
+local function checkCarveOut(path, value, containerId)
+    local v, err = CARVE_OUTS[path](value)
+    if not v then return false, err end
+    if not resolveRoot(splitPath(path), containerId) then return false, NO_CONTAINER end
+    return true
+end
+
+--- Whether a row write would be stored: the row exists, its validate accepts the value, and (for a
+--- stored row) the container exists. A row's normalize never refuses, so it is not run.
+local function checkRow(path, value, containerId)
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
     if row.validate and not row.validate(value) then
         return false, L["Invalid value for %s"]:format(path)
     end
-
-    local id
-    if row.sessionOnly then
-        -- No database write by definition; the row's own set() IS its storage.
-        if row.set then row.set(value) end
-    else
-        local parts = splitPath(path)
-        local root, first, rid = resolveRoot(parts, containerId)
-        if not root then return false, NO_CONTAINER end
-        id = rid
-        -- copy() on the way in: a color table handed straight from a widget or from a row's
-        -- default would otherwise be shared, and editing one container would edit another.
-        writeInto(root, parts, first, copy(value))
+    if not row.sessionOnly and not resolveRoot(splitPath(path), containerId) then
+        return false, NO_CONTAINER
     end
-
-    if row.onChange then row.onChange(value, id) end
-    announceWrite(row.page, id, path, value)
     return true
+end
+
+--- Whether NS.SetByPath(path, value, containerId) would store the value: the same checks, run on a
+--- copy, with nothing stored, no onChange and nothing announced. Not a second write seam — it
+--- writes nothing. It lets a caller that writes several paths as one act (ContainerManager.CopyFrom)
+--- refuse all of them when any one would be refused.
+--- @return boolean ok, string|nil err
+function NS.CheckWrite(path, value, containerId)
+    if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+    if CARVE_OUTS[path] then return checkCarveOut(path, value, containerId) end
+    if SECTIONS[path] then
+        local v, err = prepareSection(path, value, containerId)
+        if not v then return false, err end
+        return true
+    end
+    return checkRow(path, value, containerId)
 end
 
 --- Restore one row to its shipped default, through the same seam everything else writes through.

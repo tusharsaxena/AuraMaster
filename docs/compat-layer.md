@@ -18,7 +18,7 @@ metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`) and the secret-safe str
 
 | # | Shim | Wraps | Fallback | Why it exists | Called from |
 |---|---|---|---|---|---|
-| 1 | `HasAuraContainer()` | `AuraContainerSortMethod` and `CreateFrame` present | `false` | Without the 12.1 engine nothing can be drawn; say so once instead of erroring per render | `modules/ContainerManager.lua`, `modules/Container.lua` |
+| 1 | `HasAuraContainer()` | `AuraContainerSortMethod` and `CreateFrame` present | `false` | Without the 12.1 engine nothing can be drawn; say so once instead of erroring per render | `modules/Container.lua` (and shim 17 `EnsureAuraContainer`) |
 | 2 | `AurasAreSecret()` | `C_Secrets.ShouldAurasBeSecret()` (pcall) | `false` | The gate in front of every apply, restyle and aura scan | `modules/ContainerManager.lua`, `modules/TimedSpells.lua` |
 | 3 | `SortMethod(key)` | `AuraContainerSortMethod[member]` via `SORT_METHOD_ENGINE` | `0` | The addon stores its own sort keys; the engine enum is looked up at call time | `modules/Container.lua` |
 | 4 | `SortDirection(key)` | `AuraContainerSortDirection.Normal/Reverse` | `0` / `1` | Same | `modules/Container.lua` |

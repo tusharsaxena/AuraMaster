@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-154%2F154_passing-green)
+![Tests](https://img.shields.io/badge/Tests-251%2F251_passing-green)
 
 ![Ka0s Aura Master](media/logos/auramaster.logo.png)
 
@@ -24,11 +24,11 @@ Everything is set up from the addon's page under Settings → AddOns, or from ch
 Your first login gives you three containers to start from: your buffs as bars near the top right of
 the screen, your debuffs as a row of icons just above them, and the debuffs you've put on your target
 as icons a little below the middle of the screen. They start locked. Type `/am unlock` and each one
-gets a blue handle with its name, filled with sample auras so there is something to grab even when
-nothing is up. Drag them where you want them and type `/am lock`. Right-clicking a handle opens the
-settings with that container already selected.
+fills with sample auras. It also gets a gold-edged handle with its name, placed just outside the
+first bar or icon so it never covers one. Drag the handles where you want them and type
+`/am lock`. Right-clicking a handle opens the settings with that container already selected.
 
-Those sample auras are the preview, and `/am preview` shows them without unlocking anything. It's the
+Those sample auras are the preview, and `/am test` shows them without unlocking anything. It's the
 quickest way to try textures, fonts and sizes before a real buff turns up. Real auras stay hidden
 while the preview is on, and locking or a `/reload` turns it off.
 
@@ -47,8 +47,10 @@ closes the settings so you can just click the frame you want. The same page cove
 spacing, scale and tooltips, and right-clicking one of your own buffs cancels it unless you switch
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
 chat too: `/am new target debuffs icons` makes a container, `/am select` changes which one you're
-editing, and `/am set` changes any single setting. If you change something mid-fight, it waits until
-combat ends, and chat tells you so once.
+editing, and `/am set` changes any single setting. `/am disable` hides every container at once,
+`/am enable` brings them back, and neither one waits for combat to end. If you change something else
+mid-fight, it waits until combat ends (or, inside a key, encounter or match, until that's over), and
+chat tells you which.
 
 Everything else is on the addon's page under Settings → AddOns, and `/am help` (or `/auramaster help`)
 lists every command.
@@ -80,7 +82,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | Question | Answer |
 |----------|--------|
 | Do I need to install anything else? | No. Everything the addon needs comes inside it. |
-| Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change, mentions it once in chat, and applies it as soon as the lock lifts. |
+| Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change and says so in chat. If the lock outlasts combat because an encounter, key or match is still going, it says so once more. The change goes in as soon as the lock lifts. |
 | Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned and tracked as a GitHub issue, and so is a text-only container style. |
 | Can I put a container on my unit frame? | Yes. On Layout → Position set **Attach to** to *A named frame*, then use **Pick a frame…** and click it. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
 | Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on friendly units and debuffs on hostile ones. Categories, dispel types and the other filters work on any unit. |
@@ -94,8 +96,8 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 | Symptom | Fix |
 |---------|-----|
-| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on the Containers page. |
-| I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am preview off`. |
+| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on the Containers page. |
+| I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am test off`. |
 | A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category with every spell unticked. Loosen one of them, for example by setting a category back to its neutral dash. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |
 | I can't drag a container | Only containers attached to the screen can be dragged, and not during combat. An attached container follows its target; move it with the offsets on Layout → Position, or use **Attach to the screen**. |

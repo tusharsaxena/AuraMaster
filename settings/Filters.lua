@@ -66,12 +66,13 @@ local function categoryRows(auraType)
     for _, def in ipairs(Cat.For(auraType)) do
         local sub = SUBGROUP_BY_KIND[def.kind] or "Blizzard flags"
         if def.field == "isFromPlayerOrPlayerPet" then sub = "Who cast it" end
-        rows[#rows + 1] = {
+        local row = {
             path = "container.filter.categories." .. def.key, page = PAGE, group = G_CATS,
             subgroup = L[sub], auraTypes = { [auraType] = true },
             type = "string", values = STATES, label = L[def.label],
-            desc = L[def.desc] .. "\n\n" .. L["Show: this container shows only the categories set to Show (and your Always list). Hide: never shown here. —: no effect."],
+            desc = ("%s\n\n%s"):format(L[def.desc], L["Show: this container shows only the categories set to Show (and your Always list). Hide: never shown here. —: no effect."]),
         }
+        rows[#rows + 1] = row
     end
     return rows
 end
@@ -120,7 +121,9 @@ end
 
 local function sortedIds(set)
     local out = {}
-    for id in pairs(set or {}) do out[#out + 1] = id end
+    for id in pairs(set or {}) do
+        out[#out + 1] = id
+    end
     table.sort(out)
     return out
 end
@@ -148,7 +151,9 @@ local spellCategory   -- session: which spell category the tab is editing
 local function spellCategories()
     local out = {}
     for _, def in ipairs(Cat.For("HELPFUL")) do
-        if def.kind == "spells" then out[#out + 1] = def end
+        if def.kind == "spells" then
+            out[#out + 1] = def
+        end
     end
     return out
 end
@@ -186,7 +191,9 @@ local function renderSpellLists(ctx, cfg)
 
     -- Starter spells first (ticked unless removed), then the ones the player added.
     local rows = {}
-    for id in pairs(def.spells or {}) do rows[#rows + 1] = { id = id, starter = true } end
+    for id in pairs(def.spells or {}) do
+        rows[#rows + 1] = { id = id, starter = true }
+    end
     table.sort(rows, function(a, b) return a.id < b.id end)
     for _, id in ipairs(sortedIds(mine)) do
         if mine[id] == true and not (def.spells and def.spells[id]) then
@@ -194,7 +201,7 @@ local function renderSpellLists(ctx, cfg)
         end
     end
     for _, r in ipairs(rows) do
-        items[#items + 1] = { make = function(_, parent, rel)
+        table.insert(items, { make = function(_, parent, rel)
             local cb = AceGUI:Create("CheckBox")
             cb:SetLabel(spellText(r.id))
             cb:SetRelativeWidth(rel or 0.5)
@@ -209,7 +216,7 @@ local function renderSpellLists(ctx, cfg)
             end)
             parent:AddChild(cb)
             return cb
-        end }
+        end })
     end
     H.RenderGrid(ctx, items)
     H.InlineButtonPair(ctx, {
@@ -232,14 +239,14 @@ local function renderIdSet(ctx, cfg, key, heading, blurb)
         rerender()
     end), { make = function() return true end } }
     for _, id in ipairs(sortedIds(set)) do
-        items[#items + 1] = { make = function(_, parent, rel)
+        table.insert(items, { make = function(_, parent, rel)
             local lbl = AceGUI:Create("Label")
             lbl:SetText(spellText(id))
             lbl:SetRelativeWidth(rel or 0.5)
             parent:AddChild(lbl)
             return lbl
-        end }
-        items[#items + 1] = { make = function(_, parent, rel)
+        end })
+        table.insert(items, { make = function(_, parent, rel)
             local btn = AceGUI:Create("Button")
             btn:SetText(L["Remove"])
             btn:SetRelativeWidth((rel or 0.5) * 0.5)
@@ -250,7 +257,7 @@ local function renderIdSet(ctx, cfg, key, heading, blurb)
             end)
             parent:AddChild(btn)
             return btn
-        end }
+        end })
     end
     H.RenderGrid(ctx, items)
 end

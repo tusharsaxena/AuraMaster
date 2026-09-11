@@ -10,15 +10,31 @@ local _, NS = ...
 -- account-wide (db.global.timedSpells), and modules/FilterCompiler.lua hands that set to the engine as
 -- excludeSpellIDs. A timed buff never yet seen out of combat shows up once, then is learned for good.
 --
+-- HOW IT LISTENS. Through AceEvent on this file's own target, never a private frame
+-- (events-frames-taint-§1). The vendored AceEvent has no RegisterUnitEvent, so UNIT_AURA arrives for
+-- every unit, raid members and nameplates included, and the handler keeps only the player and pet.
+-- That cost is bounded by registering UNIT_AURA only while a scan could read anything: out of combat
+-- lockdown and while auras are not secret. PLAYER_REGEN_DISABLED closes that gate (lockdown begins
+-- only after it fires); PLAYER_REGEN_ENABLED and ADDON_RESTRICTION_STATE_CHANGED re-check it, and
+-- reopening it schedules one scan. In combat and in every secret stretch UNIT_AURA is not registered
+-- at all, and a scan queued before the gate closed is dropped when it comes due, so combat never
+-- learns a spell, announces one, or queues an apply.
+--
 -- It only listens while some container actually uses the mode, so an addon with none pays nothing.
+-- What it learned is announced on the bus (TIMED_SPELLS_CHANGED), never pushed into another module.
 
 NS.TimedSpells = NS.TimedSpells or {}
 local TS = NS.TimedSpells
+local Perf = NS.Perf
 
-local frame            -- the event frame, built on first need
 local scanScheduled = false
+local listening = false    -- whether UNIT_AURA is registered right now
 local SCAN_UNITS = { "player", "pet" }
 local MAX_INDEX = 40
+
+-- Game events, on a target of their own: apart from the message target below, so
+-- UnregisterAllEvents can never touch a message registration.
+local events = NS.NewBusTarget()
 
 local function store()
     local g = NS.db and NS.db.global
@@ -61,45 +77,75 @@ function TS.Scan()
     end
     if learned > 0 then
         NS.Debug("Timed", "learned %s timed spell(s)", learned)
-        if NS.ContainerManager then NS.ContainerManager.RequestApply() end
+        NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED)
     end
     return learned
+end
+
+--- Whether a scan could read anything right now: no combat lockdown, auras not secret.
+local function readable()
+    return not InCombatLockdown() and not NS.Compat.AurasAreSecret()
+end
+
+--- One scan, bracketed (bucket `timedScan`, performance-§3). A tick queued before the gate closed
+--- (combat, a secret stretch, suspend) is dropped, unmarked, so it neither reads nor announces
+--- anything; the gate reopening schedules a fresh scan.
+local function scanTick()
+    if not (listening and readable()) then
+        scanScheduled = false
+        return
+    end
+    local t0 = Perf.on and debugprofilestop()
+    TS.Scan()
+    if t0 then Perf.Note("timedScan", debugprofilestop() - t0) end
 end
 
 local function scheduleScan()
     if scanScheduled then return end
     scanScheduled = true
-    C_Timer.After(0.5, TS.Scan)
+    C_Timer.After(0.5, scanTick)
 end
 
---- The event frame. UNIT_AURA goes through RegisterUnitEvent for the two units scanned, so the client
---- filters it: registered bare, it would fire for every unit in a raid and every nameplate.
-local function eventFrame()
-    if not frame and CreateFrame then
-        frame = CreateFrame("Frame")
-        frame:SetScript("OnEvent", function() scheduleScan() end)
+--- UNIT_AURA arrives for every unit. The payload is secret while auras are, so the unit is proven a
+--- safe key before it is compared.
+local function onUnitAura(_, unit)
+    if NS.Secrets.IsSafeKey(unit) and (unit == "player" or unit == "pet") then scheduleScan() end
+end
+
+--- Register UNIT_AURA while a scan could read anything, and drop it while none could. The client
+--- fires PLAYER_REGEN_DISABLED before its combat lockdown begins, so InCombatLockdown() still answers
+--- false inside that handler: the event itself closes the gate (docs/midnight-quirks.md, combat state).
+local function syncAuraListen(event)
+    local open = event ~= "PLAYER_REGEN_DISABLED" and readable()
+    if open and not listening then
+        events:RegisterEvent("UNIT_AURA", onUnitAura)
+        listening = true
+        scheduleScan()
+    elseif not open and listening then
+        events:UnregisterEvent("UNIT_AURA")
+        listening = false
     end
-    return frame
 end
 
 --- Stop listening (perf suspend, and any time no container needs it).
 function TS.Stop()
-    if frame then frame:UnregisterAllEvents() end
+    events:UnregisterAllEvents()
+    listening = false
 end
 
 --- Start or stop listening, from what the containers need right now. Suspend wins
 --- (performance-§6): a suspended addon registers nothing.
 function TS.Sync()
-    if not (TS.Needed() and not NS.Perf.suspended) then return TS.Stop() end
-    local f = eventFrame()
-    if not f then return end
-    f:RegisterUnitEvent("UNIT_AURA", "player", "pet")
-    f:RegisterEvent("PLAYER_REGEN_ENABLED")
+    if not (TS.Needed() and not Perf.suspended) then return TS.Stop() end
+    events:RegisterEvent("PLAYER_REGEN_DISABLED", syncAuraListen)
+    events:RegisterEvent("PLAYER_REGEN_ENABLED", syncAuraListen)
+    events:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", syncAuraListen)
+    syncAuraListen()
     scheduleScan()
 end
 
---- The event frame, or nil before it is needed (a test seam).
-function TS.__frame() return frame end
+--- This file's event target (a test seam).
+function TS.__events() return events end
 
 -- Whether a scan is needed changes when a container's filter or the registry does, so both messages
 -- re-sync — on this file's own bus target (architecture-§4).
@@ -118,5 +164,6 @@ end
 function TS.Forget()
     local g = NS.db and NS.db.global
     if g then g.timedSpells = {} end
-    if NS.ContainerManager then NS.ContainerManager.RequestApply() end
+    -- The player's own change, unlike a scan's: an apply it queues in combat is announced.
+    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED, { byPlayer = true })
 end

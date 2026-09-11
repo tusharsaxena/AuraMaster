@@ -22,8 +22,9 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 5. **`modules/`** — `Style.lua` before `Style_Bars.lua` and `Style_Icons.lua`, which decorate
    `NS.Style` at file scope. The rest reach each other only at call time.
 6. **`settings/`** — last. `Schema.lua` first (every page registers into it), `Slash.lua`, then
-   `OptionsSetup.lua` before every page file, because the pages call the composers and
-   `NS.Helpers.LSMValues` inside schema-row literals at file load. The page files are in the order
+   `OptionsSetup.lua` before every page file, because the pages call the composers
+   (`NS.Helpers.ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`, `MasterControls`) inside
+   `NS.RegisterSchemaRows` at file load. The page files are in the order
    their Blizzard subcategories appear.
 
 ## `locales/`
@@ -42,14 +43,14 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/Constants.lua` | Enum-like tables and labels (units, aura types, styles, sort methods, points, dispel colors, preview auras), fallback media, `LOGO_PATH` | Read by everything after it |
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `preview`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
-| `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.SafeToString`, `NS.IsConcatSafe`, `NS.ResolveColor`, `NS.SKIN`/`ApplySkin`, the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
-| `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the three `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
-| `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a three-member local pool | Conventional |
-| `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with five buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
-| `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `CanCompare2`, `IsSafeKey`, `ReadOr` | Conventional |
+| `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin` (the skin seam, published for a future standalone window; nothing consumes it today), the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
+| `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
+| `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a four-member local pool (`New`, `Acquire`, `ReleaseAll`, `Counts`) | Conventional |
+| `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
+| `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `IsSafeKey` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
-| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the empty `SCHEMA_STEPS` ladder, `PrepareProfile`, registry reads, `DeepCopy`/`Backfill`/`Merge` | Conventional: called from `OnInitialize` |
+| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the empty `SCHEMA_STEPS` ladder, `PrepareProfile` (the load repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps outside the write seam: the architecture-§5 row), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
 
 ## `defaults/`
 
@@ -62,24 +63,24 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 
 | File | Responsibility |
 |---|---|
-| `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens only while a container needs it |
+| `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens through AceEvent only while a container needs it and auras are readable, and announces what it learned on the bus |
 | `modules/FilterCompiler.lua` | Pure: one container's filter settings → aura groups (filter strings + candidate filters), enchant slots and warnings; `Signature`, `StructureKey` |
-| `modules/Style.lua` | Shared dressing: LSM fetch, player-class color, text, border, guarded engine bindings, element size, mouse behavior, duration text; bucket `styleElement` |
+| `modules/Style.lua` | Shared dressing: LSM fetch, class color (the container's unit's, as snapshotted), text, border, guarded engine bindings, element size, mouse behavior, duration text; bucket `styleElement` |
 | `modules/Style_Bars.lua` | Builds and dresses a bar button; the elapsed-time status bar with an edge-anchored fill; preview fill |
 | `modules/Style_Icons.lua` | Builds and dresses an icon button: aspect-correct crop, cooldown swipe, dispel border; preview fill |
 | `modules/Anchors.lua` | Places a container's anchor on the screen, another container or a named frame; cycle check; pending frame re-resolve; the drag handle |
 | `modules/Preview.lua` | Placeholder elements from a pool, dressed by `Style` with `engine` false, positioned by `Preview.Offset` |
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor; left-click picks, right-click or Escape cancels |
 | `modules/BlizzardFrames.lua` | Reparents `BuffFrame`/`DebuffFrame` to a hidden parent and back, out of combat only |
-| `modules/Container.lua` | One live container: its anchor and handle, building, updating or retiring its engine, restyling, the show ladder; bucket `applyContainer` |
-| `modules/ContainerManager.lua` | The registry's one writer (create, delete, rename, duplicate, copy-from, reset positions), the coalesced and deferred apply, visibility and unit refresh; buckets `applyPass`, `visibilityPass` |
+| `modules/Container.lua` | One live container: its anchor and handle, building, updating or retiring its engine, restyling, the per-apply class snapshot, the show ladder; bucket `applyContainer` |
+| `modules/ContainerManager.lua` | The registry's runtime writer (create, delete, duplicate; `Database.PrepareProfile` also writes it on load, and the architecture-§5 row names every writer), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
 
 ## `settings/` (TOC order)
 
 | File | Responsibility |
 |---|---|
 | `settings/Schema.lua` | The path machinery: container-relative resolution, `NS.RegisterSchemaRows`, the read seam `NS.GetSetting`, the write seam `NS.SetByPath`, the carve-outs, `NS.Choices`, `NS.ValidateSchema` |
-| `settings/Slash.lua` | `NS.COMMANDS` (20 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
+| `settings/Slash.lua` | `NS.COMMANDS` (22 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
 | `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor and its load-completing stub; the container banner, `RenderContainerPage`, `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
 | `settings/General.lua` | The General page: the composed Master controls tab and the Display tab; the Reset all popup |
@@ -114,15 +115,15 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, combat and secrecy deferral |
 | `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, pending frames, picking and canceling |
 | `test_style.lua` | `modules/Style*.lua` and `modules/Preview.lua`: element sizes, preview layout, engine bindings |
-| `test_timedspells.lua` | `modules/TimedSpells.lua`: unit-filtered listening, learning out of combat, feeding the timeless filter |
+| `test_timedspells.lua` | `modules/TimedSpells.lua`: readable-state listening, the bus announcement, learning out of combat, feeding the timeless filter |
 | `test_slash.lua` | `settings/Slash.lua`: `NS.COMMANDS` and every host verb through the real dispatcher |
 | `test_optionssetup.lua` | The panel: pages, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |
 | `test_locale.lua` | `locales/enUS.lua` defines every routed string and nothing unused |
-| `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways |
+| `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways, every file:line citation resolving to a non-blank line |
 | `test_surface_parity.lua` | Each degradation stub against the live surface it stands in for |
 | `test_vendor_sync.lua` | `libs/LibKa0s/` and `tests/_kit/` against the LibKa0s tag named in `CLAUDE.md` |
-| `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression |
+| `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares |
 
 ## Root and media
@@ -136,4 +137,5 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `.gitignore` | OS and editor clutter, agent scratch directories |
 | `LICENSE` | MIT |
 | `README.md`, `CLAUDE.md`, `DEPENDENCIES.md` | The three root docs (documentation-§1/§2/§7) |
+| `docs/` | The engineering docs; every file is registered in `docs/ARCHITECTURE.md` → Documentation map, which also names the frozen bundle directories |
 | `media/logos/auramaster.logo.tga` | The logo the client loads (landing page, `## IconTexture`); `.png` and `.jpg` beside it are the source art |

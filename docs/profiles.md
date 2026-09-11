@@ -16,7 +16,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## AceDB setup
 
-`NS.InitDB` (`core/Database.lua:165`), called from `OnInitialize`:
+`NS.InitDB` (`core/Database.lua:212`), called from `OnInitialize`:
 
 - `AceDB:New("AuraMasterDB", NS.defaults, true)` — `true` puts every character on the shared
   `Default` profile until the player picks a per-character, per-class or per-realm one.
@@ -25,7 +25,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged` (`core/AuraMaster.lua:106`):
+`NS.OnProfileChanged` (`core/AuraMaster.lua:118`):
 
 ```
 NS.OnProfileChanged()
@@ -44,6 +44,15 @@ NS.OnProfileChanged()
 - **A reset** empties the profile. `seeded` goes back to `false` with it, so the starter containers
   come back — a reset is "as installed", not "nothing".
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
+- **A switch, copy or reset in combat** cannot be refused, since AceDB fires it. A container the new
+  profile does not have is parked (its engine disabled, nothing hidden) and torn down after combat;
+  a container it adds gets a plain anchor frame now and its engine once combat ends. Ids are reused
+  across profiles (a reset reseeds the starters from id 1), so a container whose id the new profile
+  also has stays parked too: its engine was built for the old container, and it draws again only
+  after the deferred apply rebuilds it for the new one. The same holds for a container the new
+  profile lacks: it is marked as parked by a profile change, so if a Create or Duplicate hands its
+  id out again before the apply can run (a reset rewinds the id counter, and both are allowed out of
+  combat while aura information is withheld), it stays parked until that apply rebuilds it.
 
 ## Reset all settings is a profile reset
 
@@ -52,7 +61,8 @@ General → Master controls → **Reset all settings** and `/am resetall` both r
 `db:ResetProfile()` (options-ui-§12), so the global reset and Profiles → Reset Profile are the same
 act, with the same popup wording. The global reset's own row walk skips the Profiles page and every
 profile-backed row (`vetoedFromResetAll`, `settings/OptionsSetup.lua:23`), leaving it only the
-session rows a profile reset cannot reach. Other profiles are untouched.
+session rows a profile reset cannot reach. Other profiles are untouched. Neither surface is refused
+in combat: like Reset Profile, both take the parked teardown described above.
 
 ## The Profiles sub-page
 

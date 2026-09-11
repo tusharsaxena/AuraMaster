@@ -9,7 +9,7 @@ local _, NS = ...
 -- the engine uses, with invented values filled in. Everything a player changes on the Bars or Icons
 -- page therefore shows up here exactly as it will on a real aura.
 --
--- Preview is on whenever the addon is UNLOCKED, or when `/am preview` turns it on; while it is, each
+-- Preview is on whenever the addon is UNLOCKED, or when `/am test` turns it on; while it is, each
 -- container's engine is disabled so real auras do not draw on top of the placeholders.
 
 NS.Preview = NS.Preview or {}
@@ -55,10 +55,13 @@ local function factory(parent)
     end
 end
 
---- Draw the placeholders for one container.
+--- Draw the placeholders for one container. They are dressed again only when they were hidden in
+--- between or the container's settings were applied since the last dress (`previewDirty`, set by
+--- ContainerClass:Apply): a visibility pass alone leaves them as they are.
 function Preview.Show(container)
     local cfg = container:Cfg()
     if not cfg then return end
+    if container.previewShown and not container.previewDirty then return end
     local pool = container.previewPool
     if not pool then
         pool = NS.Pool.New()
@@ -72,17 +75,21 @@ function Preview.Show(container)
     if cfg.auraType == "ENCHANT" then count = math.min(count, 2) end
 
     local styler = (cfg.style == "icons") and NS.Style.Icons or NS.Style.Bars
+    local make = container.previewFactory or factory(container.anchor)
+    container.previewFactory = make
     for i = 1, count do
-        local f = NS.Pool.Acquire(pool, factory(container.anchor))
-        NS.Style.Element(f, cfg, false)
+        local f = NS.Pool.Acquire(pool, make)
+        NS.Style.Element(f, cfg, false, container.classColor)
         styler.FillPreview(f, C.PREVIEW_AURAS[i], cfg)
         local point, x, y = Preview.Offset(cfg, i)
         f:ClearAllPoints()
         f:SetPoint(point, container.anchor, point, x, y)
     end
+    container.previewShown, container.previewDirty = true, false
 end
 
 --- Remove one container's placeholders.
 function Preview.Hide(container)
     if container.previewPool then NS.Pool.ReleaseAll(container.previewPool) end
+    container.previewShown = false
 end

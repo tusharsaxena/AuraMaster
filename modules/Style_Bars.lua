@@ -19,6 +19,7 @@ local _, NS = ...
 
 local Style = NS.Style
 local C = NS.Constants
+local D = NS.CONTAINER_TEMPLATE
 
 Style.Bars = Style.Bars or {}
 local Bars = Style.Bars
@@ -66,7 +67,7 @@ end
 
 --- Lay the icon and the bar area out inside the element.
 local function layout(frame, am, b, h)
-    local iconPos = b.icon or "LEFT"
+    local iconPos = b.icon or D.bars.icon
     local iconSize = (tonumber(b.iconSize) or 0) > 0 and b.iconSize or h
     local gap = tonumber(b.iconGap) or 0
 
@@ -115,37 +116,30 @@ local function wireFill(am, b)
     end
 end
 
-function Bars.Apply(frame, cfg, engine)
-    local b = cfg.bars or {}
-    local w, h = Style.ElementSize(cfg)
-    local am = frame.__am or build(frame)
-
-    frame:SetSize(w, h)
-    layout(frame, am, b, h)
-
-    -- Surfaces.
-    local tex = Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE)
-    am.fill:SetTexture(tex)
-    local r, g, bl, a = Style.Color(b.barColor, b.useClassColorBar)
-    am.fill:SetVertexColor(r, g, bl, a)
+--- Paint the surfaces: the fill, the background, the border and the spark. Each surface's opacity
+--- multiplies onto its color's own alpha, so a color's alpha still applies.
+local function applySurfaces(am, b)
+    am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
+    am.fill:SetVertexColor(Style.Color(b.barColor, b.useClassColorBar))
     am.fill:SetAlpha(tonumber(b.barAlpha) or 1)
 
     am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
     am.bg:SetVertexColor(Style.Color(b.bgColor, b.useClassColorBg))
+    am.bg:SetAlpha(tonumber(b.bgAlpha) or D.bars.bgAlpha)
 
     Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, b.borderSize, b.borderColor,
         b.useClassColorBorder)
 
-    wireFill(am, b)
     am.spark:SetShown(b.spark ~= false)
-    am.spark:SetSize(tonumber(b.sparkWidth) or 8, h * 2)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))
+end
 
-    -- Text.
-    Style.ApplyText(am.name, b.name, am.bar)
-    Style.ApplyText(am.time, b.time, am.bar)
+--- Dress the name, time and stack texts, and show each one its settings leave on.
+local function applyTexts(am, b)
+    Style.ApplyText(am.name, b.name, am.bar, D.bars.name)
+    Style.ApplyText(am.time, b.time, am.bar, D.bars.time)
     local stackHost = (b.icon ~= "NONE") and am.icon or am.bar
-    Style.ApplyText(am.stacks, b.stacks, stackHost)
+    Style.ApplyText(am.stacks, b.stacks, stackHost, D.bars.stacks)
     -- The name stops short of the time text rather than running under it.
     if b.name and b.time and b.time.show ~= false then
         am.name:SetPoint("RIGHT", am.time, "LEFT", -4, 0)
@@ -153,6 +147,19 @@ function Bars.Apply(frame, cfg, engine)
     am.name:SetShown(b.name == nil or b.name.show ~= false)
     am.time:SetShown(b.time == nil or b.time.show ~= false)
     am.stacks:SetShown(b.stacks == nil or b.stacks.show ~= false)
+end
+
+function Bars.Apply(frame, cfg, engine)
+    local b = cfg.bars or {}
+    local w, h = Style.ElementSize(cfg)
+    local am = frame.__am or build(frame)
+
+    frame:SetSize(w, h)
+    layout(frame, am, b, h)
+    applySurfaces(am, b)
+    wireFill(am, b)
+    am.spark:SetSize(tonumber(b.sparkWidth) or D.bars.sparkWidth, h * 2)
+    applyTexts(am, b)
 
     am.pandemic:SetVertexColor(Style.Color(b.pandemicColor, false))
 
@@ -172,7 +179,7 @@ function Bars.Bind(frame, am, cfg, b)
     })
     if b.icon ~= "NONE" then Style.Bind(frame, "SetIcon", am.icon) end
     if b.name == nil or b.name.show ~= false then Style.Bind(frame, "SetSpellName", am.name) end
-    if b.time == nil or b.time.show ~= false then Style.BindDurationText(frame, am.time, b) end
+    if b.time == nil or b.time.show ~= false then Style.BindDurationText(frame, am.time, b, D.bars) end
     if b.stacks == nil or b.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
     Style.Bind(frame, "ClearDispelTypeTextures")

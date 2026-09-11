@@ -19,7 +19,9 @@ local function compile(over, ctx) return FC.Compile(cfg(over), ctx) end
 
 local function setOf(t)
     local keys = {}
-    for k in pairs(t or {}) do keys[#keys + 1] = tostring(k) end
+    for k in pairs(t or {}) do
+        keys[#keys + 1] = tostring(k)
+    end
     table.sort(keys)
     return table.concat(keys, ",")
 end
@@ -211,10 +213,81 @@ test("filter: Signature is independent of key insertion order and sees nested ch
     assertTrue(FC.Signature({ a = { c = 2 } }) ~= FC.Signature({ a = { c = 3 } }))
 end)
 
-test("filter: StructureKey tracks the group count and the enchant slots only", function()
+test("filter: StructureKey tracks the group count, the enchant slots and hide-permanent", function()
     local a = compile({})
     local b = compile({ filter = { castBy = "mine", maxDuration = 30 } })
     assertEqual(FC.StructureKey(a), FC.StructureKey(b), "a live-editable change is not structural")
     local c = compile({ filter = { includeEnchants = true } })
     assertTrue(FC.StructureKey(a) ~= FC.StructureKey(c))
+    -- AddItemEnchantment takes hidePermanent only at creation, so flipping it needs a new engine.
+    local hide = compile({ filter = { includeEnchants = true, hidePermanentEnchants = true } })
+    local keep = compile({ filter = { includeEnchants = true, hidePermanentEnchants = false } })
+    assertTrue(FC.StructureKey(hide) ~= FC.StructureKey(keep), "hide-permanent is structural")
+end)
+
+-- ── characterization: whole plans (testing-§13) ──────────────────────────────────────────────────
+-- Each signature was captured from FC.Compile as one function, before it was split into helpers. A
+-- change to the shipped categories or warnings moves these on purpose; recapture them then.
+
+-- Only token, flag and dispel categories, so a signature does not carry a whole shipped spell list.
+local RICH = {
+    { { unit = "player", auraType = "HELPFUL", filter = {
+        castBy = "others", durationMode = "timeless", maxDuration = 30, maxAuras = 5,
+        sortMethod = "bogus", sortDirection = "reverse", includeEnchants = true,
+        whitelist = { [100] = true, [200] = true }, blacklist = { [200] = true, [300] = true },
+        categories = { bigDefensive = "show", castable = "show", important = "hide", stealable = "hide" },
+    } }, { timedSpells = { [400] = true } } },
+    { { unit = "target", auraType = "HARMFUL", filter = {
+        castBy = "mine", durationMode = "timeless", maxDuration = 12,
+        categories = { magic = "show", boss = "show", crowdControl = "hide" },
+    } } },
+    { { unit = "focus", auraType = "HELPFUL", filter = {
+        durationMode = "timed", whitelist = { [500] = true }, categories = { bigDefensive = "show" },
+    } } },
+    { { unit = "target", auraType = "ENCHANT" } },
+}
+
+local RICH_SIGNATURES = {
+    "{enchants={hidePermanent=boolean:true,slots={1=string:mainHand,2=string:offHand,3=string:ranged}},"
+    .. "groups={1={candidateFilters={includeSpellIDs={100=boolean:true}},filter=string:HELPFUL,key=string:g1,"
+    .. "label=string:Always shown,maxFrameCount=number:5,sortDirection=string:reverse,sortMethod=string:default},"
+    .. "2={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,400=boolean:true},"
+    .. "isStealable=boolean:false},filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE|!IMPORTANT,key=string:g2,"
+    .. "label=string:Big defensives (Blizzard),maxFrameCount=number:5,sortDirection=string:reverse,"
+    .. "sortMethod=string:default},"
+    .. "3={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,400=boolean:true},"
+    .. "isStealable=boolean:false},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE|!IMPORTANT,key=string:g3,"
+    .. "label=string:Castable by you,maxFrameCount=number:5,sortDirection=string:reverse,sortMethod=string:default}},"
+    .. "warnings={1=string:Max duration is ignored while showing only auras without a duration.}}",
+
+    "{groups={1={candidateFilters={isBossAura=boolean:true,maxDuration=number:12},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g1,label=string:Boss debuffs,"
+    .. "maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly},"
+    .. "2={candidateFilters={includeDispelTypes={Magic=boolean:true},isBossAura=boolean:false,maxDuration=number:12},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g2,label=string:Magic,"
+    .. "maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly}},"
+    .. "warnings={1=string:Only auras without a duration works for buffs only; this container shows every duration.}}",
+
+    "{groups={1={candidateFilters={includeSpellIDs={500=boolean:true}},filter=string:HELPFUL,key=string:g1,"
+    .. "label=string:Always shown,maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly},"
+    .. "2={candidateFilters={excludeSpellIDs={500=boolean:true},maxDuration=number:inf},filter=string:HELPFUL|BIG_DEFENSIVE,"
+    .. "key=string:g2,label=string:Big defensives (Blizzard),maxFrameCount=number:inf,sortDirection=string:normal,"
+    .. "sortMethod=string:expirationOnly}},"
+    .. "warnings={1=string:Spell lists only apply while the unit is friendly.}}",
+
+    "{enchants={hidePermanent=boolean:true,slots={1=string:mainHand,2=string:offHand,3=string:ranged}},groups={},"
+    .. "warnings={1=string:Weapon enchants only exist on your own character; this container shows the player's "
+    .. "enchants whatever its unit is set to.}}",
+}
+
+test("filter: the whole plan for four rich containers is unchanged (characterization)", function()
+    local off = {}
+    for i, case in ipairs(RICH) do
+        -- math.huge prints as "inf" here and as "1.#INF" under an MSVC-built Lua.
+        local got = (FC.Signature(compile(case[1], case[2])):gsub("1%.#INF", "inf"))
+        if got ~= RICH_SIGNATURES[i] then
+            off[#off + 1] = "case " .. i .. " got " .. got
+        end
+    end
+    assertEqual(#off, 0, table.concat(off, " || "))
 end)

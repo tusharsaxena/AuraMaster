@@ -30,6 +30,7 @@ libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 #@end-no-lib-strip@
 
 # Locales (first after the libraries: this file bootstraps NS.L for everything below)
+# LOAD-BEARING: bootstraps NS.L, which every file below reads at load.
 locales\enUS.lua
 
 # Core — dependency-correct order (layout-§1)
@@ -54,12 +55,14 @@ core\Bus.lua
 core\PoolSetup.lua
 # LOAD-BEARING: before core/AuraMaster.lua and every module taking NS.Perf as a load-time upvalue.
 core\PerfSetup.lua
+# Conventional: the secret-value gates, reached at call time.
 core\Secrets.lua
 # LOAD-BEARING: after Constants (the font), State (the flag) and CoreSetup (the printer), and before
 # anything that calls NS.Debug.
 core\DebugLogSetup.lua
 # LOAD-BEARING: the AceAddon promotion; reclaims NS.Print from AceConsole's embed.
 core\AuraMaster.lua
+# Conventional: reached from OnInitialize, at call time.
 core\Database.lua
 
 # Defaults
@@ -69,12 +72,14 @@ defaults\Categories.lua
 defaults\Profile.lua
 
 # Modules
+# Conventional: TimedSpells and FilterCompiler resolve their peers at call time.
 modules\TimedSpells.lua
 modules\FilterCompiler.lua
 # LOAD-BEARING: Style before Style_Bars and Style_Icons, which decorate NS.Style at file scope.
 modules\Style.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
+# Conventional: the rest of the modules; peers resolved at call time.
 modules\Anchors.lua
 modules\Preview.lua
 modules\FramePicker.lua
@@ -85,9 +90,11 @@ modules\ContainerManager.lua
 # Settings (last — depend on everything else being initialized)
 # LOAD-BEARING: the schema machinery every page registers rows into.
 settings\Schema.lua
+# Conventional: its handlers reach the schema and pages at call time.
 settings\Slash.lua
-# LOAD-BEARING: before every page file, which calls the composers and LSMValues at file load.
+# LOAD-BEARING: before every page file, which calls the composers at file load.
 settings\OptionsSetup.lua
+# Conventional: the page files, each registering its rows and page at load.
 settings\About.lua
 settings\General.lua
 settings\Containers.lua

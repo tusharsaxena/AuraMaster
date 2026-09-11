@@ -36,9 +36,10 @@ NS.defaults.profile = {
     hideBlizzardDebuffs = false,
 
     -- The container registry. `containers` is keyed by id; `containerOrder` is display order (the
-    -- settings picker, the CLI, and the order containers are built in). Both are written only by
-    -- modules/ContainerManager.lua. `seeded` records that a fresh profile has had its starter
-    -- containers created, so deleting them all does not bring them back on the next login.
+    -- settings picker, the CLI, and the order containers are built in). Both are written at runtime by
+    -- modules/ContainerManager.lua, and on load by core/Database.lua's PrepareProfile (repair and
+    -- first-run seeding). `seeded` records that a fresh profile has had its starter containers
+    -- created, so deleting them all does not bring them back on the next login.
     containers      = {},
     containerOrder  = {},
     nextContainerId = 1,
@@ -47,7 +48,7 @@ NS.defaults.profile = {
 
 NS.defaults.global = {
     -- Account-wide schema stamp (savedvariables-§1). Defaults to 1, NOT the current version: AceDB
-    -- fills an absent key the moment the section is read, which happens before NS:RunMigrations, so a
+    -- fills an absent key the moment the section is read, which happens before NS.RunMigrations, so a
     -- default of the current number would stamp every old database as already migrated.
     schemaVersion = 1,
 
@@ -142,7 +143,7 @@ NS.CONTAINER_TEMPLATE = {
         colorMode = "static", dispelColors = dispelColors(),
         drain = "left", smooth = false,
 
-        bgTexture = "Blizzard", bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
+        bgTexture = "Blizzard", bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
 
         borderShow = false, borderStyle = "Solid", borderSize = 1,
         borderColor = color(0, 0, 0, 1), useClassColorBorder = false,

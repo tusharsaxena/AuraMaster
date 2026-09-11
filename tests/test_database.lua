@@ -108,3 +108,55 @@ test("database: an existing SavedVariables file keeps its containers", function(
     assertEqual(list[1].bars.width, NS.CONTAINER_TEMPLATE.bars.width, "the missing sections are backfilled")
     assertFalse(list[1].id ~= 4)
 end)
+
+test("database: a non-numeric container key is dropped and the profile loads", function()
+    local seeded = {
+        profiles = { Default = {
+            seeded = true, nextContainerId = 5,
+            containers = {
+                [4] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars" },
+                abc = { name = "junk" },
+            },
+            containerOrder = { 4 },
+        } },
+        global = { schemaVersion = 1 },
+    }
+    -- red under: removing the drop branch in normalizeKeys (the env build raises comparing "abc" to a number)
+    local NS = fresh({ savedVariables = seeded })
+    assertEqual(#NS.Database.GetContainers(), 1)
+    assertNil(NS.db.profile.containers.abc, "a key that is neither a number nor a numeric string is dropped")
+    assertEqual(NS.db.profile.containers[4].name, "Mine")
+end)
+
+-- Characterization (testing-§13): pinned on the single-function PrepareProfile before it was split
+-- into local helpers, so the split is proven to change nothing.
+
+test("database: PrepareProfile seeds an empty profile from its own counter, in declaration order", function()
+    local NS = fresh()
+    local n = #NS.STARTER_CONTAINERS
+    local p = { nextContainerId = 10 }
+    assertEqual(NS.Database.PrepareProfile(p), n, "returns how many it seeded")
+    local want = {}
+    for i = 1, n do
+        want[i] = tostring(9 + i)
+    end
+    assertEqual(table.concat(p.containerOrder, ","), table.concat(want, ","))
+    assertEqual(p.nextContainerId, 10 + n)
+    assertEqual(p.containers[10].id, 10)
+    assertEqual(p.containers[10].name, NS.STARTER_CONTAINERS[1].name)
+    assertTrue(p.seeded)
+    assertEqual(NS.Database.PrepareProfile(p), 0, "a second call seeds nothing")
+end)
+
+test("database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids", function()
+    local NS = fresh()
+    assertEqual(NS.Database.PrepareProfile(nil), 0, "a non-table profile is left alone")
+    local p = { containers = { [3] = { name = "Three", id = 99 }, [5] = true }, containerOrder = { 5, 3 } }
+    assertEqual(NS.Database.PrepareProfile(p), 0, "a profile that has containers gets no starters")
+    assertTrue(p.seeded)
+    assertNil(p.containers[5], "an entry that is not a table is dropped")
+    assertEqual(p.containers[3].id, 3, "the stored id follows the key")
+    assertEqual(p.containers[3].bars.width, NS.CONTAINER_TEMPLATE.bars.width, "backfilled")
+    assertEqual(table.concat(p.containerOrder, ","), "3")
+    assertEqual(p.nextContainerId, 4, "the counter starts past the largest id")
+end)

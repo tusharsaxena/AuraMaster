@@ -22,7 +22,7 @@ Example: a bar option.
    which re-applies that container and restyles its buttons once auras are readable.
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
-   the structure key in `Container:Apply` (`modules/Container.lua:246`).
+   the structure key in `Container:Apply` (`modules/Container.lua:327`).
 6. `NS.ValidateSchema` fails the load if the path does not resolve against the template. Update the
    row lists in `docs/settings-panel.md` and the defaults in `docs/schema.md`.
 
@@ -78,7 +78,7 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 2, apply = function(db) … end }` to `SCHEMA_STEPS` in `core/Database.lua:192`. The
+2. Append `{ to = 2, apply = function(db) … end }` to `SCHEMA_STEPS` in `core/Database.lua:239`. The
    ladder is account-wide (`global.schemaVersion`), but containers live in **every** profile: walk
    `db.sv.profiles` (AceDB's raw store, guarded — the no-AceDB fallback has no `sv`) and transform
    `profile.containers[*]` in each, not only `db.profile`. Test the stored value with `== nil`, never

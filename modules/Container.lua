@@ -6,10 +6,10 @@ local _, NS = ...
 -- BUILD, UPDATE OR REBUILD. A container's settings compile (modules/FilterCompiler.lua) into a plan of
 -- aura groups. The engine lets most of a group change live — filter string, candidate filters,
 -- sorting, cap, layout — so a plan with the same SHAPE as the last one (same number of groups, same
--- enchant slots, same style) is applied in place and every existing button is restyled. A plan of a
--- different shape needs a new engine: groups are add-only and a frame once created is never
--- destroyed, so the old engine is disabled, hidden and set aside, and a fresh one is built. That only
--- happens on a settings change, never in play.
+-- enchant slots and hide-permanent flag, same style) is applied in place and every existing button is
+-- restyled. A plan of a different shape needs a new engine: groups are add-only and a frame once
+-- created is never destroyed, so the old engine is disabled, hidden and set aside, and a fresh one is
+-- built. That only happens on a settings change, never in play.
 --
 -- NEVER WHILE AURAS ARE SECRET. Building, updating and restyling all touch aura buttons, which the
 -- engine locks while auras are secret. modules/ContainerManager.lua holds every apply until secrecy
@@ -20,6 +20,7 @@ local ContainerClass = {}
 ContainerClass.__index = ContainerClass
 
 local Perf = NS.Perf
+local D = NS.CONTAINER_TEMPLATE
 local HUGE = math.huge
 
 local function callEngine(engine, method, ...)
@@ -39,6 +40,9 @@ function NS.Container.New(id)
     self.anchor = CreateFrame("Frame", "AuraMasterAnchor" .. id, UIParent,
         "DisableUntrustedLayoutScriptsTemplate")
     self.anchor:SetMovable(true)
+    -- Movable frames are saved in the client's layout cache and restored at login over the stored
+    -- position; the stored position is the only one.
+    if self.anchor.SetDontSavePosition then self.anchor:SetDontSavePosition(true) end
     self.anchor:SetClampedToScreen(true)
     self.handle = NS.Anchors.BuildHandle(self)
     return self
@@ -52,10 +56,12 @@ end
 -- Layout
 -- ---------------------------------------------------------------------------
 
---- A layout's growth, normalized: "right" unless "left", "down" unless "up".
+--- A layout's growth, normalized: "right" unless "left", "down" unless "up". Published for the drag
+--- handle (modules/Anchors.lua), which sits on the side the auras do not grow into.
 local function growthOf(L)
     return (L.growH == "left") and "left" or "right", (L.growV == "up") and "up" or "down"
 end
+NS.Container.Growth = growthOf
 
 --- The corner auras grow away from: auras growing down and right start at the top left.
 function NS.Container.AnchorPoint(growH, growV)
@@ -114,7 +120,47 @@ end
 
 function ContainerClass:InitFrame(frame)
     local cfg = self:Cfg()
-    if cfg then NS.Style.Element(frame, cfg, true) end
+    if cfg then NS.Style.Element(frame, cfg, true, self.classColor) end
+end
+
+-- ---------------------------------------------------------------------------
+-- Class color, snapshotted per apply
+-- ---------------------------------------------------------------------------
+-- A container tracking another unit paints its class colors with that unit's class (options-ui-§17).
+-- The class is read HERE, once per apply — and an apply only runs while auras are readable — then
+-- used by every dress until the next one: engine buttons created mid-combat, a restyle, the preview.
+-- So every button of one container shows one class at every moment. A swap of the tracked unit to a
+-- different class re-applies the container (modules/ContainerManager.lua's RefreshUnit), or marks it
+-- stale while that has to wait.
+
+--- A unit's class color, or nil when it does not resolve. Guarded, because the unit is not the
+--- player: a class token the client withholds (a secret) raises where the library indexes
+--- RAID_CLASS_COLORS with it, and that failure is an unresolved class, painted with the swatch.
+function NS.Container.ClassOf(unit)
+    local ok, r, g, b = pcall(NS.ClassColor, unit)
+    if not ok then return nil end
+    return r, g, b
+end
+
+--- The tracked unit's class as { r, g, b }, in a table reused per instance. When the class does not
+--- resolve (an NPC, no such unit) the channels are nil, and Style.Color falls through to the swatch.
+function ContainerClass:ResolveUnitClass(unit)
+    local c = self.classBuf or {}
+    self.classBuf = c
+    c.r, c.g, c.b = NS.Container.ClassOf(unit)
+    return c
+end
+
+--- Record the class this apply paints with, and whether a unit swap has to re-apply the container.
+--- An enchant container shows the player's enchants whatever its unit, so it describes the player.
+--- The class read here is the current one, so a stale mark (ContainerManager.RefreshUnit) is settled
+--- too: an apply that ran on the flush ending a hold must not be followed by ReapplyStaleClass's.
+function ContainerClass:SnapshotClass(cfg)
+    local unit = (cfg.auraType == "ENCHANT") and "player" or cfg.unit
+    local tracked = unit ~= "player"
+    self.classColor = tracked and self:ResolveUnitClass(unit) or nil
+    self.usesClass = tracked and NS.Style.UsesClassColor(cfg)
+    self.classStale = nil
 end
 
 function ContainerClass:Retire()
@@ -125,7 +171,7 @@ function ContainerClass:Retire()
     -- itself, and a disabled, hidden engine draws nothing wherever it is anchored.
     engine:Hide()
     self.retired[#self.retired + 1] = engine
-    self.engine, self.structure, self.plan = nil, nil, nil
+    self.engine, self.structure, self.plan, self.enchantDir = nil, nil, nil, nil
     self.enchantFrames = {}
 end
 
@@ -169,7 +215,9 @@ function ContainerClass:Build(cfg, plan, structure)
             local ok, frame = pcall(engine.AddItemEnchantment, engine, Compat.EnchantSlot(slot), {
                 initializeFrame = init, hidePermanent = plan.enchants.hidePermanent,
             })
-            if ok and frame then self.enchantFrames[#self.enchantFrames + 1] = frame end
+            if ok and frame then
+                self.enchantFrames[#self.enchantFrames + 1] = frame
+            end
         end
     end
 
@@ -177,7 +225,25 @@ function ContainerClass:Build(cfg, plan, structure)
     -- already knows what it is looking for.
     callEngine(engine, "SetUnit", (cfg.auraType == "ENCHANT") and "player" or cfg.unit)
     self.unit = cfg.unit
+    self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
+end
+
+--- The enchant slots on a live engine: the layout every time, the sort only when the direction moved
+--- (recorded, so later updates do not re-send it). hidePermanent cannot change here; it is part of
+--- the structure key, so toggling it rebuilds.
+local function updateEnchants(self, engine, cfg, plan)
+    if not plan.enchants then return end
+    local Compat = NS.Compat
+    local layout = groupLayout(cfg, #plan.groups + 1)
+    layout.placement = Compat.EnchantPlacementAfter()
+    callEngine(engine, "SetItemEnchantmentLayout", layout)
+    local dir = cfg.filter and cfg.filter.sortDirection
+    if dir ~= self.enchantDir then
+        callEngine(engine, "SetItemEnchantmentSortMethod", Compat.EnchantSortByDuration(),
+            Compat.SortDirection(dir))
+        self.enchantDir = dir
+    end
 end
 
 function ContainerClass:Update(cfg, plan)
@@ -203,11 +269,7 @@ function ContainerClass:Update(cfg, plan)
         end
         callEngine(engine, "SetAuraGroupLayout", g.key, groupLayout(cfg, i))
     end
-    if plan.enchants then
-        local layout = groupLayout(cfg, #plan.groups + 1)
-        layout.placement = Compat.EnchantPlacementAfter()
-        callEngine(engine, "SetItemEnchantmentLayout", layout)
-    end
+    updateEnchants(self, engine, cfg, plan)
     local unit = (cfg.auraType == "ENCHANT") and "player" or cfg.unit
     if self.unit ~= cfg.unit then
         callEngine(engine, "SetUnit", unit)
@@ -227,13 +289,13 @@ function ContainerClass:Restyle(cfg)
         for i = 1, (ok and n or 0) do
             local okF, frame = pcall(engine.GetAuraGroupFrame, engine, g.key, i)
             if okF and frame then
-                pcall(NS.Style.Element, frame, cfg, true)
+                pcall(NS.Style.Element, frame, cfg, true, self.classColor)
                 count = count + 1
             end
         end
     end
     for _, frame in ipairs(self.enchantFrames) do
-        pcall(NS.Style.Element, frame, cfg, true)
+        pcall(NS.Style.Element, frame, cfg, true, self.classColor)
         count = count + 1
     end
     return count
@@ -255,9 +317,11 @@ function ContainerClass:Apply()
     local L = cfg.layout or {}
     local p = NS.db.profile
     anchor:SetScale(math.max(0.1, (tonumber(L.scale) or 1) * (tonumber(p.scale) or 1)))
-    anchor:SetFrameStrata(L.strata or "MEDIUM")
-    anchor:SetFrameLevel(tonumber(L.level) or 5)
+    anchor:SetFrameStrata(L.strata or D.layout.strata)
+    anchor:SetFrameLevel(tonumber(L.level) or D.layout.level)
     self.placedAs = NS.Anchors.Place(self)
+    -- Before any dress below: Update restyles, and Build's buttons are dressed as they are created.
+    self:SnapshotClass(cfg)
 
     if NS.Compat.HasAuraContainer() then
         local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. tostring(cfg.style)
@@ -269,6 +333,11 @@ function ContainerClass:Apply()
         end
     end
 
+    -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
+    self.previewDirty = true
+    -- Built for the data now stored under this id, so a container parked by a profile change while
+    -- an apply must wait (combat or aura secrecy), including one marked staleData, may draw again.
+    self.parked, self.staleData = nil, nil
     self:ApplyVisibility()
     if t0 then Perf.Note("applyContainer", debugprofilestop() - t0, "applyPass") end
     return plan
@@ -289,10 +358,11 @@ local function visibilityAllows(vis)
 end
 
 --- The show ladder, in order. Step 0 is the perf probe's suspend (performance-§6): nothing below it
---- can re-enable a container behind suspend's back.
+--- can re-enable a container behind suspend's back. A parked container (Park) shows nothing either:
+--- its engine may still be built for a container that no longer lives under its id.
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
-    if NS.Perf.suspended then return false, false end
+    if NS.Perf.suspended or self.parked then return false, false end
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
     if not (p and cfg and p.enabled and cfg.enabled) then return false, false end
@@ -324,8 +394,21 @@ function ContainerClass:Refresh()
     if self.engine then callEngine(self.engine, "UpdateAllAuras") end
 end
 
+--- Set the container aside under combat lockdown, when its anchor and the engine's ancestry must not
+--- be shown, hidden or re-anchored (events-frames-taint-§2): the engine is disabled — combat-legal,
+--- the same call ApplyVisibility makes — and only our own preview and handle are hidden.
+--- modules/ContainerManager.lua destroys a parked container once combat ends, or revives it if its
+--- id comes back first.
+function ContainerClass:Park()
+    if self.engine then callEngine(self.engine, "SetEnabled", false) end
+    NS.Preview.Hide(self)
+    if self.handle then self.handle:Hide() end
+    self.parked = true
+end
+
 --- Tear the container down for good: the engine is retired and the anchor hidden. Frames are never
---- destroyed in WoW, so this is as far as "delete" can go.
+--- destroyed in WoW, so this is as far as "delete" can go. Only ever reached out of lockdown; under
+--- lockdown the container is parked instead.
 function ContainerClass:Destroy()
     self:Retire()
     NS.Preview.Hide(self)

@@ -6,8 +6,8 @@ local _, NS = ...
 --     [ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]
 --
 -- Same rules as settings/Bars.lua: composed font and border blocks, a class-color companion on every
--- color that describes the player's taste, and palette swatches (running out, refresh window)
--- exempt.
+-- color, resolved to the class of the container's unit and snapshotted per apply, and palette
+-- swatches (running out, refresh window) exempt.
 
 local L = NS.L
 local H = NS.Helpers
@@ -15,7 +15,7 @@ local C = NS.Constants
 
 local PAGE = "icons"
 local P = "container.icons."
-local PLAYER = { source = "player" }
+local UNIT = { source = "unit" }
 
 local G_SIZE, G_BORDER, G_CD = L["Size"], L["Border"], L["Cooldown"]
 local G_TIME, G_STACK, G_HI = L["Time text"], L["Stack text"], L["Highlights"]
@@ -33,7 +33,7 @@ NS.RegisterSchemaRows({
 })
 
 NS.RegisterSchemaRows(H.BorderGroup({
-    prefix = P, page = PAGE, group = G_BORDER, subgroup = L["Border"], show = true, classColor = PLAYER,
+    prefix = P, page = PAGE, group = G_BORDER, subgroup = L["Border"], show = true, classColor = UNIT,
     extra = {
         { path = P .. "dispelBorder", type = "bool", label = L["Color the border by dispel type"],
           desc = L["Draw Blizzard's debuff border in the debuff's dispel color."] },
@@ -56,7 +56,7 @@ NS.RegisterSchemaRows({
 local function textRows(leaf, group, extras)
     local prefix = P .. leaf .. "."
     NS.RegisterSchemaRows(H.FontGroup({
-        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = PLAYER,
+        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT,
     }))
     local rows = {
         { path = prefix .. "show", page = PAGE, group = group, subgroup = L["Placement"], type = "bool",

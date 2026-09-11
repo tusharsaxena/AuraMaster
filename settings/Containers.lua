@@ -18,6 +18,7 @@ local H = NS.Helpers
 local C = NS.Constants
 local CM = NS.ContainerManager
 local print = NS.Print
+local printf = NS.Printf
 
 local PAGE = "containers"
 local GROUP = L["General"]
@@ -32,11 +33,16 @@ NS.RegisterSchemaRows({
         maxLetters = 40, label = L["Name"],
         desc = L["What this container is called in the picker, on its drag handle and in /am containers. Press Enter to apply."],
         validate = function(v) return type(v) == "string" and v:match("%S") ~= nil end,
-        onChange = function() CM.NotifyRenamed() end,
+        -- Every write — the panel, `/am set`, Rename, a reset — stores the trimmed name made unique
+        -- case-insensitively, so `/am select|delete <name>` can never match two containers.
+        normalize = function(v, id) return CM.UniqueName(v:match("^%s*(.-)%s*$"), id) end,
+        -- NotifyRenamed is the whole effect (handles and pickers); Container:Apply never reads the
+        -- name, so a rename queues no apply and, in combat, announces no deferral.
+        onChange = function() CM.NotifyRenamed() end, effect = "none",
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",
-        label = L["Enabled"], desc = L["Draw this container. A disabled container keeps its settings."],
+        label = L["Enabled"], desc = L["Draw this container. A disabled container keeps its settings."], effect = "visibility",
     },
     {
         path = "container.unit", page = PAGE, group = GROUP, type = "string",
@@ -66,17 +72,23 @@ local function selectAndRefresh(id)
     H.SelectContainer(id)
 end
 
+-- A refusal (CM.Create's third return) is the gray combat line; any other error prints plain.
+local function sayError(err, refused)
+    if refused then return printf("|cff808080%s|r", err) end
+    print(err)
+end
+
 local function doNew()
-    local id, err = CM.Create({})
-    if not id then return print(err) end
+    local id, err, refused = CM.Create({})
+    if not id then return sayError(err, refused) end
     selectAndRefresh(id)
 end
 
 local function doDuplicate()
     local _, id = NS.ActiveContainer()
     if not id then return end
-    local newId, err = CM.Duplicate(id)
-    if not newId then return print(err) end
+    local newId, err, refused = CM.Duplicate(id)
+    if not newId then return sayError(err, refused) end
     selectAndRefresh(newId)
 end
 
@@ -88,6 +100,10 @@ StaticPopupDialogs["AURAMASTER_DELETE_CONTAINER"] = {
     whileDead    = true,
     hideOnEscape = true,
     OnAccept     = function(_, data)
+        -- The same gate as /am delete: a popup accepted after combat started must not tear down.
+        if InCombatLockdown() then
+            return printf("|cff808080%s|r", L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
+        end
         if data and CM.Delete(data) then H.RefreshAllPanels() end
     end,
 }
@@ -150,7 +166,9 @@ local function renderCopy(ctx)
         onClick = function()
             if not (copySource and activeId) then return end
             local ok, err = CM.CopyFrom(copySource, activeId, copySection ~= "all" and copySection or nil)
-            if not ok then print(err) end
+            -- The Filters page's spell lists are not scalars, so the seam's in-place refresh would
+            -- leave them stale: re-render, as the Delete popup does.
+            if ok then H.RefreshAllPanels() else print(err) end
         end,
     }, nil)
 end
@@ -159,7 +177,8 @@ local function afterGeneral(ctx)
     H.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
         { text = L["Delete"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
-    if #NS.Database.GetContainers() > 1 then renderCopy(ctx) end
+    local count = #NS.Database.GetContainers()
+    if count > 1 then renderCopy(ctx) end
 end
 
 -- ---------------------------------------------------------------------------
@@ -184,21 +203,21 @@ local function renderOverview(ctx)
     local AceGUI = NS.AceGUI
     local items = {}
     for _, c in ipairs(NS.Database.GetContainers()) do
-        items[#items + 1] = { make = function(_, parent, rel)
+        table.insert(items, { make = function(_, parent, rel)
             local lbl = AceGUI:Create("Label")
             lbl:SetText(describe(c))
             lbl:SetRelativeWidth(rel or 0.5)
             parent:AddChild(lbl)
             return lbl
-        end }
-        items[#items + 1] = { make = function(_, parent, rel)
+        end })
+        table.insert(items, { make = function(_, parent, rel)
             local btn = AceGUI:Create("Button")
             btn:SetText(L["Select"])
             btn:SetRelativeWidth((rel or 0.5) * 0.5)
             btn:SetCallback("OnClick", function() selectAndRefresh(c.id) end)
             parent:AddChild(btn)
             return btn
-        end }
+        end })
     end
     H.RenderGrid(ctx, items)
 end

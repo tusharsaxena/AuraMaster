@@ -1,6 +1,6 @@
 -- tests/test_docs.lua — the shipped prose is checkable, so it is checked.
 --
--- Three rules about text that no code path enforces and no reviewer reliably catches:
+-- Four rules about text that no code path enforces and no reviewer reliably catches:
 --
 --   1. Angle-bracket argument placeholders must not appear in README.md. CurseForge's renderer treats
 --      `<path>` as an unknown HTML tag and strips it — inside backticks too — so a command that reads
@@ -11,6 +11,9 @@
 --      outside this repo can check.
 --   3. The Tier 2 rows of docs/ARCHITECTURE.md's `## Documentation map` agree with the disk: a doc
 --      filed Present exists, and one filed Not applicable does not (documentation-§3).
+--   4. Every `path.lua:N[-M]` or `AuraMaster.toc:N[-M]` citation in docs/*.md, DEPENDENCIES.md and
+--      README.md names a file that exists and a range inside it whose first line is not blank. That is
+--      mechanical only: whether the cited line still carries the doc's claim stays a reviewer's job.
 --
 -- Out of scope, named rather than inferred (localization-§5): `libs/` and `tests/_kit/` (vendored),
 -- the frozen bundles under `docs/audits/`, `docs/reviews/` and `docs/automated-tests/<run>/`,
@@ -32,7 +35,9 @@ local function glob(pattern)
   local out, p = {}, io.popen("ls -1 " .. pattern .. " 2>/dev/null")
   if not p then return out end
   for line in p:lines() do
-    if line ~= "" then out[#out + 1] = line end
+    if line ~= "" then
+      out[#out + 1] = line
+    end
   end
   p:close()
   return out
@@ -107,7 +112,9 @@ for _, w in ipairs(ALLOWED) do ALLOWED_SET[w] = true end
 local function ownFiles()
   local files = {}
   local function add(list)
-    for _, p in ipairs(list) do files[#files + 1] = p end
+    for _, p in ipairs(list) do
+      files[#files + 1] = p
+    end
   end
   add(glob("*.md"))
   add(glob("*.toc"))
@@ -124,7 +131,9 @@ local function ownFiles()
   local skip = { ["docs/test-cases.md"] = true, ["tests/test_docs.lua"] = true }
   local kept = {}
   for _, p in ipairs(files) do
-    if not skip[p] and not p:match("^tests/_kit/") then kept[#kept + 1] = p end
+    if not skip[p] and not p:match("^tests/_kit/") then
+      kept[#kept + 1] = p
+    end
   end
   return kept
 end
@@ -135,11 +144,15 @@ local function britishOn(line)
   local kept = {}
   for word in line:gmatch("%a+") do
     local lw = word:lower()
-    if not ALLOWED_SET[lw] then kept[#kept + 1] = lw end
+    if not ALLOWED_SET[lw] then
+      kept[#kept + 1] = lw
+    end
   end
   local text = " " .. table.concat(kept, " ") .. " "
   for _, sub in ipairs(BRITISH) do
-    if text:find(sub, 1, true) then hits[#hits + 1] = sub end
+    if text:find(sub, 1, true) then
+      hits[#hits + 1] = sub
+    end
   end
   return hits
 end
@@ -155,7 +168,8 @@ test("the addon's own files use US spellings (localization-§5's canonical lists
       lineNo = lineNo + 1
       for _, sub in ipairs(britishOn(line)) do
         offenders = offenders + 1
-        if #report < 12 then report[#report + 1] = path .. ":" .. lineNo .. " " .. sub end
+        local reported = #report
+        if reported < 12 then report[reported + 1] = path .. ":" .. lineNo .. " " .. sub end
       end
     end
   end
@@ -202,8 +216,12 @@ test("every .md under docs/ appears in the documentation map", function()
   assertTrue(map ~= nil, "docs/ARCHITECTURE.md has no `## Documentation map` section")
   local missing = {}
   local docs = {}
-  for _, p in ipairs(glob("docs/*.md")) do docs[#docs + 1] = p end
-  for _, p in ipairs(glob("docs/*/README.md")) do docs[#docs + 1] = p end
+  for _, p in ipairs(glob("docs/*.md")) do
+    docs[#docs + 1] = p
+  end
+  for _, p in ipairs(glob("docs/*/README.md")) do
+    docs[#docs + 1] = p
+  end
   docs[#docs + 1] = "docs/automated-tests/RESULTS.md"
   for _, p in ipairs(docs) do
     local rel = p:gsub("^docs/", "")
@@ -212,4 +230,72 @@ test("every .md under docs/ appears in the documentation map", function()
     end
   end
   assertEqual(#missing, 0, "docs not registered in the map: " .. table.concat(missing, ", "))
+end)
+
+-- ── file:line citations resolve ────────────────────────────────────────────────────────────────
+
+--- The docs whose citations are checked: docs/*.md (not the generated inventory), DEPENDENCIES.md
+--- and README.md. Frozen bundles sit one level deeper and are not globbed.
+local function citingDocs()
+  local docs = {}
+  for _, p in ipairs(glob("docs/*.md")) do
+    if p ~= "docs/test-cases.md" then
+      docs[#docs + 1] = p
+    end
+  end
+  docs[#docs + 1] = "DEPENDENCIES.md"
+  docs[#docs + 1] = "README.md"
+  return docs
+end
+
+--- A source file's lines with CRs stripped, cached per path; false when the file cannot be opened.
+local sourceCache = {}
+local function sourceLines(path)
+  if sourceCache[path] == nil then
+    local f = io.open(path, "r")
+    local out = false
+    if f then
+      out = {}
+      for l in f:lines() do
+        out[#out + 1] = (l:gsub("\r$", ""))
+      end
+      f:close()
+    end
+    sourceCache[path] = out
+  end
+  return sourceCache[path]
+end
+
+--- Why one citation does not resolve, or nil when it does.
+local function citationFault(path, first, last)
+  local src = sourceLines(path)
+  if not src then return "missing file" end
+  local count = #src
+  if first < 1 or last > count then return "outside the file's " .. count .. " lines" end
+  if not src[first]:match("%S") then return "a blank line" end
+  return nil
+end
+
+test("docs: every file:line citation names an existing file and a non-blank line inside it", function()
+  -- red under: citing modules/Container.lua:99999 in any checked doc.
+  local checked, offenders = 0, {}
+  for _, doc in ipairs(citingDocs()) do
+    local lineNo = 0
+    for line in (readFile(doc) .. "\n"):gmatch("([^\n]*)\n") do
+      lineNo = lineNo + 1
+      for path, a, b in line:gmatch("([%w_%./]+%.[lt][uo][ac]):(%d+)%-?(%d*)") do
+        if path:match("%.lua$") or path:match("%.toc$") then
+          checked = checked + 1
+          local first = tonumber(a)
+          local fault = citationFault(path, first, tonumber(b ~= "" and b or a))
+          if fault then
+            offenders[#offenders + 1] = ("%s:%d cites %s:%s%s (%s)"):format(
+              doc, lineNo, path, a, b ~= "" and ("-" .. b) or "", fault)
+          end
+        end
+      end
+    end
+  end
+  assertTrue(checked > 50, "matched only " .. checked .. " citations -- the pattern or the glob broke")
+  assertEqual(#offenders, 0, "citations that do not resolve: " .. table.concat(offenders, "; "))
 end)

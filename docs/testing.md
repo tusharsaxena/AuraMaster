@@ -37,6 +37,14 @@ checkpoint: the release is cut only when the release run's `manifest.json` shows
 install the missing tool and run again. The release command reads the manifest; the runner's own exit
 code is unchanged. Recording those runs is `docs/automated-tests/README.md`.
 
+**lizard and the length operator.** lizard's shared tokenizer takes a `#` outside a string as the
+start of a C preprocessor line and drops everything after it up to the newline. In Lua `#` is the
+length operator. A block keyword or an unbalanced brace after it on the same line throws off lizard's
+block count, so every later function in that file goes unmeasured and the gate stays silent without
+having looked. An `and` or `or` after it is left out of the CCN. The last case in
+`tests/test_lintconfig.lua` fails any line where a keyword or an unbalanced brace follows a `#`. Move
+what follows onto its own line, or take the length into a local first.
+
 ## What the headless suite is
 
 `tests/run.lua` loads the vendored LibKa0s files in `LibKa0s.xml` order, then the addon's own files
@@ -55,7 +63,8 @@ Suites worth knowing by name:
 
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
-  `## Documentation map` agreeing with `docs/` in both directions.
+  `## Documentation map` agreeing with `docs/` in both directions, and every `file:line` citation in
+  `docs/*.md`, `DEPENDENCIES.md` and `README.md` naming an existing file and a non-blank line.
 - **`tests/test_lintconfig.lua`** — `.luacheckrc` carries no blanket suppression, so `0/0` is a
   statement about the code.
 - **`tests/test_vendor_sync.lua`** — `libs/LibKa0s/` and `tests/_kit/` are byte-identical to the

@@ -9,7 +9,7 @@ local _, NS = ...
 -- goes through.
 --
 -- Loads after settings/Slash.lua and BEFORE every settings/<page>.lua, because those files call
--- the composers (NS.Helpers.FontGroup, …) and NS.Helpers.LSMValues at FILE LOAD.
+-- the composers (NS.Helpers.FontGroup, …) at FILE LOAD.
 
 local L = NS.L
 local print = NS.Print
@@ -69,22 +69,19 @@ local descriptor = {
 -- The degradation stub — LOAD-COMPLETING, not member-answering (options-ui-§1)
 -- ---------------------------------------------------------------------------
 --
--- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD, and settings/Bars.lua
--- evaluates LSMValues inside a row literal. With any of those nil the page file raises, its rows
--- never register, and most of the schema — with /am list, /am set and the profile defaults —
--- silently vanishes. So this stub publishes every member a page file touches at load, measured by
--- deleting one and re-running tests/degraded_env.lua, and nothing else: no widget maker, no flow
--- engine, no header, no LAYOUT constant.
+-- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD. With any of those
+-- nil the page file raises, its rows never register, and most of the schema — with /am list,
+-- /am set and the profile defaults — silently vanishes. So this stub publishes every member a page
+-- file touches at load, measured by deleting one and re-running tests/degraded_env.lua, and
+-- nothing else: no widget maker, no flow engine, no header, no LAYOUT constant.
 --
 -- The composers reproduce the STORED SURFACE only — one row per canonical leaf at the path the live
 -- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this
 -- build has none. tests/test_optionssetup.lua pins the member set and the schema row count.
 if not lib then
-    local MISSING = NS.LIBKA0S_MISSING .. ", " .. L["so the settings panel is unavailable."]
+    local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
     NS.Helpers = Helpers
-
-    Helpers.LSMValues = function() return function() return {} end end
 
     local function composeBlock(leaves, spec)
         spec = spec or {}
@@ -92,11 +89,12 @@ if not lib then
         local rows = {}
         for _, leaf in ipairs(leaves) do
             if not omit[leaf.leaf] then
-                rows[#rows + 1] = {
+                local row = {
                     path = leaf.path or ((spec.prefix or "") .. (keys[leaf.leaf] or leaf.leaf)),
                     page = spec.page, group = spec.group, subgroup = spec.subgroup,
                     type = leaf.type, sessionOnly = leaf.sessionOnly,
                 }
+                rows[#rows + 1] = row
             end
         end
         for _, extra in ipairs(spec.extra or {}) do
@@ -173,9 +171,9 @@ if not lib then
 
     NS.RegisterOptionsPage = function() end
     NS.RefreshOptionsPanel = function() end
-    NS.CreateOptionsPanel  = function() print(MISSING) end
-    NS.OpenOptionsPanel    = function() print(MISSING) end
-    NS.OpenOptionsPage     = function() print(MISSING) end
+    NS.CreateOptionsPanel  = function() sayMissing() end
+    NS.OpenOptionsPanel    = function() sayMissing() end
+    NS.OpenOptionsPage     = function() sayMissing() end
     NS.RegisterContainerPage = function() end
     return
 end
@@ -206,7 +204,7 @@ local categories = {}
 --- own open does (options-ui-§2) — a category switch is protected, so it is refused, never deferred.
 function NS.OpenOptionsPage(pageKey)
     if InCombatLockdown() then
-        print("|cff808080" .. L["Cannot open settings during combat."] .. "|r")
+        NS.Printf("|cff808080%s|r", L["cannot open settings during combat — Blizzard's category-switch is protected"])
         return
     end
     local cat = categories[pageKey]
@@ -345,6 +343,52 @@ function Helpers.RenderWarnings(ctx, cfg)
     end
 end
 
+--- A container page's tabs: its schema groups in first-seen order, then the bespoke tabs the
+--- container's aura type admits. No container, no tabs.
+--- @return table tabs, table byGroup, table bespoke
+local function collectTabs(cfg, pageKey, spec)
+    local tabs, byGroup, bespoke = {}, {}, {}
+    if not cfg then return tabs, byGroup, bespoke end
+    for _, row in ipairs(NS.SchemaForPage(pageKey)) do
+        if not byGroup[row.group] then
+            byGroup[row.group] = {}
+            tabs[#tabs + 1] = { key = row.group, label = row.group }
+        end
+        local rows = byGroup[row.group]
+        rows[#rows + 1] = row
+    end
+    for _, t in ipairs(spec.tabs or {}) do
+        if not t.auraTypes or t.auraTypes[cfg.auraType] then
+            tabs[#tabs + 1] = { key = t.key, label = t.label }
+            bespoke[t.key] = t
+        end
+    end
+    return tabs, byGroup, bespoke
+end
+
+--- Keep the active tab when this render draws it; otherwise fall back to the first.
+local function settleActiveTab(ctx, tabs)
+    for _, t in ipairs(tabs) do
+        if t.key == ctx.activeTab then return end
+    end
+    ctx.activeTab = tabs[1].key
+end
+
+--- The active tab's content, under the page's intro; the empty registry's one line instead.
+local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
+    if not cfg then
+        Helpers.TextRow(ctx, L["No containers yet. Create one on the Containers page, or type /am new."])
+        return
+    end
+    if spec.intro then spec.intro(ctx, cfg) end
+    local b = bespoke[ctx.activeTab]
+    if b then
+        b.render(ctx, cfg)
+    elseif byGroup[ctx.activeTab] then
+        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, nil, { noHeadings = true })
+    end
+end
+
 --- Render one per-container page: the chrome block (the banner, or a host header), the tab strip
 --- over the page's schema groups plus any bespoke tabs, and the active tab's content.
 ---
@@ -369,30 +413,11 @@ function Helpers.RenderContainerPage(ctx, pageKey, spec)
     end
 
     local cfg = NS.ActiveContainer()
-    local tabs, byGroup, bespoke = {}, {}, {}
-    if cfg then
-        for _, row in ipairs(NS.SchemaForPage(pageKey)) do
-            if not byGroup[row.group] then
-                byGroup[row.group] = {}
-                tabs[#tabs + 1] = { key = row.group, label = row.group }
-            end
-            local rows = byGroup[row.group]
-            rows[#rows + 1] = row
-        end
-        for _, t in ipairs(spec.tabs or {}) do
-            if not t.auraTypes or t.auraTypes[cfg.auraType] then
-                tabs[#tabs + 1] = { key = t.key, label = t.label }
-                bespoke[t.key] = t
-            end
-        end
-    end
+    local tabs, byGroup, bespoke = collectTabs(cfg, pageKey, spec)
     -- Every page draws a strip (options-ui-§13), including the empty registry's one-tab page.
-    if #tabs == 0 then tabs[1] = { key = "__empty", label = L["Container"] } end
+    if tabs[1] == nil then tabs[1] = { key = "__empty", label = L["Container"] } end
     ctx.__tabs = tabs   -- test seam: which tabs this render drew
-
-    local valid = false
-    for _, t in ipairs(tabs) do if t.key == ctx.activeTab then valid = true end end
-    if not valid then ctx.activeTab = tabs[1].key end
+    settleActiveTab(ctx, tabs)
 
     Helpers.TabStrip(ctx, {
         tabs  = tabs,
@@ -404,17 +429,7 @@ function Helpers.RenderContainerPage(ctx, pageKey, spec)
         end,
     })
 
-    if not cfg then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on the Containers page, or type /am new."])
-    else
-        if spec.intro then spec.intro(ctx, cfg) end
-        local b = bespoke[ctx.activeTab]
-        if b then
-            b.render(ctx, cfg)
-        elseif byGroup[ctx.activeTab] then
-            Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, nil, { noHeadings = true })
-        end
-    end
+    renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
 
     if scroll and scroll.DoLayout then scroll:DoLayout() end
     releaseStaleChromeWidgets(ctx)

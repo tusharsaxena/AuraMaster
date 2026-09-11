@@ -12,6 +12,7 @@ local _, NS = ...
 
 local Style = NS.Style
 local C = NS.Constants
+local D = NS.CONTAINER_TEMPLATE
 
 Style.Icons = Style.Icons or {}
 local Icons = Style.Icons
@@ -73,7 +74,7 @@ local function applyCooldown(cd, ic)
     cd:SetDrawSwipe(on)
     cd:SetReverse(ic.cooldownReverse and true or false)
     cd:SetDrawEdge(ic.cooldownEdge and true or false)
-    cd:SetSwipeColor(0, 0, 0, tonumber(ic.swipeAlpha) or 0.6)
+    cd:SetSwipeColor(0, 0, 0, tonumber(ic.swipeAlpha) or D.icons.swipeAlpha)
     cd:SetHideCountdownNumbers(not ic.blizzardNumbers)
 end
 
@@ -88,8 +89,8 @@ function Icons.Apply(frame, cfg, engine)
         ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
 
-    Style.ApplyText(am.time, ic.time, frame)
-    Style.ApplyText(am.stacks, ic.stacks, frame)
+    Style.ApplyText(am.time, ic.time, frame, D.icons.time)
+    Style.ApplyText(am.stacks, ic.stacks, frame, D.icons.stacks)
     am.time:SetShown(ic.time == nil or ic.time.show ~= false)
     am.stacks:SetShown(ic.stacks == nil or ic.stacks.show ~= false)
 
@@ -107,7 +108,7 @@ function Icons.Bind(frame, am, cfg, ic)
     local Compat = NS.Compat
     Style.Bind(frame, "SetIcon", am.icon)
     if ic.cooldown ~= false then Style.Bind(frame, "SetDurationCooldown", am.cd) end
-    if ic.time == nil or ic.time.show ~= false then Style.BindDurationText(frame, am.time, ic) end
+    if ic.time == nil or ic.time.show ~= false then Style.BindDurationText(frame, am.time, ic, D.icons) end
     if ic.stacks == nil or ic.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
     Style.Bind(frame, "ClearDispelTypeTextures")

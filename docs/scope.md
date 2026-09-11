@@ -7,7 +7,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:85`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:86`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:33`).
 - **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
   enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container may
@@ -22,7 +22,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked or via
-  `/am preview` (preview-mode).
+  `/am test` (preview-mode).
 - **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
 - **Profiles** through AceDB, with a Profiles sub-page.
 - **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through
@@ -64,9 +64,9 @@ These are not declined; the game forbids them, and a request for one is answered
   once. On a debuff container the mode narrows nothing, because only buffs are learned.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
   friendly units and debuffs on hostile units. The addon warns per container
-  (`modules/FilterCompiler.lua:141`) rather than letting the filter look broken.
+  (`modules/FilterCompiler.lua:154`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
-  (`modules/ContainerManager.lua:86`).
+  (`modules/ContainerManager.lua:155`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
 
@@ -78,8 +78,12 @@ These are not declined; the game forbids them, and a request for one is answered
 - **A permanent aura draws a full bar.** The engine's status bar runs on elapsed time and the
   addon's own fill is anchored to its moving edge (`modules/Style_Bars.lua`), the technique
   TinyBuffBars (MIT) established.
-- **Class colors are the player's.** An element describes an aura, not a unit, and a container's unit
-  can change in combat when restyling is not allowed (`modules/Style.lua:36-42`).
+- **Class colors follow the container's unit.** A container tracking the target, focus or pet paints
+  its class colors with that unit's class, read once per apply and used by every button of the
+  container, so one container never mixes two classes. A swap of that unit re-applies the container
+  when it uses a class color. Under combat lockdown or aura secrecy the re-apply waits for the
+  restriction to lift, and the container keeps the previous unit's class until then
+  (options-ui-§17; audit 2026-09-11 AM-03).
 - **Container settings share one relative path model** (`container.…`) so one schema, one write seam
   and one CLI serve every container (`settings/Schema.lua` header).
 - **Categories are tri-state** (`""` / `show` / `hide`). Showing any category narrows the container to

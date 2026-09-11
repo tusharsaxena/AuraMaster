@@ -39,7 +39,7 @@ test("parity: the Options stub carries every helper a page file reaches at load"
     local NS2 = loadDegraded()
     T.assertSurfaceParity(NS2.Helpers, "LibKa0s-Options-1.0", {
         -- The load-completing stub (options-ui-§1) answers only what a page file touches at FILE
-        -- LOAD — the composers, LSMValues, MASTER_GROUP — plus the recovery reset. Everything below
+        -- LOAD — the composers and MASTER_GROUP — plus the recovery reset. Everything below
         -- is reached from a builder, a render or a click, and a library-less build draws no panel,
         -- so the stub answers NS.CreateOptionsPanel / NS.OpenOptionsPanel with one honest line
         -- instead of carrying a panel toolkit it could never use.
@@ -53,6 +53,9 @@ test("parity: the Options stub carries every helper a page file reaches at load"
         "ROW_VSPACER", "SECTION_HEADING_H", "BUTTON_PAIR_REL", "PADDING_X", "CHROME_GAP", "TAB_H",
         "BANNER_H", "CLASS_COLOR_NOTE", "FONT_FLAGS", "FONT_FLAGS_SORT", "VISIBILITY_SORT",
         "VISIBILITY_VALUES", "AceGUI",
+        -- The media lister: evaluated only inside the live composers' own row literals, never by a
+        -- page file, and the stub composers carry no media source.
+        "LSMValues",
         -- This addon's own decorations on the live instance (settings/OptionsSetup.lua, About.lua):
         -- every one is a render-time helper for a panel the degraded build never draws.
         "SelectContainer", "ContainerBanner", "PlaceInHeader", "ContainerPickerWidget",

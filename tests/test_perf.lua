@@ -9,6 +9,8 @@ local loadDegraded = dofile("tests/degraded_env.lua")
 
 --- Drive every path the addon brackets.
 local function exercise(NS, mocks)
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)   -- TimedSpells arms its scan
+    mocks.__fireTimers()                                          -- ...and scanTick runs it
     NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
     NS.ContainerManager.RequestApply()
     mocks.__fireTimers()
@@ -38,7 +40,7 @@ test("perf: every declared bucket is reached by a real bracket", function()
     for _, key in ipairs(NS.Perf.BUCKET_ORDER) do
         assertTrue((seen[key] or 0) > 0, "bucket '" .. key .. "' was never noted")
     end
-    assertTrue(#NS.Perf.BUCKET_ORDER == 5, "the five declared buckets")
+    assertTrue(#NS.Perf.BUCKET_ORDER == 6, "the six declared buckets")
 end)
 
 test("perf: a dormant probe notes nothing", function()
@@ -55,16 +57,34 @@ test("perf: suspend makes the addon inert without a reload, and resume restores 
     NS.SetByPath("container.filter.durationMode", "timeless", 1)   -- TimedSpells now listens
     NS.Perf.Suspend()
     assertTrue(NS.Perf.suspended)
-    assertTrue(NS.TimedSpells.__frame().__unitEvents.UNIT_AURA == nil, "the timed-spell scan stopped too")
+    assertTrue(NS.TimedSpells.__events().__events.UNIT_AURA == nil, "the timed-spell scan stopped too")
     assertEqual(next(NS.addon.__events), nil, "every lifecycle event unregistered")
     for _, e in ipairs(mocks.__engines) do assertFalse(e.__enabled, "an engine is still enabled") end
     NS.ContainerManager.ApplyVisibility()
     for _, e in ipairs(mocks.__engines) do assertFalse(e.__enabled, "visibility re-enabled an engine") end
     NS.Perf.Resume()
     assertFalse(NS.Perf.suspended)
-    assertTrue(NS.TimedSpells.__frame().__unitEvents.UNIT_AURA ~= nil, "and resumed")
+    assertTrue(NS.TimedSpells.__events().__events.UNIT_AURA ~= nil, "and resumed")
     assertTrue(NS.addon.__events.PLAYER_TARGET_CHANGED ~= nil)
     assertTrue(mocks.__engines[1].__enabled)
+end)
+
+test("perf: suspend holds a queued apply until resume", function()
+    -- red under: FlushPending without its suspended gate.
+    local NS, mocks = fresh()
+    NS.Perf.Suspend()
+    for _, e in ipairs(mocks.__engines) do e.__calls = {} end
+    NS.SetByPath("container.bars.width", 250, 1)
+    mocks.__fireTimers()
+    local calls = 0
+    for _, e in ipairs(mocks.__engines) do
+        calls = calls + #e.__calls
+    end
+    assertEqual(calls, 0, "a suspended addon sent an engine call")
+    assertEqual(NS.ContainerManager.FlushPending(), 0)
+    NS.Perf.Resume()
+    mocks.__fireTimers()
+    assertTrue(#mocks.__engines[1]:__callsTo("SetAuraGroupLayout") > 0, "resume drained the queued apply")
 end)
 
 test("perf: without the library, /am perf answers one honest line", function()

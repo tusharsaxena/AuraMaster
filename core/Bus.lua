@@ -29,13 +29,19 @@ end
 -- every container and nothing in this addon reads an aura to pass on (docs/data-flow.md).
 NS.MSG = {
     -- Sender: modules/ContainerManager.lua. Payload: none. A container was created, deleted,
-    -- renamed or duplicated, one container's settings were replaced wholesale (copy-from, reset
-    -- positions), or the profile under the registry changed.
+    -- renamed or duplicated, or the profile under the registry changed. Copying settings between
+    -- containers and resetting positions are settings writes, announced by CONFIG_CHANGED.
     CONTAINERS_CHANGED = "Ka0s_AuraMaster_ContainersChanged",
-    -- Sender: settings/Schema.lua (the single write seam). Payload: ({ section, containerId }).
-    -- A setting changed; `containerId` is nil for an addon-wide row.
+    -- Sender: settings/Schema.lua (the single write seam). Payload: ({ section, containerId, path }).
+    -- A setting changed; `containerId` is nil for an addon-wide row, and `path` is the row (or
+    -- spell-set) path written, whose `effect` the receiver reads. Session rows send nothing.
     CONFIG_CHANGED     = "Ka0s_AuraMaster_ConfigChanged",
     -- Sender: core/AuraMaster.lua. Payload: none. Combat started or ended, or the world was entered —
     -- anything that can flip the General visibility gate.
     VISIBILITY_CHANGED = "Ka0s_AuraMaster_VisibilityChanged",
+    -- Sender: modules/TimedSpells.lua. Payload: none from a scan, ({ byPlayer = true }) from
+    -- `/am forgettimed`. A readable-state scan learned timed spells, or the player emptied the set,
+    -- so every "without a duration" filter's excluded ids moved. Only the player's change is
+    -- announced if the apply it queues has to wait.
+    TIMED_SPELLS_CHANGED = "Ka0s_AuraMaster_TimedSpellsChanged",
 }

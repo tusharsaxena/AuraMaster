@@ -60,7 +60,10 @@ test("schema: every color row has its class-color companion next to it, or is a 
             local nxt = rows[i + 1]
             assertTrue(nxt and nxt.type == "bool" and nxt.path:find("useClassColor"),
                 "no class-color companion after " .. row.path)
-            assertEqual(row.classColorSource, "player", "whose class " .. row.path .. " means")
+            -- A container's colors describe what the container tracks, so they take its unit's
+            -- class (options-ui-§17); a color outside any container stays the player's.
+            local whose = row.path:find("^container%.") and "unit" or "player"
+            assertEqual(row.classColorSource, whose, "whose class " .. row.path .. " means")
             checked = checked + 1
         end
     end
@@ -134,12 +137,15 @@ test("schema: every write announces CONFIG_CHANGED once, naming the container", 
     local NS2 = fresh()
     local got = {}
     local rx = NS2.NewBusTarget()
-    rx:RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, payload) got[#got + 1] = payload end)
+    rx:RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, payload)
+        got[#got + 1] = payload
+    end)
     NS2.State.SetActiveContainer(3)
     NS2.SetByPath("container.icons.width", 40)
     assertEqual(#got, 1)
     assertEqual(got[1].containerId, 3)
     assertEqual(got[1].section, "icons")
+    assertEqual(got[1].path, "container.icons.width")
     NS2.SetByPath("alpha", 0.5)
     assertNil(got[2].containerId, "an addon-wide row names no container")
 end)
@@ -151,13 +157,38 @@ test("schema: a failed validation writes nothing", function()
     assertEqual(NS2.Database.FindContainer(1).name, before)
 end)
 
+test("schema: renaming to a taken name through the seam stores a unique, trimmed name", function()
+    local NS2 = fresh()
+    assertTrue(NS2.SetByPath("container.name", "  Player debuffs ", 1))
+    -- red under: dropping the name row's normalize
+    assertEqual(NS2.Database.FindContainer(1).name, "Player debuffs (2)")
+    assertEqual(NS2.Database.FindContainer(2).name, "Player debuffs", "the holder keeps its name")
+end)
+
 test("schema: a session row is stored by its own set, never in the profile", function()
     local NS2 = fresh()
     NS2.SetByPath("state.preview", true)
     assertTrue(NS2.State.preview)
     assertEqual(NS2.GetSetting("state.preview"), true)
+    -- red under: SetByPath writing session rows into the profile (dropping the sessionOnly branch)
     assertNil(NS2.db.profile.state)
     NS2.SetByPath("state.preview", false)
+end)
+
+test("schema: a session row announces no CONFIG_CHANGED and queues no apply", function()
+    local NS2, mocks = fresh()
+    local CM = NS2.ContainerManager
+    local requests, orig = { 0 }, CM.RequestApply
+    CM.RequestApply = function(...) requests[1] = requests[1] + 1; return orig(...) end
+    local announced = { 0 }
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function() announced[1] = announced[1] + 1 end)
+    assertTrue(NS2.SetByPath("state.preview", true))
+    assertTrue(NS2.SetByPath("state.debugConsole", true))
+    mocks.__fireTimers()
+    -- red under: announceWrite sending for sessionOnly rows
+    assertEqual(announced[1], 0, "a session row is not a setting")
+    assertEqual(requests[1], 0, "and re-applies no container")
+    NS2.SetByPath("state.debugConsole", false)
 end)
 
 test("schema: ApplyDefault restores the shipped value without sharing a table", function()
@@ -180,10 +211,27 @@ test("schema: a spell set is written whole and normalized to positive integer id
         { ["12"] = true, [0] = true, [-3] = true, [4.5] = true, [99] = false, [7] = true, x = true }))
     local set = NS2.Database.FindContainer(1).filter.whitelist
     local ids = {}
-    for id in pairs(set) do ids[#ids + 1] = id end
+    for id in pairs(set) do
+        ids[#ids + 1] = id
+    end
     table.sort(ids)
     assertEqual(table.concat(ids, ","), "7,12")
     assertFalse((NS2.SetByPath("container.filter.blacklist", "12")), "a non-set is refused")
+end)
+
+test("schema: a carve-out's refusal is the locale's sentence", function()
+    local NS2 = fresh()
+    -- The case's own environment: its locale table is rebuilt per case, so these stand-ins end here.
+    rawset(NS2.L, "Expected a set of spell ids", "ID SET REFUSED")
+    rawset(NS2.L, "Expected per-category spell edits", "EDITS REFUSED")
+    local ok, err = NS2.SetByPath("container.filter.whitelist", "x", 1)
+    assertFalse(ok)
+    -- red under: normalizeIdSet returning an English literal instead of its L key
+    assertEqual(err, "ID SET REFUSED")
+    ok, err = NS2.SetByPath("container.filter.categorySpells", 5, 1)
+    assertFalse(ok)
+    -- red under: normalizeCategoryEdits returning an English literal instead of its L key
+    assertEqual(err, "EDITS REFUSED")
 end)
 
 test("schema: category spell edits keep only real spell categories", function()
@@ -199,4 +247,85 @@ test("schema: category spell edits keep only real spell categories", function()
     assertEqual(edits.defensives[2], true)
     assertNil(edits.crowdControl)
     assertNil(edits.nonsense)
+end)
+
+-- ── whole-section writes ──────────────────────────────────────────────────────────────────────
+
+test("schema: a whole section written through the seam replaces it, backfills it, logs once and announces once", function()
+    local NS2 = fresh()
+    NS2.State.debug = true
+    local lines = {}
+    NS2.Debug = function(tag, fmt, ...)
+        if tag == "Set" then
+            lines[#lines + 1] = fmt:format(...)
+        end
+    end
+    local got = {}
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, p)
+        got[#got + 1] = p
+    end)
+    local given = { point = "TOP", x = 5 }
+    assertTrue(NS2.SetByPath("container.position", given, 1))
+    NS2.State.debug = false
+    local pos = NS2.Database.FindContainer(1).position
+    assertTrue(pos ~= given, "stored as a copy, never the caller's table")
+    assertEqual(pos.point, "TOP")
+    assertEqual(pos.x, 5)
+    assertEqual(pos.y, NS2.CONTAINER_TEMPLATE.position.y, "y backfilled from the template")
+    assertEqual(pos.relativePoint, NS2.CONTAINER_TEMPLATE.position.relativePoint, "relativePoint backfilled")
+    assertEqual(#lines, 1, "one [Set] line per section write")
+    assertTrue(lines[1]:find("x=5", 1, true) ~= nil, "the line renders the stored table: " .. lines[1])
+    assertEqual(#got, 1, "one CONFIG_CHANGED")
+    assertEqual(got[1].path, "container.position")
+    assertEqual(got[1].containerId, 1)
+    assertEqual(got[1].section, "layout")
+end)
+
+test("schema: a section write refuses a non-section path, a non-table, and a value a row rejects", function()
+    local NS2 = fresh()
+    assertTrue(NS2.IsSection("container.position"))
+    assertFalse(NS2.IsSection("container.attach"))
+    assertFalse((NS2.SetByPath("container.bars.name", { fontSize = 20 }, 1)), "not a section")
+    assertFalse((NS2.SetByPath("container.position", 5, 1)), "not a table")
+    local before = NS2.Database.FindContainer(1).filter
+    -- red under: writeSection skipping the carve-out normalize
+    assertFalse((NS2.SetByPath("container.filter", { whitelist = "x" }, 1)), "the carve-out rejects it")
+    assertTrue(NS2.Database.FindContainer(1).filter == before, "the stored section is untouched")
+    assertFalse((NS2.SetByPath("container.attach", { mode = "screen" }, 1)), "attach is not a section")
+end)
+
+test("schema: a section write runs the normalize hook of every row under it, with the target id", function()
+    -- No shipped row under a section has a hook today; this plants one so a future row's is honored.
+    local NS2 = fresh()
+    local seenId
+    for _, row in ipairs(NS2.Schema) do
+        if row.path == "container.layout.spacing" then
+            row.normalize = function(v, id) seenId = id; return v + 1 end
+        end
+    end
+    assertTrue(NS2.SetByPath("container.layout", { spacing = 5 }, 2))
+    -- red under: writeSection skipping the rows' normalize hooks
+    assertEqual(NS2.Database.FindContainer(2).layout.spacing, 6, "stored normalized")
+    assertEqual(seenId, 2, "the hook saw the section's container")
+end)
+
+test("schema: CheckWrite answers what SetByPath would, and stores and announces nothing", function()
+    local NS2 = fresh()
+    local c1 = NS2.Database.FindContainer(1)
+    local width, list = c1.bars.width, c1.filter.whitelist
+    local sent = { 0 }
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function() sent[1] = sent[1] + 1 end)
+    assertTrue(NS2.CheckWrite("container.bars", { width = 222 }, 1), "a section the seam takes")
+    assertTrue(NS2.CheckWrite("container.unit", "focus", 1), "a row the seam takes")
+    assertTrue(NS2.CheckWrite("container.filter.whitelist", { [123] = true }, 1), "a spell set")
+    assertFalse((NS2.CheckWrite("container.icons", "garbage", 1)), "a section that is not a table")
+    assertFalse((NS2.CheckWrite("container.filter.whitelist", "x", 1)), "a set the carve-out refuses")
+    assertFalse((NS2.CheckWrite("container.name", "   ", 1)), "a value the row refuses")
+    assertFalse((NS2.CheckWrite("container.bars", {}, 99)), "no such container")
+    assertFalse((NS2.CheckWrite("no.such.path", 1)), "no such setting")
+    -- red under: CheckWrite storing through writeSection or writeRow
+    assertEqual(c1.bars.width, width, "nothing is stored")
+    assertEqual(c1.unit, "player")
+    assertTrue(c1.filter.whitelist == list)
+    assertEqual(sent[1], 0, "and nothing is announced")
 end)

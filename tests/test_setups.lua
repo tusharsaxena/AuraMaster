@@ -15,17 +15,35 @@ test("core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] 
     local NS2, mocks = fresh()
     assertTrue(NS2.Print == NS2.Util.print, "one function object (architecture-§2)")
     local lines = {}
-    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     NS2.Print("hello")
     assertEqual(#lines, 1)
     assertTrue(lines[1]:find("|cFF00FFFF[AM]|r", 1, true) ~= nil, "the tag: " .. lines[1])
     assertTrue(lines[1]:find("hello", 1, true) ~= nil)
 end)
 
+test("core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer", function()
+    local NS2, mocks = fresh()
+    -- red under: dropping the Printf reclaim in core/AuraMaster.lua
+    assertTrue(NS2.Printf == NS2.Util.printf, "one function object, reclaimed like NS.Print")
+    local lines = {}
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
+    NS2.Printf("x %s", "y")
+    assertEqual(#lines, 1)
+    assertTrue(lines[1]:find("|cFF00FFFF[AM]|r", 1, true) ~= nil, "the tag: " .. lines[1])
+    assertTrue(lines[1]:find("x y", 1, true) ~= nil, "formatted inside the printer: " .. lines[1])
+end)
+
 test("core: every close control goes through the one NS.MakeCloseButton wrapper", function()
     local p = io.popen("grep -rn 'MakeCloseButton(' --include='*.lua' core modules settings")
     local hits = {}
-    for line in p:lines() do hits[#hits + 1] = line end
+    for line in p:lines() do
+        hits[#hits + 1] = line
+    end
     p:close()
     for _, h in ipairs(hits) do
         assertTrue(h:find("^core/CoreSetup%.lua") or h:find("NS%.MakeCloseButton%("),
@@ -50,6 +68,34 @@ test("env: the version falls back to NS.version where the TOC cannot be read", f
     assertEqual(NS.version, "0.1.0")
 end)
 
+test("env: the metadata reader never calls the deprecated global", function()
+    -- red under: re-adding the global fallback in NS.Meta
+    -- Source half: every GetAddOnMetadata( call in the addon's own code is qualified (Env., C_AddOns.).
+    local p = io.popen("grep -rn 'GetAddOnMetadata(' --include='*.lua' core modules settings")
+    for line in p:lines() do
+        local code = line:match("^[^:]+:%d+:(.*)$") or line
+        local from = 1
+        while true do
+            local s = code:find("GetAddOnMetadata(", from, true)
+            if not s then break end
+            assertTrue(s > 1 and code:sub(s - 1, s - 1) == ".", "a bare deprecated call: " .. line)
+            from = s + 1
+        end
+    end
+    p:close()
+    -- Behavioral half: a degraded load (LibKa0s-Env absent) with no C_AddOns reader answers nil and
+    -- never reaches a global GetAddOnMetadata. The degraded env's mock table is its own, so nothing
+    -- planted here outlives the case.
+    local NS2, mocks2 = loadDegraded()
+    mocks2.C_AddOns = { GetAddOnMetadata = function(_, field) return "c:" .. field end }
+    assertEqual(NS2.Meta("Version"), "c:Version", "the degraded reader reaches C_AddOns")
+    mocks2.C_AddOns = false
+    mocks2.GetAddOnMetadata = function() error("the deprecated global was called", 2) end
+    local ok, v = pcall(NS2.Meta, "Version")
+    assertTrue(ok, "NS.Meta raised: " .. tostring(v))
+    assertNil(v)
+end)
+
 -- ── DebugLog ──────────────────────────────────────────────────────────────────────────────────
 
 test("debug: the logging flag is ours, session-only, and never written to the profile", function()
@@ -59,6 +105,7 @@ test("debug: the logging flag is ours, session-only, and never written to the pr
     assertTrue(NS2.State.debug)
     assertTrue(NS2.DebugLog:IsEnabled())
     NS2.DebugLog:SetEnabled(false)
+    -- red under: DebugLogSetup's setEnabled writing NS.db.profile.debug
     assertNil(NS2.db.profile.debug)
     assertEqual(type(NS2.Debug), "function")
 end)

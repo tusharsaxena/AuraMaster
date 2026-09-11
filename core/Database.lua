@@ -50,6 +50,8 @@ local function merge(dst, overrides)
     end
     return dst
 end
+-- A test seam: tests/test_style.lua and tests/test_filtercompiler.lua call it; production uses the
+-- local `merge`.
 Database.Merge = merge
 
 -- ---------------------------------------------------------------------------
@@ -68,7 +70,9 @@ function Database.GetContainers()
     if not p then return out end
     for _, id in ipairs(p.containerOrder or {}) do
         local c = p.containers and p.containers[id]
-        if c then out[#out + 1] = c end
+        if c then
+            out[#out + 1] = c
+        end
     end
     return out
 end
@@ -92,45 +96,60 @@ function Database.NewContainerData(overrides)
     return c, id
 end
 
---- Put a profile's registry into a shape every reader can trust: every stored container backfilled
---- from the template, `containerOrder` holding exactly the ids that exist (orphans appended, dangling
---- ids dropped), and — on a brand-new profile — the starter containers seeded once.
---- Idempotent: a second call changes nothing.
---- @return number  containers seeded by this call
-function Database.PrepareProfile(p)
-    if type(p) ~= "table" then return 0 end
-    p.containers = p.containers or {}
-    p.containerOrder = p.containerOrder or {}
-
-    local seeded = 0
-    if not p.seeded then
-        if next(p.containers) == nil then
-            for _, spec in ipairs(NS.STARTER_CONTAINERS or {}) do
-                local id = p.nextContainerId or 1
-                p.nextContainerId = id + 1
-                local c = merge(copy(NS.CONTAINER_TEMPLATE), spec)
-                c.id = id
-                p.containers[id] = c
-                p.containerOrder[#p.containerOrder + 1] = id
-                seeded = seeded + 1
+--- Keys come back from SavedVariables as numbers, but a hand-edited file or an old export can carry
+--- string ids; normalize so FindContainer(3) and FindContainer("3") cannot disagree. A key that is
+--- neither a number nor a numeric string has no id to become, and every later pass compares ids as
+--- numbers, so it is dropped (one gated [Migrate] line each).
+--- Collected first, then moved: assigning a new key while `pairs` walks the same table is
+--- undefined in Lua and raises "invalid key to 'next'".
+local function normalizeKeys(p)
+    local renames, drops = {}, {}
+    for k in pairs(p.containers) do
+        if type(k) ~= "number" then
+            if tonumber(k) then
+                renames[#renames + 1] = k
+            else
+                drops[#drops + 1] = k
             end
         end
-        p.seeded = true
-    end
-
-    -- Keys come back from SavedVariables as numbers, but a hand-edited file or an old export can carry
-    -- string ids; normalize so FindContainer(3) and FindContainer("3") cannot disagree.
-    -- Collected first, then moved: assigning a new key while `pairs` walks the same table is
-    -- undefined in Lua and raises "invalid key to 'next'".
-    local renames = {}
-    for k in pairs(p.containers) do
-        if type(k) ~= "number" and tonumber(k) then renames[#renames + 1] = k end
     end
     for _, k in ipairs(renames) do
         p.containers[tonumber(k)] = p.containers[k]
         p.containers[k] = nil
     end
+    for _, k in ipairs(drops) do
+        p.containers[k] = nil
+        if NS.Debug then NS.Debug("Migrate", "dropped container key %s", k) end
+    end
+end
 
+--- Seed the starter containers into a brand-new profile, once. An unseeded profile with no
+--- containers gets every starter, numbered from its own counter; an unseeded profile is then marked
+--- seeded either way, so deleting every container never brings the starters back.
+--- @return number  containers seeded
+local function seedStarters(p)
+    if p.seeded then return 0 end
+    local seeded = 0
+    if next(p.containers) == nil then
+        for _, spec in ipairs(NS.STARTER_CONTAINERS or {}) do
+            local id = p.nextContainerId or 1
+            p.nextContainerId = id + 1
+            local c = merge(copy(NS.CONTAINER_TEMPLATE), spec)
+            c.id = id
+            p.containers[id] = c
+            p.containerOrder[#p.containerOrder + 1] = id
+            seeded = seeded + 1
+        end
+    end
+    p.seeded = true
+    return seeded
+end
+
+--- Backfill every stored container from the template and stamp its id from its key. An entry that
+--- is not a table is dropped: clearing a key while `pairs` walks the table is allowed in Lua, only
+--- adding one is not.
+--- @return number  the largest id kept, or 0
+local function backfillContainers(p)
     local maxId = 0
     for id, c in pairs(p.containers) do
         if type(c) == "table" then
@@ -141,8 +160,12 @@ function Database.PrepareProfile(p)
             p.containers[id] = nil
         end
     end
-    if (p.nextContainerId or 1) <= maxId then p.nextContainerId = maxId + 1 end
+    return maxId
+end
 
+--- Rebuild `containerOrder` to hold exactly the ids that exist: dangling and duplicate ids dropped,
+--- orphans appended in id order.
+local function rebuildOrder(p)
     local seen, order = {}, {}
     for _, id in ipairs(p.containerOrder) do
         id = tonumber(id)
@@ -153,12 +176,32 @@ function Database.PrepareProfile(p)
     end
     local orphans = {}
     for id in pairs(p.containers) do
-        if not seen[id] then orphans[#orphans + 1] = id end
+        if not seen[id] then
+            orphans[#orphans + 1] = id
+        end
     end
     table.sort(orphans)
-    for _, id in ipairs(orphans) do order[#order + 1] = id end
+    for _, id in ipairs(orphans) do
+        order[#order + 1] = id
+    end
     p.containerOrder = order
+end
 
+--- Put a profile's registry into a shape every reader can trust: every stored container backfilled
+--- from the template, `containerOrder` holding exactly the ids that exist (orphans appended, dangling
+--- ids dropped), and — on a brand-new profile — the starter containers seeded once.
+--- Idempotent: a second call changes nothing.
+--- @return number  containers seeded by this call
+function Database.PrepareProfile(p)
+    if type(p) ~= "table" then return 0 end
+    p.containers = p.containers or {}
+    p.containerOrder = p.containerOrder or {}
+
+    local seeded = seedStarters(p)
+    normalizeKeys(p)
+    local maxId = backfillContainers(p)
+    if (p.nextContainerId or 1) <= maxId then p.nextContainerId = maxId + 1 end
+    rebuildOrder(p)
     return seeded
 end
 
@@ -195,7 +238,8 @@ end
 -- concern (toc-file-§2), and the next stored-shape change adds a row here in the same change.
 local SCHEMA_STEPS = {}
 
---- Current schema version: the last step's `to`, or 1.
+--- Current schema version: the last step's `to`, or 1. A test seam: tests/test_database.lua calls
+--- it; production (NS.RunMigrations) walks SCHEMA_STEPS directly.
 function Database.CurrentSchemaVersion()
     local last = SCHEMA_STEPS[#SCHEMA_STEPS]
     return last and last.to or 1

@@ -60,6 +60,37 @@ test("container: a change of shape retires the engine and builds a new one", fun
     assertEqual(#inst.engine:__callsTo("AddAuraGroup"), 2)
 end)
 
+test("container: toggling hide-permanent rebuilds the engine with the new flag", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local old = inst.engine
+    NS.SetByPath("container.filter.hidePermanentEnchants", false, 1)
+    mocks.__fireTimers()
+    assertTrue(inst.engine ~= old, "hidePermanent is fixed at AddItemEnchantment, so only a new engine takes it")
+    assertEqual(#inst.retired, 1)
+    local added = inst.engine:__callsTo("AddItemEnchantment")
+    assertEqual(#added, 3)
+    for _, c in ipairs(added) do assertEqual(c[3].hidePermanent, false) end
+end)
+
+test("container: a sort-direction change reaches the enchant sort in place", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local e = inst.engine
+    local before = #e:__callsTo("SetItemEnchantmentSortMethod")
+    NS.SetByPath("container.filter.sortDirection", "reverse", 1)
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "the same engine: the enchant sort is live-editable")
+    local sent = e:__callsTo("SetItemEnchantmentSortMethod")
+    assertEqual(#sent, before + 1)
+    assertEqual(sent[#sent][3], NS.Compat.SortDirection("reverse"))
+    -- red under: updateEnchants not recording self.enchantDir after re-sending
+    NS.SetByPath("container.bars.width", 300, 1)
+    mocks.__fireTimers()
+    assertEqual(#e:__callsTo("SetItemEnchantmentSortMethod"), before + 1,
+        "an unrelated write does not re-send the enchant sort")
+end)
+
 test("container: a restyle re-dresses every button the engine has made", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
@@ -119,6 +150,27 @@ test("container: unlocking previews placeholders through the style code and disa
     assertEqual(after, 0)
 end)
 
+test("container: a visibility pass re-dresses no preview element unless the settings changed", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local dressed = 0
+    local element = NS.Style.Element
+    NS.Style.Element = function(f, c, engine)
+        if not engine then dressed = dressed + 1 end
+        return element(f, c, engine)
+    end
+    NS.ContainerManager.ApplyVisibility()
+    -- red under: Preview.Show without its early return
+    assertEqual(dressed, 0, "the look did not change, so the placeholders are not dressed again")
+    NS.SetByPath("container.bars.width", 250, 1)
+    mocks.__fireTimers()
+    local _, active = NS.Pool.Counts(inst.previewPool)
+    assertTrue(active > 0)
+    assertEqual(dressed, active, "an applied setting re-dresses every placeholder of that container, once")
+end)
+
 test("container: a new target refreshes only the containers tracking the target", function()
     local NS = fresh()
     NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
@@ -132,7 +184,9 @@ test("container: Blizzard's load-on-demand aura container is loaded before the f
     local NS, mocks = fresh({ before = function(m)
         m.C_AddOns = {
             IsAddOnLoaded = function() return false end,
-            LoadAddOn = function(name) loaded[#loaded + 1] = name end,
+            LoadAddOn = function(name)
+                loaded[#loaded + 1] = name
+            end,
         }
     end })
     assertEqual(loaded[1], "Blizzard_AuraContainer")
@@ -153,8 +207,17 @@ test("container: deleting a container disables its engine and hides its anchor",
     local NS = fresh()
     local inst = NS.ContainerManager.instances[2]
     local e = inst.engine
+    -- Kit frames start hidden: show it first, or the IsShown assertion below could never fail.
+    inst.anchor:Show()
     NS.ContainerManager.Delete(2)
     assertFalse(e.__enabled)
+    -- red under: Destroy not hiding the anchor
     assertFalse(inst.anchor:IsShown())
     assertNil(NS.ContainerManager.instances[2])
+end)
+
+test("container: an anchor is movable but never saved by the client's layout cache", function()
+    local NS = fresh()
+    -- A position the client saved would be restored at login over the stored one.
+    assertTrue(NS.ContainerManager.instances[1].anchor.__dontSavePosition == true)
 end)

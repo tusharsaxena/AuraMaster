@@ -8,7 +8,8 @@ local addonName, NS = ...
 --
 -- LOAD-BEARING POSITION: the instance is built at FILE LOAD, before any module takes
 -- `local Perf = NS.Perf` as a load-time upvalue (core/AuraMaster.lua, modules/Container.lua,
--- modules/ContainerManager.lua, modules/Style.lua), so this file precedes all of them in the TOC.
+-- modules/ContainerManager.lua, modules/Style.lua, modules/TimedSpells.lua), so this file precedes
+-- all of them in the TOC.
 
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 if not lib then
@@ -38,10 +39,11 @@ NS.Perf = lib:New({
     -- Declared in report order, with nesting DECLARED rather than explained (performance-§3). Every
     -- nested bracket also supplies its parent at the Perf.Note call, so the record carries observed
     -- containment rather than this table's claim.
-    -- WHAT IS NOT HERE: aura events and timer ticks. Blizzard's aura engine owns both — it handles
-    -- UNIT_AURA and animates every bar and countdown in its own code — so this addon has no per-aura
-    -- Lua path at all to bracket. Its cost is the configuration work below, plus the engine's own,
-    -- which the capture's frame-time arms measure (performance-§7).
+    -- WHAT IS NOT HERE: the containers' aura events and timer ticks. Blizzard's aura engine owns both
+    -- — it handles each container's UNIT_AURA and animates every bar and countdown in its own code.
+    -- The addon has one aura-driven Lua path of its own, the readable-state timed-spell scan, and it
+    -- is bracketed (`timedScan`). The rest of its cost is the configuration work below, plus the
+    -- engine's own, which the capture's frame-time arms measure (performance-§7).
     buckets = {
         -- core/AuraMaster.lua: target / focus / pet changed, so every container on that unit is told
         -- to refresh. The one path that runs on ordinary combat activity.
@@ -51,11 +53,14 @@ NS.Perf = lib:New({
         { key = "applyPass" },
         -- modules/Container.lua: compile, then build or update ONE container's engine, inside the pass.
         { key = "applyContainer", within = "applyPass" },
-        -- modules/Container.lua: the show ladder re-evaluated for every container (combat, settings).
+        -- modules/ContainerManager.lua: the show ladder re-evaluated for every container (combat, settings).
         { key = "visibilityPass" },
         -- modules/Style.lua: dressing one bar or icon — called by the engine's initializeFrame as it
         -- creates buttons, and by a restyle after a settings change.
         { key = "styleElement" },
+        -- modules/TimedSpells.lua: one readable-state scan of the player's and pet's buffs, 0.5 s
+        -- after their auras changed.
+        { key = "timedScan" },
     },
 
     --- Make the addon inert without a /reload (performance-§6). Every event unregistered and every
@@ -79,7 +84,8 @@ NS.Perf = lib:New({
         if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
         if NS.ContainerManager then
             if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
-            if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply() end
+            -- The addon's own request: a player change held by the suspension keeps its notice.
+            if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
         end
     end,
 

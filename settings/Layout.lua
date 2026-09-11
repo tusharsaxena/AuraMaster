@@ -25,7 +25,9 @@ local function attachTargets()
     local _, activeId = NS.ActiveContainer()
     local out = { { value = 0, text = L["None"] } }
     for _, c in ipairs(NS.Database.GetContainers()) do
-        if c.id ~= activeId then out[#out + 1] = { value = c.id, text = tostring(c.name) } end
+        if c.id ~= activeId then
+            out[#out + 1] = { value = c.id, text = tostring(c.name) }
+        end
     end
     return out
 end
@@ -165,7 +167,9 @@ NS.RegisterSchemaRows({
 local function pickFrame()
     local cfg, id = NS.ActiveContainer()
     if not cfg then return end
-    if InCombatLockdown() then return NS.Print(L["Cannot pick a frame during combat"]) end
+    if InCombatLockdown() then
+        return NS.Printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
+    end
     -- Get the settings window out of the way so the frames behind it can be clicked.
     if SettingsPanel and SettingsPanel.Close then pcall(SettingsPanel.Close, SettingsPanel, true) end
     NS.FramePicker.Start(function(name)

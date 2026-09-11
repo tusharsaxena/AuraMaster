@@ -41,33 +41,52 @@ return function()
 
     M.__engines = {}
 
+    -- Every recorded engine call goes through here. `__counts` (calls by name) is always kept and
+    -- allocates nothing once a name has been seen; the `__calls` log allocates a table per call, so
+    -- tests/perf.lua sets `M.__countOnly` around its measured loops to keep the mock's own garbage
+    -- out of the addon's bytes-per-iteration figure.
+    local function record(self, name, ...)
+        self.__counts[name] = (self.__counts[name] or 0) + 1
+        if not M.__countOnly then
+            self.__calls[#self.__calls + 1] = { name, ... }
+        end
+    end
+
     local function makeEngine(f)
         f.__calls = {}
+        f.__counts = {}
         f.__frames = {}
         for _, name in ipairs(ENGINE_METHODS) do
             f[name] = function(self, ...)
-                self.__calls[#self.__calls + 1] = { name, ... }
+                record(self, name, ...)
                 return self
             end
         end
         -- SetEnabled is recorded AND tracked, so both "was it called" and "is it enabled" answer.
         function f:SetEnabled(v)
-            self.__calls[#self.__calls + 1] = { "SetEnabled", v }
+            record(self, "SetEnabled", v)
             self.__enabled = not not v
             return self
         end
         function f:AddItemEnchantment(slot, opts)
-            self.__calls[#self.__calls + 1] = { "AddItemEnchantment", slot, opts }
+            record(self, "AddItemEnchantment", slot, opts)
             local frame = M.__stubFrame()
             frame.__enchantSlot = slot
             return frame
         end
-        function f:GetAuraGroupFrameCount(key) return #(self.__frames[key] or {}) end
+        function f:GetAuraGroupFrameCount(key)
+            local frames = self.__frames[key] or {}
+            return #frames
+        end
         function f:GetAuraGroupFrame(key, i) return (self.__frames[key] or {})[i] end
         --- Every call to `name`, in order (a test helper; not engine API).
         function f:__callsTo(name)
             local out = {}
-            for _, c in ipairs(self.__calls) do if c[1] == name then out[#out + 1] = c end end
+            for _, c in ipairs(self.__calls) do
+                if c[1] == name then
+                    out[#out + 1] = c
+                end
+            end
             return out
         end
         --- The index of the first call to `name`, or nil.
@@ -82,14 +101,34 @@ return function()
     -- Named frames land in __globals so a test can plant a frame another addon would have created
     -- and modules/Anchors.lua can find it through _G (the loader resolves the mock before _G).
     M.__globals = {}
+
+    -- Opt-in live geometry. The kit answers GetWidth/GetHeight with 0 until a test arms a frame, and
+    -- the tab strip's pitch is measured on a probe texture the library builds for itself, which no
+    -- test can reach to arm by hand. Setting `M.__armGeometry = true` in a fresh env's `before` arms
+    -- every frame created after that, and every texture each of those frames creates, so the probe's
+    -- SetAtlas measures. Off by default, because every other suite leans on the zeros.
+    M.__armGeometry = false
+    local function armGeometry(f)
+        f:__setGeom()
+        local create = f.CreateTexture
+        rawset(f, "CreateTexture", function(self, ...)
+            local tex = create(self, ...)
+            if type(tex) == "table" and tex.__setGeom and not tex.__geomLive then tex:__setGeom() end
+            return tex
+        end)
+    end
+
     local baseCreate = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreate(frameType, name, parent, template)
+        if M.__armGeometry then armGeometry(f) end
         -- Frame level is arithmetic in production (the drag handle sits 50 above its anchor), so it
         -- answers a real number (fidelity rule 2) and records what was set.
         f.__level = 0
         function f:SetFrameLevel(v) self.__level = v; return self end
         function f:GetFrameLevel() return self.__level end
+        -- The client's layout cache: recorded so a test can see an anchor opt out of it.
+        function f:SetDontSavePosition(v) self.__dontSavePosition = v; return self end
         if frameType == "AuraContainer" then makeEngine(f) end
         if type(name) == "string" then M.__globals[name] = f end
         return f
@@ -127,8 +166,8 @@ return function()
 
     -- ── AceGUI:Release ─────────────────────────────────────────────────────────────────────
     -- The kit's factory never takes a widget back; the chrome block releases its own. Modeled on
-    -- the real one's observable effect plus a recorder, and reported upstream rather than patched
-    -- into the vendored kit.
+    -- the real one's observable effect plus a recorder, and reported upstream
+    -- (tusharsaxena/LibKa0s#27) rather than patched into the vendored kit.
     local aceGUI = M.__libs["AceGUI-3.0"]
     aceGUI.__released = {}
     function aceGUI:Release(widget)
@@ -136,6 +175,52 @@ return function()
         widget.__released = true
         if widget.frame then widget.frame:Hide() end
         self.__released[#self.__released + 1] = widget
+    end
+
+    -- ── AceConsole's Printf ────────────────────────────────────────────────────────────────
+    -- The LibKa0s v1.29.0 kit's NewAddon stamps Print but not Printf (tusharsaxena/LibKa0s#30);
+    -- delete on the re-vendor that adds it. The real AceConsole-3.0 Embed stamps both mixins, so
+    -- NS.Printf is clobbered exactly as NS.Print is, and core/AuraMaster.lua must reclaim both.
+    -- Mirrored as the real one behaves when called bare (`NS.Printf(fmt, …)`): the format string
+    -- lands in `self`, green with a trailing colon, and the rest are formatted without it.
+    local aceAddon = M.__libs["AceAddon-3.0"]
+    local kitNewAddon = aceAddon.NewAddon
+    aceAddon.NewAddon = function(lib, target, ...)
+        target = kitNewAddon(lib, target, ...)
+        target.Printf = function(selfOrFmt, ...)
+            local body = select("#", ...) > 0 and string.format(...) or ""
+            if DEFAULT_CHAT_FRAME then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99" .. tostring(selfOrFmt) .. "|r: " .. body)
+            end
+        end
+        return target
+    end
+
+    -- ── AceEvent's event half on an embed ──────────────────────────────────────────────────
+    -- The LibKa0s v1.29.0 kit's AceEvent Embed has no RegisterEvent (tusharsaxena/LibKa0s#29);
+    -- delete this on the re-vendor that adds it. The real Embed stamps RegisterEvent,
+    -- UnregisterEvent and UnregisterAllEvents on every target, and a module's own target from
+    -- NS.NewBusTarget() registers game events on it. Recorded rather than no-opped, so a test can
+    -- see what is registered right now and fire a handler as CallbackHandler would:
+    -- `handler(event, ...)`. Cleared in place, so a table a test captured stays the live one.
+    local aceEvent = M.__libs["AceEvent-3.0"]
+    local kitEmbed = aceEvent.Embed
+    aceEvent.Embed = function(lib, obj)
+        obj = kitEmbed(lib, obj)
+        obj.__events = {}
+        obj.RegisterEvent = function(self, event, handler)
+            self.__events[event] = handler or true
+            return self
+        end
+        obj.UnregisterEvent = function(self, event)
+            self.__events[event] = nil
+            return self
+        end
+        obj.UnregisterAllEvents = function(self)
+            for k in pairs(self.__events) do self.__events[k] = nil end
+            return self
+        end
+        return obj
     end
 
     -- ── _G ──────────────────────────────────────────────────────────────────────────────────

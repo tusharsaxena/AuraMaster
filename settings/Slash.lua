@@ -18,12 +18,16 @@ local Sl = NS.Slash
 
 local L = NS.L
 local print = NS.Print
+-- The formatting printer, captured the same way: this file loads after core/AuraMaster.lua has
+-- reclaimed both from AceConsole. A whole sentence goes in as one L[...] key with %s slots, and the
+-- printer formats it over secret-safe arguments (events-frames-taint-§8).
+local printf = NS.Printf
 
 local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
 local cli
 
-local runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPreview, runPick
+local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runTest, runPick
 local runResetPosition, runForgetTimed, runDebug, runPerf
 
 NS.COMMANDS = {
@@ -31,7 +35,11 @@ NS.COMMANDS = {
         function() cli:PrintHelp() end},
     {"config",        L["Open the settings panel"],
         function() NS.OpenOptionsPanel() end},
-    {"list",          L["List every setting and its current value (container settings read the selected container)"],
+    {"enable",        L["Turn Aura Master on (every enabled container shows again)"],
+        function() runEnabled(true) end},
+    {"disable",       L["Turn Aura Master off (hides every container)"],
+        function() runEnabled(false) end},
+    {"list",         L["List every setting and its current value (container settings read the selected container)"],
         function() cli:CliList() end},
     {"get",           L["Print a setting's current value — /am get path"],
         function(rest) cli:CliGet(rest) end},
@@ -53,8 +61,8 @@ NS.COMMANDS = {
         function() runLock(true) end},
     {"unlock",        L["Unlock containers so they can be dragged (shows placeholder auras)"],
         function() runLock(false) end},
-    {"preview",       L["Show placeholder auras — /am preview [on|off]"],
-        function(rest) runPreview(rest) end},
+    {"test",          L["Show placeholder auras — /am test [on|off]"],
+        function(rest) runTest(rest) end},
     {"pick",          L["Attach the selected container to a frame by clicking it"],
         function() runPick() end},
     {"resetposition", L["Move every container back to its default screen position"],
@@ -66,7 +74,7 @@ NS.COMMANDS = {
     {"perf",          L["Measure performance — try /am perf for the workflow"],
         function(rest) runPerf(rest) end},
     {"version",       L["Print the addon version"],
-        function() print(("v%s"):format(NS.Version())) end},
+        function() printf("v%s", NS.Version()) end},
 }
 
 -- ---------------------------------------------------------------------------
@@ -79,59 +87,89 @@ local function firstWord(rest)
     return ((rest or ""):match("^%s*(%S*)") or ""):lower()
 end
 
---- A container by id or by name (case-insensitive), or nil.
+--- A container by id or by name (case-insensitive), or nil. A name more than one container answers
+--- to — a profile saved before names were kept unique case-insensitively — is refused rather than
+--- guessed: nil, the ambiguity sentence and the name as typed, for the caller to printf.
 local function findContainer(arg)
     arg = (arg or ""):match("^%s*(.-)%s*$")
     if arg == "" then return nil end
     local id = tonumber(arg)
     if id then return NS.Database.FindContainer(id) end
-    local want = arg:lower()
+    local want, found = arg:lower(), nil
     for _, c in ipairs(NS.Database.GetContainers()) do
-        if type(c.name) == "string" and c.name:lower() == want then return c end
+        if type(c.name) == "string" and c.name:lower() == want then
+            if found then
+                return nil, L["More than one container is called '%s' — use its number from /am containers."], arg
+            end
+            found = c
+        end
     end
-    return nil
+    return found
 end
 
+--- The line for a lookup that found nothing: the ambiguity sentence when there is one.
+local function sayNotFound(ambiguous, name)
+    if ambiguous then return printf(ambiguous, name) end
+    print(L["No such container — /am containers lists them"])
+end
+
+-- The fields are one localized string per state (localization-§1), so a translator can reorder
+-- them and the status tag; only the name and the gray markup around the fields stay outside.
 local function describe(c)
-    return ("%s  |cff888888#%d · %s · %s · %s%s|r"):format(c.name or "?", c.id,
+    local fields = c.enabled and L["#%s · %s · %s · %s"] or L["#%s · %s · %s · %s · disabled"]
+    return ("%s  |cff888888%s|r"):format(NS.SafeToString(c.name or "?"), fields:format(tostring(c.id),
         L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
         L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
-        L[C.STYLE_LABELS[c.style] or tostring(c.style)],
-        c.enabled and "" or (" · " .. L["disabled"]))
+        L[C.STYLE_LABELS[c.style] or tostring(c.style)]))
 end
 
 local function afterRegistryChange()
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
 end
 
+-- The gray combat refusal (options-ui-§2's canonical shape).
+local function refuse(line) printf("|cff808080%s|r", line) end
+
+-- The master switch, through the same seam as General → Master controls' "Enable Aura Master" and
+-- `/am set enabled`: the [Set] line, CONFIG_CHANGED and the visibility pass. Not refused in combat —
+-- the pass flips each engine through its own SetEnabled, which is combat-legal.
+function runEnabled(on)
+    local ok, err = NS.SetByPath("enabled", on)
+    if not ok then return print(err) end
+    print(on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
+end
+
 function runResetAll()
-    -- The acknowledgment lives INSIDE the guard: on a load where settings/OptionsSetup.lua never
-    -- ran there is nothing to delegate to, and printing it anyway would claim work that did not
-    -- happen.
+    -- Not refused in combat: this is Profiles → Reset Profile (options-ui-§12), which takes the
+    -- parked teardown there. The acknowledgment lives INSIDE the guard: on a load where
+    -- settings/OptionsSetup.lua never ran there is nothing to delegate to, and printing it anyway
+    -- would claim work that did not happen.
     if NS.Helpers and NS.Helpers.RestoreAllDefaults then
         NS.Helpers.RestoreAllDefaults()
-        print(L["All settings reset to defaults"])
+        -- The same keys the General page's Reset Profile prints: one message, one key (F-018).
+        print(L["All settings reset to defaults."])
     else
-        print(L["Cannot reset settings — the settings helpers failed to load"])
+        print(L["Cannot reset settings — the settings helpers failed to load."])
     end
 end
 
 function runContainers()
     local list = NS.Database.GetContainers()
-    if #list == 0 then return print(L["No containers yet — /am new creates one"]) end
+    local count = #list
+    if count == 0 then return print(L["No containers yet — /am new creates one"]) end
     local _, activeId = NS.ActiveContainer()
     print(L["Containers"])
     for _, c in ipairs(list) do
-        print(("  %s %s"):format(c.id == activeId and "|cff33ff99>|r" or " ", describe(c)))
+        printf("  %s %s", c.id == activeId and "|cff33ff99>|r" or " ", describe(c))
     end
 end
 
 function runSelect(rest)
-    local c = findContainer(rest)
-    if not c then return print(L["No such container — /am containers lists them"]) end
+    local c, ambiguous, name = findContainer(rest)
+    if not c then return sayNotFound(ambiguous, name) end
     NS.State.SetActiveContainer(c.id)
     afterRegistryChange()
-    print(L["Selected"] .. " " .. describe(c))
+    printf(L["Selected %s"], describe(c))
 end
 
 -- The words `/am new` understands, each mapped onto the stored value it means.
@@ -150,25 +188,31 @@ function runNew(rest)
     for word in (rest or ""):gmatch("%S+") do
         local spec = NEW_WORDS[word:lower()]
         if not spec then
-            return print(L["Unknown word"] .. " '" .. word .. "' — " .. L["try /am new target debuffs icons"])
+            return printf(L["Unknown word '%s' — try /am new target debuffs icons"], word)
         end
         for k, v in pairs(spec) do overrides[k] = v end
     end
-    local id, err = NS.ContainerManager.Create(overrides)
-    if not id then return print(err or L["Could not create a container"]) end
+    local id, err, refused = NS.ContainerManager.Create(overrides)
+    if not id then
+        if refused then return refuse(err) end
+        return print(err or L["Could not create a container"])
+    end
     NS.State.SetActiveContainer(id)
     afterRegistryChange()
-    print(L["Created"] .. " " .. describe(NS.Database.FindContainer(id)))
+    printf(L["Created %s"], describe(NS.Database.FindContainer(id)))
 end
 
 function runDelete(rest)
-    local c = findContainer(rest)
-    if not c then return print(L["No such container — /am containers lists them"]) end
+    if InCombatLockdown() then
+        return refuse(L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
+    end
+    local c, ambiguous, typed = findContainer(rest)
+    if not c then return sayNotFound(ambiguous, typed) end
     local name = c.name
     local ok, err = NS.ContainerManager.Delete(c.id)
     if not ok then return print(err) end
     afterRegistryChange()
-    print(L["Deleted"] .. " '" .. tostring(name) .. "'")
+    printf(L["Deleted '%s'"], name)
 end
 
 function runLock(locked)
@@ -176,7 +220,7 @@ function runLock(locked)
     print(locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
 end
 
-function runPreview(rest)
+function runTest(rest)
     local word = firstWord(rest)
     local on
     if word == "on" then on = true
@@ -189,13 +233,14 @@ end
 function runPick()
     local c, id = NS.ActiveContainer()
     if not c then return print(L["No containers yet — /am new creates one"]) end
-    if InCombatLockdown() then return print(L["Cannot pick a frame during combat"]) end
-    print(L["Point at a frame and left-click to attach"] .. " '" .. tostring(c.name) .. "'. "
-        .. L["Right-click or Escape cancels."])
+    if InCombatLockdown() then
+        return printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
+    end
+    printf(L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."], c.name)
     NS.FramePicker.Start(function(name)
         NS.SetByPath("container.attach.frame", name, id)
         NS.SetByPath("container.attach.mode", "frame", id)
-        print(("'%s' %s %s"):format(tostring(c.name), L["is now attached to"], name))
+        printf(L["'%s' is now attached to %s"], c.name, name)
     end, function()
         print(L["Frame pick canceled"])
     end)
@@ -234,28 +279,30 @@ end
 --
 -- Degrade, never error: `/am` is registered unconditionally, so something must answer it. The
 -- host verbs never went to the library and keep working; the schema verbs name the missing
--- library instead of going quiet. NOTHING of the library's rendering is copied here — no row
--- formatter, no parser, no `key = value` shape.
+-- library instead of going quiet. The stub keeps only a minimal "/am verb — desc" join, so the
+-- landing page and `/am help` still list the verbs; nothing else of the library is copied here — no
+-- parser, no `key = value` shape.
 if not SlashLib then
-    local missing = " " .. L["is unavailable."] .. " " .. NS.LIBKA0S_MISSING .. "."
     SlashLib = { FormatRow = function(cmd, desc) return cmd .. " — " .. desc end }
 
     function SlashLib.New(_, d)
         local stub = { SetRowAnnotator = function() end }
         local function absent(verb)
-            return function() print("/am " .. verb .. missing) end
+            return function() printf(L["/am %s is unavailable. %s."], verb, NS.LIBKA0S_MISSING) end
         end
         for _, verb in ipairs({ "List", "Get", "Set", "Reset" }) do
             stub["Cli" .. verb] = absent(verb:lower())
         end
         stub.LandingRows = function()
             local out = {}
-            for _, e in ipairs(d.commands) do out[#out + 1] = SlashLib.FormatRow("/am " .. e[1], e[2]) end
+            for _, e in ipairs(d.commands) do
+                out[#out + 1] = SlashLib.FormatRow("/am " .. e[1], e[2])
+            end
             return out
         end
         stub.PrintHelp = function()
-            print(("v%s — %s"):format(d.version(), L["slash commands"]))
-            for _, row in ipairs(stub.LandingRows()) do print("  " .. row) end
+            printf(L["v%s — slash commands"], d.version())
+            for _, row in ipairs(stub.LandingRows()) do printf("  %s", row) end
         end
         stub.OnSlash = function(_, msg)
             local raw = (msg or ""):match("^%s*(.-)%s*$") or ""
@@ -266,7 +313,7 @@ if not SlashLib then
             for _, e in ipairs(d.commands) do
                 if e[1] == cmd then return e[3](rest or "") end
             end
-            print(L["Unknown command"] .. " '" .. cmd .. "'")
+            printf(L["Unknown command '%s'"], cmd)
             stub.PrintHelp()
         end
         return stub
@@ -315,7 +362,7 @@ cli:SetRowAnnotator(function(row)
     return ""
 end)
 
--- Published for introspection (tests/test_surface_parity.lua is the only reader).
+-- Published for introspection (read by tests/run.lua and tests/test_surface_parity.lua).
 Sl.__cli = cli
 
 --- The command list the landing page renders — the same rows `/am help` prints, without the chat

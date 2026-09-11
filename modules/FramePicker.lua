@@ -26,10 +26,12 @@ local REJECT = { UIParent = true, WorldFrame = true }
 function FP.NamedAncestor(f)
     local hops = 0
     while f and hops < 32 do
+        -- A forbidden frame raises on any other method call, so it is asked first and ends the walk.
+        if f.IsForbidden and f:IsForbidden() then return nil end
         if f == overlay or f == outline then return nil end
         local name = f.GetName and f:GetName()
         if type(name) == "string" and name ~= "" and not REJECT[name] and not name:match("^AuraMaster") then
-            if not (f.IsForbidden and f:IsForbidden()) then return f, name end
+            return f, name
         end
         f = f.GetParent and f:GetParent() or nil
         hops = hops + 1
@@ -127,12 +129,4 @@ end
 --- Whether a pick is in progress.
 function FP.IsActive()
     return overlay ~= nil and overlay:IsShown() and true or false
-end
-
---- Cancel a pick in progress.
-function FP.Cancel()
-    if FP.IsActive() then
-        stop()
-        if onCancel then onCancel() end
-    end
 end
