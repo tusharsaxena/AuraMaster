@@ -302,6 +302,28 @@ test("handle: under lockdown a changed layout does not re-place the handle; the 
     assertEqual(p[3], "BOTTOMLEFT")
 end)
 
+test("handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local insets = 0
+    rawset(inst.anchor, "SetClampRectInsets", function() insets = insets + 1 end)
+    -- The label's own SetPoint("CENTER") is recorded on the strip (the kit stub hands a font string
+    -- back as its frame), so count from what BuildHandle already logged.
+    local _, before = last(h, "SetPoint")
+    mocks.__lockdown = true
+    NS.Anchors.UpdateHandle(inst, true)
+    local p, points = last(h, "SetPoint")
+    -- red under: gating the first placement on InCombatLockdown like every later one
+    assertEqual(points, before + 1, "a never-placed handle gets its points, even under lockdown")
+    assertEqual(p[2], inst.anchor, "placed against the container's anchor")
+    assertTrue(h:IsShown())
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(select(2, last(h, "SetPoint")), before + 1, "and only once: a later pass under lockdown keeps it")
+    mocks.__lockdown = false
+    assertEqual(insets, 0, "the anchor's clamp is not touched under lockdown")
+end)
+
 test("handle: a visibility pass that changes nothing re-sets no clamp insets", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]

@@ -274,6 +274,7 @@ local function placeHandle(container, cfg)
     handle:ClearAllPoints()
     handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and HANDLE_GAP or -HANDLE_GAP)
     handle:SetWidth(width)
+    handle.placed = true
     return width - w
 end
 
@@ -310,7 +311,9 @@ end
 --- name sets its width and the layout's growth sets its side. Placing the strip and clamping the
 --- anchor are layout work beside an aura engine's parent, so neither runs under lockdown: the handle
 --- keeps its last placement and only shows or hides, and the next visibility pass after combat
---- catches both up.
+--- catches both up. The one exception is a handle never placed (first shown in combat): it has no
+--- points and would draw nothing, so it is placed once, being our own unprotected strip, while the
+--- anchor's clamp still waits for combat to end.
 function Anchors.UpdateHandle(container, show)
     local handle = container.handle
     if not handle then return end
@@ -319,6 +322,8 @@ function Anchors.UpdateHandle(container, show)
     handle.label:SetText(cfg and cfg.name or "")
     if not InCombatLockdown() then
         clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
+    elseif show and not handle.placed then
+        placeHandle(container, cfg)
     end
     handle:SetShown(show)
 end
