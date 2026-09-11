@@ -203,6 +203,23 @@ test("manager: a master visibility row hides containers at once, with no apply p
     assertEqual(CM.FlushPending(), 0)
 end)
 
+test("manager: disabling a container in combat hides it at once, with no apply and no deferral notice", function()
+    local NS, mocks = fresh()
+    local lines = chat(mocks)
+    local CM = NS.ContainerManager
+    local inst = CM.instances[1]
+    assertTrue((inst:ShouldShow()), "container 1 starts shown")
+    local requests = countRequests(CM)
+    mocks.__lockdown = true
+    assertTrue(NS.SetByPath("container.enabled", false, 1))
+    assertFalse((inst:ShouldShow()), "the show ladder reads the new value")
+    assertFalse(inst.engine.__enabled, "container 1 hidden in the same frame")
+    mocks.__fireTimers()
+    -- red under: the container.enabled row without effect = "visibility"
+    assertEqual(requests[1], 0, "a container's enable queues no apply")
+    assertEqual(countLines(lines, "will apply"), 0, "nothing was held, so nothing is announced")
+end)
+
 test("manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line", function()
     local NS, mocks = fresh()
     local lines = chat(mocks)

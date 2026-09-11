@@ -182,8 +182,9 @@ same path out of the template (for `container.` paths) or `NS.defaults.profile` 
 list per page are in `docs/settings-panel.md`.
 
 A row may also declare `effect`, which tells `modules/ContainerManager.lua` what a write needs beyond
-the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`) runs the
-combat-legal visibility pass and queues no apply. `"none"` (`hideBlizzardBuffs`,
+the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`, and
+`container.enabled`) runs the combat-legal visibility pass and queues no apply. Only the show ladder
+reads a container's `enabled`; `Container:Apply` never does. `"none"` (`hideBlizzardBuffs`,
 `hideBlizzardDebuffs`, `container.name`) queues nothing, because the row's `onChange` is its whole
 effect. A Blizzard-frame toggle made under lockdown still waits: `BlizzardFrames.Apply` catches it
 up on `PLAYER_REGEN_ENABLED`, and the row's `onChange` prints the combat deferral line through

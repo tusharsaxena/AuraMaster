@@ -118,7 +118,8 @@ container `enabled`, preview (unlocked or `/am preview`), then General visibilit
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
 clears the preview, and shows the drag handle while unlocked. `ApplyVisibility` runs after every
 apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end) and whenever a row whose
-`effect` is `"visibility"` is written (the master enable, visibility, lock and alpha). The handle
+`effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
+container's own enable). The handle
 (`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into, so it
 covers no element and nothing moves to make room for it.
 

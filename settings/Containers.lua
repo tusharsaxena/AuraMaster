@@ -42,7 +42,7 @@ NS.RegisterSchemaRows({
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",
-        label = L["Enabled"], desc = L["Draw this container. A disabled container keeps its settings."],
+        label = L["Enabled"], desc = L["Draw this container. A disabled container keeps its settings."], effect = "visibility",
     },
     {
         path = "container.unit", page = PAGE, group = GROUP, type = "string",

@@ -120,7 +120,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (36)
+### test_containermanager.lua (37)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -135,6 +135,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
 - manager: /am preview, /am lock and a rename under lockdown print no deferral notice
 - manager: a master visibility row hides containers at once, with no apply pass
+- manager: disabling a container in combat hides it at once, with no apply and no deferral notice
 - manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line
 - manager: the regen edge never escalates the notice; a later held request does
 - manager: a Blizzard-frame toggle in combat says it waits, once, and applies after combat
@@ -315,7 +316,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 25 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 36 |
+| test_containermanager.lua | 37 |
 | test_anchors.lua | 20 |
 | test_style.lua | 17 |
 | test_timedspells.lua | 10 |
@@ -328,4 +329,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **242** |
+| **Total** | **243** |
