@@ -15,11 +15,11 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:445
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:440
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:477
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:478
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
@@ -42,7 +42,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:248
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:242
         │  build the regions once (icon, bar, fill, spark, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,

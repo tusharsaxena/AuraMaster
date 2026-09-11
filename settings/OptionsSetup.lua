@@ -84,8 +84,6 @@ if not lib then
     local Helpers = {}
     NS.Helpers = Helpers
 
-    Helpers.LSMValues = function() return function() return {} end end
-
     local function composeBlock(leaves, spec)
         spec = spec or {}
         local keys, omit = spec.keys or {}, spec.omit or {}

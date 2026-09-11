@@ -368,6 +368,7 @@ end
 --- other setting. The name row (settings/Containers.lua) makes the name unique in its normalize and
 --- calls CM.NotifyRenamed in its onChange, so a rename typed into the panel or `/am set
 --- container.name` lands the same way. The two checks here only give a caller a specific refusal.
+--- A test seam: tests/test_containermanager.lua calls it; no production path does.
 function CM.Rename(id, name)
     local c = NS.Database.FindContainer(id)
     if not c then return false, L["No such container."] end

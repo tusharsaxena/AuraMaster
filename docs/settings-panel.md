@@ -30,7 +30,7 @@ is a defect in this doc (documentation-§3).
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:404`): the page's schema groups become tabs, the page's bespoke tabs
+  (`settings/OptionsSetup.lua:402`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
@@ -253,7 +253,7 @@ pages, and the six `bars.dispelColors.*`.
 ## The degraded panel
 
 With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-completing** stub
-(options-ui-§1): `LSMValues`, the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
+(options-ui-§1): the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
 `MasterControls`), `MASTER_GROUP`, a real `RestoreAllDefaults`, and no-op refreshers — every member a
 page file touches at file load — so every row still registers and `/am list|get|set` and the defaults
 keep working. The panel itself answers one line naming the missing library. `tests/degraded_env.lua`

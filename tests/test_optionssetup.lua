@@ -310,7 +310,7 @@ end)
 
 test("options: the degraded stub completes the load — every page's rows still register", function()
     local NS2, m2 = loadDegraded()
-    for _, member in ipairs({ "LSMValues", "ColorPair", "FontGroup", "BorderGroup", "BarGroup",
+    for _, member in ipairs({ "ColorPair", "FontGroup", "BorderGroup", "BarGroup",
             "MasterControls", "RestoreAllDefaults" }) do
         assertEqual(type(NS2.Helpers[member]), "function", member)
     end

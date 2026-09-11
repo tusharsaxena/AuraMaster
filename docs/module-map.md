@@ -42,14 +42,14 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/Constants.lua` | Enum-like tables and labels (units, aura types, styles, sort methods, points, dispel colors, preview auras), fallback media, `LOGO_PATH` | Read by everything after it |
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `preview`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
-| `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.IsConcatSafe`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin`, the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
+| `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin` (the skin seam, published for a future standalone window; nothing consumes it today), the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
 | `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a three-member local pool | Conventional |
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
-| `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `CanCompare2`, `IsSafeKey`, `ReadOr` | Conventional |
+| `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `IsSafeKey` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
-| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the empty `SCHEMA_STEPS` ladder, `PrepareProfile` (the load repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps outside the write seam: the architecture-§5 row), registry reads, `DeepCopy`/`Backfill`/`Merge` | Conventional: called from `OnInitialize` |
+| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the empty `SCHEMA_STEPS` ladder, `PrepareProfile` (the load repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps outside the write seam: the architecture-§5 row), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
 
 ## `defaults/`
 

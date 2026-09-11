@@ -130,11 +130,3 @@ end
 function FP.IsActive()
     return overlay ~= nil and overlay:IsShown() and true or false
 end
-
---- Cancel a pick in progress.
-function FP.Cancel()
-    if FP.IsActive() then
-        stop()
-        if onCancel then onCancel() end
-    end
-end

@@ -249,11 +249,6 @@ local CARVE_OUTS = {
     ["container.filter.categorySpells"] = normalizeCategoryEdits,
 }
 
---- Whether `path` is one of the whole-set carve-outs (a test seam and a CLI aid).
-function NS.IsCarveOut(path)
-    return CARVE_OUTS[path] ~= nil
-end
-
 -- ---------------------------------------------------------------------------
 -- The write seam
 -- ---------------------------------------------------------------------------
@@ -301,7 +296,7 @@ local SECTIONS = {
     ["container.icons"]    = "icons",
 }
 
---- Whether `path` is one of the whole-section paths (a test seam, like NS.IsCarveOut).
+--- Whether `path` is one of the whole-section paths (a test seam: tests/test_schema.lua).
 function NS.IsSection(path)
     return SECTIONS[path] ~= nil
 end

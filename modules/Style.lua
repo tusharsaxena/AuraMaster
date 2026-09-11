@@ -118,12 +118,6 @@ function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     frame:Show()
 end
 
---- Whether `frame` is one of the engine's aura buttons (as opposed to a preview frame of ours).
-function Style.IsEngineButton(frame)
-    return type(frame) == "table" and type(frame.SetDurationBar) == "function"
-        and type(frame.SetIcon) == "function"
-end
-
 --- Call one engine binding, guarded. A binding that raises — an option this client does not know, an
 --- access refusal the secrecy check did not foresee — costs that one binding and is logged, never the
 --- button, because the engine created the button inside its own frame batch and an error there would

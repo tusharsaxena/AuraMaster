@@ -20,14 +20,14 @@ if not lib then
     -- would take the settings UI with it and a no-op one would make /am answer nothing. These are
     -- short working fallbacks, and "not installed" is said ONCE, on the first line printed.
     local function probeConcat(v) return table.concat({ v }) end
-    function NS.IsConcatSafe(v)
+    local function isConcatSafe(v)
         return (pcall(probeConcat, v))
     end
 
     function NS.SafeToString(v)
         if v == nil then return "nil" end
         if type(v) == "boolean" then return tostring(v) end
-        if NS.IsConcatSafe(v) then return tostring(v) end
+        if isConcatSafe(v) then return tostring(v) end
         return "<secret>"
     end
 
@@ -90,7 +90,6 @@ if not lib then
     return
 end
 
-NS.IsConcatSafe = lib.IsConcatSafe
 NS.SafeToString = lib.SafeToString
 
 -- ONE class-color resolver for the collection (options-ui-§17). Handed over by reference: it closes
@@ -100,9 +99,10 @@ NS.ResolveColor = lib.ResolveColor
 -- times (modules/Container.lua snapshots a tracked unit's class per apply).
 NS.ClassColor = lib.ClassColor
 
--- The shared window edge, published flat for any standalone window this addon adds, so it reaches the
--- edge by name rather than through a private lookalike (standalone-windows). There is none today, and
--- the frame picker draws its own outline rather than reading NS.SKIN.
+-- The shared window edge: the standalone-windows skin seam, published flat for a future standalone
+-- window so it reaches the edge by name rather than through a private lookalike (standalone-windows).
+-- Nothing consumes it today: the addon has no standalone window, and the frame picker draws its own
+-- outline rather than reading NS.SKIN.
 NS.SKIN      = lib.SKIN
 NS.ApplySkin = lib.ApplySkin
 

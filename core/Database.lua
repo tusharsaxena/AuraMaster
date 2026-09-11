@@ -50,6 +50,8 @@ local function merge(dst, overrides)
     end
     return dst
 end
+-- A test seam: tests/test_style.lua and tests/test_filtercompiler.lua call it; production uses the
+-- local `merge`.
 Database.Merge = merge
 
 -- ---------------------------------------------------------------------------
@@ -236,7 +238,8 @@ end
 -- concern (toc-file-§2), and the next stored-shape change adds a row here in the same change.
 local SCHEMA_STEPS = {}
 
---- Current schema version: the last step's `to`, or 1.
+--- Current schema version: the last step's `to`, or 1. A test seam: tests/test_database.lua calls
+--- it; production (NS.RunMigrations) walks SCHEMA_STEPS directly.
 function Database.CurrentSchemaVersion()
     local last = SCHEMA_STEPS[#SCHEMA_STEPS]
     return last and last.to or 1
