@@ -105,19 +105,19 @@ path, never to a number restated in `modules/`.
 | `barColor` | `{ r=0.20, g=0.55, b=0.95, a=1 }` | `useClassColorBar` | `false` |
 | `colorMode` | `"static"` (`static`, `dispel`) | `dispelColors` | per dispel type, from `core/Constants.lua:143` |
 | `drain` | `"left"` (`left`, `right`) | `smooth` | `false` |
-| `bgTexture` | `"Blizzard"` | `bgColor` | `{ 0, 0, 0, 0.5 }` |
-| `useClassColorBg` | `false` | `borderShow` | `false` |
-| `borderStyle` | `"Solid"` | `borderSize` | `1` |
-| `borderColor` | `{ 0, 0, 0, 1 }` | `useClassColorBorder` | `false` |
-| `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) | `iconSize` | `0` (= bar height) |
-| `iconGap` | `1` | `iconZoom` | `0.08` |
-| `spark` | `true` | `sparkWidth` | `8` |
-| `sparkColor` | `{ 1, 1, 1, 0.9 }` | `useClassColorSpark` | `false` |
-| `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` | `time` | text block: size 11, `RIGHT`, x −4, y 0, justify `RIGHT` |
-| `stacks` | text block: size 10, `BOTTOMRIGHT`, x −1, y 1, justify `RIGHT` | `timeFormat` | `"blizzard"` (`blizzard`, `short`, `long`) |
-| `expiringColorOn` | `false` | `expiringThreshold` | `5` |
-| `expiringColor` | `{ 1, 0.25, 0.25, 1 }` | `pandemic` | `false` |
-| `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` | | |
+| `bgTexture` | `"Blizzard"` | `bgAlpha` | `1.0` |
+| `bgColor` | `{ 0, 0, 0, 0.5 }` | `useClassColorBg` | `false` |
+| `borderShow` | `false` | `borderStyle` | `"Solid"` |
+| `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
+| `useClassColorBorder` | `false` | `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) |
+| `iconSize` | `0` (= bar height) | `iconGap` | `1` |
+| `iconZoom` | `0.08` | `spark` | `true` |
+| `sparkWidth` | `8` | `sparkColor` | `{ 1, 1, 1, 0.9 }` |
+| `useClassColorSpark` | `false` | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
+| `time` | text block: size 11, `RIGHT`, x −4, y 0, justify `RIGHT` | `stacks` | text block: size 10, `BOTTOMRIGHT`, x −1, y 1, justify `RIGHT` |
+| `timeFormat` | `"blizzard"` (`blizzard`, `short`, `long`) | `expiringColorOn` | `false` |
+| `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
+| `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
 `dispelColors` defaults: Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None

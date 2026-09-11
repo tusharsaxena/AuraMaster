@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 192 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 193 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -186,7 +186,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (70 rows, `settings/Bars.lua`)
+### Bars (71 rows, `settings/Bars.lua`)
 
 A notice in orange heads every tab when the selected container is drawn as icons.
 
@@ -194,7 +194,7 @@ A notice in orange heads every tab when the selected container is drawn as icons
 |---|---|
 | Size (6) | `width` 40–600, `height` 6–80; *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3 |
 | Bar (11) | *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark` |
-| Background & border (8) | *Background:* `bgTexture`, `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
+| Background & border (9) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
@@ -207,6 +207,11 @@ as a dispel-type texture tinted from `dispelColors`; `timeFormat` other than Bli
 a `SecondsFormatter`; the running-out color is a step color curve over remaining time
 (`core/Compat.lua:155`); the refresh-window highlight is an additive wash the engine shows only
 while the aura can be refreshed without loss.
+
+The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
+surface with no texture a swatch and its companion and nothing else, and this background has a live
+texture, so it takes the whole bar block with its own tooltips. `bgAlpha` multiplies onto the
+background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged.
 
 ### Icons (42 rows, `settings/Icons.lua`)
 

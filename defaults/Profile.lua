@@ -142,7 +142,7 @@ NS.CONTAINER_TEMPLATE = {
         colorMode = "static", dispelColors = dispelColors(),
         drain = "left", smooth = false,
 
-        bgTexture = "Blizzard", bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
+        bgTexture = "Blizzard", bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
 
         borderShow = false, borderStyle = "Solid", borderSize = 1,
         borderColor = color(0, 0, 0, 1), useClassColorBorder = false,

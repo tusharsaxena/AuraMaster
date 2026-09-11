@@ -89,6 +89,51 @@ test("style: a stored-nil leaf falls back to the template's own value", function
     if not ok then error(err, 0) end
 end)
 
+--- A fresh stub that records the last paint call of each kind made on it. The kit's CreateTexture
+--- returns the frame itself, so the fill and the background are one table until each is swapped
+--- for one of these.
+local function recorder()
+    local r = mocks.__stubFrame()
+    r.__calls = {}
+    for _, m in ipairs({ "SetTexture", "SetVertexColor", "SetAlpha" }) do
+        rawset(r, m, function(_, ...) r.__calls[m] = { ... } end)
+    end
+    return r
+end
+
+--- Dress a bar element, give it recording fill and background regions, and dress it again.
+local function dressSurfaces(c)
+    local frame = mocks.__stubFrame()
+    NS.Style.Element(frame, c, false)
+    frame.__am.fill, frame.__am.bg = recorder(), recorder()
+    NS.Style.Element(frame, c, false)
+    return frame.__am
+end
+
+test("style: a bar's fill and background take their texture, color and opacity from settings", function()
+    local S, FALLBACK = NS.Style, NS.Constants.FALLBACK_TEXTURE
+    local am = dressSurfaces(cfg({ style = "bars", bars = {
+        barTexture = "Fill Tex", barAlpha = 0.7, barColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.9 },
+        bgTexture = "Bg Tex", bgColor = { r = 0.4, g = 0.5, b = 0.6, a = 0.25 } } }))
+    local fill, bg = am.fill.__calls, am.bg.__calls
+    assertEqual(fill.SetTexture[1], S.Fetch("statusbar", "Fill Tex", FALLBACK), "fill texture")
+    assertEqual(table.concat(fill.SetVertexColor, ","), "0.1,0.2,0.3,0.9", "fill color")
+    assertEqual(fill.SetAlpha[1], 0.7, "fill opacity")
+    assertEqual(bg.SetTexture[1], S.Fetch("statusbar", "Bg Tex", FALLBACK), "background texture")
+    assertEqual(table.concat(bg.SetVertexColor, ","), "0.4,0.5,0.6,0.25", "background color, its alpha kept")
+end)
+
+test("style: the background opacity multiplies onto the background texture", function()
+    local am = dressSurfaces(cfg({ style = "bars", bars = { barAlpha = 0.7, bgAlpha = 0.4 } }))
+    local set = am.bg.__calls.SetAlpha
+    -- red under: applySurfaces not setting the bg alpha
+    assertEqual(set and set[1], 0.4, "the background's own opacity")
+    assertEqual(am.fill.__calls.SetAlpha[1], 0.7, "the fill keeps its own")
+    set = dressSurfaces(cfg({ style = "bars" })).bg.__calls.SetAlpha
+    assertEqual(set and set[1], NS.CONTAINER_TEMPLATE.bars.bgAlpha, "the template's opacity by default")
+    assertEqual(NS.CONTAINER_TEMPLATE.bars.bgAlpha, 1, "opaque by default: the default look is unchanged")
+end)
+
 test("preview: a column of bars grows down from the top left", function()
     local c = cfg({ style = "bars", layout = { axis = "vertical", growH = "right", growV = "down", spacing = 2 } })
     local point, x, y = NS.Preview.Offset(c, 1)

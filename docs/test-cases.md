@@ -153,10 +153,12 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (12)
+### test_style.lua (14)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
+- style: a bar's fill and background take their texture, color and opacity from settings
+- style: the background opacity multiplies onto the background texture
 - preview: a column of bars grows down from the top left
 - preview: rows of icons growing left and up wrap after perLine
 - style: a restyle clears the additive bindings before adding them again
@@ -198,7 +200,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_optionssetup.lua (12)
+### test_optionssetup.lua (13)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -211,6 +213,7 @@ badge and any count quoted in the docs must agree with it.
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
 - options: opening a page in combat refuses with the canonical gray line
 - options: the Delete and Reset-all popups refuse in combat
+- options: the Background block is composed in canonical order, and its tooltips name the background
 - options: the degraded stub completes the load — every page's rows still register
 
 ### test_perf.lua (5)
@@ -269,10 +272,10 @@ badge and any count quoted in the docs must agree with it.
 | test_container.lua | 16 |
 | test_containermanager.lua | 20 |
 | test_anchors.lua | 13 |
-| test_style.lua | 12 |
+| test_style.lua | 14 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
-| test_optionssetup.lua | 12 |
+| test_optionssetup.lua | 13 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
 | test_docs.lua | 5 |
@@ -280,4 +283,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **194** |
+| **Total** | **197** |

@@ -173,6 +173,35 @@ test("options: the Delete and Reset-all popups refuse in combat", function()
         1, true) ~= nil, lines[2] or "")
 end)
 
+test("options: the Background block is composed in canonical order, and its tooltips name the background", function()
+    local L, P = NS.L, "container.bars."
+    local byPath, order = {}, {}
+    for i, row in ipairs(NS.Schema) do byPath[row.path], order[row.path] = row, i end
+    local want = {
+        { "bgTexture", L["The texture drawn behind the fill."] },
+        { "bgAlpha", L["How opaque the background texture is."] },
+        { "bgColor", L["The background color."] },
+        { "useClassColorBg", L["Draw the background in the class color instead of the swatch beside it."] },
+    }
+    local first = order[P .. want[1][1]]
+    for i, w in ipairs(want) do
+        local row = byPath[P .. w[1]]
+        assertTrue(row ~= nil, "no row " .. w[1])
+        assertEqual(order[row.path], first + i - 1, w[1] .. " in canonical order")
+        assertEqual(row.subgroup, L["Background"], w[1] .. " subgroup")
+        local tip = row.tooltip or ""
+        assertEqual(tip:sub(1, #w[2]), w[2], w[1] .. " tooltip")
+        -- red under: dropping the tooltip post-set
+        assertFalse(tip:find("fill is drawn", 1, true), w[1] .. " kept the fill's tooltip: " .. tip)
+        assertFalse(tip:find("this bar in the class color", 1, true), w[1] .. " kept the bar's companion tooltip")
+        assertFalse(tip:find("bar's fill", 1, true), w[1] .. " describes the fill: " .. tip)
+    end
+    assertEqual(byPath[P .. "bgAlpha"].label, L["Background opacity"])
+    -- The swatch keeps the composer's class-color note (options-ui-§17).
+    local note = NS.Helpers.CLASS_COLOR_NOTE
+    assertTrue(note ~= nil and byPath[P .. "bgColor"].tooltip:find(note, 1, true) ~= nil, "the class-color note")
+end)
+
 test("options: the degraded stub completes the load — every page's rows still register", function()
     local NS2, m2 = loadDegraded()
     for _, member in ipairs({ "LSMValues", "ColorPair", "FontGroup", "BorderGroup", "BarGroup",

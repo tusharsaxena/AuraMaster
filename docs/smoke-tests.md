@@ -70,7 +70,10 @@ suite covers what only the client can show.
 25. **Layout** → **[ Position ][ Growth ][ Frame ][ Mouse ]**; Position ends with **Pick a frame…** and
     **Attach to the screen**.
 26. **Bars** → **[ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Highlights ]**. On an icon container every tab carries the orange "drawn as icons" notice.
+    Highlights ]**. On an icon container every tab carries the orange "drawn as icons" notice. On
+    **Background & border**, Background reads **Background texture** · **Background opacity** /
+    **Background color** · **Use class color**; drag **Background opacity** down → the bars'
+    background fades while the fill stays as it was.
 27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**.
 28. **The picker is shared.** On Bars → Bar, switch the Container dropdown → the page stays on **Bar**,
     now showing the other container; open Layout → the same container is selected there.

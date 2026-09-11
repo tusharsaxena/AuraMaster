@@ -5,7 +5,7 @@ local _, NS = ...
 --     band   [Container ▾]
 --     [ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
 --
--- The font, border and bar blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
+-- The font, border, bar and background blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
 -- with anything extra appended after the block — and every color row has its class-color companion
 -- (options-ui-§17), resolved to the PLAYER's class: an element describes an aura, not a unit
 -- (modules/Style.lua's Style.Color). The dispel, expiring and pandemic swatches are PALETTE
@@ -71,15 +71,22 @@ NS.RegisterSchemaRows(H.ColorPair({
 
 -- ── Background & border ───────────────────────────────────────────────────────────────────────
 
-NS.RegisterSchemaRows({
-    { path = P .. "bgTexture", page = PAGE, group = G_BG, subgroup = L["Background"], type = "string",
-      dialogControl = "LSM30_Statusbar", values = H.LSMValues("statusbar"), label = L["Background texture"],
-      desc = L["The texture drawn behind the fill."] },
+-- The background is a bar group, not options-ui-§16's "group over a background": that clause is for
+-- a surface with no texture, and this one has a live texture (modules/Style_Bars.lua paints it). The
+-- composer's own tooltips describe a fill, so each row's is replaced, found by path.
+local bg = H.BarGroup({
+    prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = PLAYER,
+    keys = { barTexture = "bgTexture", barAlpha = "bgAlpha", barColor = "bgColor", useClassColorBar = "useClassColorBg" },
+    labels = { barTexture = L["Background texture"], barAlpha = L["Background opacity"], barColor = L["Background color"] },
 })
-NS.RegisterSchemaRows(H.ColorPair({
-    prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], key = "bgColor",
-    companionKey = "useClassColorBg", label = L["Background color"], classColor = PLAYER,
-}))
+local BG_TOOLTIPS = {
+    [P .. "bgTexture"] = L["The texture drawn behind the fill."],
+    [P .. "bgAlpha"] = L["How opaque the background texture is."],
+    [P .. "bgColor"] = L["The background color."] .. (H.CLASS_COLOR_NOTE and (" " .. H.CLASS_COLOR_NOTE) or ""),
+    [P .. "useClassColorBg"] = L["Draw the background in the class color instead of the swatch beside it."],
+}
+for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
+NS.RegisterSchemaRows(bg)
 NS.RegisterSchemaRows(H.BorderGroup({
     prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = PLAYER,
 }))
