@@ -146,9 +146,9 @@ end
 -- The drag handle
 -- ---------------------------------------------------------------------------
 
--- A labeled strip OUTSIDE the anchor, on the side the auras do not grow into, drawn the way
--- ConsumableMaster draws its macro bar's handle so the collection reads as one suite: a dark
--- backdrop with a thin gold edge, a gold label, and a help mark inside its far end. Outside, because
+-- A labeled strip OUTSIDE the anchor, on the side the auras do not grow into: a dark WHITE8X8
+-- backdrop with a 1px gold edge, a gold label, and the media catalog's help mark inside its far
+-- end. Outside, because
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
@@ -182,13 +182,39 @@ end
 
 local function hideTooltip() if GameTooltip then GameTooltip:Hide() end end
 
+--- The strip's two drag scripts, built once per handle and set on the strip AND its help mark, so a
+--- drag that starts on the mark moves the container too instead of landing in a dead zone.
+local function dragScripts(container)
+    local anchor = container.anchor
+    local function start()
+        local cfg = container:Cfg()
+        -- Only a screen-attached container moves by dragging; an attached one follows its target, and
+        -- its offsets are set on the Layout page. Never mid-combat: the anchor parents an aura engine.
+        if cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown() then
+            anchor:StartMoving()
+            container.__dragging = true
+        end
+    end
+    local function stop()
+        if not container.__dragging then return end
+        container.__dragging = nil
+        anchor:StopMovingOrSizing()
+        Anchors.SavePosition(container)
+    end
+    return start, stop
+end
+
 --- The help mark: a fixed 14px icon rather than a line of hint text, so a one-element container's
---- handle is not forced wider by prose. It carries the tooltip and passes a right-click through.
+--- handle is not forced wider by prose. It carries the tooltip, passes a right-click through, and
+--- takes a left-drag with the strip's own drag scripts.
 local function buildHelp(handle, container)
     local help = CreateFrame("Button", nil, handle)
     help:SetSize(HANDLE_HELP, HANDLE_HELP)
     help:SetPoint("RIGHT", handle, "RIGHT", -4, 0)
     help:RegisterForClicks("RightButtonUp")
+    help:RegisterForDrag("LeftButton")
+    help:SetScript("OnDragStart", handle:GetScript("OnDragStart"))
+    help:SetScript("OnDragStop", handle:GetScript("OnDragStop"))
     local icon = help:CreateTexture(nil, "OVERLAY")
     icon:SetAllPoints(help)
     icon:SetTexture(NS.Icon and NS.Icon("help") or HELP_TEXTURE)
@@ -200,8 +226,10 @@ local function buildHelp(handle, container)
 end
 
 --- Build the handle a player drags a container by. Shown only while unlocked; it sits outside the
---- anchor (Anchors.UpdateHandle places it), so what is lined up while unlocked is exactly where it
---- stays and no element is covered.
+--- anchor (Anchors.UpdateHandle places it), so no element is covered and nothing moves to make room.
+--- The one exception is the screen edge: while the handle shows, the anchor's clamp rect takes the
+--- strip in (clampToHandle), so a container flush with the edge on the handle's side is pushed in by
+--- the strip while unlocked and returns when locked. Its stored position does not change.
 function Anchors.BuildHandle(container)
     local anchor = container.anchor
     local handle = CreateFrame("Button", nil, anchor, "BackdropTemplate")
@@ -219,23 +247,11 @@ function Anchors.BuildHandle(container)
     label:SetPoint("CENTER")
     label:SetTextColor(1, 0.82, 0)
     handle.label = label
-    handle.help = buildHelp(handle, container)
 
-    handle:SetScript("OnDragStart", function()
-        local cfg = container:Cfg()
-        -- Only a screen-attached container moves by dragging; an attached one follows its target, and
-        -- its offsets are set on the Layout page. Never mid-combat: the anchor parents an aura engine.
-        if cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown() then
-            anchor:StartMoving()
-            container.__dragging = true
-        end
-    end)
-    handle:SetScript("OnDragStop", function()
-        if not container.__dragging then return end
-        container.__dragging = nil
-        anchor:StopMovingOrSizing()
-        Anchors.SavePosition(container)
-    end)
+    local dragStart, dragStop = dragScripts(container)
+    handle:SetScript("OnDragStart", dragStart)
+    handle:SetScript("OnDragStop", dragStop)
+    handle.help = buildHelp(handle, container)
     handle:SetScript("OnClick", function(_, button)
         if button == "RightButton" then openSettings(container) end
     end)

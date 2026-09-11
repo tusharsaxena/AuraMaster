@@ -144,6 +144,7 @@ end)
 local RECORDED = {
     "SetPoint", "SetAllPoints", "ClearAllPoints", "SetWidth", "SetHeight", "SetSize",
     "SetBackdrop", "SetBackdropColor", "SetBackdropBorderColor", "SetTextColor", "SetTexture",
+    "RegisterForDrag",
 }
 
 --- Rebuild container `inst`'s handle under a CreateFrame that records every frame it makes.
@@ -175,7 +176,7 @@ local function last(f, method)
     return log[#log], #log
 end
 
-test("handle: dressed like ConsumableMaster's bar handle, with a help mark from the media seam", function()
+test("handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
@@ -293,6 +294,27 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     h.help:__fire("OnClick", "RightButton")
     assertEqual(opened, 1)
     assertEqual(NS.State.activeContainerId, 2)
+end)
+
+test("handle: a left-drag that starts on the help mark moves the container as one on the strip does", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    assertEqual(NS.Database.FindContainer(1).attach.mode, "screen")
+    local h = recordedHandle(mocks, NS, inst)
+    assertEqual(table.concat(last(h.help, "RegisterForDrag") or {}, ","), "LeftButton",
+        "the help mark takes a left-drag")
+    local moved, stopped = 0, 0
+    rawset(inst.anchor, "StartMoving", function() moved = moved + 1 end)
+    rawset(inst.anchor, "StopMovingOrSizing", function() stopped = stopped + 1 end)
+    inst.anchor.GetPoint = function() return "TOP", nil, "TOP", 7, -40 end
+    h.help:__fire("OnDragStart")
+    h.help:__fire("OnDragStop")
+    assertEqual(moved, 1, "the drag moves the anchor")
+    assertEqual(stopped, 1)
+    local pos = NS.Database.FindContainer(1).position
+    assertEqual(pos.x, 7, "and the position is stored")
+    assertEqual(pos.y, -40)
+    assertTrue(h.help:GetScript("OnDragStart") == h:GetScript("OnDragStart"), "one drag function, not a copy")
 end)
 
 test("handle: without the media library the help mark falls back to Blizzard's information icon", function()

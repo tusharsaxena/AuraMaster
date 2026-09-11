@@ -549,6 +549,35 @@ test("manager: a target swap under lockdown leaves the class color silently stal
     assertNil(inst.classStale)
 end)
 
+test("manager: a stale class and a held change of the player's re-apply the container once after the hold", function()
+    -- Both edges that end a hold run FlushPending and then ReapplyStaleClass (core/AuraMaster.lua).
+    local edges = {
+        { hold = "__lockdown", lift = function(NS) NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED") end },
+        { hold = "__aurasSecret", lift = function(NS) NS.addon:OnRestrictionChanged() end },
+    }
+    for _, e in ipairs(edges) do
+        local NS, mocks = fresh()
+        local inst = NS.ContainerManager.instances[3]   -- Target debuffs (mine)
+        classColored(NS, mocks, 3)
+        mocks[e.hold] = true
+        NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
+        assertTrue(inst.classStale, e.hold .. ": the swap marks the class stale")
+        assertTrue(NS.SetByPath("container.icons.width", 40, 3))   -- and the player changes a setting
+        mocks.__fireTimers()
+        local applies, apply = 0, inst.Apply
+        rawset(inst, "Apply", function(self)
+            applies = applies + 1
+            return apply(self)
+        end)
+        mocks[e.hold] = false
+        e.lift(NS)
+        mocks.__fireTimers()
+        -- red under: SnapshotClass leaving classStale set after the flush re-applied the container
+        assertEqual(applies, 1, e.hold .. ": the flush's apply already painted the new class")
+        assertNil(inst.classStale, e.hold)
+    end
+end)
+
 --- A fresh environment whose target's class token is `target.token` (nil makes it an NPC), planted
 --- in that environment's own mock. Everyone else is a mage.
 local function freshWithTarget(token)

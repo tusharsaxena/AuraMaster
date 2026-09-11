@@ -120,7 +120,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (35)
+### test_containermanager.lua (36)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -150,6 +150,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 - manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
+- manager: a stale class and a held change of the player's re-apply the container once after the hold
 - manager: a target swap out of combat re-applies only class-colored containers of that unit
 - manager: an out-of-combat swap to a same-class target, or NPC to NPC, queues no apply
 - manager: a class-changing swap queued just before combat applies after it, with no deferral notice
@@ -158,7 +159,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 
-### test_anchors.lua (19)
+### test_anchors.lua (20)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -168,11 +169,12 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a forbidden frame, or something that is not a frame, is never a target
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - anchors: a drag saves the position in one write
-- handle: dressed like ConsumableMaster's bar handle, with a help mark from the media seam
+- handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark
 - handle: above the anchor when auras grow down, below when up, edge-aligned where they start
 - handle: at least as wide as its container's element, and as its label with room for the help mark
 - handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
+- handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: without the media library the help mark falls back to Blizzard's information icon
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
 - picker: a forbidden frame under the cursor ends the walk without calling its methods
@@ -180,7 +182,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (16)
+### test_style.lua (17)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -196,6 +198,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a class color keeps the stored alpha; off, the stored swatch is used
 - style: a target container's class color is the target's, snapshotted at apply
 - style: a dress that raises still clears its class color, and the error reaches the caller
+- style: a dress that raises hands the error handler the failing styler's stack
 - style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
 
@@ -312,9 +315,9 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 25 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 35 |
-| test_anchors.lua | 19 |
-| test_style.lua | 16 |
+| test_containermanager.lua | 36 |
+| test_anchors.lua | 20 |
+| test_style.lua | 17 |
 | test_timedspells.lua | 10 |
 | test_slash.lua | 21 |
 | test_optionssetup.lua | 16 |
@@ -325,4 +328,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **239** |
+| **Total** | **242** |

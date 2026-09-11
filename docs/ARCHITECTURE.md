@@ -15,7 +15,7 @@ seeded with three (`defaults/Profile.lua:187`).
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:169`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:172`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -120,8 +120,8 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:238` — a coalesced panel re-render (every banner lists containers) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:477` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:238` — a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:477` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all); `modules/TimedSpells.lua:153` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:484` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
@@ -174,7 +174,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:216-218` | `NS.OnProfileChanged` → re-prepare the registry, rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:214`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:217`) and
 is not addon code. The eight `core/AuraMaster.lua` registrations live in one function,
 `RegisterLifecycleEvents`, so the perf probe's suspend and resume remove and restore the same list.
 
@@ -193,12 +193,12 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   (`SetClampRectInsets`), and that happens only out of combat, because the anchor parents an aura
   engine. The next visibility pass after combat catches the clamp up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:173-177`).
+  anchor it (`modules/Container.lua:176-180`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:155`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:368`).
+  button's ancestry (`modules/Container.lua:371`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
@@ -233,7 +233,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:256-258`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:274-276`).
 
 ## Known Limitations
 
@@ -286,6 +286,16 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   and issue tusharsaxena/AuraMaster#3.
 - **A frame anchor needs a global name.** The picker walks up to the nearest named ancestor
   (`modules/FramePicker.lua:26`); an unnamed frame cannot be re-found after a `/reload`.
+- **While unlocked, a container flush with the screen edge on its handle's side is pushed in.** The
+  anchor's clamp rect takes the handle in, so the handle can never be dragged off the screen
+  (`Anchors.UpdateHandle`). A container dragged against the top edge that grows down therefore sits
+  20px lower (the 18px strip and its 2px gap) until `/am lock`, and a handle wider than one element
+  pushes a container off the side edge it runs toward the same way. Locking puts it back, and the
+  stored position never changes.
+- **An attached container's handle can lie over the container it is attached to.** The handle sits
+  outside its own container, on the side its auras do not grow into, and an attached container often
+  has its target on exactly that side. The handle shows only while unlocked, and an attached
+  container is placed by its Layout-page offsets rather than dragged, so nothing is lost.
 
 ## Documentation map
 
@@ -337,5 +347,5 @@ None.
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03 | 2026-09-11 | The aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret |
-| `architecture-§5` | The container registry (`containers` membership, `containerOrder`, `nextContainerId`) is written outside `NS.SetByPath`: by `ContainerManager.Create` (with `Database.NewContainerData` taking the id and stamping `c.id`), `.Delete` and `.Duplicate` (through `Create`), and by `Database.PrepareProfile`'s load repair and first-run seeding (`seedStarters`, `normalizeKeys`, `backfillContainers`, `rebuildOrder` and the `nextContainerId` bump). That load pass also writes the profile's `seeded` flag, backfills missing template leaves into every stored container and stamps each container's `c.id` from its key | The registry is not addressable by any schema row, since a row is a leaf; membership changes are structural and go through ContainerManager, and the load repair normalizes what AceDB loaded and, on a brand-new profile, seeds the starters, before any reader sees the registry; follow-up to docs/reviews/2026-09-11 F-006, whose settings writes now go through the seam, leaving only the registry, which is not a settings path | 2026-09-11 | A schema row (or the seam) gains a registry address, or architecture-§5 scopes the rule to schema rows |
+| `architecture-§5` | The container registry (`containers` membership, `containerOrder`, `nextContainerId`) is written outside `NS.SetByPath`: by `ContainerManager.Create` (with `Database.NewContainerData` taking the id and stamping `c.id`), `.Delete` and `.Duplicate` (through `Create`), and by `Database.PrepareProfile`'s load repair and first-run seeding (`seedStarters`, `normalizeKeys`, `backfillContainers`, `rebuildOrder` and the `nextContainerId` bump). That load pass also writes the profile's `seeded` flag, backfills missing template leaves into every stored container and stamps each container's `c.id` from its key | The registry is not addressable by any schema row, since a row is a leaf; membership changes are structural and go through ContainerManager, and the load repair normalizes what AceDB loaded and, on a brand-new profile, seeds the starters, before any reader sees the registry; follow-up to docs/reviews/2026-09-11 F-006, whose settings writes now go through the seam, leaving only the registry, which is not a settings path | 2026-09-11 | A schema row (or the seam) gains a registry address, or architecture-§5 is scoped to schema rows (tusharsaxena/WowAddonStandards#7) |
 | `documentation-§1` | README has no `## Screenshots` section (item 5) | Screenshots can only be captured in a live client and none exist yet; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20; the capture is tracked as issue tusharsaxena/AuraMaster#3 | 2026-09-11 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when the section lands |

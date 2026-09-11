@@ -279,6 +279,23 @@ test("style: a dress that raises still clears its class color, and the error rea
         "outside a dress the player's class paints, not the failed dress's")
 end)
 
+test("style: a dress that raises hands the error handler the failing styler's stack", function()
+    -- The client's debugstack, planted in this environment only: the headless mock has none.
+    local NS2, m2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.debugstack = function() return debug.traceback("stack:", 2) end
+    end })
+    NS2.Style.Bars.Apply = function() error("styler failed") end
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "bars" })
+    local ok, err = pcall(NS2.Style.Element, m2.__stubFrame(), c, true, nil)
+    assertTrue(not ok, "the styler's error is not swallowed")
+    err = tostring(err)
+    local where = err:match("^(.-:%d+): styler failed")
+    assertTrue(where ~= nil, "the message keeps the styler's file:line: " .. err)
+    local stack = err:match("\n(.*)$") or ""
+    -- red under: Style.Element re-raising the bare message from a pcall (no stack captured)
+    assertTrue(stack:find(where, 1, true) ~= nil, "the stack names the failing styler's line: " .. err)
+end)
+
 test("style: the Blizzard time format asks for no formatter of our own", function()
     assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
 end)

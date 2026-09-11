@@ -43,8 +43,14 @@ suite covers what only the client can show.
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
     Hovering the help mark at the handle's right end shows the name and "Drag to move. Right-click for
     settings."
-15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. Right-click a handle →
-    the settings open with that container selected.
+    **Screen edge.** Lock, drag a container that grows down flush against the top of the screen, then
+    `/am unlock` → the container shifts down by the handle's height, so the handle stays on screen;
+    `/am lock` → it returns to the edge. Its stored position is the same before and after.
+    **Attached container.** Attach one container to another (Layout page) and unlock → the attached
+    container's handle sits outside its own edge and may lie over the target's elements or handle.
+    This is expected (Known Limitations).
+15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
+    the help mark moves it too. Right-click a handle → the settings open with that container selected.
 16. `/am lock` → handles and placeholders go; real auras return.
 17. `/am preview` → placeholders without handles; `/am preview off` → gone. `/am preview on` then
     `/reload` → preview is off again.

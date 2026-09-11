@@ -221,18 +221,36 @@ function Style.ElementSize(cfg)
     return tonumber(b.width) or D.bars.width, tonumber(b.height) or D.bars.height
 end
 
+-- The dress in progress, handed to runDress through upvalues: Lua 5.1's xpcall passes no arguments
+-- to the function it calls, and a closure per dress would allocate on every button.
+local dressStyler, dressFrame, dressCfg, dressEngine
+
+local function runDress()
+    return dressStyler.Apply(dressFrame, dressCfg, dressEngine)
+end
+
+--- A dress's error handler. It runs where the styler raised, while the stack still holds the failing
+--- line, and that stack travels with the message, because the re-raise in Style.Element starts a new
+--- one and an error handler (BugSack) would otherwise see a stack that ends there. The headless
+--- harness has no debugstack; the message then goes on as it came.
+local function withStack(err)
+    if type(debugstack) ~= "function" then return err end
+    return tostring(err) .. "\n" .. debugstack(2)
+end
+
 --- Dress one element for `cfg` (a container's stored table). `engine` true binds the regions to the
 --- engine's aura data; false leaves them for the preview to fill. `classColor` is the container's
 --- class snapshot (nil for a player container), used by every class-colored region of this dress.
 --- The snapshot is cleared on every exit: a styler that raises (Container:Restyle catches it) must not
---- leave it set for the next Style.Color outside a dress, so the error is re-raised only after.
+--- leave it set for the next Style.Color outside a dress, so the error is re-raised only after, with
+--- the styler's own stack attached (withStack).
 function Style.Element(frame, cfg, engine, classColor)
     local t0 = Perf.on and debugprofilestop()
     local styler = (cfg.style == "icons") and Style.Icons or Style.Bars
     if styler then
-        dressClass = classColor
-        local ok, err = pcall(styler.Apply, frame, cfg, engine)
-        dressClass = nil
+        dressClass, dressStyler, dressFrame, dressCfg, dressEngine = classColor, styler, frame, cfg, engine
+        local ok, err = xpcall(runDress, withStack)
+        dressClass, dressStyler, dressFrame, dressCfg, dressEngine = nil, nil, nil, nil, nil
         if not ok then error(err, 0) end
     end
     if t0 then Perf.Note("styleElement", debugprofilestop() - t0) end
