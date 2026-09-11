@@ -100,8 +100,9 @@ NS.ResolveColor = lib.ResolveColor
 -- times (modules/Container.lua snapshots a tracked unit's class per apply).
 NS.ClassColor = lib.ClassColor
 
--- The shared window edge, published flat so the frame picker's overlay reaches it by name rather than
--- through a private lookalike (standalone-windows).
+-- The shared window edge, published flat for any standalone window this addon adds, so it reaches the
+-- edge by name rather than through a private lookalike (standalone-windows). There is none today, and
+-- the frame picker draws its own outline rather than reading NS.SKIN.
 NS.SKIN      = lib.SKIN
 NS.ApplySkin = lib.ApplySkin
 

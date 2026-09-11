@@ -267,8 +267,9 @@ end
 --
 -- Degrade, never error: `/am` is registered unconditionally, so something must answer it. The
 -- host verbs never went to the library and keep working; the schema verbs name the missing
--- library instead of going quiet. NOTHING of the library's rendering is copied here — no row
--- formatter, no parser, no `key = value` shape.
+-- library instead of going quiet. The stub keeps only a minimal "/am verb — desc" join, so the
+-- landing page and `/am help` still list the verbs; nothing else of the library is copied here — no
+-- parser, no `key = value` shape.
 if not SlashLib then
     SlashLib = { FormatRow = function(cmd, desc) return cmd .. " — " .. desc end }
 

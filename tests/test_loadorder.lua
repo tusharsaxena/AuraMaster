@@ -58,6 +58,56 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         "the MediaSetup position carries its note")
 end)
 
+-- The note that governs each addon file line (toc-file-§5). Groups are runs of non-blank lines;
+-- `##` metadata and `#@` directives are ignored, `libs\` lines skipped. A group's first line, when it
+-- is a comment, is its header and not a note. A note is a maximal run of comment lines; a file line's
+-- current note is the latest one in its group. Returns { file, note, adjacent } per addon file line.
+local function tocCoverage(text)
+    local out, note, adjacent, first = {}, nil, false, true
+    local inNote = false
+    for raw in (text .. "\n"):gmatch("([^\n]*)\n") do
+        local line = raw:gsub("\r", ""):match("^%s*(.-)%s*$")
+        if line == "" then
+            note, adjacent, first, inNote = nil, false, true, false
+        elseif line:match("^##") or line:match("^#@") then
+            first, adjacent, inNote = false, false, false
+        elseif line:match("^#") then
+            if not first then
+                if inNote then note[#note + 1] = line else note, inNote = { line }, true end
+                adjacent = true
+            end
+            first = false
+        else
+            if not line:lower():match("^libs[\\/]") then
+                out[#out + 1] = { file = line, note = note and table.concat(note, " "), adjacent = adjacent }
+            end
+            first, adjacent, inNote = false, false, false
+        end
+    end
+    return out
+end
+
+local function covered(entry)
+    local note = entry.note
+    if not note then return false end
+    if note:find("Conventional", 1, true) then return true end
+    if not note:find("LOAD-BEARING", 1, true) then return false end
+    local base = entry.file:gsub("\\", "/"):match("([^/]+)%.%w+$")
+    return entry.adjacent or note:find("%f[%w_]" .. base .. "%f[^%w_]") ~= nil
+end
+
+test("loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Conventional note", function()
+    -- red under: deleting the new core\Secrets.lua note
+    -- red under: deleting the Settings page-files Conventional note
+    local entries = tocCoverage(readFile("AuraMaster.toc"))
+    assertTrue(#entries == #Loader.tocFiles("AuraMaster.toc"), "every addon file line was parsed")
+    local bare = {}
+    for _, e in ipairs(entries) do
+        if not covered(e) then bare[#bare + 1] = e.file end
+    end
+    assertEqual(table.concat(bare, ", "), "", "TOC lines with no governing note")
+end)
+
 test("loadorder: the runner loaded exactly the TOC's files and the XML's library files", function()
     assertEqual(table.concat(T.loadedAddonFiles, "\n"), table.concat(Loader.tocFiles("AuraMaster.toc"), "\n"))
     assertEqual(table.concat(T.loadedLibFiles, "\n"),
