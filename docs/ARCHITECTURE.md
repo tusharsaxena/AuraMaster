@@ -123,7 +123,7 @@ pass on.
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:238` — a coalesced panel re-render (every banner lists containers) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:469` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:476` — `ApplyVisibility()` over every container |
-| `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none | `modules/ContainerManager.lua` `CM.Init` — `RequestApply()` over every container (their excluded ids moved) |
+| `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
 
@@ -251,7 +251,10 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   master enable, visibility, lock and alpha run the visibility pass at once, and a rename and the
   session toggles queue nothing. The Blizzard-frame toggles queue nothing either, but reparenting
   waits for lockdown to lift: a toggle in combat prints the combat line, under the same
-  once-per-stretch rule, and applies on `PLAYER_REGEN_ENABLED`.
+  once-per-stretch rule, and applies on `PLAYER_REGEN_ENABLED`. The notice is only for the
+  player's changes. What the addon queues for itself waits just the same but prints nothing: a
+  class-swap re-apply, a learned timed spell, the startup build after a reload in combat, a perf
+  resume (`RequestApply(id, true)`).
 - **A container deleted or switched away in combat, or while aura information is withheld (an
   encounter, key or match), draws nothing until that ends, and is torn down then.** Its frames stay
   parked in the meantime. Creating and deleting from our own surfaces are refused in combat instead;

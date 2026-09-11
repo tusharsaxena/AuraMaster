@@ -83,7 +83,8 @@ NS.Perf = lib:New({
         if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
         if NS.ContainerManager then
             if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
-            if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply() end
+            -- The addon's own request: a player change held by the suspension keeps its notice.
+            if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
         end
     end,
 

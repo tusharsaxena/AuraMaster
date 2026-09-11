@@ -120,7 +120,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (30)
+### test_containermanager.lua (35)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -152,6 +152,11 @@ badge and any count quoted in the docs must agree with it.
 - manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
 - manager: a target swap out of combat re-applies only class-colored containers of that unit
 - manager: an out-of-combat swap to a same-class target, or NPC to NPC, queues no apply
+- manager: a class-changing swap queued just before combat applies after it, with no deferral notice
+- manager: timed spells learned just before combat apply after it, with no deferral notice
+- manager: /am forgettimed in combat is the player's change, so it says it waits
+- manager: a player's change held beside the addon's own request is announced once
+- manager: a reload in combat builds silently and applies once combat ends
 
 ### test_anchors.lua (13)
 
@@ -301,7 +306,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 25 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 30 |
+| test_containermanager.lua | 35 |
 | test_anchors.lua | 13 |
 | test_style.lua | 16 |
 | test_timedspells.lua | 10 |
@@ -314,4 +319,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **228** |
+| **Total** | **233** |

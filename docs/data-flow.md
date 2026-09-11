@@ -53,7 +53,11 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ## When an apply waits
 
-`FlushPending` holds the whole queue while `MustDefer()` is true and says so once per held stretch,
+`FlushPending` holds the whole queue while `MustDefer()` is true. The notice is for the player's own
+changes: a request the addon makes for itself passes `RequestApply(id, true)` (a class-swap re-apply
+from `RefreshUnit` or `ReapplyStaleClass`, a timed-spell scan's `TIMED_SPELLS_CHANGED`, the startup
+build in `CM.Init`, a perf resume). It waits and applies on the same edge, but a stretch that holds
+only such requests prints nothing. With a player change queued, it says so once per held stretch,
 naming the cause: "…will apply when combat ends." under lockdown, "…will apply once aura information
 is available again (after the encounter, key or match)." when secrecy alone holds it. One escalation
 only: a stretch announced as combat that secrecy still holds afterwards prints the restriction line
@@ -178,7 +182,8 @@ by index, and records every readable spell id with a readable positive duration 
 `global.timedSpells` (through `Secrets.IsSafeKey` and `Secrets.IsReadableNumber`). A scan that
 learned something sends `TIMED_SPELLS_CHANGED`; `ContainerManager` hears it and re-applies every
 container, which updates their `excludeSpellIDs`. `/am forgettimed` empties the set and sends the
-same message.
+same message with `{ byPlayer = true }`: a scan's apply that has to wait says nothing, while the
+player's forget is announced like a setting change.
 
 ## Where a container sits
 

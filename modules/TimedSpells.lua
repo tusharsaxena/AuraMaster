@@ -164,5 +164,6 @@ end
 function TS.Forget()
     local g = NS.db and NS.db.global
     if g then g.timedSpells = {} end
-    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED)
+    -- The player's own change, unlike a scan's: an apply it queues in combat is announced.
+    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED, { byPlayer = true })
 end

@@ -602,3 +602,79 @@ test("manager: an out-of-combat swap to a same-class target, or NPC to NPC, queu
     mocks.__fireTimers()
     assertEqual(#requestsOnSwap(NS), 0, "NPC to NPC: both unresolved, nothing changed")
 end)
+
+-- The deferral notice is for the player's own changes. What the addon asks of itself (a class-swap
+-- re-apply, a learned timed spell, the startup build) still waits for the same edge, silently.
+
+test("manager: a class-changing swap queued just before combat applies after it, with no deferral notice", function()
+    local NS, mocks, target = freshWithTarget("PRIEST")
+    local inst = NS.ContainerManager.instances[3]   -- Target debuffs (mine)
+    classColored(NS, mocks, 3)
+    assertEqual(inst.classColor.r, 1, "painted for the priest")
+    local lines = chat(mocks)
+    target.token = "MAGE"
+    NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")   -- out of combat: the class changed, an apply is queued
+    mocks.__lockdown = true                           -- and combat starts before its frame comes
+    mocks.__fireTimers()
+    -- red under: RefreshUnit requesting without the system flag
+    assertEqual(countLines(lines, "will apply"), 0, "the player changed no setting")
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertEqual(inst.classColor.r, mocks.RAID_CLASS_COLORS.MAGE.r, "re-applied for the mage after combat")
+    assertEqual(countLines(lines, "will apply"), 0)
+end)
+
+test("manager: timed spells learned just before combat apply after it, with no deferral notice", function()
+    local NS, mocks = fresh()
+    local lines = chat(mocks)
+    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED)   -- what a readable-state scan sends
+    mocks.__lockdown = true
+    mocks.__fireTimers()
+    -- red under: the TIMED_SPELLS_CHANGED receiver requesting without the system flag
+    assertEqual(countLines(lines, "will apply"), 0, "the player changed no setting")
+    mocks.__lockdown = false
+    assertTrue(NS.ContainerManager.FlushPending("regen") > 0, "the held apply runs once combat ends")
+end)
+
+test("manager: /am forgettimed in combat is the player's change, so it says it waits", function()
+    local NS, mocks = fresh()
+    local lines = chat(mocks)
+    mocks.__lockdown = true
+    NS.TimedSpells.Forget()
+    mocks.__fireTimers()
+    -- red under: TS.Forget announcing TIMED_SPELLS_CHANGED without its byPlayer mark
+    assertEqual(countLines(lines, COMBAT_LINE), 1, "told once")
+    mocks.__lockdown = false
+    assertTrue(NS.ContainerManager.FlushPending("regen") > 0, "and applied once combat ends")
+end)
+
+test("manager: a player's change held beside the addon's own request is announced once", function()
+    local NS, mocks = fresh()
+    local lines = chat(mocks)
+    mocks.__lockdown = true
+    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED)
+    mocks.__fireTimers()
+    assertEqual(countLines(lines, "will apply"), 0, "the addon's own request alone says nothing")
+    assertTrue(NS.SetByPath("container.icons.width", 40, 1))
+    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED)   -- a system request after it, in the same frame
+    mocks.__fireTimers()
+    -- red under: RequestApply recording only the latest request's origin (userPending = not system)
+    assertEqual(countLines(lines, COMBAT_LINE), 1, "the player's change is announced")
+    NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED)
+    mocks.__fireTimers()
+    assertEqual(countLines(lines, "will apply"), 1, "once per stretch")
+    mocks.__lockdown = false
+    assertTrue(NS.ContainerManager.FlushPending("regen") > 0)
+end)
+
+test("manager: a reload in combat builds silently and applies once combat ends", function()
+    local lines
+    local NS, mocks = fresh({ before = function(m)
+        m.__lockdown = true
+        lines = chat(m)
+    end })
+    -- red under: CM.Init requesting its first apply without the system flag
+    assertEqual(countLines(lines, "will apply"), 0, "the player changed no setting")
+    mocks.__lockdown = false
+    assertTrue(NS.ContainerManager.FlushPending("regen") > 0, "the startup apply runs once combat ends")
+end)

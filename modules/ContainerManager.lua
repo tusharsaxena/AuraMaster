@@ -12,7 +12,9 @@ local _, NS = ...
 -- applies once. And an apply that would touch aura buttons while auras are secret — or rebuild frames
 -- during combat lockdown — waits: FlushPending runs again on PLAYER_REGEN_ENABLED and on
 -- ADDON_RESTRICTION_STATE_CHANGED (core/AuraMaster.lua), and the player is told once, naming the
--- cause: combat, or aura information being withheld (an encounter, a key or a match).
+-- cause: combat, or aura information being withheld (an encounter, a key or a match). Only the
+-- player's own changes are announced: a request the addon makes for itself (a class-swap re-apply,
+-- a learned timed spell, the startup build) waits the same way, silently.
 --
 -- NOT EVERY WRITE NEEDS AN APPLY. A row may declare `effect`: "visibility" rows (the master enable,
 -- visibility, lock and alpha) run the combat-legal visibility pass at once, and "none" rows (the
@@ -30,6 +32,7 @@ CM.instances = CM.instances or {}
 local pending = {}        -- [id] = true
 local pendingAll = false
 local scheduled = false
+local userPending = false -- a pending request is the player's own, so a deferral of it is announced
 local shownReason = nil   -- the cause the deferral notice last named: nil, "combat" or "secret"
 
 local function print_(line)
@@ -132,13 +135,15 @@ end
 -- ---------------------------------------------------------------------------
 
 --- Ask for container `id` — or every container, when `id` is nil — to be re-applied. Batched to the
---- next frame.
-function CM.RequestApply(id)
+--- next frame. `system` marks a request the addon makes for itself, not for a change the player
+--- made: it waits like any other, but its deferral prints no notice (see noteDeferred).
+function CM.RequestApply(id, system)
     if id == nil then
         pendingAll = true
     else
         pending[id] = true
     end
+    if not system then userPending = true end
     if not scheduled then
         scheduled = true
         C_Timer.After(0, CM.FlushPending)
@@ -156,14 +161,16 @@ end
 --- Never on the PLAYER_REGEN_ENABLED edge itself (`edge == "regen"`): the order of that event and
 --- ADDON_RESTRICTION_STATE_CHANGED is unverified, and a momentary secret reading there after an
 --- ordinary fight must not print a false restriction line. Secret then combat prints nothing more:
---- the restriction wording already covers combat.
-local function noteDeferred(edge)
+--- the restriction wording already covers combat. `quiet` (nothing held is the player's own change)
+--- traces the deferral and prints nothing.
+local function noteDeferred(edge, quiet)
     local lockdown = InCombatLockdown()
     local reason = lockdown and "combat" or "secret"
     if NS.Debug then
         NS.Debug("Apply", "deferred: secret=%s lockdown=%s edge=%s",
             NS.Compat.AurasAreSecret(), lockdown, edge or "-")
     end
+    if quiet then return end
     local escalate = shownReason == "combat" and reason == "secret" and edge ~= "regen"
     if shownReason == nil or escalate then
         shownReason = reason
@@ -209,7 +216,7 @@ function CM.FlushPending(edge)
     if Perf.suspended then return 0 end   -- performance-§6: held; resume's RequestApply drains it
     local idle = not pendingAll and next(pending) == nil and next(retiring) == nil
     if CM.MustDefer() then
-        if not idle then noteDeferred(edge) end
+        if not idle then noteDeferred(edge, not userPending) end
         return 0
     end
     -- Nothing is held any longer, even when the queue is empty: a stretch CM.NoteDeferred announced
@@ -220,7 +227,7 @@ function CM.FlushPending(edge)
 
     local t0 = Perf.on and debugprofilestop()
     local all, which = pendingAll, pending
-    pending, pendingAll = {}, false
+    pending, pendingAll, userPending = {}, false, false
     local applied = applyDirty(all, which)
     replaceAttached()
     if t0 then Perf.Note("applyPass", debugprofilestop() - t0) end
@@ -246,9 +253,10 @@ end
 
 --- `unit` now names someone else: every container tracking it refreshes. One that paints a class
 --- color also re-applies when the new unit's class differs, so its class snapshot follows the unit
---- (modules/Container.lua's SnapshotClass); a same-class swap costs no apply. While an apply has to
---- wait the class is not read: the container is marked stale SILENTLY — no request and no deferral
---- notice, because nothing the player changed is being held. ReapplyStaleClass catches up.
+--- (modules/Container.lua's SnapshotClass); a same-class swap costs no apply. The request is the
+--- addon's own (`system`), so if combat starts before it flushes it waits with no deferral notice:
+--- nothing the player changed is being held. While an apply has to wait the class is not read: the
+--- container is marked stale SILENTLY, with no request. ReapplyStaleClass catches up.
 function CM.RefreshUnit(unit)
     for _, inst in pairs(CM.instances) do
         local cfg = inst:Cfg()
@@ -258,7 +266,7 @@ function CM.RefreshUnit(unit)
                 if CM.MustDefer() then
                     inst.classStale = true
                 elseif classChanged(inst, unit) then
-                    CM.RequestApply(inst.id)
+                    CM.RequestApply(inst.id, true)
                 end
             end
         end
@@ -272,7 +280,7 @@ function CM.ReapplyStaleClass()
     for id, inst in pairs(CM.instances) do
         if inst.classStale then
             inst.classStale = nil
-            CM.RequestApply(id)
+            CM.RequestApply(id, true)
         end
     end
 end
@@ -474,11 +482,14 @@ function CM.Init()
             elseif effect ~= "none" then CM.RequestApply(p.containerId) end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)
-        -- The learned timed-spell set changed: every container's excluded ids may have moved.
-        ev:RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function() CM.RequestApply() end)
+        -- The learned timed-spell set changed: every container's excluded ids may have moved. A
+        -- scan's news is the addon's own request; `/am forgettimed` marks its payload `byPlayer`.
+        ev:RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function(_, payload)
+            CM.RequestApply(nil, not (type(payload) == "table" and payload.byPlayer))
+        end)
     end
     CM.Sync()
-    CM.RequestApply()
+    CM.RequestApply(nil, true)   -- the startup build: a reload in combat changed no setting
     CM.FlushPending()
     if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
 end
