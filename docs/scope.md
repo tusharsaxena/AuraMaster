@@ -64,9 +64,9 @@ These are not declined; the game forbids them, and a request for one is answered
   once. On a debuff container the mode narrows nothing, because only buffs are learned.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
   friendly units and debuffs on hostile units. The addon warns per container
-  (`modules/FilterCompiler.lua:141`) rather than letting the filter look broken.
+  (`modules/FilterCompiler.lua:154`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
-  (`modules/ContainerManager.lua:86`).
+  (`modules/ContainerManager.lua:131`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
 

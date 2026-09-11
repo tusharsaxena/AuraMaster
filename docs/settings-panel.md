@@ -24,7 +24,7 @@ is a defect in this doc (documentation-§3).
   descriptor (`get`/`set`/`applyDefault` over the write seam, `rowsForPage` over
   `NS.SchemaForPage`, `skipRestoreAll`, `resetProfile`, `scheduleTimer`, the color codec) and the
   library draws the canvas, header, tab strip, two-column flow and widgets. The parent category
-  registers eagerly at `PLAYER_LOGIN` (`core/AuraMaster.lua:36`) and every body is built on its first
+  registers eagerly at `PLAYER_LOGIN` (`core/AuraMaster.lua:38`) and every body is built on its first
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
@@ -33,7 +33,7 @@ is a defect in this doc (documentation-§3).
   (`settings/OptionsSetup.lua:357`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:158`): the buff categories are not offered on a debuff container, and a
+  (`settings/Schema.lua:167`): the buff categories are not offered on a debuff container, and a
   weapon-enchant container sees only the rows that mean something for it.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -51,7 +51,7 @@ band holds **the picker itself** (options-ui-§14):
   page's only picker.
 - **Containers** has more page-wide acts than fit one row, so it takes the one-row-band escape: the
   band carries only the identity controls — the Container picker and **New container**
-  (`settings/Containers.lua:210`) — and every act on the selected container (Duplicate, Delete, Copy
+  (`settings/Containers.lua:231`) — and every act on the selected container (Duplicate, Delete, Copy
   settings from) sits on the page's first tab, named **General**. No page-wide act is drawn on any
   other tab. The band is not boxed a second time.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
@@ -201,12 +201,12 @@ A notice in orange heads every tab when the selected container is drawn as icons
 | Highlights (11) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`; *Dispel type colors:* `dispelColors.Magic`, `.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None` |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:99`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:100`);
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
 as a dispel-type texture tinted from `dispelColors`; `timeFormat` other than Blizzard hands the engine
-a `SecondsFormatter`; the running-out color is a step color curve over remaining time
-(`core/Compat.lua:155`); the refresh-window highlight is an additive wash the engine shows only
-while the aura can be refreshed without loss.
+a `SecondsFormatter` (`core/Compat.lua:135`); the running-out color is a step color curve over
+remaining time (`core/Compat.lua:168`); the refresh-window highlight is an additive wash the engine
+shows only while the aura can be refreshed without loss.
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
 surface with no texture a swatch and its companion and nothing else, and this background has a live

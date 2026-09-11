@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:327`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:360`), called from `OnInitialize`. There is no `SLASH_*` global.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -46,7 +46,7 @@ eight-or-more trigger (documentation-§3).
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:138`):
+(`NEW_WORDS`, `settings/Slash.lua:164`):
 
 | Words | Field |
 |---|---|
@@ -72,7 +72,7 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:98`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:310`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:343`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 Examples:
@@ -91,7 +91,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:239` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:273` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's
 formatting or parsing. `tests/degraded_env.lua` loads the addon that way.
