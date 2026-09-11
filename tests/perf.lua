@@ -8,7 +8,9 @@
 --
 -- What it ASSERTS is the deterministic half: how many times the aura engine is called, how many
 -- apply passes a burst of changes costs, and that a dormant probe changes neither the calls nor the
--- allocation of a pass. Those are machine-independent, so a real regression — a filter re-sent on
+-- allocation of a pass compared with the same code with no probe at all. Loops run with the GC
+-- stopped and the engine mock counting calls without logging them, so bytes/iter is the addon's own
+-- allocation. Those are machine-independent, so a real regression — a filter re-sent on
 -- every apply, a coalescing throttle broken, a bracket written without its gate — fails here while
 -- a busy CPU never does.
 --
@@ -50,32 +52,47 @@ mocks.__fireTimers()
 
 local CM = NS.ContainerManager
 
--- Every engine call, across every container, since the last reset.
+-- Every engine call, across every container, since the last reset. Read from the mock's by-name
+-- counters, which the measured loops keep without allocating (tests/wow_mock.lua `record`).
 local function engineCalls()
     local n = 0
-    for _, e in ipairs(mocks.__engines) do n = n + #e.__calls end
+    for _, e in ipairs(mocks.__engines) do
+        for _, c in pairs(e.__counts) do n = n + c end
+    end
     return n
 end
+-- Zeroed in place rather than replaced, so a name already seen costs no allocation when a
+-- measured loop counts it again.
 local function resetEngineCalls()
-    for _, e in ipairs(mocks.__engines) do e.__calls = {} end
+    for _, e in ipairs(mocks.__engines) do
+        e.__calls = {}
+        for name in pairs(e.__counts) do e.__counts[name] = 0 end
+    end
 end
 local function callsNamed(name)
     local n = 0
-    for _, e in ipairs(mocks.__engines) do n = n + #e:__callsTo(name) end
+    for _, e in ipairs(mocks.__engines) do n = n + (e.__counts[name] or 0) end
     return n
 end
 
 local results, failures = {}, {}
 local function assert_(cond, msg) if not cond then failures[#failures + 1] = msg end end
 
+-- The loop runs with the collector stopped, so bytes/iter is what the loop allocated and never what
+-- a collection happened to free mid-loop, and with the engine mock counting only, so the recorder's
+-- own garbage is not charged to the addon.
 local function measure(name, iterations, fn)
-    collectgarbage("collect"); collectgarbage("collect")
     resetEngineCalls()
+    collectgarbage("collect"); collectgarbage("collect")
+    mocks.__countOnly = true
+    collectgarbage("stop")
     local kb0 = collectgarbage("count")
     local t0 = os.clock()
     for i = 1, iterations do fn(i) end
     local elapsed = os.clock() - t0
     local kb1 = collectgarbage("count")
+    collectgarbage("restart")
+    mocks.__countOnly = false
     local r = {
         name = name, iterations = iterations,
         totalMs = elapsed * 1000, msPerIter = elapsed * 1000 / iterations,
@@ -130,13 +147,45 @@ assert_(swap.apiPerIter == targets,
     ("unitSwap makes %.1f engine calls, expected %d (one UpdateAllAuras per target container)")
         :format(swap.apiPerIter, targets))
 
--- 7. Probe overhead: the instrumentation must be free when capture is off.
+-- 7. Probe overhead: the instrumentation must be free when capture is off. "Free" is measured
+--    against the same bodies with no brackets at all (performance-§9): probeAbsent is exactly
+--    CM.ApplyVisibility plus addon:OnUnitSwap("PLAYER_TARGET_CHANGED") minus their brackets.
 local off = measure("probeOverheadOff", 1000, function() CM.ApplyVisibility(); NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED") end)
 NS.Perf.on = true
 local on = measure("probeOverheadOn", 1000, function() CM.ApplyVisibility(); NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED") end)
 NS.Perf.on = false
+local absent = measure("probeAbsent", 1000, function()
+    for _, inst in pairs(CM.instances) do inst:ApplyVisibility() end
+    CM.RefreshUnit("target")
+end)
 assert_(off.apiPerIter == on.apiPerIter, "the probe changed how many engine calls a pass makes")
-assert_(off.bytesPerIter <= on.bytesPerIter + 1, "a dormant bracket allocated more than an armed one")
+assert_(off.apiPerIter == absent.apiPerIter,
+    ("a dormant bracket changed the engine calls: %.1f vs %.1f with no bracket")
+        :format(off.apiPerIter, absent.apiPerIter))
+-- red under: a table built beside the dormant `t0` in CM.ApplyVisibility.
+assert_(off.bytesPerIter <= absent.bytesPerIter,
+    ("a dormant bracket allocated: %.1f B/iter vs %.1f with no bracket")
+        :format(off.bytesPerIter, absent.bytesPerIter))
+
+-- 8. TimedSpells listens to UNIT_AURA for every unit while a scan could read anything; for a unit
+--    it never scans, the handler must allocate nothing and arm no scan.
+NS.SetByPath("container.filter.durationMode", "timeless", 1)
+mocks.__fireTimers(); mocks.__fireTimers()
+local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+assert_(type(onUnitAura) == "function", "unitAuraOther: TimedSpells did not register UNIT_AURA")
+if type(onUnitAura) == "function" then
+    local timersBeforeAura = #mocks.__timers
+    local other = measure("unitAuraOther", 1000, function() onUnitAura("UNIT_AURA", "nameplate1") end)
+    assert_(#mocks.__timers == timersBeforeAura,
+        ("unitAuraOther: a non-player UNIT_AURA armed %d timer(s)"):format(#mocks.__timers - timersBeforeAura))
+    -- red under: a table built at the top of TimedSpells' onUnitAura.
+    assert_(other.bytesPerIter == 0,
+        ("unitAuraOther: a non-player UNIT_AURA allocated %.1f B/iter"):format(other.bytesPerIter))
+end
+
+for _, r in ipairs(results) do
+    assert_(r.bytesPerIter >= 0, ("%s reports negative bytes per iteration (%.1f)"):format(r.name, r.bytesPerIter))
+end
 
 -- ── report ──────────────────────────────────────────────────────────────────────────────────
 

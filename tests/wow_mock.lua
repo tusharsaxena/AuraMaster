@@ -41,23 +41,33 @@ return function()
 
     M.__engines = {}
 
+    -- Every recorded engine call goes through here. `__counts` (calls by name) is always kept and
+    -- allocates nothing once a name has been seen; the `__calls` log allocates a table per call, so
+    -- tests/perf.lua sets `M.__countOnly` around its measured loops to keep the mock's own garbage
+    -- out of the addon's bytes-per-iteration figure.
+    local function record(self, name, ...)
+        self.__counts[name] = (self.__counts[name] or 0) + 1
+        if not M.__countOnly then self.__calls[#self.__calls + 1] = { name, ... } end
+    end
+
     local function makeEngine(f)
         f.__calls = {}
+        f.__counts = {}
         f.__frames = {}
         for _, name in ipairs(ENGINE_METHODS) do
             f[name] = function(self, ...)
-                self.__calls[#self.__calls + 1] = { name, ... }
+                record(self, name, ...)
                 return self
             end
         end
         -- SetEnabled is recorded AND tracked, so both "was it called" and "is it enabled" answer.
         function f:SetEnabled(v)
-            self.__calls[#self.__calls + 1] = { "SetEnabled", v }
+            record(self, "SetEnabled", v)
             self.__enabled = not not v
             return self
         end
         function f:AddItemEnchantment(slot, opts)
-            self.__calls[#self.__calls + 1] = { "AddItemEnchantment", slot, opts }
+            record(self, "AddItemEnchantment", slot, opts)
             local frame = M.__stubFrame()
             frame.__enchantSlot = slot
             return frame

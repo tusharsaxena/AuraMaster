@@ -116,6 +116,11 @@ iteration — never wall-clock time, and its timings are for comparing scenarios
 The vendored runner drives it as the `perf` suite and keeps its output in the run's bundle under
 `docs/automated-tests/` (automated-tests-§7).
 
+Every measured loop runs with the garbage collector stopped (a full collect on either side), so
+bytes/iter is what the loop allocated and is never negative. The mock engine switches to count-only
+while a loop runs: it counts calls by name and does not log them, so its own bookkeeping is not
+charged to the addon. Figures from bundles recorded before this change are not comparable.
+
 | Scenario | What it exercises |
 |---|---|
 | `compile` | `FilterCompiler.Compile` over a representative container |
@@ -123,8 +128,10 @@ The vendored runner drives it as the `perf` suite and keeps its output in the ru
 | `restyle` | Re-dressing every button of a live engine (`Container:Restyle`) |
 | `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`) |
 | `unitSwap` | A target change refreshing the containers on that unit |
-| `probeOverheadOff` | The hottest bracketed path with capture off — the evidence that a dormant bracket costs nothing (performance-§9) |
-| `probeOverheadOn` | The same path with capture on, for the comparison |
+| `probeOverheadOff` | The hottest bracketed path with capture off |
+| `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
+| `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9) |
+| `unitAuraOther` | TimedSpells' `UNIT_AURA` handler for a unit it never scans (`nameplate1`); must allocate 0 B/iter and arm no scan |
 
 **What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
 makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it
