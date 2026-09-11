@@ -47,7 +47,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:165`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
-| LibSharedMedia-3.0 | Texture, border and font lookups (`modules/Style.lua:23`) |
+| LibSharedMedia-3.0 | Texture, border and font lookups (`modules/Style.lua:26`) |
 | LibKa0s v1.29.0 | Eight modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
@@ -127,7 +127,7 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:29`). Twenty verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty verbs; `options` is an alias of `config`.
 
 | Command | What it does |
 |---|---|

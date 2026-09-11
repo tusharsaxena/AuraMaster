@@ -55,7 +55,8 @@ Suites worth knowing by name:
 
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
-  `## Documentation map` agreeing with `docs/` in both directions.
+  `## Documentation map` agreeing with `docs/` in both directions, and every `file:line` citation in
+  `docs/*.md`, `DEPENDENCIES.md` and `README.md` naming an existing file and a non-blank line.
 - **`tests/test_lintconfig.lua`** — `.luacheckrc` carries no blanket suppression, so `0/0` is a
   statement about the code.
 - **`tests/test_vendor_sync.lua`** — `libs/LibKa0s/` and `tests/_kit/` are byte-identical to the

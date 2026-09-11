@@ -54,7 +54,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
 - **Creates every region as a descendant of the button**, once, in `initializeFrame`, stored on
-  `frame.__am` (`modules/Style_Bars.lua:28`, `modules/Style_Icons.lua:19`).
+  `frame.__am` (`modules/Style_Bars.lua:28`, `modules/Style_Icons.lua:22`).
 - **Guards every binding** with `pcall` (`Style.Bind`, `callEngine`), so a refusal costs one binding,
   not the engine's frame batch.
 

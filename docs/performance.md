@@ -49,7 +49,7 @@ Declared in report order in `core/PerfSetup.lua:45`, each bracketed with the inl
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
 | `unitSwap` | — | `core/AuraMaster.lua:80`, `:87` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:103` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `applyPass` | — | `modules/ContainerManager.lua:192` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:230` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:130` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:128` | Dressing one bar or icon: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |

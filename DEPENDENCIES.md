@@ -37,7 +37,7 @@ marked as such rather than listed as a requirement.
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:136` probes `command -v lizard` |
 | `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, and the runner's manifest | `tests/_kit/vendor_sync.lua:184` (`git -C … show`), `tests/test_lintconfig.lua:146` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays |
-| POSIX shell with `ls` | any | the docs gate lists files by shelling out | `tests/test_docs.lua:32` (`io.popen("ls -1 …")`) |
+| POSIX shell with `ls` | any | the docs gate lists files by shelling out | `tests/test_docs.lua:35` (`io.popen("ls -1 …")`) |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2. "5.2 will probably work" is false and costs an hour to

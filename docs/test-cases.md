@@ -234,13 +234,14 @@ badge and any count quoted in the docs must agree with it.
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
 
-### test_docs.lua (5)
+### test_docs.lua (6)
 
 - README.md carries no angle-bracket argument placeholders
 - the addon's own files use US spellings (localization-§5's canonical lists)
 - the spelling gate is falsifiable: it flags a British word and passes its US twin
 - every Tier 2 documentation-map row agrees with docs/
 - every .md under docs/ appears in the documentation map
+- docs: every file:line citation names an existing file and a non-blank line inside it
 
 ### test_surface_parity.lua (4)
 
@@ -284,9 +285,9 @@ badge and any count quoted in the docs must agree with it.
 | test_optionssetup.lua | 14 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
-| test_docs.lua | 5 |
+| test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **203** |
+| **Total** | **204** |

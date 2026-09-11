@@ -119,7 +119,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_optionssetup.lua` | The panel: pages, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |
 | `test_locale.lua` | `locales/enUS.lua` defines every routed string and nothing unused |
-| `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways |
+| `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways, every file:line citation resolving to a non-blank line |
 | `test_surface_parity.lua` | Each degradation stub against the live surface it stands in for |
 | `test_vendor_sync.lua` | `libs/LibKa0s/` and `tests/_kit/` against the LibKa0s tag named in `CLAUDE.md` |
 | `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression |
