@@ -116,7 +116,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
 - manager: ResetPositions puts every container back on the screen, staggered
 
-### test_anchors.lua (9)
+### test_anchors.lua (10)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -124,6 +124,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a forbidden frame, or something that is not a frame, is never a target
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
+- picker: a forbidden frame under the cursor ends the walk without calling its methods
 - picker: it arms on release, then a left-click on a named frame picks it
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
@@ -229,7 +230,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 12 |
 | test_containermanager.lua | 9 |
-| test_anchors.lua | 9 |
+| test_anchors.lua | 10 |
 | test_style.lua | 10 |
 | test_timedspells.lua | 5 |
 | test_slash.lua | 10 |
@@ -241,4 +242,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **155** |
+| **Total** | **156** |

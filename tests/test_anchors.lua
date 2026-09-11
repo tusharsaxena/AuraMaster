@@ -79,12 +79,26 @@ test("picker: a frame resolves to its nearest named ancestor, skipping the scree
     local named = plant(mocks, "PlayerFrame")
     local child = mocks.__stubFrame()
     child.GetName = function() return nil end
+    child.IsForbidden = function() return false end   -- the kit stub answers any method truthy
     child.GetParent = function() return named end
     local f, name = NS.FramePicker.NamedAncestor(child)
     assertTrue(f == named)
     assertEqual(name, "PlayerFrame")
     local ours = plant(mocks, "AuraMasterAnchor9")
     assertNil(NS.FramePicker.NamedAncestor(ours))
+end)
+
+test("picker: a forbidden frame under the cursor ends the walk without calling its methods", function()
+    -- red under: calling GetName before the IsForbidden check.
+    local NS = fresh()
+    local stub = {
+        IsForbidden = function() return true end,
+        GetName = function() error("forbidden") end,
+        GetParent = function() error("forbidden") end,
+    }
+    local ok, f = pcall(NS.FramePicker.NamedAncestor, stub)
+    assertTrue(ok)
+    assertNil(f)
 end)
 
 test("picker: it arms on release, then a left-click on a named frame picks it", function()
