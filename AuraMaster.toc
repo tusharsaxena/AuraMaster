@@ -92,7 +92,7 @@ modules\ContainerManager.lua
 settings\Schema.lua
 # Conventional: its handlers reach the schema and pages at call time.
 settings\Slash.lua
-# LOAD-BEARING: before every page file, which calls the composers and LSMValues at file load.
+# LOAD-BEARING: before every page file, which calls the composers at file load.
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.
 settings\About.lua

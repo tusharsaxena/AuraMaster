@@ -9,7 +9,7 @@ local _, NS = ...
 -- library's `{ free, active }`), acquires one placeholder per slot on a dress and releases them all
 -- before the next. The keyed shape is not used here: placeholders are positional, not identified.
 --
--- WHAT A DEGRADED INSTALL GETS: the same three members, locally. A call site that branched on the
+-- WHAT A DEGRADED INSTALL GETS: the same four members, locally. A call site that branched on the
 -- library's presence would be a call site with a memory leak on one of its two paths.
 
 local Pool = LibStub and LibStub("LibKa0s-Pool-1.0", true)

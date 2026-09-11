@@ -362,7 +362,7 @@ cli:SetRowAnnotator(function(row)
     return ""
 end)
 
--- Published for introspection (tests/test_surface_parity.lua is the only reader).
+-- Published for introspection (read by tests/run.lua and tests/test_surface_parity.lua).
 Sl.__cli = cli
 
 --- The command list the landing page renders — the same rows `/am help` prints, without the chat

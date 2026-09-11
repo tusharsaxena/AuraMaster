@@ -82,7 +82,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | Question | Answer |
 |----------|--------|
 | Do I need to install anything else? | No. Everything the addon needs comes inside it. |
-| Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change, mentions it once in chat, and applies it as soon as the lock lifts. |
+| Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change and says so in chat. If the lock outlasts combat because an encounter, key or match is still going, it says so once more. The change goes in as soon as the lock lifts. |
 | Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned and tracked as a GitHub issue, and so is a text-only container style. |
 | Can I put a container on my unit frame? | Yes. On Layout → Position set **Attach to** to *A named frame*, then use **Pick a frame…** and click it. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
 | Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on friendly units and debuffs on hostile ones. Categories, dispel types and the other filters work on any unit. |

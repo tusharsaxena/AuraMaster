@@ -9,7 +9,7 @@ local _, NS = ...
 -- goes through.
 --
 -- Loads after settings/Slash.lua and BEFORE every settings/<page>.lua, because those files call
--- the composers (NS.Helpers.FontGroup, …) and NS.Helpers.LSMValues at FILE LOAD.
+-- the composers (NS.Helpers.FontGroup, …) at FILE LOAD.
 
 local L = NS.L
 local print = NS.Print
@@ -69,8 +69,8 @@ local descriptor = {
 -- The degradation stub — LOAD-COMPLETING, not member-answering (options-ui-§1)
 -- ---------------------------------------------------------------------------
 --
--- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD, and settings/Bars.lua
--- evaluates LSMValues inside a row literal. With any of those nil the page file raises, its rows
+-- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD. With any of those nil
+-- the page file raises, its rows
 -- never register, and most of the schema — with /am list, /am set and the profile defaults —
 -- silently vanishes. So this stub publishes every member a page file touches at load, measured by
 -- deleting one and re-running tests/degraded_env.lua, and nothing else: no widget maker, no flow

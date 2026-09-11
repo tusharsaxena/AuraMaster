@@ -43,7 +43,7 @@ the client drop them.
 
 ## Buckets
 
-Declared in report order in `core/PerfSetup.lua:46`, each bracketed with the inline gated form
+Declared in report order in `core/PerfSetup.lua:47`, each bracketed with the inline gated form
 (`local t0 = Perf.on and debugprofilestop()`, performance-§2) at a load-time `local Perf = NS.Perf`.
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
@@ -92,7 +92,7 @@ as described in `docs/perf-analysis/README.md`.
 
 ### Suspend
 
-Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:69`)
+Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:70`)
 calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — then
 `NS.TimedSpells.Stop()`, which drops TimedSpells' own `UNIT_AURA` and its three gate events, and
 runs a visibility pass; `Container:ShouldShow` checks `NS.Perf.suspended` as **step 0**, so every engine is disabled and

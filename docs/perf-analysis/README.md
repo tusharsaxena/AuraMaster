@@ -40,7 +40,7 @@ label, a `context` block (character, class, spec, level, zone, group), a `bucket
 parent — and an `fps` block with the active arm, the suspended arm and their per-frame delta.
 
 This addon's buckets are `unitSwap`, `applyPass`, `applyContainer` (within `applyPass`),
-`visibilityPass` and `styleElement` (`core/PerfSetup.lua`). Never sum a parent and its children; a
+`visibilityPass`, `styleElement` and `timedScan` (`core/PerfSetup.lua`). Never sum a parent and its children; a
 bucket that never fired is absent, not zero.
 
 ## Taking a capture

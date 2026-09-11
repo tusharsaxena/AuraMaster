@@ -21,7 +21,7 @@ otherwise (`docs/profiles.md`).
 | `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and the preview |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
-| `containers` | map | `{}` | `[id] = container` (the template below); written only by `modules/ContainerManager.lua` |
+| `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
 | `seeded` | bool | `false` | The starter containers have been created once; deleting them all does not bring them back |
@@ -166,7 +166,7 @@ The schema reaches the session state through two `sessionOnly` rows, `state.debu
 
 ## `AuraMasterPerfDB` — the capture ring
 
-A second top-level global, owned by `LibKa0s-Perf-1.0` and named in `core/PerfSetup.lua:36`. It
+A second top-level global, owned by `LibKa0s-Perf-1.0` and named in `core/PerfSetup.lua:37`. It
 holds the most recent in-game perf captures in the library's record schema, outside the AceDB tree
 so a profile copy, reset or switch never touches it (performance-§5). This addon writes nothing to
 it directly.

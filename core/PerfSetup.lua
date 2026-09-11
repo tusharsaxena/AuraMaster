@@ -8,7 +8,8 @@ local addonName, NS = ...
 --
 -- LOAD-BEARING POSITION: the instance is built at FILE LOAD, before any module takes
 -- `local Perf = NS.Perf` as a load-time upvalue (core/AuraMaster.lua, modules/Container.lua,
--- modules/ContainerManager.lua, modules/Style.lua), so this file precedes all of them in the TOC.
+-- modules/ContainerManager.lua, modules/Style.lua, modules/TimedSpells.lua), so this file precedes
+-- all of them in the TOC.
 
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 if not lib then
@@ -52,7 +53,7 @@ NS.Perf = lib:New({
         { key = "applyPass" },
         -- modules/Container.lua: compile, then build or update ONE container's engine, inside the pass.
         { key = "applyContainer", within = "applyPass" },
-        -- modules/Container.lua: the show ladder re-evaluated for every container (combat, settings).
+        -- modules/ContainerManager.lua: the show ladder re-evaluated for every container (combat, settings).
         { key = "visibilityPass" },
         -- modules/Style.lua: dressing one bar or icon — called by the engine's initializeFrame as it
         -- creates buttons, and by a restyle after a settings change.

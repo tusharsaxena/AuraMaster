@@ -10,7 +10,7 @@ marked as such rather than listed as a requirement.
 | Group | Who needs it | Short answer |
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
-| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`. |
+| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls`, `grep` and `nproc`. |
 | Release / assets | Nobody, locally | None. |
 
 ## Runtime (in-game) — what a player needs
@@ -42,9 +42,10 @@ marked as such rather than listed as a requirement.
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
 | `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:136` probes `command -v lizard` |
-| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, and the runner's manifest | `tests/_kit/vendor_sync.lua:184` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
-| `bash` | any recent | running the vendored automated-test runner | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays |
-| POSIX shell with `ls` | any | the docs gate lists files by shelling out | `tests/test_docs.lua:35` (`io.popen("ls -1 …")`) |
+| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:184` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/test_vendor_sync.lua:36` (`git ls-files -s`), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
+| `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:185` and `:200` (`sed`), `:200-203` (`grep`), `:277`, `:306`, `:322`, `:338` (`awk`), `:87` (`date`), `:351-356` (`find`, `wc`, `sort`), `:64` (`head`), `:305` (`tail`), `:67` (`tr`) |
+| POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:35` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua:357` (`listDir`, `ls -A`) |
+| POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, `lua tests/run.lua -j N` / `-j auto`; `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua:583` (`nproc` for `--jobs auto`), `:683` (`os.execute(":")`, the POSIX-shell probe), `:704` (shards backgrounded with `&` and joined with `wait`) |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2. "5.2 will probably work" is false and costs an hour to
@@ -63,7 +64,7 @@ sudo apt-get install -y pipx
 pipx ensurepath          # then open a new shell, or: source ~/.bashrc
 pipx install lizard
 
-# git (and bash, which Ubuntu already ships)
+# git (bash, sh, ls, grep, nproc and the runner's text utilities ship with Ubuntu already)
 sudo apt-get install -y git
 
 # verify — each of these must print a version
@@ -96,8 +97,8 @@ git -C ../LibKa0s rev-parse --short v1.29.0   # verify: prints a commit
 - **LuaFileSystem.** Not used; the kit lists directories by shelling out. `luacheck` pulls it in for
   itself, which is LuaRocks' business rather than this addon's.
 - **A CI runner.** There is none; every gate is local and hand-run (testing-§5).
-- **The vendored libraries.** Ace3, LibStub, LibSharedMedia-3.0 and LibKa0s are committed under
-  `libs/`. Listing them here does not license fetching them at build time.
+- **The vendored libraries.** LibStub, CallbackHandler-1.0, the Ace3 modules, LibKa0s,
+  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed under `libs/`. Listing them here does not license fetching them at build time.
 
 ## Release / assets
 

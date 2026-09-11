@@ -117,7 +117,7 @@ function Anchors.ResolvePending()
     end
 end
 
---- Which containers are still waiting on their frame (a test seam and a `/am list` aid).
+--- Which containers are still waiting on their frame (a test seam: tests/test_anchors.lua).
 function Anchors.Pending()
     local out = {}
     for id in pairs(pending) do
