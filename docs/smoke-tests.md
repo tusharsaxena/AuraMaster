@@ -52,8 +52,8 @@ suite covers what only the client can show.
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
     the help mark moves it too. Right-click a handle → the settings open with that container selected.
 16. `/am lock` → handles and placeholders go; real auras return.
-17. `/am preview` → placeholders without handles; `/am preview off` → gone. `/am preview on` then
-    `/reload` → preview is off again.
+17. `/am test` → placeholders without handles; `/am test off` → gone. `/am test on` then
+    `/reload` → preview is off again. `/am preview` → an unknown-command line and the help index.
 18. **Combat drag.** Unlock, enter combat, try to drag → the container does not move.
 
 ## D. Settings panel — every page and tab
@@ -149,7 +149,7 @@ suite covers what only the client can show.
 
 46. **Enter combat** (a training dummy) and change a container's bar width or a filter → chat prints
     once: `[AM] Aura Master settings changes will apply when combat ends.`; nothing changes on screen.
-    Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am preview`
+    Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am test`
     and a rename print no notice. With a target container's border on class color, target a player
     of another class and pull at once → no notice prints (you changed no setting), and the border
     takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →

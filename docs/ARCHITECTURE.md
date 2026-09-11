@@ -149,7 +149,7 @@ ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-two verbs; `options` is 
 | `/am delete id-or-name` | Delete a container |
 | `/am lock` | Lock every container in place |
 | `/am unlock` | Unlock containers so they can be dragged (shows placeholder auras) |
-| `/am preview [on\|off]` | Show placeholder auras |
+| `/am test [on\|off]` | Show placeholder auras (preview mode) |
 | `/am pick` | Attach the selected container to a frame by clicking it |
 | `/am resetposition` | Move every container back to its default screen position |
 | `/am forgettimed` | Forget which buffs were learned to have a duration |

@@ -113,7 +113,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
 `Container:ShouldShow` (`modules/Container.lua:355`) answers, in order — perf suspend, profile and
-container `enabled`, preview (unlocked or `/am preview`), then General visibility against
+container `enabled`, preview (unlocked or `/am test`), then General visibility against
 `UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
 clears the preview, and shows the drag handle while unlocked. `ApplyVisibility` runs after every

@@ -289,7 +289,7 @@ L["Create a container — /am new [player|target|focus|pet] [buffs|debuffs|encha
 L["Delete a container — /am delete id or name"] = "Delete a container — /am delete id or name"
 L["Lock every container in place"] = "Lock every container in place"
 L["Unlock containers so they can be dragged (shows placeholder auras)"] = "Unlock containers so they can be dragged (shows placeholder auras)"
-L["Show placeholder auras — /am preview [on|off]"] = "Show placeholder auras — /am preview [on|off]"
+L["Show placeholder auras — /am test [on|off]"] = "Show placeholder auras — /am test [on|off]"
 L["Attach the selected container to a frame by clicking it"] = "Attach the selected container to a frame by clicking it"
 L["Move every container back to its default screen position"] = "Move every container back to its default screen position"
 L["Forget which buffs were learned to have a duration"] = "Forget which buffs were learned to have a duration"

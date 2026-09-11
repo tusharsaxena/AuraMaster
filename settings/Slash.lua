@@ -27,7 +27,7 @@ local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
 local cli
 
-local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPreview, runPick
+local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runTest, runPick
 local runResetPosition, runForgetTimed, runDebug, runPerf
 
 NS.COMMANDS = {
@@ -61,8 +61,8 @@ NS.COMMANDS = {
         function() runLock(true) end},
     {"unlock",        L["Unlock containers so they can be dragged (shows placeholder auras)"],
         function() runLock(false) end},
-    {"preview",       L["Show placeholder auras — /am preview [on|off]"],
-        function(rest) runPreview(rest) end},
+    {"test",          L["Show placeholder auras — /am test [on|off]"],
+        function(rest) runTest(rest) end},
     {"pick",          L["Attach the selected container to a frame by clicking it"],
         function() runPick() end},
     {"resetposition", L["Move every container back to its default screen position"],
@@ -220,7 +220,7 @@ function runLock(locked)
     print(locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
 end
 
-function runPreview(rest)
+function runTest(rest)
     local word = firstWord(rest)
     local on
     if word == "on" then on = true

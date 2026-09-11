@@ -133,7 +133,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: CopyFrom is all or nothing — a corrupt later section stores and announces nothing
 - manager: many apply requests in one frame schedule one pass
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
-- manager: /am preview, /am lock and a rename under lockdown print no deferral notice
+- manager: /am test, /am lock and a rename under lockdown print no deferral notice
 - manager: a master visibility row hides containers at once, with no apply pass
 - manager: disabling a container in combat hides it at once, with no apply and no deferral notice
 - manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line
@@ -218,7 +218,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 
-### test_slash.lua (21)
+### test_slash.lua (23)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -226,7 +226,9 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am new with a word it does not know creates nothing and says why
 - slash: /am select takes an id or a name; /am containers marks the selection
 - slash: /am set writes the selected container through the seam
-- slash: lock, unlock and preview drive the same settings the panel does
+- slash: lock, unlock and test drive the same settings the panel does
+- slash: /am preview is an unknown verb now; it prints the help index and changes nothing
+- slash: /am help and the landing page list test, not preview
 - slash: /am disable and /am enable write the master switch through the seam and say so
 - slash: /am disable in combat is not refused; the master switch is a visibility write
 - slash: /am enable prints the seam's error instead of the success line
@@ -322,7 +324,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 21 |
 | test_style.lua | 18 |
 | test_timedspells.lua | 10 |
-| test_slash.lua | 21 |
+| test_slash.lua | 23 |
 | test_optionssetup.lua | 16 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
@@ -331,4 +333,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **245** |
+| **Total** | **247** |

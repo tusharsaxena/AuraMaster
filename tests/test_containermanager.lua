@@ -175,7 +175,7 @@ local function countRequests(CM)
     return n
 end
 
-test("manager: /am preview, /am lock and a rename under lockdown print no deferral notice", function()
+test("manager: /am test, /am lock and a rename under lockdown print no deferral notice", function()
     local NS, mocks = fresh()
     local lines = chat(mocks)
     mocks.__lockdown = true
