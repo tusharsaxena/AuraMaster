@@ -264,50 +264,63 @@ local function announceWrite(section, containerId, path, value, sessionOnly)
     if H and H.RefreshScalars then H.RefreshScalars() end
 end
 
---- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
---- Defaults buttons and a drag handle all land here. `containerId` targets a specific container
---- instead of the active one.
----
---- Order is load-bearing: write, react, log once, announce. Reacting before the write would hand a
---- reactor the old value; logging in the reactor would log it once per subscriber.
---- @return boolean ok, string|nil err
-function NS.SetByPath(path, value, containerId)
-    if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+--- A carve-out: the whole set, normalized by its CARVE_OUTS entry, written, then announced.
+local function writeCarveOut(path, value, containerId)
+    local v, err = CARVE_OUTS[path](value)
+    if not v then return false, err end
+    local parts = splitPath(path)
+    local root, first, id = resolveRoot(parts, containerId)
+    if not root then return false, NO_CONTAINER end
+    writeInto(root, parts, first, v)
+    announceWrite("filters", id, path, v, false)
+    return true
+end
 
-    local normalize = CARVE_OUTS[path]
-    if normalize then
-        local v, err = normalize(value)
-        if not v then return false, err end
-        local parts = splitPath(path)
-        local root, first, id = resolveRoot(parts, containerId)
-        if not root then return false, NO_CONTAINER end
-        writeInto(root, parts, first, v)
-        announceWrite("filters", id, path, v, false)
-        return true
-    end
-
-    local row = index[path]
-    if not row then return false, L["Setting not found: %s"]:format(path) end
+--- A schema row's storage step: validate the raw value, resolve the container, normalize, store.
+--- `row.normalize(value, id)` is an optional hook that runs after the id is known, so a row can
+--- rewrite a valid value against its container (the name row makes it unique). It returns ok,
+--- err|nil, the container id, and the value as stored (what onChange and the announcement see).
+local function writeRow(row, path, value, containerId)
     if row.validate and not row.validate(value) then
         return false, L["Invalid value for %s"]:format(path)
     end
-
-    local id
+    local parts, root, first, id
+    if not row.sessionOnly then
+        parts = splitPath(path)
+        root, first, id = resolveRoot(parts, containerId)
+        if not root then return false, NO_CONTAINER end
+    end
+    if row.normalize then value = row.normalize(value, id) end
     if row.sessionOnly then
         -- No database write by definition; the row's own set() IS its storage.
         if row.set then row.set(value) end
     else
-        local parts = splitPath(path)
-        local root, first, rid = resolveRoot(parts, containerId)
-        if not root then return false, NO_CONTAINER end
-        id = rid
         -- copy() on the way in: a color table handed straight from a widget or from a row's
         -- default would otherwise be shared, and editing one container would edit another.
         writeInto(root, parts, first, copy(value))
     end
+    return true, nil, id, value
+end
 
-    if row.onChange then row.onChange(value, id) end
-    announceWrite(row.page, id, path, value, row.sessionOnly)
+--- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
+--- Defaults buttons and a drag handle all land here. `containerId` targets a specific container
+--- instead of the active one.
+---
+--- Order is load-bearing: validate, resolve, normalize, write, react, log once, announce. Reacting
+--- before the write would hand a reactor the old value; logging in the reactor would log it once
+--- per subscriber.
+--- @return boolean ok, string|nil err
+function NS.SetByPath(path, value, containerId)
+    if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+    if CARVE_OUTS[path] then return writeCarveOut(path, value, containerId) end
+
+    local row = index[path]
+    if not row then return false, L["Setting not found: %s"]:format(path) end
+    local ok, err, id, stored = writeRow(row, path, value, containerId)
+    if not ok then return false, err end
+
+    if row.onChange then row.onChange(stored, id) end
+    announceWrite(row.page, id, path, stored, row.sessionOnly)
     return true
 end
 

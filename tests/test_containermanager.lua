@@ -60,6 +60,14 @@ test("manager: Rename trims, refuses an empty name and keeps names unique", func
     assertEqual(NS.Database.FindContainer(2).name, "Buffs (2)")
 end)
 
+test("manager: names that differ only in case are not unique", function()
+    local NS = fresh()
+    -- red under: UniqueName keying taken names case-sensitively
+    assertEqual(NS.ContainerManager.UniqueName("player buffs"), "player buffs (2)")
+    assertEqual(NS.ContainerManager.UniqueName("player buffs", 1), "player buffs",
+        "a container's own name does not count against it")
+end)
+
 test("manager: Duplicate copies every setting under a new id and name, offset on screen", function()
     local NS = fresh()
     local src = NS.Database.FindContainer(2)

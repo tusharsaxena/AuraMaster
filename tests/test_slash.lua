@@ -93,6 +93,22 @@ test("slash: /am delete removes a container by id", function()
     assertEqual(#NS2.Database.GetContainers(), 2)
 end)
 
+test("slash: a name two containers share is refused, not guessed", function()
+    local NS2, mocks = fresh()
+    -- A legacy profile: stored straight into the database, around the seam that now keeps names unique.
+    NS2.Database.FindContainer(1).name = "Dup"
+    NS2.Database.FindContainer(2).name = "dup"
+    NS2.State.SetActiveContainer(3)
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("delete dup")
+    -- red under: findContainer returning the first match
+    assertEqual(#NS2.Database.GetContainers(), 3, "both containers remain")
+    assertTrue(said(lines, "More than one container is called 'dup'"), lines[#lines] or "")
+    NS2.Slash:OnSlash("select DUP")
+    assertEqual(NS2.State.activeContainerId, 3, "the selection does not move")
+    assertTrue(said(lines, "More than one container is called 'DUP'"), lines[#lines] or "")
+end)
+
 local function grayLine(lines, fragment)
     for _, l in ipairs(lines) do
         if l:find("|cff808080", 1, true) and l:find(fragment, 1, true) then return true end

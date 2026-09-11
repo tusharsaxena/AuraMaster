@@ -33,6 +33,9 @@ NS.RegisterSchemaRows({
         maxLetters = 40, label = L["Name"],
         desc = L["What this container is called in the picker, on its drag handle and in /am containers. Press Enter to apply."],
         validate = function(v) return type(v) == "string" and v:match("%S") ~= nil end,
+        -- Every write — the panel, `/am set`, Rename, a reset — stores the trimmed name made unique
+        -- case-insensitively, so `/am select|delete <name>` can never match two containers.
+        normalize = function(v, id) return CM.UniqueName(v:match("^%s*(.-)%s*$"), id) end,
         -- NotifyRenamed is the whole effect (handles and pickers); Container:Apply never reads the
         -- name, so a rename queues no apply and, in combat, announces no deferral.
         onChange = function() CM.NotifyRenamed() end, effect = "none",

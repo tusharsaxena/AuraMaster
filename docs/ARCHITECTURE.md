@@ -83,7 +83,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 `NS.Schema` holds **192** rows across six pages — General 9, Containers 5, Filters 40, Layout 26,
 Bars 70, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:270`),
-is where the panel, the CLI, the Defaults buttons and a drag handle all land.
+is where the panel, the CLI, the Defaults buttons and a drag handle all land. It validates, resolves
+the container, runs the row's optional `normalize` hook, writes, reacts and announces, in that order.
+The name row's hook stores container names unique, case-insensitively.
 
 Almost every row belongs to one container, so container rows use a **relative path**:
 `container.bars.width` resolves against the container the settings banner has selected

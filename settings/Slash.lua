@@ -83,17 +83,30 @@ local function firstWord(rest)
     return ((rest or ""):match("^%s*(%S*)") or ""):lower()
 end
 
---- A container by id or by name (case-insensitive), or nil.
+--- A container by id or by name (case-insensitive), or nil. A name more than one container answers
+--- to — a profile saved before names were kept unique case-insensitively — is refused rather than
+--- guessed: nil, the ambiguity sentence and the name as typed, for the caller to printf.
 local function findContainer(arg)
     arg = (arg or ""):match("^%s*(.-)%s*$")
     if arg == "" then return nil end
     local id = tonumber(arg)
     if id then return NS.Database.FindContainer(id) end
-    local want = arg:lower()
+    local want, found = arg:lower(), nil
     for _, c in ipairs(NS.Database.GetContainers()) do
-        if type(c.name) == "string" and c.name:lower() == want then return c end
+        if type(c.name) == "string" and c.name:lower() == want then
+            if found then
+                return nil, L["More than one container is called '%s' — use its number from /am containers."], arg
+            end
+            found = c
+        end
     end
-    return nil
+    return found
+end
+
+--- The line for a lookup that found nothing: the ambiguity sentence when there is one.
+local function sayNotFound(ambiguous, name)
+    if ambiguous then return printf(ambiguous, name) end
+    print(L["No such container — /am containers lists them"])
 end
 
 local function describe(c)
@@ -140,8 +153,8 @@ function runContainers()
 end
 
 function runSelect(rest)
-    local c = findContainer(rest)
-    if not c then return print(L["No such container — /am containers lists them"]) end
+    local c, ambiguous, name = findContainer(rest)
+    if not c then return sayNotFound(ambiguous, name) end
     NS.State.SetActiveContainer(c.id)
     afterRegistryChange()
     printf(L["Selected %s"], describe(c))
@@ -181,8 +194,8 @@ function runDelete(rest)
     if InCombatLockdown() then
         return refuse(L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
     end
-    local c = findContainer(rest)
-    if not c then return print(L["No such container — /am containers lists them"]) end
+    local c, ambiguous, typed = findContainer(rest)
+    if not c then return sayNotFound(ambiguous, typed) end
     local name = c.name
     local ok, err = NS.ContainerManager.Delete(c.id)
     if not ok then return print(err) end

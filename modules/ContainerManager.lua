@@ -226,17 +226,18 @@ end
 
 local function profile() return NS.db and NS.db.profile end
 
---- A name no other container is using: `base`, or `base (2)`, `base (3)`, …
+--- A name no other container is using: `base`, or `base (2)`, `base (3)`, … Names that differ
+--- only in case count as taken, because `/am select|delete <name>` matches case-insensitively.
 function CM.UniqueName(base, exceptId)
     base = (type(base) == "string" and base ~= "") and base or "Container"
     local taken = {}
     for _, c in ipairs(NS.Database.GetContainers()) do
-        if c.id ~= exceptId then taken[c.name] = true end
+        if c.id ~= exceptId and type(c.name) == "string" then taken[c.name:lower()] = true end
     end
-    if not taken[base] then return base end
+    if not taken[base:lower()] then return base end
     for n = 2, 999 do
         local name = ("%s (%d)"):format(base, n)
-        if not taken[name] then return name end
+        if not taken[name:lower()] then return name end
     end
     return base
 end
@@ -291,14 +292,15 @@ function CM.Delete(id)
 end
 
 --- Rename container `id`, through the write seam so the change is logged and announced like any
---- other setting. The name row's onChange (settings/Containers.lua) calls CM.NotifyRenamed, so a
---- rename typed into the panel or `/am set container.name` announces the same way.
+--- other setting. The name row (settings/Containers.lua) makes the name unique in its normalize and
+--- calls CM.NotifyRenamed in its onChange, so a rename typed into the panel or `/am set
+--- container.name` lands the same way. The two checks here only give a caller a specific refusal.
 function CM.Rename(id, name)
     local c = NS.Database.FindContainer(id)
     if not c then return false, L["No such container."] end
     name = type(name) == "string" and name:match("^%s*(.-)%s*$") or ""
     if name == "" then return false, L["A container needs a name."] end
-    return NS.SetByPath("container.name", CM.UniqueName(name, id), id)
+    return NS.SetByPath("container.name", name, id)
 end
 
 --- A container's name changed: every picker and handle lists names.

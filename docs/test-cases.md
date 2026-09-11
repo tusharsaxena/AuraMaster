@@ -38,7 +38,7 @@ badge and any count quoted in the docs must agree with it.
 - database: an existing SavedVariables file keeps its containers
 - database: a non-numeric container key is dropped and the profile loads
 
-### test_schema.lua (20)
+### test_schema.lua (21)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -55,6 +55,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: an unknown path refuses
 - schema: every write announces CONFIG_CHANGED once, naming the container
 - schema: a failed validation writes nothing
+- schema: renaming to a taken name through the seam stores a unique, trimmed name
 - schema: a session row is stored by its own set, never in the profile
 - schema: a session row announces no CONFIG_CHANGED and queues no apply
 - schema: ApplyDefault restores the shipped value without sharing a table
@@ -108,12 +109,13 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine nothing is built and preview still works
 - container: deleting a container disables its engine and hides its anchor
 
-### test_containermanager.lua (18)
+### test_containermanager.lua (19)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
 - manager: deleting a container sends the ones attached to it back to the screen
 - manager: Rename trims, refuses an empty name and keeps names unique
+- manager: names that differ only in case are not unique
 - manager: Duplicate copies every setting under a new id and name, offset on screen
 - manager: CopyFrom copies the chosen section, never the name or the position
 - manager: many apply requests in one frame schedule one pass
@@ -163,7 +165,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 
-### test_slash.lua (14)
+### test_slash.lua (15)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -173,6 +175,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am set writes the selected container through the seam
 - slash: lock, unlock and preview drive the same settings the panel does
 - slash: /am delete removes a container by id
+- slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
 - slash: /am resetall in combat refuses in gray and resets nothing
 - slash: /am new in combat refuses in gray and creates nothing
@@ -246,14 +249,14 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 6 |
 | test_setups.lua | 7 |
 | test_database.lua | 10 |
-| test_schema.lua | 20 |
+| test_schema.lua | 21 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 14 |
-| test_containermanager.lua | 18 |
+| test_containermanager.lua | 19 |
 | test_anchors.lua | 10 |
 | test_style.lua | 10 |
 | test_timedspells.lua | 5 |
-| test_slash.lua | 14 |
+| test_slash.lua | 15 |
 | test_optionssetup.lua | 12 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
@@ -262,4 +265,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **176** |
+| **Total** | **179** |

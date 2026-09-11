@@ -187,6 +187,13 @@ effect. Absent, the write re-applies its container, or every container for a glo
 `sessionOnly` row announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs
 in `Container:Apply`.
 
+A row may declare `normalize(value, id)`, an optional hook `NS.SetByPath` runs after `validate` and
+after the container id is resolved, just before the write. Whatever it returns is what gets stored, and
+it is also the value `onChange` and the announcement see. The `container.name` row uses it to store the
+trimmed name made unique by `ContainerManager.UniqueName`, and that comparison ignores case (`buffs`
+next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
+`/am set`, `ContainerManager.Rename` or a reset.
+
 ## Migration path
 
 The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:192`: one `{ to = N, apply = fn }`

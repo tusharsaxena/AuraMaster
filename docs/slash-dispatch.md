@@ -30,9 +30,9 @@ eight-or-more trigger (documentation-§3).
 | 6 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page |
 | 7 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); refused in combat with a gray notice |
 | 8 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
-| 9 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive |
+| 9 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
 | 10 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
-| 11 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice |
+| 11 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
 | 12 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
 | 13 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders |
 | 14 | `preview [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles |
@@ -55,6 +55,15 @@ Any order, any subset, case-insensitive; each word sets one field of the new con
 | `bar`, `bars` / `icon`, `icons` | `style` |
 
 An unknown word prints `Unknown word 'x' — try /am new target debuffs icons` and creates nothing.
+
+### Names on `select` and `delete`
+
+A name is matched without regard to case. Every write of `container.name` stores a name that is
+unique regardless of case, so a match normally finds one container. A profile saved before that rule
+can still hold two containers named, say, `Dup` and `dup`. When a name matches more than one
+container, the command guesses neither. It acts on nothing and prints
+`More than one container is called 'dup' — use its number from /am containers.` Nothing is renamed or
+migrated. Addressing the container by its number works as before.
 
 ## Container-relative paths on the CLI
 

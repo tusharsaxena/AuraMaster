@@ -152,6 +152,14 @@ test("schema: a failed validation writes nothing", function()
     assertEqual(NS2.Database.FindContainer(1).name, before)
 end)
 
+test("schema: renaming to a taken name through the seam stores a unique, trimmed name", function()
+    local NS2 = fresh()
+    assertTrue(NS2.SetByPath("container.name", "  Player debuffs ", 1))
+    -- red under: dropping the name row's normalize
+    assertEqual(NS2.Database.FindContainer(1).name, "Player debuffs (2)")
+    assertEqual(NS2.Database.FindContainer(2).name, "Player debuffs", "the holder keeps its name")
+end)
+
 test("schema: a session row is stored by its own set, never in the profile", function()
     local NS2 = fresh()
     NS2.SetByPath("state.preview", true)
