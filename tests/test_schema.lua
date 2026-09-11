@@ -293,3 +293,24 @@ test("schema: a section write runs the normalize hook of every row under it, wit
     assertEqual(NS2.Database.FindContainer(2).layout.spacing, 6, "stored normalized")
     assertEqual(seenId, 2, "the hook saw the section's container")
 end)
+
+test("schema: CheckWrite answers what SetByPath would, and stores and announces nothing", function()
+    local NS2 = fresh()
+    local c1 = NS2.Database.FindContainer(1)
+    local width, list = c1.bars.width, c1.filter.whitelist
+    local sent = { 0 }
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function() sent[1] = sent[1] + 1 end)
+    assertTrue(NS2.CheckWrite("container.bars", { width = 222 }, 1), "a section the seam takes")
+    assertTrue(NS2.CheckWrite("container.unit", "focus", 1), "a row the seam takes")
+    assertTrue(NS2.CheckWrite("container.filter.whitelist", { [123] = true }, 1), "a spell set")
+    assertFalse((NS2.CheckWrite("container.icons", "garbage", 1)), "a section that is not a table")
+    assertFalse((NS2.CheckWrite("container.filter.whitelist", "x", 1)), "a set the carve-out refuses")
+    assertFalse((NS2.CheckWrite("container.name", "   ", 1)), "a value the row refuses")
+    assertFalse((NS2.CheckWrite("container.bars", {}, 99)), "no such container")
+    assertFalse((NS2.CheckWrite("no.such.path", 1)), "no such setting")
+    -- red under: CheckWrite storing through writeSection or writeRow
+    assertEqual(c1.bars.width, width, "nothing is stored")
+    assertEqual(c1.unit, "player")
+    assertTrue(c1.filter.whitelist == list)
+    assertEqual(sent[1], 0, "and nothing is announced")
+end)

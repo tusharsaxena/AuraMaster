@@ -85,7 +85,7 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 `NS.Schema` holds **193** rows across six pages — General 9, Containers 5, Filters 40, Layout 26,
 Bars 71, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:436`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:445`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It validates, resolves
 the container, runs the row's optional `normalize` hook, writes, reacts and announces, in that order.
 The name row's hook stores container names unique, case-insensitively.
@@ -121,8 +121,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:238` — a coalesced panel re-render (every banner lists containers) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:449` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:456` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:468` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:475` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none | `modules/ContainerManager.lua` `CM.Init` — `RequestApply()` over every container (their excluded ids moved) |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -190,7 +190,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:171-175`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:149`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:150`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
   button's ancestry (`modules/Container.lua:366`).
@@ -228,7 +228,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:251-253`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:256-258`).
 
 ## Known Limitations
 
@@ -248,8 +248,10 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   the change. A stretch announced as combat that secrecy still holds afterwards says so once more, on
   the next held change and never on the `PLAYER_REGEN_ENABLED` edge itself, whose order against
   `ADDON_RESTRICTION_STATE_CHANGED` is unverified. Writes that apply no container never wait: the
-  master enable, visibility, lock and alpha run the visibility pass at once, and the Blizzard-frame
-  toggles, a rename and the session toggles queue nothing.
+  master enable, visibility, lock and alpha run the visibility pass at once, and a rename and the
+  session toggles queue nothing. The Blizzard-frame toggles queue nothing either, but reparenting
+  waits for lockdown to lift: a toggle in combat prints the combat line, under the same
+  once-per-stretch rule, and applies on `PLAYER_REGEN_ENABLED`.
 - **A container deleted or switched away in combat, or while aura information is withheld (an
   encounter, key or match), draws nothing until that ends, and is torn down then.** Its frames stay
   parked in the meantime. Creating and deleting from our own surfaces are refused in combat instead;

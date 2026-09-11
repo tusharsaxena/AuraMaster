@@ -159,7 +159,9 @@ suite covers what only the client can show.
 
 48. General → Display → **Hide Blizzard buffs** → the default buff frame disappears (with its weapon
     enchants); **Hide Blizzard debuffs** → the default debuff frame goes. Untick → both return. Tick one
-    in combat → it applies when combat ends. No taint warnings on any of this.
+    in combat → chat prints `[AM] Aura Master settings changes will apply when combat ends.` once
+    (tick the other too: still one line), and it applies when combat ends. No taint warnings on any
+    of this.
 
 ## K. Mouse
 

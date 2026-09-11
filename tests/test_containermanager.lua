@@ -118,6 +118,21 @@ test("manager: CopyFrom and ResetPositions write through the seam, send no CONTA
     assertEqual(type(NS.Database.FindContainer(1).filter.whitelist), "table", "nothing was stored")
 end)
 
+test("manager: CopyFrom is all or nothing — a corrupt later section stores and announces nothing", function()
+    local NS = fresh()
+    local src, dst = NS.Database.FindContainer(2), NS.Database.FindContainer(1)
+    src.bars.width = 333          -- copied before icons in "everything"
+    src.icons = "garbage"         -- a section the seam refuses
+    local width = dst.bars.width
+    local config = countMessages(NS, NS.MSG.CONFIG_CHANGED)
+    local ok, err = NS.ContainerManager.CopyFrom(2, 1)
+    assertFalse(ok, "the copy is refused")
+    assertTrue(type(err) == "string" and err:find("container.icons", 1, true) ~= nil, tostring(err))
+    -- red under: copyThrough writing each key before every key is checked
+    assertEqual(dst.bars.width, width, "an earlier section is not copied either")
+    assertEqual(config[1], 0, "and nothing is announced")
+end)
+
 test("manager: many apply requests in one frame schedule one pass", function()
     local NS, mocks = fresh()
     local before = #mocks.__timers
@@ -233,6 +248,33 @@ test("manager: the regen edge never escalates the notice; a later held request d
     CM.RequestApply()
     mocks.__fireTimers()
     assertEqual(countLines(lines, COMBAT_LINE), 2, "a later deferral is announced afresh")
+end)
+
+test("manager: a Blizzard-frame toggle in combat says it waits, once, and applies after combat", function()
+    local NS, mocks = fresh({ before = function(m)
+        m.BuffFrame, m.DebuffFrame = m.__stubFrame(), m.__stubFrame()
+    end })
+    local BF = NS.BlizzardFrames
+    local lines = chat(mocks)
+    assertTrue(NS.SetByPath("hideBlizzardBuffs", true))
+    assertTrue(BF.IsHidden("BuffFrame"), "out of combat it applies at once")
+    assertEqual(countLines(lines, "will apply"), 0, "and says nothing")
+    mocks.__lockdown = true
+    assertTrue(NS.SetByPath("hideBlizzardBuffs", false))
+    assertTrue(NS.SetByPath("hideBlizzardDebuffs", true))
+    mocks.__fireTimers()
+    -- red under: the hideBlizzard* onChange ignoring BlizzardFrames.Apply's false
+    assertEqual(countLines(lines, COMBAT_LINE), 1, "held, and said once for both toggles")
+    assertTrue(BF.IsHidden("BuffFrame"), "nothing is reparented under lockdown")
+    assertFalse(BF.IsHidden("DebuffFrame"))
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertFalse(BF.IsHidden("BuffFrame"), "applied once combat ends")
+    assertTrue(BF.IsHidden("DebuffFrame"))
+    mocks.__lockdown = true
+    assertTrue(NS.SetByPath("hideBlizzardBuffs", true))
+    -- red under: FlushPending clearing the notice only after a pass with work to apply
+    assertEqual(countLines(lines, COMBAT_LINE), 2, "a toggle in a later fight is announced afresh")
 end)
 
 --- Count calls to `frame[method]`, still calling through. Returns a one-slot box.

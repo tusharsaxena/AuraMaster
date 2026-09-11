@@ -264,6 +264,21 @@ test("style: a target container's class color is the target's, snapshotted at ap
         "a player container keeps the player's class")
 end)
 
+test("style: a dress that raises still clears its class color, and the error reaches the caller", function()
+    -- Its own environment: the styler is replaced there, never on the shared one.
+    local NS2, m2 = dofile("tests/fresh_env.lua")()
+    NS2.Style.Bars.Apply = function() error("styler failed") end
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "bars" })
+    local ok, err = pcall(NS2.Style.Element, m2.__stubFrame(), c, true, { r = 0.9, g = 0.8, b = 0.7 })
+    assertTrue(not ok, "the styler's error is not swallowed")
+    assertTrue(tostring(err):find("styler failed", 1, true) ~= nil, tostring(err))
+    local mage = m2.RAID_CLASS_COLORS.MAGE
+    local r, g, b = NS2.Style.Color({ r = 0.1, g = 0.2, b = 0.3, a = 1 }, true)
+    -- red under: Style.Element clearing dressClass only after a clean styler.Apply
+    assertEqual(table.concat({ r, g, b }, ","), table.concat({ mage.r, mage.g, mage.b }, ","),
+        "outside a dress the player's class paints, not the failed dress's")
+end)
+
 test("style: the Blizzard time format asks for no formatter of our own", function()
     assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
 end)

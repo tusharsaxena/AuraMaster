@@ -224,12 +224,17 @@ end
 --- Dress one element for `cfg` (a container's stored table). `engine` true binds the regions to the
 --- engine's aura data; false leaves them for the preview to fill. `classColor` is the container's
 --- class snapshot (nil for a player container), used by every class-colored region of this dress.
+--- The snapshot is cleared on every exit: a styler that raises (Container:Restyle catches it) must not
+--- leave it set for the next Style.Color outside a dress, so the error is re-raised only after.
 function Style.Element(frame, cfg, engine, classColor)
     local t0 = Perf.on and debugprofilestop()
-    dressClass = classColor
     local styler = (cfg.style == "icons") and Style.Icons or Style.Bars
-    if styler then styler.Apply(frame, cfg, engine) end
-    dressClass = nil
+    if styler then
+        dressClass = classColor
+        local ok, err = pcall(styler.Apply, frame, cfg, engine)
+        dressClass = nil
+        if not ok then error(err, 0) end
+    end
     if t0 then Perf.Note("styleElement", debugprofilestop() - t0) end
 end
 

@@ -49,6 +49,13 @@ local masterEffect = {
     ["locked"]  = "visibility", ["alpha"]      = "visibility",
 }
 
+-- The two Blizzard-frame rows' whole effect: no container reads them, so none re-applies. Under
+-- lockdown BlizzardFrames.Apply waits for PLAYER_REGEN_ENABLED (core/AuraMaster.lua), and the player
+-- is told so by the same once-per-stretch notice a held container apply prints.
+local function applyBlizzardFrames()
+    if NS.BlizzardFrames.Apply() == false then NS.ContainerManager.NoteDeferred() end
+end
+
 -- The console row is SESSION state: it mirrors the console window, never the profile.
 local console = NS.DebugLog:ConsoleCheckbox()
 
@@ -79,15 +86,14 @@ NS.RegisterSchemaRows({
         type = "bool", startsLine = true,
         label = L["Hide Blizzard buffs"],
         desc  = L["Hide the default buff frame (your weapon enchants go with it). Applied out of combat."],
-        -- BlizzardFrames.Apply is the whole effect; no container reads this, so none re-applies.
-        onChange = function() NS.BlizzardFrames.Apply() end, effect = "none",
+        onChange = applyBlizzardFrames, effect = "none",
     },
     {
         path = "hideBlizzardDebuffs", page = "general", group = L["Display"], subgroup = L["Blizzard frames"],
         type = "bool",
         label = L["Hide Blizzard debuffs"],
         desc  = L["Hide the default debuff frame. Applied out of combat."],
-        onChange = function() NS.BlizzardFrames.Apply() end, effect = "none",
+        onChange = applyBlizzardFrames, effect = "none",
     },
 })
 

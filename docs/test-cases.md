@@ -42,7 +42,7 @@ badge and any count quoted in the docs must agree with it.
 - database: PrepareProfile seeds an empty profile from its own counter, in declaration order
 - database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
 
-### test_schema.lua (24)
+### test_schema.lua (25)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -68,6 +68,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: a whole section written through the seam replaces it, backfills it, logs once and announces once
 - schema: a section write refuses a non-section path, a non-table, and a value a row rejects
 - schema: a section write runs the normalize hook of every row under it, with the target id
+- schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 
 ### test_filtercompiler.lua (28)
 
@@ -119,7 +120,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (28)
+### test_containermanager.lua (30)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -129,12 +130,14 @@ badge and any count quoted in the docs must agree with it.
 - manager: Duplicate copies every setting under a new id and name, offset on screen
 - manager: CopyFrom copies the chosen section, never the name or the position
 - manager: CopyFrom and ResetPositions write through the seam, send no CONTAINERS_CHANGED, and report a rejected write
+- manager: CopyFrom is all or nothing — a corrupt later section stores and announces nothing
 - manager: many apply requests in one frame schedule one pass
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
 - manager: /am preview, /am lock and a rename under lockdown print no deferral notice
 - manager: a master visibility row hides containers at once, with no apply pass
 - manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line
 - manager: the regen edge never escalates the notice; a later held request does
+- manager: a Blizzard-frame toggle in combat says it waits, once, and applies after combat
 - manager: a container deleted under lockdown is parked — disabled, nothing hidden — and destroyed after combat
 - manager: a parked id that comes back before combat ends reuses its instance and draws again
 - manager: a profile switch under lockdown parks departing containers and tears them down after combat
@@ -166,7 +169,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (15)
+### test_style.lua (16)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -181,6 +184,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a preview element is dressed but never bound to the engine
 - style: a class color keeps the stored alpha; off, the stored swatch is used
 - style: a target container's class color is the target's, snapshotted at apply
+- style: a dress that raises still clears its class color, and the error reaches the caller
 - style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
 
@@ -294,12 +298,12 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 8 |
 | test_database.lua | 12 |
-| test_schema.lua | 24 |
+| test_schema.lua | 25 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 28 |
+| test_containermanager.lua | 30 |
 | test_anchors.lua | 13 |
-| test_style.lua | 15 |
+| test_style.lua | 16 |
 | test_timedspells.lua | 10 |
 | test_slash.lua | 21 |
 | test_optionssetup.lua | 16 |
@@ -310,4 +314,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **224** |
+| **Total** | **228** |

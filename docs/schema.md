@@ -185,9 +185,12 @@ A row may also declare `effect`, which tells `modules/ContainerManager.lua` what
 the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`) runs the
 combat-legal visibility pass and queues no apply. `"none"` (`hideBlizzardBuffs`,
 `hideBlizzardDebuffs`, `container.name`) queues nothing, because the row's `onChange` is its whole
-effect. Absent, the write re-applies its container, or every container for a global row. A
-`sessionOnly` row announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs
-in `Container:Apply`.
+effect. A Blizzard-frame toggle made under lockdown still waits: `BlizzardFrames.Apply` catches it
+up on `PLAYER_REGEN_ENABLED`, and the row's `onChange` prints the combat deferral line through
+`ContainerManager.NoteDeferred`, under the same once-per-stretch rule a held apply follows. Absent,
+the write re-applies its container, or every container for a global row. A `sessionOnly` row
+announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs in
+`Container:Apply`.
 
 A row may declare `normalize(value, id)`, an optional hook `NS.SetByPath` runs after `validate` and
 after the container id is resolved, just before the write. Whatever it returns is what gets stored, and
@@ -207,6 +210,13 @@ section is written, `onChange` fires for each row whose leaf actually changed, c
 sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section. No
 caller writes it whole, and its `container` validator checks for cycles against the active container
 rather than the target.
+
+`NS.CheckWrite(path, value, id)` answers whether `NS.SetByPath` would store a value. It runs the same
+checks on a copy (a row's `validate`, a carve-out's normalizer, or a section's backfill, carve-outs
+and row validation) and stores and announces nothing, so it is not a second write seam.
+`ContainerManager.CopyFrom` uses it to stay all or nothing: it checks every section it copies (and,
+for a whole copy, the unit, aura type and style) before writing any of them, so one corrupt source
+section refuses the whole copy and leaves the target untouched, with no `CONFIG_CHANGED` sent.
 
 ## Migration path
 

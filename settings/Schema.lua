@@ -378,18 +378,27 @@ local function logSection(path, v)
     end
 end
 
---- A whole section: a deep copy of `value`, backfilled, carve-outs normalized, rows validated and
---- normalized, then stored in one write. All or nothing: nothing is stored unless every check passes.
-local function writeSection(path, value, containerId, sec)
-    if type(value) ~= "table" then return false, L["Invalid value for %s"]:format(path) end
+--- The checks a whole-section write runs before it stores anything: a deep copy of `value`,
+--- backfilled, carve-outs normalized, rows validated. Returns the copy, the root, the path's parts,
+--- the first index and the container id — or nil and the refusal. Nothing is stored.
+local function prepareSection(path, value, containerId)
+    if type(value) ~= "table" then return nil, L["Invalid value for %s"]:format(path) end
     local parts = splitPath(path)
     local root, first, id = resolveRoot(parts, containerId)
-    if not root then return false, NO_CONTAINER end
+    if not root then return nil, NO_CONTAINER end
     local v = copy(value)
     NS.Database.Backfill(v, readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
     local depth = #parts
     local err = normalizeSectionCarveOuts(path, v, depth) or validateSectionRows(path, v, depth)
-    if err then return false, err end
+    if err then return nil, err end
+    return v, root, parts, first, id
+end
+
+--- A whole section: prepareSection's checked copy, its rows normalized, then stored in one write.
+--- All or nothing: nothing is stored unless every check passes.
+local function writeSection(path, value, containerId, sec)
+    local v, root, parts, first, id = prepareSection(path, value, containerId)
+    if not v then return false, root end   -- `root` carries the refusal here
     normalizeSectionRows(path, v, #parts, id)
     local old = readFrom(root, parts, first)
     writeInto(root, parts, first, v)
@@ -447,6 +456,44 @@ function NS.SetByPath(path, value, containerId)
     if row.onChange then row.onChange(stored, id) end
     announceWrite(row.page, id, path, stored, row.sessionOnly)
     return true
+end
+
+--- Whether a spell set would be stored: the carve-out's normalizer accepts it and the container exists.
+local function checkCarveOut(path, value, containerId)
+    local v, err = CARVE_OUTS[path](value)
+    if not v then return false, err end
+    if not resolveRoot(splitPath(path), containerId) then return false, NO_CONTAINER end
+    return true
+end
+
+--- Whether a row write would be stored: the row exists, its validate accepts the value, and (for a
+--- stored row) the container exists. A row's normalize never refuses, so it is not run.
+local function checkRow(path, value, containerId)
+    local row = index[path]
+    if not row then return false, L["Setting not found: %s"]:format(path) end
+    if row.validate and not row.validate(value) then
+        return false, L["Invalid value for %s"]:format(path)
+    end
+    if not row.sessionOnly and not resolveRoot(splitPath(path), containerId) then
+        return false, NO_CONTAINER
+    end
+    return true
+end
+
+--- Whether NS.SetByPath(path, value, containerId) would store the value: the same checks, run on a
+--- copy, with nothing stored, no onChange and nothing announced. Not a second write seam — it
+--- writes nothing. It lets a caller that writes several paths as one act (ContainerManager.CopyFrom)
+--- refuse all of them when any one would be refused.
+--- @return boolean ok, string|nil err
+function NS.CheckWrite(path, value, containerId)
+    if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+    if CARVE_OUTS[path] then return checkCarveOut(path, value, containerId) end
+    if SECTIONS[path] then
+        local v, err = prepareSection(path, value, containerId)
+        if not v then return false, err end
+        return true
+    end
+    return checkRow(path, value, containerId)
 end
 
 --- Restore one row to its shipped default, through the same seam everything else writes through.

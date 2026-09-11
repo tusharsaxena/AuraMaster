@@ -15,16 +15,16 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:436
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:445
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:449
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:468
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:199
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:207
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -42,7 +42,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:227
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:229
         │  build the regions once (icon, bar, fill, spark, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -59,8 +59,11 @@ is available again (after the encounter, key or match)." when secrecy alone hold
 only: a stretch announced as combat that secrecy still holds afterwards prints the restriction line
 once, on the next held request. The `PLAYER_REGEN_ENABLED` flush passes `"regen"` and never escalates,
 because that event's order against `ADDON_RESTRICTION_STATE_CHANGED` is unverified. Secret then
-combat prints nothing more. A successful flush clears the stretch, and every deferral writes one
-gated `[Apply] deferred: secret=… lockdown=… edge=…` line.
+combat prints nothing more. A flush that may touch frames clears the stretch, even with nothing
+queued, and every deferral writes one gated `[Apply] deferred: secret=… lockdown=… edge=…` line. A
+Blizzard-frame toggle made under lockdown is not queued (`BlizzardFrames.Apply` catches it up on
+`PLAYER_REGEN_ENABLED`), but its `onChange` announces the wait through
+`ContainerManager.NoteDeferred` under the same rule, so one fight prints the line once.
 
 ## Step 4 in detail: the filter plan
 
@@ -143,9 +146,10 @@ Create, delete, duplicate, rename, copy-from and reset positions all live in
 (instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`). Copy-from and
 reset positions are settings writes, not registry changes: each section they replace is one
 whole-section write through `NS.SetByPath`, which announces `CONFIG_CHANGED`, and the applies those
-writes queue coalesce into one pass. Copy-from stops at the first write the seam rejects and reports
-it. Deleting a container drops any container attached to it back to the screen, through the same
-seam. Under `MustDefer`, an instance that leaves
+writes queue coalesce into one pass. Copy-from is all or nothing: it checks every write with
+`NS.CheckWrite` before making any, so a write the seam would refuse is reported and nothing is
+copied. Deleting a container drops any container attached to it back to the screen, through the
+same seam. Under `MustDefer`, an instance that leaves
 the registry is parked rather than destroyed: `Container:Park` disables its engine and hides only
 the preview and handle. The next `FlushPending` that may touch frames destroys every parked
 instance before it applies; a parked id that returns first is revived in place and redrawn at once.

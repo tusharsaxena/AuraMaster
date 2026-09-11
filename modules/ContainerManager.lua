@@ -16,7 +16,8 @@ local _, NS = ...
 --
 -- NOT EVERY WRITE NEEDS AN APPLY. A row may declare `effect`: "visibility" rows (the master enable,
 -- visibility, lock and alpha) run the combat-legal visibility pass at once, and "none" rows (the
--- Blizzard-frame toggles, a container's name) did their whole effect in their own onChange.
+-- Blizzard-frame toggles, a container's name) did their whole effect in their own onChange. A
+-- Blizzard-frame toggle that lockdown holds says so through CM.NoteDeferred, under the same rule.
 
 NS.ContainerManager = NS.ContainerManager or {}
 local CM = NS.ContainerManager
@@ -171,6 +172,13 @@ local function noteDeferred(edge)
     end
 end
 
+--- A settings write outside the apply queue had to wait as well — a Blizzard-frame toggle under
+--- lockdown, which BlizzardFrames.Apply catches up on PLAYER_REGEN_ENABLED (core/AuraMaster.lua).
+--- Say so under the same once-per-stretch rule, so one fight never prints the line twice.
+function CM.NoteDeferred()
+    noteDeferred()
+end
+
 --- Apply every container that is pending (or all of them). Returns how many were applied.
 local function applyDirty(all, which)
     local applied = 0
@@ -199,12 +207,15 @@ end
 function CM.FlushPending(edge)
     scheduled = false
     if Perf.suspended then return 0 end   -- performance-§6: held; resume's RequestApply drains it
-    if not pendingAll and next(pending) == nil and next(retiring) == nil then return 0 end
+    local idle = not pendingAll and next(pending) == nil and next(retiring) == nil
     if CM.MustDefer() then
-        noteDeferred(edge)
+        if not idle then noteDeferred(edge) end
         return 0
     end
+    -- Nothing is held any longer, even when the queue is empty: a stretch CM.NoteDeferred announced
+    -- for a write outside the queue (a Blizzard-frame toggle) ends here too.
     shownReason = nil
+    if idle then return 0 end
     destroyParked()
 
     local t0 = Perf.on and debugprofilestop()
@@ -388,13 +399,20 @@ for i = sectionCount, 1, -1 do
     table.insert(COPY_ALL, 1, CM.COPY_SECTIONS[i])
 end
 
---- Write each of `keys` from `src` onto container `dstId` through the write seam, stopping at the
---- first write it rejects. Returns ok, err.
+--- Write each of `keys` from `src` onto container `dstId` through the write seam — all of them or
+--- none. Every write is checked first (NS.CheckWrite: the seam's own checks, nothing stored), and
+--- nothing is written unless every one passes, so a refusal leaves `dstId` untouched and announces
+--- nothing. A checked write cannot then be refused: SetByPath runs those same checks. Returns ok, err.
 local function copyThrough(src, dstId, keys)
     for _, key in ipairs(keys) do
         if src[key] ~= nil then
-            local ok, err = NS.SetByPath("container." .. key, NS.Database.DeepCopy(src[key]), dstId)
+            local ok, err = NS.CheckWrite("container." .. key, src[key], dstId)
             if not ok then return false, err end
+        end
+    end
+    for _, key in ipairs(keys) do
+        if src[key] ~= nil then
+            NS.SetByPath("container." .. key, NS.Database.DeepCopy(src[key]), dstId)
         end
     end
     return true
@@ -402,8 +420,9 @@ end
 
 --- Copy `section` (or every copyable section, and what the container is, when nil) from container
 --- `srcId` onto `dstId`. Settings writes, not a registry change: each lands through the write seam,
---- which validates it and announces it, so nothing here sends CONTAINERS_CHANGED. Returns ok, err —
---- false on the first write the seam rejects (a source is stored data, so that means corrupt data).
+--- which validates it and announces it, so nothing here sends CONTAINERS_CHANGED. All or nothing:
+--- returns ok, err — false, with nothing copied, when the seam would refuse any one of the writes
+--- (a source is stored data, so that means corrupt data).
 function CM.CopyFrom(srcId, dstId, section)
     local src, dst = NS.Database.FindContainer(srcId), NS.Database.FindContainer(dstId)
     if not (src and dst) then return false, L["No such container."] end
