@@ -1,12 +1,12 @@
 # Slash dispatch
 
-`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 20 commands, over the
+`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 22 commands, over the
 eight-or-more trigger (documentation-§3).
 
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:362`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:374`), called from `OnInitialize`. There is no `SLASH_*` global.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -24,29 +24,31 @@ eight-or-more trigger (documentation-§3).
 |---|---|---|---|
 | 1 | `help` | library | `cli:PrintHelp()` — version line plus one row per command |
 | 2 | `config` | host | `NS.OpenOptionsPanel()`; refused in combat with a gray notice (options-ui-§2) |
-| 3 | `list` | library | `cli:CliList()` over `NS.Schema`, grouped by page |
-| 4 | `get path` | library | `cli:CliGet` → `NS.GetSetting(path)`; also answers sub-tables such as `container.filter.whitelist` |
-| 5 | `set path value` | library | `cli:CliSet` → type-aware parse → `NS.SetByPath(path, value)`; an error from the seam is printed |
-| 6 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page |
-| 7 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); not refused in combat, where it takes the parked teardown like Profiles → Reset Profile |
-| 8 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
-| 9 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
-| 10 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
-| 11 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
-| 12 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
-| 13 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders |
-| 14 | `preview [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles |
-| 15 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
-| 16 | `resetposition` | host | `ContainerManager.ResetPositions()` |
-| 17 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 18 | `debug [on\|off]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled` |
-| 19 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
-| 20 | `version` | host | `v` + `NS.Version()` |
+| 3 | `enable` | host | `NS.SetByPath("enabled", true)`, the path the General → Master controls "Enable Aura Master" checkbox takes; not refused in combat, and a seam error is printed |
+| 4 | `disable` | host | `NS.SetByPath("enabled", false)`; the visibility pass disables every engine through its own `SetEnabled`, combat included |
+| 5 | `list` | library | `cli:CliList()` over `NS.Schema`, grouped by page |
+| 6 | `get path` | library | `cli:CliGet` → `NS.GetSetting(path)`; also answers sub-tables such as `container.filter.whitelist` |
+| 7 | `set path value` | library | `cli:CliSet` → type-aware parse → `NS.SetByPath(path, value)`; an error from the seam is printed |
+| 8 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page |
+| 9 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); not refused in combat, where it takes the parked teardown like Profiles → Reset Profile |
+| 10 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
+| 11 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
+| 12 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
+| 13 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
+| 14 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
+| 15 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders |
+| 16 | `preview [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles |
+| 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
+| 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
+| 19 | `forgettimed` | host | `TimedSpells.Forget()` |
+| 20 | `debug [on\|off]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled` |
+| 21 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
+| 22 | `version` | host | `v` + `NS.Version()` |
 
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:164`):
+(`NEW_WORDS`, `settings/Slash.lua:176`):
 
 | Words | Field |
 |---|---|
@@ -72,7 +74,7 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:102`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:345`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:357`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 Examples:
@@ -91,7 +93,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:273` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:285` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's
 formatting or parsing. `tests/degraded_env.lua` loads the addon that way.

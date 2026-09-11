@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-213%2F213_passing-green)
+![Tests](https://img.shields.io/badge/Tests-218%2F218_passing-green)
 
 ![Ka0s Aura Master](media/logos/auramaster.logo.png)
 
@@ -47,8 +47,10 @@ closes the settings so you can just click the frame you want. The same page cove
 spacing, scale and tooltips, and right-clicking one of your own buffs cancels it unless you switch
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
 chat too: `/am new target debuffs icons` makes a container, `/am select` changes which one you're
-editing, and `/am set` changes any single setting. If you change something mid-fight, it waits until
-combat ends (or, inside a key, encounter or match, until that's over), and chat tells you which.
+editing, and `/am set` changes any single setting. `/am disable` hides every container at once,
+`/am enable` brings them back, and neither one waits for combat to end. If you change something else
+mid-fight, it waits until combat ends (or, inside a key, encounter or match, until that's over), and
+chat tells you which.
 
 Everything else is on the addon's page under Settings → AddOns, and `/am help` (or `/auramaster help`)
 lists every command.
@@ -94,7 +96,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 | Symptom | Fix |
 |---------|-----|
-| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on the Containers page. |
+| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on the Containers page. |
 | I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am preview off`. |
 | A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category with every spell unticked. Loosen one of them, for example by setting a category back to its neutral dash. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |

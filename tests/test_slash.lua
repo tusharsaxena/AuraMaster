@@ -94,6 +94,107 @@ test("slash: lock, unlock and preview drive the same settings the panel does", f
     assertFalse(NS2.State.preview)
 end)
 
+local function grayLine(lines, fragment)
+    for _, l in ipairs(lines) do
+        if l:find("|cff808080", 1, true) and l:find(fragment, 1, true) then return true end
+    end
+    return false
+end
+
+--- Wrap NS2.SetByPath so a case can see what the verb handed the seam; the real seam still runs
+--- unless `answer` stands in for it.
+local function recordSeam(NS2, answer)
+    local calls, real = {}, NS2.SetByPath
+    NS2.SetByPath = function(path, value, id)
+        calls[#calls + 1] = { path = path, value = value }
+        if answer then return answer(path, value, id) end
+        return real(path, value, id)
+    end
+    return calls
+end
+
+--- Every live container's engine, enabled or not (the visibility pass's visible outcome).
+local function enginesEnabled(NS2)
+    local on, off = 0, 0
+    for _, inst in pairs(NS2.ContainerManager.instances) do
+        if inst.engine then
+            if inst.engine.__enabled then on = on + 1 else off = off + 1 end
+        end
+    end
+    return on, off
+end
+
+test("slash: /am disable and /am enable write the master switch through the seam and say so", function()
+    local NS2, mocks = fresh()
+    local calls = recordSeam(NS2)
+    local lines = capture(mocks)
+    assertTrue(NS2.db.profile.enabled, "the shipped profile starts enabled")
+    NS2.Slash:OnSlash("disable")
+    assertEqual(calls[1] and calls[1].path, "enabled")
+    assertEqual(calls[1] and calls[1].value, false)
+    assertFalse(NS2.db.profile.enabled)
+    assertTrue(said(lines, "Aura Master disabled — /am enable turns it back on"), lastLine(lines))
+    local on, off = enginesEnabled(NS2)
+    assertTrue(on == 0 and off > 0, "the visibility pass disabled every engine")
+    NS2.Slash:OnSlash("enable")
+    assertEqual(calls[2] and calls[2].path, "enabled")
+    assertEqual(calls[2] and calls[2].value, true)
+    assertTrue(NS2.db.profile.enabled, "disable then enable round-trips")
+    assertTrue(said(lines, "Aura Master enabled"), lastLine(lines))
+    on, off = enginesEnabled(NS2)
+    assertTrue(on > 0 and off == 0, "the visibility pass re-enabled every engine")
+end)
+
+test("slash: /am disable in combat is not refused; the master switch is a visibility write", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    NS2.Slash:OnSlash("disable")
+    assertFalse(NS2.db.profile.enabled)
+    -- red under: runEnabled refusing in gray under InCombatLockdown
+    assertFalse(grayLine(lines, "during combat"), lastLine(lines))
+    local on = enginesEnabled(NS2)
+    assertEqual(on, 0, "engines disabled in combat through their own SetEnabled")
+end)
+
+test("slash: /am enable prints the seam's error instead of the success line", function()
+    local NS2, mocks = fresh()
+    recordSeam(NS2, function() return false, "the seam said no" end)
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("enable")
+    assertTrue(said(lines, "the seam said no"), lastLine(lines))
+    -- red under: runEnabled printing the success line whatever the seam answered
+    assertFalse(said(lines, "Aura Master enabled"), lastLine(lines))
+    assertEqual(#lines, 1, "one line: the error")
+end)
+
+test("slash: enable and disable are listed by /am help and on the landing page", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("help")
+    local rows = table.concat(NS2.Slash.LandingRows(), "\n")
+    -- The verb, then anything but a letter: a help row closes the verb's color code right after it.
+    local function listed(text, verb) return text:find("/am " .. verb .. "[^%w]") ~= nil end
+    for _, verb in ipairs({ "enable", "disable" }) do
+        assertTrue(listed(table.concat(lines, "\n"), verb), "help row for " .. verb)
+        assertTrue(listed(rows, verb), "landing row for " .. verb)
+    end
+end)
+
+test("slash: the degraded stub still answers /am enable and /am disable", function()
+    local NS2, mocks = dofile("tests/degraded_env.lua")()
+    local calls = recordSeam(NS2, function() return true end)
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("disable")
+    NS2.Slash:OnSlash("enable")
+    assertEqual(#calls, 2, "both verbs reached the seam without the library")
+    assertEqual(calls[1].value, false)
+    assertEqual(calls[2].value, true)
+    assertTrue(said(lines, "Aura Master enabled"), lastLine(lines))
+    local rows = table.concat(NS2.Slash.LandingRows(), "\n")
+    assertTrue(rows:find("/am disable", 1, true) ~= nil, "the stub lists the verb")
+end)
+
 test("slash: /am delete removes a container by id", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("delete 3")
@@ -116,13 +217,6 @@ test("slash: a name two containers share is refused, not guessed", function()
     assertEqual(NS2.State.activeContainerId, 3, "the selection does not move")
     assertTrue(said(lines, "More than one container is called 'DUP'"), lastLine(lines))
 end)
-
-local function grayLine(lines, fragment)
-    for _, l in ipairs(lines) do
-        if l:find("|cff808080", 1, true) and l:find(fragment, 1, true) then return true end
-    end
-    return false
-end
 
 test("slash: /am delete in combat refuses in gray and keeps the container", function()
     local NS2, mocks = fresh()

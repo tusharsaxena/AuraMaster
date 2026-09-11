@@ -79,7 +79,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | File | Responsibility |
 |---|---|
 | `settings/Schema.lua` | The path machinery: container-relative resolution, `NS.RegisterSchemaRows`, the read seam `NS.GetSetting`, the write seam `NS.SetByPath`, the carve-outs, `NS.Choices`, `NS.ValidateSchema` |
-| `settings/Slash.lua` | `NS.COMMANDS` (20 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
+| `settings/Slash.lua` | `NS.COMMANDS` (22 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
 | `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor and its load-completing stub; the container banner, `RenderContainerPage`, `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
 | `settings/General.lua` | The General page: the composed Master controls tab and the Display tab; the Reset all popup |

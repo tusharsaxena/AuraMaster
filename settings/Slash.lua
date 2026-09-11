@@ -27,7 +27,7 @@ local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
 local cli
 
-local runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPreview, runPick
+local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPreview, runPick
 local runResetPosition, runForgetTimed, runDebug, runPerf
 
 NS.COMMANDS = {
@@ -35,7 +35,11 @@ NS.COMMANDS = {
         function() cli:PrintHelp() end},
     {"config",        L["Open the settings panel"],
         function() NS.OpenOptionsPanel() end},
-    {"list",          L["List every setting and its current value (container settings read the selected container)"],
+    {"enable",        L["Turn Aura Master on (every enabled container shows again)"],
+        function() runEnabled(true) end},
+    {"disable",       L["Turn Aura Master off (hides every container)"],
+        function() runEnabled(false) end},
+    {"list",         L["List every setting and its current value (container settings read the selected container)"],
         function() cli:CliList() end},
     {"get",           L["Print a setting's current value — /am get path"],
         function(rest) cli:CliGet(rest) end},
@@ -125,6 +129,15 @@ end
 
 -- The gray combat refusal (options-ui-§2's canonical shape).
 local function refuse(line) printf("|cff808080%s|r", line) end
+
+-- The master switch, through the same seam as General → Master controls' "Enable Aura Master" and
+-- `/am set enabled`: the [Set] line, CONFIG_CHANGED and the visibility pass. Not refused in combat —
+-- the pass flips each engine through its own SetEnabled, which is combat-legal.
+function runEnabled(on)
+    local ok, err = NS.SetByPath("enabled", on)
+    if not ok then return print(err) end
+    print(on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
+end
 
 function runResetAll()
     -- Not refused in combat: this is Profiles → Reset Profile (options-ui-§12), which takes the

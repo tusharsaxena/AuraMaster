@@ -191,7 +191,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 
-### test_slash.lua (16)
+### test_slash.lua (21)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -200,6 +200,11 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am select takes an id or a name; /am containers marks the selection
 - slash: /am set writes the selected container through the seam
 - slash: lock, unlock and preview drive the same settings the panel does
+- slash: /am disable and /am enable write the master switch through the seam and say so
+- slash: /am disable in combat is not refused; the master switch is a visibility write
+- slash: /am enable prints the seam's error instead of the success line
+- slash: enable and disable are listed by /am help and on the landing page
+- slash: the degraded stub still answers /am enable and /am disable
 - slash: /am delete removes a container by id
 - slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
@@ -290,7 +295,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 13 |
 | test_style.lua | 15 |
 | test_timedspells.lua | 9 |
-| test_slash.lua | 16 |
+| test_slash.lua | 21 |
 | test_optionssetup.lua | 16 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
@@ -299,4 +304,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **213** |
+| **Total** | **218** |

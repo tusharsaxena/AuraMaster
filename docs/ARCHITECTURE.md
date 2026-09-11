@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:363-364`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:375-376`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:213`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -127,12 +127,14 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-two verbs; `options` is an alias of `config`.
 
 | Command | What it does |
 |---|---|
 | `/am help` | List available commands |
 | `/am config` | Open the settings panel |
+| `/am enable` | Turn Aura Master on (every enabled container shows again) |
+| `/am disable` | Turn Aura Master off (hides every container) |
 | `/am list` | List every setting and its current value (container settings read the selected container) |
 | `/am get path` | Print a setting's current value |
 | `/am set path value` | Set a setting |
@@ -277,7 +279,7 @@ generated directories are named once and never enumerated: `docs/audits/`, `docs
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 20 commands in `NS.COMMANDS`, over the eight-or-more threshold |
+| `slash-dispatch.md` | Present | 22 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine |
 | `compat-layer.md` | Present | 17 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
