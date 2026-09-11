@@ -203,7 +203,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_optionssetup.lua (13)
+### test_optionssetup.lua (14)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -217,6 +217,7 @@ badge and any count quoted in the docs must agree with it.
 - options: opening a page in combat refuses with the canonical gray line
 - options: the Delete and Reset-all popups refuse in combat
 - options: the Background block is composed in canonical order, and its tooltips name the background
+- options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 
 ### test_perf.lua (5)
@@ -278,7 +279,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style.lua | 15 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
-| test_optionssetup.lua | 13 |
+| test_optionssetup.lua | 14 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
 | test_docs.lua | 5 |
@@ -286,4 +287,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **200** |
+| **Total** | **201** |

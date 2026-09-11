@@ -202,6 +202,72 @@ test("options: the Background block is composed in canonical order, and its tool
     assertTrue(note ~= nil and byPath[P .. "bgColor"].tooltip:find(note, 1, true) ~= nil, "the class-color note")
 end)
 
+test("options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection", function()
+    -- options-ui-§13: nothing about the strip's geometry may depend on which tab is selected. The
+    -- Bars page has seven tabs; a narrow chrome wraps them. Geometry is armed so the pitch probe
+    -- measures the kit's atlas fixture, where the selected tab's art is taller than the rest.
+    local buttons = {}
+    local NS2, m = fresh({ before = function(mk)
+        mk.__armGeometry = true
+        local create = mk.CreateFrame
+        mk.CreateFrame = function(frameType, ...)
+            local f = create(frameType, ...)
+            if frameType == "Button" then
+                buttons[#buttons + 1] = f
+                -- Only the strip's own placement anchors TOPLEFT to TOPLEFT of another frame.
+                rawset(f, "SetPoint", function(self, point, rel, relPoint, _, y)
+                    if point == "TOPLEFT" and relPoint == "TOPLEFT" and type(rel) == "table" then
+                        self.__stripRel, self.__stripY = rel, y
+                    end
+                    return self
+                end)
+            end
+            return f
+        end
+    end })
+    local H = NS2.Helpers
+    local ctx = H.__containerCtx.bars
+    ctx.chrome:__setGeom(200, 0)
+    H.__resetTabArtHeight()
+
+    local function snapshot()
+        local ys = {}
+        for i = 1, #ctx.__tabs do
+            local b = ctx.__tabKids[i]
+            assertEqual(b.__stripRel, ctx.chrome, "tab " .. i .. " anchors to the chrome")
+            ys[i] = b.__stripY
+        end
+        return { band = ctx.chromeHeight, ys = ys }
+    end
+    local function clear() for _, b in ipairs(buttons) do b.__stripRel, b.__stripY = nil, nil end end
+
+    clear()
+    m.__subcategories.Bars:__fire("OnShow")
+    local keys = {}
+    for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
+    assertTrue(#keys >= 2, "the page draws several tabs")
+    assertEqual(ctx.activeTab, keys[1])
+    assertEqual(H.__tabArtHeight(), m.__atlasSizes["Options_Tab_Left"][2], "the probe measured the inactive art")
+    local ref = snapshot()
+    local rows = {}
+    for _, y in ipairs(ref.ys) do rows[y] = true end
+    local rowCount = 0
+    for _ in pairs(rows) do rowCount = rowCount + 1 end
+    assertTrue(rowCount >= 2, "the strip wrapped (" .. rowCount .. " row)")
+
+    for i = 2, #keys do
+        clear()
+        ctx.__tabKids[i]:__fire("OnClick")
+        assertEqual(ctx.activeTab, keys[i], "selected " .. keys[i])
+        local got = snapshot()
+        -- red under: placeTabs taking its pitch from the first button's art as drawn (active when tab 1 is selected) — the pre-minor-13 bug
+        assertEqual(got.band, ref.band, "band with " .. keys[i] .. " selected")
+        for j = 1, #keys do
+            assertEqual(got.ys[j], ref.ys[j], "tab " .. j .. " y with " .. keys[i] .. " selected")
+        end
+    end
+end)
+
 test("options: the degraded stub completes the load — every page's rows still register", function()
     local NS2, m2 = loadDegraded()
     for _, member in ipairs({ "LSMValues", "ColorPair", "FontGroup", "BorderGroup", "BarGroup",

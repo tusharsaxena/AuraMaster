@@ -92,9 +92,27 @@ return function()
     -- Named frames land in __globals so a test can plant a frame another addon would have created
     -- and modules/Anchors.lua can find it through _G (the loader resolves the mock before _G).
     M.__globals = {}
+
+    -- Opt-in live geometry. The kit answers GetWidth/GetHeight with 0 until a test arms a frame, and
+    -- the tab strip's pitch is measured on a probe texture the library builds for itself, which no
+    -- test can reach to arm by hand. Setting `M.__armGeometry = true` in a fresh env's `before` arms
+    -- every frame created after that, and every texture each of those frames creates, so the probe's
+    -- SetAtlas measures. Off by default, because every other suite leans on the zeros.
+    M.__armGeometry = false
+    local function armGeometry(f)
+        f:__setGeom()
+        local create = f.CreateTexture
+        rawset(f, "CreateTexture", function(self, ...)
+            local tex = create(self, ...)
+            if type(tex) == "table" and tex.__setGeom and not tex.__geomLive then tex:__setGeom() end
+            return tex
+        end)
+    end
+
     local baseCreate = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreate(frameType, name, parent, template)
+        if M.__armGeometry then armGeometry(f) end
         -- Frame level is arithmetic in production (the drag handle sits 50 above its anchor), so it
         -- answers a real number (fidelity rule 2) and records what was set.
         f.__level = 0
