@@ -40,7 +40,7 @@ badge and any count quoted in the docs must agree with it.
 - database: an existing SavedVariables file keeps its containers
 - database: a non-numeric container key is dropped and the profile loads
 
-### test_schema.lua (23)
+### test_schema.lua (24)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -65,6 +65,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: category spell edits keep only real spell categories
 - schema: a whole section written through the seam replaces it, backfills it, logs once and announces once
 - schema: a section write refuses a non-section path, a non-table, and a value a row rejects
+- schema: a section write runs the normalize hook of every row under it, with the target id
 
 ### test_filtercompiler.lua (27)
 
@@ -115,7 +116,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (22)
+### test_containermanager.lua (23)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -139,6 +140,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: ResetPositions puts every container back on the screen, staggered
 - manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
 - manager: a target swap out of combat re-applies only class-colored containers of that unit
+- manager: an out-of-combat swap to a same-class target, or NPC to NPC, queues no apply
 
 ### test_anchors.lua (13)
 
@@ -274,10 +276,10 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 8 |
 | test_database.lua | 10 |
-| test_schema.lua | 23 |
+| test_schema.lua | 24 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 22 |
+| test_containermanager.lua | 23 |
 | test_anchors.lua | 13 |
 | test_style.lua | 15 |
 | test_timedspells.lua | 9 |
@@ -290,4 +292,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **204** |
+| **Total** | **206** |

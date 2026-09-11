@@ -127,9 +127,9 @@ end
 -- A container tracking another unit paints its class colors with that unit's class (options-ui-§17).
 -- The class is read HERE, once per apply — and an apply only runs while auras are readable — then
 -- used by every dress until the next one: engine buttons created mid-combat, a restyle, the preview.
--- So every button of one container shows one class at every moment. A swap of the tracked unit
--- re-applies the container (modules/ContainerManager.lua's RefreshUnit), or marks it stale while
--- that has to wait.
+-- So every button of one container shows one class at every moment. A swap of the tracked unit to a
+-- different class re-applies the container (modules/ContainerManager.lua's RefreshUnit), or marks it
+-- stale while that has to wait.
 
 --- The tracked unit's class as { r, g, b }, in a table reused per instance. When the class does not
 --- resolve (an NPC, no such unit) the channels are nil, and Style.Color falls through to the swatch.

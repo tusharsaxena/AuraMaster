@@ -109,12 +109,14 @@ local function sayNotFound(ambiguous, name)
     print(L["No such container — /am containers lists them"])
 end
 
+-- The fields are one localized string per state (localization-§1), so a translator can reorder
+-- them and the status tag; only the name and the gray markup around the fields stay outside.
 local function describe(c)
-    return ("%s  |cff888888#%d · %s · %s · %s%s|r"):format(NS.SafeToString(c.name or "?"), c.id,
+    local fields = c.enabled and L["#%s · %s · %s · %s"] or L["#%s · %s · %s · %s · disabled"]
+    return ("%s  |cff888888%s|r"):format(NS.SafeToString(c.name or "?"), fields:format(tostring(c.id),
         L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
         L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
-        L[C.STYLE_LABELS[c.style] or tostring(c.style)],
-        c.enabled and "" or (" · " .. L["disabled"]))
+        L[C.STYLE_LABELS[c.style] or tostring(c.style)]))
 end
 
 local function afterRegistryChange()

@@ -93,11 +93,12 @@ as described in `docs/perf-analysis/README.md`.
 ### Suspend
 
 Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:69`)
-calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — and
+calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — then
+`NS.TimedSpells.Stop()`, which drops TimedSpells' own `UNIT_AURA` and its three gate events, and
 runs a visibility pass; `Container:ShouldShow` checks `NS.Perf.suspended` as **step 0**, so every engine is disabled and
 nothing — a combat transition, a target swap, a settings change — can enable one behind suspend's
 back, and a queued apply waits for resume: `ContainerManager.FlushPending` returns early while
-suspended and keeps the pending set. `resume` re-registers the events, runs a visibility pass and re-applies every container from the
+suspended and keeps the pending set. `resume` re-registers the events, calls `NS.TimedSpells.Sync()`, runs a visibility pass and re-applies every container from the
 current settings. The suspended flag is session-only.
 
 ## Reading the report

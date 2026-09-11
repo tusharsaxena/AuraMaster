@@ -391,18 +391,53 @@ test("manager: a target swap under lockdown leaves the class color silently stal
     assertNil(inst.classStale)
 end)
 
-test("manager: a target swap out of combat re-applies only class-colored containers of that unit", function()
-    local NS, mocks = fresh()
+--- A fresh environment whose target's class token is `target.token` (nil makes it an NPC), planted
+--- in that environment's own mock. Everyone else is a mage.
+local function freshWithTarget(token)
+    local target = { token = token }
+    local NS, mocks = fresh({ before = function(m)
+        m.UnitClass = function(u)
+            if u == "target" then return target.token and "Target", target.token end
+            return "Mage", "MAGE"
+        end
+        m.RAID_CLASS_COLORS.PRIEST = { r = 1, g = 1, b = 1 }
+    end })
+    return NS, mocks, target
+end
+
+--- Spy on RequestApply around one target swap; returns the ids it was asked for.
+local function requestsOnSwap(NS)
     local CM = NS.ContainerManager
-    local other = CM.Create({ unit = "target" })
-    mocks.__fireTimers()
-    assertEqual(NS.Database.FindContainer(other).unit, "target")
-    classColored(NS, mocks, 3)
     local asked, orig = {}, CM.RequestApply
     CM.RequestApply = function(id) asked[#asked + 1] = id; return orig(id) end
     NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
     CM.RequestApply = orig
+    return asked
+end
+
+test("manager: a target swap out of combat re-applies only class-colored containers of that unit", function()
+    local NS, mocks, target = freshWithTarget("PRIEST")
+    local other = NS.ContainerManager.Create({ unit = "target" })
+    mocks.__fireTimers()
+    assertEqual(NS.Database.FindContainer(other).unit, "target")
+    classColored(NS, mocks, 3)
+    target.token = "MAGE"
+    local asked = requestsOnSwap(NS)
     -- red under: RefreshUnit requesting an apply for every container of the unit
     assertEqual(#asked, 1, "one request, not one per target container")
     assertEqual(asked[1], 3, "for the class-colored one")
+end)
+
+test("manager: an out-of-combat swap to a same-class target, or NPC to NPC, queues no apply", function()
+    local NS, mocks, target = freshWithTarget("PRIEST")
+    classColored(NS, mocks, 3)
+    local timers = #mocks.__timers
+    -- red under: RefreshUnit dropping the class comparison (requesting on every swap)
+    assertEqual(#requestsOnSwap(NS), 0, "priest to priest")
+    assertEqual(#mocks.__timers, timers, "no apply is queued")
+
+    target.token = nil
+    assertEqual(#requestsOnSwap(NS), 1, "priest to NPC is a change")
+    mocks.__fireTimers()
+    assertEqual(#requestsOnSwap(NS), 0, "NPC to NPC: both unresolved, nothing changed")
 end)

@@ -206,17 +206,31 @@ function CM.ApplyVisibility()
     if t0 then Perf.Note("visibilityPass", debugprofilestop() - t0) end
 end
 
+--- Whether `unit`'s class differs from the one `inst`'s last apply painted with. Two unresolved
+--- classes (an NPC, no such unit) are the same. Read only while an apply may run, as SnapshotClass is.
+local function classChanged(inst, unit)
+    local snap = inst.classColor
+    if not snap then return true end
+    local r, g, b = NS.ClassColor(unit)
+    return snap.r ~= r or snap.g ~= g or snap.b ~= b
+end
+
 --- `unit` now names someone else: every container tracking it refreshes. One that paints a class
---- color also re-applies, so its class snapshot follows the new unit (modules/Container.lua's
---- SnapshotClass) — or, while an apply has to wait, is marked stale SILENTLY: no request and no
---- deferral notice, because nothing the player changed is being held. ReapplyStaleClass catches up.
+--- color also re-applies when the new unit's class differs, so its class snapshot follows the unit
+--- (modules/Container.lua's SnapshotClass); a same-class swap costs no apply. While an apply has to
+--- wait the class is not read: the container is marked stale SILENTLY — no request and no deferral
+--- notice, because nothing the player changed is being held. ReapplyStaleClass catches up.
 function CM.RefreshUnit(unit)
     for _, inst in pairs(CM.instances) do
         local cfg = inst:Cfg()
         if cfg and cfg.unit == unit then
             inst:Refresh()
             if inst.usesClass then
-                if CM.MustDefer() then inst.classStale = true else CM.RequestApply(inst.id) end
+                if CM.MustDefer() then
+                    inst.classStale = true
+                elseif classChanged(inst, unit) then
+                    CM.RequestApply(inst.id)
+                end
             end
         end
     end

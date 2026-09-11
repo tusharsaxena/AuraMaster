@@ -330,6 +330,17 @@ local function validateSectionRows(section, v, depth)
     return nil
 end
 
+--- Run the `normalize(value, id)` hook of every row under `section` over its leaf of `v`, in place,
+--- after validation — the order writeRow uses — so a section write stores what a row write would.
+local function normalizeSectionRows(section, v, depth, id)
+    for _, row in ipairs(NS.Schema) do
+        if row.normalize and isUnder(row.path, section) then
+            local parts = splitPath(row.path)
+            writeInto(v, parts, depth + 1, row.normalize(readFrom(v, parts, depth + 1), id))
+        end
+    end
+end
+
 --- The onChange of every row under `section` whose leaf actually changed between `old` and `v`.
 local function fireSectionChanges(section, old, v, depth, id)
     local Sig = NS.FilterCompiler.Signature
@@ -361,8 +372,8 @@ local function logSection(path, v)
     end
 end
 
---- A whole section: a deep copy of `value`, backfilled, carve-outs normalized, rows validated, then
---- stored in one write. All or nothing: nothing is stored unless every check passes.
+--- A whole section: a deep copy of `value`, backfilled, carve-outs normalized, rows validated and
+--- normalized, then stored in one write. All or nothing: nothing is stored unless every check passes.
 local function writeSection(path, value, containerId, sec)
     if type(value) ~= "table" then return false, L["Invalid value for %s"]:format(path) end
     local parts = splitPath(path)
@@ -372,6 +383,7 @@ local function writeSection(path, value, containerId, sec)
     NS.Database.Backfill(v, readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
     local err = normalizeSectionCarveOuts(path, v, #parts) or validateSectionRows(path, v, #parts)
     if err then return false, err end
+    normalizeSectionRows(path, v, #parts, id)
     local old = readFrom(root, parts, first)
     writeInto(root, parts, first, v)
     fireSectionChanges(path, old, v, #parts, id)

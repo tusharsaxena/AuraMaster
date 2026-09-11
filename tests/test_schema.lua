@@ -270,3 +270,18 @@ test("schema: a section write refuses a non-section path, a non-table, and a val
     assertTrue(NS2.Database.FindContainer(1).filter == before, "the stored section is untouched")
     assertFalse((NS2.SetByPath("container.attach", { mode = "screen" }, 1)), "attach is not a section")
 end)
+
+test("schema: a section write runs the normalize hook of every row under it, with the target id", function()
+    -- No shipped row under a section has a hook today; this plants one so a future row's is honored.
+    local NS2 = fresh()
+    local seenId
+    for _, row in ipairs(NS2.Schema) do
+        if row.path == "container.layout.spacing" then
+            row.normalize = function(v, id) seenId = id; return v + 1 end
+        end
+    end
+    assertTrue(NS2.SetByPath("container.layout", { spacing = 5 }, 2))
+    -- red under: writeSection skipping the rows' normalize hooks
+    assertEqual(NS2.Database.FindContainer(2).layout.spacing, 6, "stored normalized")
+    assertEqual(seenId, 2, "the hook saw the section's container")
+end)
