@@ -232,9 +232,10 @@ end
 --- A dress's error handler. It runs where the styler raised, while the stack still holds the failing
 --- line, and that stack travels with the message, because the re-raise in Style.Element starts a new
 --- one and an error handler (BugSack) would otherwise see a stack that ends there. The headless
---- harness has no debugstack; the message then goes on as it came.
+--- harness has no debugstack; the message then goes on as it came, and so does an error that is not
+--- a string (a table or other value), which the caller must receive unchanged.
 local function withStack(err)
-    if type(debugstack) ~= "function" then return err end
+    if type(debugstack) ~= "function" or type(err) ~= "string" then return err end
     return tostring(err) .. "\n" .. debugstack(2)
 end
 

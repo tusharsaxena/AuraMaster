@@ -43,9 +43,9 @@ suite covers what only the client can show.
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
     Hovering the help mark at the handle's right end shows the name and "Drag to move. Right-click for
     settings."
-    **Screen edge.** Lock, drag a container that grows down flush against the top of the screen, then
-    `/am unlock` → the container shifts down by the handle's height, so the handle stays on screen;
-    `/am lock` → it returns to the edge. Its stored position is the same before and after.
+    **Screen edge.** `/am unlock`, drag a container that grows down flush against the top of the
+    screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
+    its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
     **Attached container.** Attach one container to another (Layout page) and unlock → the attached
     container's handle sits outside its own edge and may lie over the target's elements or handle.
     This is expected (Known Limitations).

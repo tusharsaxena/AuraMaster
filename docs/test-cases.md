@@ -183,7 +183,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (17)
+### test_style.lua (18)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -200,6 +200,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a target container's class color is the target's, snapshotted at apply
 - style: a dress that raises still clears its class color, and the error reaches the caller
 - style: a dress that raises hands the error handler the failing styler's stack
+- style: a dress that raises a non-string value hands that value on unchanged
 - style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
 
@@ -318,7 +319,7 @@ badge and any count quoted in the docs must agree with it.
 | test_container.lua | 16 |
 | test_containermanager.lua | 37 |
 | test_anchors.lua | 20 |
-| test_style.lua | 17 |
+| test_style.lua | 18 |
 | test_timedspells.lua | 10 |
 | test_slash.lua | 21 |
 | test_optionssetup.lua | 16 |
@@ -329,4 +330,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **243** |
+| **Total** | **244** |

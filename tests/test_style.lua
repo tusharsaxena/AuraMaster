@@ -296,6 +296,19 @@ test("style: a dress that raises hands the error handler the failing styler's st
     assertTrue(stack:find(where, 1, true) ~= nil, "the stack names the failing styler's line: " .. err)
 end)
 
+test("style: a dress that raises a non-string value hands that value on unchanged", function()
+    local NS2, m2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.debugstack = function() return debug.traceback("stack:", 2) end
+    end })
+    local raised = { reason = "styler failed" }
+    NS2.Style.Bars.Apply = function() error(raised) end
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "bars" })
+    local ok, err = pcall(NS2.Style.Element, m2.__stubFrame(), c, true, nil)
+    assertTrue(not ok, "the styler's error is not swallowed")
+    -- red under: withStack stringifying every error, whatever its type
+    assertTrue(err == raised, "the caller receives the very table the styler raised: " .. tostring(err))
+end)
+
 test("style: the Blizzard time format asks for no formatter of our own", function()
     assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
 end)
