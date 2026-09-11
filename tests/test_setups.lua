@@ -22,6 +22,18 @@ test("core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] 
     assertTrue(lines[1]:find("hello", 1, true) ~= nil)
 end)
 
+test("core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer", function()
+    local NS2, mocks = fresh()
+    -- red under: dropping the Printf reclaim in core/AuraMaster.lua
+    assertTrue(NS2.Printf == NS2.Util.printf, "one function object, reclaimed like NS.Print")
+    local lines = {}
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    NS2.Printf("x %s", "y")
+    assertEqual(#lines, 1)
+    assertTrue(lines[1]:find("|cFF00FFFF[AM]|r", 1, true) ~= nil, "the tag: " .. lines[1])
+    assertTrue(lines[1]:find("x y", 1, true) ~= nil, "formatted inside the printer: " .. lines[1])
+end)
+
 test("core: every close control goes through the one NS.MakeCloseButton wrapper", function()
     local p = io.popen("grep -rn 'MakeCloseButton(' --include='*.lua' core modules settings")
     local hits = {}

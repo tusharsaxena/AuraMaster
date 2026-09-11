@@ -67,6 +67,18 @@ if not lib then
     end
     Util.print = NS.Print
 
+    -- The formatting half, with the library's contract: every argument is stringified secret-safe
+    -- BEFORE format sees it, so a secret in a %s slot prints the sentinel instead of raising. Reached
+    -- through NS.Print at call time, so the one-time notice above still leads.
+    function NS.Printf(fmt, ...)
+        local n = select("#", ...)
+        if n == 0 then return NS.Print(NS.SafeToString(fmt)) end
+        local parts = {}
+        for i = 1, n do parts[i] = NS.SafeToString((select(i, ...))) end
+        NS.Print(NS.SafeToString(fmt):format(unpack(parts, 1, n)))
+    end
+    Util.printf = NS.Printf
+
     return
 end
 
@@ -104,3 +116,9 @@ local printer = lib:New({ prefix = function() return NS.PREFIX end })
 -- the settings files captured because it is the identical object.
 NS.Print = printer.Print
 Util.print = NS.Print
+
+-- The same rule for the formatting printer: AceConsole's mixins include :Printf too, so NS.Printf is
+-- clobbered and reclaimed exactly like NS.Print. Format stringifies every argument secret-safe before
+-- format() sees it, so a whole-sentence key with %s slots is formatted INSIDE the printer.
+NS.Printf = printer.Format
+Util.printf = NS.Printf

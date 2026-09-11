@@ -111,6 +111,17 @@ test("slash: /am pick starts the frame picker for the selected container", funct
     assertEqual(c.attach.frame, "FocusFrame")
 end)
 
+test("slash: /am resetall and the General reset print the same line", function()
+    local NS2, mocks = fresh()
+    local fromSlash = capture(mocks)
+    NS2.Slash:OnSlash("resetall")
+    local fromPage = capture(mocks)
+    mocks.StaticPopupDialogs.AURAMASTER_RESET_ALL.OnAccept()
+    assertTrue(#fromSlash >= 1 and #fromPage >= 1, "both surfaces acknowledged the reset")
+    assertEqual(fromSlash[#fromSlash], fromPage[#fromPage])
+    assertTrue(said(fromPage, "All settings reset to defaults."), fromPage[#fromPage])
+end)
+
 test("slash: /am debug on and off flip the session flag; it never reaches the profile", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("debug on")

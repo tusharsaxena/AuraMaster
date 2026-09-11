@@ -39,8 +39,10 @@ if not lib then
         SetEnabled      = function(_, on)
             on = not not on
             if NS.State then NS.State.debug = on end
-            if NS.Print then
-                NS.Print("debug logging " .. (on and "|cff40ff40ON|r" or "|cffff4040OFF|r"))
+            -- Two whole sentences; the color is a layout-only wrap with no words in it.
+            if NS.Printf then
+                NS.Printf(on and "|cff40ff40%s|r" or "|cffff4040%s|r",
+                    on and NS.L["Debug logging on."] or NS.L["Debug logging off."])
             end
             if on then sayOnce() end
         end,

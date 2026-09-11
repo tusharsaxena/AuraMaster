@@ -15,9 +15,10 @@ badge and any count quoted in the docs must agree with it.
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
 - loadorder: the library registered — NS.Perf is the real probe, not the stub
 
-### test_setups.lua (6)
+### test_setups.lua (7)
 
 - core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] tag
+- core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer
 - core: every close control goes through the one NS.MakeCloseButton wrapper
 - media: icons and the monospace face resolve inside this addon's folder
 - env: the version falls back to NS.version where the TOC cannot be read
@@ -152,7 +153,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 
-### test_slash.lua (10)
+### test_slash.lua (11)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -163,9 +164,10 @@ badge and any count quoted in the docs must agree with it.
 - slash: lock, unlock and preview drive the same settings the panel does
 - slash: /am delete removes a container by id
 - slash: /am pick starts the frame picker for the selected container
+- slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_optionssetup.lua (10)
+### test_optionssetup.lua (11)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -176,6 +178,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Containers page's New button creates and selects a container
 - options: a page's Defaults button restores only the selected container
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
+- options: opening a page in combat refuses with the canonical gray line
 - options: the degraded stub completes the load — every page's rows still register
 
 ### test_perf.lua (4)
@@ -226,7 +229,7 @@ badge and any count quoted in the docs must agree with it.
 | Suite | Cases |
 |-------|------:|
 | test_loadorder.lua | 6 |
-| test_setups.lua | 6 |
+| test_setups.lua | 7 |
 | test_database.lua | 10 |
 | test_schema.lua | 19 |
 | test_filtercompiler.lua | 27 |
@@ -235,8 +238,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 10 |
 | test_style.lua | 10 |
 | test_timedspells.lua | 5 |
-| test_slash.lua | 10 |
-| test_optionssetup.lua | 10 |
+| test_slash.lua | 11 |
+| test_optionssetup.lua | 11 |
 | test_perf.lua | 4 |
 | test_locale.lua | 2 |
 | test_docs.lua | 5 |
@@ -244,4 +247,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **158** |
+| **Total** | **161** |

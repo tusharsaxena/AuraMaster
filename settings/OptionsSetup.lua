@@ -80,7 +80,7 @@ local descriptor = {
 -- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this
 -- build has none. tests/test_optionssetup.lua pins the member set and the schema row count.
 if not lib then
-    local MISSING = NS.LIBKA0S_MISSING .. ", " .. L["so the settings panel is unavailable."]
+    local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
     NS.Helpers = Helpers
 
@@ -173,9 +173,9 @@ if not lib then
 
     NS.RegisterOptionsPage = function() end
     NS.RefreshOptionsPanel = function() end
-    NS.CreateOptionsPanel  = function() print(MISSING) end
-    NS.OpenOptionsPanel    = function() print(MISSING) end
-    NS.OpenOptionsPage     = function() print(MISSING) end
+    NS.CreateOptionsPanel  = function() sayMissing() end
+    NS.OpenOptionsPanel    = function() sayMissing() end
+    NS.OpenOptionsPage     = function() sayMissing() end
     NS.RegisterContainerPage = function() end
     return
 end
@@ -206,7 +206,7 @@ local categories = {}
 --- own open does (options-ui-§2) — a category switch is protected, so it is refused, never deferred.
 function NS.OpenOptionsPage(pageKey)
     if InCombatLockdown() then
-        print("|cff808080" .. L["Cannot open settings during combat."] .. "|r")
+        NS.Printf("|cff808080%s|r", L["cannot open settings during combat — Blizzard's category-switch is protected"])
         return
     end
     local cat = categories[pageKey]

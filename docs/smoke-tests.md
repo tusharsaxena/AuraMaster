@@ -114,7 +114,8 @@ suite covers what only the client can show.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout
-    reopens. `/am pick` does the same from chat and is refused in combat.
+    reopens. `/am pick` does the same from chat. In combat, both are refused with the gray
+    "cannot pick a frame during combat — attaching to a frame waits until combat ends" line.
 43. **Frame not there yet.** Attach to a frame name belonging to an addon that loads on demand →
     the container sits at its screen position until that addon loads, then moves. **Attach to the
     screen** detaches it.

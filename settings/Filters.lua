@@ -70,7 +70,7 @@ local function categoryRows(auraType)
             path = "container.filter.categories." .. def.key, page = PAGE, group = G_CATS,
             subgroup = L[sub], auraTypes = { [auraType] = true },
             type = "string", values = STATES, label = L[def.label],
-            desc = L[def.desc] .. "\n\n" .. L["Show: this container shows only the categories set to Show (and your Always list). Hide: never shown here. —: no effect."],
+            desc = ("%s\n\n%s"):format(L[def.desc], L["Show: this container shows only the categories set to Show (and your Always list). Hide: never shown here. —: no effect."]),
         }
     end
     return rows

@@ -51,7 +51,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 |---|---|---|
 | `LibKa0s-Media-1.0` | `core/MediaSetup.lua` | `NS.Icon`, `NS.MediaFont`, the LSM registration |
 | `LibKa0s-Env-1.0` | `core/EnvSetup.lua` | `NS.Meta`, `NS.Version` |
-| `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.SafeToString`, `NS.ResolveColor`, `NS.MakeCloseButton` |
+| `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.MakeCloseButton` |
 | `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
 | `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, suspend) |
 | `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |

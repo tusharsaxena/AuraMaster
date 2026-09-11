@@ -138,6 +138,25 @@ return function()
         self.__released[#self.__released + 1] = widget
     end
 
+    -- ── AceConsole's Printf ────────────────────────────────────────────────────────────────
+    -- The LibKa0s v1.29.0 kit's NewAddon stamps Print but not Printf; delete on the re-vendor that
+    -- adds it. The real AceConsole-3.0 Embed stamps both mixins, so NS.Printf is clobbered exactly as
+    -- NS.Print is, and core/AuraMaster.lua must reclaim both. Mirrored as the real one behaves when
+    -- called bare (`NS.Printf(fmt, …)`): the format string lands in `self`, green with a trailing
+    -- colon, and the rest are formatted without it.
+    local aceAddon = M.__libs["AceAddon-3.0"]
+    local kitNewAddon = aceAddon.NewAddon
+    aceAddon.NewAddon = function(lib, target, ...)
+        target = kitNewAddon(lib, target, ...)
+        target.Printf = function(selfOrFmt, ...)
+            local body = select("#", ...) > 0 and string.format(...) or ""
+            if DEFAULT_CHAT_FRAME then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99" .. tostring(selfOrFmt) .. "|r: " .. body)
+            end
+        end
+        return target
+    end
+
     -- ── _G ──────────────────────────────────────────────────────────────────────────────────
     -- The loader resolves a bare global against the mock first, but `_G.X` in addon code reads the
     -- `_G` KEY — which the mock did not have, so it fell through to the harness process's own global

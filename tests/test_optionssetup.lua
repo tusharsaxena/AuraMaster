@@ -127,6 +127,31 @@ test("options: Reset all settings resets the active profile whole, and nothing e
     assertTrue(changed[1] >= 1, "the registry change was announced")
 end)
 
+test("options: opening a page in combat refuses with the canonical gray line", function()
+    -- A subcategory that answers GetID, as the client's does, so an ungated open would reach
+    -- Settings.OpenToCategory rather than the library's own (also refusing) panel open.
+    local opened = 0
+    local NS2, m = fresh({ before = function(mk)
+        local register = mk.Settings.RegisterCanvasLayoutSubcategory
+        mk.Settings.RegisterCanvasLayoutSubcategory = function(...)
+            local cat = register(...)
+            cat.GetID = function() return 7 end
+            return cat
+        end
+        mk.Settings.OpenToCategory = function() opened = opened + 1 end
+    end })
+    local lines = {}
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    m.__lockdown = true
+    NS2.OpenOptionsPage("layout")
+    -- red under: OpenOptionsPage without its InCombatLockdown gate
+    assertEqual(opened, 0, "no protected category switch in combat")
+    assertEqual(#lines, 1, "exactly one refusal line")
+    assertTrue(lines[1]:find("|cff808080", 1, true) ~= nil, "gray: " .. lines[1])
+    assertTrue(lines[1]:find("cannot open settings during combat — Blizzard's category-switch is protected",
+        1, true) ~= nil, "canonical: " .. lines[1])
+end)
+
 test("options: the degraded stub completes the load — every page's rows still register", function()
     local NS2, m2 = loadDegraded()
     for _, member in ipairs({ "LSMValues", "ColorPair", "FontGroup", "BorderGroup", "BarGroup",

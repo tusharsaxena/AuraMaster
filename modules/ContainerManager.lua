@@ -183,7 +183,7 @@ function CM.Create(overrides)
     local p = profile()
     if not p then return nil, L["No profile is loaded."] end
     local c, id = NS.Database.NewContainerData(overrides)
-    c.name = CM.UniqueName(c.name ~= "Container" and c.name or ("Container " .. id))
+    c.name = CM.UniqueName(c.name ~= "Container" and c.name or L["Container %d"]:format(id))
     -- Offset a new container from the center by its id, so two new ones are not stacked exactly.
     if not (overrides and overrides.position) then
         c.position.y = -((id - 1) % 8) * 30
@@ -239,7 +239,7 @@ function CM.Duplicate(id)
     if not src then return nil, L["No such container."] end
     local overrides = NS.Database.DeepCopy(src)
     overrides.id = nil
-    overrides.name = src.name .. " (copy)"
+    overrides.name = L["%s (copy)"]:format(src.name)
     if overrides.attach and overrides.attach.mode == "screen" then
         overrides.position.x = (tonumber(overrides.position.x) or 0) + 20
         overrides.position.y = (tonumber(overrides.position.y) or 0) - 20

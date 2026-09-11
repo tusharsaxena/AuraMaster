@@ -18,6 +18,10 @@ local Sl = NS.Slash
 
 local L = NS.L
 local print = NS.Print
+-- The formatting printer, captured the same way: this file loads after core/AuraMaster.lua has
+-- reclaimed both from AceConsole. A whole sentence goes in as one L[...] key with %s slots, and the
+-- printer formats it over secret-safe arguments (events-frames-taint-§8).
+local printf = NS.Printf
 
 local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
@@ -66,7 +70,7 @@ NS.COMMANDS = {
     {"perf",          L["Measure performance — try /am perf for the workflow"],
         function(rest) runPerf(rest) end},
     {"version",       L["Print the addon version"],
-        function() print(("v%s"):format(NS.Version())) end},
+        function() printf("v%s", NS.Version()) end},
 }
 
 -- ---------------------------------------------------------------------------
@@ -93,7 +97,7 @@ local function findContainer(arg)
 end
 
 local function describe(c)
-    return ("%s  |cff888888#%d · %s · %s · %s%s|r"):format(c.name or "?", c.id,
+    return ("%s  |cff888888#%d · %s · %s · %s%s|r"):format(NS.SafeToString(c.name or "?"), c.id,
         L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
         L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
         L[C.STYLE_LABELS[c.style] or tostring(c.style)],
@@ -110,9 +114,10 @@ function runResetAll()
     -- happen.
     if NS.Helpers and NS.Helpers.RestoreAllDefaults then
         NS.Helpers.RestoreAllDefaults()
-        print(L["All settings reset to defaults"])
+        -- The same keys the General page's Reset Profile prints: one message, one key (F-018).
+        print(L["All settings reset to defaults."])
     else
-        print(L["Cannot reset settings — the settings helpers failed to load"])
+        print(L["Cannot reset settings — the settings helpers failed to load."])
     end
 end
 
@@ -122,7 +127,7 @@ function runContainers()
     local _, activeId = NS.ActiveContainer()
     print(L["Containers"])
     for _, c in ipairs(list) do
-        print(("  %s %s"):format(c.id == activeId and "|cff33ff99>|r" or " ", describe(c)))
+        printf("  %s %s", c.id == activeId and "|cff33ff99>|r" or " ", describe(c))
     end
 end
 
@@ -131,7 +136,7 @@ function runSelect(rest)
     if not c then return print(L["No such container — /am containers lists them"]) end
     NS.State.SetActiveContainer(c.id)
     afterRegistryChange()
-    print(L["Selected"] .. " " .. describe(c))
+    printf(L["Selected %s"], describe(c))
 end
 
 -- The words `/am new` understands, each mapped onto the stored value it means.
@@ -150,7 +155,7 @@ function runNew(rest)
     for word in (rest or ""):gmatch("%S+") do
         local spec = NEW_WORDS[word:lower()]
         if not spec then
-            return print(L["Unknown word"] .. " '" .. word .. "' — " .. L["try /am new target debuffs icons"])
+            return printf(L["Unknown word '%s' — try /am new target debuffs icons"], word)
         end
         for k, v in pairs(spec) do overrides[k] = v end
     end
@@ -158,7 +163,7 @@ function runNew(rest)
     if not id then return print(err or L["Could not create a container"]) end
     NS.State.SetActiveContainer(id)
     afterRegistryChange()
-    print(L["Created"] .. " " .. describe(NS.Database.FindContainer(id)))
+    printf(L["Created %s"], describe(NS.Database.FindContainer(id)))
 end
 
 function runDelete(rest)
@@ -168,7 +173,7 @@ function runDelete(rest)
     local ok, err = NS.ContainerManager.Delete(c.id)
     if not ok then return print(err) end
     afterRegistryChange()
-    print(L["Deleted"] .. " '" .. tostring(name) .. "'")
+    printf(L["Deleted '%s'"], name)
 end
 
 function runLock(locked)
@@ -189,13 +194,14 @@ end
 function runPick()
     local c, id = NS.ActiveContainer()
     if not c then return print(L["No containers yet — /am new creates one"]) end
-    if InCombatLockdown() then return print(L["Cannot pick a frame during combat"]) end
-    print(L["Point at a frame and left-click to attach"] .. " '" .. tostring(c.name) .. "'. "
-        .. L["Right-click or Escape cancels."])
+    if InCombatLockdown() then
+        return printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
+    end
+    printf(L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."], c.name)
     NS.FramePicker.Start(function(name)
         NS.SetByPath("container.attach.frame", name, id)
         NS.SetByPath("container.attach.mode", "frame", id)
-        print(("'%s' %s %s"):format(tostring(c.name), L["is now attached to"], name))
+        printf(L["'%s' is now attached to %s"], c.name, name)
     end, function()
         print(L["Frame pick canceled"])
     end)
@@ -237,13 +243,12 @@ end
 -- library instead of going quiet. NOTHING of the library's rendering is copied here — no row
 -- formatter, no parser, no `key = value` shape.
 if not SlashLib then
-    local missing = " " .. L["is unavailable."] .. " " .. NS.LIBKA0S_MISSING .. "."
     SlashLib = { FormatRow = function(cmd, desc) return cmd .. " — " .. desc end }
 
     function SlashLib.New(_, d)
         local stub = { SetRowAnnotator = function() end }
         local function absent(verb)
-            return function() print("/am " .. verb .. missing) end
+            return function() printf(L["/am %s is unavailable. %s."], verb, NS.LIBKA0S_MISSING) end
         end
         for _, verb in ipairs({ "List", "Get", "Set", "Reset" }) do
             stub["Cli" .. verb] = absent(verb:lower())
@@ -254,8 +259,8 @@ if not SlashLib then
             return out
         end
         stub.PrintHelp = function()
-            print(("v%s — %s"):format(d.version(), L["slash commands"]))
-            for _, row in ipairs(stub.LandingRows()) do print("  " .. row) end
+            printf(L["v%s — slash commands"], d.version())
+            for _, row in ipairs(stub.LandingRows()) do printf("  %s", row) end
         end
         stub.OnSlash = function(_, msg)
             local raw = (msg or ""):match("^%s*(.-)%s*$") or ""
@@ -266,7 +271,7 @@ if not SlashLib then
             for _, e in ipairs(d.commands) do
                 if e[1] == cmd then return e[3](rest or "") end
             end
-            print(L["Unknown command"] .. " '" .. cmd .. "'")
+            printf(L["Unknown command '%s'"], cmd)
             stub.PrintHelp()
         end
         return stub

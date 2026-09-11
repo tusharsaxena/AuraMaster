@@ -17,9 +17,11 @@ local AceAddon = LibStub("AceAddon-3.0")
 local addon = AceAddon:NewAddon(NS, addonName, "AceEvent-3.0", "AceTimer-3.0", "AceConsole-3.0")
 NS.addon = addon
 
--- Reclaim NS.Print from AceConsole's embed, which stamps its own :Print over ours (architecture-§2,
--- anti-pattern #36). core/CoreSetup.lua stashed the real printer at NS.Util.print, the same object.
+-- Reclaim NS.Print and NS.Printf from AceConsole's embed, which stamps its own :Print and :Printf
+-- over ours (architecture-§2, anti-pattern #36). core/CoreSetup.lua stashed the real printers at
+-- NS.Util.print and NS.Util.printf, the same objects.
 if NS.Util and NS.Util.print then NS.Print = NS.Util.print end
+if NS.Util and NS.Util.printf then NS.Printf = NS.Util.printf end
 
 function addon:OnInitialize()
     NS:InitDB()

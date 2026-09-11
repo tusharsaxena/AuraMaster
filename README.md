@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-158%2F158_passing-green)
+![Tests](https://img.shields.io/badge/Tests-161%2F161_passing-green)
 
 ![Ka0s Aura Master](media/logos/auramaster.logo.png)
 
