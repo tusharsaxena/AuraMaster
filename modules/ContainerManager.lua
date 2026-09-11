@@ -40,21 +40,62 @@ end
 -- Instances follow the registry
 -- ---------------------------------------------------------------------------
 
---- Make the live instances match the stored registry: build one for every new container, destroy the
---- one for every container that is gone.
+-- TEARDOWN WAITS FOR COMBAT TO END. Destroying a container hides its anchor and the engine under it,
+-- which must not happen under lockdown. A container that leaves the registry while CM.MustDefer() is
+-- true is PARKED instead (disabled, nothing hidden) and kept here until the next FlushPending that
+-- may touch frames destroys it. A parked id that comes back first is revived, not rebuilt: a second
+-- AuraMasterAnchor<id> global would be a second frame for the same container.
+local retiring = {}       -- [id] = parked instance
+
+--- Put a parked instance back in the registry and let it draw again at once: Park disabled its
+--- engine, and the apply that re-enables it is itself deferred until combat ends.
+local function revive(id, inst)
+    retiring[id] = nil
+    inst.parked = nil
+    CM.instances[id] = inst
+    inst:ApplyVisibility()
+end
+
+--- Make the live instances match the stored registry: build (or revive) one for every new container,
+--- and destroy — or, under lockdown, park — the one for every container that is gone.
 function CM.Sync()
+    local defer = CM.MustDefer()
     local wanted = {}
     for _, c in ipairs(NS.Database.GetContainers()) do
-        wanted[c.id] = true
-        if not CM.instances[c.id] then CM.instances[c.id] = NS.Container.New(c.id) end
+        local id = c.id
+        wanted[id] = true
+        if not CM.instances[id] then
+            local parked = retiring[id]
+            if parked then
+                revive(id, parked)
+            else
+                CM.instances[id] = NS.Container.New(id)
+            end
+        end
     end
     for id, inst in pairs(CM.instances) do
         if not wanted[id] then
-            inst:Destroy()
             CM.instances[id] = nil
+            if defer then
+                inst:Park()
+                retiring[id] = inst
+            else
+                inst:Destroy()
+            end
         end
     end
 end
+
+--- Destroy every parked instance. Only called when frames may be touched.
+local function destroyParked()
+    for id, inst in pairs(retiring) do
+        inst:Destroy()
+        retiring[id] = nil
+    end
+end
+
+--- The parked instances, by id (a test seam; production never reads it).
+function CM.__retiring() return retiring end
 
 --- The registry changed: follow it, re-apply everything, and tell whoever is listening.
 function CM.Announce()
@@ -116,15 +157,17 @@ local function replaceAttached()
     end
 end
 
---- Apply everything pending, unless it has to wait. Returns how many containers were applied.
+--- Destroy what was parked, then apply everything pending — unless it has to wait. Returns how many
+--- containers were applied.
 function CM.FlushPending()
     scheduled = false
-    if not pendingAll and next(pending) == nil then return 0 end
+    if not pendingAll and next(pending) == nil and next(retiring) == nil then return 0 end
     if CM.MustDefer() then
         noteDeferred()
         return 0
     end
     deferNoticeShown = false
+    destroyParked()
 
     local t0 = Perf.on and debugprofilestop()
     local all, which = pendingAll, pending
@@ -178,16 +221,29 @@ function CM.UniqueName(base, exceptId)
     return base
 end
 
---- Create a container from the template plus `overrides`. Returns its id.
-function CM.Create(overrides)
-    local p = profile()
-    if not p then return nil, L["No profile is loaded."] end
+--- A new container's stored data: the template plus `overrides`, with a unique name. Returns the
+--- data and its id.
+local function newContainerData(overrides)
     local c, id = NS.Database.NewContainerData(overrides)
     c.name = CM.UniqueName(c.name ~= "Container" and c.name or L["Container %d"]:format(id))
     -- Offset a new container from the center by its id, so two new ones are not stacked exactly.
     if not (overrides and overrides.position) then
         c.position.y = -((id - 1) % 8) * 30
     end
+    return c, id
+end
+
+--- Create a container from the template plus `overrides`. Returns its id, or nil, a message and — for
+--- a refusal the caller should print gray — true. Refused under combat lockdown: a new container
+--- creates its anchor frame, which options-ui-§2 keeps out of combat. That covers `/am new`, the
+--- Containers page's New and Duplicate, and any later caller.
+function CM.Create(overrides)
+    if InCombatLockdown() then
+        return nil, L["cannot create a container during combat — a new display cannot be built until combat ends"], true
+    end
+    local p = profile()
+    if not p then return nil, L["No profile is loaded."] end
+    local c, id = newContainerData(overrides)
     p.containers[id] = c
     p.containerOrder[#p.containerOrder + 1] = id
     NS.Debug("Containers", "created %s '%s'", id, c.name)

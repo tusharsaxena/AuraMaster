@@ -107,7 +107,7 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine nothing is built and preview still works
 - container: deleting a container disables its engine and hides its anchor
 
-### test_containermanager.lua (9)
+### test_containermanager.lua (14)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -117,6 +117,11 @@ badge and any count quoted in the docs must agree with it.
 - manager: CopyFrom copies the chosen section, never the name or the position
 - manager: many apply requests in one frame schedule one pass
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
+- manager: a container deleted under lockdown is parked — disabled, nothing hidden — and destroyed after combat
+- manager: a parked id that comes back before combat ends reuses its instance and draws again
+- manager: a profile switch under lockdown parks departing containers and tears them down after combat
+- manager: a profile reset under lockdown parks departing containers and tears them down after combat
+- manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 
 ### test_anchors.lua (10)
@@ -153,7 +158,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 
-### test_slash.lua (11)
+### test_slash.lua (14)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -163,11 +168,14 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am set writes the selected container through the seam
 - slash: lock, unlock and preview drive the same settings the panel does
 - slash: /am delete removes a container by id
+- slash: /am delete in combat refuses in gray and keeps the container
+- slash: /am resetall in combat refuses in gray and resets nothing
+- slash: /am new in combat refuses in gray and creates nothing
 - slash: /am pick starts the frame picker for the selected container
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_optionssetup.lua (11)
+### test_optionssetup.lua (12)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -179,6 +187,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a page's Defaults button restores only the selected container
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
 - options: opening a page in combat refuses with the canonical gray line
+- options: the Delete and Reset-all popups refuse in combat
 - options: the degraded stub completes the load — every page's rows still register
 
 ### test_perf.lua (4)
@@ -234,12 +243,12 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 19 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 14 |
-| test_containermanager.lua | 9 |
+| test_containermanager.lua | 14 |
 | test_anchors.lua | 10 |
 | test_style.lua | 10 |
 | test_timedspells.lua | 5 |
-| test_slash.lua | 11 |
-| test_optionssetup.lua | 11 |
+| test_slash.lua | 14 |
+| test_optionssetup.lua | 12 |
 | test_perf.lua | 4 |
 | test_locale.lua | 2 |
 | test_docs.lua | 5 |
@@ -247,4 +256,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **161** |
+| **Total** | **170** |

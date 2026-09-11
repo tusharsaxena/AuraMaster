@@ -81,7 +81,11 @@ suite covers what only the client can show.
 30. Containers → **New container** → a player-buff bar container named *Container N* appears, offset
     from the last new one, and is selected.
 31. **Duplicate** → a *… (copy)* container with every setting, nudged 20 px; **Delete** → a confirmation
-    popup; **Yes** removes it and any container attached to it falls back to the screen.
+    popup; **Yes** removes it and any container attached to it falls back to the screen. In combat,
+    **New container**, **Duplicate** and `/am new` are refused with the gray "cannot create a container
+    during combat — a new display cannot be built until combat ends" line, and the Delete popup's
+    **Yes** and `/am delete` with the gray "cannot delete a container during combat — its display
+    cannot be torn down until combat ends" line; nothing is created or removed.
 32. **Copy settings from** → pick a source and *Bar style* → the selected container takes only the
     source's bar look; its name and position are unchanged.
 33. Rename one on the General tab (Enter to apply) → the handle label, every picker and `/am containers`
@@ -136,7 +140,11 @@ suite covers what only the client can show.
     encounter → the change waits until the key or encounter ends, even if you drop combat between
     pulls.
 47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
-    warning, and the panel does not pop open when combat ends.
+    warning, and the panel does not pop open when combat ends. `/am resetall`, and General → **Reset
+    all settings** → **Yes**, are refused with the gray "cannot reset settings during combat — the
+    containers cannot be rebuilt until combat ends" line. Switch to a profile without one of your
+    containers in combat → that container stops drawing, is torn down when combat ends, and no taint
+    warning appears.
 
 ## J. Blizzard frames
 

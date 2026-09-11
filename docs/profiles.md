@@ -44,6 +44,9 @@ NS.OnProfileChanged()
 - **A reset** empties the profile. `seeded` goes back to `false` with it, so the starter containers
   come back — a reset is "as installed", not "nothing".
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
+- **A switch, copy or reset in combat** cannot be refused, since AceDB fires it. A container the new
+  profile does not have is parked (its engine disabled, nothing hidden) and torn down after combat;
+  a container it adds gets a plain anchor frame now and its engine once combat ends.
 
 ## Reset all settings is a profile reset
 

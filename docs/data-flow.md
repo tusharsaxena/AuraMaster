@@ -125,7 +125,11 @@ Create, delete, duplicate, rename, copy-from and reset positions all live in
 `modules/ContainerManager.lua`, the one writer of the registry. A structural change calls `Announce`
 (instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`); copy-from and
 reset positions re-apply and announce without rebuilding the instance list. Deleting a container
-drops any container attached to it back to the screen. `CONTAINERS_CHANGED` re-renders an open
+drops any container attached to it back to the screen. Under `MustDefer`, an instance that leaves
+the registry is parked rather than destroyed: `Container:Park` disables its engine and hides only
+the preview and handle. The next `FlushPending` that may touch frames destroys every parked
+instance before it applies; a parked id that returns first is revived in place and redrawn at once.
+Create, delete and reset all are refused in combat on every surface this addon owns. `CONTAINERS_CHANGED` re-renders an open
 panel, because every banner lists containers.
 
 ## Learning timed buffs

@@ -176,6 +176,21 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
   `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:207`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
+- **Teardown under lockdown is parked, never hidden.** A container that leaves the registry while
+  `MustDefer` is true is parked (`Container:Park`): its engine is disabled through `SetEnabled`, its
+  preview and handle (our own frames) are hidden, and the anchor and engine ancestry are left alone.
+  The next `FlushPending` that may touch frames destroys it; if its id comes back first, the same
+  instance is revived and no second `AuraMasterAnchor<id>` is created.
+- **Registry verbs that create or destroy frames are refused in combat** with a gray line
+  (options-ui-§2): `/am new`, `/am delete`, `/am resetall`, the Containers page's New container,
+  Duplicate and Delete popup, and the General page's Reset-all popup. `ContainerManager.Create`
+  refuses itself, so every creating caller is covered.
+- **Reset all diverges from Profiles → Reset Profile (options-ui-§12) in combat.** Reset Profile is
+  AceDBOptions' own button and cannot be refused, so in combat it completes through the park path.
+  Reset all is refused by choice, a deliberate gate on a surface this addon owns; its line says only
+  what is true, that the containers cannot be rebuilt until combat ends.
+- **A profile switch, copy or reset in combat may create anchor frames.** Those are plain frames,
+  which is combat-legal; their engines are built by the deferred apply once combat ends.
 - **Every engine and button binding is `pcall`-guarded** (`callEngine`, `Style.Bind`), so a binding
   the client rejects costs that binding, never the engine's frame batch.
 - **Secret values never reach a string operation.** Only `modules/TimedSpells.lua` reads aura data,
@@ -197,6 +212,9 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   the set only grows until `/am forgettimed`. Because only buffs are scanned, the mode narrows
   nothing on a debuff container.
 - **Settings changes wait for secrecy and lockdown to lift.** The player is told once per deferral.
+- **A container deleted or switched away in combat draws nothing until combat ends, and is torn
+  down then.** Its frames stay parked in the meantime; creating, deleting and resetting from our own
+  surfaces are refused in combat instead.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
   one; WoW never frees a frame, so

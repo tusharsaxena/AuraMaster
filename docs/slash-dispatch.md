@@ -28,11 +28,11 @@ eight-or-more trigger (documentation-§3).
 | 4 | `get path` | library | `cli:CliGet` → `NS.GetSetting(path)`; also answers sub-tables such as `container.filter.whitelist` |
 | 5 | `set path value` | library | `cli:CliSet` → type-aware parse → `NS.SetByPath(path, value)`; an error from the seam is printed |
 | 6 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page |
-| 7 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12) |
+| 7 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); refused in combat with a gray notice |
 | 8 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
 | 9 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive |
-| 10 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it |
-| 11 | `delete id-or-name` | host | `ContainerManager.Delete(id)` |
+| 10 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
+| 11 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice |
 | 12 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
 | 13 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders |
 | 14 | `preview [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles |

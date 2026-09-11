@@ -338,8 +338,21 @@ function ContainerClass:Refresh()
     if self.engine then callEngine(self.engine, "UpdateAllAuras") end
 end
 
+--- Set the container aside under combat lockdown, when its anchor and the engine's ancestry must not
+--- be shown, hidden or re-anchored (events-frames-taint-§2): the engine is disabled — combat-legal,
+--- the same call ApplyVisibility makes — and only our own preview and handle are hidden.
+--- modules/ContainerManager.lua destroys a parked container once combat ends, or revives it if its
+--- id comes back first.
+function ContainerClass:Park()
+    if self.engine then callEngine(self.engine, "SetEnabled", false) end
+    NS.Preview.Hide(self)
+    if self.handle then self.handle:Hide() end
+    self.parked = true
+end
+
 --- Tear the container down for good: the engine is retired and the anchor hidden. Frames are never
---- destroyed in WoW, so this is as far as "delete" can go.
+--- destroyed in WoW, so this is as far as "delete" can go. Only ever reached out of lockdown; under
+--- lockdown the container is parked instead.
 function ContainerClass:Destroy()
     self:Retire()
     NS.Preview.Hide(self)

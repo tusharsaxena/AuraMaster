@@ -108,7 +108,15 @@ local function afterRegistryChange()
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
 end
 
+-- The gray combat refusal (options-ui-§2's canonical shape).
+local function refuse(line) printf("|cff808080%s|r", line) end
+
 function runResetAll()
+    -- Refused by choice, not because it is impossible: Profiles → Reset Profile cannot be refused and
+    -- completes through the parked teardown, but on a surface we own the rebuild waits for the player.
+    if InCombatLockdown() then
+        return refuse(L["cannot reset settings during combat — the containers cannot be rebuilt until combat ends"])
+    end
     -- The acknowledgment lives INSIDE the guard: on a load where settings/OptionsSetup.lua never
     -- ran there is nothing to delegate to, and printing it anyway would claim work that did not
     -- happen.
@@ -159,14 +167,20 @@ function runNew(rest)
         end
         for k, v in pairs(spec) do overrides[k] = v end
     end
-    local id, err = NS.ContainerManager.Create(overrides)
-    if not id then return print(err or L["Could not create a container"]) end
+    local id, err, refused = NS.ContainerManager.Create(overrides)
+    if not id then
+        if refused then return refuse(err) end
+        return print(err or L["Could not create a container"])
+    end
     NS.State.SetActiveContainer(id)
     afterRegistryChange()
     printf(L["Created %s"], describe(NS.Database.FindContainer(id)))
 end
 
 function runDelete(rest)
+    if InCombatLockdown() then
+        return refuse(L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
+    end
     local c = findContainer(rest)
     if not c then return print(L["No such container — /am containers lists them"]) end
     local name = c.name

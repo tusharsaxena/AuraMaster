@@ -115,6 +115,128 @@ test("manager: an apply under combat lockdown waits, says so once, and runs afte
     assertTrue(NS.ContainerManager.FlushPending() > 0, "the queued apply runs once combat ends")
 end)
 
+--- Count calls to `frame[method]`, still calling through. Returns a one-slot box.
+local function counted(frame, method)
+    local n, orig = { 0 }, frame[method]
+    frame[method] = function(self, ...)
+        n[1] = n[1] + 1
+        return orig(self, ...)
+    end
+    return n
+end
+
+--- Count CreateFrame calls whose name starts with `prefix`. Installed on the mock, which the loader
+--- resolves at call time.
+local function spyCreate(mocks, prefix)
+    local n, orig = { 0 }, mocks.CreateFrame
+    mocks.CreateFrame = function(frameType, name, ...)
+        if type(name) == "string" and name:sub(1, #prefix) == prefix then n[1] = n[1] + 1 end
+        return orig(frameType, name, ...)
+    end
+    return n
+end
+
+test("manager: a container deleted under lockdown is parked — disabled, nothing hidden — and destroyed after combat", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local inst = CM.instances[2]
+    local e = inst.engine
+    inst.anchor:Show()
+    local hides, clears = counted(inst.anchor, "Hide"), counted(inst.anchor, "ClearAllPoints")
+    local engineHides = counted(e, "Hide")
+    mocks.__lockdown = true
+    CM.Delete(2)
+    assertFalse(e.__enabled, "the engine is disabled, which is combat-legal")
+    -- red under: CM.Sync destroying instead of parking under MustDefer
+    assertTrue(inst.anchor:IsShown(), "the anchor is not hidden under lockdown")
+    assertEqual(hides[1], 0)
+    assertEqual(clears[1], 0)
+    assertEqual(engineHides[1], 0)
+    assertNil(CM.instances[2])
+    assertTrue(CM.__retiring()[2] == inst, "parked until combat ends")
+    mocks.__lockdown = false
+    CM.FlushPending()
+    assertTrue(hides[1] >= 1 and clears[1] >= 1, "torn down after combat")
+    assertTrue(engineHides[1] >= 1)
+    assertFalse(inst.anchor:IsShown())
+    assertNil(next(CM.__retiring()), "nothing left parked")
+end)
+
+test("manager: a parked id that comes back before combat ends reuses its instance and draws again", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local inst = CM.instances[2]
+    local e = inst.engine
+    local made = spyCreate(mocks, "AuraMasterAnchor2")
+    mocks.__lockdown = true
+    local c2 = NS.Database.DeepCopy(NS.Database.FindContainer(2))
+    CM.Delete(2)
+    local p = NS.db.profile
+    p.containers[2] = c2
+    table.insert(p.containerOrder, 2)
+    CM.Announce()
+    -- red under: CM.Sync calling NS.Container.New instead of reusing retiring[id]
+    assertEqual(made[1], 0, "no second AuraMasterAnchor2 global")
+    assertTrue(CM.instances[2] == inst, "the parked instance is back in the registry")
+    assertNil(inst.parked)
+    -- red under: revive without inst:ApplyVisibility()
+    assertTrue(e.__enabled, "a returning container draws again at once")
+    assertNil(CM.__retiring()[2])
+end)
+
+--- Create container 4 out of lockdown, then run `leave` under lockdown: id 4 departs (the new or
+--- reset profile seeds only 1-3) and must be parked, then torn down once combat ends.
+local function departsUnderLockdown(leave)
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local id = CM.Create({})
+    mocks.__fireTimers()
+    local inst4 = CM.instances[id]
+    assertEqual(id, 4)
+    assertTrue(inst4.engine ~= nil, "built out of lockdown")
+    inst4.anchor:Show()
+    local hides, clears = counted(inst4.anchor, "Hide"), counted(inst4.anchor, "ClearAllPoints")
+    mocks.__lockdown = true
+    leave(NS)
+    -- red under: CM.Sync ignoring MustDefer
+    assertEqual(hides[1], 0)
+    assertEqual(clears[1], 0)
+    assertTrue(inst4.anchor:IsShown())
+    assertFalse(inst4.engine.__enabled)
+    assertTrue(CM.__retiring()[4] == inst4)
+    mocks.__lockdown = false
+    CM.FlushPending()
+    assertTrue(hides[1] >= 1 and clears[1] >= 1, "torn down after combat")
+    assertNil(next(CM.__retiring()))
+end
+
+test("manager: a profile switch under lockdown parks departing containers and tears them down after combat", function()
+    departsUnderLockdown(function(NS) NS.db:SetProfile("Raid") end)
+end)
+
+test("manager: a profile reset under lockdown parks departing containers and tears them down after combat", function()
+    departsUnderLockdown(function(NS) NS.db:ResetProfile() end)
+end)
+
+test("manager: creating or duplicating a container in combat is refused and creates nothing", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local made = spyCreate(mocks, "AuraMasterAnchor")
+    local before = #NS.Database.GetContainers()
+    mocks.__lockdown = true
+    local id, err, refused = CM.Create({})
+    -- red under: CM.Create without its InCombatLockdown gate
+    assertNil(id)
+    assertTrue(type(err) == "string" and err:find("during combat", 1, true) ~= nil, tostring(err))
+    assertTrue(refused)
+    local dup, dupErr, dupRefused = CM.Duplicate(1)
+    assertNil(dup)
+    assertEqual(dupErr, err)
+    assertTrue(dupRefused)
+    assertEqual(#NS.Database.GetContainers(), before)
+    assertEqual(made[1], 0, "no anchor frame was created")
+end)
+
 test("manager: ResetPositions puts every container back on the screen, staggered", function()
     local NS = fresh()
     local c1 = NS.Database.FindContainer(1)

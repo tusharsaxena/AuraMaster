@@ -146,7 +146,9 @@ enchants with it, and the setting's description says so.
 - **`UnitAffectingCombat("player")`** answers General visibility (`Container:ShouldShow`) — the
   player's combat state, available at the `PLAYER_REGEN_DISABLED` edge.
 - **`InCombatLockdown()`** gates secure-adjacent writes: building or rebuilding an engine,
-  reparenting Blizzard's frames, starting a drag, the frame picker, opening a settings category.
+  reparenting Blizzard's frames, starting a drag, the frame picker, opening a settings category,
+  creating a container, and tearing one down. A container that leaves the registry in combat is
+  parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
   aura buttons (`modules/Container.lua:286-290`).
 

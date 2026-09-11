@@ -18,6 +18,7 @@ local H = NS.Helpers
 local C = NS.Constants
 local CM = NS.ContainerManager
 local print = NS.Print
+local printf = NS.Printf
 
 local PAGE = "containers"
 local GROUP = L["General"]
@@ -66,17 +67,23 @@ local function selectAndRefresh(id)
     H.SelectContainer(id)
 end
 
+-- A refusal (CM.Create's third return) is the gray combat line; any other error prints plain.
+local function sayError(err, refused)
+    if refused then return printf("|cff808080%s|r", err) end
+    print(err)
+end
+
 local function doNew()
-    local id, err = CM.Create({})
-    if not id then return print(err) end
+    local id, err, refused = CM.Create({})
+    if not id then return sayError(err, refused) end
     selectAndRefresh(id)
 end
 
 local function doDuplicate()
     local _, id = NS.ActiveContainer()
     if not id then return end
-    local newId, err = CM.Duplicate(id)
-    if not newId then return print(err) end
+    local newId, err, refused = CM.Duplicate(id)
+    if not newId then return sayError(err, refused) end
     selectAndRefresh(newId)
 end
 
@@ -88,6 +95,10 @@ StaticPopupDialogs["AURAMASTER_DELETE_CONTAINER"] = {
     whileDead    = true,
     hideOnEscape = true,
     OnAccept     = function(_, data)
+        -- The same gate as /am delete: a popup accepted after combat started must not tear down.
+        if InCombatLockdown() then
+            return printf("|cff808080%s|r", L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
+        end
         if data and CM.Delete(data) then H.RefreshAllPanels() end
     end,
 }

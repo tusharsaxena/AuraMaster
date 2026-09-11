@@ -93,6 +93,47 @@ test("slash: /am delete removes a container by id", function()
     assertEqual(#NS2.Database.GetContainers(), 2)
 end)
 
+local function grayLine(lines, fragment)
+    for _, l in ipairs(lines) do
+        if l:find("|cff808080", 1, true) and l:find(fragment, 1, true) then return true end
+    end
+    return false
+end
+
+test("slash: /am delete in combat refuses in gray and keeps the container", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    NS2.Slash:OnSlash("delete 3")
+    -- red under: runDelete without its InCombatLockdown gate
+    assertTrue(NS2.Database.FindContainer(3) ~= nil, "the container survives")
+    assertEqual(#NS2.Database.GetContainers(), 3)
+    assertTrue(grayLine(lines, "cannot delete a container during combat"), lines[#lines] or "")
+end)
+
+test("slash: /am resetall in combat refuses in gray and resets nothing", function()
+    local NS2, mocks = fresh()
+    local resets = 0
+    NS2.Helpers.RestoreAllDefaults = function() resets = resets + 1 end
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    NS2.Slash:OnSlash("resetall")
+    -- red under: runResetAll without its InCombatLockdown gate
+    assertEqual(resets, 0)
+    assertTrue(grayLine(lines, "cannot reset settings during combat"), lines[#lines] or "")
+end)
+
+test("slash: /am new in combat refuses in gray and creates nothing", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    NS2.Slash:OnSlash("new target debuffs icons")
+    assertEqual(#NS2.Database.GetContainers(), 3)
+    -- red under: runNew printing a refused err through the plain printer
+    assertTrue(grayLine(lines, "cannot create a container during combat"), lines[#lines] or "")
+    assertEqual(#lines, 1, "one line, not a gray one and a plain one")
+end)
+
 test("slash: /am pick starts the frame picker for the selected container", function()
     local NS2, mocks = fresh()
     NS2.Slash:OnSlash("select 2")
