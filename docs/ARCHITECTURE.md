@@ -102,10 +102,12 @@ copy between containers, a position reset and a delete's fallback to the screen 
 
 The registry (which containers exist, their order and the id counter: `containers` membership,
 `containerOrder`, `nextContainerId`) is not a settings path. No schema row addresses it, and none
-can, since a row is a leaf. Its only writers are `ContainerManager.Create`, `ContainerManager.Delete`,
-`ContainerManager.Duplicate` (through `Create`) and `Database.PrepareProfile`'s load repair
-(`normalizeKeys`). Those writes bypass `NS.SetByPath`, which is the `architecture-§5` row in
-Documented deviations.
+can, since a row is a leaf. Its writers are `ContainerManager.Create` (with
+`Database.NewContainerData` taking the id), `ContainerManager.Delete`, `ContainerManager.Duplicate`
+(through `Create`), and `Database.PrepareProfile`'s load repair and first-run seeding
+(`seedStarters`, `normalizeKeys`, `backfillContainers`, `rebuildOrder` and the `nextContainerId`
+bump). Those writes bypass `NS.SetByPath`, which is the `architecture-§5` row in Documented
+deviations.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
@@ -324,5 +326,5 @@ None.
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | The engine dresses buttons in initializeFrame and forbids restyling them while auras are secret (DenyTaintedAccessWhenAurasAreSecret), and every restyle waits out combat lockdown (`ContainerManager.MustDefer`), so a re-dress on an in-combat swap is impossible; audit docs/audits/2026-09-11 AM-03 | 2026-09-11 | The aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret |
-| `architecture-§5` | The container registry (`containers` membership, `containerOrder`, `nextContainerId`) is written outside `NS.SetByPath`: by `ContainerManager.Create`, `.Delete` and `.Duplicate` (through `Create`), and by `Database.PrepareProfile`'s load repair (`normalizeKeys`) | The registry is not addressable by any schema row, since a row is a leaf; membership changes are structural and go through ContainerManager's one registry writer, and the load repair only normalizes what AceDB loaded; review docs/reviews/2026-09-11 F-006 | 2026-09-11 | A schema row (or the seam) gains a registry address, or architecture-§5 scopes the rule to schema rows |
+| `architecture-§5` | The container registry (`containers` membership, `containerOrder`, `nextContainerId`) is written outside `NS.SetByPath`: by `ContainerManager.Create` (with `Database.NewContainerData` taking the id), `.Delete` and `.Duplicate` (through `Create`), and by `Database.PrepareProfile`'s load repair and first-run seeding (`seedStarters`, `normalizeKeys`, `backfillContainers`, `rebuildOrder` and the `nextContainerId` bump) | The registry is not addressable by any schema row, since a row is a leaf; membership changes are structural and go through ContainerManager, and the load repair normalizes what AceDB loaded and, on a brand-new profile, seeds the starters, before any reader sees the registry; follow-up to docs/reviews/2026-09-11 F-006, whose settings writes now go through the seam, leaving only the registry, which is not a settings path | 2026-09-11 | A schema row (or the seam) gains a registry address, or architecture-§5 scopes the rule to schema rows |
 | `documentation-§1` | README has no `## Screenshots` section (item 5) | Screenshots can only be captured in a live client and none exist yet; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20 | 2026-09-11 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when the section lands |
