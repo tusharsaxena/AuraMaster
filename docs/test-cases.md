@@ -153,9 +153,10 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (11)
+### test_style.lua (12)
 
 - style: an element's size comes from its style's settings
+- style: a stored-nil leaf falls back to the template's own value
 - preview: a column of bars grows down from the top left
 - preview: rows of icons growing left and up wrap after perLine
 - style: a restyle clears the additive bindings before adding them again
@@ -268,7 +269,7 @@ badge and any count quoted in the docs must agree with it.
 | test_container.lua | 16 |
 | test_containermanager.lua | 20 |
 | test_anchors.lua | 13 |
-| test_style.lua | 11 |
+| test_style.lua | 12 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
 | test_optionssetup.lua | 12 |
@@ -279,4 +280,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **193** |
+| **Total** | **194** |

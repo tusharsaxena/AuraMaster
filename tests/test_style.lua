@@ -43,6 +43,52 @@ test("style: an element's size comes from its style's settings", function()
     assertEqual(h, 20)
 end)
 
+test("style: a stored-nil leaf falls back to the template's own value", function()
+    -- Its own environment, so the template mutation below can never reach the shared one.
+    local NS2, m2 = dofile("tests/fresh_env.lua")()
+    local D = NS2.CONTAINER_TEMPLATE
+    local function build(over)
+        local c = NS2.Database.Merge(NS2.Database.DeepCopy(D), over)
+        c.bars.width, c.icons.height, c.layout.strata, c.bars.name.fontSize = nil, nil, nil, nil
+        return c
+    end
+    --- What the render path draws for the four nil leaves: bar width, icon height, the bar name's
+    --- font size, and the anchor's strata.
+    local function drawn()
+        local _, ih = NS2.Style.ElementSize(build({ style = "icons" }))
+        local bw = NS2.Style.ElementSize(build({ style = "bars" }))
+        local frame, c = m2.__stubFrame(), build({ style = "bars" })
+        NS2.Style.Element(frame, c, false)
+        local sizes = {}
+        -- name, time and stacks are one FontString in the kit (mock_base: CreateFontString aliases).
+        rawset(frame.__am.name, "SetFont", function(_, _, size) sizes[#sizes + 1] = size; return true end)
+        NS2.Style.Element(frame, c, false)
+        local inst = NS2.ContainerManager.instances[1]
+        inst:Cfg().layout.strata = nil
+        local strata
+        rawset(inst.anchor, "SetFrameStrata", function(_, v) strata = v end)
+        inst:Apply()
+        return bw, ih, sizes[1], strata
+    end
+    local function expectTemplate()
+        local bw, ih, fontSize, strata = drawn()
+        -- red under: a literal fallback left in ElementSize
+        assertEqual(bw, D.bars.width, "bar width")
+        assertEqual(ih, D.icons.height, "icon height")
+        assertEqual(fontSize, D.bars.name.fontSize, "bar name font size")
+        assertEqual(strata, D.layout.strata, "anchor strata")
+    end
+    expectTemplate()
+
+    -- The value is READ from the template, not restated beside it: move the template and the
+    -- fallback moves with it. The restore runs even when an assertion fails.
+    local saved = { D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize }
+    D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = 221, 33, "HIGH", 13
+    local ok, err = pcall(expectTemplate)
+    D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = saved[1], saved[2], saved[3], saved[4]
+    if not ok then error(err, 0) end
+end)
+
 test("preview: a column of bars grows down from the top left", function()
     local c = cfg({ style = "bars", layout = { axis = "vertical", growH = "right", growV = "down", spacing = 2 } })
     local point, x, y = NS.Preview.Offset(c, 1)

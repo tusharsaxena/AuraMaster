@@ -20,6 +20,7 @@ local _, NS = ...
 
 NS.Anchors = NS.Anchors or {}
 local Anchors = NS.Anchors
+local D = NS.CONTAINER_TEMPLATE
 
 -- Frame-mode containers whose frame did not exist yet, by container id.
 local pending = {}
@@ -49,7 +50,8 @@ end
 
 local function toScreen(anchor, cfg)
     local pos = cfg.position or {}
-    anchor:SetPoint(pos.point or "CENTER", UIParent, pos.relativePoint or pos.point or "CENTER",
+    anchor:SetPoint(pos.point or D.position.point, UIParent,
+        pos.relativePoint or pos.point or D.position.relativePoint,
         tonumber(pos.x) or 0, tonumber(pos.y) or 0)
 end
 
@@ -87,8 +89,8 @@ function Anchors.Place(container)
     local at = cfg.attach or {}
     local target, mode = targetFor(container, at)
     if target then
-        local ok = pcall(anchor.SetPoint, anchor, at.point or "TOPLEFT", target,
-            at.relativePoint or "BOTTOMLEFT", tonumber(at.x) or 0, tonumber(at.y) or 0)
+        local ok = pcall(anchor.SetPoint, anchor, at.point or D.attach.point, target,
+            at.relativePoint or D.attach.relativePoint, tonumber(at.x) or 0, tonumber(at.y) or 0)
         if ok then return mode end
         anchor:ClearAllPoints()
     end

@@ -20,6 +20,7 @@ local ContainerClass = {}
 ContainerClass.__index = ContainerClass
 
 local Perf = NS.Perf
+local D = NS.CONTAINER_TEMPLATE
 local HUGE = math.huge
 
 local function callEngine(engine, method, ...)
@@ -272,8 +273,8 @@ function ContainerClass:Apply()
     local L = cfg.layout or {}
     local p = NS.db.profile
     anchor:SetScale(math.max(0.1, (tonumber(L.scale) or 1) * (tonumber(p.scale) or 1)))
-    anchor:SetFrameStrata(L.strata or "MEDIUM")
-    anchor:SetFrameLevel(tonumber(L.level) or 5)
+    anchor:SetFrameStrata(L.strata or D.layout.strata)
+    anchor:SetFrameLevel(tonumber(L.level) or D.layout.level)
     self.placedAs = NS.Anchors.Place(self)
 
     if NS.Compat.HasAuraContainer() then

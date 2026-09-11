@@ -38,7 +38,9 @@ otherwise (`docs/profiles.md`).
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
 (`defaults/Profile.lua:85`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
-container also carries its own `id`.
+container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
+that is missing or garbage when a container is drawn falls back to the template's value for that same
+path, never to a number restated in `modules/`.
 
 ### Identity
 

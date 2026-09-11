@@ -17,6 +17,9 @@ local Style = NS.Style
 
 local C = NS.Constants
 local Perf = NS.Perf
+-- The one home for defaults (savedvariables-§2): a stored leaf that is missing or garbage falls back
+-- to the template's value for the same path, never to a number restated here.
+local D = NS.CONTAINER_TEMPLATE
 
 -- A flat one-pixel border, registered under a name the border dropdown can offer. It is not a file this
 -- addon ships: WHITE8X8 is a client texture, stretched into an edge of any thickness.
@@ -45,10 +48,11 @@ local FLAG_MAP = { NONE = "", OUTLINE = "OUTLINE", THICKOUTLINE = "THICKOUTLINE"
     MONOCHROME = "MONOCHROME", MONOCHROMEOUTLINE = "MONOCHROME,OUTLINE" }
 
 --- Apply one text block (the six canonical font leaves plus point / x / y / justify / show) to a
---- FontString parented under `anchorTo`.
-function Style.ApplyText(fs, t, anchorTo)
+--- FontString parented under `anchorTo`. `tdef` is the template's block for the same element, which
+--- the size, point and justify fall back to.
+function Style.ApplyText(fs, t, anchorTo, tdef)
     if not (fs and t) then return end
-    local size = tonumber(t.fontSize) or 11
+    local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
     local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
@@ -60,9 +64,9 @@ function Style.ApplyText(fs, t, anchorTo)
         fs:SetShadowOffset(0, 0)
     end
     fs:ClearAllPoints()
-    local point = t.point or "CENTER"
+    local point = t.point or tdef.point
     fs:SetPoint(point, anchorTo, point, tonumber(t.x) or 0, tonumber(t.y) or 0)
-    fs:SetJustifyH(t.justify or "CENTER")
+    fs:SetJustifyH(t.justify or tdef.justify)
     fs:SetWordWrap(false)
 end
 
@@ -177,10 +181,10 @@ end
 function Style.ElementSize(cfg)
     if cfg.style == "icons" then
         local ic = cfg.icons or {}
-        return tonumber(ic.width) or 32, tonumber(ic.height) or 32
+        return tonumber(ic.width) or D.icons.width, tonumber(ic.height) or D.icons.height
     end
     local b = cfg.bars or {}
-    return tonumber(b.width) or 220, tonumber(b.height) or 18
+    return tonumber(b.width) or D.bars.width, tonumber(b.height) or D.bars.height
 end
 
 --- Dress one element for `cfg` (a container's stored table). `engine` true binds the regions to the
@@ -210,16 +214,17 @@ function Style.ApplyBehavior(frame, cfg)
     -- One click phase only — never both. A button reassigned to a different aura between the press
     -- and the release would cancel the wrong one.
     Style.Bind(frame, "SetCancelAuraButtons", cancel and "RightButtonUp" or nil)
-    Style.Bind(frame, "SetTooltipAnchorPoint", b.tooltipAnchor or "ANCHOR_BOTTOMLEFT", 0, 0)
+    Style.Bind(frame, "SetTooltipAnchorPoint", b.tooltipAnchor or D.behavior.tooltipAnchor, 0, 0)
     Style.Bind(frame, "SetHideTooltipInCombat", b.tooltipInCombat == false)
 end
 
 --- Bind the duration text with the configured formatter and expiring color, both shared across every
---- button of the same look (formatterFor, curveFor).
-function Style.BindDurationText(frame, fs, s)
+--- button of the same look (formatterFor, curveFor). `sdef` is the template's style block (`bars` or
+--- `icons`) that `s` was copied from, which the threshold falls back to.
+function Style.BindDurationText(frame, fs, s, sdef)
     local opts = { textFormatter = formatterFor(s.timeFormat) }
     if s.expiringColorOn then
-        opts.textColor = curveFor(tonumber(s.expiringThreshold) or 5, s.expiringColor or NO_COLOR,
+        opts.textColor = curveFor(tonumber(s.expiringThreshold) or sdef.expiringThreshold, s.expiringColor or NO_COLOR,
             (s.time and s.time.fontColor) or NO_COLOR)
     end
     Style.Bind(frame, "SetDurationText", fs, opts)

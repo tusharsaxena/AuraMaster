@@ -19,6 +19,7 @@ local _, NS = ...
 
 local Style = NS.Style
 local C = NS.Constants
+local D = NS.CONTAINER_TEMPLATE
 
 Style.Bars = Style.Bars or {}
 local Bars = Style.Bars
@@ -66,7 +67,7 @@ end
 
 --- Lay the icon and the bar area out inside the element.
 local function layout(frame, am, b, h)
-    local iconPos = b.icon or "LEFT"
+    local iconPos = b.icon or D.bars.icon
     local iconSize = (tonumber(b.iconSize) or 0) > 0 and b.iconSize or h
     local gap = tonumber(b.iconGap) or 0
 
@@ -138,14 +139,14 @@ function Bars.Apply(frame, cfg, engine)
 
     wireFill(am, b)
     am.spark:SetShown(b.spark ~= false)
-    am.spark:SetSize(tonumber(b.sparkWidth) or 8, h * 2)
+    am.spark:SetSize(tonumber(b.sparkWidth) or D.bars.sparkWidth, h * 2)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))
 
     -- Text.
-    Style.ApplyText(am.name, b.name, am.bar)
-    Style.ApplyText(am.time, b.time, am.bar)
+    Style.ApplyText(am.name, b.name, am.bar, D.bars.name)
+    Style.ApplyText(am.time, b.time, am.bar, D.bars.time)
     local stackHost = (b.icon ~= "NONE") and am.icon or am.bar
-    Style.ApplyText(am.stacks, b.stacks, stackHost)
+    Style.ApplyText(am.stacks, b.stacks, stackHost, D.bars.stacks)
     -- The name stops short of the time text rather than running under it.
     if b.name and b.time and b.time.show ~= false then
         am.name:SetPoint("RIGHT", am.time, "LEFT", -4, 0)
@@ -172,7 +173,7 @@ function Bars.Bind(frame, am, cfg, b)
     })
     if b.icon ~= "NONE" then Style.Bind(frame, "SetIcon", am.icon) end
     if b.name == nil or b.name.show ~= false then Style.Bind(frame, "SetSpellName", am.name) end
-    if b.time == nil or b.time.show ~= false then Style.BindDurationText(frame, am.time, b) end
+    if b.time == nil or b.time.show ~= false then Style.BindDurationText(frame, am.time, b, D.bars) end
     if b.stacks == nil or b.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
     Style.Bind(frame, "ClearDispelTypeTextures")
