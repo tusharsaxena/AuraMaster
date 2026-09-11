@@ -54,15 +54,18 @@ end
 -- a profile with its own id 1, so an instance kept (or revived) under its id may be built for a
 -- different container than the one now stored there. Under CM.MustDefer() every such instance stays
 -- parked — engine disabled, nothing hidden, and ContainerClass:ShouldShow keeps it off through every
--- visibility pass — until the deferred apply rebuilds it for the new data and unparks it.
+-- visibility pass — until the deferred apply rebuilds it for the new data and unparks it. An
+-- instance a profile change sends to `retiring` is marked `staleData` too: a reset rewinds the id
+-- counter, so a later Create or Duplicate in the same window can hand its id out again.
 local retiring = {}       -- [id] = parked instance
 
 --- Put a parked instance back in the registry. It draws again at once (Park disabled its engine;
---- the apply that re-enables it is itself deferred) unless `hold` keeps it parked: a profile change
---- under MustDefer, when the data under its id may be another container's.
+--- the apply that re-enables it is itself deferred) unless it must stay parked: `hold` (a profile
+--- change under MustDefer) or `staleData` (a profile change parked it), when the data under its id
+--- may be another container's.
 local function revive(id, inst, hold)
     retiring[id] = nil
-    inst.parked = hold or nil
+    inst.parked = (hold or inst.staleData) or nil
     CM.instances[id] = inst
     inst:ApplyVisibility()
 end
@@ -95,6 +98,7 @@ function CM.Sync(profileChanged)
             CM.instances[id] = nil
             if defer then
                 inst:Park()
+                if profileChanged then inst.staleData = true end
                 retiring[id] = inst
             else
                 inst:Destroy()

@@ -415,6 +415,39 @@ test("manager: a parked id revived by a profile change in combat stays parked un
     assertTrue(inst4.engine.__enabled, "drawing again after the deferred apply")
 end)
 
+test("manager: an id a later Create reuses after a profile reset while auras are secret stays parked until the deferred apply", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local id = CM.Create({})
+    mocks.__fireTimers()
+    assertEqual(id, 4)
+    assertTrue(NS.SetByPath("container.unit", "focus", id))
+    mocks.__fireTimers()
+    local inst4 = CM.instances[4]
+    local e = inst4.engine
+    assertEqual(inst4.unit, "focus")
+    assertTrue(e.__enabled, "drawing for the old container 4")
+    local made = spyCreate(mocks, "AuraMasterAnchor4")
+    -- Out of combat, but auras are secret (between pulls in a key): Create is allowed, applies wait.
+    mocks.__aurasSecret, mocks.__lockdown = true, false
+    NS.db:ResetProfile()
+    assertTrue(CM.__retiring()[4] == inst4, "parked: the reset profile has no container 4")
+    assertEqual(CM.Create({}), 4, "the reset counter hands id 4 out again")
+    assertTrue(CM.instances[4] == inst4, "revived, not rebuilt")
+    assertEqual(made[1], 0)
+    assertEqual(NS.Database.FindContainer(4).unit, "player")
+    -- red under: revive ignoring a profile-change park
+    assertFalse(e.__enabled, "the focus engine does not draw under the new container 4")
+    NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
+    assertFalse(e.__enabled, "a visibility pass does not re-enable it")
+    mocks.__aurasSecret = false
+    NS.addon:OnRestrictionChanged()
+    assertTrue(CM.instances[4] == inst4)
+    assertNil(inst4.parked, "the deferred apply unparks it")
+    assertEqual(inst4.unit, "player", "rebuilt for the new container 4")
+    assertTrue(inst4.engine.__enabled, "and drawing again")
+end)
+
 test("manager: creating or duplicating a container in combat is refused and creates nothing", function()
     local NS, mocks = fresh()
     local CM = NS.ContainerManager

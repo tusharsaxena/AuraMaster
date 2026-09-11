@@ -19,12 +19,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:445
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:449
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:195
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:199
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -151,7 +151,9 @@ the preview and handle. The next `FlushPending` that may touch frames destroys e
 instance before it applies; a parked id that returns first is revived in place and redrawn at once.
 A profile switch, copy or reset (`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception: ids
 are reused across profiles, so under `MustDefer` every kept or revived instance is parked, and
-`Container:ShouldShow` keeps it off until the deferred apply rebuilds it for the new data.
+`Container:ShouldShow` keeps it off until the deferred apply rebuilds it for the new data. One that
+leaves the registry on a profile change is marked `staleData` as it parks, so a Create or Duplicate
+that reuses its id before that apply (a reset rewinds the id counter) revives it still parked.
 Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is
 Profiles → Reset Profile, so in combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open
 panel, because every banner lists containers.

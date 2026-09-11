@@ -118,8 +118,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:238` — a coalesced panel re-render (every banner lists containers) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:445` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:452` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:271` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:449` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:456` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none | `modules/ContainerManager.lua` `CM.Init` — `RequestApply()` over every container (their excluded ids moved) |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -187,7 +187,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:171-175`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:145`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:149`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
   button's ancestry (`modules/Container.lua:366`).
@@ -205,7 +205,9 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   reseeds the starters from id 1), so an instance kept or revived under its id by a switch, copy or
   reset may be built for another container. Under `MustDefer`, `CM.Sync(true)` parks each one
   (engine disabled, nothing hidden); `Container:ShouldShow` keeps a parked instance off through every
-  visibility pass, and the deferred apply rebuilds it for the new data and unparks it.
+  visibility pass, and the deferred apply rebuilds it for the new data and unparks it. An instance a
+  profile change parks because the new profile lacks its id is marked `staleData`, so a later Create
+  or Duplicate that reuses the id (a reset rewinds the counter) revives it still parked too.
 - **Registry verbs that create or destroy frames are refused in combat** with a gray line
   (options-ui-§2): `/am new`, `/am delete`, and the Containers page's New container, Duplicate and
   Delete popup. `ContainerManager.Create` refuses itself, so every creating caller is covered.
@@ -249,7 +251,9 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **After a profile switch, copy or reset in combat, a container whose id the new profile shares
   draws nothing until combat ends** (or, while aura information is withheld, until that ends). Its
   engine was built for the old container, so it stays parked rather than show stale auras under the
-  new container's name, and the deferred apply rebuilds it.
+  new container's name, and the deferred apply rebuilds it. The same goes for a container a Create
+  or Duplicate adds under an id the profile change just retired: while aura information is withheld
+  out of combat it draws nothing until that ends.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
   one; WoW never frees a frame, so

@@ -323,7 +323,7 @@ function ContainerClass:Apply()
     self.previewDirty = true
     -- Built for the data now stored under this id, so a container parked by a profile change in
     -- combat (modules/ContainerManager.lua's CM.Sync) may draw again.
-    self.parked = nil
+    self.parked, self.staleData = nil, nil
     self:ApplyVisibility()
     if t0 then Perf.Note("applyContainer", debugprofilestop() - t0, "applyPass") end
     return plan
