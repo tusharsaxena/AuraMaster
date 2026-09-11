@@ -277,13 +277,26 @@ local function placeHandle(container, cfg)
     return width - w
 end
 
+--- Set the anchor's clamp insets only when they change. This runs on every visibility pass, and a
+--- pass that moves nothing must cost nothing: no engine call, no allocation after the first set.
+local function setClamp(container, l, r, t, b)
+    local c = container.clampInsets
+    if c and c[1] == l and c[2] == r and c[3] == t and c[4] == b then return end
+    if not c then
+        c = {}
+        container.clampInsets = c
+    end
+    c[1], c[2], c[3], c[4] = l, r, t, b
+    container.anchor:SetClampRectInsets(l, r, t, b)
+end
+
 --- The anchor is clamped to the screen; while its handle shows, the clamp rect reaches over the strip
 --- too, so the handle cannot be dragged off-screen. Never in combat: the anchor parents an aura engine,
 --- and no layout work touches it under lockdown. The next visibility pass after combat catches up.
 local function clampToHandle(container, cfg, overhang)
     if InCombatLockdown() then return end
     if not overhang then
-        container.anchor:SetClampRectInsets(0, 0, 0, 0)
+        setClamp(container, 0, 0, 0, 0)
         return
     end
     local growH, growV = NS.Container.Growth(cfg.layout or {})
@@ -292,7 +305,7 @@ local function clampToHandle(container, cfg, overhang)
     local right = (growH == "right") and overhang or 0
     local top = (growV == "down") and reach or 0
     local bottom = (growV == "up") and -reach or 0
-    container.anchor:SetClampRectInsets(left, right, top, bottom)
+    setClamp(container, left, right, top, bottom)
 end
 
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the

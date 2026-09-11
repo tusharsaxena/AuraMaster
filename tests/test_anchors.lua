@@ -275,6 +275,26 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     assertNil(insets, "the anchor parents an aura engine: no layout work on it in combat")
 end)
 
+test("handle: a visibility pass that changes nothing re-sets no clamp insets", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    recordedHandle(mocks, NS, inst)
+    local calls = 0
+    rawset(inst.anchor, "SetClampRectInsets", function() calls = calls + 1 end)
+    NS.Anchors.UpdateHandle(inst, false)
+    NS.Anchors.UpdateHandle(inst, false)
+    NS.Anchors.UpdateHandle(inst, false)
+    -- red under: clampToHandle setting the insets on every pass instead of only when they change
+    assertTrue(calls <= 1, "three locked passes re-set the clamp at most once, got " .. calls)
+    NS.Anchors.UpdateHandle(inst, true)
+    local shown = calls
+    assertTrue(shown > 0, "showing the handle extends the clamp")
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(calls, shown, "an unchanged shown handle re-sets nothing")
+    NS.Anchors.UpdateHandle(inst, false)
+    assertEqual(calls, shown + 1, "hiding restores the insets, once")
+end)
+
 test("handle: the help mark carries the tooltip and right-click opens the settings on this container", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[2]

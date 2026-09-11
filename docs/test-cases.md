@@ -160,7 +160,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 
-### test_anchors.lua (20)
+### test_anchors.lua (21)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -174,6 +174,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: above the anchor when auras grow down, below when up, edge-aligned where they start
 - handle: at least as wide as its container's element, and as its label with room for the help mark
 - handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
+- handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: without the media library the help mark falls back to Blizzard's information icon
@@ -318,7 +319,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 37 |
-| test_anchors.lua | 20 |
+| test_anchors.lua | 21 |
 | test_style.lua | 18 |
 | test_timedspells.lua | 10 |
 | test_slash.lua | 21 |
@@ -330,4 +331,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **244** |
+| **Total** | **245** |
