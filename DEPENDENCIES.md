@@ -16,16 +16,23 @@ marked as such rather than listed as a requirement.
 ## Runtime (in-game) — what a player needs
 
 - **World of Warcraft (Retail).** Single `## Interface: 120100` line in `AuraMaster.toc:1` — Retail
-  only. The addon needs the 12.1 aura container engine: `core/Compat.lua:19`
-  (`Compat.HasAuraContainer`) checks for it, and `modules/ContainerManager.lua:407` prints a one-line
-  notice and draws nothing on a client without it.
+  only. The addon needs the 12.1 aura container engine: `CM.Init` asks
+  `Compat.EnsureAuraContainer` (`core/Compat.lua:28`), which loads Blizzard's on-demand aura
+  container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:19`). On a client
+  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:407`) and draws
+  nothing.
+- **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
+  `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
+  falls back to the deprecated global `GetAddOnMetadata`; the TOC is Retail-only, where `C_AddOns`
+  always exists.
 - **Nothing else.** The TOC declares no `## Dependencies`. Every library it loads — LibStub,
   CallbackHandler-1.0, the Ace3 modules, LibKa0s, LibSharedMedia-3.0 and
   AceGUI-3.0-SharedMediaWidgets — is vendored under `libs/` and listed in the `# Libraries` block
   (`AuraMaster.toc:15-30`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
   ordering, not as things to download (library-stack).
 - **No optional integration.** Nothing in the addon checks whether another addon is loaded before
-  using it. `Compat.IsAddOnLoaded` (`core/Compat.lua:206`) exists, but only as a shim; the frame
+  using it. The only add-on-loaded check is `Compat.EnsureAuraContainer`'s own
+  (`core/Compat.lua:28`), and it asks only about Blizzard's `Blizzard_AuraContainer`. The frame
   anchor re-resolves on every `ADDON_LOADED` (`core/AuraMaster.lua:105`) whatever the addon is.
 
 ## Development — the contributor toolchain
