@@ -72,7 +72,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor; left-click picks, right-click or Escape cancels |
 | `modules/BlizzardFrames.lua` | Reparents `BuffFrame`/`DebuffFrame` to a hidden parent and back, out of combat only |
 | `modules/Container.lua` | One live container: its anchor and handle, building, updating or retiring its engine, restyling, the show ladder; bucket `applyContainer` |
-| `modules/ContainerManager.lua` | The registry's one writer (create, delete, rename, duplicate, copy-from, reset positions), the coalesced and deferred apply, visibility and unit refresh; buckets `applyPass`, `visibilityPass` |
+| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply, visibility and unit refresh; buckets `applyPass`, `visibilityPass` |
 
 ## `settings/` (TOC order)
 

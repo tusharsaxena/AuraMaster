@@ -93,7 +93,15 @@ Almost every row belongs to one container, so container rows use a **relative pa
 (`enabled`, `hideBlizzardBuffs`). A row's `default` is never typed in a page file —
 `NS.RegisterSchemaRows` stamps it from `defaults/Profile.lua`, and `NS.ValidateSchema` proves every
 path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`,
-`.categorySpells`) are written through the same seam and normalized there.
+`.categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
+`.position`, `.bars`, `.icons`) are written through the same seam and normalized there. A drag, a
+copy between containers, a position reset and a delete's fallback to the screen all write that way.
+
+The registry (which containers exist, their order and the id counter: `containers` membership,
+`containerOrder`, `nextContainerId`) is not a settings path. No schema row addresses it, and none
+can, since a row is a leaf. Its only writers are `ContainerManager.Create`, `ContainerManager.Delete`,
+`ContainerManager.Duplicate` (through `Create`) and `Database.PrepareProfile`'s load repair
+(`normalizeKeys`).
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
@@ -106,7 +114,7 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, copy-from, reset positions, profile change | none | `settings/OptionsSetup.lua:237` — a coalesced panel re-render (every banner lists containers) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:237` — a coalesced panel re-render (every banner lists containers) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:255` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:291` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:295` — `ApplyVisibility()` over every container |
 

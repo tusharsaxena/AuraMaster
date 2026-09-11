@@ -111,7 +111,7 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine nothing is built and preview still works
 - container: deleting a container disables its engine and hides its anchor
 
-### test_containermanager.lua (19)
+### test_containermanager.lua (20)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -120,6 +120,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: names that differ only in case are not unique
 - manager: Duplicate copies every setting under a new id and name, offset on screen
 - manager: CopyFrom copies the chosen section, never the name or the position
+- manager: CopyFrom and ResetPositions write through the seam, send no CONTAINERS_CHANGED, and report a rejected write
 - manager: many apply requests in one frame schedule one pass
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
 - manager: /am preview, /am lock and a rename under lockdown print no deferral notice
@@ -133,13 +134,14 @@ badge and any count quoted in the docs must agree with it.
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 
-### test_anchors.lua (10)
+### test_anchors.lua (11)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
 - anchors: a named frame that does not exist yet waits, and attaches once it does
 - anchors: a forbidden frame, or something that is not a frame, is never a target
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
+- anchors: a drag saves the position in one write
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
 - picker: a forbidden frame under the cursor ends the walk without calling its methods
 - picker: it arms on release, then a left-click on a named frame picks it
@@ -254,8 +256,8 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 23 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 14 |
-| test_containermanager.lua | 19 |
-| test_anchors.lua | 10 |
+| test_containermanager.lua | 20 |
+| test_anchors.lua | 11 |
 | test_style.lua | 10 |
 | test_timedspells.lua | 5 |
 | test_slash.lua | 15 |
@@ -267,4 +269,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **181** |
+| **Total** | **183** |

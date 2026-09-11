@@ -137,9 +137,12 @@ addon-owned button per placeholder aura from a pool, dresses it through the same
 
 Create, delete, duplicate, rename, copy-from and reset positions all live in
 `modules/ContainerManager.lua`, the one writer of the registry. A structural change calls `Announce`
-(instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`); copy-from and
-reset positions re-apply and announce without rebuilding the instance list. Deleting a container
-drops any container attached to it back to the screen. Under `MustDefer`, an instance that leaves
+(instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`). Copy-from and
+reset positions are settings writes, not registry changes: each section they replace is one
+whole-section write through `NS.SetByPath`, which announces `CONFIG_CHANGED`, and the applies those
+writes queue coalesce into one pass. Copy-from stops at the first write the seam rejects and reports
+it. Deleting a container drops any container attached to it back to the screen, through the same
+seam. Under `MustDefer`, an instance that leaves
 the registry is parked rather than destroyed: `Container:Park` disables its engine and hides only
 the preview and handle. The next `FlushPending` that may touch frames destroys every parked
 instance before it applies; a parked id that returns first is revived in place and redrawn at once.

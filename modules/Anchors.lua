@@ -116,19 +116,19 @@ function Anchors.Pending()
     return out
 end
 
+--- An offset to one decimal place: what a drag stores.
+local function round(v) return math.floor((tonumber(v) or 0) * 10 + 0.5) / 10 end
+
 --- After a drag: read the anchor's point back (it is attached to UIParent and holds nothing secret)
 --- and store it through the single write seam, on THIS container rather than the settings panel's
---- active one.
+--- active one. One whole-section write: the position lands whole or not at all, announced once.
 function Anchors.SavePosition(container)
     local anchor = container.anchor
     if not (anchor and anchor.GetPoint) then return end
     local point, _, relPoint, x, y = anchor:GetPoint(1)
     if not point then return end
-    local round = function(v) return math.floor((tonumber(v) or 0) * 10 + 0.5) / 10 end
-    NS.SetByPath("container.position.point", point, container.id)
-    NS.SetByPath("container.position.relativePoint", relPoint or point, container.id)
-    NS.SetByPath("container.position.x", round(x), container.id)
-    NS.SetByPath("container.position.y", round(y), container.id)
+    NS.SetByPath("container.position",
+        { point = point, relativePoint = relPoint or point, x = round(x), y = round(y) }, container.id)
 end
 
 -- ---------------------------------------------------------------------------

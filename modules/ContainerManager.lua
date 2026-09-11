@@ -282,7 +282,7 @@ function CM.Delete(id)
     end
     for _, c in pairs(p.containers) do
         if c.attach and c.attach.mode == "container" and tonumber(c.attach.container) == id then
-            c.attach.mode = "screen"
+            NS.SetByPath("container.attach.mode", "screen", c.id)
         end
     end
     if NS.State and NS.State.activeContainerId == id then NS.State.SetActiveContainer(nil) end
@@ -328,38 +328,51 @@ end
 -- What "copy settings from" copies. Identity (name), placement (position, attach) and the registry's
 -- own id are never copied: copying a container onto another is about how it looks and what it shows.
 CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons" }
+-- What "everything" copies: every section, then what the container IS.
+local COPY_ALL = { "unit", "auraType", "style" }
+for i = #CM.COPY_SECTIONS, 1, -1 do table.insert(COPY_ALL, 1, CM.COPY_SECTIONS[i]) end
 
---- Copy `section` (or every copyable section when nil) from container `srcId` onto `dstId`.
+--- Write each of `keys` from `src` onto container `dstId` through the write seam, stopping at the
+--- first write it rejects. Returns ok, err.
+local function copyThrough(src, dstId, keys)
+    for _, key in ipairs(keys) do
+        if src[key] ~= nil then
+            local ok, err = NS.SetByPath("container." .. key, NS.Database.DeepCopy(src[key]), dstId)
+            if not ok then return false, err end
+        end
+    end
+    return true
+end
+
+--- Copy `section` (or every copyable section, and what the container is, when nil) from container
+--- `srcId` onto `dstId`. Settings writes, not a registry change: each lands through the write seam,
+--- which validates it and announces it, so nothing here sends CONTAINERS_CHANGED. Returns ok, err —
+--- false on the first write the seam rejects (a source is stored data, so that means corrupt data).
 function CM.CopyFrom(srcId, dstId, section)
     local src, dst = NS.Database.FindContainer(srcId), NS.Database.FindContainer(dstId)
     if not (src and dst) then return false, L["No such container."] end
     if srcId == dstId then return false, L["A container cannot copy itself."] end
-    local sections = section and { section } or CM.COPY_SECTIONS
-    for _, key in ipairs(sections) do
-        if src[key] ~= nil then dst[key] = NS.Database.DeepCopy(src[key]) end
-    end
-    if not section then
-        dst.unit, dst.auraType, dst.style = src.unit, src.auraType, src.style
-    end
+    local ok, err = copyThrough(src, dstId, section and { section } or COPY_ALL)
+    if not ok then return false, err end
     NS.Debug("Containers", "copied %s from %s to %s", section or "all", srcId, dstId)
-    -- A wholesale replacement, not a setting: CONFIG_CHANGED has one sender (the write seam), so
-    -- this applies its own container and announces on the registry's message.
-    CM.RequestApply(dstId)
-    NS.bus:SendMessage(NS.MSG.CONTAINERS_CHANGED)
     return true
 end
 
 --- Put every container back at its default screen position, staggered so they do not overlap. The
---- Master controls tab's Reset position and `/am resetposition` both land here.
+--- Master controls tab's Reset position and `/am resetposition` both land here. Each position is one
+--- whole-section write through the seam; the applies those writes queue coalesce into one pass.
 function CM.ResetPositions()
     local template = NS.CONTAINER_TEMPLATE.position
-    for i, c in ipairs(NS.Database.GetContainers()) do
-        c.position = NS.Database.DeepCopy(template)
-        c.position.y = -(i - 1) * 30
-        if c.attach then c.attach.mode = "screen" end
+    local containers = NS.Database.GetContainers()
+    for i, c in ipairs(containers) do
+        local pos = NS.Database.DeepCopy(template)
+        pos.y = -(i - 1) * 30
+        NS.SetByPath("container.position", pos, c.id)
+        if c.attach and c.attach.mode ~= "screen" then
+            NS.SetByPath("container.attach.mode", "screen", c.id)
+        end
     end
-    CM.RequestApply()
-    NS.bus:SendMessage(NS.MSG.CONTAINERS_CHANGED)
+    NS.Debug("Containers", "reset %s position(s)", #containers)
 end
 
 -- ---------------------------------------------------------------------------

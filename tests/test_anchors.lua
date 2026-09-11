@@ -72,6 +72,21 @@ test("anchors: a drag saves the dragged container's position, rounded, whatever 
     assertEqual(NS.Database.FindContainer(2).position.x, NS.STARTER_CONTAINERS[2].position.x)
 end)
 
+test("anchors: a drag saves the position in one write", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    inst.anchor.GetPoint = function() return "TOP", nil, "TOP", 5, -30 end
+    local writes, paths = 0, {}
+    NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function(_, p)
+        writes = writes + 1
+        paths[#paths + 1] = p.path
+    end)
+    NS.Anchors.SavePosition(inst)
+    -- red under: four leaf writes
+    assertEqual(writes, 1, table.concat(paths, ","))
+    assertEqual(paths[1], "container.position")
+end)
+
 -- ── the frame picker ──────────────────────────────────────────────────────────────────────────
 
 test("picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves", function()

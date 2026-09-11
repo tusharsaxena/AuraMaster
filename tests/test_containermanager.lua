@@ -98,6 +98,24 @@ test("manager: CopyFrom copies the chosen section, never the name or the positio
     assertEqual(dst.style, src.style, "copying everything copies what it is, too")
 end)
 
+test("manager: CopyFrom and ResetPositions write through the seam, send no CONTAINERS_CHANGED, and report a rejected write", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    local changed = countMessages(NS, NS.MSG.CONTAINERS_CHANGED)
+    local config = countMessages(NS, NS.MSG.CONFIG_CHANGED)
+    assertTrue(CM.CopyFrom(2, 1))
+    CM.ResetPositions()
+    assertTrue(config[1] > 0, "a copy and a reset are settings writes")
+    -- red under: restoring the direct CONTAINERS_CHANGED send
+    assertEqual(changed[1], 0, "the registry did not change")
+    NS.Database.FindContainer(2).filter.whitelist = "garbage"
+    local ok, err = CM.CopyFrom(2, 1, "filter")
+    -- red under: CopyFrom ignoring SetByPath's result
+    assertFalse(ok, "a write the seam rejects fails the copy")
+    assertTrue(type(err) == "string" and err ~= "", tostring(err))
+    assertEqual(type(NS.Database.FindContainer(1).filter.whitelist), "table", "nothing was stored")
+end)
+
 test("manager: many apply requests in one frame schedule one pass", function()
     local NS, mocks = fresh()
     local before = #mocks.__timers

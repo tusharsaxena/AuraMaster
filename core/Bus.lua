@@ -29,8 +29,8 @@ end
 -- every container and nothing in this addon reads an aura to pass on (docs/data-flow.md).
 NS.MSG = {
     -- Sender: modules/ContainerManager.lua. Payload: none. A container was created, deleted,
-    -- renamed or duplicated, one container's settings were replaced wholesale (copy-from, reset
-    -- positions), or the profile under the registry changed.
+    -- renamed or duplicated, or the profile under the registry changed. Copying settings between
+    -- containers and resetting positions are settings writes, announced by CONFIG_CHANGED.
     CONTAINERS_CHANGED = "Ka0s_AuraMaster_ContainersChanged",
     -- Sender: settings/Schema.lua (the single write seam). Payload: ({ section, containerId, path }).
     -- A setting changed; `containerId` is nil for an addon-wide row, and `path` is the row (or

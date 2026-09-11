@@ -166,7 +166,9 @@ local function renderCopy(ctx)
         onClick = function()
             if not (copySource and activeId) then return end
             local ok, err = CM.CopyFrom(copySource, activeId, copySection ~= "all" and copySection or nil)
-            if not ok then print(err) end
+            -- The Filters page's spell lists are not scalars, so the seam's in-place refresh would
+            -- leave them stale: re-render, as the Delete popup does.
+            if ok then H.RefreshAllPanels() else print(err) end
         end,
     }, nil)
 end
