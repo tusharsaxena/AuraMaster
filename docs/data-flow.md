@@ -19,7 +19,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:468
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:469
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
@@ -159,8 +159,8 @@ are reused across profiles, so under `MustDefer` every kept or revived instance 
 leaves the registry on a profile change is marked `staleData` as it parks, so a Create or Duplicate
 that reuses its id before that apply (a reset rewinds the id counter) revives it still parked.
 Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is
-Profiles → Reset Profile, so in combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open
-panel, because every banner lists containers.
+Profiles → Reset Profile, so in combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders
+an open panel, because every banner lists containers.
 
 ## Learning timed buffs
 
