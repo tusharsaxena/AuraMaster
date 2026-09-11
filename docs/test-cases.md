@@ -94,7 +94,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
 
-### test_container.lua (15)
+### test_container.lua (16)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -111,6 +111,7 @@ badge and any count quoted in the docs must agree with it.
 - container: Blizzard's load-on-demand aura container is loaded before the first engine
 - container: on a client without the aura engine nothing is built and preview still works
 - container: deleting a container disables its engine and hides its anchor
+- container: an anchor is movable but never saved by the client's layout cache
 
 ### test_containermanager.lua (20)
 
@@ -135,11 +136,13 @@ badge and any count quoted in the docs must agree with it.
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 
-### test_anchors.lua (11)
+### test_anchors.lua (13)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
 - anchors: a named frame that does not exist yet waits, and attaches once it does
+- anchors: a frame that appears during combat is attached when combat ends
+- anchors: a screen fallback and a skipped resolve are traced
 - anchors: a forbidden frame, or something that is not a frame, is never a target
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - anchors: a drag saves the position in one write
@@ -261,9 +264,9 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 10 |
 | test_schema.lua | 23 |
 | test_filtercompiler.lua | 27 |
-| test_container.lua | 15 |
+| test_container.lua | 16 |
 | test_containermanager.lua | 20 |
-| test_anchors.lua | 11 |
+| test_anchors.lua | 13 |
 | test_style.lua | 11 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
@@ -275,4 +278,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **189** |
+| **Total** | **192** |

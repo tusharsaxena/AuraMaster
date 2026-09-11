@@ -213,3 +213,9 @@ test("container: deleting a container disables its engine and hides its anchor",
     assertFalse(inst.anchor:IsShown())
     assertNil(NS.ContainerManager.instances[2])
 end)
+
+test("container: an anchor is movable but never saved by the client's layout cache", function()
+    local NS = fresh()
+    -- A position the client saved would be restored at login over the stored one.
+    assertTrue(NS.ContainerManager.instances[1].anchor.__dontSavePosition == true)
+end)

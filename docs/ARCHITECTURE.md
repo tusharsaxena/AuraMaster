@@ -160,7 +160,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 |---|---|---|
 | `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:42` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:43` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
-| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:44` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `BlizzardFrames.Apply` |
+| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:44` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:45-46` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`) |
 | `UNIT_PET` | `core/AuraMaster.lua:47` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`) |
 | `ADDON_LOADED` | `core/AuraMaster.lua:48` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
@@ -178,6 +178,10 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
   Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:37-40`).
+- **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
+  with `StartMoving`), and the client saves a movable frame's position and restores it at login.
+  `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
+  position an anchor ever has.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:126-130`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`

@@ -49,6 +49,55 @@ test("anchors: a named frame that does not exist yet waits, and attaches once it
     assertEqual(NS.Anchors.Place(inst), "frame")
 end)
 
+test("anchors: a frame that appears during combat is attached when combat ends", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    NS.SetByPath("container.attach.frame", "LateFrame", 1)
+    NS.SetByPath("container.attach.mode", "frame", 1)
+    mocks.__fireTimers()
+    assertEqual(table.concat(NS.Anchors.Pending(), ","), "1", "pending: the frame does not exist yet")
+    mocks.__lockdown = true
+    local late = plant(mocks, "LateFrame")
+    NS.addon:OnAddonLoaded()
+    assertEqual(table.concat(NS.Anchors.Pending(), ","), "1", "an add-on loading in combat resolves nothing")
+    -- Nothing is queued, so FlushPending cannot re-place it: only ResolvePending can.
+    local requests, realRequest = 0, CM.RequestApply
+    CM.RequestApply = function(...) requests = requests + 1; return realRequest(...) end
+    local anchor, relTo = CM.instances[1].anchor, nil
+    rawset(anchor, "SetPoint", function(_, _, rel) relTo = rel end)
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    rawset(anchor, "SetPoint", nil)
+    CM.RequestApply = realRequest
+    -- red under: removing the ResolvePending call in OnCombatChanged
+    assertEqual(#NS.Anchors.Pending(), 0)
+    assertTrue(relTo == late, "anchored to LateFrame")
+    assertEqual(requests, 0)
+end)
+
+test("anchors: a screen fallback and a skipped resolve are traced", function()
+    local NS, mocks = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Anchor" then lines[#lines + 1] = fmt:format(...) end
+    end
+    local CM = NS.ContainerManager
+    NS.Anchors.Place(CM.instances[2])
+    -- red under: tracing a screen container's placement as a fallback
+    assertEqual(#lines, 0, "a container set to the screen is not a fallback")
+    local c = NS.Database.FindContainer(1)
+    c.attach.mode, c.attach.frame = "frame", "MissingBar"
+    assertEqual(NS.Anchors.Place(CM.instances[1]), "screen")
+    -- red under: dropping the Place trace
+    assertEqual(#lines, 1, "one fallback line")
+    assertTrue(lines[1]:find("screen fallback", 1, true) ~= nil, lines[1])
+    mocks.__lockdown = true
+    NS.Anchors.ResolvePending()
+    mocks.__lockdown = false
+    assertEqual(#lines, 2, "one skip line")
+    assertTrue(lines[2]:find("lockdown", 1, true) ~= nil, lines[2])
+end)
+
 test("anchors: a forbidden frame, or something that is not a frame, is never a target", function()
     local NS, mocks = fresh()
     plant(mocks, "Forbidden", { forbidden = true })

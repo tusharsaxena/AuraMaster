@@ -14,9 +14,9 @@ local _, NS = ...
 --              anchor inherits DisableUntrustedLayoutScriptsTemplate, Blizzard's opt-in for a frame
 --              that anchors to an aura container (whose layout scripts are forbidden to addons);
 --   frame      any named frame — a unit frame, another add-on's bar — re-resolved when the add-on
---              that creates it loads (Anchors.ResolvePending).
+--              that creates it loads, and again when combat ends (Anchors.ResolvePending).
 -- A chain that would loop back on itself, a target that does not exist, or a frame that is forbidden
--- falls back to the screen position rather than to nowhere.
+-- falls back to the screen position rather than to nowhere, and says so in the [Anchor] debug trace.
 
 NS.Anchors = NS.Anchors or {}
 local Anchors = NS.Anchors
@@ -92,14 +92,21 @@ function Anchors.Place(container)
         if ok then return mode end
         anchor:ClearAllPoints()
     end
+    if at.mode and at.mode ~= "screen" and NS.Debug then
+        NS.Debug("Anchor", "container %s: %s target unavailable, screen fallback", container.id, at.mode)
+    end
     toScreen(anchor, cfg)
     return "screen"
 end
 
 --- Re-place every container whose frame target did not exist when it was placed. Called whenever an
---- add-on loads, since that is when a new named frame can appear.
+--- add-on loads, since that is when a new named frame can appear, and when combat ends, since an
+--- add-on that loaded during combat could not be resolved then.
 function Anchors.ResolvePending()
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        if NS.Debug then NS.Debug("Anchor", "pending resolve skipped under lockdown; retried when combat ends") end
+        return
+    end
     local CM = NS.ContainerManager
     if not CM then return end
     for id in pairs(pending) do

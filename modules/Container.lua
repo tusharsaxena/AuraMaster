@@ -39,6 +39,9 @@ function NS.Container.New(id)
     self.anchor = CreateFrame("Frame", "AuraMasterAnchor" .. id, UIParent,
         "DisableUntrustedLayoutScriptsTemplate")
     self.anchor:SetMovable(true)
+    -- Movable frames are saved in the client's layout cache and restored at login over the stored
+    -- position; the stored position is the only one.
+    if self.anchor.SetDontSavePosition then self.anchor:SetDontSavePosition(true) end
     self.anchor:SetClampedToScreen(true)
     self.handle = NS.Anchors.BuildHandle(self)
     return self

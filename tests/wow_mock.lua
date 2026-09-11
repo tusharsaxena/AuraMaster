@@ -100,6 +100,8 @@ return function()
         f.__level = 0
         function f:SetFrameLevel(v) self.__level = v; return self end
         function f:GetFrameLevel() return self.__level end
+        -- The client's layout cache: recorded so a test can see an anchor opt out of it.
+        function f:SetDontSavePosition(v) self.__dontSavePosition = v; return self end
         if frameType == "AuraContainer" then makeEngine(f) end
         if type(name) == "string" then M.__globals[name] = f end
         return f

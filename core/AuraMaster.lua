@@ -74,6 +74,8 @@ function addon:OnCombatChanged(event)
         -- "regen": the deferral notice never escalates on this edge (modules/ContainerManager.lua).
         if NS.ContainerManager then NS.ContainerManager.FlushPending("regen") end
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
+        -- A frame an add-on created during combat could not be resolved then (OnAddonLoaded).
+        if NS.Anchors and NS.Anchors.ResolvePending then NS.Anchors.ResolvePending() end
     end
 end
 

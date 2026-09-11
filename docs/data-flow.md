@@ -129,7 +129,7 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
 | `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them; `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
 | `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending |
-| `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies and apply the Blizzard-frame settings |
+| `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
@@ -171,6 +171,10 @@ their `excludeSpellIDs`. `/am forgettimed` empties the set and sends the same me
 `Anchors.Place` (`modules/Anchors.lua:59`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists), unless that would loop;
 to a named frame, if it exists and is not forbidden — otherwise the container is marked pending and
-re-placed on the next `ADDON_LOADED`; else to the screen at `container.position`. Positions are
-stored, never read back off an engine frame, whose geometry can be secret; the only position read is
-the anchor's own after a drag, saved through the write seam against that container's id.
+re-placed on the next `ADDON_LOADED`; else to the screen at `container.position`. A pending resolve
+is skipped under combat lockdown, so `PLAYER_REGEN_ENABLED` runs it again once combat ends. A
+container set to a container or a frame that lands on the screen instead writes one `[Anchor]` debug
+line, and so does a skipped resolve. Positions are stored, never read back off an engine frame, whose
+geometry can be secret; the only position read is the anchor's own after a drag, saved through the
+write seam against that container's id. The client never saves an anchor's position itself
+(`SetDontSavePosition`), so a login cannot restore one over the stored position.
