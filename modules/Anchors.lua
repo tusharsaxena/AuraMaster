@@ -146,26 +146,80 @@ end
 -- The drag handle
 -- ---------------------------------------------------------------------------
 
---- Build the handle a player drags a container by. Shown only while unlocked; it covers the anchor,
---- above the first element, so what is lined up while unlocked is exactly where it stays.
+-- A labeled strip OUTSIDE the anchor, on the side the auras do not grow into, drawn the way
+-- ConsumableMaster draws its macro bar's handle so the collection reads as one suite: a dark
+-- backdrop with a thin gold edge, a gold label, and a help mark inside its far end. Outside, because
+-- the anchor is exactly one element in size and the first element sits on it: a handle covering the
+-- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
+-- (which may never be re-anchored once it holds groups) and the preview stay where they are.
+local HANDLE_H     = 18   -- strip height
+local HANDLE_GAP   = 2    -- gap between the strip and the anchor
+local HANDLE_PAD   = 24   -- horizontal padding around the label
+local HANDLE_HELP  = 14   -- the help mark's edge, inside the strip's far end
+local BACKDROP_TEX = [[Interface\Buttons\WHITE8X8]]
+-- The LAST rung of the help mark's ladder: the catalog's `help` icon through NS.Icon first, and this
+-- Blizzard texture only when the media library is absent or stops carrying that name.
+local HELP_TEXTURE = [[Interface\FriendsFrame\InformationIcon]]
+
+--- Right-click: the settings, on this container.
+local function openSettings(container)
+    if NS.State then NS.State.SetActiveContainer(container.id) end
+    if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
+end
+
+--- One tooltip for the strip and its help mark: the container's name, then how to use the handle.
+local function showTooltip(owner, container)
+    if not GameTooltip then return end
+    local cfg = container:Cfg()
+    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+    GameTooltip:SetText(cfg and cfg.name or NS.L["Container"], 1, 0.82, 0)
+    GameTooltip:AddLine(NS.L["Drag to move. Right-click for settings."], 1, 1, 1, true)
+    if cfg and cfg.attach and cfg.attach.mode ~= "screen" then
+        GameTooltip:AddLine(NS.L["Attached — set its offsets on the Layout page."], 1, 0.82, 0, true)
+    end
+    GameTooltip:Show()
+end
+
+local function hideTooltip() if GameTooltip then GameTooltip:Hide() end end
+
+--- The help mark: a fixed 14px icon rather than a line of hint text, so a one-element container's
+--- handle is not forced wider by prose. It carries the tooltip and passes a right-click through.
+local function buildHelp(handle, container)
+    local help = CreateFrame("Button", nil, handle)
+    help:SetSize(HANDLE_HELP, HANDLE_HELP)
+    help:SetPoint("RIGHT", handle, "RIGHT", -4, 0)
+    help:RegisterForClicks("RightButtonUp")
+    local icon = help:CreateTexture(nil, "OVERLAY")
+    icon:SetAllPoints(help)
+    icon:SetTexture(NS.Icon and NS.Icon("help") or HELP_TEXTURE)
+    help.icon = icon
+    help:SetScript("OnEnter", function(self) showTooltip(self, container) end)
+    help:SetScript("OnLeave", hideTooltip)
+    help:SetScript("OnClick", function() openSettings(container) end)
+    return help
+end
+
+--- Build the handle a player drags a container by. Shown only while unlocked; it sits outside the
+--- anchor (Anchors.UpdateHandle places it), so what is lined up while unlocked is exactly where it
+--- stays and no element is covered.
 function Anchors.BuildHandle(container)
     local anchor = container.anchor
-    local handle = CreateFrame("Button", nil, anchor)
-    handle:SetAllPoints(anchor)
+    local handle = CreateFrame("Button", nil, anchor, "BackdropTemplate")
+    handle:SetHeight(HANDLE_H)
     handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + 50)
+    handle:SetBackdrop({ bgFile = BACKDROP_TEX, edgeFile = BACKDROP_TEX, edgeSize = 1 })
+    handle:SetBackdropColor(0, 0, 0, 0.75)
+    handle:SetBackdropBorderColor(1, 0.82, 0, 0.6)
     handle:EnableMouse(true)
     handle:RegisterForDrag("LeftButton")
     handle:RegisterForClicks("RightButtonUp")
     handle:Hide()
 
-    local bg = handle:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(0.10, 0.45, 0.80, 0.55)
-    handle.bg = bg
-
-    local label = handle:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local label = handle:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     label:SetPoint("CENTER")
+    label:SetTextColor(1, 0.82, 0)
     handle.label = label
+    handle.help = buildHelp(handle, container)
 
     handle:SetScript("OnDragStart", function()
         local cfg = container:Cfg()
@@ -183,30 +237,56 @@ function Anchors.BuildHandle(container)
         Anchors.SavePosition(container)
     end)
     handle:SetScript("OnClick", function(_, button)
-        if button ~= "RightButton" then return end
-        if NS.State then NS.State.SetActiveContainer(container.id) end
-        if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
+        if button == "RightButton" then openSettings(container) end
     end)
-    handle:SetScript("OnEnter", function(self)
-        if not GameTooltip then return end
-        local cfg = container:Cfg()
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine(cfg and cfg.name or NS.L["Container"])
-        GameTooltip:AddLine(NS.L["Drag to move. Right-click for settings."], 1, 1, 1)
-        if cfg and cfg.attach and cfg.attach.mode ~= "screen" then
-            GameTooltip:AddLine(NS.L["Attached — set its offsets on the Layout page."], 1, 0.82, 0)
-        end
-        GameTooltip:Show()
-    end)
-    handle:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    handle:SetScript("OnEnter", function(self) showTooltip(self, container) end)
+    handle:SetScript("OnLeave", hideTooltip)
     return handle
 end
 
---- Show or hide a container's handle, with its current name.
+--- Put the strip on the side the auras do not grow into: above the anchor when they grow down,
+--- below when they grow up, its edge lined up with the edge they start from so it runs along the
+--- first line. At least as wide as one element, and as its label with room for the help mark.
+--- @return number  how far the strip runs past the anchor along the line
+local function placeHandle(container, cfg)
+    local handle = container.handle
+    local growH, growV = NS.Container.Growth(cfg.layout or {})
+    local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
+    local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
+    local w = NS.Style.ElementSize(cfg)
+    local width = math.max((tonumber(handle.label:GetStringWidth()) or 0) + HANDLE_PAD + HANDLE_HELP * 2, w)
+    handle:ClearAllPoints()
+    handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and HANDLE_GAP or -HANDLE_GAP)
+    handle:SetWidth(width)
+    return width - w
+end
+
+--- The anchor is clamped to the screen; while its handle shows, the clamp rect reaches over the strip
+--- too, so the handle cannot be dragged off-screen. Never in combat: the anchor parents an aura engine,
+--- and no layout work touches it under lockdown. The next visibility pass after combat catches up.
+local function clampToHandle(container, cfg, overhang)
+    if InCombatLockdown() then return end
+    if not overhang then
+        container.anchor:SetClampRectInsets(0, 0, 0, 0)
+        return
+    end
+    local growH, growV = NS.Container.Growth(cfg.layout or {})
+    local reach = HANDLE_H + HANDLE_GAP
+    local left = (growH == "left") and -overhang or 0
+    local right = (growH == "right") and overhang or 0
+    local top = (growV == "down") and reach or 0
+    local bottom = (growV == "up") and -reach or 0
+    container.anchor:SetClampRectInsets(left, right, top, bottom)
+end
+
+--- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
+--- name sets its width and the layout's growth sets its side.
 function Anchors.UpdateHandle(container, show)
     local handle = container.handle
     if not handle then return end
     local cfg = container:Cfg()
+    show = (show and cfg) and true or false
     handle.label:SetText(cfg and cfg.name or "")
-    handle:SetShown(show and true or false)
+    clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
+    handle:SetShown(show)
 end

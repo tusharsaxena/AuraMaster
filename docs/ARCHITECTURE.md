@@ -15,7 +15,7 @@ seeded with three (`defaults/Profile.lua:187`).
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:167`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:169`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -174,7 +174,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:216-218` | `NS.OnProfileChanged` → re-prepare the registry, rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:212`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:214`) and
 is not addon code. The eight `core/AuraMaster.lua` registrations live in one function,
 `RegisterLifecycleEvents`, so the perf probe's suspend and resume remove and restore the same list.
 
@@ -187,13 +187,18 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
   position an anchor ever has.
+- **The drag handle sits outside the anchor and never re-anchors anything.** It is our own strip,
+  placed against the anchor on the side the auras do not grow into; the anchor, the engine and the
+  preview stay where they are. While it shows, the anchor's clamp rect is widened over it
+  (`SetClampRectInsets`), and that happens only out of combat, because the anchor parents an aura
+  engine. The next visibility pass after combat catches the clamp up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:171-175`).
+  anchor it (`modules/Container.lua:173-177`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:155`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:366`).
+  button's ancestry (`modules/Container.lua:368`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),

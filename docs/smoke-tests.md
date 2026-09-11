@@ -37,8 +37,12 @@ suite covers what only the client can show.
 
 ## C. Unlock, drag, preview
 
-14. `/am unlock` → every container shows a blue handle with its name and fills with placeholder auras;
-    real auras are hidden.
+14. `/am unlock` → every container shows a handle with its name and fills with placeholder auras;
+    real auras are hidden. The handle is a dark strip with a thin gold edge and a gold label, sitting
+    outside the container: above it when the auras grow down, below when they grow up, lined up with
+    the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
+    Hovering the help mark at the handle's right end shows the name and "Drag to move. Right-click for
+    settings."
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. Right-click a handle →
     the settings open with that container selected.
 16. `/am lock` → handles and placeholders go; real auras return.

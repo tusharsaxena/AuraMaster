@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-233%2F233_passing-green)
+![Tests](https://img.shields.io/badge/Tests-239%2F239_passing-green)
 
 ![Ka0s Aura Master](media/logos/auramaster.logo.png)
 
@@ -24,9 +24,9 @@ Everything is set up from the addon's page under Settings → AddOns, or from ch
 Your first login gives you three containers to start from: your buffs as bars near the top right of
 the screen, your debuffs as a row of icons just above them, and the debuffs you've put on your target
 as icons a little below the middle of the screen. They start locked. Type `/am unlock` and each one
-gets a blue handle with its name, filled with sample auras so there is something to grab even when
-nothing is up. Drag them where you want them and type `/am lock`. Right-clicking a handle opens the
-settings with that container already selected.
+fills with sample auras. It also gets a gold-edged handle with its name, placed just outside the
+first bar or icon so it never covers one. Drag the handles where you want them and type
+`/am lock`. Right-clicking a handle opens the settings with that container already selected.
 
 Those sample auras are the preview, and `/am preview` shows them without unlocking anything. It's the
 quickest way to try textures, fonts and sizes before a real buff turns up. Real auras stay hidden

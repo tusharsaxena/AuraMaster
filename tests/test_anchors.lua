@@ -138,6 +138,171 @@ test("anchors: a drag saves the position in one write", function()
     assertEqual(paths[1], "container.position")
 end)
 
+-- ── the drag handle ───────────────────────────────────────────────────────────────────────────
+
+-- Every setter the handle's look and placement go through, recorded in call order per frame.
+local RECORDED = {
+    "SetPoint", "SetAllPoints", "ClearAllPoints", "SetWidth", "SetHeight", "SetSize",
+    "SetBackdrop", "SetBackdropColor", "SetBackdropBorderColor", "SetTextColor", "SetTexture",
+}
+
+--- Rebuild container `inst`'s handle under a CreateFrame that records every frame it makes.
+--- Font strings and textures come back as their frame from the kit stub, so a label's or an icon's
+--- setters land on the frame that made it.
+local function recordedHandle(mocks, NS, inst)
+    local real = mocks.CreateFrame
+    mocks.CreateFrame = function(...)
+        local f = real(...)
+        f.__rec = {}
+        for _, m in ipairs(RECORDED) do
+            rawset(f, m, function(self, ...)
+                local log = self.__rec[m] or {}
+                self.__rec[m] = log
+                log[#log + 1] = { ... }
+                return self
+            end)
+        end
+        return f
+    end
+    local handle = NS.Anchors.BuildHandle(inst)
+    mocks.CreateFrame = real
+    inst.handle = handle
+    return handle
+end
+
+local function last(f, method)
+    local log = f.__rec[method] or {}
+    return log[#log], #log
+end
+
+test("handle: dressed like ConsumableMaster's bar handle, with a help mark from the media seam", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    assertEqual(h.__template, "BackdropTemplate")
+    assertEqual(last(h, "SetHeight")[1], 18)
+    local bd = last(h, "SetBackdrop")[1]
+    assertEqual(bd.bgFile, [[Interface\Buttons\WHITE8X8]])
+    assertEqual(bd.edgeFile, [[Interface\Buttons\WHITE8X8]])
+    assertEqual(bd.edgeSize, 1)
+    assertEqual(table.concat(last(h, "SetBackdropColor"), ","), "0,0,0,0.75")
+    assertEqual(table.concat(last(h, "SetBackdropBorderColor"), ","), "1,0.82,0,0.6")
+    assertEqual(table.concat(last(h, "SetTextColor"), ","), "1,0.82,0")
+    local help = h.help
+    assertEqual(table.concat(last(help, "SetSize"), ","), "14,14")
+    local p = last(help, "SetPoint")
+    assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h); assertEqual(p[3], "RIGHT")
+    assertEqual(p[4], -4); assertEqual(p[5], 0)
+    assertTrue(NS.Icon("help") ~= nil, "the vendored catalog carries the help mark")
+    assertEqual(last(help, "SetTexture")[1], NS.Icon("help"))
+    local _, covers = last(h, "SetAllPoints")
+    -- red under: restoring SetAllPoints(anchor) in BuildHandle
+    assertEqual(covers, 0, "the handle never covers the anchor")
+end)
+
+test("handle: above the anchor when auras grow down, below when up, edge-aligned where they start", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = NS.Database.FindContainer(1)
+    local h = recordedHandle(mocks, NS, inst)
+    local cases = {
+        { "down", "right", "BOTTOMLEFT", "TOPLEFT", 2 },
+        { "down", "left", "BOTTOMRIGHT", "TOPRIGHT", 2 },
+        { "up", "right", "TOPLEFT", "BOTTOMLEFT", -2 },
+        { "up", "left", "TOPRIGHT", "BOTTOMRIGHT", -2 },
+    }
+    local anchorMoves = 0
+    rawset(inst.anchor, "SetPoint", function() anchorMoves = anchorMoves + 1 end)
+    rawset(inst.anchor, "ClearAllPoints", function() anchorMoves = anchorMoves + 1 end)
+    local engineMoves = inst.engine.__counts.SetPoint or 0
+    for _, c in ipairs(cases) do
+        cfg.layout.growV, cfg.layout.growH = c[1], c[2]
+        NS.Anchors.UpdateHandle(inst, true)
+        local p = last(h, "SetPoint")
+        local what = c[1] .. "/" .. c[2]
+        assertEqual(p[1], c[3], what)
+        assertTrue(p[2] == inst.anchor, what)
+        assertEqual(p[3], c[4], what)
+        assertEqual(p[4], 0, what)
+        assertEqual(p[5], c[5], what)
+    end
+    assertTrue(h:IsShown())
+    -- red under: re-placing the anchor from UpdateHandle to make room for the handle
+    assertEqual(anchorMoves, 0, "the anchor, and so every element, stays where it is")
+    -- red under: re-anchoring the engine from UpdateHandle
+    assertEqual(inst.engine.__counts.SetPoint or 0, engineMoves, "the engine is never re-anchored")
+end)
+
+test("handle: at least as wide as its container's element, and as its label with room for the help mark", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = NS.Database.FindContainer(1)
+    local h = recordedHandle(mocks, NS, inst)
+    local w = NS.Style.ElementSize(cfg)
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, w), "an empty label")
+    rawset(h, "GetStringWidth", function() return w + 100 end)   -- the label is the handle's font string
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "a label wider than the element")
+end)
+
+test("handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = NS.Database.FindContainer(1)
+    local h = recordedHandle(mocks, NS, inst)
+    local insets
+    rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b) insets = table.concat({ l, r, t, b }, ",") end)
+    local w = NS.Style.ElementSize(cfg)
+    rawset(h, "GetStringWidth", function() return w + 100 end)
+    local over = 100 + 24 + 14 * 2
+    cfg.layout.growV, cfg.layout.growH = "down", "right"
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(insets, "0," .. over .. ",20,0", "down/right: above, reaching right")
+    cfg.layout.growV, cfg.layout.growH = "up", "left"
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(insets, -over .. ",0,0,-20", "up/left: below, reaching left")
+    NS.Anchors.UpdateHandle(inst, false)
+    -- red under: leaving the insets extended when the handle hides
+    assertEqual(insets, "0,0,0,0")
+    assertFalse(h:IsShown())
+    insets = nil
+    mocks.__lockdown = true
+    NS.Anchors.UpdateHandle(inst, true)
+    mocks.__lockdown = false
+    -- red under: dropping the InCombatLockdown gate before SetClampRectInsets
+    assertNil(insets, "the anchor parents an aura engine: no layout work on it in combat")
+end)
+
+test("handle: the help mark carries the tooltip and right-click opens the settings on this container", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    local function add(_, s)
+        lines[#lines + 1] = s
+    end
+    rawset(mocks.GameTooltip, "SetText", add)
+    rawset(mocks.GameTooltip, "AddLine", add)
+    h.help:__fire("OnEnter")
+    assertEqual(lines[1], NS.Database.FindContainer(2).name)
+    assertEqual(lines[2], NS.L["Drag to move. Right-click for settings."])
+    local opened = 0
+    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    NS.State.SetActiveContainer(1)
+    h.help:__fire("OnClick", "RightButton")
+    assertEqual(opened, 1)
+    assertEqual(NS.State.activeContainerId, 2)
+end)
+
+test("handle: without the media library the help mark falls back to Blizzard's information icon", function()
+    local NS2, mocks2 = dofile("tests/degraded_env.lua")()
+    assertNil(NS2.Icon("help"))
+    local inst = { id = 1, anchor = mocks2.CreateFrame("Frame"), Cfg = function() return nil end }
+    local h = recordedHandle(mocks2, NS2, inst)
+    assertEqual(last(h.help, "SetTexture")[1], [[Interface\FriendsFrame\InformationIcon]])
+end)
+
 -- ── the frame picker ──────────────────────────────────────────────────────────────────────────
 
 test("picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves", function()

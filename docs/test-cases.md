@@ -158,7 +158,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 
-### test_anchors.lua (13)
+### test_anchors.lua (19)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -168,6 +168,12 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a forbidden frame, or something that is not a frame, is never a target
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - anchors: a drag saves the position in one write
+- handle: dressed like ConsumableMaster's bar handle, with a help mark from the media seam
+- handle: above the anchor when auras grow down, below when up, edge-aligned where they start
+- handle: at least as wide as its container's element, and as its label with room for the help mark
+- handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
+- handle: the help mark carries the tooltip and right-click opens the settings on this container
+- handle: without the media library the help mark falls back to Blizzard's information icon
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
 - picker: a forbidden frame under the cursor ends the walk without calling its methods
 - picker: it arms on release, then a left-click on a named frame picks it
@@ -307,7 +313,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 35 |
-| test_anchors.lua | 13 |
+| test_anchors.lua | 19 |
 | test_style.lua | 16 |
 | test_timedspells.lua | 10 |
 | test_slash.lua | 21 |
@@ -319,4 +325,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **233** |
+| **Total** | **239** |

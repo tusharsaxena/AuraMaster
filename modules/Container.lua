@@ -56,10 +56,12 @@ end
 -- Layout
 -- ---------------------------------------------------------------------------
 
---- A layout's growth, normalized: "right" unless "left", "down" unless "up".
+--- A layout's growth, normalized: "right" unless "left", "down" unless "up". Published for the drag
+--- handle (modules/Anchors.lua), which sits on the side the auras do not grow into.
 local function growthOf(L)
     return (L.growH == "left") and "left" or "right", (L.growV == "up") and "up" or "down"
 end
+NS.Container.Growth = growthOf
 
 --- The corner auras grow away from: auras growing down and right start at the top left.
 function NS.Container.AnchorPoint(growH, growV)
