@@ -39,4 +39,7 @@ NS.MSG = {
     -- Sender: core/AuraMaster.lua. Payload: none. Combat started or ended, or the world was entered —
     -- anything that can flip the General visibility gate.
     VISIBILITY_CHANGED = "Ka0s_AuraMaster_VisibilityChanged",
+    -- Sender: modules/TimedSpells.lua. Payload: none. A readable-state scan learned timed spells, or
+    -- `/am forgettimed` emptied the set, so every "without a duration" filter's excluded ids moved.
+    TIMED_SPELLS_CHANGED = "Ka0s_AuraMaster_TimedSpellsChanged",
 }

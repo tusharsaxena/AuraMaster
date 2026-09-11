@@ -21,16 +21,80 @@ test("timed: nothing is needed until a container shows only timeless auras", fun
     assertTrue(NS.TimedSpells.Needed())
 end)
 
-test("timed: it listens to UNIT_AURA for the player and pet only, and only while needed", function()
-    -- red under: registering UNIT_AURA bare (every unit in a raid) instead of RegisterUnitEvent.
+test("timed: it hears UNIT_AURA through AceEvent only while needed and readable", function()
+    -- red under: TS.Sync registering UNIT_AURA regardless of TS.Needed().
     local NS = fresh()
-    assertTrue(NS.TimedSpells.__frame() == nil, "no frame while no container needs it")
+    local ev = NS.TimedSpells.__events()
+    assertTrue(ev.__events.UNIT_AURA == nil, "heard while no container needs it")
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
-    local f = NS.TimedSpells.__frame()
-    assertTrue(f ~= nil)
-    assertEqual(table.concat(f.__unitEvents.UNIT_AURA or {}, ","), "player,pet")
+    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard once a container needs it")
     NS.SetByPath("container.filter.durationMode", "any", 1)
-    assertTrue(f.__unitEvents.UNIT_AURA == nil, "unregistered once nothing needs it")
+    assertTrue(ev.__events.UNIT_AURA == nil, "still heard once nothing needs it")
+end)
+
+test("timed: UNIT_AURA for another unit schedules nothing", function()
+    -- red under: onUnitAura without its unit filter.
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers()   -- drain the sync's own scan and the apply it queued
+    local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+    local before = #mocks.__timers
+    onUnitAura("UNIT_AURA", "nameplate1")
+    assertEqual(#mocks.__timers, before, "a nameplate's aura change scheduled a scan")
+    onUnitAura("UNIT_AURA", "player")
+    assertEqual(#mocks.__timers, before + 1, "the player's own aura change schedules one scan")
+end)
+
+test("timed: combat drops UNIT_AURA and its end restores it with a scan", function()
+    -- red under: syncAuraListen ignoring InCombatLockdown.
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers()
+    local ev = NS.TimedSpells.__events()
+    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard before combat")
+    mocks.__lockdown = true
+    ev.__events.PLAYER_REGEN_DISABLED("PLAYER_REGEN_DISABLED")
+    assertTrue(ev.__events.UNIT_AURA == nil, "still heard in combat")
+    mocks.__lockdown = false
+    local before = #mocks.__timers
+    ev.__events.PLAYER_REGEN_ENABLED("PLAYER_REGEN_ENABLED")
+    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard again after combat")
+    assertEqual(#mocks.__timers, before + 1, "reopening scheduled one scan")
+end)
+
+test("timed: secret auras out of combat keep UNIT_AURA unregistered until the restriction lifts", function()
+    -- red under: syncAuraListen ignoring AurasAreSecret.
+    local NS, mocks = fresh()
+    mocks.__aurasSecret = true
+    mocks.__lockdown = false
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    NS.TimedSpells.Sync()
+    mocks.__fireTimers()
+    local ev = NS.TimedSpells.__events()
+    assertTrue(ev.__events.UNIT_AURA == nil, "heard while auras are secret")
+    mocks.__aurasSecret = false
+    local before = #mocks.__timers
+    ev.__events.ADDON_RESTRICTION_STATE_CHANGED("ADDON_RESTRICTION_STATE_CHANGED")
+    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard once the restriction lifted")
+    assertEqual(#mocks.__timers, before + 1, "reopening scheduled one scan")
+end)
+
+test("timed: learning a spell is announced on the bus to every receiver, and the manager re-applies", function()
+    local NS, mocks = fresh()
+    withAuras(mocks, { { spellId = 55, duration = 12 } })
+    mocks.__fireTimers()
+    local heard = { a = 0, b = 0 }
+    local a, b = NS.NewBusTarget(), NS.NewBusTarget()
+    a:RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function() heard.a = heard.a + 1 end)
+    b:RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function() heard.b = heard.b + 1 end)
+    local before = #mocks.__timers
+    assertEqual(NS.TimedSpells.Scan(), 1)
+    assertEqual(heard.a, 1, "the first receiver missed it")
+    assertEqual(heard.b, 1, "the second receiver missed it")
+    assertEqual(#mocks.__timers, before + 1, "the manager queued no apply")
+    NS.TimedSpells.Forget()
+    assertEqual(heard.a, 2, "Forget was not announced")
+    assertEqual(heard.b, 2, "Forget was not announced to the second receiver")
 end)
 
 test("timed: a readable scan learns every timed buff once, and skips permanent ones", function()

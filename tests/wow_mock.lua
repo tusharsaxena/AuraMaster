@@ -157,6 +157,33 @@ return function()
         return target
     end
 
+    -- ── AceEvent's event half on an embed ──────────────────────────────────────────────────
+    -- The LibKa0s v1.29.0 kit's AceEvent Embed has no RegisterEvent; delete this on the re-vendor
+    -- that adds it. The real Embed stamps RegisterEvent, UnregisterEvent and UnregisterAllEvents on
+    -- every target, and a module's own target from NS.NewBusTarget() registers game events on it.
+    -- Recorded rather than no-opped, so a test can see what is registered right now and fire a
+    -- handler as CallbackHandler would: `handler(event, ...)`. Cleared in place, so a table a test
+    -- captured stays the live one.
+    local aceEvent = M.__libs["AceEvent-3.0"]
+    local kitEmbed = aceEvent.Embed
+    aceEvent.Embed = function(lib, obj)
+        obj = kitEmbed(lib, obj)
+        obj.__events = {}
+        obj.RegisterEvent = function(self, event, handler)
+            self.__events[event] = handler or true
+            return self
+        end
+        obj.UnregisterEvent = function(self, event)
+            self.__events[event] = nil
+            return self
+        end
+        obj.UnregisterAllEvents = function(self)
+            for k in pairs(self.__events) do self.__events[k] = nil end
+            return self
+        end
+        return obj
+    end
+
     -- ── _G ──────────────────────────────────────────────────────────────────────────────────
     -- The loader resolves a bare global against the mock first, but `_G.X` in addon code reads the
     -- `_G` KEY — which the mock did not have, so it fell through to the harness process's own global

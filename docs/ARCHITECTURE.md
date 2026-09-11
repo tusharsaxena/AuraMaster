@@ -27,8 +27,11 @@ settings row ─► NS.SetByPath ─► CONFIG_CHANGED ─► ContainerManager.R
    ─► engine creates buttons ─► initializeFrame ─► Style.Element dresses them ─► engine renders
 ```
 
-There is therefore **no per-aura Lua path** in this addon: no `UNIT_AURA` handler of its own on the
-hot path, no timer, no `OnUpdate` driving a bar. The full pipeline is in `docs/data-flow.md`.
+There is therefore **no per-aura Lua path while auras are secret**: no timer and no `OnUpdate`
+driving a bar. The one aura-driven Lua path is the readable-state timed-spell scan
+(`modules/TimedSpells.lua`), bracketed `timedScan`. It runs only while a container shows auras
+without a duration, and only out of combat with auras readable. The full pipeline is in
+`docs/data-flow.md`.
 
 ### Libraries and what this addon does with each
 
@@ -117,8 +120,9 @@ pass on.
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:237` — a coalesced panel re-render (every banner lists containers) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:255` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:291` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:295` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none | `modules/ContainerManager.lua` `CM.Init` — `RequestApply()` over every container (their excluded ids moved) |
 
-Three messages, well under the more-than-ten trigger for a separate `message-bus.md`.
+Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
 
 ## Slash Commands
 
@@ -161,8 +165,8 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | `UNIT_PET` | `core/AuraMaster.lua:47` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`) |
 | `ADDON_LOADED` | `core/AuraMaster.lua:48` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:50` | `OnRestrictionChanged` → `FlushPending` (a deferred apply runs when secrecy lifts) |
-| `UNIT_AURA` | `modules/TimedSpells.lua:84` — only while a container uses "without a duration" | handler keeps `player`/`pet` and schedules a scan 0.5 s later |
-| `PLAYER_REGEN_ENABLED` | `modules/TimedSpells.lua:87` — same condition | schedules a scan |
+| `UNIT_AURA` | `modules/TimedSpells.lua` (AceEvent, on its own target) — only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret) | `onUnitAura`: a safe-key `player`/`pet` schedules a scan 0.5 s later (bucket `timedScan`); every other unit is dropped |
+| `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: re-checks the readable gate, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:171-173` | `NS.OnProfileChanged` → re-prepare the registry, rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:161`) and
@@ -269,7 +273,7 @@ generated directories are named once and never enumerated: `docs/audits/`, `docs
 | `slash-dispatch.md` | Present | 20 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine |
 | `compat-layer.md` | Present | 17 shims in `core/Compat.lua`, over the three-or-more threshold |
-| `message-bus.md` | Not applicable | 3 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
+| `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
 | `debug.md` | Not applicable | Only the LibKa0s default console (`core/DebugLogSetup.lua`); no debug surface of the addon's own |
 

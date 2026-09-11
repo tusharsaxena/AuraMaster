@@ -161,10 +161,14 @@ badge and any count quoted in the docs must agree with it.
 - style: a class color keeps the stored alpha; off, the stored swatch is used
 - style: the Blizzard time format asks for no formatter of our own
 
-### test_timedspells.lua (5)
+### test_timedspells.lua (9)
 
 - timed: nothing is needed until a container shows only timeless auras
-- timed: it listens to UNIT_AURA for the player and pet only, and only while needed
+- timed: it hears UNIT_AURA through AceEvent only while needed and readable
+- timed: UNIT_AURA for another unit schedules nothing
+- timed: combat drops UNIT_AURA and its end restores it with a scan
+- timed: secret auras out of combat keep UNIT_AURA unregistered until the restriction lifts
+- timed: learning a spell is announced on the bus to every receiver, and the manager re-applies
 - timed: a readable scan learns every timed buff once, and skips permanent ones
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
@@ -259,7 +263,7 @@ badge and any count quoted in the docs must agree with it.
 | test_containermanager.lua | 20 |
 | test_anchors.lua | 11 |
 | test_style.lua | 10 |
-| test_timedspells.lua | 5 |
+| test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
 | test_optionssetup.lua | 12 |
 | test_perf.lua | 5 |
@@ -269,4 +273,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **183** |
+| **Total** | **187** |

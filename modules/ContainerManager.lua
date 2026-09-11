@@ -398,6 +398,8 @@ function CM.Init()
             elseif effect ~= "none" then CM.RequestApply(p.containerId) end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)
+        -- The learned timed-spell set changed: every container's excluded ids may have moved.
+        ev:RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function() CM.RequestApply() end)
     end
     CM.Sync()
     CM.RequestApply()

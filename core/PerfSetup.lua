@@ -38,10 +38,11 @@ NS.Perf = lib:New({
     -- Declared in report order, with nesting DECLARED rather than explained (performance-§3). Every
     -- nested bracket also supplies its parent at the Perf.Note call, so the record carries observed
     -- containment rather than this table's claim.
-    -- WHAT IS NOT HERE: aura events and timer ticks. Blizzard's aura engine owns both — it handles
-    -- UNIT_AURA and animates every bar and countdown in its own code — so this addon has no per-aura
-    -- Lua path at all to bracket. Its cost is the configuration work below, plus the engine's own,
-    -- which the capture's frame-time arms measure (performance-§7).
+    -- WHAT IS NOT HERE: the containers' aura events and timer ticks. Blizzard's aura engine owns both
+    -- — it handles each container's UNIT_AURA and animates every bar and countdown in its own code.
+    -- The addon has one aura-driven Lua path of its own, the readable-state timed-spell scan, and it
+    -- is bracketed (`timedScan`). The rest of its cost is the configuration work below, plus the
+    -- engine's own, which the capture's frame-time arms measure (performance-§7).
     buckets = {
         -- core/AuraMaster.lua: target / focus / pet changed, so every container on that unit is told
         -- to refresh. The one path that runs on ordinary combat activity.
@@ -56,6 +57,9 @@ NS.Perf = lib:New({
         -- modules/Style.lua: dressing one bar or icon — called by the engine's initializeFrame as it
         -- creates buttons, and by a restyle after a settings change.
         { key = "styleElement" },
+        -- modules/TimedSpells.lua: one readable-state scan of the player's and pet's buffs, 0.5 s
+        -- after their auras changed.
+        { key = "timedScan" },
     },
 
     --- Make the addon inert without a /reload (performance-§6). Every event unregistered and every

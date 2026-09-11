@@ -8,14 +8,36 @@ schema and the step panel belong to `LibKa0s-Perf-1.0` and are documented with t
 
 Most of the work of showing auras is **not this addon's code**. Every container is a Blizzard aura
 engine that handles `UNIT_AURA` for its unit, gathers and sorts auras, lays out buttons and animates
-every bar, countdown and swipe in Blizzard's own code. The addon has **no per-aura Lua path**: no aura
-event handler on the hot path, no ticker, no `OnUpdate` driving a display. What remains is
-configuration work, and one path that runs on ordinary play (a target, focus or pet change).
+every bar, countdown and swipe in Blizzard's own code. The addon has **no per-aura Lua path while
+auras are secret**: no ticker and no `OnUpdate` driving a display. Its one aura-driven path is the
+readable-state timed-spell scan, bracketed `timedScan` (below). What remains is configuration work,
+and one path that runs on ordinary play (a target, focus or pet change).
 
 Other timers and frames of the addon's own: a next-frame `C_Timer.After(0)` that coalesces applies
-(`modules/ContainerManager.lua:80`), a half-second scan timer in `modules/TimedSpells.lua` that exists
-only while a container uses "only auras without a duration", and the frame picker's `OnUpdate`, which
-runs only while a pick is in progress.
+(`modules/ContainerManager.lua:80`), the half-second timed-spell scan timer, armed by a player or pet
+`UNIT_AURA` only while a container uses "only auras without a duration" and auras are readable, and
+the frame picker's `OnUpdate`, which runs only while a pick is in progress.
+
+### The timed-spell listener's cost
+
+`modules/TimedSpells.lua` hears `UNIT_AURA` through AceEvent on its own target (events-frames-taint-§1).
+The vendored AceEvent has no `RegisterUnitEvent`, so the event arrives bare, for every unit, raid
+members and nameplates included, where a private frame's unit-filtered registration would have let
+the client drop them.
+
+- **The gate bounds it.** `UNIT_AURA` is registered only while a container needs the scan, the addon
+  is not suspended, there is no combat lockdown and auras are not secret. In combat and in every
+  secret stretch (encounters, keys, PvP matches, restricted maps) it is not registered at all, so the
+  cost there is **zero**.
+- **Registered and readable, each event costs** one AceEvent dispatch, one `Secrets.IsSafeKey` and
+  one string compare, with no allocation. Only a player or pet event arms the 0.5 s scan.
+- **The volume is not bounded.** In a city, or a raid group between pulls, out-of-combat `UNIT_AURA`
+  can exceed the ~1000 events/min guide figure (events-frames-taint-§1). The work per event is small
+  and fixed; the in-game figure is recorded below.
+
+| Where | Out-of-combat `UNIT_AURA`/min (`/etrace`) | Recorded |
+|---|---|---|
+| City, or a raid group between pulls, with a "without a duration" container enabled | _not yet measured_ | — |
 
 ## Buckets
 
@@ -29,6 +51,7 @@ Declared in report order in `core/PerfSetup.lua:45`, each bracketed with the inl
 | `applyContainer` | `applyPass` | `modules/Container.lua:230` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:130` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:128` | Dressing one bar or icon: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path; absent from a capture with no "without a duration" container |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children
 (performance-§3). **`styleElement` is declared at the root because its callers differ**, and it

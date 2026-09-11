@@ -43,9 +43,9 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `preview`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
 | `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.SafeToString`, `NS.IsConcatSafe`, `NS.ResolveColor`, `NS.SKIN`/`ApplySkin`, the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
-| `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the three `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
+| `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a three-member local pool | Conventional |
-| `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with five buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
+| `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
 | `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `CanCompare2`, `IsSafeKey`, `ReadOr` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
@@ -62,7 +62,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 
 | File | Responsibility |
 |---|---|
-| `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens only while a container needs it |
+| `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens through AceEvent only while a container needs it and auras are readable, and announces what it learned on the bus |
 | `modules/FilterCompiler.lua` | Pure: one container's filter settings → aura groups (filter strings + candidate filters), enchant slots and warnings; `Signature`, `StructureKey` |
 | `modules/Style.lua` | Shared dressing: LSM fetch, player-class color, text, border, guarded engine bindings, element size, mouse behavior, duration text; bucket `styleElement` |
 | `modules/Style_Bars.lua` | Builds and dresses a bar button; the elapsed-time status bar with an edge-anchored fill; preview fill |
@@ -114,7 +114,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, combat and secrecy deferral |
 | `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, pending frames, picking and canceling |
 | `test_style.lua` | `modules/Style*.lua` and `modules/Preview.lua`: element sizes, preview layout, engine bindings |
-| `test_timedspells.lua` | `modules/TimedSpells.lua`: unit-filtered listening, learning out of combat, feeding the timeless filter |
+| `test_timedspells.lua` | `modules/TimedSpells.lua`: readable-state listening, the bus announcement, learning out of combat, feeding the timeless filter |
 | `test_slash.lua` | `settings/Slash.lua`: `NS.COMMANDS` and every host verb through the real dispatcher |
 | `test_optionssetup.lua` | The panel: pages, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |

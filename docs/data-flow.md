@@ -152,12 +152,17 @@ panel, because every banner lists containers.
 ## Learning timed buffs
 
 `modules/TimedSpells.lua` listens only while an enabled buff container uses "only auras without a
-duration". On `UNIT_AURA` for the player or pet, and on combat end, it schedules a scan half a second
-later; the scan runs only when `Compat.AurasAreSecret()` is false, reads the player's and pet's buffs
-by index, and records every readable spell id with a readable positive duration into
-`global.timedSpells` (through `Secrets.IsSafeKey` and `Secrets.IsReadableNumber`). A scan that
-learned something asks for every container to re-apply, which updates their `excludeSpellIDs`.
-`/am forgettimed` empties the set.
+duration" and the addon is not suspended. It registers through AceEvent on its own target:
+`PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED` and `ADDON_RESTRICTION_STATE_CHANGED` all re-check
+one gate, and `UNIT_AURA` is registered only while that gate is open (no combat lockdown, auras not
+secret). The vendored AceEvent has no unit filter, so `UNIT_AURA` arrives for every unit; the handler
+proves the unit a safe key and keeps only the player and pet. Such an event, or the gate reopening,
+schedules a scan half a second later, bracketed `timedScan`. The scan runs only when
+`Compat.AurasAreSecret()` is false, reads the player's and pet's buffs by index, and records every
+readable spell id with a readable positive duration into `global.timedSpells` (through
+`Secrets.IsSafeKey` and `Secrets.IsReadableNumber`). A scan that learned something sends
+`TIMED_SPELLS_CHANGED`; `ContainerManager` hears it and re-applies every container, which updates
+their `excludeSpellIDs`. `/am forgettimed` empties the set and sends the same message.
 
 ## Where a container sits
 
