@@ -148,10 +148,10 @@ suite covers what only the client can show.
     still held after the pull prints the restriction line once.
 47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
     warning, and the panel does not pop open when combat ends. `/am resetall`, and General → **Reset
-    all settings** → **Yes**, are refused with the gray "cannot reset settings during combat — the
-    containers cannot be rebuilt until combat ends" line. Switch to a profile without one of your
-    containers in combat → that container stops drawing, is torn down when combat ends, and no taint
-    warning appears.
+    all settings** → **Yes**, reset the profile in combat just as Profiles → Reset Profile does: the
+    acknowledgment prints and no gray line. After either reset, or a switch to a profile without one
+    of your containers, in combat → that container stops drawing, is torn down when combat ends, and
+    no taint warning appears.
 
 ## J. Blizzard frames
 

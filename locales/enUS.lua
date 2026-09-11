@@ -308,7 +308,6 @@ L["Preview on — placeholder auras are shown"] = "Preview on — placeholder au
 L["Preview off"] = "Preview off"
 L["cannot pick a frame during combat — attaching to a frame waits until combat ends"] = "cannot pick a frame during combat — attaching to a frame waits until combat ends"
 L["cannot delete a container during combat — its display cannot be torn down until combat ends"] = "cannot delete a container during combat — its display cannot be torn down until combat ends"
-L["cannot reset settings during combat — the containers cannot be rebuilt until combat ends"] = "cannot reset settings during combat — the containers cannot be rebuilt until combat ends"
 L["cannot create a container during combat — a new display cannot be built until combat ends"] = "cannot create a container during combat — a new display cannot be built until combat ends"
 L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."] = "Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."
 L["'%s' is now attached to %s"] = "'%s' is now attached to %s"

@@ -149,7 +149,8 @@ seam. Under `MustDefer`, an instance that leaves
 the registry is parked rather than destroyed: `Container:Park` disables its engine and hides only
 the preview and handle. The next `FlushPending` that may touch frames destroys every parked
 instance before it applies; a parked id that returns first is revived in place and redrawn at once.
-Create, delete and reset all are refused in combat on every surface this addon owns. `CONTAINERS_CHANGED` re-renders an open
+Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is
+Profiles → Reset Profile, so in combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open
 panel, because every banner lists containers.
 
 ## Learning timed buffs

@@ -188,7 +188,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 
-### test_slash.lua (15)
+### test_slash.lua (16)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -200,7 +200,8 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am delete removes a container by id
 - slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
-- slash: /am resetall in combat refuses in gray and resets nothing
+- slash: /am resetall in combat resets the profile and parks what it drops (options-ui-§12)
+- slash: the General Reset-all popup in combat resets the profile and parks what it drops (options-ui-§12)
 - slash: /am new in combat refuses in gray and creates nothing
 - slash: /am pick starts the frame picker for the selected container
 - slash: /am resetall and the General reset print the same line
@@ -218,7 +219,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a page's Defaults button restores only the selected container
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
 - options: opening a page in combat refuses with the canonical gray line
-- options: the Delete and Reset-all popups refuse in combat
+- options: the Delete popup refuses in combat
 - options: the Background block is composed in canonical order, and its tooltips name the background
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
@@ -283,7 +284,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 13 |
 | test_style.lua | 15 |
 | test_timedspells.lua | 9 |
-| test_slash.lua | 15 |
+| test_slash.lua | 16 |
 | test_optionssetup.lua | 14 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
@@ -292,4 +293,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **206** |
+| **Total** | **207** |

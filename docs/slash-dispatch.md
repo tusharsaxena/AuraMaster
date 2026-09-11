@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:362`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:359`), called from `OnInitialize`. There is no `SLASH_*` global.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -28,7 +28,7 @@ eight-or-more trigger (documentation-§3).
 | 4 | `get path` | library | `cli:CliGet` → `NS.GetSetting(path)`; also answers sub-tables such as `container.filter.whitelist` |
 | 5 | `set path value` | library | `cli:CliSet` → type-aware parse → `NS.SetByPath(path, value)`; an error from the seam is printed |
 | 6 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page |
-| 7 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); refused in combat with a gray notice |
+| 7 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); not refused in combat, where it takes the parked teardown like Profiles → Reset Profile |
 | 8 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
 | 9 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
 | 10 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
@@ -46,7 +46,7 @@ eight-or-more trigger (documentation-§3).
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:166`):
+(`NEW_WORDS`, `settings/Slash.lua:163`):
 
 | Words | Field |
 |---|---|
@@ -72,7 +72,7 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:98`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:345`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:342`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 Examples:
@@ -91,7 +91,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:275` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:272` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's
 formatting or parsing. `tests/degraded_env.lua` loads the addon that way.

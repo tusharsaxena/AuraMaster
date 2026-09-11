@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:363-364`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:360-361`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:184`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -200,13 +200,12 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   The next `FlushPending` that may touch frames destroys it; if its id comes back first, the same
   instance is revived and no second `AuraMasterAnchor<id>` is created.
 - **Registry verbs that create or destroy frames are refused in combat** with a gray line
-  (options-ui-§2): `/am new`, `/am delete`, `/am resetall`, the Containers page's New container,
-  Duplicate and Delete popup, and the General page's Reset-all popup. `ContainerManager.Create`
-  refuses itself, so every creating caller is covered.
-- **Reset all diverges from Profiles → Reset Profile (options-ui-§12) in combat.** Reset Profile is
-  AceDBOptions' own button and cannot be refused, so in combat it completes through the park path.
-  Reset all is refused by choice, a deliberate gate on a surface this addon owns; its line says only
-  what is true, that the containers cannot be rebuilt until combat ends.
+  (options-ui-§2): `/am new`, `/am delete`, and the Containers page's New container, Duplicate and
+  Delete popup. `ContainerManager.Create` refuses itself, so every creating caller is covered.
+- **Reset all is Profiles → Reset Profile, in combat as well (options-ui-§12).** `/am resetall` and
+  the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
+  makes, and neither is refused. In combat all three take the parked teardown above: a container the
+  reset drops draws nothing until combat ends and is torn down then.
 - **A profile switch, copy or reset in combat may create anchor frames.** Those are plain frames,
   which is combat-legal; their engines are built by the deferred apply once combat ends.
 - **Every engine and button binding is `pcall`-guarded** (`callEngine`, `Style.Bind`), so a binding
@@ -238,8 +237,8 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   master enable, visibility, lock and alpha run the visibility pass at once, and the Blizzard-frame
   toggles, a rename and the session toggles queue nothing.
 - **A container deleted or switched away in combat, or while aura information is withheld (an
-  encounter, key or match), draws nothing until that ends, and is torn down then.** Its frames stay parked in the meantime; creating, deleting and resetting from our own
-  surfaces are refused in combat instead.
+  encounter, key or match), draws nothing until that ends, and is torn down then.** Its frames stay parked in the meantime. Creating and deleting from our own
+  surfaces are refused in combat instead; Reset all, like Reset Profile, takes this parked path.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
   one; WoW never frees a frame, so

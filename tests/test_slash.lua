@@ -127,16 +127,60 @@ test("slash: /am delete in combat refuses in gray and keeps the container", func
     assertTrue(grayLine(lines, "cannot delete a container during combat"), lines[#lines] or "")
 end)
 
-test("slash: /am resetall in combat refuses in gray and resets nothing", function()
+local function counted(frame, method)
+    local n, orig = { 0 }, frame[method]
+    frame[method] = function(self, ...)
+        n[1] = n[1] + 1
+        return orig(self, ...)
+    end
+    return n
+end
+
+--- Reset all under lockdown, from `surface`. It must be the act Profiles → Reset Profile performs,
+--- db:ResetProfile() (options-ui-§12), and the container the reset drops must be parked, never
+--- hidden, then torn down once combat ends.
+local function resetsUnderLockdown(surface)
     local NS2, mocks = fresh()
-    local resets = 0
-    NS2.Helpers.RestoreAllDefaults = function() resets = resets + 1 end
+    local CM = NS2.ContainerManager
+    local id = CM.Create({})
+    mocks.__fireTimers()
+    local inst = CM.instances[id]
+    assertTrue(inst.engine ~= nil, "built out of lockdown")
+    inst.anchor:Show()
+    local hides, clears = counted(inst.anchor, "Hide"), counted(inst.anchor, "ClearAllPoints")
+    local engineHides = counted(inst.engine, "Hide")
+    local resets, reset = { 0 }, NS2.db.ResetProfile
+    NS2.db.ResetProfile = function(...)
+        resets[1] = resets[1] + 1
+        return reset(...)
+    end
     local lines = capture(mocks)
     mocks.__lockdown = true
-    NS2.Slash:OnSlash("resetall")
-    -- red under: runResetAll without its InCombatLockdown gate
-    assertEqual(resets, 0)
-    assertTrue(grayLine(lines, "cannot reset settings during combat"), lines[#lines] or "")
+    surface(NS2, mocks)
+    -- red under: the surface keeping an InCombatLockdown refusal in front of RestoreAllDefaults
+    assertEqual(resets[1], 1, "db:ResetProfile(), once: the same act as Reset Profile")
+    assertFalse(grayLine(lines, "during combat"), "no refusal: " .. (lines[#lines] or ""))
+    assertTrue(said(lines, "All settings reset to defaults."), lines[#lines] or "")
+    assertEqual(#NS2.Database.GetContainers(), 3, "the shipped set is back")
+    -- red under: CM.Sync destroying instead of parking under MustDefer
+    assertEqual(hides[1], 0)
+    assertEqual(clears[1], 0)
+    assertEqual(engineHides[1], 0)
+    assertTrue(inst.anchor:IsShown(), "the anchor is not hidden under lockdown")
+    assertFalse(inst.engine.__enabled, "its engine is disabled, which is combat-legal")
+    assertTrue(CM.__retiring()[id] == inst, "parked until combat ends")
+    mocks.__lockdown = false
+    CM.FlushPending()
+    assertTrue(hides[1] >= 1 and clears[1] >= 1, "torn down after combat")
+    assertNil(next(CM.__retiring()), "nothing left parked")
+end
+
+test("slash: /am resetall in combat resets the profile and parks what it drops (options-ui-§12)", function()
+    resetsUnderLockdown(function(NS2) NS2.Slash:OnSlash("resetall") end)
+end)
+
+test("slash: the General Reset-all popup in combat resets the profile and parks what it drops (options-ui-§12)", function()
+    resetsUnderLockdown(function(_, mocks) mocks.StaticPopupDialogs.AURAMASTER_RESET_ALL.OnAccept() end)
 end)
 
 test("slash: /am new in combat refuses in gray and creates nothing", function()

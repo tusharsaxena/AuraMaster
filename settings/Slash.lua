@@ -127,12 +127,8 @@ end
 local function refuse(line) printf("|cff808080%s|r", line) end
 
 function runResetAll()
-    -- Refused by choice, not because it is impossible: Profiles → Reset Profile cannot be refused and
-    -- completes through the parked teardown, but on a surface we own the rebuild waits for the player.
-    if InCombatLockdown() then
-        return refuse(L["cannot reset settings during combat — the containers cannot be rebuilt until combat ends"])
-    end
-    -- The acknowledgment lives INSIDE the guard: on a load where settings/OptionsSetup.lua never
+    -- Not refused in combat: this is Profiles → Reset Profile (options-ui-§12), which takes the
+    -- parked teardown there. The acknowledgment lives INSIDE the guard: on a load where settings/OptionsSetup.lua never
     -- ran there is nothing to delegate to, and printing it anyway would claim work that did not
     -- happen.
     if NS.Helpers and NS.Helpers.RestoreAllDefaults then

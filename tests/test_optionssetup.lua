@@ -152,25 +152,20 @@ test("options: opening a page in combat refuses with the canonical gray line", f
         1, true) ~= nil, "canonical: " .. lines[1])
 end)
 
-test("options: the Delete and Reset-all popups refuse in combat", function()
+-- The Reset-all popup is not refused in combat: it is Profiles → Reset Profile (options-ui-§12), and
+-- tests/test_slash.lua drives it under lockdown through the parked teardown.
+test("options: the Delete popup refuses in combat", function()
     local NS2, m = fresh()
-    local resets = 0
-    NS2.Helpers.RestoreAllDefaults = function() resets = resets + 1 end
     local lines = {}
     rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
     m.__lockdown = true
     m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(nil, 2)
-    m.StaticPopupDialogs.AURAMASTER_RESET_ALL.OnAccept()
     -- red under: the Delete popup's OnAccept without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(2) ~= nil, "the registry is intact")
     assertEqual(#NS2.Database.GetContainers(), 3)
-    -- red under: the Reset-all popup's OnAccept without its InCombatLockdown gate
-    assertEqual(resets, 0, "no reset ran")
-    assertEqual(#lines, 2, "one refusal per popup")
+    assertEqual(#lines, 1, "one refusal")
     assertTrue(lines[1]:find("|cff808080", 1, true) and lines[1]:find("cannot delete a container during combat",
         1, true) ~= nil, lines[1] or "")
-    assertTrue(lines[2]:find("|cff808080", 1, true) and lines[2]:find("cannot reset settings during combat",
-        1, true) ~= nil, lines[2] or "")
 end)
 
 test("options: the Background block is composed in canonical order, and its tooltips name the background", function()

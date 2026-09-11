@@ -19,7 +19,6 @@ local _, NS = ...
 local L = NS.L
 local H = NS.Helpers
 local print = NS.Print
-local printf = NS.Printf
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
 
@@ -102,10 +101,7 @@ StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {
     whileDead    = true,
     hideOnEscape = true,
     OnAccept     = function()
-        -- The same gate as /am resetall, refused by choice (docs/ARCHITECTURE.md, Taint Notes).
-        if InCombatLockdown() then
-            return printf("|cff808080%s|r", L["cannot reset settings during combat — the containers cannot be rebuilt until combat ends"])
-        end
+        -- Not refused in combat, like /am resetall: Reset Profile takes the parked teardown there.
         if NS.Helpers and NS.Helpers.RestoreAllDefaults then
             NS.Helpers.RestoreAllDefaults()
             print(L["All settings reset to defaults."])
