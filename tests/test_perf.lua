@@ -77,7 +77,9 @@ test("perf: suspend holds a queued apply until resume", function()
     NS.SetByPath("container.bars.width", 250, 1)
     mocks.__fireTimers()
     local calls = 0
-    for _, e in ipairs(mocks.__engines) do calls = calls + #e.__calls end
+    for _, e in ipairs(mocks.__engines) do
+        calls = calls + #e.__calls
+    end
     assertEqual(calls, 0, "a suspended addon sent an engine call")
     assertEqual(NS.ContainerManager.FlushPending(), 0)
     NS.Perf.Resume()

@@ -25,7 +25,9 @@ local function attachTargets()
     local _, activeId = NS.ActiveContainer()
     local out = { { value = 0, text = L["None"] } }
     for _, c in ipairs(NS.Database.GetContainers()) do
-        if c.id ~= activeId then out[#out + 1] = { value = c.id, text = tostring(c.name) } end
+        if c.id ~= activeId then
+            out[#out + 1] = { value = c.id, text = tostring(c.name) }
+        end
     end
     return out
 end

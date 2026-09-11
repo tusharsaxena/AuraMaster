@@ -26,7 +26,9 @@ end)
 test("options: every page renders without a reported error", function()
     local NS2, m = fresh()
     local lines = {}
-    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     local aceGUI = m.LibStub("AceGUI-3.0")
     for _, name in ipairs(PAGES) do
         local before = #aceGUI.__created
@@ -64,6 +66,42 @@ test("options: the Filters page offers the spell-list tab only for a buff contai
     NS2.Helpers.SelectContainer(2)
     NS2.Helpers.RenderContainerPage(ctx, "filters", nil)
     assertNil(tabs().spellLists)
+end)
+
+-- Characterization (testing-§13): pinned on RenderContainerPage as one function, before its tab
+-- collection and tab validation moved into local helpers.
+
+test("options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back", function()
+    local NS2, m = fresh()
+    local ctx = NS2.Helpers.__containerCtx.filters
+    NS2.State.SetActiveContainer(1)
+    m.__subcategories.Filters:__fire("OnShow")
+    local want, seen = {}, {}
+    for _, row in ipairs(NS2.SchemaForPage("filters")) do
+        if not seen[row.group] then
+            seen[row.group] = true
+            want[#want + 1] = row.group
+        end
+    end
+    want[#want + 1] = "spellLists"
+    want[#want + 1] = "alwaysNever"
+    local got = {}
+    for i, t in ipairs(ctx.__tabs) do got[i] = t.key end
+    assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups first, then bespoke")
+    ctx.activeTab = "no such tab"
+    NS2.Helpers.RefreshAllPanels()   -- a hidden panel is marked dirty, and re-renders on its next show
+    m.__subcategories.Filters:__fire("OnShow")
+    assertEqual(ctx.activeTab, want[1], "a tab the page does not draw falls back to the first")
+end)
+
+test("options: with no containers a container page draws one placeholder tab", function()
+    local NS2, m = fresh()
+    for _, c in ipairs(NS2.Database.GetContainers()) do NS2.ContainerManager.Delete(c.id) end
+    m.__subcategories.Filters:__fire("OnShow")
+    local ctx = NS2.Helpers.__containerCtx.filters
+    assertEqual(#ctx.__tabs, 1, "one tab")
+    assertEqual(ctx.__tabs[1].key, "__empty")
+    assertEqual(ctx.activeTab, "__empty")
 end)
 
 test("options: the banner is the picker — choosing a container retargets every page", function()
@@ -118,7 +156,9 @@ test("options: Reset all settings resets the active profile whole, and nothing e
     NS2.Helpers.RestoreAllDefaults()
 
     local names = {}
-    for _, c in ipairs(NS2.Database.GetContainers()) do names[#names + 1] = c.name end
+    for _, c in ipairs(NS2.Database.GetContainers()) do
+        names[#names + 1] = c.name
+    end
     assertEqual(table.concat(names, "|"), "Player buffs|Player debuffs|Target debuffs (mine)",
         "exactly the shipped set survives")
     assertEqual(table.concat(NS2.db:GetProfiles(), ","), profilesBefore, "the profile list is untouched")
@@ -141,7 +181,9 @@ test("options: opening a page in combat refuses with the canonical gray line", f
         mk.Settings.OpenToCategory = function() opened = opened + 1 end
     end })
     local lines = {}
-    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     m.__lockdown = true
     NS2.OpenOptionsPage("layout")
     -- red under: OpenOptionsPage without its InCombatLockdown gate
@@ -157,7 +199,9 @@ end)
 test("options: the Delete popup refuses in combat", function()
     local NS2, m = fresh()
     local lines = {}
-    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     m.__lockdown = true
     m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(nil, 2)
     -- red under: the Delete popup's OnAccept without its InCombatLockdown gate
@@ -227,7 +271,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
 
     local function snapshot()
         local ys = {}
-        for i = 1, #ctx.__tabs do
+        for i in ipairs(ctx.__tabs) do
             local b = ctx.__tabKids[i]
             assertEqual(b.__stripRel, ctx.chrome, "tab " .. i .. " anchors to the chrome")
             ys[i] = b.__stripY
@@ -250,14 +294,15 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
     for _ in pairs(rows) do rowCount = rowCount + 1 end
     assertTrue(rowCount >= 2, "the strip wrapped (" .. rowCount .. " row)")
 
-    for i = 2, #keys do
+    local keyCount = #keys
+    for i = 2, keyCount do
         clear()
         ctx.__tabKids[i]:__fire("OnClick")
         assertEqual(ctx.activeTab, keys[i], "selected " .. keys[i])
         local got = snapshot()
         -- red under: placeTabs taking its pitch from the first button's art as drawn (active when tab 1 is selected) — the pre-minor-13 bug
         assertEqual(got.band, ref.band, "band with " .. keys[i] .. " selected")
-        for j = 1, #keys do
+        for j = 1, keyCount do
             assertEqual(got.ys[j], ref.ys[j], "tab " .. j .. " y with " .. keys[i] .. " selected")
         end
     end
@@ -272,10 +317,14 @@ test("options: the degraded stub completes the load — every page's rows still 
     assertEqual(NS2.Helpers.MASTER_GROUP, "Master controls")
     assertEqual(#NS2.Schema, #NS.Schema, "the degraded schema has every row the live one has")
     local lines = {}
-    rawset(m2.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(m2.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     NS2.CreateOptionsPanel()
     -- The degraded printer names the missing library once, on the first line it ever prints
     -- (core/CoreSetup.lua); the panel's own refusal is the line after it.
-    assertTrue(#lines >= 1 and #lines <= 2, "at most the one-time notice and the refusal")
-    assertTrue(lines[#lines]:find("settings panel is unavailable", 1, true) ~= nil, lines[#lines] or "")
+    local count = #lines
+    assertTrue(count >= 1 and count <= 2, "at most the one-time notice and the refusal")
+    local last = lines[count] or ""
+    assertTrue(last:find("settings panel is unavailable", 1, true) ~= nil, last)
 end)

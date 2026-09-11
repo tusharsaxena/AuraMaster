@@ -79,7 +79,7 @@ never read back off an engine frame; the anchor is sized to one element from con
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:244-246`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:246-248`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters are honored only on one side of the friend/foe line
@@ -150,7 +150,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:360`).
+  aura buttons (`modules/Container.lua:362`).
 
 ## Smaller API moves this addon absorbs
 

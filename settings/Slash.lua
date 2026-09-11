@@ -142,7 +142,8 @@ end
 
 function runContainers()
     local list = NS.Database.GetContainers()
-    if #list == 0 then return print(L["No containers yet — /am new creates one"]) end
+    local count = #list
+    if count == 0 then return print(L["No containers yet — /am new creates one"]) end
     local _, activeId = NS.ActiveContainer()
     print(L["Containers"])
     for _, c in ipairs(list) do
@@ -281,7 +282,9 @@ if not SlashLib then
         end
         stub.LandingRows = function()
             local out = {}
-            for _, e in ipairs(d.commands) do out[#out + 1] = SlashLib.FormatRow("/am " .. e[1], e[2]) end
+            for _, e in ipairs(d.commands) do
+                out[#out + 1] = SlashLib.FormatRow("/am " .. e[1], e[2])
+            end
             return out
         end
         stub.PrintHelp = function()

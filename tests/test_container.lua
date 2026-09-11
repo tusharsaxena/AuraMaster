@@ -184,7 +184,9 @@ test("container: Blizzard's load-on-demand aura container is loaded before the f
     local NS, mocks = fresh({ before = function(m)
         m.C_AddOns = {
             IsAddOnLoaded = function() return false end,
-            LoadAddOn = function(name) loaded[#loaded + 1] = name end,
+            LoadAddOn = function(name)
+                loaded[#loaded + 1] = name
+            end,
         }
     end })
     assertEqual(loaded[1], "Blizzard_AuraContainer")

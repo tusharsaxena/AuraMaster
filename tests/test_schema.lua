@@ -137,7 +137,9 @@ test("schema: every write announces CONFIG_CHANGED once, naming the container", 
     local NS2 = fresh()
     local got = {}
     local rx = NS2.NewBusTarget()
-    rx:RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, payload) got[#got + 1] = payload end)
+    rx:RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, payload)
+        got[#got + 1] = payload
+    end)
     NS2.State.SetActiveContainer(3)
     NS2.SetByPath("container.icons.width", 40)
     assertEqual(#got, 1)
@@ -209,7 +211,9 @@ test("schema: a spell set is written whole and normalized to positive integer id
         { ["12"] = true, [0] = true, [-3] = true, [4.5] = true, [99] = false, [7] = true, x = true }))
     local set = NS2.Database.FindContainer(1).filter.whitelist
     local ids = {}
-    for id in pairs(set) do ids[#ids + 1] = id end
+    for id in pairs(set) do
+        ids[#ids + 1] = id
+    end
     table.sort(ids)
     assertEqual(table.concat(ids, ","), "7,12")
     assertFalse((NS2.SetByPath("container.filter.blacklist", "12")), "a non-set is refused")
@@ -237,10 +241,14 @@ test("schema: a whole section written through the seam replaces it, backfills it
     NS2.State.debug = true
     local lines = {}
     NS2.Debug = function(tag, fmt, ...)
-        if tag == "Set" then lines[#lines + 1] = fmt:format(...) end
+        if tag == "Set" then
+            lines[#lines + 1] = fmt:format(...)
+        end
     end
     local got = {}
-    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, p) got[#got + 1] = p end)
+    NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, p)
+        got[#got + 1] = p
+    end)
     local given = { point = "TOP", x = 5 }
     assertTrue(NS2.SetByPath("container.position", given, 1))
     NS2.State.debug = false

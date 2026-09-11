@@ -30,10 +30,10 @@ is a defect in this doc (documentation-§3).
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:357`): the page's schema groups become tabs, the page's bespoke tabs
+  (`settings/OptionsSetup.lua:404`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:167`): the buff categories are not offered on a debuff container, and a
+  (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
   weapon-enchant container sees only the rows that mean something for it.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -51,7 +51,7 @@ band holds **the picker itself** (options-ui-§14):
   page's only picker.
 - **Containers** has more page-wide acts than fit one row, so it takes the one-row-band escape: the
   band carries only the identity controls — the Container picker and **New container**
-  (`settings/Containers.lua:231`) — and every act on the selected container (Duplicate, Delete, Copy
+  (`settings/Containers.lua:232`) — and every act on the selected container (Duplicate, Delete, Copy
   settings from) sits on the page's first tab, named **General**. No page-wide act is drawn on any
   other tab. The band is not boxed a second time.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through

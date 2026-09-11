@@ -22,7 +22,9 @@ end
 
 local function sources()
     local out, p = {}, io.popen("ls -1 core/*.lua modules/*.lua settings/*.lua defaults/*.lua 2>/dev/null")
-    for line in p:lines() do out[#out + 1] = line end
+    for line in p:lines() do
+        out[#out + 1] = line
+    end
     p:close()
     return out
 end
@@ -42,7 +44,9 @@ test("locale: every L[...] subscript in the source is defined in enUS.lua", func
     local missing = {}
     for _, path in ipairs(sources()) do
         for key in readFile(path):gmatch('%f[%w_]L%[%s*"(.-)"%s*%]') do
-            if not keys[key] then missing[#missing + 1] = path .. ": " .. key end
+            if not keys[key] then
+                missing[#missing + 1] = path .. ": " .. key
+            end
         end
     end
     assertEqual(#missing, 0, "used but not defined: " .. table.concat(missing, "; "))
@@ -51,11 +55,15 @@ end)
 test("locale: every key enUS.lua defines is used somewhere in the source", function()
     local keys = defined()
     local corpus = {}
-    for _, path in ipairs(sources()) do corpus[#corpus + 1] = readFile(path) end
+    for _, path in ipairs(sources()) do
+        corpus[#corpus + 1] = readFile(path)
+    end
     local all = table.concat(corpus, "\n")
     local dead = {}
     for key in pairs(keys) do
-        if not all:find('"' .. key .. '"', 1, true) then dead[#dead + 1] = key end
+        if not all:find('"' .. key .. '"', 1, true) then
+            dead[#dead + 1] = key
+        end
     end
     table.sort(dead)
     assertEqual(#dead, 0, "defined but never used: " .. table.concat(dead, "; "))

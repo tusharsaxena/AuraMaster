@@ -92,11 +92,12 @@ if not lib then
         local rows = {}
         for _, leaf in ipairs(leaves) do
             if not omit[leaf.leaf] then
-                rows[#rows + 1] = {
+                local row = {
                     path = leaf.path or ((spec.prefix or "") .. (keys[leaf.leaf] or leaf.leaf)),
                     page = spec.page, group = spec.group, subgroup = spec.subgroup,
                     type = leaf.type, sessionOnly = leaf.sessionOnly,
                 }
+                rows[#rows + 1] = row
             end
         end
         for _, extra in ipairs(spec.extra or {}) do
@@ -345,6 +346,52 @@ function Helpers.RenderWarnings(ctx, cfg)
     end
 end
 
+--- A container page's tabs: its schema groups in first-seen order, then the bespoke tabs the
+--- container's aura type admits. No container, no tabs.
+--- @return table tabs, table byGroup, table bespoke
+local function collectTabs(cfg, pageKey, spec)
+    local tabs, byGroup, bespoke = {}, {}, {}
+    if not cfg then return tabs, byGroup, bespoke end
+    for _, row in ipairs(NS.SchemaForPage(pageKey)) do
+        if not byGroup[row.group] then
+            byGroup[row.group] = {}
+            tabs[#tabs + 1] = { key = row.group, label = row.group }
+        end
+        local rows = byGroup[row.group]
+        rows[#rows + 1] = row
+    end
+    for _, t in ipairs(spec.tabs or {}) do
+        if not t.auraTypes or t.auraTypes[cfg.auraType] then
+            tabs[#tabs + 1] = { key = t.key, label = t.label }
+            bespoke[t.key] = t
+        end
+    end
+    return tabs, byGroup, bespoke
+end
+
+--- Keep the active tab when this render draws it; otherwise fall back to the first.
+local function settleActiveTab(ctx, tabs)
+    for _, t in ipairs(tabs) do
+        if t.key == ctx.activeTab then return end
+    end
+    ctx.activeTab = tabs[1].key
+end
+
+--- The active tab's content, under the page's intro; the empty registry's one line instead.
+local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
+    if not cfg then
+        Helpers.TextRow(ctx, L["No containers yet. Create one on the Containers page, or type /am new."])
+        return
+    end
+    if spec.intro then spec.intro(ctx, cfg) end
+    local b = bespoke[ctx.activeTab]
+    if b then
+        b.render(ctx, cfg)
+    elseif byGroup[ctx.activeTab] then
+        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, nil, { noHeadings = true })
+    end
+end
+
 --- Render one per-container page: the chrome block (the banner, or a host header), the tab strip
 --- over the page's schema groups plus any bespoke tabs, and the active tab's content.
 ---
@@ -369,30 +416,11 @@ function Helpers.RenderContainerPage(ctx, pageKey, spec)
     end
 
     local cfg = NS.ActiveContainer()
-    local tabs, byGroup, bespoke = {}, {}, {}
-    if cfg then
-        for _, row in ipairs(NS.SchemaForPage(pageKey)) do
-            if not byGroup[row.group] then
-                byGroup[row.group] = {}
-                tabs[#tabs + 1] = { key = row.group, label = row.group }
-            end
-            local rows = byGroup[row.group]
-            rows[#rows + 1] = row
-        end
-        for _, t in ipairs(spec.tabs or {}) do
-            if not t.auraTypes or t.auraTypes[cfg.auraType] then
-                tabs[#tabs + 1] = { key = t.key, label = t.label }
-                bespoke[t.key] = t
-            end
-        end
-    end
+    local tabs, byGroup, bespoke = collectTabs(cfg, pageKey, spec)
     -- Every page draws a strip (options-ui-§13), including the empty registry's one-tab page.
-    if #tabs == 0 then tabs[1] = { key = "__empty", label = L["Container"] } end
+    if tabs[1] == nil then tabs[1] = { key = "__empty", label = L["Container"] } end
     ctx.__tabs = tabs   -- test seam: which tabs this render drew
-
-    local valid = false
-    for _, t in ipairs(tabs) do if t.key == ctx.activeTab then valid = true end end
-    if not valid then ctx.activeTab = tabs[1].key end
+    settleActiveTab(ctx, tabs)
 
     Helpers.TabStrip(ctx, {
         tabs  = tabs,
@@ -404,17 +432,7 @@ function Helpers.RenderContainerPage(ctx, pageKey, spec)
         end,
     })
 
-    if not cfg then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on the Containers page, or type /am new."])
-    else
-        if spec.intro then spec.intro(ctx, cfg) end
-        local b = bespoke[ctx.activeTab]
-        if b then
-            b.render(ctx, cfg)
-        elseif byGroup[ctx.activeTab] then
-            Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, nil, { noHeadings = true })
-        end
-    end
+    renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
 
     if scroll and scroll.DoLayout then scroll:DoLayout() end
     releaseStaleChromeWidgets(ctx)

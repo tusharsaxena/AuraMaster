@@ -15,7 +15,9 @@ test("core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] 
     local NS2, mocks = fresh()
     assertTrue(NS2.Print == NS2.Util.print, "one function object (architecture-§2)")
     local lines = {}
-    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     NS2.Print("hello")
     assertEqual(#lines, 1)
     assertTrue(lines[1]:find("|cFF00FFFF[AM]|r", 1, true) ~= nil, "the tag: " .. lines[1])
@@ -27,7 +29,9 @@ test("core: NS.Printf is reclaimed from AceConsole and formats inside the secret
     -- red under: dropping the Printf reclaim in core/AuraMaster.lua
     assertTrue(NS2.Printf == NS2.Util.printf, "one function object, reclaimed like NS.Print")
     local lines = {}
-    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     NS2.Printf("x %s", "y")
     assertEqual(#lines, 1)
     assertTrue(lines[1]:find("|cFF00FFFF[AM]|r", 1, true) ~= nil, "the tag: " .. lines[1])
@@ -37,7 +41,9 @@ end)
 test("core: every close control goes through the one NS.MakeCloseButton wrapper", function()
     local p = io.popen("grep -rn 'MakeCloseButton(' --include='*.lua' core modules settings")
     local hits = {}
-    for line in p:lines() do hits[#hits + 1] = line end
+    for line in p:lines() do
+        hits[#hits + 1] = line
+    end
     p:close()
     for _, h in ipairs(hits) do
         assertTrue(h:find("^core/CoreSetup%.lua") or h:find("NS%.MakeCloseButton%("),

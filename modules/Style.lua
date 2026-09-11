@@ -186,7 +186,8 @@ end
 --- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now.
 local function dispelMapCurrent(entry, stored)
     local types, src = C.DISPEL_TYPES, entry.src
-    for i = 1, #types do
+    local count = #types
+    for i = 1, count do
         if stored[types[i]] ~= src[types[i]] then return false end
     end
     return true

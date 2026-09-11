@@ -19,7 +19,9 @@ local function engineButton()
     local b = mocks.__stubFrame()
     b.__bound = {}
     for _, m in ipairs(BINDINGS) do
-        b[m] = function(_, ...) b.__bound[#b.__bound + 1] = { m, ... } end
+        b[m] = function(_, ...)
+            b.__bound[#b.__bound + 1] = { m, ... }
+        end
     end
     function b:__count(m)
         local n = 0
@@ -61,7 +63,10 @@ test("style: a stored-nil leaf falls back to the template's own value", function
         NS2.Style.Element(frame, c, false)
         local sizes = {}
         -- name, time and stacks are one FontString in the kit (mock_base: CreateFontString aliases).
-        rawset(frame.__am.name, "SetFont", function(_, _, size) sizes[#sizes + 1] = size; return true end)
+        rawset(frame.__am.name, "SetFont", function(_, _, size)
+            sizes[#sizes + 1] = size
+            return true
+        end)
         NS2.Style.Element(frame, c, false)
         local inst = NS2.ContainerManager.instances[1]
         inst:Cfg().layout.strata = nil
@@ -293,7 +298,9 @@ test("style: buttons of one look share one formatter and curve; a new color buil
         local b = m2.__stubFrame()
         b.__bound = {}
         for _, name in ipairs(BINDINGS) do
-            b[name] = function(_, ...) b.__bound[#b.__bound + 1] = { name, ... } end
+            b[name] = function(_, ...)
+                b.__bound[#b.__bound + 1] = { name, ... }
+            end
         end
         return b
     end

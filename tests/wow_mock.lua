@@ -47,7 +47,9 @@ return function()
     -- out of the addon's bytes-per-iteration figure.
     local function record(self, name, ...)
         self.__counts[name] = (self.__counts[name] or 0) + 1
-        if not M.__countOnly then self.__calls[#self.__calls + 1] = { name, ... } end
+        if not M.__countOnly then
+            self.__calls[#self.__calls + 1] = { name, ... }
+        end
     end
 
     local function makeEngine(f)
@@ -72,12 +74,19 @@ return function()
             frame.__enchantSlot = slot
             return frame
         end
-        function f:GetAuraGroupFrameCount(key) return #(self.__frames[key] or {}) end
+        function f:GetAuraGroupFrameCount(key)
+            local frames = self.__frames[key] or {}
+            return #frames
+        end
         function f:GetAuraGroupFrame(key, i) return (self.__frames[key] or {})[i] end
         --- Every call to `name`, in order (a test helper; not engine API).
         function f:__callsTo(name)
             local out = {}
-            for _, c in ipairs(self.__calls) do if c[1] == name then out[#out + 1] = c end end
+            for _, c in ipairs(self.__calls) do
+                if c[1] == name then
+                    out[#out + 1] = c
+                end
+            end
             return out
         end
         --- The index of the first call to `name`, or nil.

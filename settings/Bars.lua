@@ -145,8 +145,9 @@ local HI = {
 }
 for _, name in ipairs(C.DISPEL_TYPES) do
     -- Palette definition: one color per dispel type, used when the bar is colored by dispel type.
-    HI[#HI + 1] = { path = P .. "dispelColors." .. name, page = PAGE, group = G_HI, subgroup = L["Dispel type colors"],
+    local row = { path = P .. "dispelColors." .. name, page = PAGE, group = G_HI, subgroup = L["Dispel type colors"],
         type = "color", label = L[name], desc = L["The fill color for this dispel type when Color by is set to dispel type."] }
+    HI[#HI + 1] = row
 end
 NS.RegisterSchemaRows(HI)
 

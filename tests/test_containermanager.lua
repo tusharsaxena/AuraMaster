@@ -8,7 +8,9 @@ local fresh = dofile("tests/fresh_env.lua")
 
 local function chat(mocks)
     local lines = {}
-    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     return lines
 end
 
@@ -219,7 +221,11 @@ test("manager: the regen edge never escalates the notice; a later held request d
     assertEqual(countLines(lines, "will apply"), 2)
     mocks.__aurasSecret = false
     local flushed, orig = {}, CM.FlushPending
-    CM.FlushPending = function(...) local n = orig(...); flushed[#flushed + 1] = n; return n end
+    CM.FlushPending = function(...)
+        local n = orig(...)
+        flushed[#flushed + 1] = n
+        return n
+    end
     NS.addon:OnRestrictionChanged()
     CM.FlushPending = orig
     assertTrue((flushed[1] or 0) > 0, "the held apply runs once secrecy lifts")
@@ -244,7 +250,7 @@ end
 local function spyCreate(mocks, prefix)
     local n, orig = { 0 }, mocks.CreateFrame
     mocks.CreateFrame = function(frameType, name, ...)
-        if type(name) == "string" and name:sub(1, #prefix) == prefix then n[1] = n[1] + 1 end
+        if type(name) == "string" and name:find(prefix, 1, true) == 1 then n[1] = n[1] + 1 end
         return orig(frameType, name, ...)
     end
     return n
@@ -409,7 +415,10 @@ end
 local function requestsOnSwap(NS)
     local CM = NS.ContainerManager
     local asked, orig = {}, CM.RequestApply
-    CM.RequestApply = function(id) asked[#asked + 1] = id; return orig(id) end
+    CM.RequestApply = function(id)
+        asked[#asked + 1] = id
+        return orig(id)
+    end
     NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
     CM.RequestApply = orig
     return asked

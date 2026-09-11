@@ -180,43 +180,49 @@ local function spellSet(map)
     return out
 end
 
---- Build the engine-facing plan for one container.
----
---- @param cfg table  the container's stored table (defaults/Profile.lua CONTAINER_TEMPLATE shape)
---- @param ctx table|nil  { categories = NS.Categories, timedSpells = { [id] = true } }
---- @return table  plan = { groups = { {key, filter, candidateFilters, sortMethod, sortDirection,
----                maxFrameCount, label} }, enchants = { slots, hidePermanent } | nil, warnings = {} }
-function FC.Compile(cfg, ctx)
-    ctx = ctx or {}
-    local Categories = ctx.categories or NS.Categories
+local function warn(plan, w)
+    plan.warnings[#plan.warnings + 1] = w
+end
+
+local function enchantBlock(filter)
+    return { slots = { "mainHand", "offHand", "ranged" },
+        hidePermanent = filter.hidePermanentEnchants ~= false }
+end
+
+--- How every group sorts and caps: the same for each group a container compiles to.
+local function lookOf(filter)
     local C = NS.Constants
-    local filter = cfg.filter or {}
-    local plan = { groups = {}, warnings = {}, enchants = nil }
+    return {
+        sortMethod    = sortKey(filter.sortMethod, C.SORT_METHOD_ENGINE, "default"),
+        sortDirection = (filter.sortDirection == "reverse") and "reverse" or "normal",
+        maxFrameCount = (tonumber(filter.maxAuras) or 0) > 0 and math.floor(filter.maxAuras) or HUGE,
+    }
+end
 
-    local sortMethod = sortKey(filter.sortMethod, C.SORT_METHOD_ENGINE, "default")
-    local sortDirection = (filter.sortDirection == "reverse") and "reverse" or "normal"
-    local maxFrameCount = (tonumber(filter.maxAuras) or 0) > 0 and math.floor(filter.maxAuras) or HUGE
-
-    local auraType = cfg.auraType
-    if auraType == "ENCHANT" then
-        if cfg.unit ~= "player" then
-            plan.warnings[#plan.warnings + 1] = FC.WARN.ENCHANT_UNIT
-        end
-        plan.enchants = { slots = { "mainHand", "offHand", "ranged" },
-            hidePermanent = filter.hidePermanentEnchants ~= false }
-        return plan
+--- A weapon-enchant container: the three slots and no aura groups.
+local function compileEnchant(plan, cfg, filter)
+    if cfg.unit ~= "player" then
+        warn(plan, FC.WARN.ENCHANT_UNIT)
     end
-    if auraType ~= "HARMFUL" then auraType = "HELPFUL" end
+    plan.enchants = enchantBlock(filter)
+    return plan
+end
 
-    -- ── The base every group starts from ────────────────────────────────────────────────────
+--- The base every group starts from: the aura type, and who cast it.
+local function baseFor(auraType, castBy)
     local base = newCon()
     addToken(base, auraType)
-    if filter.castBy == "mine" then
+    if castBy == "mine" then
         addToken(base, "PLAYER")
-    elseif filter.castBy == "others" then
+    elseif castBy == "others" then
         addToken(base, "!PLAYER")
     end
+    return base
+end
 
+--- The duration mode and the max duration, applied to the base.
+--- @return boolean  whether the base now filters by spell id
+local function applyDuration(base, plan, filter, auraType, timedSpells)
     local usesSpellIds = false
     local mode = filter.durationMode
     local maxDuration = tonumber(filter.maxDuration) or 0
@@ -224,20 +230,20 @@ function FC.Compile(cfg, ctx)
     -- spell-id exclusion is not honored for debuffs on friendly units anyway: on a debuff container
     -- the mode means nothing, so it is reported and treated as "any".
     if mode == "timeless" and auraType ~= "HELPFUL" then
-        plan.warnings[#plan.warnings + 1] = FC.WARN.TIMELESS_BUFFS_ONLY
+        warn(plan, FC.WARN.TIMELESS_BUFFS_ONLY)
         mode = "any"
     end
     if mode == "timeless" then
         -- No engine filter selects "no duration". The workaround: exclude every spell we have SEEN
         -- carry one (modules/TimedSpells.lua learns them while auras are readable). A maxDuration
         -- would drop the very auras this mode is for, so it is ignored here and the player is told.
-        local timed = ctx.timedSpells or {}
+        local timed = timedSpells or {}
         if not isEmpty(timed) then
             addToSet(base, "excludeSpellIDs", timed)
             usesSpellIds = true
         end
         if maxDuration > 0 then
-            plan.warnings[#plan.warnings + 1] = FC.WARN.MAX_WITH_TIMELESS
+            warn(plan, FC.WARN.MAX_WITH_TIMELESS)
         end
     elseif maxDuration > 0 then
         base.cand.maxDuration = maxDuration
@@ -245,18 +251,24 @@ function FC.Compile(cfg, ctx)
         -- The engine drops permanent auras whenever maxDuration is set, which is exactly "timed".
         base.cand.maxDuration = HUGE
     end
+    return usesSpellIds
+end
 
+--- The whitelist and the blacklist as id sets; the blacklist goes on the base.
+--- @return table whitelist, boolean usesSpellIds
+local function applyLists(base, filter)
     local blacklist = spellSet(filter.blacklist)
     local whitelist = spellSet(filter.whitelist)
     for id in pairs(blacklist) do whitelist[id] = nil end     -- "never" beats "always"
-    if not isEmpty(blacklist) then
-        addToSet(base, "excludeSpellIDs", blacklist)
-        usesSpellIds = true
-    end
+    if isEmpty(blacklist) then return whitelist, false end
+    addToSet(base, "excludeSpellIDs", blacklist)
+    return whitelist, true
+end
 
-    -- ── Categories: shown and hidden, in declaration order ───────────────────────────────────
-    local shown, hidden = {}, {}
-    local states = filter.categories or {}
+--- The categories set to show and to hide, in declaration order.
+--- @return table shown, table hidden, boolean usesSpellIds
+local function splitCategories(Categories, auraType, states)
+    local shown, hidden, usesSpellIds = {}, {}, false
     for _, def in ipairs(Categories.For(auraType)) do
         local state = states[def.key]
         if state == "show" then
@@ -266,62 +278,106 @@ function FC.Compile(cfg, ctx)
         end
         if (state == "show" or state == "hide") and def.kind == "spells" then usesSpellIds = true end
     end
+    return shown, hidden, usesSpellIds
+end
 
-    local function finish(con, label)
-        if con.conflict then return end
-        local cand = con.cand
-        local groupCount = #plan.groups + 1
-        plan.groups[groupCount] = {
-            key              = "g" .. groupCount,
-            label            = label,
-            filter           = table.concat(con.tokens, "|"),
-            candidateFilters = next(cand) and cand or nil,
-            sortMethod       = sortMethod,
-            sortDirection    = sortDirection,
-            maxFrameCount    = maxFrameCount,
-        }
-    end
+--- One engine group for `con`, unless it is a contradiction.
+local function addGroup(plan, con, label, look)
+    if con.conflict then return end
+    local cand = con.cand
+    local groupCount = #plan.groups + 1
+    plan.groups[groupCount] = {
+        key              = "g" .. groupCount,
+        label            = label,
+        filter           = table.concat(con.tokens, "|"),
+        candidateFilters = next(cand) and cand or nil,
+        sortMethod       = look.sortMethod,
+        sortDirection    = look.sortDirection,
+        maxFrameCount    = look.maxFrameCount,
+    }
+end
 
-    -- The whitelist group: the aura type, the ids, nothing else.
-    if not isEmpty(whitelist) then
-        local wl = newCon()
-        addToken(wl, auraType)
-        addToSet(wl, "includeSpellIDs", whitelist)
-        finish(wl, "Always shown")
-        usesSpellIds = true
-    end
+--- The whitelist group: the aura type, the ids, nothing else.
+--- @return boolean  whether a group was added
+local function addWhitelistGroup(plan, auraType, whitelist, look)
+    if isEmpty(whitelist) then return false end
+    local wl = newCon()
+    addToken(wl, auraType)
+    addToSet(wl, "includeSpellIDs", whitelist)
+    addGroup(plan, wl, "Always shown", look)
+    return true
+end
 
+--- The category groups: one "All" group, or one per shown category. Each excludes the hidden
+--- categories, the whitelist, and every shown category before it.
+local function addCategoryGroups(plan, base, cats, cfg, look)
     local function withExclusions(con)
-        for _, def in ipairs(hidden) do applyCategory(con, def, cfg, false) end
-        if not isEmpty(whitelist) then addToSet(con, "excludeSpellIDs", whitelist) end
+        for _, def in ipairs(cats.hidden) do applyCategory(con, def, cfg, false) end
+        if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
         return con
     end
 
-    if #shown == 0 then
-        finish(withExclusions(cloneCon(base)), "All")
-    else
-        for i, def in ipairs(shown) do
-            local con = cloneCon(base)
-            applyCategory(con, def, cfg, true)
-            for j = 1, i - 1 do applyCategory(con, shown[j], cfg, false) end
-            finish(withExclusions(con), def.label)
+    local shown = cats.shown
+    local shownCount = #shown
+    if shownCount == 0 then
+        addGroup(plan, withExclusions(cloneCon(base)), "All", look)
+        return
+    end
+    for i, def in ipairs(shown) do
+        local con = cloneCon(base)
+        applyCategory(con, def, cfg, true)
+        for j = 1, i - 1 do applyCategory(con, shown[j], cfg, false) end
+        addGroup(plan, withExclusions(con), def.label, look)
+    end
+end
+
+--- The warnings that depend on the finished plan.
+local function finishWarnings(plan, unit, auraType, usesSpellIds)
+    if usesSpellIds then
+        local w = identityWarning(unit, auraType)
+        if w then
+            warn(plan, w)
         end
     end
+    local groupCount = #plan.groups
+    if groupCount == 0 then
+        warn(plan, FC.WARN.NEVER_MATCHES)
+    end
+end
+
+--- Build the engine-facing plan for one container.
+---
+--- @param cfg table  the container's stored table (defaults/Profile.lua CONTAINER_TEMPLATE shape)
+--- @param ctx table|nil  { categories = NS.Categories, timedSpells = { [id] = true } }
+--- @return table  plan = { groups = { {key, filter, candidateFilters, sortMethod, sortDirection,
+---                maxFrameCount, label} }, enchants = { slots, hidePermanent } | nil, warnings = {} }
+function FC.Compile(cfg, ctx)
+    ctx = ctx or {}
+    local Categories = ctx.categories or NS.Categories
+    local filter = cfg.filter or {}
+    local plan = { groups = {}, warnings = {}, enchants = nil }
+    local look = lookOf(filter)
+
+    local auraType = cfg.auraType
+    if auraType == "ENCHANT" then return compileEnchant(plan, cfg, filter) end
+    if auraType ~= "HARMFUL" then auraType = "HELPFUL" end
+
+    -- ── The base every group starts from ────────────────────────────────────────────────────
+    local base = baseFor(auraType, filter.castBy)
+    local timedIds = applyDuration(base, plan, filter, auraType, ctx.timedSpells)
+    local whitelist, blacklisted = applyLists(base, filter)
+
+    -- ── Categories: shown and hidden, in declaration order ───────────────────────────────────
+    local shown, hidden, categoryIds = splitCategories(Categories, auraType, filter.categories or {})
+    local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
+    addCategoryGroups(plan, base, { shown = shown, hidden = hidden, whitelist = whitelist }, cfg, look)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     if auraType == "HELPFUL" and filter.includeEnchants and cfg.unit == "player" then
-        plan.enchants = { slots = { "mainHand", "offHand", "ranged" },
-            hidePermanent = filter.hidePermanentEnchants ~= false }
+        plan.enchants = enchantBlock(filter)
     end
 
-    if usesSpellIds then
-        local w = identityWarning(cfg.unit, auraType)
-        if w then plan.warnings[#plan.warnings + 1] = w end
-    end
-    if #plan.groups == 0 then
-        plan.warnings[#plan.warnings + 1] = FC.WARN.NEVER_MATCHES
-    end
-
+    finishWarnings(plan, cfg.unit, auraType, timedIds or blacklisted or categoryIds or whitelisted)
     return plan
 end
 
@@ -334,7 +390,9 @@ function FC.Signature(v)
     local t = type(v)
     if t ~= "table" then return t .. ":" .. tostring(v) end
     local keys = {}
-    for k in pairs(v) do keys[#keys + 1] = k end
+    for k in pairs(v) do
+        keys[#keys + 1] = k
+    end
     table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
     local parts = {}
     for i, k in ipairs(keys) do parts[i] = tostring(k) .. "=" .. FC.Signature(v[k]) end

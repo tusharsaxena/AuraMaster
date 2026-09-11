@@ -177,7 +177,8 @@ local function afterGeneral(ctx)
     H.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
         { text = L["Delete"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
-    if #NS.Database.GetContainers() > 1 then renderCopy(ctx) end
+    local count = #NS.Database.GetContainers()
+    if count > 1 then renderCopy(ctx) end
 end
 
 -- ---------------------------------------------------------------------------
@@ -202,21 +203,21 @@ local function renderOverview(ctx)
     local AceGUI = NS.AceGUI
     local items = {}
     for _, c in ipairs(NS.Database.GetContainers()) do
-        items[#items + 1] = { make = function(_, parent, rel)
+        table.insert(items, { make = function(_, parent, rel)
             local lbl = AceGUI:Create("Label")
             lbl:SetText(describe(c))
             lbl:SetRelativeWidth(rel or 0.5)
             parent:AddChild(lbl)
             return lbl
-        end }
-        items[#items + 1] = { make = function(_, parent, rel)
+        end })
+        table.insert(items, { make = function(_, parent, rel)
             local btn = AceGUI:Create("Button")
             btn:SetText(L["Select"])
             btn:SetRelativeWidth((rel or 0.5) * 0.5)
             btn:SetCallback("OnClick", function() selectAndRefresh(c.id) end)
             parent:AddChild(btn)
             return btn
-        end }
+        end })
     end
     H.RenderGrid(ctx, items)
 end

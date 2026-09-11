@@ -79,7 +79,9 @@ test("anchors: a screen fallback and a skipped resolve are traced", function()
     local NS, mocks = fresh()
     local lines = {}
     NS.Debug = function(tag, fmt, ...)
-        if tag == "Anchor" then lines[#lines + 1] = fmt:format(...) end
+        if tag == "Anchor" then
+            lines[#lines + 1] = fmt:format(...)
+        end
     end
     local CM = NS.ContainerManager
     NS.Anchors.Place(CM.instances[2])

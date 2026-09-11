@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:184`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:213`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -176,7 +176,7 @@ it directly.
 A schema row's `path` is either absolute into `profile` (`enabled`, `hideBlizzardBuffs`) or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:98`). `NS.DefaultFor(path)` reads the
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:102`). `NS.DefaultFor(path)` reads the
 same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
@@ -210,13 +210,13 @@ rather than the target.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:208`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:237`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
 - **Schema v1** is the shape the addon shipped with at 0.1.0. **The ladder is empty**, and
   `Database.CurrentSchemaVersion()` answers `1`.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:123`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:193`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`

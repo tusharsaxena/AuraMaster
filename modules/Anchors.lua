@@ -120,7 +120,9 @@ end
 --- Which containers are still waiting on their frame (a test seam and a `/am list` aid).
 function Anchors.Pending()
     local out = {}
-    for id in pairs(pending) do out[#out + 1] = id end
+    for id in pairs(pending) do
+        out[#out + 1] = id
+    end
     table.sort(out)
     return out
 end

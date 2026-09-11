@@ -61,14 +61,17 @@ local function splitPath(path)
     local parts = splitCache[path]
     if parts then return parts end
     parts = {}
-    for segment in tostring(path):gmatch("[^%.]+") do parts[#parts + 1] = segment end
+    for segment in tostring(path):gmatch("[^%.]+") do
+        parts[#parts + 1] = segment
+    end
     splitCache[path] = parts
     return parts
 end
 
 local function readFrom(root, parts, first)
     local node = root
-    for i = first, #parts do
+    local last = #parts
+    for i = first, last do
         if type(node) ~= "table" then return nil end
         node = node[parts[i]]
     end
@@ -77,7 +80,8 @@ end
 
 local function writeInto(root, parts, first, value)
     local node = root
-    for i = first, #parts - 1 do
+    local last = #parts - 1
+    for i = first, last do
         local key = parts[i]
         if type(node[key]) ~= "table" then node[key] = {} end
         node = node[key]
@@ -356,7 +360,9 @@ end
 --- `{k=v, sub={…}}` with sorted keys: what a section write's [Set] line shows.
 local function renderSection(v)
     local keys = {}
-    for k in pairs(v) do keys[#keys + 1] = k end
+    for k in pairs(v) do
+        keys[#keys + 1] = k
+    end
     table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
     for i, k in ipairs(keys) do
         local x = v[k]
@@ -381,7 +387,8 @@ local function writeSection(path, value, containerId, sec)
     if not root then return false, NO_CONTAINER end
     local v = copy(value)
     NS.Database.Backfill(v, readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
-    local err = normalizeSectionCarveOuts(path, v, #parts) or validateSectionRows(path, v, #parts)
+    local depth = #parts
+    local err = normalizeSectionCarveOuts(path, v, depth) or validateSectionRows(path, v, depth)
     if err then return false, err end
     normalizeSectionRows(path, v, #parts, id)
     local old = readFrom(root, parts, first)

@@ -30,14 +30,20 @@ NS.Pool = Pool or {
         -- BACKWARD: Acquire pops the free list from the END, so parking the last element first hands
         -- each element back to the slot it already held, and a re-dressed preview keeps every
         -- placeholder in the frame it had.
-        for i = #active, 1, -1 do
+        local count = #active
+        for i = count, 1, -1 do
             local o = active[i]
             if before then before(o) end
             o:Hide()
             pool.free[#pool.free + 1] = o
         end
-        for i = #active, 1, -1 do active[i] = nil end
+        count = #active
+        for i = count, 1, -1 do
+            active[i] = nil
+        end
     end,
 
-    Counts = function(pool) return #pool.free, #pool.active end,
+    Counts = function(pool)
+        return #pool.free, #pool.active
+    end,
 }

@@ -73,13 +73,18 @@ local function tocCoverage(text)
             first, adjacent, inNote = false, false, false
         elseif line:match("^#") then
             if not first then
-                if inNote then note[#note + 1] = line else note, inNote = { line }, true end
+                if inNote then
+                    note[#note + 1] = line
+                else
+                    note, inNote = { line }, true
+                end
                 adjacent = true
             end
             first = false
         else
             if not line:lower():match("^libs[\\/]") then
-                out[#out + 1] = { file = line, note = note and table.concat(note, " "), adjacent = adjacent }
+                local entry = { file = line, note = note and table.concat(note, " "), adjacent = adjacent }
+                out[#out + 1] = entry
             end
             first, adjacent, inNote = false, false, false
         end
@@ -103,7 +108,9 @@ test("loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Con
     assertTrue(#entries == #Loader.tocFiles("AuraMaster.toc"), "every addon file line was parsed")
     local bare = {}
     for _, e in ipairs(entries) do
-        if not covered(e) then bare[#bare + 1] = e.file end
+        if not covered(e) then
+            bare[#bare + 1] = e.file
+        end
     end
     assertEqual(table.concat(bare, ", "), "", "TOC lines with no governing note")
 end)

@@ -76,7 +76,11 @@ local function callsNamed(name)
 end
 
 local results, failures = {}, {}
-local function assert_(cond, msg) if not cond then failures[#failures + 1] = msg end end
+local function assert_(cond, msg)
+    if not cond then
+        failures[#failures + 1] = msg
+    end
+end
 
 -- The loop runs with the collector stopped, so bytes/iter is what the loop allocated and never what
 -- a collection happened to free mid-loop, and with the engine mock counting only, so the recorder's
@@ -201,9 +205,10 @@ print()
 print("timings are for orientation only — compare scenarios within a run, never across machines")
 print(("applyPass: %.1f engine calls per pass over %d containers"):format(applyPass.apiPerIter, containers))
 
-if #failures > 0 then
+local failed = #failures
+if failed > 0 then
     print()
-    print(("%d assertion%s FAILED:"):format(#failures, #failures == 1 and "" or "s"))
+    print(("%d assertion%s FAILED:"):format(failed, failed == 1 and "" or "s"))
     for _, f in ipairs(failures) do print("  - " .. f) end
 end
 
@@ -234,4 +239,4 @@ if opts.out then
     print("wrote " .. opts.out)
 end
 
-os.exit(#failures == 0 and 0 or 1)
+os.exit(failed == 0 and 0 or 1)

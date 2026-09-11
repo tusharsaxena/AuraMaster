@@ -37,6 +37,14 @@ checkpoint: the release is cut only when the release run's `manifest.json` shows
 install the missing tool and run again. The release command reads the manifest; the runner's own exit
 code is unchanged. Recording those runs is `docs/automated-tests/README.md`.
 
+**lizard and the length operator.** lizard's shared tokenizer takes a `#` outside a string as the
+start of a C preprocessor line and drops everything after it up to the newline. In Lua `#` is the
+length operator. A block keyword or an unbalanced brace after it on the same line throws off lizard's
+block count, so every later function in that file goes unmeasured and the gate stays silent without
+having looked. An `and` or `or` after it is left out of the CCN. The last case in
+`tests/test_lintconfig.lua` fails any line where a keyword or an unbalanced brace follows a `#`. Move
+what follows onto its own line, or take the length into a local first.
+
 ## What the headless suite is
 
 `tests/run.lua` loads the vendored LibKa0s files in `LibKa0s.xml` order, then the addon's own files

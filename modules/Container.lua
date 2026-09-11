@@ -201,7 +201,9 @@ function ContainerClass:Build(cfg, plan, structure)
             local ok, frame = pcall(engine.AddItemEnchantment, engine, Compat.EnchantSlot(slot), {
                 initializeFrame = init, hidePermanent = plan.enchants.hidePermanent,
             })
-            if ok and frame then self.enchantFrames[#self.enchantFrames + 1] = frame end
+            if ok and frame then
+                self.enchantFrames[#self.enchantFrames + 1] = frame
+            end
         end
     end
 

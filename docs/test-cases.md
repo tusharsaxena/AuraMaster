@@ -27,7 +27,7 @@ badge and any count quoted in the docs must agree with it.
 - debug: the logging flag is ours, session-only, and never written to the profile
 - degraded: without LibKa0s the addon still loads and every seam answers
 
-### test_database.lua (10)
+### test_database.lua (12)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -39,6 +39,8 @@ badge and any count quoted in the docs must agree with it.
 - database: the migration runner stamps the schema and creates the timed-spell store
 - database: an existing SavedVariables file keeps its containers
 - database: a non-numeric container key is dropped and the profile loads
+- database: PrepareProfile seeds an empty profile from its own counter, in declaration order
+- database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
 
 ### test_schema.lua (24)
 
@@ -67,7 +69,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write refuses a non-section path, a non-table, and a value a row rejects
 - schema: a section write runs the normalize hook of every row under it, with the target id
 
-### test_filtercompiler.lua (27)
+### test_filtercompiler.lua (28)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -96,6 +98,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
+- filter: the whole plan for four rich containers is unchanged (characterization)
 
 ### test_container.lua (16)
 
@@ -207,13 +210,15 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_optionssetup.lua (14)
+### test_optionssetup.lua (16)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
 - options: the Filters page offers the spell-list tab only for a buff container
+- options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
+- options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
 - options: the Containers page's New button creates and selects a container
 - options: a page's Defaults button restores only the selected container
@@ -259,12 +264,13 @@ badge and any count quoted in the docs must agree with it.
 - tests/_kit is the test kit that shipped with that release
 - vendor: the automated-test runner is recorded executable (100755)
 
-### test_lintconfig.lua (4)
+### test_lintconfig.lua (5)
 
 - lintconfig: .luacheckrc sets no top-level ignore
 - lintconfig: .luacheckrc switches no warning class off wholesale
 - lintconfig: every files[...] ignore is narrowed to a file or a name
 - lintconfig: no source file carries a bare inline luacheck ignore
+- lintconfig: no length operator shares its line with a keyword or brace lizard must see
 
 ### test_eol.lua (1)
 
@@ -276,21 +282,21 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 8 |
-| test_database.lua | 10 |
+| test_database.lua | 12 |
 | test_schema.lua | 24 |
-| test_filtercompiler.lua | 27 |
+| test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 23 |
 | test_anchors.lua | 13 |
 | test_style.lua | 15 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 16 |
-| test_optionssetup.lua | 14 |
+| test_optionssetup.lua | 16 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
 | test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
-| test_lintconfig.lua | 4 |
+| test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **207** |
+| **Total** | **213** |

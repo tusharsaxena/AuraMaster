@@ -19,7 +19,7 @@ marked as such rather than listed as a requirement.
   only. The addon needs the 12.1 aura container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:28`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:19`). On a client
-  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:421`) and draws
+  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:425`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
@@ -42,7 +42,7 @@ marked as such rather than listed as a requirement.
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
 | `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:136` probes `command -v lizard` |
-| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, and the runner's manifest | `tests/_kit/vendor_sync.lua:184` (`git -C … show`), `tests/test_lintconfig.lua:146` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
+| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, and the runner's manifest | `tests/_kit/vendor_sync.lua:184` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays |
 | POSIX shell with `ls` | any | the docs gate lists files by shelling out | `tests/test_docs.lua:35` (`io.popen("ls -1 …")`) |
 

@@ -35,7 +35,9 @@ local function glob(pattern)
   local out, p = {}, io.popen("ls -1 " .. pattern .. " 2>/dev/null")
   if not p then return out end
   for line in p:lines() do
-    if line ~= "" then out[#out + 1] = line end
+    if line ~= "" then
+      out[#out + 1] = line
+    end
   end
   p:close()
   return out
@@ -110,7 +112,9 @@ for _, w in ipairs(ALLOWED) do ALLOWED_SET[w] = true end
 local function ownFiles()
   local files = {}
   local function add(list)
-    for _, p in ipairs(list) do files[#files + 1] = p end
+    for _, p in ipairs(list) do
+      files[#files + 1] = p
+    end
   end
   add(glob("*.md"))
   add(glob("*.toc"))
@@ -127,7 +131,9 @@ local function ownFiles()
   local skip = { ["docs/test-cases.md"] = true, ["tests/test_docs.lua"] = true }
   local kept = {}
   for _, p in ipairs(files) do
-    if not skip[p] and not p:match("^tests/_kit/") then kept[#kept + 1] = p end
+    if not skip[p] and not p:match("^tests/_kit/") then
+      kept[#kept + 1] = p
+    end
   end
   return kept
 end
@@ -138,11 +144,15 @@ local function britishOn(line)
   local kept = {}
   for word in line:gmatch("%a+") do
     local lw = word:lower()
-    if not ALLOWED_SET[lw] then kept[#kept + 1] = lw end
+    if not ALLOWED_SET[lw] then
+      kept[#kept + 1] = lw
+    end
   end
   local text = " " .. table.concat(kept, " ") .. " "
   for _, sub in ipairs(BRITISH) do
-    if text:find(sub, 1, true) then hits[#hits + 1] = sub end
+    if text:find(sub, 1, true) then
+      hits[#hits + 1] = sub
+    end
   end
   return hits
 end
@@ -158,7 +168,8 @@ test("the addon's own files use US spellings (localization-§5's canonical lists
       lineNo = lineNo + 1
       for _, sub in ipairs(britishOn(line)) do
         offenders = offenders + 1
-        if #report < 12 then report[#report + 1] = path .. ":" .. lineNo .. " " .. sub end
+        local reported = #report
+        if reported < 12 then report[reported + 1] = path .. ":" .. lineNo .. " " .. sub end
       end
     end
   end
@@ -205,8 +216,12 @@ test("every .md under docs/ appears in the documentation map", function()
   assertTrue(map ~= nil, "docs/ARCHITECTURE.md has no `## Documentation map` section")
   local missing = {}
   local docs = {}
-  for _, p in ipairs(glob("docs/*.md")) do docs[#docs + 1] = p end
-  for _, p in ipairs(glob("docs/*/README.md")) do docs[#docs + 1] = p end
+  for _, p in ipairs(glob("docs/*.md")) do
+    docs[#docs + 1] = p
+  end
+  for _, p in ipairs(glob("docs/*/README.md")) do
+    docs[#docs + 1] = p
+  end
   docs[#docs + 1] = "docs/automated-tests/RESULTS.md"
   for _, p in ipairs(docs) do
     local rel = p:gsub("^docs/", "")
@@ -224,7 +239,9 @@ end)
 local function citingDocs()
   local docs = {}
   for _, p in ipairs(glob("docs/*.md")) do
-    if p ~= "docs/test-cases.md" then docs[#docs + 1] = p end
+    if p ~= "docs/test-cases.md" then
+      docs[#docs + 1] = p
+    end
   end
   docs[#docs + 1] = "DEPENDENCIES.md"
   docs[#docs + 1] = "README.md"
@@ -239,7 +256,9 @@ local function sourceLines(path)
     local out = false
     if f then
       out = {}
-      for l in f:lines() do out[#out + 1] = (l:gsub("\r$", "")) end
+      for l in f:lines() do
+        out[#out + 1] = (l:gsub("\r$", ""))
+      end
       f:close()
     end
     sourceCache[path] = out
@@ -251,7 +270,8 @@ end
 local function citationFault(path, first, last)
   local src = sourceLines(path)
   if not src then return "missing file" end
-  if first < 1 or last > #src then return "outside the file's " .. #src .. " lines" end
+  local count = #src
+  if first < 1 or last > count then return "outside the file's " .. count .. " lines" end
   if not src[first]:match("%S") then return "a blank line" end
   return nil
 end

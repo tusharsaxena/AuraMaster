@@ -9,13 +9,21 @@ local fresh = dofile("tests/fresh_env.lua")
 
 local function capture(mocks)
     local lines = {}
-    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
     return lines
 end
 
 local function said(lines, fragment)
     for _, l in ipairs(lines) do if l:find(fragment, 1, true) then return true end end
     return false
+end
+
+--- The last line printed, or "" when nothing was (an assertion's message).
+local function lastLine(lines)
+    local count = #lines
+    return lines[count] or ""
 end
 
 test("slash: every command is a positional {name, desc, fn} triple", function()
@@ -103,10 +111,10 @@ test("slash: a name two containers share is refused, not guessed", function()
     NS2.Slash:OnSlash("delete dup")
     -- red under: findContainer returning the first match
     assertEqual(#NS2.Database.GetContainers(), 3, "both containers remain")
-    assertTrue(said(lines, "More than one container is called 'dup'"), lines[#lines] or "")
+    assertTrue(said(lines, "More than one container is called 'dup'"), lastLine(lines))
     NS2.Slash:OnSlash("select DUP")
     assertEqual(NS2.State.activeContainerId, 3, "the selection does not move")
-    assertTrue(said(lines, "More than one container is called 'DUP'"), lines[#lines] or "")
+    assertTrue(said(lines, "More than one container is called 'DUP'"), lastLine(lines))
 end)
 
 local function grayLine(lines, fragment)
@@ -124,7 +132,7 @@ test("slash: /am delete in combat refuses in gray and keeps the container", func
     -- red under: runDelete without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(3) ~= nil, "the container survives")
     assertEqual(#NS2.Database.GetContainers(), 3)
-    assertTrue(grayLine(lines, "cannot delete a container during combat"), lines[#lines] or "")
+    assertTrue(grayLine(lines, "cannot delete a container during combat"), lastLine(lines))
 end)
 
 local function counted(frame, method)
@@ -159,8 +167,8 @@ local function resetsUnderLockdown(surface)
     surface(NS2, mocks)
     -- red under: the surface keeping an InCombatLockdown refusal in front of RestoreAllDefaults
     assertEqual(resets[1], 1, "db:ResetProfile(), once: the same act as Reset Profile")
-    assertFalse(grayLine(lines, "during combat"), "no refusal: " .. (lines[#lines] or ""))
-    assertTrue(said(lines, "All settings reset to defaults."), lines[#lines] or "")
+    assertFalse(grayLine(lines, "during combat"), "no refusal: " .. lastLine(lines))
+    assertTrue(said(lines, "All settings reset to defaults."), lastLine(lines))
     assertEqual(#NS2.Database.GetContainers(), 3, "the shipped set is back")
     -- red under: CM.Sync destroying instead of parking under MustDefer
     assertEqual(hides[1], 0)
@@ -190,7 +198,7 @@ test("slash: /am new in combat refuses in gray and creates nothing", function()
     NS2.Slash:OnSlash("new target debuffs icons")
     assertEqual(#NS2.Database.GetContainers(), 3)
     -- red under: runNew printing a refused err through the plain printer
-    assertTrue(grayLine(lines, "cannot create a container during combat"), lines[#lines] or "")
+    assertTrue(grayLine(lines, "cannot create a container during combat"), lastLine(lines))
     assertEqual(#lines, 1, "one line, not a gray one and a plain one")
 end)
 
@@ -218,7 +226,8 @@ test("slash: /am resetall and the General reset print the same line", function()
     NS2.Slash:OnSlash("resetall")
     local fromPage = capture(mocks)
     mocks.StaticPopupDialogs.AURAMASTER_RESET_ALL.OnAccept()
-    assertTrue(#fromSlash >= 1 and #fromPage >= 1, "both surfaces acknowledged the reset")
+    local slashCount, pageCount = #fromSlash, #fromPage
+    assertTrue(slashCount >= 1 and pageCount >= 1, "both surfaces acknowledged the reset")
     assertEqual(fromSlash[#fromSlash], fromPage[#fromPage])
     assertTrue(said(fromPage, "All settings reset to defaults."), fromPage[#fromPage])
 end)

@@ -12,6 +12,9 @@
 -- It loads `.luacheckrc` as Lua under a sandbox rather than scanning it as text, so what it inspects
 -- is the table luacheck obeys. It FAILS rather than passes when it cannot look — no config, no
 -- io.popen, no git — because a gate that goes quiet when it is blind reports success.
+--
+-- The last case applies the same rule to the complexity gate: no line may hide code from lizard
+-- behind a length operator (see "The complexity gate stays sighted" below).
 
 local T = _G.AM_TEST
 local test, fail = T.test, T.fail
@@ -77,7 +80,9 @@ test("lintconfig: .luacheckrc sets no top-level ignore", function()
   if ignore ~= nil then
     local shown = {}
     if type(ignore) == "table" then
-      for _, entry in ipairs(ignore) do shown[#shown + 1] = tostring(entry) end
+      for _, entry in ipairs(ignore) do
+        shown[#shown + 1] = tostring(entry)
+      end
     else
       shown[1] = tostring(ignore)
     end
@@ -95,9 +100,11 @@ test("lintconfig: .luacheckrc switches no warning class off wholesale", function
     -- `allow_defined*` and `module` widen by being true; the rest widen by being false.
     local widens = (name:find("^allow_defined") or name == "module") and value == true
       or (not name:find("^allow_defined") and name ~= "module") and value == false
-    if widens then off[#off + 1] = name .. " = " .. tostring(value) end
+    if widens then
+      off[#off + 1] = name .. " = " .. tostring(value)
+    end
   end
-  if #off > 0 then
+  if off[1] then
     fail(".luacheckrc turns a whole warning class off at the top level: " .. table.concat(off, ", "), 2)
   end
 end)
@@ -117,7 +124,7 @@ test("lintconfig: every files[...] ignore is narrowed to a file or a name", func
       end
     end
   end
-  if #wide > 0 then
+  if wide[1] then
     fail("luacheck suppressions that cover a whole directory with no name to narrow them: "
       .. table.concat(wide, ", "), 2)
   end
@@ -129,7 +136,9 @@ local function splitNul(blob)
   while true do
     local i = blob:find("\0", start, true)
     if not i then break end
-    if i > start then out[#out + 1] = blob:sub(start, i - 1) end
+    if i > start then
+      out[#out + 1] = blob:sub(start, i - 1)
+    end
     start = i + 1
   end
   return out
@@ -155,12 +164,14 @@ local function trackedLua()
     if not SKIPPED_FILES[path] then
       local skip = false
       for _, prefix in ipairs(SKIPPED_PREFIXES) do
-        if path:sub(1, #prefix) == prefix then skip = true break end
+        if path:find(prefix, 1, true) == 1 then skip = true break end
       end
-      if not skip then paths[#paths + 1] = path end
+      if not skip then
+        paths[#paths + 1] = path
+      end
     end
   end
-  if #paths == 0 then
+  if not paths[1] then
     fail("lint config gate: `git ls-files` reported no Lua files, which cannot be true here — git is "
       .. "unavailable or nothing is staged; this gate cannot run", 2)
   end
@@ -184,8 +195,84 @@ test("lintconfig: no source file carries a bare inline luacheck ignore", functio
     end
     fh:close()
   end
-  if #bare > 0 then
+  if bare[1] then
     fail("bare `-- luacheck: ignore` directives, which silence every code in scope: "
       .. table.concat(bare, ", "), 2)
+  end
+end)
+
+-- ── The complexity gate stays sighted ────────────────────────────────────────────────────────────
+-- lizard's shared tokenizer reads a `#` outside a string as the start of a C preprocessor line and
+-- swallows everything after it up to the newline. In Lua `#` is the length operator, so a keyword or
+-- brace after it on the same line never reaches lizard's Lua reader: an `end` there unbalances the
+-- block count and every later function in the file goes unmeasured, and an `and`/`or` there
+-- undercounts CCN. The `-C 15` gate is then silent because it is blind, not because it passed.
+
+local LIZARD_WORDS = {}
+for w in ("and or not then do end function if elseif else for while repeat until return local in break"):gmatch("%a+") do
+  LIZARD_WORDS[w] = true
+end
+
+--- One source line with its string contents blanked and any trailing `--` comment removed.
+local function codeOf(line)
+  local out, i, n = {}, 1, #line
+  while i <= n do
+    local ch = line:sub(i, i)
+    if ch == "-" and line:sub(i + 1, i + 1) == "-" then break end
+    if ch == '"' or ch == "'" then
+      local j = i + 1
+      while j <= n and line:sub(j, j) ~= ch do
+        if line:sub(j, j) == "\\" then j = j + 1 end
+        j = j + 1
+      end
+      out[#out + 1] = ch .. ch
+      i = j + 1
+    else
+      out[#out + 1] = ch
+      i = i + 1
+    end
+  end
+  return table.concat(out)
+end
+
+--- Does a length operator on this line have a keyword, or an unbalanced brace, after it? A balanced
+--- `{ ... }` is swallowed whole and changes nothing; an opening or a closing brace alone does.
+local function lengthHazard(line)
+  local code = codeOf(line)
+  local at = code:find("#", 1, true)
+  if not at then return false end
+  local rest = code:sub(at + 1)
+  local _, opens = rest:gsub("{", "")
+  local _, closes = rest:gsub("}", "")
+  if opens ~= closes then return true end
+  for word in rest:gmatch("[%a_][%w_]*") do
+    if LIZARD_WORDS[word] then return true end
+  end
+  return false
+end
+
+test("lintconfig: no length operator shares its line with a keyword or brace lizard must see", function()
+  -- red under: writing `for _, id in ipairs(orphans) do order[#order + 1] = id end` back on one line in core/Database.lua
+  if not (lengthHazard("for _, x in ipairs(t) do o[#o + 1] = x end") and lengthHazard("if #t > 0 and ok then")
+      and lengthHazard("o[#o + 1] = {") and not lengthHazard("o[#o + 1] = { k = 1 }")
+      and not lengthHazard("local n = #t") and not lengthHazard('if s:find("#") then return end')
+      and not lengthHazard("o[#o + 1] = x -- then end")) then
+    fail("complexity gate: the length-operator scanner itself is wrong", 2)
+  end
+  local paths = trackedLua()
+  paths[#paths + 1] = "tests/test_lintconfig.lua"
+  local hits = {}
+  for _, path in ipairs(paths) do
+    local lineNo = 0
+    for line in io.lines(path) do
+      lineNo = lineNo + 1
+      if lengthHazard(line) then
+        hits[#hits + 1] = path .. ":" .. lineNo
+      end
+    end
+  end
+  if hits[1] then
+    fail(#hits .. " line(s) hide code from lizard behind a `#`; move what follows the length onto its own "
+      .. "line or into a local: " .. table.concat(hits, ", "), 2)
   end
 end)

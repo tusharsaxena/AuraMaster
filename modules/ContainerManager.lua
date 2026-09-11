@@ -311,7 +311,8 @@ function CM.Delete(id)
     local p = profile()
     if not (p and p.containers[id]) then return false, L["No such container."] end
     p.containers[id] = nil
-    for i = #p.containerOrder, 1, -1 do
+    local last = #p.containerOrder
+    for i = last, 1, -1 do
         if p.containerOrder[i] == id then table.remove(p.containerOrder, i) end
     end
     for _, c in pairs(p.containers) do
@@ -364,7 +365,10 @@ end
 CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons" }
 -- What "everything" copies: every section, then what the container IS.
 local COPY_ALL = { "unit", "auraType", "style" }
-for i = #CM.COPY_SECTIONS, 1, -1 do table.insert(COPY_ALL, 1, CM.COPY_SECTIONS[i]) end
+local sectionCount = #CM.COPY_SECTIONS
+for i = sectionCount, 1, -1 do
+    table.insert(COPY_ALL, 1, CM.COPY_SECTIONS[i])
+end
 
 --- Write each of `keys` from `src` onto container `dstId` through the write seam, stopping at the
 --- first write it rejects. Returns ok, err.
