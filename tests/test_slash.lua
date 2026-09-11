@@ -185,5 +185,6 @@ test("slash: /am debug on and off flip the session flag; it never reaches the pr
     assertTrue(NS2.State.debug)
     NS2.Slash:OnSlash("debug off")
     assertFalse(NS2.State.debug)
+    -- red under: DebugLogSetup's setEnabled writing NS.db.profile.debug (reached via /am debug off)
     assertNil(NS2.db.profile.debug)
 end)

@@ -99,6 +99,7 @@ test("debug: the logging flag is ours, session-only, and never written to the pr
     assertTrue(NS2.State.debug)
     assertTrue(NS2.DebugLog:IsEnabled())
     NS2.DebugLog:SetEnabled(false)
+    -- red under: DebugLogSetup's setEnabled writing NS.db.profile.debug
     assertNil(NS2.db.profile.debug)
     assertEqual(type(NS2.Debug), "function")
 end)

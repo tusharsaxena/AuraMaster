@@ -168,6 +168,7 @@ test("schema: a session row is stored by its own set, never in the profile", fun
     NS2.SetByPath("state.preview", true)
     assertTrue(NS2.State.preview)
     assertEqual(NS2.GetSetting("state.preview"), true)
+    -- red under: SetByPath writing session rows into the profile (dropping the sessionOnly branch)
     assertNil(NS2.db.profile.state)
     NS2.SetByPath("state.preview", false)
 end)
