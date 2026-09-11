@@ -36,12 +36,44 @@ function Style.Fetch(mediaType, key, fallback)
     return fallback
 end
 
---- r, g, b, a for a stored color and its class-color companion. The class is the PLAYER's for every
---- surface in this addon: an element describes an aura rather than a unit, and a container's unit can
---- change mid-combat when restyling is not allowed, so a class color that followed the target would be
---- wrong until the next restyle. The stored alpha always survives (options-ui-§17).
+-- The class color of the dress in progress: the container's snapshot of its tracked unit's class
+-- ({ r, g, b }, with r nil when that class did not resolve), or nil for a player container. Set and
+-- cleared by Style.Element, so nothing between it and Style.Color has to thread it through.
+local dressClass
+
+--- r, g, b, a for a stored color and its class-color companion. The class is the one the surface
+--- describes (options-ui-§17): a container tracking another unit paints with that unit's class, as
+--- snapshotted at its last apply (modules/Container.lua's SnapshotClass), because buttons cannot be
+--- re-dressed while auras are secret and every button of one container must show one class. A
+--- tracked unit whose class does not resolve (an NPC) falls through to the stored swatch; a player
+--- container reads the player's class. The stored alpha always survives.
 function Style.Color(stored, useClass)
+    if useClass and dressClass then
+        local r, g, b, a = NS.ResolveColor(stored, false)
+        if dressClass.r == nil then return r, g, b, a end
+        return dressClass.r, dressClass.g, dressClass.b, a
+    end
     return NS.ResolveColor(stored, useClass, "player")
+end
+
+--- Whether any `useClassColor*` flag in one table is on.
+local function anyClassFlag(t)
+    for k, v in pairs(t) do
+        if v == true and type(k) == "string" and k:find("^useClassColor") then return true end
+    end
+    return false
+end
+
+--- Whether the container's active style block (or one of its text blocks) turns a class color on.
+--- Allocation-free: it runs on every unit swap for each container tracking the swapped unit.
+function Style.UsesClassColor(cfg)
+    local s = (cfg.style == "icons") and cfg.icons or cfg.bars
+    if type(s) ~= "table" then return false end
+    if anyClassFlag(s) then return true end
+    for _, sub in pairs(s) do
+        if type(sub) == "table" and anyClassFlag(sub) then return true end
+    end
+    return false
 end
 
 local FLAG_MAP = { NONE = "", OUTLINE = "OUTLINE", THICKOUTLINE = "THICKOUTLINE",
@@ -188,11 +220,14 @@ function Style.ElementSize(cfg)
 end
 
 --- Dress one element for `cfg` (a container's stored table). `engine` true binds the regions to the
---- engine's aura data; false leaves them for the preview to fill.
-function Style.Element(frame, cfg, engine)
+--- engine's aura data; false leaves them for the preview to fill. `classColor` is the container's
+--- class snapshot (nil for a player container), used by every class-colored region of this dress.
+function Style.Element(frame, cfg, engine, classColor)
     local t0 = Perf.on and debugprofilestop()
+    dressClass = classColor
     local styler = (cfg.style == "icons") and Style.Icons or Style.Bars
     if styler then styler.Apply(frame, cfg, engine) end
+    dressClass = nil
     if t0 then Perf.Note("styleElement", debugprofilestop() - t0) end
 end
 

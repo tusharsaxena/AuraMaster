@@ -361,3 +361,48 @@ test("manager: ResetPositions puts every container back on the screen, staggered
     assertEqual(c1.attach.mode, "screen")
     assertEqual(NS.Database.FindContainer(2).position.y, -30)
 end)
+
+--- Turn container `id`'s icon border class color on through the seam and let the apply run, so the
+--- container's per-apply snapshot knows it uses a class color.
+local function classColored(NS, mocks, id)
+    assertTrue(NS.SetByPath("container.icons.useClassColorBorder", true, id))
+    mocks.__fireTimers()
+end
+
+test("manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[3]   -- Target debuffs (mine)
+    classColored(NS, mocks, 3)
+    local lines = chat(mocks)
+    local timers = #mocks.__timers
+    mocks.__lockdown = true
+    NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
+    -- red under: RefreshUnit calling RequestApply under MustDefer
+    assertEqual(#mocks.__timers, timers, "no apply is queued under lockdown")
+    mocks.__fireTimers()
+    assertEqual(#lines, 0, "and nothing is announced")
+    assertTrue(inst.classStale, "the container is marked stale instead")
+
+    local axis = inst.engine.__counts.SetFlowLayoutAxis or 0
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    mocks.__fireTimers()
+    assertTrue((inst.engine.__counts.SetFlowLayoutAxis or 0) > axis, "container 3 was applied after combat")
+    assertNil(inst.classStale)
+end)
+
+test("manager: a target swap out of combat re-applies only class-colored containers of that unit", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local other = CM.Create({ unit = "target" })
+    mocks.__fireTimers()
+    assertEqual(NS.Database.FindContainer(other).unit, "target")
+    classColored(NS, mocks, 3)
+    local asked, orig = {}, CM.RequestApply
+    CM.RequestApply = function(id) asked[#asked + 1] = id; return orig(id) end
+    NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
+    CM.RequestApply = orig
+    -- red under: RefreshUnit requesting an apply for every container of the unit
+    assertEqual(#asked, 1, "one request, not one per target container")
+    assertEqual(asked[1], 3, "for the class-colored one")
+end)

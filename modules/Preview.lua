@@ -79,7 +79,7 @@ function Preview.Show(container)
     container.previewFactory = make
     for i = 1, count do
         local f = NS.Pool.Acquire(pool, make)
-        NS.Style.Element(f, cfg, false)
+        NS.Style.Element(f, cfg, false, container.classColor)
         styler.FillPreview(f, C.PREVIEW_AURAS[i], cfg)
         local point, x, y = Preview.Offset(cfg, i)
         f:ClearAllPoints()

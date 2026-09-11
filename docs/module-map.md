@@ -42,7 +42,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/Constants.lua` | Enum-like tables and labels (units, aura types, styles, sort methods, points, dispel colors, preview auras), fallback media, `LOGO_PATH` | Read by everything after it |
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `preview`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
-| `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.SafeToString`, `NS.IsConcatSafe`, `NS.ResolveColor`, `NS.SKIN`/`ApplySkin`, the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
+| `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.SafeToString`, `NS.IsConcatSafe`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin`, the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
 | `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a three-member local pool | Conventional |
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
@@ -64,15 +64,15 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 |---|---|
 | `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens through AceEvent only while a container needs it and auras are readable, and announces what it learned on the bus |
 | `modules/FilterCompiler.lua` | Pure: one container's filter settings → aura groups (filter strings + candidate filters), enchant slots and warnings; `Signature`, `StructureKey` |
-| `modules/Style.lua` | Shared dressing: LSM fetch, player-class color, text, border, guarded engine bindings, element size, mouse behavior, duration text; bucket `styleElement` |
+| `modules/Style.lua` | Shared dressing: LSM fetch, class color (the container's unit's, as snapshotted), text, border, guarded engine bindings, element size, mouse behavior, duration text; bucket `styleElement` |
 | `modules/Style_Bars.lua` | Builds and dresses a bar button; the elapsed-time status bar with an edge-anchored fill; preview fill |
 | `modules/Style_Icons.lua` | Builds and dresses an icon button: aspect-correct crop, cooldown swipe, dispel border; preview fill |
 | `modules/Anchors.lua` | Places a container's anchor on the screen, another container or a named frame; cycle check; pending frame re-resolve; the drag handle |
 | `modules/Preview.lua` | Placeholder elements from a pool, dressed by `Style` with `engine` false, positioned by `Preview.Offset` |
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor; left-click picks, right-click or Escape cancels |
 | `modules/BlizzardFrames.lua` | Reparents `BuffFrame`/`DebuffFrame` to a hidden parent and back, out of combat only |
-| `modules/Container.lua` | One live container: its anchor and handle, building, updating or retiring its engine, restyling, the show ladder; bucket `applyContainer` |
-| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply, visibility and unit refresh; buckets `applyPass`, `visibilityPass` |
+| `modules/Container.lua` | One live container: its anchor and handle, building, updating or retiring its engine, restyling, the per-apply class snapshot, the show ladder; bucket `applyContainer` |
+| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
 
 ## `settings/` (TOC order)
 

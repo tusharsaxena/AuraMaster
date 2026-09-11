@@ -54,7 +54,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 |---|---|---|
 | `LibKa0s-Media-1.0` | `core/MediaSetup.lua` | `NS.Icon`, `NS.MediaFont`, the LSM registration |
 | `LibKa0s-Env-1.0` | `core/EnvSetup.lua` | `NS.Meta`, `NS.Version` |
-| `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.MakeCloseButton` |
+| `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.MakeCloseButton` |
 | `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
 | `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, suspend) |
 | `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |
@@ -160,11 +160,11 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 |---|---|---|
 | `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:42` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:43` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
-| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:44` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:45-46` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`) |
-| `UNIT_PET` | `core/AuraMaster.lua:47` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`) |
+| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:44` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:45-46` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit, or marks them stale, silently, while an apply must wait |
+| `UNIT_PET` | `core/AuraMaster.lua:47` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers, or marks them stale while an apply must wait |
 | `ADDON_LOADED` | `core/AuraMaster.lua:48` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
-| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:50` | `OnRestrictionChanged` → `FlushPending` (a deferred apply runs when secrecy lifts) |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:50` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
 | `UNIT_AURA` | `modules/TimedSpells.lua` (AceEvent, on its own target) — only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret) | `onUnitAura`: a safe-key `player`/`pet` schedules a scan 0.5 s later (bucket `timedScan`); every other unit is dropped |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:171-173` | `NS.OnProfileChanged` → re-prepare the registry, rebuild, re-render |
@@ -246,8 +246,10 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   each such change leaves one hidden frame for the session.
 - **Preview elements are addon-owned frames**, dressed by the same `Style` code but laid out by
   `Preview.Offset`'s arithmetic rather than by the engine.
-- **Class colors resolve to the player's class** on every surface; an element describes an aura, not
-  a unit (`modules/Style.lua:40`).
+- **Class colors follow the container's unit, snapshotted per apply.** After a target, focus or pet
+  swap under combat lockdown or while auras are secret, a class-colored container keeps the previous
+  unit's class until the restriction lifts and it re-applies; engine buttons cannot be re-dressed
+  while auras are secret.
 - **A frame anchor needs a global name.** The picker walks up to the nearest named ancestor
   (`modules/FramePicker.lua:26`); an unnamed frame cannot be re-found after a `/reload`.
 

@@ -114,7 +114,7 @@ badge and any count quoted in the docs must agree with it.
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
 
-### test_containermanager.lua (20)
+### test_containermanager.lua (22)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -136,6 +136,8 @@ badge and any count quoted in the docs must agree with it.
 - manager: a profile reset under lockdown parks departing containers and tears them down after combat
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
+- manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
+- manager: a target swap out of combat re-applies only class-colored containers of that unit
 
 ### test_anchors.lua (13)
 
@@ -153,7 +155,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 
-### test_style.lua (14)
+### test_style.lua (15)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -167,6 +169,7 @@ badge and any count quoted in the docs must agree with it.
 - style: right-click cancel is offered only on your own buffs, and never click-through
 - style: a preview element is dressed but never bound to the engine
 - style: a class color keeps the stored alpha; off, the stored swatch is used
+- style: a target container's class color is the target's, snapshotted at apply
 - style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
 
@@ -270,9 +273,9 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 23 |
 | test_filtercompiler.lua | 27 |
 | test_container.lua | 16 |
-| test_containermanager.lua | 20 |
+| test_containermanager.lua | 22 |
 | test_anchors.lua | 13 |
-| test_style.lua | 14 |
+| test_style.lua | 15 |
 | test_timedspells.lua | 9 |
 | test_slash.lua | 15 |
 | test_optionssetup.lua | 13 |
@@ -283,4 +286,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 2 |
 | test_lintconfig.lua | 4 |
 | test_eol.lua | 1 |
-| **Total** | **197** |
+| **Total** | **200** |

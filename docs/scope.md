@@ -78,8 +78,12 @@ These are not declined; the game forbids them, and a request for one is answered
 - **A permanent aura draws a full bar.** The engine's status bar runs on elapsed time and the
   addon's own fill is anchored to its moving edge (`modules/Style_Bars.lua`), the technique
   TinyBuffBars (MIT) established.
-- **Class colors are the player's.** An element describes an aura, not a unit, and a container's unit
-  can change in combat when restyling is not allowed (`modules/Style.lua:36-42`).
+- **Class colors follow the container's unit.** A container tracking the target, focus or pet paints
+  its class colors with that unit's class, read once per apply and used by every button of the
+  container, so one container never mixes two classes. A swap of that unit re-applies the container
+  when it uses a class color. Under combat lockdown or aura secrecy the re-apply waits for the
+  restriction to lift, and the container keeps the previous unit's class until then
+  (options-ui-§17; audit 2026-09-11 AM-03).
 - **Container settings share one relative path model** (`container.…`) so one schema, one write seam
   and one CLI serve every container (`settings/Schema.lua` header).
 - **Categories are tri-state** (`""` / `show` / `hide`). Showing any category narrows the container to

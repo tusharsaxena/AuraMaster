@@ -60,7 +60,10 @@ test("schema: every color row has its class-color companion next to it, or is a 
             local nxt = rows[i + 1]
             assertTrue(nxt and nxt.type == "bool" and nxt.path:find("useClassColor"),
                 "no class-color companion after " .. row.path)
-            assertEqual(row.classColorSource, "player", "whose class " .. row.path .. " means")
+            -- A container's colors describe what the container tracks, so they take its unit's
+            -- class (options-ui-§17); a color outside any container stays the player's.
+            local whose = row.path:find("^container%.") and "unit" or "player"
+            assertEqual(row.classColorSource, whose, "whose class " .. row.path .. " means")
             checked = checked + 1
         end
     end

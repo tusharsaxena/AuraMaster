@@ -72,7 +72,11 @@ function addon:OnCombatChanged(event)
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if event == "PLAYER_REGEN_ENABLED" then
         -- "regen": the deferral notice never escalates on this edge (modules/ContainerManager.lua).
-        if NS.ContainerManager then NS.ContainerManager.FlushPending("regen") end
+        -- Then a container whose unit swapped during combat re-applies for its new unit's class.
+        if NS.ContainerManager then
+            NS.ContainerManager.FlushPending("regen")
+            NS.ContainerManager.ReapplyStaleClass()
+        end
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
         -- A frame an add-on created during combat could not be resolved then (OnAddonLoaded).
         if NS.Anchors and NS.Anchors.ResolvePending then NS.Anchors.ResolvePending() end
@@ -103,7 +107,10 @@ function addon:OnAddonLoaded()
 end
 
 function addon:OnRestrictionChanged()
-    if NS.ContainerManager then NS.ContainerManager.FlushPending() end
+    if NS.ContainerManager then
+        NS.ContainerManager.FlushPending()
+        NS.ContainerManager.ReapplyStaleClass()
+    end
 end
 
 --- AceDB profile callback (core/Database.lua): the new profile gets its registry prepared, every

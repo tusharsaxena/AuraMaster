@@ -215,6 +215,50 @@ test("style: a class color keeps the stored alpha; off, the stored swatch is use
     assertEqual(a, 0.5, "the swatch's opacity always applies (options-ui-§17)")
 end)
 
+test("style: a target container's class color is the target's, snapshotted at apply", function()
+    -- Its own environment: UnitClass and the priest's color are planted there, never on the shared
+    -- mock. The target's class token is an upvalue so the case can make the target an NPC.
+    local targetToken = "PRIEST"
+    local NS2, m2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.UnitClass = function(u)
+            if u == "target" then return targetToken and "Priest", targetToken end
+            return "Mage", "MAGE"
+        end
+        m.RAID_CLASS_COLORS.PRIEST = { r = 1, g = 1, b = 1 }
+    end })
+    local swatch = { r = 0.1, g = 0.2, b = 0.3, a = 0.6 }
+    --- Container `id` drawn as bars with a class-colored fill, applied.
+    local function applied(id)
+        local inst = NS2.ContainerManager.instances[id]
+        local c = inst:Cfg()
+        c.style, c.bars.useClassColorBar, c.bars.barColor = "bars", true, swatch
+        inst:Apply()
+        return inst
+    end
+    --- Dress one engine button through the container's initializeFrame and read the fill's color.
+    local function fillOf(inst)
+        local btn = m2.__stubFrame()
+        inst:InitFrame(btn)
+        local fill = m2.__stubFrame()
+        rawset(fill, "SetVertexColor", function(_, ...) fill.__color = { ... } end)
+        btn.__am.fill = fill
+        inst:InitFrame(btn)
+        return table.concat(fill.__color, ",")
+    end
+    local priest, mage = m2.RAID_CLASS_COLORS.PRIEST, m2.RAID_CLASS_COLORS.MAGE
+    local target = applied(3)
+    -- red under: Style.Color ignoring dressClass
+    assertEqual(fillOf(target), table.concat({ priest.r, priest.g, priest.b, 0.6 }, ","),
+        "the target's class, with the swatch's alpha")
+    targetToken = nil
+    assertEqual(fillOf(target), table.concat({ priest.r, priest.g, priest.b, 0.6 }, ","),
+        "read once per apply, not on every dress")
+    target:Apply()
+    assertEqual(fillOf(target), "0.1,0.2,0.3,0.6", "an unresolvable class falls through to the swatch")
+    assertEqual(fillOf(applied(1)), table.concat({ mage.r, mage.g, mage.b, 0.6 }, ","),
+        "a player container keeps the player's class")
+end)
+
 test("style: the Blizzard time format asks for no formatter of our own", function()
     assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
 end)

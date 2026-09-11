@@ -239,8 +239,10 @@ See `docs/profiles.md`.
 ## Colors and the class-color companion
 
 Every color that describes the player's taste has a **Use class color** checkbox immediately to its
-right, default off, declared with `classColorSource = "player"` on both rows and resolved through
-`NS.ResolveColor` (options-ui-§17). The swatch is never disabled; its alpha applies under both modes.
+right, default off, declared with `classColorSource = "unit"` on both rows (options-ui-§17). The
+class is that of the unit the container tracks, read once per apply: a player container shows the
+player's, a target container the target's, and a unit with no class (an NPC) falls through to the
+swatch. The swatch is never disabled; its alpha applies under both modes.
 With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `fontColor` on
 `name`/`time`/`stacks`; Icons `borderColor`, and `fontColor` on `time`/`stacks`.
 

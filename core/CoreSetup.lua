@@ -31,6 +31,16 @@ if not lib then
         return "<secret>"
     end
 
+    -- A unit's class color, or nil when the class does not resolve (an NPC, no such unit). The
+    -- library's answer: nil is an answer, and the caller falls through to its stored swatch.
+    function NS.ClassColor(unit)
+        local ok, _, token = pcall(UnitClass, unit or "player")
+        local c = (ok and type(token) == "string" and type(RAID_CLASS_COLORS) == "table")
+            and RAID_CLASS_COLORS[token] or nil
+        if type(c) ~= "table" or type(c.r) ~= "number" then return nil end
+        return c.r, c.g, c.b
+    end
+
     -- The class-color resolver, working rather than a no-op, because every colored surface calls it
     -- on each paint. The library's three rules (options-ui-§17): the stored alpha survives the mode,
     -- an unresolvable class falls through to the stored swatch, and the swatch is read under both.
@@ -38,11 +48,9 @@ if not lib then
         if type(stored) ~= "table" then stored = {} end
         local r, g, b, a = stored.r or 1, stored.g or 1, stored.b or 1, stored.a or 1
         if not on then return r, g, b, a end
-        local ok, _, token = pcall(UnitClass, unit or "player")
-        local c = (ok and type(token) == "string" and type(RAID_CLASS_COLORS) == "table")
-            and RAID_CLASS_COLORS[token] or nil
-        if type(c) ~= "table" or type(c.r) ~= "number" then return r, g, b, a end
-        return c.r, c.g, c.b, a
+        local cr, cg, cb = NS.ClassColor(unit)
+        if cr == nil then return r, g, b, a end
+        return cr, cg, cb, a
     end
 
     -- The chrome degrades to NOTHING rather than to a hand-copied backdrop: Core.SKIN's values ARE the
@@ -88,6 +96,9 @@ NS.SafeToString = lib.SafeToString
 -- ONE class-color resolver for the collection (options-ui-§17). Handed over by reference: it closes
 -- over nothing of ours, and the memoized player color is the library's to keep.
 NS.ResolveColor = lib.ResolveColor
+-- The class lookup on its own, for a surface that reads a unit's class once and paints with it many
+-- times (modules/Container.lua snapshots a tracked unit's class per apply).
+NS.ClassColor = lib.ClassColor
 
 -- The shared window edge, published flat so the frame picker's overlay reaches it by name rather than
 -- through a private lookalike (standalone-windows).

@@ -7,8 +7,9 @@ local _, NS = ...
 --
 -- The font, border, bar and background blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
 -- with anything extra appended after the block — and every color row has its class-color companion
--- (options-ui-§17), resolved to the PLAYER's class: an element describes an aura, not a unit
--- (modules/Style.lua's Style.Color). The dispel, expiring and pandemic swatches are PALETTE
+-- (options-ui-§17), declared `source = "unit"`: the class is that of the unit the container tracks,
+-- snapshotted once per apply (modules/Container.lua's SnapshotClass, modules/Style.lua's
+-- Style.Color), so a player container reads the player's. The dispel, expiring and pandemic swatches are PALETTE
 -- definitions — one color per dispel type or per state — and carry no companion, the one exemption
 -- §17 makes.
 
@@ -18,7 +19,7 @@ local C = NS.Constants
 
 local PAGE = "bars"
 local P = "container.bars."
-local PLAYER = { source = "player" }
+local UNIT = { source = "unit" }
 
 local G_SIZE, G_BAR, G_BG = L["Size"], L["Bar"], L["Background & border"]
 local G_NAME, G_TIME, G_STACK, G_HI = L["Name text"], L["Time text"], L["Stack text"], L["Highlights"]
@@ -47,7 +48,7 @@ NS.RegisterSchemaRows({
 -- ── Bar ───────────────────────────────────────────────────────────────────────────────────────
 
 NS.RegisterSchemaRows(H.BarGroup({
-    prefix = P, page = PAGE, group = G_BAR, subgroup = L["Fill"], classColor = PLAYER,
+    prefix = P, page = PAGE, group = G_BAR, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
           label = L["Color by"], desc = L["One color, or each debuff's dispel type (set on the Highlights tab)."] },
@@ -66,7 +67,7 @@ NS.RegisterSchemaRows({
 })
 NS.RegisterSchemaRows(H.ColorPair({
     prefix = P, page = PAGE, group = G_BAR, subgroup = L["Spark"], key = "sparkColor",
-    companionKey = "useClassColorSpark", label = L["Spark color"], classColor = PLAYER,
+    companionKey = "useClassColorSpark", label = L["Spark color"], classColor = UNIT,
 }))
 
 -- ── Background & border ───────────────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ NS.RegisterSchemaRows(H.ColorPair({
 -- a surface with no texture, and this one has a live texture (modules/Style_Bars.lua paints it). The
 -- composer's own tooltips describe a fill, so each row's is replaced, found by path.
 local bg = H.BarGroup({
-    prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = PLAYER,
+    prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = UNIT,
     keys = { barTexture = "bgTexture", barAlpha = "bgAlpha", barColor = "bgColor", useClassColorBar = "useClassColorBg" },
     labels = { barTexture = L["Background texture"], barAlpha = L["Background opacity"], barColor = L["Background color"] },
 })
@@ -88,7 +89,7 @@ local BG_TOOLTIPS = {
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
 NS.RegisterSchemaRows(bg)
 NS.RegisterSchemaRows(H.BorderGroup({
-    prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = PLAYER,
+    prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = UNIT,
 }))
 
 -- ── Text ──────────────────────────────────────────────────────────────────────────────────────
@@ -97,7 +98,7 @@ NS.RegisterSchemaRows(H.BorderGroup({
 local function textRows(leaf, group, extras)
     local prefix = P .. leaf .. "."
     NS.RegisterSchemaRows(H.FontGroup({
-        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = PLAYER,
+        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT,
     }))
     local rows = {
         { path = prefix .. "show", page = PAGE, group = group, subgroup = L["Placement"], type = "bool",

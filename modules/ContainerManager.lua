@@ -206,11 +206,31 @@ function CM.ApplyVisibility()
     if t0 then Perf.Note("visibilityPass", debugprofilestop() - t0) end
 end
 
---- `unit` now names someone else: every container tracking it refreshes.
+--- `unit` now names someone else: every container tracking it refreshes. One that paints a class
+--- color also re-applies, so its class snapshot follows the new unit (modules/Container.lua's
+--- SnapshotClass) — or, while an apply has to wait, is marked stale SILENTLY: no request and no
+--- deferral notice, because nothing the player changed is being held. ReapplyStaleClass catches up.
 function CM.RefreshUnit(unit)
     for _, inst in pairs(CM.instances) do
         local cfg = inst:Cfg()
-        if cfg and cfg.unit == unit then inst:Refresh() end
+        if cfg and cfg.unit == unit then
+            inst:Refresh()
+            if inst.usesClass then
+                if CM.MustDefer() then inst.classStale = true else CM.RequestApply(inst.id) end
+            end
+        end
+    end
+end
+
+--- Re-apply every container whose class snapshot went stale during combat or aura secrecy. Called on
+--- the same edges as FlushPending (core/AuraMaster.lua), and a no-op while an apply still has to wait.
+function CM.ReapplyStaleClass()
+    if CM.MustDefer() then return end
+    for id, inst in pairs(CM.instances) do
+        if inst.classStale then
+            inst.classStale = nil
+            CM.RequestApply(id)
+        end
     end
 end
 

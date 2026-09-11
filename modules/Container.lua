@@ -118,7 +118,35 @@ end
 
 function ContainerClass:InitFrame(frame)
     local cfg = self:Cfg()
-    if cfg then NS.Style.Element(frame, cfg, true) end
+    if cfg then NS.Style.Element(frame, cfg, true, self.classColor) end
+end
+
+-- ---------------------------------------------------------------------------
+-- Class color, snapshotted per apply
+-- ---------------------------------------------------------------------------
+-- A container tracking another unit paints its class colors with that unit's class (options-ui-§17).
+-- The class is read HERE, once per apply — and an apply only runs while auras are readable — then
+-- used by every dress until the next one: engine buttons created mid-combat, a restyle, the preview.
+-- So every button of one container shows one class at every moment. A swap of the tracked unit
+-- re-applies the container (modules/ContainerManager.lua's RefreshUnit), or marks it stale while
+-- that has to wait.
+
+--- The tracked unit's class as { r, g, b }, in a table reused per instance. When the class does not
+--- resolve (an NPC, no such unit) the channels are nil, and Style.Color falls through to the swatch.
+function ContainerClass:ResolveUnitClass(unit)
+    local c = self.classBuf or {}
+    self.classBuf = c
+    c.r, c.g, c.b = NS.ClassColor(unit)
+    return c
+end
+
+--- Record the class this apply paints with, and whether a unit swap has to re-apply the container.
+--- An enchant container shows the player's enchants whatever its unit, so it describes the player.
+function ContainerClass:SnapshotClass(cfg)
+    local unit = (cfg.auraType == "ENCHANT") and "player" or cfg.unit
+    local tracked = unit ~= "player"
+    self.classColor = tracked and self:ResolveUnitClass(unit) or nil
+    self.usesClass = tracked and NS.Style.UsesClassColor(cfg)
 end
 
 function ContainerClass:Retire()
@@ -245,13 +273,13 @@ function ContainerClass:Restyle(cfg)
         for i = 1, (ok and n or 0) do
             local okF, frame = pcall(engine.GetAuraGroupFrame, engine, g.key, i)
             if okF and frame then
-                pcall(NS.Style.Element, frame, cfg, true)
+                pcall(NS.Style.Element, frame, cfg, true, self.classColor)
                 count = count + 1
             end
         end
     end
     for _, frame in ipairs(self.enchantFrames) do
-        pcall(NS.Style.Element, frame, cfg, true)
+        pcall(NS.Style.Element, frame, cfg, true, self.classColor)
         count = count + 1
     end
     return count
@@ -276,6 +304,8 @@ function ContainerClass:Apply()
     anchor:SetFrameStrata(L.strata or D.layout.strata)
     anchor:SetFrameLevel(tonumber(L.level) or D.layout.level)
     self.placedAs = NS.Anchors.Place(self)
+    -- Before any dress below: Update restyles, and Build's buttons are dressed as they are created.
+    self:SnapshotClass(cfg)
 
     if NS.Compat.HasAuraContainer() then
         local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. tostring(cfg.style)
