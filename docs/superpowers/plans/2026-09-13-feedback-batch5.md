@@ -75,7 +75,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | A4 release v1.35.0 (local tag) | X-4 | LibKa0s | todo | | **CP-A** |
 | B1 preview style switch | C-4 | AM | done | 1020798 | Style.RegionsFor + per-style preview pools |
 | B2 apply error isolation | B-5 | AM | done | 6e9739c | xpcall + Style.WithStack, geterrorhandler |
-| B3 justify width | B-5 | AM | todo | | |
+| B3 justify width | B-5 | AM | done | c138d55 | ApplyText boxWidth; bar time unboxed while name stops at it |
 | B4 dispel color order | B-4 | AM | todo | | needs R0 |
 | B5 icon border color | I-1 | AM | todo | | needs R0 |
 | B6 countdown rounding | I-2 | AM | todo | | needs R0 |
