@@ -121,6 +121,21 @@ screen. The per-container `container.filter.whitelist`, `.blacklist` and `.categ
 values the seam takes whole at its carve-out paths, not registries. Only its named writer and
 load pass write the registry, so it is compliant and carries no Documented deviations row.
 
+The addon holds one piece of named non-setting state (architecture-§5), learned data that no control
+sets and no row addresses.
+
+- **Storage key:** `global.timedSpells` (`db.global.timedSpells`), `[spellId] = true` for every buff
+  seen carrying a duration. It is account-wide, so a profile switch, copy or reset never touches it.
+- **Owner:** `modules/TimedSpells.lua`.
+- **Writers:** `TS.Scan` adds the id of each newly seen timed buff. The readable-state scan reaches
+  it: `scanTick`, 0.5 s after a player or pet `UNIT_AURA` or after the readable gate reopens.
+  `TS.Forget` replaces the set with `{}`, and `/am forgettimed` reaches it (`runForgetTimed` in
+  `settings/Slash.lua`). That is the owner's forget operation. Nothing else writes it. `store()`
+  lazily creates the empty table on first read and is not a writer, and neither is the load pass
+  (`NS.RunMigrations` backfills it, as does the no-AceDB fallback in `NS.InitDB`). The two compile
+  sites in `modules/Container.lua` and `settings/OptionsSetup.lua` hand it to `FilterCompiler.Compile`,
+  which only reads it.
+
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
 ## Message Bus

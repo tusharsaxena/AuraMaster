@@ -31,7 +31,7 @@ otherwise (`docs/profiles.md`).
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `schemaVersion` | number | `1` | The migration stamp (savedvariables-§1). Defaults to 1, not the current version: AceDB fills an absent key before `RunMigrations` reads it |
-| `timedSpells` | map | `{}` | `[spellId] = true` for every buff `modules/TimedSpells.lua` has seen carry a duration; account-wide because it is a fact about the game |
+| `timedSpells` | map | `{}` | `[spellId] = true` for every buff `modules/TimedSpells.lua` has seen carry a duration; account-wide because it is a fact about the game. Learned data, not a setting: written at runtime only by its owner, `modules/TimedSpells.lua` (`TS.Scan` learns, `TS.Forget` behind `/am forgettimed` empties it), and backfilled on load by `NS.RunMigrations`. Named in `docs/ARCHITECTURE.md` → Settings Schema (architecture-§5) |
 
 ## The container template
 
