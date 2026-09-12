@@ -30,7 +30,7 @@ is a defect in this doc (documentation-§3).
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:401`): the page's schema groups become tabs, the page's bespoke tabs
+  (`settings/OptionsSetup.lua:412`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
@@ -58,7 +58,8 @@ band holds **the picker itself** (options-ui-§14):
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
 - **The Defaults button stays page-wide**: on a container page it restores every row of that page, for
-  the selected container. On General it restores the General rows of the profile.
+  the selected container. On General it restores the General rows of the profile. Either press logs
+  one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
 
 ## Page → tab → row
 
@@ -254,7 +255,8 @@ pages, and the six `bars.dispelColors.*`.
 
 With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-completing** stub
 (options-ui-§1): the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
-`MasterControls`), `MASTER_GROUP`, a real `RestoreAllDefaults`, and no-op refreshers — every member a
+`MasterControls`), `MASTER_GROUP`, a real `RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`,
+logged once by `NS.OnProfileReset`), and no-op refreshers — every member a
 page file touches at file load — so every row still registers and `/am list|get|set` and the defaults
 keep working. The panel itself answers one line naming the missing library. `tests/degraded_env.lua`
 builds that environment for the suite.

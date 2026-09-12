@@ -113,14 +113,48 @@ function addon:OnRestrictionChanged()
     end
 end
 
---- AceDB profile callback (core/Database.lua): the new profile gets its registry prepared, every
---- container is rebuilt from it, and an open settings panel re-renders.
-function NS.OnProfileChanged()
+-- The three AceDB profile callbacks (core/Database.lua). Each prepares the new profile's registry,
+-- traces the event ONCE in its own words, then rebuilds every container and re-renders an open
+-- panel. A reset or a copy is AceDB replacing the profile whole, not a write through the seam, so it
+-- is one [Set] line here and no bulk bracket adds a second (debug-logging-§10). A switch rewrites no
+-- rows and keeps its [Profile] trace.
+
+local function currentProfile()
+    return (NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()) or "?"
+end
+
+--- Before the trace, so a reset's count sees the starters it re-seeds.
+local function prepareProfile()
     if NS.Database and NS.db then NS.Database.PrepareProfile(NS.db.profile) end
     if NS.State then NS.State.SetActiveContainer(nil) end
-    NS.Debug("Profile", "changed -> %s",
-        (NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()) or "?")
+end
+
+local function rebuildProfile()
     if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+end
+
+--- OnProfileChanged: a switch.
+function NS.OnProfileChanged()
+    prepareProfile()
+    NS.Debug("Profile", "changed -> %s", currentProfile())
+    rebuildProfile()
+end
+
+--- OnProfileReset: the profile back to the addon's defaults (Reset all, Profiles → Reset Profile).
+function NS.OnProfileReset()
+    prepareProfile()
+    -- The count walks the schema, so it is built only while debug is on (debug-logging-§4).
+    if NS.State and NS.State.debug then
+        NS.Debug("Set", "reset profile '%s' to defaults (%s rows)", currentProfile(), NS.ProfileRowCount())
+    end
+    rebuildProfile()
+end
+
+--- OnProfileCopied: profile `source` copied into the active one.
+function NS.OnProfileCopied(source)
+    prepareProfile()
+    NS.Debug("Set", "copied profile '%s' → '%s'", tostring(source), currentProfile())
+    rebuildProfile()
 end

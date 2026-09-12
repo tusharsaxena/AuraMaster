@@ -216,8 +216,10 @@ function NS.InitDB()
         -- A profile switch, copy or reset re-prepares the registry and rebuilds every container.
         if NS.db.RegisterCallback then
             NS.db.RegisterCallback(NS, "OnProfileChanged", function() NS.OnProfileChanged() end)
-            NS.db.RegisterCallback(NS, "OnProfileCopied", function() NS.OnProfileChanged() end)
-            NS.db.RegisterCallback(NS, "OnProfileReset", function() NS.OnProfileChanged() end)
+            -- Each is traced by its own handler, in the event's words (debug-logging-§10). AceDB
+            -- hands OnProfileCopied the SOURCE profile's key.
+            NS.db.RegisterCallback(NS, "OnProfileCopied", function(_, _, source) NS.OnProfileCopied(source) end)
+            NS.db.RegisterCallback(NS, "OnProfileReset", function() NS.OnProfileReset() end)
         end
     end
     -- Soft fallback when AceDB is absent: a db-shaped table over the raw SavedVariables global, so

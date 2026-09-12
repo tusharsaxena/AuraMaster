@@ -412,19 +412,23 @@ end
 --- Write each of `keys` from `src` onto container `dstId` through the write seam — all of them or
 --- none. Every write is checked first (NS.CheckWrite: the seam's own checks, nothing stored), and
 --- nothing is written unless every one passes, so a refusal leaves `dstId` untouched and announces
---- nothing. A checked write cannot then be refused: SetByPath runs those same checks. Returns ok, err.
-local function copyThrough(src, dstId, keys)
+--- nothing. A checked write cannot then be refused: SetByPath runs those same checks. The writes are
+--- one bulk copy, `scope` naming it: one [Set] line counting the rows they changed
+--- (debug-logging-§10). A refused copy logs nothing. Returns ok, err.
+local function copyThrough(src, dstId, keys, scope)
     for _, key in ipairs(keys) do
         if src[key] ~= nil then
             local ok, err = NS.CheckWrite("container." .. key, src[key], dstId)
             if not ok then return false, err end
         end
     end
-    for _, key in ipairs(keys) do
-        if src[key] ~= nil then
-            NS.SetByPath("container." .. key, NS.Database.DeepCopy(src[key]), dstId)
+    NS.Bulk.Run("copy", scope, function()
+        for _, key in ipairs(keys) do
+            if src[key] ~= nil then
+                NS.SetByPath("container." .. key, NS.Database.DeepCopy(src[key]), dstId)
+            end
         end
-    end
+    end)
     return true
 end
 
@@ -437,27 +441,28 @@ function CM.CopyFrom(srcId, dstId, section)
     local src, dst = NS.Database.FindContainer(srcId), NS.Database.FindContainer(dstId)
     if not (src and dst) then return false, L["No such container."] end
     if srcId == dstId then return false, L["A container cannot copy itself."] end
-    local ok, err = copyThrough(src, dstId, section and { section } or COPY_ALL)
+    local scope = ("container %s→%s (%s)"):format(srcId, dstId, section or "all")
+    local ok, err = copyThrough(src, dstId, section and { section } or COPY_ALL, scope)
     if not ok then return false, err end
-    NS.Debug("Containers", "copied %s from %s to %s", section or "all", srcId, dstId)
     return true
 end
 
 --- Put every container back at its default screen position, staggered so they do not overlap. The
 --- Master controls tab's Reset position and `/am resetposition` both land here. Each position is one
---- whole-section write through the seam; the applies those writes queue coalesce into one pass.
+--- whole-section write through the seam; the applies those writes queue coalesce into one pass. The
+--- whole act is one bulk reset: one `[Set] reset positions: N rows` line (debug-logging-§10).
 function CM.ResetPositions()
     local template = NS.CONTAINER_TEMPLATE.position
-    local containers = NS.Database.GetContainers()
-    for i, c in ipairs(containers) do
-        local pos = NS.Database.DeepCopy(template)
-        pos.y = -(i - 1) * 30
-        NS.SetByPath("container.position", pos, c.id)
-        if c.attach and c.attach.mode ~= "screen" then
-            NS.SetByPath("container.attach.mode", "screen", c.id)
+    NS.Bulk.Run("reset", "positions", function()
+        for i, c in ipairs(NS.Database.GetContainers()) do
+            local pos = NS.Database.DeepCopy(template)
+            pos.y = -(i - 1) * 30
+            NS.SetByPath("container.position", pos, c.id)
+            if c.attach and c.attach.mode ~= "screen" then
+                NS.SetByPath("container.attach.mode", "screen", c.id)
+            end
         end
-    end
-    NS.Debug("Containers", "reset %s position(s)", #containers)
+    end)
 end
 
 -- ---------------------------------------------------------------------------

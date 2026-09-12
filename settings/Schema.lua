@@ -250,6 +250,74 @@ local CARVE_OUTS = {
 }
 
 -- ---------------------------------------------------------------------------
+-- The bulk bracket (debug-logging-§10)
+-- ---------------------------------------------------------------------------
+--
+-- A bulk copy or reset through the seam (a page's Defaults, Reset all, ContainerManager.CopyFrom,
+-- ContainerManager.ResetPositions) is ONE `[Set] <act> <scope>: N rows` line, never a [Set] per
+-- row. Validation, each row's onChange and CONFIG_CHANGED still run per write: only the log
+-- collapses.
+--
+-- While a bracket is open, the seam's two log sites (announceWrite, logSection) are muted and
+-- tally the rows each write CHANGED instead. N is the rows the act actually wrote, so a row already
+-- at its default is not counted, which is why N comes from here and not from the library's bulkEnd
+-- `count` (that counts every applyDefault that returned). The mute is a depth counter: a bracket
+-- inside a bracket, such as a host act wrapping a library reset, sums into the outer one, and the
+-- act logs once, when the depth returns to 0. If any level reports `info.profileReset`, AceDB
+-- replaced the profile whole and NS.OnProfileReset (core/AuraMaster.lua) logs it, so the bracket
+-- logs nothing.
+local bulk = { depth = 0, rows = 0, profileReset = false }
+
+local Bulk = {}
+NS.Bulk = Bulk
+
+--- Open a bracket. The Options and Slash descriptors' `bulkBegin`.
+function Bulk.Begin()
+    if bulk.depth == 0 then bulk.rows, bulk.profileReset = 0, false end
+    bulk.depth = bulk.depth + 1
+end
+
+--- Close a bracket and, at depth 0, log the act's one line. The descriptors' `bulkEnd`. Its `count`
+--- is ignored (see above), and its `err` is the caller's to re-raise.
+function Bulk.End(act, scope, _, _, info)
+    if bulk.depth == 0 then return end
+    bulk.depth = bulk.depth - 1
+    if type(info) == "table" and info.profileReset then bulk.profileReset = true end
+    if bulk.depth > 0 or bulk.profileReset then return end
+    if NS.Debug then NS.Debug("Set", "%s %s: %s rows", act, scope, bulk.rows) end
+end
+
+--- Run `fn` as one bulk act under the host's own bracket (CopyFrom, ResetPositions, the degraded
+--- Reset all). A begun bracket always closes, so the mute cannot stick: `fn` runs under pcall, End
+--- runs once, then an error is re-raised unchanged. `fn` returns true when it reset the profile.
+function Bulk.Run(act, scope, fn)
+    local info = { profileReset = false }
+    Bulk.Begin()
+    local ok, err = pcall(function() info.profileReset = fn() == true end)
+    Bulk.End(act, scope, nil, err, info)
+    if not ok then error(err, 0) end
+end
+
+--- Whether storing `new` over `old` changes the stored value. This is the bracket's tally test.
+local function changes(old, new)
+    local Sig = NS.FilterCompiler.Signature
+    return Sig(old) ~= Sig(new)
+end
+
+--- Whether storing `value` in `row` changes it. A session row reads through its own get().
+local function rowChanges(row, root, parts, first, value)
+    if row.sessionOnly then return changes(row.get and row.get(), value) end
+    return changes(readFrom(root, parts, first), value)
+end
+
+--- Inside a bracket, add `n` changed rows to the tally and answer true (muted). Outside, false.
+local function tallied(n)
+    if bulk.depth == 0 then return false end
+    bulk.rows = bulk.rows + n
+    return true
+end
+
+-- ---------------------------------------------------------------------------
 -- The write seam
 -- ---------------------------------------------------------------------------
 
@@ -257,9 +325,13 @@ local CARVE_OUTS = {
 --- row announces nothing: it is not a setting, its own set() already did everything it does, and a
 --- CONFIG_CHANGED would re-apply every container for a toggle that changes none of them.
 --- `logged` says the caller already wrote the [Set] line (a section write renders its own).
-local function announceWrite(section, containerId, path, value, sessionOnly, logged)
-    -- Logged ONCE, here, with the format deferred into the sink (debug-logging-§10).
-    if NS.Debug and not logged then NS.Debug("Set", "%s = %s", path, value) end
+--- `changedRows` is what the write counts inside a bulk bracket: 1 when it changed the stored
+--- value, else 0. A section write tallies in logSection instead.
+local function announceWrite(section, containerId, path, value, sessionOnly, logged, changedRows)
+    -- Logged ONCE, here, with the format deferred into the sink (debug-logging-§10). Inside a bulk
+    -- bracket the write is tallied instead, and the act logs one line when it closes.
+    local muted = tallied(changedRows or 0)
+    if NS.Debug and not (logged or muted) then NS.Debug("Set", "%s = %s", path, value) end
     -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row;
     -- `path` lets modules/ContainerManager.lua read the row's `effect` and skip an apply it needs not.
     if NS.bus and not sessionOnly then
@@ -279,8 +351,9 @@ local function writeCarveOut(path, value, containerId)
     local parts = splitPath(path)
     local root, first, id = resolveRoot(parts, containerId)
     if not root then return false, NO_CONTAINER end
+    local changed = bulk.depth > 0 and changes(readFrom(root, parts, first), v)
     writeInto(root, parts, first, v)
-    announceWrite("filters", id, path, v, false)
+    announceWrite("filters", id, path, v, false, false, changed and 1 or 0)
     return true
 end
 
@@ -366,11 +439,49 @@ local function renderSection(v)
     return "{" .. table.concat(keys, ", ") .. "}"
 end
 
+--- Whether the leaf at `p` differs between two copies of a section, `depth` deep.
+local function leafChanged(p, old, v, depth)
+    local parts = splitPath(p)
+    return changes(readFrom(old, parts, depth + 1), readFrom(v, parts, depth + 1))
+end
+
+--- How many rows, and spell-set carve-outs, under `section` differ between `old` and `v`. This is
+--- what a section write counts inside a bulk bracket.
+local function countSectionChanges(section, old, v, depth)
+    if type(old) ~= "table" then old = {} end
+    local n = 0
+    for _, row in ipairs(NS.Schema) do
+        if isUnder(row.path, section) and leafChanged(row.path, old, v, depth) then n = n + 1 end
+    end
+    for cpath in pairs(CARVE_OUTS) do
+        if isUnder(cpath, section) and leafChanged(cpath, old, v, depth) then n = n + 1 end
+    end
+    return n
+end
+
 --- The section's one [Set] line, built only when the debug flag is on (debug-logging-§4, §9).
-local function logSection(path, v)
+--- Inside a bulk bracket it logs nothing and tallies the rows the write changed.
+local function logSection(path, old, v, depth)
+    if bulk.depth > 0 then
+        tallied(countSectionChanges(path, old, v, depth))
+        return
+    end
     if NS.State and NS.State.debug and NS.Debug then
         NS.Debug("Set", "%s = %s", path, renderSection(v))
     end
+end
+
+--- The rows a whole-profile reset puts back: every profile-backed row, and a container row once per
+--- container. It is the count in NS.OnProfileReset's one line (debug-logging-§10).
+function NS.ProfileRowCount()
+    local containers = #NS.Database.GetContainers()
+    local n = 0
+    for _, row in ipairs(NS.Schema) do
+        if not row.sessionOnly then
+            n = n + (isUnder(row.path, CONTAINER) and containers or 1)
+        end
+    end
+    return n
 end
 
 --- The checks a whole-section write runs before it stores anything: a deep copy of `value`,
@@ -398,7 +509,7 @@ local function writeSection(path, value, containerId, sec)
     local old = readFrom(root, parts, first)
     writeInto(root, parts, first, v)
     fireSectionChanges(path, old, v, #parts, id)
-    logSection(path, v)
+    logSection(path, old, v, #parts)
     announceWrite(sec, id, path, nil, false, true)
     return true
 end
@@ -418,6 +529,7 @@ local function writeRow(row, path, value, containerId)
         if not root then return false, NO_CONTAINER end
     end
     if row.normalize then value = row.normalize(value, id) end
+    local changed = bulk.depth > 0 and rowChanges(row, root, parts, first, value)
     if row.sessionOnly then
         -- No database write by definition; the row's own set() IS its storage.
         if row.set then row.set(value) end
@@ -426,7 +538,7 @@ local function writeRow(row, path, value, containerId)
         -- default would otherwise be shared, and editing one container would edit another.
         writeInto(root, parts, first, copy(value))
     end
-    return true, nil, id, value
+    return true, nil, id, value, changed
 end
 
 --- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
@@ -445,11 +557,11 @@ function NS.SetByPath(path, value, containerId)
 
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
-    local ok, err, id, stored = writeRow(row, path, value, containerId)
+    local ok, err, id, stored, changed = writeRow(row, path, value, containerId)
     if not ok then return false, err end
 
     if row.onChange then row.onChange(stored, id) end
-    announceWrite(row.page, id, path, stored, row.sessionOnly)
+    announceWrite(row.page, id, path, stored, row.sessionOnly, false, changed and 1 or 0)
     return true
 end
 

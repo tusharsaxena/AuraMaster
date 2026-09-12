@@ -20,18 +20,24 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 - `AceDB:New("AuraMasterDB", NS.defaults, true)` — `true` puts every character on the shared
   `Default` profile until the player picks a per-character, per-class or per-realm one.
-- `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` all call `NS.OnProfileChanged`.
+- `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` each call their own handler:
+  `NS.OnProfileChanged`, `NS.OnProfileCopied` and `NS.OnProfileReset`. The three share one body and
+  differ only in the line they trace.
 - Then `NS.RunMigrations` — the ladder, then `Database.PrepareProfile` on the active profile.
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged` (`core/AuraMaster.lua:118`):
+`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:139`,
+`core/AuraMaster.lua:146`, `core/AuraMaster.lua:156`):
 
 ```
-NS.OnProfileChanged()
+NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   ├─ Database.PrepareProfile(db.profile)    backfill every container, normalize the order,
   │                                          seed the starters if this profile never had them
   ├─ State.SetActiveContainer(nil)           the old selection's id may not exist here
+  ├─ the event's one trace line              switch: [Profile] changed -> X
+  │                                          reset:  [Set] reset profile 'X' to defaults (N rows)
+  │                                          copy:   [Set] copied profile 'A' → 'X'
   ├─ ContainerManager.Announce()             instances follow the new registry, apply all,
   │                                          CONTAINERS_CHANGED → the panel re-renders
   ├─ BlizzardFrames.Apply()                  the new profile's hide switches
@@ -43,6 +49,11 @@ NS.OnProfileChanged()
   the id counter consistent.
 - **A reset** empties the profile. `seeded` goes back to `false` with it, so the starter containers
   come back — a reset is "as installed", not "nothing".
+- **Logging (debug-logging-§10).** A reset or a copy is AceDB replacing the profile whole, not a write
+  through the seam, so its handler logs it once. A reset's N counts every profile-backed row, and a
+  container row once per container (`NS.ProfileRowCount`); it is built only while debug is on. Reset
+  all's bulk bracket wraps the profile reset and logs nothing of its own, and the session rows it
+  writes first are muted, so a Reset all reads as that one line.
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
 - **A switch, copy or reset in combat** cannot be refused, since AceDB fires it. A container the new
   profile does not have is parked (its engine disabled, nothing hidden) and torn down after combat;

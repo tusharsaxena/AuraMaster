@@ -214,6 +214,21 @@ sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` 
 caller writes it whole, and its `container` validator checks for cycles against the active container
 rather than the target.
 
+**A bulk copy or reset is one line** (debug-logging-§10). `NS.Bulk` brackets every act that
+rewrites a set of rows wholesale. That covers a page's Defaults and Reset all (the library's
+`bulkBegin`/`bulkEnd`, LibKa0s-Options minor 16), `CliResetAll` (Slash minor 8), and
+`ContainerManager.CopyFrom` and `ContainerManager.ResetPositions` (`NS.Bulk.Run`). While a bracket
+is open, the seam's two log sites, the per-write `[Set]` line and the section line, are muted. They
+tally the rows each write changed instead, compared by `FilterCompiler.Signature`; a section write
+counts each row and carve-out under it that changed. The act then logs one
+`[Set] <act> <scope>: N rows` line, such as `[Set] reset bars: 2 rows`,
+`[Set] copy container 2→1 (all): 14 rows` or `[Set] reset positions: 3 rows`. N is the rows actually
+changed, not the library's `count`, so a Defaults press on a page already at its defaults logs
+`0 rows`. Validation, `onChange` and `CONFIG_CHANGED` still run per write. The mute is a depth
+counter, so a bracket inside another sums into it and the act logs once. When any level reports
+`info.profileReset`, the bracket logs nothing and `NS.OnProfileReset` logs the reset
+(`docs/profiles.md`).
+
 `NS.CheckWrite(path, value, id)` answers whether `NS.SetByPath` would store a value. It runs the same
 checks on a copy (a row's `validate`, a carve-out's normalizer, or a section's backfill, carve-outs
 and row validation) and stores and announces nothing, so it is not a second write seam.
@@ -223,7 +238,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:239`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:241`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 

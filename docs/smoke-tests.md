@@ -198,7 +198,12 @@ suite covers what only the client can show.
     suspended arm and come back after **finish** without a reload.
 54. `/am debug` → the debug console opens; the General page's **Debug console** checkbox follows it.
     `/am debug on` → lines such as `[Set] … = …` stream as you change settings; `/am debug off` stops
-    them; `/reload` → logging off, window closed.
+    them; `/reload` → logging off, window closed. With debug on, each bulk act logs **one** `[Set]`
+    line and no per-row lines (debug-logging-§10): the Bars page's **Defaults** → `[Set] reset bars:
+    N rows` (0 when nothing was off its default); **Copy settings from** → `[Set] copy container
+    A→B (section): N rows`; **Reset position** → `[Set] reset positions: N rows`; **Reset all
+    settings** → only `[Set] reset profile 'Default' to defaults (N rows)`; Profiles → **Copy** →
+    only `[Set] copied profile 'A' → 'B'`.
 55. Memory spot-check: `/run print(collectgarbage("count"))`, change a bar container's bar width 10
     times, then print it again. Note the growth. Style objects are built once per look, so the growth
     should be smaller than on a build from before that change. Record both numbers.

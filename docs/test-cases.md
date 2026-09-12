@@ -249,6 +249,20 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
+### test_bulklog.lua (11)
+
+- bulklog: a container page's Defaults is one [Set] line counting the rows it changed
+- bulklog: General's Defaults is one [Set] line counting the rows it changed
+- bulklog: Reset all, from /am resetall or the General popup, is one line in total — the profile handler's
+- bulklog: the degraded build's Reset all is one line in total, too
+- bulklog: Slash's CliResetAll, handed the same pair, is one [Set] reset all line
+- bulklog: a profile reset and a profile copy are one [Set] line each; a switch keeps its trace
+- bulklog: CopyFrom is one [Set] line counting the rows it changed, and no [Containers] summary
+- bulklog: a refused CopyFrom logs nothing
+- bulklog: ResetPositions is one [Set] line counting the rows it changed
+- bulklog: a bracket inside a bracket logs once, summed, when the outer one closes
+- bulklog: a bulk act that raises still closes its bracket, so the seam logs again
+
 ### test_optionssetup.lua (16)
 
 - options: NS.Helpers IS the library instance
@@ -330,6 +344,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style.lua | 19 |
 | test_timedspells.lua | 11 |
 | test_slash.lua | 23 |
+| test_bulklog.lua | 11 |
 | test_optionssetup.lua | 16 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
@@ -338,4 +353,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **252** |
+| **Total** | **263** |

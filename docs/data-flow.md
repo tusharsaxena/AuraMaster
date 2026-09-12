@@ -15,11 +15,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:440
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:552
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
+        │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:478
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:483
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
