@@ -174,6 +174,34 @@ test("icons: the dispel border is the engine's debuff art on harmful auras only"
     assertFalse(add[2].showWhenHelpful, "buffs do not")
 end)
 
+test("icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)", function()
+    -- Its own environment: every frame there makes textures of their own, each tagged with the
+    -- frame that made it (the kit's texture is the frame itself, which cannot name an owner).
+    local NS2, m2 = fresh()
+    local real = m2.CreateFrame
+    m2.CreateFrame = function(...)
+        local f = real(...)
+        rawset(f, "CreateTexture", function(self)
+            local tex = R()
+            tex.__owner = self
+            return tex
+        end)
+        return f
+    end
+    local frame = R()
+    NS2.Style.Element(frame, cfg(), false)
+    local am = frame.__am
+    local host = am.dispel.__owner
+    -- red under: the dispel texture made on the button itself, whose regions draw below every child
+    -- frame, so our border covers Blizzard's art instead of the art replacing it
+    assertTrue(host ~= nil and host ~= frame, "the dispel texture lives on a frame of its own")
+    assertTrue(host.__parent == frame, "a child of the button, so the engine's region rules hold")
+    -- red under: build leaving the cooldown, border and text frames at one level (their order unset)
+    assertTrue(am.border:GetFrameLevel() > am.cd:GetFrameLevel(), "our border above the cooldown swipe")
+    assertTrue(host:GetFrameLevel() > am.border:GetFrameLevel(), "the dispel border above ours")
+    assertTrue(am.text:GetFrameLevel() > host:GetFrameLevel(), "the texts above the dispel border")
+end)
+
 test("icons: the dispel border turned off is hidden and never bound", function()
     local frame, am = dressed(cfg({ icons = { dispelBorder = false } }), true)
     -- red under: Icons.Apply leaving a previously shown dispel border drawn

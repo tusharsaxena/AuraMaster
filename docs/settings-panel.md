@@ -230,7 +230,8 @@ A notice in orange heads every tab when the selected container is drawn as bars.
 | Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor` |
 
 `dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
-harmful auras only; `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
+harmful auras with a dispel type only. The art sits above your border and replaces it there; every
+other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
 
 ### Profiles (`settings/Profiles.lua`)
 

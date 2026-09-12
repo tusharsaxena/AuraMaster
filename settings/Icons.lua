@@ -36,7 +36,7 @@ NS.RegisterSchemaRows(H.BorderGroup({
     prefix = P, page = PAGE, group = G_BORDER, subgroup = L["Border"], show = true, classColor = UNIT,
     extra = {
         { path = P .. "dispelBorder", type = "bool", label = L["Color the border by dispel type"],
-          desc = L["Draw Blizzard's debuff border in the debuff's dispel color."] },
+          desc = L["Where a debuff has a dispel type, this border replaces yours in the dispel color."] },
     },
 }))
 

@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- modules/Style_Icons.lua — dressing one aura as an ICON.
 --
---     ┌───────────┐  border (ours) · dispel-type border (the engine tints it)
+--     ┌───────────┐  border (ours) · dispel-type border above it (the engine's art replaces ours)
 --     │   icon    │  cooldown swipe driven by the aura's duration
 --     │        3  │  stack count
 --     └───────────┘
@@ -33,8 +33,13 @@ local function build(frame)
     am.border:SetAllPoints(frame)
 
     -- The dispel-type border: a texture the engine sets to Blizzard's own debuff border art for the
-    -- aura's dispel type, and hides for an aura without one.
-    am.dispel = frame:CreateTexture(nil, "OVERLAY")
+    -- aura's dispel type, and hides for an aura without one. It lives on a frame of its own ABOVE our
+    -- border: a region of the button draws below every child frame, so drawn there our border would
+    -- cover the art. Above it, the art replaces ours where the aura has a dispel type, and ours shows
+    -- wherever it has none (I-1; docs/superpowers/research/2026-09-13-aura-engine-notes.md Q3).
+    am.dispelHost = CreateFrame("Frame", nil, frame)
+    am.dispelHost:SetAllPoints(frame)
+    am.dispel = am.dispelHost:CreateTexture(nil, "OVERLAY")
     am.dispel:SetAllPoints(frame)
 
     -- Text above the cooldown swipe, so the countdown is never shaded by it.
@@ -48,6 +53,14 @@ local function build(frame)
     am.pandemic:SetTexture(C.WHITE_TEXTURE)
     am.pandemic:SetBlendMode("ADD")
     am.pandemic:Hide()
+
+    -- Sibling frames made at one level stack in no promised order, so set it, bottom to top: the
+    -- cooldown swipe, our border, the dispel border, the texts. Once, here, where every level is a
+    -- fresh frame's own number.
+    local level = am.cd:GetFrameLevel()
+    am.border:SetFrameLevel(level + 1)
+    am.dispelHost:SetFrameLevel(level + 2)
+    am.text:SetFrameLevel(level + 3)
     return am
 end
 
