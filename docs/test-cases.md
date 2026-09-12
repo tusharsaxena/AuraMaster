@@ -16,7 +16,7 @@ badge and any count quoted in the docs must agree with it.
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
 - loadorder: the library registered — NS.Perf is the real probe, not the stub
 
-### test_setups.lua (8)
+### test_setups.lua (14)
 
 - core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] tag
 - core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer
@@ -26,6 +26,12 @@ badge and any count quoted in the docs must agree with it.
 - env: the metadata reader never calls the deprecated global
 - debug: the logging flag is ours, session-only, and never written to the profile
 - degraded: without LibKa0s the addon still loads and every seam answers
+- media: the shipped face and bar textures reach LibSharedMedia, from this addon's folder
+- core: the degraded printer names the missing library once, on the first line it prints
+- core: the degraded Printf stringifies every argument before it formats
+- core: the degraded color resolver keeps the stored alpha, and falls through for a unit with no class
+- core: every close button is built with this addon's folder, so it can draw the catalog mark
+- namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
 ### test_database.lua (12)
 
@@ -286,6 +292,123 @@ badge and any count quoted in the docs must agree with it.
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 
+### test_pages_general.lua (12)
+
+- general: the Enable checkbox writes the master switch through the seam
+- general: the four show-or-hide master rows are visibility passes; Master scale re-applies
+- general: the visibility dropdown offers the four states in order and stores the one chosen
+- general: locking ends preview mode; unlocking leaves it alone
+- general: the Debug console checkbox shows the window and writes nothing to the profile
+- general: the Display tab's preview checkbox turns preview mode on for the session only
+- general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
+- general: the Blizzard-frame rows re-apply no container
+- general: Reset position puts every container back on the screen
+- general: Reset all settings asks first and resets nothing until the answer
+- general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
+- general: Defaults restores the General rows of the profile and no container setting
+
+### test_pages_containers.lua (14)
+
+- containers: the Name box renames the selected container, trimmed, and no other
+- containers: a blank name is refused and the container keeps its name
+- containers: a rename re-lists every picker and re-applies no container
+- containers: the Unit dropdown offers the four units in order and writes the selected container
+- containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+- containers: the Style dropdown offers bars and icons and writes the selected container
+- containers: New and Duplicate in combat refuse in gray and create nothing
+- containers: Duplicate copies the selected container and selects the copy
+- containers: Delete asks first, naming the container, and deletes it only on Yes
+- containers: the copy block offers every other container and copies only the chosen section
+- containers: copying Everything takes what the source is, never its name or position
+- containers: with one container the page offers Duplicate and Delete but no copy block
+- containers: Overview describes every container and where it is attached; Select selects it
+- containers: the band's picker lists every container, and choosing one retargets the page
+
+### test_pages_filters.lua (12)
+
+- filters: Cast by writes the selected container's filter and no other
+- filters: a buff container is offered the weapon-enchant rows; a debuff container is not
+- filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
+- filters: a category dropdown stores show, hide or neutral for the selected container
+- filters: each category row sits under the subgroup its kind names
+- filters: Spell lists opens on the first spell category, every starter spell ticked
+- filters: choosing another category lists its spells, by name where the client knows them
+- filters: unticking a starter spell stores it as removed; ticking it again drops the edit
+- filters: Add spell ID adds the number typed and ignores a box without one
+- filters: Restore this category's starter list clears that category's edits and no other's
+- filters: Always / never adds to one list at a time, and Remove takes an id off
+- filters: every tab opens with what the engine will not honor here, in orange
+
+### test_pages_layout.lua (12)
+
+- layout: Attach to writes the mode and redraws an open page on the next frame
+- layout: the Container dropdown offers None and every other container, never the selected one
+- layout: a target that would close a loop is refused; any other, or None, is stored
+- layout: Frame name stores the typed name for the selected container
+- layout: Attach to the screen detaches the selected container and no other
+- layout: Pick a frame in combat refuses in gray and starts nothing
+- layout: a pick attaches the container selected when it began, and reopens the page
+- layout: a Growth write re-applies only the selected container
+- layout: Strata offers the five layers in order and stores the one chosen
+- layout: the Mouse tab's rows write the selected container's behavior
+- layout: Defaults restores the selected container's placement and arrangement, and not its look
+- layout: after the banner moves, the page draws the newly selected container's values
+
+### test_pages_bars.lua (6)
+
+- bars: every tab of an icons container carries the orange notice; a bars container's carry none
+- bars: the seven tabs are drawn in order, whatever the container shows
+- bars: Width writes the selected container, and the page re-reads after the banner moves
+- bars: a confirmed fill color is stored on the selected container, as a table of its own
+- bars: Highlights draws one swatch per dispel type, each writing its own color
+- bars: Defaults restores the selected container's bar look and leaves its icon look alone
+
+### test_pages_icons.lua (5)
+
+- icons: a bars container's tabs carry the orange notice; an icons container's carry none
+- icons: the six tabs are drawn in order
+- icons: Width on the Icons page writes the icon width, never the bar width
+- icons: the Cooldown rows write the selected container's swipe
+- icons: Defaults restores the selected container's icon look and leaves its bar look alone
+
+### test_pages_about.lua (3)
+
+- about: the landing page lists every slash command, in /am help's own words
+- about: the Notes line is read from this addon's TOC when the page is drawn
+- about: the logo is this addon's own art, shipped as a texture the client can load
+
+### test_pages_profiles.lua (3)
+
+- profiles: the page registers this database's AceDBOptions table under its own app name
+- profiles: every render re-opens the dialog into the one container it built
+- profiles: without AceConfigDialog the page opts out instead of failing on first show
+
+### test_envsetup.lua (4)
+
+- env: NS.Meta reads this addon's own manifest, by its folder name, on both arms
+- env: the version is the TOC's where it can be read, and the fallback constant where not
+- env: an empty TOC version falls back like an absent one, on both arms
+- env: the version is never nil — '?' when neither the TOC nor the constant answers
+
+### test_poolsetup.lua (4)
+
+- pool: the live seam is the library's own pool, not the fallback
+- pool: the fallback carries every member the preview calls
+- pool: a released placeholder is reused rather than made again, on both arms
+- pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
+
+### test_defaults.lua (9)
+
+- defaults: every starter container is a valid container whose every override the template knows
+- defaults: every category carries what its kind needs, and a label and description
+- defaults: spell categories are buff categories, and IsSpellCategory names exactly them
+- defaults: every leaf of the container template is edited by a settings row or is a spell set
+- defaults: every profile default is a settings row or the registry's own bookkeeping
+- defaults: every dropdown's default is one of its choices
+- defaults: every slider's default lies inside its range
+- defaults: the dispel palette covers every dispel type, and the template holds its own copy
+- defaults: the global schema stamp defaults to 1, never the current version
+
 ### test_perf.lua (5)
 
 - perf: every declared bucket is reached by a real bracket
@@ -294,10 +417,13 @@ badge and any count quoted in the docs must agree with it.
 - perf: suspend holds a queued apply until resume
 - perf: without the library, /am perf answers one honest line
 
-### test_locale.lua (2)
+### test_locale.lua (5)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
+- locale: no key is defined twice in enUS.lua
+- locale: every enUS value is its own key, so the English build shows the source string
+- locale: every string routed by value has its key — Constants labels, categories, filter warnings
 
 ### test_docs.lua (6)
 
@@ -338,7 +464,7 @@ badge and any count quoted in the docs must agree with it.
 | Suite | Cases |
 |-------|------:|
 | test_loadorder.lua | 7 |
-| test_setups.lua | 8 |
+| test_setups.lua | 14 |
 | test_database.lua | 12 |
 | test_schema.lua | 26 |
 | test_filtercompiler.lua | 28 |
@@ -350,11 +476,22 @@ badge and any count quoted in the docs must agree with it.
 | test_slash.lua | 23 |
 | test_bulklog.lua | 13 |
 | test_optionssetup.lua | 17 |
+| test_pages_general.lua | 12 |
+| test_pages_containers.lua | 14 |
+| test_pages_filters.lua | 12 |
+| test_pages_layout.lua | 12 |
+| test_pages_bars.lua | 6 |
+| test_pages_icons.lua | 5 |
+| test_pages_about.lua | 3 |
+| test_pages_profiles.lua | 3 |
+| test_envsetup.lua | 4 |
+| test_poolsetup.lua | 4 |
+| test_defaults.lua | 9 |
 | test_perf.lua | 5 |
-| test_locale.lua | 2 |
+| test_locale.lua | 5 |
 | test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **267** |
+| **Total** | **360** |
