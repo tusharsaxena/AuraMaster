@@ -65,10 +65,16 @@ local function build(frame)
     return am
 end
 
+--- The icon's side: its stored size, or the template's when that is missing; zero means the bar's height.
+local function iconSizeFor(b, h)
+    local size = tonumber(b.iconSize) or D.bars.iconSize
+    return size > 0 and size or h
+end
+
 --- Lay the icon and the bar area out inside the element.
 local function layout(frame, am, b, h)
     local iconPos = b.icon or D.bars.icon
-    local iconSize = (tonumber(b.iconSize) or 0) > 0 and b.iconSize or h
+    local iconSize = iconSizeFor(b, h)
     local gap = tonumber(b.iconGap) or D.bars.iconGap
 
     am.icon:ClearAllPoints()
@@ -121,14 +127,14 @@ end
 local function applySurfaces(am, b)
     am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
     am.fill:SetVertexColor(Style.Color(b.barColor, b.useClassColorBar))
-    am.fill:SetAlpha(tonumber(b.barAlpha) or 1)
+    am.fill:SetAlpha(tonumber(b.barAlpha) or D.bars.barAlpha)
 
     am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
     am.bg:SetVertexColor(Style.Color(b.bgColor, b.useClassColorBg))
     am.bg:SetAlpha(tonumber(b.bgAlpha) or D.bars.bgAlpha)
 
-    Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, b.borderSize, b.borderColor,
-        b.useClassColorBorder)
+    Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, tonumber(b.borderSize) or D.bars.borderSize,
+        b.borderColor, b.useClassColorBorder)
 
     am.spark:SetShown(b.spark ~= false)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))
@@ -209,8 +215,7 @@ end
 local function barAreaWidth(cfg, b)
     local w, h = Style.ElementSize(cfg)
     if b.icon == "NONE" then return w end
-    local iconSize = (tonumber(b.iconSize) or 0) > 0 and b.iconSize or h
-    return w - iconSize - (tonumber(b.iconGap) or 0)
+    return w - iconSizeFor(b, h) - (tonumber(b.iconGap) or D.bars.iconGap)
 end
 
 --- Fill a PREVIEW element with placeholder values (modules/Preview.lua). The regions are ours, so

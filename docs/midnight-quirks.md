@@ -116,7 +116,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:100`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:106`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Additive bindings stack
@@ -124,7 +124,7 @@ TinyBuffBars' (MIT).
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
-before adding again (`modules/Style_Bars.lua:185-195`, `modules/Style_Icons.lua:115-124`).
+before adding again (`modules/Style_Bars.lua:191-201`, `modules/Style_Icons.lua:121-130`).
 
 ## The engine does not notice a unit token changing
 

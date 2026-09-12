@@ -418,7 +418,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (27)
+### test_style_bars.lua (31)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -430,6 +430,8 @@ badge and any count quoted in the docs must agree with it.
 - bars: the spark shows unless turned off, twice the bar's height, in its own width and color
 - bars: class colors paint the fill, background, spark and border with the dress's class, keeping each alpha
 - bars: the class companions left off paint every surface its stored swatch
+- bars: a missing bar opacity paints the template's, never a number restated in the composer
+- bars: a missing border size paints the template's, so a border turned on still shows
 - bars: a bar border shows only when turned on, with its style, size and color
 - bars: the refresh-window highlight takes the pandemic color, never a class color
 - bars: the name stops short of the time text, and runs to the bar's end when the time is hidden
@@ -442,19 +444,22 @@ badge and any count quoted in the docs must agree with it.
 - bars: dispel coloring tints the fill through the engine with the stored dispel colors
 - bars: the refresh-window highlight is bound only when turned on, and always cleared first
 - bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
+- bars: a preview with a missing icon gap measures the template's gap, as the layout does
+- bars: a missing icon size is the template's, in the layout and in the preview alike
 - bars: a timeless preview aura draws a full bar with no time text, and an expired one keeps one pixel
 - bars: preview text shows the name, whole seconds left, and stacks only above one
 - bars: a preview fill drains from the configured side, spark at its leading edge
 - bars: a dispel-colored preview paints the Magic color, since no real aura names a type
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (18)
+### test_style_icons.lua (19)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
 - icons: a square icon is zoomed evenly from every side
 - icons: a wide icon is cropped top and bottom, a tall one left and right, never squashed
 - icons: the border takes its style, size and color, and the dress's class when asked
+- icons: a missing border size paints the template's, so the border and the art's inset still show
 - icons: the cooldown draws a swipe in the configured opacity, its edge and direction on their settings
 - icons: the cooldown turned off hides the swipe and never binds it to the engine
 - icons: Blizzard's countdown numbers show only when asked for
@@ -836,8 +841,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 44 |
 | test_style.lua | 38 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 27 |
-| test_style_icons.lua | 18 |
+| test_style_bars.lua | 31 |
+| test_style_icons.lua | 19 |
 | test_preview.lua | 10 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
@@ -865,4 +870,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **675** |
+| **Total** | **680** |

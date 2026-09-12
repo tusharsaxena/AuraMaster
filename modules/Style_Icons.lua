@@ -50,11 +50,17 @@ local function build(frame)
     return am
 end
 
+--- The border's thickness: the stored size, or the template's when that is missing or garbage. One
+--- reading for the border itself and the art's inset, so the two cannot disagree.
+local function borderSizeOf(ic)
+    return tonumber(ic.borderSize) or D.icons.borderSize
+end
+
 --- Place the icon INSIDE the border, so a thick border never hides the art, and crop the zoom to
 --- the element's aspect ratio, so a non-square icon is cropped rather than squashed.
 local function layoutIcon(am, frame, ic, w, h)
     local shown = Style.OrTemplate(ic.borderShow, D.icons.borderShow)
-    local inset = (shown and ic.borderStyle ~= "None") and (tonumber(ic.borderSize) or 0) or 0
+    local inset = (shown and ic.borderStyle ~= "None") and borderSizeOf(ic) or 0
     am.icon:ClearAllPoints()
     am.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", inset, -inset)
     am.icon:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -inset, inset)
@@ -87,7 +93,7 @@ function Icons.Apply(frame, cfg, engine)
     frame:SetSize(w, h)
     layoutIcon(am, frame, ic, w, h)
     Style.ApplyBorder(am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow), ic.borderStyle,
-        ic.borderSize, ic.borderColor, ic.useClassColorBorder)
+        borderSizeOf(ic), ic.borderColor, ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
 
     Style.ApplyText(am.time, ic.time, frame, D.icons.time)

@@ -156,6 +156,33 @@ test("bars: the class companions left off paint every surface its stored swatch"
     assertEqual(am.spark:__joined("SetVertexColor"), "0.4,0.5,0.6,1")
 end)
 
+--- A fresh environment whose template holds `value` at bars.<key>. A case proving a fallback READS
+--- the template, rather than restating a number that happens to equal it, has to move the template's
+--- value, and the shared environment's template is read by every suite, so it moves one of its own.
+local function withTemplate(key, value)
+    local ns = dofile("tests/fresh_env.lua")()
+    ns.CONTAINER_TEMPLATE.bars[key] = value
+    return ns
+end
+
+test("bars: a missing bar opacity paints the template's, never a number restated in the composer", function()
+    local ns = withTemplate("barAlpha", 0.35)
+    local c = cfg()
+    c.bars.barAlpha = nil
+    local _, am = dressed(c, nil, nil, ns)
+    -- red under: applySurfaces falling back to a literal 1 for a missing barAlpha
+    assertEqual(am.fill:__last("SetAlpha")[1], 0.35)
+end)
+
+test("bars: a missing border size paints the template's, so a border turned on still shows", function()
+    local c = cfg({ bars = { borderShow = true, borderStyle = "Solid" } })
+    c.bars.borderSize = nil
+    local _, am = dressed(c)
+    -- red under: applySurfaces handing ApplyBorder the raw borderSize (a missing size hides the border)
+    assertTrue(am.border:IsShown())
+    assertEqual(am.border:__last("SetBackdrop")[1].edgeSize, D.bars.borderSize)
+end)
+
 test("bars: a bar border shows only when turned on, with its style, size and color", function()
     local _, am = dressed(cfg({ bars = { borderShow = false } }))
     assertFalse(am.border:IsShown(), "off by default for bars")
@@ -297,6 +324,27 @@ test("bars: a preview fill is the remaining fraction of the bar area, net of the
     frame, am = dressed(c, false)
     NS.Style.Bars.FillPreview(frame, { name = "X", icon = 1, remaining = 30, duration = 40, stacks = 0 }, c)
     assertEqual(fillWidth(am), 200 * 30 / 40, "no icon: the whole element")
+end)
+
+test("bars: a preview with a missing icon gap measures the template's gap, as the layout does", function()
+    local c = cfg({ bars = { width = 200, height = 20, icon = "LEFT" } })
+    c.bars.iconGap = nil
+    local frame, am = dressed(c, false)
+    NS.Style.Bars.FillPreview(frame, { name = "X", icon = 1, remaining = 30, duration = 40, stacks = 0 }, c)
+    -- red under: barAreaWidth falling back to a literal 0 gap where layout reads the template's
+    assertEqual(fillWidth(am), (200 - 20 - D.bars.iconGap) * 30 / 40)
+end)
+
+test("bars: a missing icon size is the template's, in the layout and in the preview alike", function()
+    local ns = withTemplate("iconSize", 24)
+    local c = cfg({ bars = { width = 200, height = 20, icon = "LEFT", iconGap = 2 } })
+    c.bars.iconSize = nil
+    local frame, am = dressed(c, false, nil, ns)
+    -- red under: layout reading a missing iconSize as 0 (the bar's height) instead of the template's
+    assertEqual(am.icon:__joined("SetSize"), "24,24")
+    ns.Style.Bars.FillPreview(frame, { name = "X", icon = 1, remaining = 30, duration = 40, stacks = 0 }, c)
+    -- red under: barAreaWidth reading a missing iconSize as 0
+    assertEqual(fillWidth(am), (200 - 24 - 2) * 30 / 40)
 end)
 
 test("bars: a timeless preview aura draws a full bar with no time text, and an expired one keeps one pixel", function()

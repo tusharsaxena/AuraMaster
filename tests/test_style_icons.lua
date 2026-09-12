@@ -74,6 +74,20 @@ test("icons: the border takes its style, size and color, and the dress's class w
     assertEqual(am.border:__joined("SetBackdropBorderColor"), "0.9,0.8,0.7,0.4")
 end)
 
+test("icons: a missing border size paints the template's, so the border and the art's inset still show", function()
+    local c = cfg({ icons = { borderShow = true, borderStyle = "Solid" } })
+    c.icons.borderSize = nil
+    local frame, am = dressed(c)
+    -- red under: Icons.Apply handing ApplyBorder the raw borderSize (a missing size hides the template's border)
+    assertTrue(am.border:IsShown(), "the template's border shows")
+    assertEqual(am.border:__last("SetBackdrop")[1].edgeSize, D.icons.borderSize)
+    local p = am.icon:__calls("SetPoint")
+    -- red under: layoutIcon's inset falling back to 0 rather than the template's size
+    assertTrue(p[1][2] == frame)
+    assertEqual(p[1][4], D.icons.borderSize, "inset by the template's size")
+    assertEqual(p[2][4], -D.icons.borderSize)
+end)
+
 -- ── the cooldown swipe ────────────────────────────────────────────────────────────────────────
 
 test("icons: the cooldown draws a swipe in the configured opacity, its edge and direction on their settings", function()
