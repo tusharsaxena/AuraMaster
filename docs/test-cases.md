@@ -27,7 +27,7 @@ badge and any count quoted in the docs must agree with it.
 - debug: the logging flag is ours, session-only, and never written to the profile
 - degraded: without LibKa0s the addon still loads and every seam answers
 
-### test_database.lua (12)
+### test_database.lua (21)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -41,6 +41,15 @@ badge and any count quoted in the docs must agree with it.
 - database: a non-numeric container key is dropped and the profile loads
 - database: PrepareProfile seeds an empty profile from its own counter, in declaration order
 - database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
+- database: a schema version newer than this build is never lowered
+- database: learned timed spells survive a load
+- database: without AceDB the addon runs on the raw SavedVariables, keeping what was stored
+- database: GetContainers follows the stored order and skips an id with no container
+- database: a string id in the stored order keeps its place
+- database: a deleted id is never handed out again, not even after a reload
+- database: NewContainerData takes an id from the counter without registering the container
+- database: seeded starters share no table with each other or with the template
+- database: a file from before the seeded flag, the id counter and the order keeps its containers
 
 ### test_schema.lua (26)
 
@@ -71,7 +80,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write runs the normalize hook of every row under it, with the target id
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 
-### test_filtercompiler.lua (28)
+### test_filtercompiler.lua (37)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -101,8 +110,17 @@ badge and any count quoted in the docs must agree with it.
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
 - filter: the whole plan for four rich containers is unchanged (characterization)
+- filter: Signature tells a number from its string and a boolean from its name
+- filter: numeric strings in the duration and cap settings are read as numbers
+- filter: spell lists accept string ids and drop ids switched off
+- filter: a category's spell edits accept string ids and ignore keys that are not ids
+- filter: an unknown aura type compiles as buffs, and only buffs append weapon enchants
+- filter: the spell-list warning follows the unit and the aura type
+- filter: 'only timeless' with nothing learned yet filters no ids and warns about none
+- filter: a hidden spell category with every id removed excludes nothing
+- filter: group keys stay consecutive when a contradiction drops a group
 
-### test_container.lua (16)
+### test_container.lua (35)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -120,8 +138,27 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine nothing is built and preview still works
 - container: deleting a container disables its engine and hides its anchor
 - container: an anchor is movable but never saved by the client's layout cache
+- container: a line holds perLine elements and the spacing between them; 0 per line is unbounded
+- container: growth normalizes to right and down, and the anchor corner is the one auras grow away from
+- container: a changed candidate filter is re-sent on the live engine; the filter string is not
+- container: clearing the last candidate filter sends the engine an empty table, not nil
+- container: sort, cap and layout changes each send only their own setter
+- container: a unit change is sent to the live engine once
+- container: switching style rebuilds the engine even when the filter plan keeps its shape
+- container: a weapon-enchant container shows the player's enchants in the engine's three slots, whatever its unit
+- container: an enchant slot the engine refuses costs that slot, not the build
+- container: an engine call that raises is traced, and the build carries on to the unit
+- container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses
+- container: an instance whose container is gone applies nothing and touches no engine
+- container: the anchor's scale is the container's times the master's, never below a tenth
+- container: the anchor's alpha is the container's times the master's
+- container: out-of-combat visibility shows out of combat and hides in it
+- container: the class snapshot is the tracked unit's, and nothing for the player or for enchants
+- container: a class the client withholds resolves to no class instead of raising
+- container: a button the engine creates is dressed with the container's class snapshot
+- container: on a client without the aura engine a container is deleted without error
 
-### test_containermanager.lua (37)
+### test_containermanager.lua (48)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -160,6 +197,68 @@ badge and any count quoted in the docs must agree with it.
 - manager: /am forgettimed in combat is the player's change, so it says it waits
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
+- manager: a request for one container applies only that one
+- manager: a flushed queue is empty, and a later request schedules a pass of its own
+- manager: a held request keeps exactly its container through the hold
+- manager: a flush with nothing queued traces no deferral, even under lockdown
+- manager: a container row re-applies its own container; an addon-wide row re-applies every one
+- manager: a new container is named and staggered by its id; a given position is kept
+- manager: UniqueName skips every taken suffix, and a blank name becomes Container
+- manager: deleting a container leaves every other attachment and the selection alone
+- manager: a duplicate of an attached container keeps its position; an unknown id is refused
+- manager: a rebuilt engine re-anchors every container attached to it
+- manager: a client without the aura engine is told once, at startup
+
+### test_compat.lua (16)
+
+- compat: the aura engine counts as present only with its sort enum and CreateFrame
+- compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
+- compat: a LoadAddOn that raises, or no C_AddOns at all, still answers from the enums
+- compat: AurasAreSecret answers a strict boolean, and false when the client cannot say
+- compat: every sort key reaches a distinct member of the engine's sort enum
+- compat: sort direction reads the engine enum, else 1 for reverse and 0 for normal
+- compat: enchant slots read the engine enum by member, with the client's numbering as fallback
+- compat: the enchant sort and placement read their enums, else 1
+- compat: flow axis and direction use AnchorUtil's enums, else pass the name through
+- compat: the status-bar and dispel-style enums answer nil on a client without them
+- compat: no duration formatter for Blizzard's own text, without C_StringUtil, or when creation fails
+- compat: a detailed formatter shows two units with a carry, a short one a single unit
+- compat: the expiring text color is a step curve from the expiring color to the normal one at the threshold
+- compat: no curve API, or a curve that refuses a point, gives no text color
+- compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global
+- compat: spell info comes from C_Spell, and the pre-11.0 global only when C_Spell is absent
+
+### test_secrets.lua (3)
+
+- secrets: without the client's secrets system nothing is secret and every value is readable
+- secrets: issecretvalue alone decides access when canaccessvalue is absent, as a strict boolean
+- secrets: canaccessvalue, when the client has it, overrides the secret test
+
+### test_bus.lua (5)
+
+- bus: every message name carries this addon's prefix and no two share one
+- bus: two receivers on their own targets both hear one message, with its payload
+- bus: CONTAINERS_CHANGED goes out once per registry act, and never for a refused one
+- bus: world entry and each combat edge send one VISIBILITY_CHANGED; a unit swap sends none
+- bus: a CONFIG_CHANGED the receiver cannot read re-applies the container it names, or every one
+
+### test_state.lua (2)
+
+- state: the session flags start off, are never saved, and a reload starts them clean
+- state: preview's toggle stores a strict boolean and hides or restores the engines at once
+
+### test_lifecycle.lua (10)
+
+- lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
+- lifecycle: a focus change refreshes the focus containers, a target change the target ones
+- lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
+- lifecycle: entering the world runs an apply held while auras were secret
+- lifecycle: combat starting runs no held apply; combat ending does
+- lifecycle: a profile switch out of combat rebuilds every container for the new profile at once
+- lifecycle: every profile event clears the container selection and re-renders the panel once
+- lifecycle: a copied profile is prepared before its containers are built
+- lifecycle: a reset profile gets its starters back, numbered from 1 again
+- lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
 ### test_anchors.lua (24)
 
@@ -339,11 +438,16 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 8 |
-| test_database.lua | 12 |
+| test_database.lua | 21 |
 | test_schema.lua | 26 |
-| test_filtercompiler.lua | 28 |
-| test_container.lua | 16 |
-| test_containermanager.lua | 37 |
+| test_filtercompiler.lua | 37 |
+| test_container.lua | 35 |
+| test_containermanager.lua | 48 |
+| test_compat.lua | 16 |
+| test_secrets.lua | 3 |
+| test_bus.lua | 5 |
+| test_state.lua | 2 |
+| test_lifecycle.lua | 10 |
 | test_anchors.lua | 24 |
 | test_style.lua | 19 |
 | test_timedspells.lua | 11 |
@@ -357,4 +461,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **267** |
+| **Total** | **351** |
