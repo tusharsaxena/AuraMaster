@@ -30,7 +30,7 @@ is a defect in this doc (documentation-§3).
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:412`): the page's schema groups become tabs, the page's bespoke tabs
+  (`settings/OptionsSetup.lua:416`): the page's schema groups become tabs, the page's bespoke tabs
   follow, and every row resolves against the selected container. General is addon-wide.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
@@ -82,7 +82,9 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 
 Then the composed button pair: **Reset position** (`ContainerManager.ResetPositions` — every
 container back to the screen, staggered) and **Reset all settings** (the `AURAMASTER_RESET_ALL`
-popup, options-ui-§12's wording; accepting it is a profile reset).
+popup, options-ui-§12's wording; accepting it is a profile reset). Its tooltip says so: *Reset the
+current profile to its defaults — the same thing Profiles → Reset Profile does. Your other profiles
+are not affected.* The descriptor's `profilesPage = true` picks that wording (LibKa0s-Options 18).
 
 **Display**
 

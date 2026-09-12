@@ -185,6 +185,18 @@ test("general: Reset all settings asks first and resets nothing until the answer
     assertEqual(NS.db.profile.scale, 2)
 end)
 
+test("general: the Reset-all tooltip names the equivalence with Profiles → Reset Profile", function()
+    local _, m, P, ws = general()
+    local lines = {}
+    rawset(m.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    P.find(ws, "Button", "Reset all settings"):__fire("OnEnter")
+    -- red under: the Options descriptor without profilesPage (the tooltip never points at the Profiles page)
+    assertEqual(lines[1], "Reset the current profile to its defaults — the same thing Profiles → Reset Profile does. "
+        .. "Your other profiles are not affected.")
+end)
+
 test("general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through", function()
     local NS, m = general()
     local d = m.StaticPopupDialogs.AURAMASTER_RESET_ALL

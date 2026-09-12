@@ -540,7 +540,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (35)
+### test_slash_verbs.lua (36)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -566,6 +566,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am test reads its word in any case, toggles on anything else, and says which
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
+- slash verbs: /am set on a free-text row stores every word typed after the path
 - slash verbs: a right-click cancels /am pick, says so, and attaches nothing
 - slash verbs: /am perf prints every line the harness returns, tagged, and hands it the rest of the line
 - slash verbs: a bare /am debug toggles the window and leaves the flag; /am debug ON is read in any case
@@ -640,7 +641,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (12)
+### test_pages_general.lua (13)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -652,6 +653,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
 - general: Reset all settings asks first and resets nothing until the answer
+- general: the Reset-all tooltip names the equivalence with Profiles → Reset Profile
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting
 
@@ -847,11 +849,11 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
-| test_slash_verbs.lua | 35 |
+| test_slash_verbs.lua | 36 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 16 |
-| test_pages_general.lua | 12 |
+| test_pages_general.lua | 13 |
 | test_pages_containers.lua | 14 |
 | test_pages_filters.lua | 12 |
 | test_pages_layout.lua | 12 |
@@ -870,4 +872,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **680** |
+| **Total** | **682** |

@@ -408,6 +408,17 @@ test("slash verbs: /am pick attaches the container selected when it began, even 
     assertTrue(said(plain(lines), "'Player debuffs' is now attached to FocusFrame"), dump(plain(lines)))
 end)
 
+test("slash verbs: /am set on a free-text row stores every word typed after the path", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("select 2")
+    slash(NS2, lines, "set container.name My Raid Buffs")
+    -- red under: LibKa0s-Slash minor 9, whose ParseValue handed a string row its first word ("My")
+    assertEqual(NS2.Database.FindContainer(2).name, "My Raid Buffs")
+    slash(NS2, lines, "set container.attach.frame  Some Frame  ")
+    assertEqual(NS2.Database.FindContainer(2).attach.frame, "Some Frame", "trimmed at both ends")
+end)
+
 test("slash verbs: a right-click cancels /am pick, says so, and attaches nothing", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)

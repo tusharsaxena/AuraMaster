@@ -77,6 +77,10 @@ profile-backed row (`vetoedFromResetAll`, `settings/OptionsSetup.lua:23`), leavi
 session rows a profile reset cannot reach. Other profiles are untouched. Neither surface is refused
 in combat: like Reset Profile, both take the parked teardown described above.
 
+The button's tooltip names the equivalence, because the options descriptor sets `profilesPage =
+true` beside `resetProfile` in `settings/OptionsSetup.lua`: *Reset the current profile to its
+defaults — the same thing Profiles → Reset Profile does. Your other profiles are not affected.*
+
 ## The Profiles sub-page
 
 `settings/Profiles.lua` registers `AceDBOptions:GetOptionsTable(NS.db)` with AceConfig as
