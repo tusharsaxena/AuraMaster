@@ -43,7 +43,7 @@ test("schema paths: the seam validates before it resolves, so a bad value names 
     local NS2 = fresh()
     local ok, err = NS2.SetByPath("container.name", "   ", 99)
     assertFalse(ok)
-    -- red under: writeRow resolving the container before running row.validate
+    -- red under: writeRow refusing a missing container before running row.validate
     assertEqual(err, "Invalid value for container.name")
 end)
 
@@ -205,6 +205,41 @@ test("schema paths: a row's validate runs at the seam — the attach target refu
     assertFalse(ok, "1 following 2 would close a loop")
     assertEqual(err, "Invalid value for container.attach.container")
     assertEqual(NS2.Database.FindContainer(1).attach.container, 0)
+end)
+
+test("schema paths: an explicit-id attach write is checked for a loop from the container it writes", function()
+    local NS2 = fresh()
+    NS2.State.SetActiveContainer(1)
+    -- red under: the attach validator checking the SELECTED container (1 following 1 reads as a loop)
+    assertTrue(NS2.CheckWrite("container.attach.container", 1, 3), "CheckWrite agrees: 3 may follow 1")
+    assertTrue(NS2.SetByPath("container.attach.container", 1, 3), "3 follows 1 while 1 is selected")
+    assertEqual(NS2.Database.FindContainer(3).attach.container, 1)
+    assertEqual(NS2.Database.FindContainer(1).attach.container, 0, "the selected container is untouched")
+end)
+
+test("schema paths: an explicit-id attach write that would loop is refused, whatever is selected", function()
+    local NS2 = fresh()
+    local c2 = NS2.Database.FindContainer(2)
+    c2.attach.mode, c2.attach.container = "container", 3
+    NS2.State.SetActiveContainer(1)
+    -- red under: the attach validator checking the SELECTED container (1 is on no loop, so it passes)
+    local ok, err = NS2.SetByPath("container.attach.container", 2, 3)
+    assertFalse(ok, "3 following 2 closes 2 → 3 → 2")
+    assertEqual(err, "Invalid value for container.attach.container")
+    assertFalse((NS2.CheckWrite("container.attach.container", 2, 3)), "CheckWrite agrees")
+    assertFalse((NS2.SetByPath("container.attach.container", 3, 3)), "3 following itself")
+    assertEqual(NS2.Database.FindContainer(3).attach.container, 0)
+end)
+
+test("schema paths: an attach write through the selection still checks the selected container", function()
+    local NS2 = fresh()
+    local c2 = NS2.Database.FindContainer(2)
+    c2.attach.mode, c2.attach.container = "container", 3
+    NS2.State.SetActiveContainer(3)
+    -- red under: the attach validator handed no container when the write targets the selection
+    assertFalse((NS2.SetByPath("container.attach.container", 2)), "3 following 2 closes 2 → 3 → 2")
+    assertTrue(NS2.SetByPath("container.attach.container", 1), "3 following 1 is no loop")
+    assertEqual(NS2.Database.FindContainer(3).attach.container, 1)
 end)
 
 -- ── defaults, registration, validation ────────────────────────────────────────────────────────

@@ -89,7 +89,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write runs the normalize hook of every row under it, with the target id
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 
-### test_schema_paths.lua (33)
+### test_schema_paths.lua (36)
 
 - schema paths: the seam validates before it resolves, so a bad value names the value, not the container
 - schema paths: normalize is handed the resolved id, so a container keeps its own name in any case
@@ -103,6 +103,9 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: GetSetting reads paths that are not rows, and a container path reads nil with no containers
 - schema paths: a table value is stored as a copy, so the caller's table can never edit the container
 - schema paths: a row's validate runs at the seam — the attach target refuses a non-number and a cycle
+- schema paths: an explicit-id attach write is checked for a loop from the container it writes
+- schema paths: an explicit-id attach write that would loop is refused, whatever is selected
+- schema paths: an attach write through the selection still checks the selected container
 - schema paths: DefaultFor answers the template or the profile defaults, as a copy, never the stored value
 - schema paths: RegisterSchemaRows stamps a resolvable row's default, and leaves session and unresolved rows alone
 - schema paths: ValidateSchema fails an unknown page, an unknown type and an empty group, and says which
@@ -820,7 +823,7 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 14 |
 | test_database.lua | 24 |
 | test_schema.lua | 26 |
-| test_schema_paths.lua | 33 |
+| test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 37 |
 | test_container.lua | 35 |
 | test_containermanager.lua | 48 |
@@ -861,4 +864,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **671** |
+| **Total** | **674** |

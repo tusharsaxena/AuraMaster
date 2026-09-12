@@ -363,8 +363,7 @@ local function writeCarveOut(path, value, containerId)
 end
 
 -- The sections a caller may write whole, each with the CONFIG_CHANGED section it announces as.
--- `container.attach` is deliberately absent: no caller writes it whole, and its `.container`
--- validator checks cycles against the ACTIVE container, not the target id.
+-- `container.attach` is deliberately absent: no caller writes it whole.
 local SECTIONS = {
     ["container.filter"]   = "filters",
     ["container.layout"]   = "layout",
@@ -396,11 +395,12 @@ local function normalizeSectionCarveOuts(section, v, depth)
     return nil
 end
 
---- Validate every row under `section` against its leaf in `v`. Returns an error or nil.
-local function validateSectionRows(section, v, depth)
+--- Validate every row under `section` against its leaf in `v`, each handed the target container's
+--- id as a row write hands it. Returns an error or nil.
+local function validateSectionRows(section, v, depth, id)
     for _, row in ipairs(NS.Schema) do
         if row.validate and isUnder(row.path, section)
-            and not row.validate(readFrom(v, splitPath(row.path), depth + 1)) then
+            and not row.validate(readFrom(v, splitPath(row.path), depth + 1), id) then
             return L["Invalid value for %s"]:format(row.path)
         end
     end
@@ -484,7 +484,7 @@ local function prepareSection(path, value, containerId)
     local v = copy(value)
     NS.Database.Backfill(v, readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
     local depth = #parts
-    local err = normalizeSectionCarveOuts(path, v, depth) or validateSectionRows(path, v, depth)
+    local err = normalizeSectionCarveOuts(path, v, depth) or validateSectionRows(path, v, depth, id)
     if err then return nil, err end
     return v, root, parts, first, id
 end
@@ -505,22 +505,25 @@ local function writeSection(path, value, containerId, sec)
     return true
 end
 
---- A schema row's storage step: validate the raw value, resolve the container, normalize, store.
---- `row.normalize(value, id)` is an optional hook that runs after the id is known, so a row can
---- rewrite a valid value against its container (the name row makes it unique). It returns ok,
---- err|nil, the container id, and the value as stored (what onChange and the announcement see).
+--- A schema row's storage step: resolve the container, validate the raw value, normalize, store.
+--- `row.validate(value, id)` and the optional `row.normalize(value, id)` are both handed the id the
+--- write targets (nil for a global or session row, or when no container resolves), so a row can
+--- check or rewrite a value against ITS container: the attach row refuses a loop from the container
+--- written, the name row makes a name unique. A bad value is refused before a missing container, so
+--- the refusal names the value. It returns ok, err|nil, the container id, and the value as stored
+--- (what onChange and the announcement see).
 --- Inside a bulk bracket it tallies the row here, once stored, so an onChange that raises
 --- afterwards cannot drop a stored write from the count.
 local function writeRow(row, path, value, containerId)
-    if row.validate and not row.validate(value) then
-        return false, L["Invalid value for %s"]:format(path)
-    end
     local parts, root, first, id
     if not row.sessionOnly then
         parts = splitPath(path)
         root, first, id = resolveRoot(parts, containerId)
-        if not root then return false, NO_CONTAINER end
     end
+    if row.validate and not row.validate(value, id) then
+        return false, L["Invalid value for %s"]:format(path)
+    end
+    if parts and not root then return false, NO_CONTAINER end
     if row.normalize then value = row.normalize(value, id) end
     local changed = bulk.depth > 0 and rowChanges(row, root, parts, first, value)
     if row.sessionOnly then
@@ -539,9 +542,9 @@ end
 --- Defaults buttons and a drag handle all land here. `containerId` targets a specific container
 --- instead of the active one.
 ---
---- Order is load-bearing: validate, resolve, normalize, write, react, log once, announce. Reacting
---- before the write would hand a reactor the old value; logging in the reactor would log it once
---- per subscriber.
+--- Order is load-bearing: resolve, validate against the resolved container, normalize, write, react,
+--- log once, announce. A bad value is refused before a missing container. Reacting before the write
+--- would hand a reactor the old value; logging in the reactor would log it once per subscriber.
 --- @return boolean ok, string|nil err
 function NS.SetByPath(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
@@ -567,17 +570,21 @@ local function checkCarveOut(path, value, containerId)
     return true
 end
 
---- Whether a row write would be stored: the row exists, its validate accepts the value, and (for a
---- stored row) the container exists. A row's normalize never refuses, so it is not run.
+--- Whether a row write would be stored: the row exists, its validate accepts the value (handed the id
+--- the write targets, as writeRow hands it), and (for a stored row) the container exists. A row's
+--- normalize never refuses, so it is not run.
 local function checkRow(path, value, containerId)
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
-    if row.validate and not row.validate(value) then
+    local root, id
+    if not row.sessionOnly then
+        local _
+        root, _, id = resolveRoot(splitPath(path), containerId)
+    end
+    if row.validate and not row.validate(value, id) then
         return false, L["Invalid value for %s"]:format(path)
     end
-    if not row.sessionOnly and not resolveRoot(splitPath(path), containerId) then
-        return false, NO_CONTAINER
-    end
+    if not row.sessionOnly and not root then return false, NO_CONTAINER end
     return true
 end
 

@@ -195,8 +195,10 @@ the write re-applies its container, or every container for a global row. A `sess
 announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs in
 `Container:Apply`.
 
-A row may declare `normalize(value, id)`, an optional hook `NS.SetByPath` runs after `validate` and
-after the container id is resolved, just before the write. Whatever it returns is what gets stored, and
+A row's `validate(value, id)` and its optional `normalize(value, id)` hook are both handed the id of
+the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`
+resolves that id first and then validates, so a bad value is still refused before a missing container
+is. `normalize` runs after both, just before the write. Whatever it returns is what gets stored, and
 it is also the value `onChange` and the announcement see. The `container.name` row uses it to store the
 trimmed name made unique by `ContainerManager.UniqueName`, and that comparison ignores case (`buffs`
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
@@ -210,9 +212,8 @@ no key can be dropped. Then it runs the spell-set carve-outs under that section,
 section is written, `onChange` fires for each row whose leaf actually changed, compared by
 `FilterCompiler.Signature`. The write logs one `[Set]` line that renders the stored table (for example
 `container.position = {point=TOP, relativePoint=CENTER, x=5, y=0}`), built only while debug is on, and
-sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section. No
-caller writes it whole, and its `container` validator checks for cycles against the active container
-rather than the target.
+sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section: no
+caller writes it whole.
 
 **A bulk copy or reset is one line** (debug-logging-§10). `NS.Bulk` brackets every act that
 rewrites a set of rows wholesale. That covers a page's Defaults and Reset all (the library's

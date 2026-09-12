@@ -45,10 +45,11 @@ NS.RegisterSchemaRows({
         path = "container.attach.container", page = PAGE, group = G_POS, type = "number",
         values = attachTargets, label = L["Container"],
         desc = L["The container to attach to when 'Another container' is chosen. A chain that would loop falls back to the screen."],
-        validate = function(v)
-            local _, activeId = NS.ActiveContainer()
+        -- `fromId` is the container the write targets, resolved by the seam: the id a caller names,
+        -- else the selected container. A loop is checked from there, never from the selection.
+        validate = function(v, fromId)
             local id = tonumber(v)
-            return id ~= nil and (id == 0 or not NS.Anchors.WouldCycle(activeId, id))
+            return id ~= nil and (id == 0 or not NS.Anchors.WouldCycle(fromId, id))
         end,
     },
     {
