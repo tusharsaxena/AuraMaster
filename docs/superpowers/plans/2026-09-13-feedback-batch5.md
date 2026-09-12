@@ -78,7 +78,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | B3 justify width | B-5 | AM | done | c138d55 | ApplyText boxWidth; bar time unboxed while name stops at it |
 | B4 dispel color order | B-4 | AM | done | e94f771 | additive bindings cleared first in both styles; fill shown each dress |
 | B5 icon border color | I-1 | AM | done | f5ec19c | dispel art on its own frame above our border; icon frame levels set in build |
-| B6 countdown rounding | I-2 | AM | todo | | needs R0 |
+| B6 countdown rounding | I-2 | AM | done | 2280071 | every format RoundUp; Blizzard format a round-up copy of the engine default |
 | B7 world-tooltip bleed + strata | L-3 | AM | todo | | needs R0; **CP-B** |
 | C1 schema v2 migration + defaults | G-2 G-3 L-3 §7 | AM | todo | | |
 | C2 consumers read profile sets | G-2 G-3 | AM | todo | | **CP-C** |
