@@ -56,6 +56,7 @@ Kit.run{
         "test_setups",
         "test_database",
         "test_schema",
+        "test_schema_paths",
         "test_filtercompiler",
         "test_container",
         "test_containermanager",
