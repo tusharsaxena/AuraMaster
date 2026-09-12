@@ -87,6 +87,48 @@ test("perf: suspend holds a queued apply until resume", function()
     assertTrue(#mocks.__engines[1]:__callsTo("SetAuraGroupLayout") > 0, "resume drained the queued apply")
 end)
 
+test("perf: the buckets are declared in report order, and only the per-container apply nests", function()
+    local NS = fresh()
+    -- red under: a bucket reordered, renamed or dropped from core/PerfSetup.lua
+    assertEqual(table.concat(NS.Perf.BUCKET_ORDER, ","),
+        "unitSwap,applyPass,applyContainer,visibilityPass,styleElement,timedScan")
+    local nested = {}
+    for key, parent in pairs(NS.Perf.BUCKET_WITHIN) do
+        nested[#nested + 1] = key .. "<" .. parent
+    end
+    -- red under: applyContainer losing `within = "applyPass"`
+    assertEqual(table.concat(nested, ","), "applyContainer<applyPass")
+end)
+
+test("perf: suspend and resume log to the console whatever the debug flag says", function()
+    local NS = fresh()
+    assertFalse(NS.State.debug)
+    NS.Perf.Suspend()
+    -- red under: the descriptor's `log` routed through the gated NS.Debug sink
+    assertTrue(NS.DebugLog:FindLine("[Perf] addon SUSPENDED") ~= nil, tostring(NS.DebugLog:LastLine()))
+    NS.Perf.Resume()
+    assertTrue(NS.DebugLog:FindLine("[Perf] addon RESUMED") ~= nil, tostring(NS.DebugLog:LastLine()))
+end)
+
+test("perf: resume re-registers exactly the lifecycle events suspend took away", function()
+    local NS = fresh()
+    local function events()
+        local out = {}
+        for e in pairs(NS.addon.__events) do
+            out[#out + 1] = e
+        end
+        table.sort(out)
+        return table.concat(out, ",")
+    end
+    local before = events()
+    assertTrue(before ~= "", "the addon listens to something")
+    NS.Perf.Suspend()
+    assertEqual(events(), "")
+    NS.Perf.Resume()
+    -- red under: resume re-registering from a hand-kept list rather than RegisterLifecycleEvents
+    assertEqual(events(), before)
+end)
+
 test("perf: without the library, /am perf answers one honest line", function()
     local NS2 = loadDegraded()
     local lines = NS2.Perf.OnCommand("")
