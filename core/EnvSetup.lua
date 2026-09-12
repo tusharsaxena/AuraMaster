@@ -34,5 +34,8 @@ end
 --- @return string
 function NS.Version()
     if Env then return Env.Version(addonName, NS.version) or "?" end
-    return NS.Meta("Version") or NS.version or "?"
+    -- An empty field reads as absent, exactly as LibKa0s-Env's own Version reads it.
+    local v = NS.Meta("Version")
+    if v ~= nil and v ~= "" then return v end
+    return NS.version or "?"
 end

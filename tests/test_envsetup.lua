@@ -44,6 +44,14 @@ test("env: the version is the TOC's where it can be read, and the fallback const
     end
 end)
 
+test("env: an empty TOC version falls back like an absent one, on both arms", function()
+    for _, arm in ipairs(arms()) do
+        reader(arm.m, { Version = "" })
+        -- red under: the degraded reader passing the TOC's empty string through as a version
+        assertEqual(arm.NS.Version(), arm.NS.version, arm.name)
+    end
+end)
+
 test("env: the version is never nil — '?' when neither the TOC nor the constant answers", function()
     for _, arm in ipairs(arms()) do
         arm.m.C_AddOns = nil
