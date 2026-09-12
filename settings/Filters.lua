@@ -208,7 +208,9 @@ local function renderSpellLists(ctx, cfg)
             cb:SetValue(mine[r.id] ~= false)
             cb:SetCallback("OnValueChanged", function(_, _, on)
                 if r.starter then
-                    mine[r.id] = (not on) and false or nil
+                    -- A removed starter is stored as false (nil would let the starter list bring it
+                    -- back); re-ticking drops the edit.
+                    if on then mine[r.id] = nil else mine[r.id] = false end
                 else
                     mine[r.id] = on and true or nil
                 end

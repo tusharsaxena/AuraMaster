@@ -124,3 +124,110 @@ test("degraded: without LibKa0s the addon still loads and every seam answers", f
     local r, g, b, a = NS2.ResolveColor({ r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, false)
     assertEqual(r + g + b + a, 1.0)
 end)
+
+-- ── the seams, one behavior each ──────────────────────────────────────────────────────────────
+
+--- Capture an environment's chat into a list.
+local function chat(m)
+    local lines = {}
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        lines[#lines + 1] = tostring(msg)
+    end)
+    return lines
+end
+
+test("media: the shipped face and bar textures reach LibSharedMedia, from this addon's folder", function()
+    local registered = {}
+    local _, m = fresh({ before = function(mk)
+        mk.__libs["LibSharedMedia-3.0"] = {
+            MediaType = { FONT = "font", STATUSBAR = "statusbar" },
+            Register = function(_, kind, name, path)
+                registered[#registered + 1] = { kind = kind, name = name, path = path }
+            end,
+            HashTable = function() return {} end,
+            Fetch = function() return nil end,
+            List = function() return {} end,
+            IsValid = function() return false end,
+        }
+    end })
+    local media = m.LibStub("LibKa0s-Media-1.0")
+    local fonts, bars, textures = {}, 0, 0
+    for _, r in ipairs(registered) do
+        if r.kind == "font" then fonts[r.name] = r.path end
+        if r.kind == "statusbar" then bars = bars + 1 end
+    end
+    for _ in pairs(media.TEXTURES) do textures = textures + 1 end
+    -- red under: dropping core/MediaSetup.lua's RegisterLSM call (no Ka0s face or texture in any
+    -- dropdown, and a stored "JetBrains Mono" resolving to nothing)
+    local mono = fonts["JetBrains Mono"]
+    assertTrue(mono ~= nil, "the monospace face is registered")
+    assertTrue(mono:find("AddOns\\AuraMaster\\", 1, true) ~= nil, "from this addon's folder: " .. mono)
+    assertEqual(bars, textures, "every shipped bar texture")
+end)
+
+test("core: the degraded printer names the missing library once, on the first line it prints", function()
+    local NS2, m2 = loadDegraded()
+    local lines = chat(m2)
+    NS2.Print("one")
+    NS2.Print("two")
+    -- red under: the one-time notice printed on every line, or never
+    assertEqual(#lines, 3)
+    assertTrue(lines[1]:find(NS2.LIBKA0S_MISSING, 1, true) ~= nil, lines[1])
+    for i = 2, 3 do
+        assertTrue(lines[i]:find(NS2.PREFIX, 1, true) == 1, "tagged: " .. lines[i])
+        assertFalse(lines[i]:find(NS2.LIBKA0S_MISSING, 1, true), "said once: " .. lines[i])
+    end
+    assertTrue(lines[3]:find("two", 1, true) ~= nil)
+end)
+
+test("core: the degraded Printf stringifies every argument before it formats", function()
+    local NS2, m2 = loadDegraded()
+    local lines = chat(m2)
+    NS2.Print("warm up")   -- the one-time notice, out of the way
+    local ok, err = pcall(NS2.Printf, "%s|%s|%s", nil, false, 5)
+    -- red under: formatting the raw arguments (Lua 5.1's format raises on a nil for %s)
+    assertTrue(ok, tostring(err))
+    local last = lines[#lines]
+    assertTrue(last:find("nil|false|5", 1, true) ~= nil, last)
+end)
+
+test("core: the degraded color resolver keeps the stored alpha, and falls through for a unit with no class", function()
+    local NS2, m2 = loadDegraded()
+    m2.UnitClass = function(unit)
+        if unit == "player" then return "Mage", "MAGE" end
+    end
+    local stored = { r = 0.1, g = 0.2, b = 0.3, a = 0.4 }
+    local r, g, b, a = NS2.ResolveColor(stored, true, "player")
+    local mage = m2.RAID_CLASS_COLORS.MAGE
+    -- red under: the class color replacing the stored alpha (options-ui-§17's first rule)
+    assertEqual(r, mage.r, "the class color")
+    assertEqual(g, mage.g)
+    assertEqual(b, mage.b)
+    assertEqual(a, 0.4, "with the stored alpha")
+    r, g, b, a = NS2.ResolveColor(stored, true, "target")
+    assertEqual(r, 0.1, "no class: the swatch as stored")
+    assertEqual(g, 0.2)
+    assertEqual(b, 0.3)
+    assertEqual(a, 0.4)
+end)
+
+test("core: every close button is built with this addon's folder, so it can draw the catalog mark", function()
+    local NS2, m2 = fresh()
+    local core = m2.LibStub("LibKa0s-Core-1.0")
+    local real, seen = core.MakeCloseButton, nil
+    core.MakeCloseButton = function(parent, onClick, addon)
+        seen = addon
+        return real(parent, onClick, addon)
+    end
+    NS2.MakeCloseButton(m2.UIParent, function() end)
+    core.MakeCloseButton = real
+    -- red under: the wrapper calling the factory with two arguments (the × glyph, silently)
+    assertEqual(seen, "AuraMaster")
+end)
+
+test("namespace: NS is private — no global — and carries the folder name and the [AM] tag", function()
+    assertEqual(NS.name, "AuraMaster")
+    -- red under: publishing the namespace as _G[addonName] (architecture-§1)
+    assertNil(rawget(_G, "AuraMaster"))
+    assertEqual(NS.PREFIX, "|cFF00FFFF[AM]|r")
+end)
