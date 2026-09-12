@@ -69,7 +69,7 @@ end
 local function layout(frame, am, b, h)
     local iconPos = b.icon or D.bars.icon
     local iconSize = (tonumber(b.iconSize) or 0) > 0 and b.iconSize or h
-    local gap = tonumber(b.iconGap) or 0
+    local gap = tonumber(b.iconGap) or D.bars.iconGap
 
     am.icon:ClearAllPoints()
     am.bar:ClearAllPoints()
@@ -90,7 +90,7 @@ local function layout(frame, am, b, h)
             am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", iconSize + gap, 0)
             am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
         end
-        local z = tonumber(b.iconZoom) or 0
+        local z = tonumber(b.iconZoom) or D.bars.iconZoom
         am.icon:SetTexCoord(z, 1 - z, z, 1 - z)
     end
     am.bg:SetAllPoints(am.bar)

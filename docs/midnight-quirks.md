@@ -124,7 +124,7 @@ TinyBuffBars' (MIT).
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
-before adding again (`modules/Style_Bars.lua:185-195`, `modules/Style_Icons.lua:114-123`).
+before adding again (`modules/Style_Bars.lua:185-195`, `modules/Style_Icons.lua:115-124`).
 
 ## The engine does not notice a unit token changing
 

@@ -21,6 +21,13 @@ local Perf = NS.Perf
 -- to the template's value for the same path, never to a number restated here.
 local D = NS.CONTAINER_TEMPLATE
 
+--- A stored leaf, or `default` (the template's value for the same path) when the leaf is missing.
+--- For the boolean leaves, where `v or default` would turn a stored false into the default.
+function Style.OrTemplate(v, default)
+    if v == nil then return default end
+    return v
+end
+
 -- A flat one-pixel border, registered under a name the border dropdown can offer. It is not a file this
 -- addon ships: WHITE8X8 is a client texture, stretched into an edge of any thickness.
 local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
@@ -255,7 +262,9 @@ end
 --- can be canceled — a debuff or a target's buff cannot, and registering the click there would only
 --- swallow it — and a click-through container takes no clicks at all.
 local function cancelEnabled(cfg, b)
-    if b.clickThrough or not b.cancelOnRightClick then return false end
+    if b.clickThrough or not Style.OrTemplate(b.cancelOnRightClick, D.behavior.cancelOnRightClick) then
+        return false
+    end
     return cfg.unit == "player" and (cfg.auraType == "HELPFUL" or cfg.auraType == "ENCHANT")
 end
 
