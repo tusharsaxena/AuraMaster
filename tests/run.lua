@@ -59,6 +59,8 @@ Kit.run{
         "test_filtercompiler",
         "test_container",
         "test_containermanager",
+        "test_compat",
+        "test_secrets",
         "test_anchors",
         "test_style",
         "test_timedspells",
