@@ -150,25 +150,25 @@ after they were hidden; a visibility pass alone leaves them as they are.
 
 Create, delete and duplicate live in `modules/ContainerManager.lua`, the registry's one writer;
 `Database.PrepareProfile` is its load pass (`docs/ARCHITECTURE.md` → Settings Schema). Rename,
-copy-from and reset positions live there too, but write through the seam. A structural change calls `Announce`
-(instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`). Copy-from and
-reset positions are settings writes, not registry changes: each section they replace is one
-whole-section write through `NS.SetByPath`, which announces `CONFIG_CHANGED`, and the applies those
-writes queue coalesce into one pass. Copy-from is all or nothing: it checks every write with
+copy-from and reset positions live there too, but write through the seam. A structural change calls
+`Announce` (instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`).
+Copy-from and reset positions are settings writes, not registry changes: each section they replace
+is one whole-section write through `NS.SetByPath`, which announces `CONFIG_CHANGED`, and the applies
+those writes queue coalesce into one pass. Copy-from is all or nothing: it checks every write with
 `NS.CheckWrite` before making any, so a write the seam would refuse is reported and nothing is
-copied. Deleting a container drops any container attached to it back to the screen, through the
-same seam. Under `MustDefer`, an instance that leaves
-the registry is parked rather than destroyed: `Container:Park` disables its engine and hides only
-the preview and handle. The next `FlushPending` that may touch frames destroys every parked
-instance before it applies; a parked id that returns first is revived in place and redrawn at once.
-A profile switch, copy or reset (`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception: ids
-are reused across profiles, so under `MustDefer` every kept or revived instance is parked, and
-`Container:ShouldShow` keeps it off until the deferred apply rebuilds it for the new data. One that
-leaves the registry on a profile change is marked `staleData` as it parks, so a Create or Duplicate
-that reuses its id before that apply (a reset rewinds the id counter) revives it still parked.
-Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is
-Profiles → Reset Profile, so in combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders
-an open panel, because every banner lists containers.
+copied. Deleting a container drops any container attached to it back to the screen, through the same
+seam. Under `MustDefer`, an instance that leaves the registry is parked rather than destroyed:
+`Container:Park` disables its engine and hides only the preview and handle. The next `FlushPending`
+that may touch frames destroys every parked instance before it applies; a parked id that returns
+first is revived in place and redrawn at once. A profile switch, copy or reset
+(`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception: ids are reused across profiles, so
+under `MustDefer` every kept or revived instance is parked, and `Container:ShouldShow` keeps it off
+until the deferred apply rebuilds it for the new data. One that leaves the registry on a profile
+change is marked `staleData` as it parks, so a Create or Duplicate that reuses its id before that
+apply (a reset rewinds the id counter) revives it still parked. Create and delete are refused in
+combat on every surface this addon owns. Reset all is not: it is Profiles → Reset Profile, so in
+combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open panel, because every
+banner lists containers.
 
 ## Learning timed buffs
 

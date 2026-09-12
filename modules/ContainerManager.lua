@@ -2,10 +2,10 @@ local _, NS = ...
 
 -- modules/ContainerManager.lua — the container registry and every live container instance.
 --
--- ONE WRITER. Creating, deleting, renaming, duplicating and copying between containers all happen
--- here, and this file is the only sender of CONTAINERS_CHANGED (architecture-§4). The stored data
--- itself is core/Database.lua's; the per-container settings go through the single write seam
--- (settings/Schema.lua) like every other setting.
+-- THE REGISTRY WRITER (architecture-§5): create, delete and duplicate, with core/Database.lua's
+-- NewContainerData minting the id. Only its load pass, Database.PrepareProfile, also writes it.
+-- Renaming and copying between containers live here too, as settings writes through the seam
+-- (settings/Schema.lua). This file is the only sender of CONTAINERS_CHANGED (architecture-§4).
 --
 -- APPLYING IS COALESCED AND DEFERRED. A settings change asks for its container to be re-applied
 -- (RequestApply); the request is batched to the next frame, so a slider drag or a whole-profile reset
