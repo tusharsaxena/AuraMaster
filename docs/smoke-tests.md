@@ -202,7 +202,8 @@ suite covers what only the client can show.
     line and no per-row lines (debug-logging-§10): the Bars page's **Defaults** → `[Set] reset bars:
     N rows` (0 when nothing was off its default); **Copy settings from** → `[Set] copy container
     A→B (section): N rows`; **Reset position** → `[Set] reset positions: N rows`; **Reset all
-    settings** → only `[Set] reset profile 'Default' to defaults (N rows)`; Profiles → **Copy** →
+    settings** → only `[Set] reset profile 'Default' to defaults`, with no row count, even when
+    nothing was off its default; Profiles → **Copy** →
     only `[Set] copied profile 'A' → 'B'`.
 55. Memory spot-check: `/run print(collectgarbage("count"))`, change a bar container's bar width 10
     times, then print it again. Note the growth. Style objects are built once per look, so the growth

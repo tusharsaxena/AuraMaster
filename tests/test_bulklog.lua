@@ -27,16 +27,16 @@ end
 
 local function dump(lines) return "{" .. table.concat(lines, " | ") .. "}" end
 
---- The rows a whole-profile reset puts back: every profile-backed row, a container row once per
---- container. Written out here rather than asked of the addon, so the case checks the count.
-local function profileRows(NS2)
-    local containers, n = #NS2.Database.GetContainers(), 0
+-- A profile reset's one line carries no row count (debug-logging-§10 allows omitting it): the reset
+-- re-seeds the starter containers, so "rows not at default" would overcount, and AceDB gives no hook
+-- before the wipe to take that count from.
+local RESET_LINE = "[Set] reset profile 'Default' to defaults"
+
+--- The schema row at `path`, so a case can give it a raising onChange.
+local function rowAt(NS2, path)
     for _, row in ipairs(NS2.Schema) do
-        if not row.sessionOnly then
-            n = n + (row.path:find("^container%.") and containers or 1)
-        end
+        if row.path == path then return row end
     end
-    return n
 end
 
 -- ── the library's walks: Options RestoreDefaults / RestoreAllDefaults, Slash CliResetAll ─────────
@@ -90,8 +90,8 @@ test("bulklog: Reset all, from /am resetall or the General popup, is one line in
         surface(NS2, mocks)
         -- red under: bulkEnd adding its own line beside the handler's, or the session row's [Set]
         assertEqual(#lines, 1, "surface " .. i .. ": " .. dump(lines))
-        assertEqual(lines[1], ("[Set] reset profile 'Default' to defaults (%d rows)"):format(profileRows(NS2)),
-            "surface " .. i)
+        -- red under: the line carrying a count of every row the profile stores
+        assertEqual(lines[1], RESET_LINE, "surface " .. i)
         assertFalse(NS2.State.preview, "the session row is still reset")
     end
 end)
@@ -105,7 +105,7 @@ test("bulklog: the degraded build's Reset all is one line in total, too", functi
     NS2.Helpers.RestoreAllDefaults()
     -- red under: the stub's own loop logging the session row, or a bulk line beside the handler's
     assertEqual(#lines, 1, dump(lines))
-    assertEqual(lines[1], ("[Set] reset profile 'Default' to defaults (%d rows)"):format(profileRows(NS2)))
+    assertEqual(lines[1], RESET_LINE)
     assertFalse(NS2.State.preview)
 end)
 
@@ -135,7 +135,12 @@ test("bulklog: a profile reset and a profile copy are one [Set] line each; a swi
     NS2.db:ResetProfile()
     -- red under: the three AceDB callbacks sharing the one [Profile] changed line
     assertEqual(#lines, 1, dump(lines))
-    assertEqual(lines[1], ("[Set] reset profile 'Default' to defaults (%d rows)"):format(profileRows(NS2)))
+    assertEqual(lines[1], RESET_LINE)
+    -- A reset that changes nothing reads the same: the line never claims a count it cannot know.
+    lines = capture(NS2)
+    NS2.db:ResetProfile()
+    assertEqual(#lines, 1, dump(lines))
+    assertEqual(lines[1], RESET_LINE)
 
     lines = capture(NS2)
     NS2.db:CopyProfile("Raid")
@@ -213,15 +218,55 @@ test("bulklog: a bracket inside a bracket logs once, summed, when the outer one 
     lines = capture(NS2)
     NS2.Bulk.Run("reset", "outer", function() NS2.Helpers.RestoreAllDefaults() end)
     assertEqual(#lines, 1, dump(lines))
-    assertTrue(lines[1]:find("^%[Set%] reset profile 'Default' to defaults") ~= nil, lines[1])
+    assertEqual(lines[1], RESET_LINE)
 end)
 
-test("bulklog: a bulk act that raises still closes its bracket, so the seam logs again", function()
+test("bulklog: a -0 stored over 0 is not a change, so a settled ResetPositions counts none", function()
     local NS2 = fresh()
+    local CM = NS2.ContainerManager
+    CM.ResetPositions()                              -- settle
+    for _, c in ipairs(NS2.Database.GetContainers()) do
+        -- A plain 0 where the stagger writes -(i-1)*30, which is -0 for the first container.
+        if c.position.y == 0 then c.position.y = 0 end
+    end
     local lines = capture(NS2)
-    local ok, err = pcall(NS2.Bulk.Run, "copy", "test", function() error("boom", 0) end)
+    CM.ResetPositions()
+    -- red under: numbers compared by their tostring, where "-0" ~= "0"
+    assertEqual(#lines, 1, dump(lines))
+    assertEqual(lines[1], "[Set] reset positions: 0 rows")
+end)
+
+test("bulklog: a bulk act that raises still logs its one line, marked, and the seam logs again", function()
+    local NS2 = fresh()
+    NS2.SetByPath("alpha", 1)
+    local lines = capture(NS2)
+    local ok, err = pcall(NS2.Bulk.Run, "copy", "test", function()
+        NS2.SetByPath("alpha", 0.5)                  -- stored, so counted
+        error("boom", 0)
+    end)
     assertFalse(ok)
     assertEqual(err, "boom", "the raised value comes back unchanged")
-    NS2.SetByPath("alpha", 0.5)
-    assertEqual(lines[#lines], "[Set] alpha = 0.5", dump(lines))
+    -- red under: the bracket closing silently, or unmarked, on an error
+    assertEqual(#lines, 1, dump(lines))
+    assertEqual(lines[1], "[Set] copy test: 1 rows (stopped by an error)")
+    NS2.SetByPath("alpha", 0.75)
+    assertEqual(#lines, 2, dump(lines))
+    assertEqual(lines[2], "[Set] alpha = 0.75", "the mute is released")
+end)
+
+test("bulklog: a library Defaults a row's onChange stops counts the write it stored", function()
+    local NS2 = fresh()
+    NS2.State.SetActiveContainer(1)
+    NS2.Helpers.RestoreDefaults("bars")               -- settle: every bars row at its default
+    NS2.Database.FindContainer(1).bars.width = 300    -- the one row off its default
+    rowAt(NS2, "container.bars.width").onChange = function() error("boom", 0) end
+    local lines = capture(NS2)
+    local ok, err = pcall(NS2.Helpers.RestoreDefaults, "bars")
+    assertFalse(ok)
+    assertTrue(tostring(err):find("boom") ~= nil, "the library re-raises: " .. tostring(err))
+    assertEqual(NS2.Database.FindContainer(1).bars.width, NS2.CONTAINER_TEMPLATE.bars.width,
+        "the write was stored before onChange raised")
+    -- red under: the tally taken after onChange, which never returned
+    assertEqual(#lines, 1, dump(lines))
+    assertEqual(lines[1], "[Set] reset bars: 1 rows (stopped by an error)")
 end)

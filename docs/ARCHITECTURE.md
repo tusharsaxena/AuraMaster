@@ -85,14 +85,18 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 `NS.Schema` holds **193** rows across six pages — General 9, Containers 5, Filters 40, Layout 26,
 Bars 71, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:552`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:546`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It validates, resolves
 the container, runs the row's optional `normalize` hook, writes, reacts and announces, in that order.
 The name row's hook stores container names unique, case-insensitively. A bulk copy or reset (a page's
 Defaults, Reset all, `ContainerManager.CopyFrom`, `ContainerManager.ResetPositions`) runs inside
-`NS.Bulk`'s bracket: the seam mutes its per-row `[Set]` line, tallies the rows each write changed, and
-the act logs one `[Set] <act> <scope>: N rows` line. A whole-profile reset is logged by
-`NS.OnProfileReset` alone (debug-logging-§10, `docs/schema.md`).
+`NS.Bulk`'s bracket: the seam mutes its per-row `[Set]` line, tallies the rows each write changed as
+it stores them, and the act logs one `[Set] <act> <scope>: N rows` line. An act that an error stops
+still logs that line once, ending ` (stopped by an error)`. A whole-profile reset is logged by
+`NS.OnProfileReset` alone, as `[Set] reset profile '<name>' to defaults` with no row count
+(debug-logging-§10 allows omitting it). A reset re-seeds the starter containers, so counting rows not
+at default would overcount. AceDB also gives no hook before the wipe, so the Profiles page's reset
+cannot cheaply snapshot the rows it changes (`docs/schema.md`, `docs/profiles.md`).
 
 Almost every row belongs to one container, so container rows use a **relative path**:
 `container.bars.width` resolves against the container the settings banner has selected

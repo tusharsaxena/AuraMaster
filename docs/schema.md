@@ -218,16 +218,21 @@ rather than the target.
 rewrites a set of rows wholesale. That covers a page's Defaults and Reset all (the library's
 `bulkBegin`/`bulkEnd`, LibKa0s-Options minor 16), `CliResetAll` (Slash minor 8), and
 `ContainerManager.CopyFrom` and `ContainerManager.ResetPositions` (`NS.Bulk.Run`). While a bracket
-is open, the seam's two log sites, the per-write `[Set]` line and the section line, are muted. They
-tally the rows each write changed instead, compared by `FilterCompiler.Signature`; a section write
+is open, the seam's two log sites, the per-write `[Set]` line and the section line, are muted. Each
+write instead tallies the rows it changed at the moment it stores them, before any `onChange` runs,
+so the count is what was stored even when an `onChange` raises. Numbers compare by `==`, so a `-0`
+over a `0` is no change; anything else compares by `FilterCompiler.Signature`. A section write
 counts each row and carve-out under it that changed. The act then logs one
 `[Set] <act> <scope>: N rows` line, such as `[Set] reset bars: 2 rows`,
 `[Set] copy container 2→1 (all): 14 rows` or `[Set] reset positions: 3 rows`. N is the rows actually
 changed, not the library's `count`, so a Defaults press on a page already at its defaults logs
 `0 rows`. Validation, `onChange` and `CONFIG_CHANGED` still run per write. The mute is a depth
-counter, so a bracket inside another sums into it and the act logs once. When any level reports
-`info.profileReset`, the bracket logs nothing and `NS.OnProfileReset` logs the reset
-(`docs/profiles.md`).
+counter, so a bracket inside another sums into it and the act logs once. An act that an error stops
+(`bulkEnd` handed an `err`) still logs its line exactly once, with ` (stopped by an error)` on the
+end, such as `[Set] reset bars: 1 rows (stopped by an error)`. The mute is then released and the
+error re-raised unchanged. When any level reports `info.profileReset`, the bracket logs nothing and
+`NS.OnProfileReset` logs the reset as `[Set] reset profile '<name>' to defaults`, with no count
+(`docs/profiles.md` says why).
 
 `NS.CheckWrite(path, value, id)` answers whether `NS.SetByPath` would store a value. It runs the same
 checks on a copy (a row's `validate`, a carve-out's normalizer, or a section's backfill, carve-outs

@@ -28,7 +28,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 ## Switching, copying, resetting
 
 `NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:139`,
-`core/AuraMaster.lua:146`, `core/AuraMaster.lua:156`):
+`core/AuraMaster.lua:150`, `core/AuraMaster.lua:157`):
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
@@ -36,7 +36,7 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   │                                          seed the starters if this profile never had them
   ├─ State.SetActiveContainer(nil)           the old selection's id may not exist here
   ├─ the event's one trace line              switch: [Profile] changed -> X
-  │                                          reset:  [Set] reset profile 'X' to defaults (N rows)
+  │                                          reset:  [Set] reset profile 'X' to defaults
   │                                          copy:   [Set] copied profile 'A' → 'X'
   ├─ ContainerManager.Announce()             instances follow the new registry, apply all,
   │                                          CONTAINERS_CHANGED → the panel re-renders
@@ -50,10 +50,12 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
 - **A reset** empties the profile. `seeded` goes back to `false` with it, so the starter containers
   come back — a reset is "as installed", not "nothing".
 - **Logging (debug-logging-§10).** A reset or a copy is AceDB replacing the profile whole, not a write
-  through the seam, so its handler logs it once. A reset's N counts every profile-backed row, and a
-  container row once per container (`NS.ProfileRowCount`); it is built only while debug is on. Reset
-  all's bulk bracket wraps the profile reset and logs nothing of its own, and the session rows it
-  writes first are muted, so a Reset all reads as that one line.
+  through the seam, so its handler logs it once. A reset's line carries no row count, which §10
+  allows. A reset re-seeds the starter containers, so counting the rows not at default would
+  overcount. AceDB also gives no hook before the wipe, so the Profiles page's Reset Profile cannot
+  cheaply snapshot the rows it is about to change. Reset all's bulk bracket wraps the profile reset
+  and logs nothing of its own, and the session rows it writes first are muted, so a Reset all reads
+  as that one line.
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
 - **A switch, copy or reset in combat** cannot be refused, since AceDB fires it. A container the new
   profile does not have is parked (its engine disabled, nothing hidden) and torn down after combat;

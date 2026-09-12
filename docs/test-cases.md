@@ -249,7 +249,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_bulklog.lua (11)
+### test_bulklog.lua (13)
 
 - bulklog: a container page's Defaults is one [Set] line counting the rows it changed
 - bulklog: General's Defaults is one [Set] line counting the rows it changed
@@ -261,7 +261,9 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: a refused CopyFrom logs nothing
 - bulklog: ResetPositions is one [Set] line counting the rows it changed
 - bulklog: a bracket inside a bracket logs once, summed, when the outer one closes
-- bulklog: a bulk act that raises still closes its bracket, so the seam logs again
+- bulklog: a -0 stored over 0 is not a change, so a settled ResetPositions counts none
+- bulklog: a bulk act that raises still logs its one line, marked, and the seam logs again
+- bulklog: a library Defaults a row's onChange stops counts the write it stored
 
 ### test_optionssetup.lua (16)
 
@@ -344,7 +346,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style.lua | 19 |
 | test_timedspells.lua | 11 |
 | test_slash.lua | 23 |
-| test_bulklog.lua | 11 |
+| test_bulklog.lua | 13 |
 | test_optionssetup.lua | 16 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
@@ -353,4 +355,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **263** |
+| **Total** | **265** |

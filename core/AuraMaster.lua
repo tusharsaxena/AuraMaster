@@ -123,7 +123,7 @@ local function currentProfile()
     return (NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()) or "?"
 end
 
---- Before the trace, so a reset's count sees the starters it re-seeds.
+--- Before the trace, so the trace follows the registry the new profile will run with.
 local function prepareProfile()
     if NS.Database and NS.db then NS.Database.PrepareProfile(NS.db.profile) end
     if NS.State then NS.State.SetActiveContainer(nil) end
@@ -143,12 +143,13 @@ function NS.OnProfileChanged()
 end
 
 --- OnProfileReset: the profile back to the addon's defaults (Reset all, Profiles → Reset Profile).
+--- The line carries no row count, as debug-logging-§10 allows. A reset re-seeds the starter
+--- containers, so counting the rows not at default would overcount. AceDB also gives no hook before
+--- the wipe, so the Profiles page's Reset Profile cannot cheaply snapshot the rows it is about to
+--- change.
 function NS.OnProfileReset()
     prepareProfile()
-    -- The count walks the schema, so it is built only while debug is on (debug-logging-§4).
-    if NS.State and NS.State.debug then
-        NS.Debug("Set", "reset profile '%s' to defaults (%s rows)", currentProfile(), NS.ProfileRowCount())
-    end
+    NS.Debug("Set", "reset profile '%s' to defaults", currentProfile())
     rebuildProfile()
 end
 
