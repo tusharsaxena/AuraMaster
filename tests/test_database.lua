@@ -160,3 +160,99 @@ test("database: PrepareProfile marks a stocked profile seeded, drops a non-table
     assertEqual(table.concat(p.containerOrder, ","), "3")
     assertEqual(p.nextContainerId, 4, "the counter starts past the largest id")
 end)
+
+-- ── migrations, the id counter, the order and the seeding, on old and odd shapes ───────────────
+
+test("database: a schema version newer than this build is never lowered", function()
+    local NS = fresh({ savedVariables = { global = { schemaVersion = 5 } } })
+    -- red under: RunMigrations stamping the current version over whatever was stored
+    assertEqual(NS.db.global.schemaVersion, 5, "a file from a newer build keeps its version")
+end)
+
+test("database: learned timed spells survive a load", function()
+    local NS = fresh({ savedVariables = { global = { schemaVersion = 1, timedSpells = { [774] = true } } } })
+    -- red under: RunMigrations replacing the timed-spell store instead of creating it only when missing
+    assertTrue(NS.db.global.timedSpells[774])
+end)
+
+test("database: without AceDB the addon runs on the raw SavedVariables, keeping what was stored", function()
+    local NS = fresh({
+        savedVariables = { profile = { scale = 1.5 } },
+        before = function(m) m.__libs["AceDB-3.0"] = nil end,
+    })
+    -- red under: InitDB without its no-AceDB fallback (NS.db stays nil and the load raises)
+    assertTrue(NS.db.profile == _G.AuraMasterDB.profile, "writes land in the SavedVariables table")
+    assertEqual(NS.db.profile.scale, 1.5, "a stored value survives the backfill")
+    assertEqual(NS.db.profile.enabled, NS.defaults.profile.enabled, "a missing one is filled")
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS, "and the starters are seeded")
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
+end)
+
+test("database: GetContainers follows the stored order and skips an id with no container", function()
+    local NS = fresh()
+    NS.db.profile.containerOrder = { 3, 99, 1, 2 }
+    local ids = {}
+    for i, c in ipairs(NS.Database.GetContainers()) do ids[i] = c.id end
+    -- red under: GetContainers walking the containers table instead of containerOrder
+    assertEqual(table.concat(ids, ","), "3,1,2")
+end)
+
+test("database: a string id in the stored order keeps its place", function()
+    local NS = fresh()
+    local p = NS.db.profile
+    p.containerOrder = { "2", 1 }
+    NS.Database.PrepareProfile(p)
+    -- red under: rebuildOrder dropping its tonumber (the "2" is taken for dangling and re-appended)
+    assertEqual(table.concat(p.containerOrder, ","), "2,1,3")
+end)
+
+test("database: a deleted id is never handed out again, not even after a reload", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    CM.Delete(3)
+    assertEqual(CM.Create({}), 4, "the counter does not rewind to the freed id")
+    mocks.__fireTimers()
+    CM.Delete(4)
+    NS.Database.PrepareProfile(NS.db.profile)   -- what the next login runs
+    -- red under: PrepareProfile setting the counter to the largest id kept plus one
+    assertEqual(CM.Create({}), 5)
+end)
+
+test("database: NewContainerData takes an id from the counter without registering the container", function()
+    local NS = fresh()
+    local before = #NS.Database.GetContainers()
+    local c, id = NS.Database.NewContainerData({ name = "Loose" })
+    assertEqual(c.id, id)
+    assertEqual(NS.db.profile.nextContainerId, id + 1)
+    -- red under: NewContainerData inserting what it builds (Create inserts it, and announces it)
+    assertNil(NS.Database.FindContainer(id))
+    assertEqual(#NS.Database.GetContainers(), before)
+end)
+
+test("database: seeded starters share no table with each other or with the template", function()
+    local NS = fresh()
+    local p = {}
+    NS.Database.PrepareProfile(p)
+    local a, b = p.containers[1], p.containers[2]
+    -- red under: seedStarters merging onto CONTAINER_TEMPLATE itself instead of a copy of it
+    assertTrue(a.bars.barColor ~= b.bars.barColor, "two starters, two color tables")
+    assertTrue(a.bars.barColor ~= NS.CONTAINER_TEMPLATE.bars.barColor, "recoloring one never recolors the default")
+end)
+
+test("database: a file from before the seeded flag, the id counter and the order keeps its containers", function()
+    local seeded = {
+        profiles = { Default = {
+            containers = {
+                [2] = { name = "Two", unit = "player", auraType = "HELPFUL", style = "bars" },
+                [6] = { name = "Six", unit = "target", auraType = "HARMFUL", style = "icons" },
+            },
+        } },
+    }
+    local NS = fresh({ savedVariables = seeded })
+    local p = NS.db.profile
+    -- red under: seedStarters seeding an unflagged profile that already has containers
+    assertEqual(table.concat(p.containerOrder, ","), "2,6", "no starters; the order rebuilt by id")
+    assertTrue(p.seeded)
+    assertEqual(p.nextContainerId, 7)
+    assertEqual(NS.ContainerManager.Create({}), 7)
+end)

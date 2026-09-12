@@ -221,3 +221,352 @@ test("container: an anchor is movable but never saved by the client's layout cac
     -- A position the client saved would be restored at login over the stored one.
     assertTrue(NS.ContainerManager.instances[1].anchor.__dontSavePosition == true)
 end)
+
+-- ── the flow layout ──────────────────────────────────────────────────────────────────────────
+
+--- A container built from the shipped template plus `over` (read-only use of the shared env).
+local function tpl(over)
+    local Database = T.NS.Database
+    return Database.Merge(Database.DeepCopy(T.NS.CONTAINER_TEMPLATE), over or {})
+end
+
+test("container: a line holds perLine elements and the spacing between them; 0 per line is unbounded", function()
+    local FS = T.NS.Container.FlowSettings
+    local bars = { width = 200, height = 20 }
+    local rows = FS(tpl({ style = "bars", bars = bars, layout = { axis = "horizontal", perLine = 3, spacing = 2 } }))
+    -- red under: maxLineSize counting a spacing per element instead of per gap
+    assertEqual(rows.maxLineSize, 3 * 200 + 2 * 2, "rows measure element widths")
+    local cols = FS(tpl({ style = "bars", bars = bars, layout = { axis = "vertical", perLine = 3, spacing = 2 } }))
+    -- red under: FlowSettings measuring a column by element width
+    assertEqual(cols.maxLineSize, 3 * 20 + 2 * 2, "columns measure element heights")
+    assertEqual(cols.axis, "vertical")
+    assertEqual(FS(tpl({ layout = { perLine = 0 } })).maxLineSize, math.huge)
+end)
+
+test("container: growth normalizes to right and down, and the anchor corner is the one auras grow away from", function()
+    local C = T.NS.Container
+    local cases = {
+        { "right", "down", "TOPLEFT" }, { "left", "down", "TOPRIGHT" },
+        { "right", "up", "BOTTOMLEFT" }, { "left", "up", "BOTTOMRIGHT" },
+        { "sideways", "nowhere", "TOPLEFT" },
+    }
+    for _, c in ipairs(cases) do
+        local f = C.FlowSettings(tpl({ layout = { growH = c[1], growV = c[2] } }))
+        -- red under: AnchorPoint starting auras that grow up at the TOP
+        assertEqual(f.anchorPoint, c[3], c[1] .. "/" .. c[2])
+    end
+    local h, v = C.Growth({ growH = "sideways", growV = "nowhere" })
+    assertEqual(h .. "/" .. v, "right/down", "an unknown growth is the default")
+end)
+
+-- ── update in place ──────────────────────────────────────────────────────────────────────────
+
+local function sent(e, name)
+    local calls = e:__callsTo(name)
+    return #calls
+end
+local function lastSent(e, name)
+    local calls = e:__callsTo(name)
+    return calls[#calls]
+end
+
+test("container: a changed candidate filter is re-sent on the live engine; the filter string is not", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local e = inst.engine
+    local filters, cands = sent(e, "SetAuraGroupFilterString"), sent(e, "SetAuraGroupCandidateFilters")
+    assertTrue(NS.SetByPath("container.filter.maxDuration", 60, 1))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "a live-editable change")
+    -- red under: Update never re-sending candidate filters (the Signature compare inverted)
+    assertEqual(sent(e, "SetAuraGroupCandidateFilters"), cands + 1)
+    assertEqual(lastSent(e, "SetAuraGroupCandidateFilters")[3].maxDuration, 60)
+    -- red under: Update re-sending the filter string unconditionally
+    assertEqual(sent(e, "SetAuraGroupFilterString"), filters)
+end)
+
+test("container: clearing the last candidate filter sends the engine an empty table, not nil", function()
+    local NS, mocks = fresh()
+    local e = NS.ContainerManager.instances[1].engine
+    assertTrue(NS.SetByPath("container.filter.maxDuration", 60, 1))
+    mocks.__fireTimers()
+    assertTrue(NS.SetByPath("container.filter.maxDuration", 0, 1))
+    mocks.__fireTimers()
+    local last = lastSent(e, "SetAuraGroupCandidateFilters")
+    -- red under: Update passing the plan's nil candidate filters straight to the engine
+    assertEqual(type(last[3]), "table")
+    assertNil(next(last[3]), "every filter cleared")
+end)
+
+test("container: sort, cap and layout changes each send only their own setter", function()
+    local NS, mocks = fresh()
+    local e = NS.ContainerManager.instances[1].engine
+    local sort0, max0 = sent(e, "SetAuraGroupSortMethod"), sent(e, "SetAuraGroupMaxFrameCount")
+    local layout0, filter0 = sent(e, "SetAuraGroupLayout"), sent(e, "SetAuraGroupFilterString")
+    assertTrue(NS.SetByPath("container.layout.spacing", 7, 1))
+    mocks.__fireTimers()
+    assertEqual(sent(e, "SetAuraGroupLayout"), layout0 + 1, "one group, one layout")
+    assertEqual(lastSent(e, "SetAuraGroupLayout")[3].elementSpacing, 7)
+    -- red under: Update re-sending the sort and the cap whatever changed
+    assertEqual(sent(e, "SetAuraGroupSortMethod"), sort0)
+    assertEqual(sent(e, "SetAuraGroupMaxFrameCount"), max0)
+    assertTrue(NS.SetByPath("container.filter.sortMethod", "name", 1))
+    mocks.__fireTimers()
+    assertEqual(sent(e, "SetAuraGroupSortMethod"), sort0 + 1)
+    assertEqual(lastSent(e, "SetAuraGroupSortMethod")[3], mocks.AuraContainerSortMethod.Name, "the engine's enum value")
+    assertTrue(NS.SetByPath("container.filter.maxAuras", 5, 1))
+    mocks.__fireTimers()
+    -- red under: Update never re-sending a changed cap
+    assertEqual(lastSent(e, "SetAuraGroupMaxFrameCount")[3], 5)
+    assertEqual(sent(e, "SetAuraGroupSortMethod"), sort0 + 1, "the cap did not re-send the sort")
+    assertEqual(sent(e, "SetAuraGroupFilterString"), filter0, "and nothing re-sent the filter string")
+end)
+
+test("container: a unit change is sent to the live engine once", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[2]   -- Player debuffs
+    local e = inst.engine
+    local units = sent(e, "SetUnit")
+    assertTrue(NS.SetByPath("container.unit", "focus", 2))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "the same shape, so the same engine")
+    -- red under: Update skipping SetUnit when the unit moved
+    assertEqual(sent(e, "SetUnit"), units + 1)
+    assertEqual(lastSent(e, "SetUnit")[2], "focus")
+    assertTrue(NS.SetByPath("container.icons.width", 40, 2))
+    mocks.__fireTimers()
+    -- red under: Update re-sending SetUnit on every apply
+    assertEqual(sent(e, "SetUnit"), units + 1, "an unchanged unit is not re-sent")
+end)
+
+test("container: switching style rebuilds the engine even when the filter plan keeps its shape", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[2]
+    local old = inst.engine
+    assertTrue(NS.SetByPath("container.style", "bars", 2))
+    mocks.__fireTimers()
+    -- red under: the structure key leaving out cfg.style (icon buttons would be redressed as bars)
+    assertTrue(inst.engine ~= old, "a new style gets new buttons")
+    assertFalse(old.__enabled)
+end)
+
+-- ── weapon enchants and engine refusals ──────────────────────────────────────────────────────
+
+test("container: a weapon-enchant container shows the player's enchants in the engine's three slots, whatever its unit", function()
+    local NS, mocks = fresh()
+    local id = NS.ContainerManager.Create({ auraType = "ENCHANT", unit = "target" })
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[id]
+    local e = inst.engine
+    assertEqual(sent(e, "AddAuraGroup"), 0)
+    local slots = {}
+    for i, c in ipairs(e:__callsTo("AddItemEnchantment")) do slots[i] = c[2] end
+    local E = mocks.AuraContainerItemEnchantmentSlot
+    assertEqual(table.concat(slots, ","), table.concat({ E.MainHand, E.OffHand, E.Ranged }, ","))
+    assertEqual(#inst.enchantFrames, 3, "kept for the restyle")
+    -- red under: Build handing an enchant container's own unit to SetUnit
+    assertEqual(lastSent(e, "SetUnit")[2], "player")
+    assertTrue(NS.SetByPath("container.unit", "focus", id))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e)
+    -- red under: Update sending an enchant container's own unit
+    assertEqual(lastSent(e, "SetUnit")[2], "player")
+end)
+
+--- Make every aura engine created from now on raise from `method` whenever `refuse(...)` says so.
+local function refusing(mocks, method, refuse)
+    local create = mocks.CreateFrame
+    mocks.CreateFrame = function(frameType, ...)
+        local f = create(frameType, ...)
+        if frameType == "AuraContainer" then
+            local orig = f[method]
+            f[method] = function(self, ...)
+                if refuse(...) then error(method .. " refused") end
+                return orig(self, ...)
+            end
+        end
+        return f
+    end
+end
+
+test("container: an enchant slot the engine refuses costs that slot, not the build", function()
+    local NS, mocks = fresh()
+    refusing(mocks, "AddItemEnchantment", function(slot)
+        return slot == mocks.AuraContainerItemEnchantmentSlot.OffHand
+    end)
+    local id = NS.ContainerManager.Create({ auraType = "ENCHANT" })
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[id]
+    -- red under: Build calling AddItemEnchantment without pcall
+    assertEqual(#inst.enchantFrames, 2, "main hand and ranged")
+    assertEqual(lastSent(inst.engine, "SetUnit")[2], "player", "the build still reached the unit")
+end)
+
+test("container: an engine call that raises is traced, and the build carries on to the unit", function()
+    local NS, mocks = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = "[" .. tag .. "] " .. fmt:format(...)
+    end
+    refusing(mocks, "AddAuraGroup", function() return true end)
+    local id = NS.ContainerManager.Create({})
+    mocks.__fireTimers()
+    -- red under: callEngine calling the engine without pcall
+    assertEqual(lastSent(NS.ContainerManager.instances[id].engine, "SetUnit")[2], "player")
+    local traced = false
+    for _, l in ipairs(lines) do
+        if l:find("[Engine] AddAuraGroup failed", 1, true) then traced = true end
+    end
+    assertTrue(traced, "the refusal is traced")
+end)
+
+test("container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]   -- buffs, with the three enchant slots
+    local cfg = inst:Cfg()
+    inst.engine.__frames.g1 = { mocks.__stubFrame(), mocks.__stubFrame() }
+    -- red under: Restyle leaving the enchant frames out
+    assertEqual(inst:Restyle(cfg), 5, "two buttons and three enchant frames")
+    rawset(inst.engine, "GetAuraGroupFrameCount", function() error("forbidden") end)
+    -- red under: Restyle asking the engine for its frames without pcall
+    assertEqual(inst:Restyle(cfg), 3)
+end)
+
+test("container: an instance whose container is gone applies nothing and touches no engine", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[2]
+    local e = inst.engine
+    local calls = #e.__calls
+    NS.db.profile.containers[2] = nil   -- the data left before the registry followed
+    -- red under: Apply without its missing-container guard (the compiler is handed nil)
+    assertNil(inst:Apply())
+    assertEqual(#e.__calls, calls)
+end)
+
+-- ── scale, alpha, visibility ─────────────────────────────────────────────────────────────────
+
+--- Record the arguments of every `method` call on `frame`, still returning the frame.
+local function recording(frame, method)
+    local got = {}
+    rawset(frame, method, function(self, ...)
+        got[#got + 1] = { ... }
+        return self
+    end)
+    return got
+end
+
+test("container: the anchor's scale is the container's times the master's, never below a tenth", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local scales = recording(inst.anchor, "SetScale")
+    NS.db.profile.scale = 1.5
+    NS.Database.FindContainer(1).layout.scale = 2
+    inst:Apply()
+    -- red under: Apply ignoring the master scale
+    assertEqual(scales[#scales][1], 3)
+    NS.Database.FindContainer(1).layout.scale = 0.01
+    inst:Apply()
+    -- red under: Apply without its 0.1 floor
+    assertEqual(scales[#scales][1], 0.1)
+end)
+
+test("container: the anchor's alpha is the container's times the master's", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local alphas = recording(inst.anchor, "SetAlpha")
+    NS.db.profile.alpha = 0.5
+    NS.Database.FindContainer(1).layout.alpha = 0.5
+    inst:ApplyVisibility()
+    -- red under: ApplyVisibility ignoring the master alpha
+    assertEqual(alphas[#alphas][1], 0.25)
+end)
+
+test("container: out-of-combat visibility shows out of combat and hides in it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.db.profile.visibility = "outOfCombat"
+    -- red under: visibilityAllows letting every value but "never" show
+    assertTrue((inst:ShouldShow()))
+    mocks.__inCombat = true
+    assertFalse((inst:ShouldShow()))
+end)
+
+-- ── the class snapshot ───────────────────────────────────────────────────────────────────────
+
+--- A fresh environment whose target is a priest; everyone else is a mage.
+local function freshWithPriestTarget()
+    return fresh({ before = function(m)
+        m.UnitClass = function(u)
+            if u == "target" then return "Priest", "PRIEST" end
+            return "Mage", "MAGE"
+        end
+        m.RAID_CLASS_COLORS.PRIEST = { r = 1, g = 1, b = 1 }
+    end })
+end
+
+test("container: the class snapshot is the tracked unit's, and nothing for the player or for enchants", function()
+    local NS, mocks = freshWithPriestTarget()
+    local CM = NS.ContainerManager
+    local ench = CM.Create({ auraType = "ENCHANT", unit = "target", style = "icons" })
+    mocks.__fireTimers()
+    for _, id in ipairs({ 2, 3, ench }) do
+        assertTrue(NS.SetByPath("container.icons.useClassColorBorder", true, id))
+    end
+    mocks.__fireTimers()
+    assertTrue(CM.instances[3].usesClass)
+    assertEqual(CM.instances[3].classColor.r, 1, "painted for the priest")
+    -- red under: SnapshotClass resolving a class for the player's own container
+    assertNil(CM.instances[2].classColor, "the player's container paints the player's class itself")
+    assertFalse(CM.instances[2].usesClass, "so no unit swap re-applies it")
+    -- red under: SnapshotClass reading an enchant container's own unit
+    assertNil(CM.instances[ench].classColor, "enchants are the player's")
+    assertFalse(CM.instances[ench].usesClass)
+end)
+
+test("container: a class the client withholds resolves to no class instead of raising", function()
+    local NS, mocks = fresh({ before = function(m)
+        m.UnitClass = function(u)
+            if u == "target" then return "Target", "WITHHELD" end
+            return "Mage", "MAGE"
+        end
+    end })
+    -- A withheld token raises where the library indexes RAID_CLASS_COLORS with it.
+    mocks.RAID_CLASS_COLORS = setmetatable({ MAGE = mocks.RAID_CLASS_COLORS.MAGE }, {
+        __index = function(_, k) error("secret key " .. tostring(k)) end,
+    })
+    -- red under: ClassOf calling NS.ClassColor without pcall
+    assertNil((NS.Container.ClassOf("target")))
+    assertTrue(NS.SetByPath("container.icons.useClassColorBorder", true, 3))
+    mocks.__fireTimers()
+    assertNil(NS.ContainerManager.instances[3].classColor.r, "the swatch paints instead")
+end)
+
+test("container: a button the engine creates is dressed with the container's class snapshot", function()
+    local NS, mocks = freshWithPriestTarget()
+    assertTrue(NS.SetByPath("container.style", "bars", 3))   -- a new engine, built after the snapshot
+    assertTrue(NS.SetByPath("container.bars.useClassColorBar", true, 3))
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[3]
+    local init = inst.engine:__callsTo("AddAuraGroup")[1][4].initializeFrame
+    local got
+    local element = NS.Style.Element
+    NS.Style.Element = function(frame, cfg, engine, class)
+        got = class
+        return element(frame, cfg, engine, class)
+    end
+    init(mocks.__stubFrame())
+    NS.Style.Element = element
+    -- red under: InitFrame dressing without the snapshot (a button made mid-combat would show the swatch)
+    assertTrue(got ~= nil and got == inst.classColor and got.r == 1, "the priest's color")
+end)
+
+test("container: on a client without the aura engine a container is deleted without error", function()
+    local NS, mocks = fresh({ before = function(m) m.AuraContainerSortMethod = nil end })
+    local inst = NS.ContainerManager.instances[3]
+    inst.anchor:Show()
+    -- red under: Retire without its no-engine guard
+    assertTrue(NS.ContainerManager.Delete(3))
+    assertFalse(inst.anchor:IsShown(), "torn down all the same")
+    assertEqual(#mocks.__engines, 0)
+end)
