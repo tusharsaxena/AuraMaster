@@ -214,10 +214,13 @@ end)
 
 -- ── duration text ────────────────────────────────────────────────────────────────────────────
 
+-- The real client has RoundUp = 0 and Truncate = 1 (SecondsFormatterSharedDocumentation.lua); these
+-- stand-ins are distinct from every other enum value here, so a swapped member cannot pass.
 local FORMATTER_ENUM = {
     SecondsFormatterAbbreviation = { OneLetter = 1 },
-    SecondsFormatterRounding = { Truncate = 2 },
-    SecondsFormatterInterval = { Seconds = 3, Days = 6 },
+    SecondsFormatterRounding = { RoundUp = 9, Truncate = 2 },
+    SecondsFormatterInterval = { Seconds = 3, Minutes = 4, Hours = 5, Days = 6 },
+    LuaCurveType = { Step = 7 },
 }
 
 --- A SecondsFormatter stand-in that records the arguments of every setter it is given.
@@ -228,14 +231,22 @@ local function recordingFormatter()
     end })
 end
 
-test("compat: no duration formatter for Blizzard's own text, without C_StringUtil, or when creation fails", function()
-    local made = 0
-    local su = { CreateSecondsFormatter = function() made = made + 1; return recordingFormatter() end }
-    with({ { "C_StringUtil", su }, { "Enum", FORMATTER_ENUM } }, function(NS)
-        -- red under: CreateSecondsFormatter building one for "blizzard"
-        assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
-        assertEqual(made, 0, "the engine's own formatter needs none built")
-    end)
+--- A C_CurveUtil whose plain curves record their type and points; `refuse` makes AddPoint raise.
+local function plainCurveUtil(refuse)
+    return {
+        CreateCurve = function()
+            local curve = { points = {} }
+            function curve:SetType(t) self.type = t end
+            function curve:AddPoint(x, y)
+                if refuse then error("bad point") end
+                self.points[#self.points + 1] = { x, y }
+            end
+            return curve
+        end,
+    }
+end
+
+test("compat: no duration formatter without C_StringUtil, or when creation fails", function()
     with({ { "C_StringUtil", nil }, { "Enum", FORMATTER_ENUM } }, function(NS)
         assertNil(NS.Compat.CreateSecondsFormatter("short"))
     end)
@@ -261,6 +272,59 @@ test("compat: a detailed formatter shows two units with a carry, a short one a s
         assertEqual(short.__calls.SetCanRoundUpLastUnit[1], true)
         assertEqual(short.__calls.SetMinInterval[1], FORMATTER_ENUM.SecondsFormatterInterval.Seconds)
     end)
+end)
+
+test("compat: every time format rounds a fractional second up, as the cooldown countdown does (I-2)", function()
+    local su = { CreateSecondsFormatter = function() return recordingFormatter() end }
+    with({ { "C_StringUtil", su }, { "Enum", FORMATTER_ENUM }, { "C_CurveUtil", plainCurveUtil(false) } }, function(NS)
+        for _, fmt in ipairs({ "blizzard", "short", "long" }) do
+            local f = NS.Compat.CreateSecondsFormatter(fmt)
+            assertTrue(f ~= nil, fmt .. " has a formatter of its own")
+            -- red under: SetRounding(Truncate) (12.7 s reads 12 while the countdown reads 13)
+            assertEqual(f.__calls.SetRounding[1], FORMATTER_ENUM.SecondsFormatterRounding.RoundUp, fmt)
+        end
+    end)
+end)
+
+test("compat: the Blizzard format copies the engine's default formatter, rounding up (I-2)", function()
+    local su = { CreateSecondsFormatter = function() return recordingFormatter() end }
+    local I = FORMATTER_ENUM.SecondsFormatterInterval
+    with({ { "C_StringUtil", su }, { "Enum", FORMATTER_ENUM }, { "C_CurveUtil", plainCurveUtil(false) } }, function(NS)
+        local f = NS.Compat.CreateSecondsFormatter("blizzard")
+        -- red under: CreateSecondsFormatter answering nil for "blizzard" (the engine's truncating default)
+        assertTrue(f ~= nil, "a formatter of our own")
+        local c = f.__calls
+        assertEqual(c.SetDefaultAbbreviation[1], FORMATTER_ENUM.SecondsFormatterAbbreviation.OneLetter)
+        assertEqual(c.SetCanRoundUpLastUnit[1], true)
+        assertEqual(c.SetMinInterval[1], I.Seconds)
+        assertEqual(c.SetDesiredUnitCount[1], 1)
+        -- red under: the Blizzard format given the short one's flat Days maximum
+        assertNil(c.SetMaxInterval, "the largest unit steps with the time left instead")
+        local curve = c.SetMaxIntervalCurve[1]
+        assertEqual(curve.type, FORMATTER_ENUM.LuaCurveType.Step)
+        -- Blizzard_AuraContainerShared.lua: each unit holds to 1.5x the next (90 s, 90 m, 36 h).
+        local want = { { 0, I.Seconds }, { 91, I.Minutes }, { 5401, I.Hours }, { 129601, I.Days } }
+        assertEqual(#curve.points, #want)
+        for i, p in ipairs(want) do
+            -- red under: a step point off by the multiplier's 1 s margin, or a unit out of order
+            assertEqual(curve.points[i][1], p[1], "point " .. i)
+            assertEqual(curve.points[i][2], p[2], "unit " .. i)
+        end
+    end)
+end)
+
+test("compat: without the curve API, or with a curve that refuses a point, the Blizzard format tops out at days", function()
+    local su = { CreateSecondsFormatter = function() return recordingFormatter() end }
+    local days = FORMATTER_ENUM.SecondsFormatterInterval.Days
+    for _, cu in ipairs({ false, plainCurveUtil(true) }) do
+        with({ { "C_StringUtil", su }, { "Enum", FORMATTER_ENUM }, { "C_CurveUtil", cu or nil } }, function(NS)
+            local f = NS.Compat.CreateSecondsFormatter("blizzard")
+            -- red under: handing the formatter a curve it could not finish, or none and no maximum
+            assertNil(f.__calls.SetMaxIntervalCurve)
+            assertEqual(f.__calls.SetMaxInterval[1], days)
+            assertEqual(f.__calls.SetDesiredUnitCount[1], 1, "the rest of the setup still runs")
+        end)
+    end
 end)
 
 local CURVE_ENUM = {

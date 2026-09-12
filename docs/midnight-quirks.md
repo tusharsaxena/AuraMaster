@@ -182,6 +182,12 @@ enchants with it, and the setting's description says so.
   button that shares it (`modules/Style.lua`). That the engine accepts one formatter or curve shared
   across buttons is not yet verified in the client; if it does not, the memo moves to one per
   container.
+- **The engine's default duration text truncates** (`DefaultAuraDurationFormatter` in
+  `Blizzard_AuraContainerShared.lua` sets `SecondsFormatterRounding.Truncate`), so 12.7 s reads "12"
+  beside a cooldown countdown that reads 13. Every format the addon builds sets `RoundUp` instead, and
+  the Blizzard format is a copy of that default (one letter, one unit, the same step curve for the
+  largest unit) that rounds up. The countdown's own rounding is in C++ and undocumented, so the match
+  is an in-game check.
 - **`GetMouseFocus` was removed in 11.0** in favor of `GetMouseFoci`; the frame picker uses the first
   frame it returns (`Compat.GetMouseFocus`).
 - **Right-click cancel** is `SetCancelAuraButtons("RightButtonUp")` — one phase, so a button

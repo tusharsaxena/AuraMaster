@@ -90,7 +90,10 @@ suite covers what only the client can show.
     **Background & border**, Background reads **Background texture** · **Background opacity** /
     **Background color** · **Use class color**; drag **Background opacity** down → the bars'
     background fades while the fill stays as it was.
-27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**.
+27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**. On
+    Cooldown tick **Blizzard countdown numbers** → on a timed aura the countdown and the time text
+    read the same whole second throughout, in each time format (both round a fraction up: 12.7 s
+    reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
 28. **The picker is shared.** On Bars → Bar, switch the Container dropdown → the page stays on **Bar**,
     now showing the other container; open Layout → the same container is selected there.
 29. Every media dropdown (bar texture, background, border, font) opens with entries in it.

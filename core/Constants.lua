@@ -133,7 +133,7 @@ C.TOOLTIP_ANCHOR_LABELS = {
     ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right", ANCHOR_CURSOR = "At the cursor",
 }
 
--- Time text. "blizzard" is the engine's own formatter; the other two are SecondsFormatter setups.
+-- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s → 1 m)", short = "Short (1 unit)",
     long = "Detailed (2 units, 1h 15m)" }

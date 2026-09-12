@@ -206,9 +206,10 @@ A notice in orange heads every tab when the selected container is drawn as icons
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
 a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:108`);
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
-as a dispel-type texture tinted from `dispelColors`; `timeFormat` other than Blizzard hands the engine
-a `SecondsFormatter` (`core/Compat.lua:135`); the running-out color is a step color curve over
-remaining time (`core/Compat.lua:168`); the refresh-window highlight is an additive wash the engine
+as a dispel-type texture tinted from `dispelColors`; every `timeFormat` hands the engine a
+`SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
+(`core/Compat.lua:174`); the running-out color is a step color curve over
+remaining time (`core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
 shows only while the aura can be refreshed without loss.
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a

@@ -341,10 +341,6 @@ test("style: a dress that raises a non-string value hands that value on unchange
     assertTrue(err == raised, "the caller receives the very table the styler raised: " .. tostring(err))
 end)
 
-test("style: the Blizzard time format asks for no formatter of our own", function()
-    assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
-end)
-
 test("style: buttons of one look share one formatter and curve; a new color builds a new curve", function()
     -- Its own environment: the formatter, curve and color constructors are planted with counters
     -- there, never on the shared mock, so a failing case cannot leak them into later suites.
@@ -734,12 +730,13 @@ test("style: the time text gets the engine's formatter for its format, and the e
         return f:__last("SetDurationText")[2], c
     end
     local opts = bound({ style = "bars", bars = { timeFormat = "blizzard" } })
-    -- red under: BindDurationText substituting a formatter of its own for Blizzard's
-    assertNil(opts.textFormatter, "the engine's own format")
+    -- red under: the Blizzard format left to the engine's default, which truncates (I-2)
+    assertTrue(opts.textFormatter ~= nil, "the Blizzard format is a round-up copy of the engine's own")
     assertNil(opts.textColor, "no expiring color unless turned on")
     local short = bound({ style = "bars", bars = { timeFormat = "short" } }).textFormatter
     local long = bound({ style = "bars", bars = { timeFormat = "long" } }).textFormatter
     assertTrue(short ~= nil and long ~= nil and short ~= long, "each format its own formatter")
+    assertTrue(opts.textFormatter ~= short and opts.textFormatter ~= long, "the Blizzard one is not the short one")
     local c
     opts, c = bound({ style = "icons", icons = { expiringColorOn = true, expiringThreshold = 8 } })
     assertTrue(opts.textColor ~= nil, "a color curve")
