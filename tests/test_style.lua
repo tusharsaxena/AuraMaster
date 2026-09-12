@@ -416,3 +416,323 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     NS2.Style.Element(b1, c, true)
     assertEqual(built.colors - k1, dispelLeaves, "a new dispel color rebuilds the map")
 end)
+
+-- ── Style.lua: media, text, borders, bindings, behavior ───────────────────────────────────────
+
+local R = dofile("tests/region_recorder.lua")
+local fresh = dofile("tests/fresh_env.lua")
+local assertFalse = T.assertFalse
+local C, D = NS.Constants, NS.CONTAINER_TEMPLATE
+
+--- A fresh environment with a LibSharedMedia stand-in that knows what was registered with it, and
+--- raises for the key "Broken" (a media pack uninstalled half-way). Unknown methods answer a table,
+--- so the library's own media setup can use it.
+local function withMedia()
+    local registered = {}
+    local NS2 = fresh({ before = function(m)
+        local lsm = setmetatable({ MediaType = { FONT = "font", STATUSBAR = "statusbar", BORDER = "border",
+            BACKGROUND = "background", SOUND = "sound" } },
+            { __index = function() return function() return {} end end })
+        function lsm.Register(_, kind, key, path)
+            registered[kind .. ":" .. key] = path
+            return true
+        end
+        function lsm.Fetch(_, kind, key)
+            if key == "Broken" then error("media pack half-installed") end
+            return registered[kind .. ":" .. key]
+        end
+        m.__libs["LibSharedMedia-3.0"] = lsm
+    end })
+    return NS2, registered
+end
+
+--- Dress a bar element, swap its regions for recorders, and dress it again (see test_style_bars).
+local function dressedBars(c, engine, classColor)
+    local frame = R()
+    NS.Style.Element(frame, c, engine, classColor)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    frame.__log = {}
+    NS.Style.Element(frame, c, engine, classColor)
+    return frame, frame.__am
+end
+
+test("style: the Solid border is registered with the media library as the flat white texture", function()
+    local _, registered = withMedia()
+    -- red under: dropping Style.lua's LSM:Register (the default "Solid" border draws the tooltip edge)
+    assertEqual(registered["border:Solid"], C.WHITE_TEXTURE)
+end)
+
+test("style: a media key resolves through the media library; an unknown, empty, odd or broken one draws the fallback", function()
+    local NS2 = withMedia()
+    local Fetch = NS2.Style.Fetch
+    assertEqual(Fetch("border", "Solid", "FB"), C.WHITE_TEXTURE, "a registered key")
+    assertEqual(Fetch("statusbar", "Uninstalled", "FB"), "FB", "a key that no longer resolves")
+    assertEqual(Fetch("statusbar", "", "FB"), "FB", "an empty key")
+    assertEqual(Fetch("statusbar", 42, "FB"), "FB", "a key that is not a string")
+    local ok, path = pcall(Fetch, "statusbar", "Broken", "FB")
+    -- red under: Style.Fetch calling LSM.Fetch unguarded (every dress raises until the pack is fixed)
+    assertTrue(ok, tostring(path))
+    assertEqual(path, "FB", "a lookup that raises")
+end)
+
+test("style: a font the client refuses falls back to the built-in font at the same size and flags", function()
+    -- The media library still lists the font, but the file is gone: the client refuses it.
+    local NS2, registered = withMedia()
+    registered["font:Gone"] = "Interface\\AddOns\\SomePack\\Gone.ttf"
+    local fs = R()
+    fs.__answer.SetFont = function(_, path) return path == C.FALLBACK_FONT end
+    NS2.Style.ApplyText(fs, { font = "Gone", fontSize = 13, fontFlags = "OUTLINE" }, R(), D.bars.name)
+    local calls = fs:__calls("SetFont")
+    assertEqual(calls[1][1], registered["font:Gone"], "the listed font is tried first")
+    -- red under: ApplyText ignoring SetFont's answer (the text draws in no font at all)
+    assertEqual(#calls, 2)
+    assertEqual(table.concat({ calls[2][1], calls[2][2], calls[2][3] }, ","), C.FALLBACK_FONT .. ",13,OUTLINE")
+end)
+
+test("style: each outline setting reaches the font as the client's flag string", function()
+    local cases = { NONE = "", OUTLINE = "OUTLINE", THICKOUTLINE = "THICKOUTLINE", MONOCHROME = "MONOCHROME",
+        MONOCHROMEOUTLINE = "MONOCHROME,OUTLINE" }
+    for setting, flags in pairs(cases) do
+        local fs = R()
+        NS.Style.ApplyText(fs, { fontFlags = setting }, R(), D.bars.name)
+        -- red under: FLAG_MAP missing an entry (the combined flag is not the setting's own name)
+        assertEqual(fs:__last("SetFont")[3], flags, setting)
+    end
+    local fs = R()
+    NS.Style.ApplyText(fs, {}, R(), D.bars.name)
+    assertEqual(fs:__last("SetFont")[3], "", "no setting: no outline")
+end)
+
+test("style: a font shadow is a one-pixel black drop when on, and no offset when off", function()
+    local fs = R()
+    NS.Style.ApplyText(fs, { fontShadow = true }, R(), D.bars.name)
+    assertEqual(fs:__joined("SetShadowColor"), "0,0,0,1")
+    assertEqual(fs:__joined("SetShadowOffset"), "1,-1")
+    fs = R()
+    NS.Style.ApplyText(fs, { fontShadow = false }, R(), D.bars.name)
+    -- red under: the shadow's offset left at the font object's default when turned off
+    assertEqual(fs:__joined("SetShadowOffset"), "0,0")
+    assertEqual(fs:__count("SetShadowColor"), 0)
+end)
+
+test("style: a text's corner, offsets and justification come from its block, the template filling what is missing", function()
+    local fs, anchor = R(), R()
+    NS.Style.ApplyText(fs, { point = "TOP", x = 3, y = "junk", justify = "LEFT", fontSize = 9 }, anchor, D.bars.name)
+    local p = fs:__last("SetPoint")
+    assertEqual(p[1], "TOP"); assertTrue(p[2] == anchor); assertEqual(p[3], "TOP")
+    assertEqual(p[4], 3); assertEqual(p[5], 0, "an offset that is not a number is 0")
+    assertEqual(fs:__last("SetJustifyH")[1], "LEFT")
+    assertEqual(fs:__last("SetFont")[2], 9)
+    assertEqual(fs:__joined("SetWordWrap"), "false", "one line, never wrapped")
+    assertEqual(fs:__count("ClearAllPoints"), 1, "re-placed, never stacked on the last point")
+    fs = R()
+    NS.Style.ApplyText(fs, {}, anchor, D.icons.time)
+    -- red under: ApplyText falling back to literals instead of the element's template block
+    assertEqual(fs:__last("SetPoint")[1], D.icons.time.point)
+    assertEqual(fs:__last("SetJustifyH")[1], D.icons.time.justify)
+    assertEqual(fs:__last("SetFont")[2], D.icons.time.fontSize)
+end)
+
+test("style: a missing text block leaves its font string untouched", function()
+    local fs = R()
+    local ok = pcall(NS.Style.ApplyText, fs, nil, R(), D.bars.name)
+    -- red under: ApplyText without its missing-block guard
+    assertTrue(ok)
+    assertEqual(#fs.__log, 0)
+end)
+
+test("style: a text's color is its own swatch, or the dress's class when its companion is on", function()
+    local _, am = dressedBars(cfg({ style = "bars", bars = {
+        name = { fontColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, useClassColorFont = true },
+        time = { fontColor = { r = 0.5, g = 0.6, b = 0.7, a = 0.8 }, useClassColorFont = false },
+    } }), false, { r = 0.9, g = 0.8, b = 0.7 })
+    -- red under: ApplyText painting fontColor without its useClassColorFont companion
+    assertEqual(am.name:__joined("SetTextColor"), "0.9,0.8,0.7,0.4", "class, with the swatch's alpha")
+    assertEqual(am.time:__joined("SetTextColor"), "0.5,0.6,0.7,0.8", "the swatch")
+end)
+
+test("style: a missing color paints opaque white rather than raising", function()
+    local c = cfg({ style = "bars" })
+    c.bars.barColor = nil
+    local ok, err = pcall(dressedBars, c, false)
+    assertTrue(ok, tostring(err))
+    local _, am = dressedBars(c, false)
+    -- red under: a resolver handing SetVertexColor nil channels
+    assertEqual(am.fill:__joined("SetVertexColor"), "1,1,1,1")
+end)
+
+test("style: a border is hidden when off, styled None, or without a positive size", function()
+    local cases = {
+        { false, "Solid", 1, "off" }, { true, "None", 1, "the None style" },
+        { true, "Solid", 0, "zero size" }, { true, "Solid", "junk", "a size that is not a number" },
+    }
+    for _, c in ipairs(cases) do
+        local f = R()
+        f:Show()
+        NS.Style.ApplyBorder(f, c[1], c[2], c[3], { r = 1, g = 1, b = 1, a = 1 }, false)
+        -- red under: ApplyBorder drawing a backdrop it was told not to
+        assertFalse(f:IsShown(), c[4])
+        assertEqual(f:__count("SetBackdrop"), 0, c[4])
+    end
+end)
+
+test("style: a shown border takes the media edge, its size and its color", function()
+    local f = R()
+    NS.Style.ApplyBorder(f, true, "Uninstalled", 2, { r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, false)
+    assertTrue(f:IsShown())
+    local bd = f:__last("SetBackdrop")[1]
+    -- red under: ApplyBorder without the fallback edge (a missing media key draws no border)
+    assertEqual(bd.edgeFile, C.FALLBACK_BORDER)
+    assertEqual(bd.edgeSize, 2)
+    assertEqual(f:__joined("SetBackdropBorderColor"), "0.1,0.2,0.3,0.4")
+    f = R()
+    f.__absent.SetBackdrop = true
+    local ok = pcall(NS.Style.ApplyBorder, f, true, "Solid", 1, {}, false)
+    assertTrue(ok, "a frame without the backdrop mixin")
+    assertTrue(f:IsShown())
+end)
+
+test("style: a binding the client lacks is skipped, and one it refuses costs that binding alone", function()
+    -- Its own environment: the debug trace is replaced there, never on the shared one.
+    local NS2 = fresh()
+    local lines = {}
+    NS2.Debug = function(tag, fmt, ...)
+        if tag == "Style" then
+            lines[#lines + 1] = fmt:format(...)
+        end
+    end
+    local frame = R()
+    frame.__absent.SetSpellName = true
+    frame.__raise.SetIcon = true
+    local ok, err = pcall(NS2.Style.Element, frame, cfg({ style = "bars" }), true)
+    -- red under: Style.Bind calling the method unguarded (the engine's frame batch dies with the button)
+    assertTrue(ok, tostring(err))
+    for _, m in ipairs({ "SetDurationBar", "SetDurationText", "SetApplicationCount", "SetTooltipAnchorPoint" }) do
+        assertEqual(frame:__count(m), 1, m .. " still bound after SetIcon was refused")
+    end
+    assertEqual(#lines, 1, "the refusal is traced, once")
+    assertTrue(lines[1]:find("SetIcon failed", 1, true) ~= nil, lines[1])
+    assertFalse(NS2.Style.Bind(frame, "SetSpellName", 1), "a missing method answers false")
+    assertFalse(NS2.Style.Bind(frame, "SetIcon", 1), "a refused one answers false")
+    assertTrue(NS2.Style.Bind(frame, "SetDurationBar", 7))
+    assertEqual(frame:__last("SetDurationBar")[1], 7, "its arguments reach the method")
+end)
+
+test("style: a class color is looked for only in the active style's block, text blocks included", function()
+    local U = NS.Style.UsesClassColor
+    assertFalse(U(cfg({ style = "bars" })), "the template turns none on")
+    assertTrue(U(cfg({ style = "bars", bars = { useClassColorSpark = true } })), "a bar surface")
+    assertTrue(U(cfg({ style = "icons", icons = { stacks = { useClassColorFont = true } } })), "an icon's text")
+    -- red under: UsesClassColor reading both blocks (a bar flag re-applies an icon container on every swap)
+    assertFalse(U(cfg({ style = "icons", bars = { useClassColorBar = true } })), "the inactive block")
+    local c = cfg({ style = "icons" })
+    c.icons = nil
+    assertFalse(U(c), "no block at all")
+end)
+
+test("style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color", function()
+    local stored = { Magic = { r = 0.1, g = 0.2, b = 0.3 }, Curse = "junk" }
+    local map = NS.Style.DispelColorMap(stored)
+    assertEqual(table.concat({ map.Magic.r, map.Magic.g, map.Magic.b }, ","), "0.1,0.2,0.3")
+    -- red under: DispelColorMap building a color out of whatever the leaf holds
+    assertNil(map.Curse)
+    assertNil(map.Poison, "a type with no stored color")
+    assertTrue(NS.Style.DispelColorMap(stored) == map, "unchanged leaves: the same map")
+    assertEqual(next(NS.Style.DispelColorMap(nil)), nil, "no stored colors: an empty map")
+end)
+
+test("style: tooltips and click-through decide whether a button takes the mouse at all", function()
+    local function behave(over)
+        local f = R()
+        NS.Style.ApplyBehavior(f, cfg(over))
+        return f
+    end
+    local f = behave({ unit = "player", auraType = "HELPFUL" })
+    assertEqual(f:__joined("SetMouseMotionEnabled"), "true", "hover shows the tooltip")
+    assertEqual(f:__joined("SetMouseClickEnabled"), "true", "right-click cancels")
+    f = behave({ behavior = { tooltips = false } })
+    -- red under: SetMouseMotionEnabled ignoring the tooltip setting
+    assertEqual(f:__joined("SetMouseMotionEnabled"), "false", "no tooltips: no hover")
+    f = behave({ unit = "player", auraType = "HELPFUL", behavior = { clickThrough = true } })
+    -- red under: click-through that still takes hover or clicks
+    assertEqual(f:__joined("SetMouseMotionEnabled"), "false")
+    assertEqual(f:__joined("SetMouseClickEnabled"), "false")
+end)
+
+test("style: right-click cancel reaches weapon enchants, never the player's debuffs, and never when turned off", function()
+    local function cancelOf(over)
+        local f = R()
+        NS.Style.ApplyBehavior(f, cfg(over))
+        return f:__last("SetCancelAuraButtons")[1]
+    end
+    assertEqual(cancelOf({ unit = "player", auraType = "ENCHANT" }), "RightButtonUp", "a weapon enchant")
+    -- red under: cancelEnabled testing the unit alone (a debuff cannot be canceled, and the click is swallowed)
+    assertNil(cancelOf({ unit = "player", auraType = "HARMFUL" }), "the player's debuffs")
+    assertNil(cancelOf({ unit = "player", auraType = "HELPFUL", behavior = { cancelOnRightClick = false } }),
+        "turned off")
+end)
+
+test("style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor", function()
+    local f = R()
+    NS.Style.ApplyBehavior(f, cfg({ behavior = { tooltipAnchor = "ANCHOR_TOP", tooltipInCombat = false } }))
+    assertEqual(f:__joined("SetTooltipAnchorPoint"), "ANCHOR_TOP,0,0")
+    -- red under: SetHideTooltipInCombat handed the setting un-negated
+    assertEqual(f:__joined("SetHideTooltipInCombat"), "true", "no tooltips in combat")
+    local c = cfg()
+    c.behavior.tooltipAnchor = nil
+    c.behavior.tooltipInCombat = true
+    f = R()
+    NS.Style.ApplyBehavior(f, c)
+    assertEqual(f:__last("SetTooltipAnchorPoint")[1], D.behavior.tooltipAnchor)
+    assertEqual(f:__joined("SetHideTooltipInCombat"), "false")
+end)
+
+test("style: the time text gets the engine's formatter for its format, and the expiring color at its threshold", function()
+    local points = {}
+    local nop = function() end
+    local NS2 = fresh({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.SecondsFormatterAbbreviation = { OneLetter = 1 }
+        m.Enum.SecondsFormatterRounding = { Truncate = 1 }
+        m.Enum.SecondsFormatterInterval = { Seconds = 1, Days = 4 }
+        m.Enum.DurationTextBindingProperty = { RemainingDuration = 1 }
+        m.C_StringUtil = { CreateSecondsFormatter = function()
+            return setmetatable({}, { __index = function() return nop end })
+        end }
+        m.C_CurveUtil = { CreateColorCurve = function()
+            local curve = {}
+            function curve.AddPoint(_, at, color)
+                local n = #points
+                points[n + 1] = { at, color }
+            end
+            return curve
+        end }
+    end })
+    local function bound(over)
+        local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), over)
+        local f = R()
+        NS2.Style.Element(f, c, true)
+        return f:__last("SetDurationText")[2], c
+    end
+    local opts = bound({ style = "bars", bars = { timeFormat = "blizzard" } })
+    -- red under: BindDurationText substituting a formatter of its own for Blizzard's
+    assertNil(opts.textFormatter, "the engine's own format")
+    assertNil(opts.textColor, "no expiring color unless turned on")
+    local short = bound({ style = "bars", bars = { timeFormat = "short" } }).textFormatter
+    local long = bound({ style = "bars", bars = { timeFormat = "long" } }).textFormatter
+    assertTrue(short ~= nil and long ~= nil and short ~= long, "each format its own formatter")
+    local c
+    opts, c = bound({ style = "icons", icons = { expiringColorOn = true, expiringThreshold = 8 } })
+    assertTrue(opts.textColor ~= nil, "a color curve")
+    local n = #points
+    -- red under: curveFor keyed without the threshold (every look shares the first threshold)
+    assertEqual(points[n][1], 8, "normal color from the threshold up")
+    assertEqual(points[n][2].g, c.icons.time.fontColor.g)
+    assertEqual(points[n - 1][1], 0, "the expiring color below it")
+    assertEqual(points[n - 1][2].g, c.icons.expiringColor.g)
+    c.icons.expiringThreshold = nil
+    local f = R()
+    NS2.Style.Element(f, c, true)
+    n = #points
+    assertEqual(points[n][1], NS2.CONTAINER_TEMPLATE.icons.expiringThreshold, "a missing threshold is the template's")
+end)

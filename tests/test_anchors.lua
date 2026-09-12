@@ -483,3 +483,307 @@ test("picker: Escape cancels", function()
     assertTrue(canceled)
     mocks.__fireTimers()
 end)
+
+-- ── placement ─────────────────────────────────────────────────────────────────────────────────
+
+--- Record every SetPoint, ClearAllPoints and SetSize made on a container's anchor. `refuse(rel)`
+--- makes a SetPoint against `rel` raise, as the client does for a restricted target.
+local function recordAnchor(inst, refuse)
+    local rec = { points = {}, clears = 0 }
+    rawset(inst.anchor, "SetPoint", function(_, ...)
+        local rel = select(2, ...)
+        if refuse and refuse(rel) then error("Anchoring disallowed") end
+        local n = #rec.points
+        rec.points[n + 1] = { ... }
+    end)
+    rawset(inst.anchor, "ClearAllPoints", function() rec.clears = rec.clears + 1 end)
+    rawset(inst.anchor, "SetSize", function(_, w, h) rec.size = w .. "," .. h end)
+    return rec
+end
+
+test("anchors: a screen container sits at its stored point on UIParent, sized to one element", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local c = NS.Database.FindContainer(1)
+    c.position = { point = "TOPRIGHT", relativePoint = "BOTTOMRIGHT", x = 12, y = -7 }
+    local rec = recordAnchor(inst)
+    assertEqual(NS.Anchors.Place(inst), "screen")
+    local w, h = NS.Style.ElementSize(c)
+    assertEqual(rec.size, w .. "," .. h, "one element in size")
+    assertEqual(#rec.points, 1)
+    local p = rec.points[1]
+    -- red under: toScreen reading the template's position rather than the stored one
+    assertEqual(p[1], "TOPRIGHT"); assertTrue(p[2] == mocks.UIParent); assertEqual(p[3], "BOTTOMRIGHT")
+    assertEqual(p[4], 12); assertEqual(p[5], -7)
+    c.position = { point = "LEFT", x = 1 }
+    rec = recordAnchor(inst)
+    NS.Anchors.Place(inst)
+    p = rec.points[1]
+    -- red under: a missing relative point filled from the template (CENTER) instead of the point itself
+    assertEqual(p[3], "LEFT", "no relative point: the same point on the screen")
+    assertEqual(p[5], 0, "a missing offset is 0")
+end)
+
+test("anchors: a container attaches to its target's engine frame at the stored point, or to its anchor before it has one", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    local c2 = NS.Database.FindContainer(2)
+    c2.attach = { mode = "container", container = 1, point = "TOPRIGHT", relativePoint = "TOPLEFT", x = -3, y = 4 }
+    local rec = recordAnchor(CM.instances[2])
+    assertEqual(NS.Anchors.Place(CM.instances[2]), "container")
+    local p = rec.points[1]
+    -- red under: targetFor anchoring to the target's anchor (a container would not follow its target's growth)
+    assertTrue(p[2] == CM.instances[1].engine, "the target's engine frame")
+    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "TOPLEFT"); assertEqual(p[4], -3); assertEqual(p[5], 4)
+    local engine = CM.instances[1].engine
+    CM.instances[1].engine = nil
+    rec = recordAnchor(CM.instances[2])
+    NS.Anchors.Place(CM.instances[2])
+    CM.instances[1].engine = engine
+    assertTrue(rec.points[1][2] == CM.instances[1].anchor, "no engine yet: the target's anchor")
+end)
+
+test("anchors: a container never attaches to itself or to one that does not exist", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local c = NS.Database.FindContainer(1)
+    c.attach.mode, c.attach.container = "container", 1
+    local rec = recordAnchor(inst)
+    -- red under: targetFor without its self check
+    assertEqual(NS.Anchors.Place(inst), "screen", "itself")
+    assertTrue(rec.points[1][2] == mocks.UIParent)
+    c.attach.container = 99
+    assertEqual(NS.Anchors.Place(inst), "screen", "a container that does not exist")
+    assertEqual(#NS.Anchors.Pending(), 0, "and neither waits for anything")
+end)
+
+test("anchors: a frame target takes the stored attach point, relative point and offsets", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local target = plant(mocks, "PlayerFrame")
+    NS.Database.FindContainer(1).attach = { mode = "frame", frame = "PlayerFrame", point = "LEFT",
+        relativePoint = "RIGHT", x = 5, y = 6 }
+    local rec = recordAnchor(inst)
+    assertEqual(NS.Anchors.Place(inst), "frame")
+    local p = rec.points[1]
+    -- red under: Place handing SetPoint the template's attach point instead of the stored one
+    assertTrue(p[2] == target)
+    assertEqual(p[1], "LEFT"); assertEqual(p[3], "RIGHT"); assertEqual(p[4], 5); assertEqual(p[5], 6)
+end)
+
+test("anchors: a frame that refuses the anchor falls back to the screen, cleanly re-placed", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local target = plant(mocks, "RestrictedBar")
+    NS.Database.FindContainer(1).attach = { mode = "frame", frame = "RestrictedBar" }
+    local rec = recordAnchor(inst, function(rel) return rel == target end)
+    local ok, mode = pcall(NS.Anchors.Place, inst)
+    -- red under: SetPoint against the target unguarded (a restricted frame raises on every apply)
+    assertTrue(ok, tostring(mode))
+    assertEqual(mode, "screen")
+    -- red under: the fallback without its ClearAllPoints (a half-set point would pull on the anchor)
+    assertEqual(rec.clears, 2, "cleared before placing, and again after the refusal")
+    assertTrue(rec.points[1][2] == mocks.UIParent)
+    assertEqual(#NS.Anchors.Pending(), 0, "the frame exists: nothing to wait for")
+end)
+
+test("anchors: an empty frame name is a screen fallback that waits on nothing", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.Database.FindContainer(1).attach = { mode = "frame", frame = "" }
+    assertEqual(NS.Anchors.Place(inst), "screen")
+    -- red under: targetFor marking every unresolved frame pending, the unnamed one included
+    assertEqual(#NS.Anchors.Pending(), 0)
+end)
+
+test("anchors: a waiting container set back to the screen stops waiting", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local c = NS.Database.FindContainer(1)
+    c.attach.mode, c.attach.frame = "frame", "NotYetLoaded"
+    NS.Anchors.Place(inst)
+    assertEqual(table.concat(NS.Anchors.Pending(), ","), "1")
+    c.attach.mode = "screen"
+    NS.Anchors.Place(inst)
+    -- red under: Place without its pending reset (a screen container re-placed on every add-on load)
+    assertEqual(#NS.Anchors.Pending(), 0)
+end)
+
+test("anchors: a waiting container deleted before its frame appears is dropped from the wait", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local c = NS.Database.FindContainer(1)
+    c.attach.mode, c.attach.frame = "frame", "NotYetLoaded"
+    NS.Anchors.Place(CM.instances[1])
+    assertTrue(CM.Delete(1))
+    mocks.__fireTimers()
+    assertNil(CM.instances[1], "the container is gone")
+    local ok, err = pcall(NS.Anchors.ResolvePending)
+    assertTrue(ok, tostring(err))
+    -- red under: ResolvePending keeping an id whose container no longer exists
+    assertEqual(#NS.Anchors.Pending(), 0)
+end)
+
+test("anchors: an add-on loading re-places only the containers still waiting", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local c = NS.Database.FindContainer(2)
+    c.attach.mode, c.attach.frame = "frame", "LateBar"
+    NS.Anchors.Place(CM.instances[2])
+    local placed = {}
+    local place = NS.Anchors.Place
+    NS.Anchors.Place = function(inst)
+        placed[#placed + 1] = inst.id
+        return place(inst)
+    end
+    plant(mocks, "LateBar")
+    NS.addon:OnAddonLoaded()
+    NS.Anchors.Place = place
+    -- red under: ResolvePending re-placing every container on every add-on load
+    assertEqual(table.concat(placed, ","), "2")
+    assertEqual(#NS.Anchors.Pending(), 0, "and it no longer waits")
+end)
+
+test("anchors: a loop among other containers is refused, and the walk still ends", function()
+    local NS = fresh()
+    local c2, c3 = NS.Database.FindContainer(2), NS.Database.FindContainer(3)
+    c2.attach.mode, c2.attach.container = "container", 3
+    c3.attach.mode, c3.attach.container = "container", 2
+    -- red under: WouldCycle answering false at the hop limit (a looping chain anchors in a circle)
+    assertTrue(NS.Anchors.WouldCycle(1, 2))
+    local c1 = NS.Database.FindContainer(1)
+    c1.attach.mode, c1.attach.container = "container", 2
+    assertEqual(NS.Anchors.Place(NS.ContainerManager.instances[1]), "screen")
+end)
+
+test("anchors: a chain that ends at a screen container is no loop; one that returns to the start is", function()
+    local NS = fresh()
+    local c3 = NS.Database.FindContainer(3)
+    c3.attach.mode, c3.attach.container = "container", 2
+    -- red under: WouldCycle following a chain past a container that is not attached to another
+    assertFalse(NS.Anchors.WouldCycle(1, 3), "3 → 2 → the screen")
+    assertTrue(NS.Anchors.WouldCycle(2, 3), "2 → 3 → 2")
+    assertFalse(NS.Anchors.WouldCycle(1, 99), "a container that does not exist")
+end)
+
+test("anchors: a real, unforbidden frame resolves, even one without IsForbidden; a name that is not a string never does", function()
+    local NS, mocks = fresh()
+    -- A plain table, not the kit stub: the stub answers every PascalCase method, IsForbidden included.
+    local f = { GetObjectType = function() return "Frame" end }
+    mocks.__globals.OldAddonFrame = f
+    -- red under: ResolveFrame calling IsForbidden unguarded
+    assertTrue(NS.Anchors.ResolveFrame("OldAddonFrame") == f)
+    assertNil(NS.Anchors.ResolveFrame(42))
+    assertNil(NS.Anchors.ResolveFrame(nil))
+    assertNil(NS.Anchors.ResolveFrame("NoSuchFrame"))
+end)
+
+test("anchors: a drag with no relative point stores the point for both, and each offset to one decimal", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    inst.anchor.GetPoint = function() return "TOP", nil, nil, -12.36, nil end
+    NS.Anchors.SavePosition(inst)
+    local pos = NS.Database.FindContainer(1).position
+    -- red under: SavePosition storing a nil relative point (the anchor would pin to the template's)
+    assertEqual(pos.relativePoint, "TOP")
+    assertEqual(pos.x, -12.4, "rounded to the nearest tenth, downward for a negative")
+    assertEqual(pos.y, 0, "a missing offset stores 0")
+end)
+
+test("anchors: an anchor that reads back no point writes nothing", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    inst.anchor.GetPoint = function() return nil end
+    local writes = 0
+    NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
+    NS.Anchors.SavePosition(inst)
+    -- red under: SavePosition without its no-point guard (a nil point would be stored)
+    assertEqual(writes, 0)
+    assertEqual(NS.Database.FindContainer(1).position.point, NS.STARTER_CONTAINERS[1].position.point)
+end)
+
+-- ── the drag handle, continued ────────────────────────────────────────────────────────────────
+
+test("handle: the strip names its container, and a container whose settings are gone hides it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local texts = {}
+    -- The label is the strip in the kit (a font string comes back as its frame).
+    rawset(h, "SetText", function(_, s)
+        texts[#texts + 1] = s
+    end)
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], NS.Database.FindContainer(1).name)
+    assertTrue(h:IsShown())
+    inst.Cfg = function() return nil end
+    local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    -- red under: UpdateHandle placing a handle for a container with no settings (it raises)
+    assertTrue(ok, tostring(err))
+    assertFalse(h:IsShown(), "nothing to drag")
+    assertEqual(texts[#texts], "")
+end)
+
+test("handle: an attached container's tooltip says where its offsets are set; a screen one does not", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    h:__fire("OnEnter")
+    assertEqual(#lines, 1, "a screen container: how to drag, nothing more")
+    NS.Database.FindContainer(1).attach.mode = "frame"
+    lines = {}
+    h:__fire("OnEnter")
+    -- red under: showTooltip without its attached line (the player drags and nothing moves)
+    assertEqual(lines[2], NS.L["Attached — set its offsets on the Layout page."])
+end)
+
+test("handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local moved, writes = 0, 0
+    rawset(inst.anchor, "StartMoving", function() moved = moved + 1 end)
+    NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
+    inst.anchor.GetPoint = function() return "TOP", nil, "TOP", 1, 1 end
+    NS.Database.FindContainer(1).attach.mode = "container"
+    h:__fire("OnDragStart")
+    h:__fire("OnDragStop")
+    -- red under: the drag start without its screen-mode check (an attached container is dragged off its target)
+    assertEqual(moved, 0, "attached")
+    assertEqual(writes, 0, "and no position is stored for it")
+    NS.Database.FindContainer(1).attach.mode = "screen"
+    mocks.__lockdown = true
+    h:__fire("OnDragStart")
+    mocks.__lockdown = false
+    -- red under: the drag start without its lockdown check (the anchor parents an aura engine)
+    assertEqual(moved, 0, "in combat")
+    h:__fire("OnDragStop")
+    assertEqual(writes, 0, "a drag stop with no drag in progress")
+end)
+
+test("handle: the strip sits fifty levels above its anchor, over the container's elements", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    -- red under: BuildHandle leaving the strip at the anchor's level (the first element draws over it)
+    assertEqual(h:GetFrameLevel(), inst.anchor:GetFrameLevel() + 50)
+    assertTrue(inst.anchor:GetFrameLevel() > 0, "the anchor's level was applied first")
+end)
+
+test("handle: a left click on the strip opens nothing; a right click opens this container's settings", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[3]
+    local h = recordedHandle(mocks, NS, inst)
+    local opened = 0
+    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    h:__fire("OnClick", "LeftButton")
+    -- red under: the strip's OnClick ignoring the button (every drag's click would open the panel)
+    assertEqual(opened, 0)
+    h:__fire("OnClick", "RightButton")
+    assertEqual(opened, 1)
+    assertEqual(NS.State.activeContainerId, 3)
+end)
