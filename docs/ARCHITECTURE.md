@@ -47,7 +47,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:215`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
-| LibSharedMedia-3.0 | Texture, border and font lookups (`modules/Style.lua:26`) |
+| LibSharedMedia-3.0 | Texture, border and font lookups (`modules/Style.lua:33`) |
 | LibKa0s v1.33.0 | Eight modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
@@ -287,7 +287,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:269-271`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:278-280`).
 
 ## Known Limitations
 

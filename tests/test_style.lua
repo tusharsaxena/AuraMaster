@@ -736,3 +736,30 @@ test("style: the time text gets the engine's formatter for its format, and the e
     n = #points
     assertEqual(points[n][1], NS2.CONTAINER_TEMPLATE.icons.expiringThreshold, "a missing threshold is the template's")
 end)
+
+test("style: a style leaf left nil draws the template's value, never a literal of its own", function()
+    -- The one home for defaults is the template (savedvariables-§2; Style.lua's header). A backfilled
+    -- profile never holds a nil leaf, so this is the fallback a reader must still honor.
+    local c = cfg({ style = "bars", bars = { icon = "LEFT", iconSize = 10 } })
+    c.bars.iconGap, c.bars.iconZoom = nil, nil
+    local _, am = dressedBars(c, false)
+    local z = D.bars.iconZoom
+    -- red under: Style_Bars' layout restating `or 0` for the icon gap and the icon zoom
+    assertEqual(am.bar:__calls("SetPoint")[1][4], 10 + D.bars.iconGap, "bar: icon gap")
+    assertEqual(am.icon:__joined("SetTexCoord"), table.concat({ z, 1 - z, z, 1 - z }, ","), "bar: icon zoom")
+
+    local ic = cfg({ style = "icons", unit = "player", auraType = "HELPFUL" })
+    ic.icons.zoom, ic.icons.cooldownEdge, ic.icons.dispelBorder, ic.icons.borderShow = nil, nil, nil, nil
+    ic.behavior.cancelOnRightClick = nil
+    local frame, iam = dressedBars(ic, true)
+    z = D.icons.zoom
+    -- red under: Style_Icons reading a nil zoom, edge, dispel border or border as 0 / off
+    assertEqual(iam.icon:__joined("SetTexCoord"), table.concat({ z, 1 - z, z, 1 - z }, ","), "icon: zoom")
+    assertEqual(iam.cd:__joined("SetDrawEdge"), tostring(D.icons.cooldownEdge), "icon: cooldown edge")
+    assertEqual(iam.border:IsShown(), D.icons.borderShow, "icon: border")
+    assertEqual(iam.icon:__calls("SetPoint")[1][4], D.icons.borderShow and D.icons.borderSize or 0, "icon: art inset")
+    assertEqual(frame:__count("AddDispelTypeTexture"), D.icons.dispelBorder and 1 or 0, "icon: dispel border")
+    -- red under: cancelEnabled reading a nil cancelOnRightClick as off
+    assertEqual(frame:__last("SetCancelAuraButtons")[1], D.behavior.cancelOnRightClick and "RightButtonUp" or nil,
+        "behavior: right-click cancel")
+end)

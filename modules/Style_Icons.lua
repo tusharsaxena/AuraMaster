@@ -53,11 +53,12 @@ end
 --- Place the icon INSIDE the border, so a thick border never hides the art, and crop the zoom to
 --- the element's aspect ratio, so a non-square icon is cropped rather than squashed.
 local function layoutIcon(am, frame, ic, w, h)
-    local inset = (ic.borderShow and ic.borderStyle ~= "None") and (tonumber(ic.borderSize) or 0) or 0
+    local shown = Style.OrTemplate(ic.borderShow, D.icons.borderShow)
+    local inset = (shown and ic.borderStyle ~= "None") and (tonumber(ic.borderSize) or 0) or 0
     am.icon:ClearAllPoints()
     am.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", inset, -inset)
     am.icon:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -inset, inset)
-    local z = tonumber(ic.zoom) or 0
+    local z = tonumber(ic.zoom) or D.icons.zoom
     local zx, zy = z, z
     if w > h and w > 0 then
         zy = z + (1 - 2 * z) * (1 - h / w) / 2
@@ -73,7 +74,7 @@ local function applyCooldown(cd, ic)
     cd:SetShown(on)
     cd:SetDrawSwipe(on)
     cd:SetReverse(ic.cooldownReverse and true or false)
-    cd:SetDrawEdge(ic.cooldownEdge and true or false)
+    cd:SetDrawEdge(Style.OrTemplate(ic.cooldownEdge, D.icons.cooldownEdge) and true or false)
     cd:SetSwipeColor(0, 0, 0, tonumber(ic.swipeAlpha) or D.icons.swipeAlpha)
     cd:SetHideCountdownNumbers(not ic.blizzardNumbers)
 end
@@ -85,8 +86,8 @@ function Icons.Apply(frame, cfg, engine)
 
     frame:SetSize(w, h)
     layoutIcon(am, frame, ic, w, h)
-    Style.ApplyBorder(am.border, ic.borderShow, ic.borderStyle, ic.borderSize, ic.borderColor,
-        ic.useClassColorBorder)
+    Style.ApplyBorder(am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow), ic.borderStyle,
+        ic.borderSize, ic.borderColor, ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
 
     Style.ApplyText(am.time, ic.time, frame, D.icons.time)
@@ -95,7 +96,7 @@ function Icons.Apply(frame, cfg, engine)
     am.stacks:SetShown(ic.stacks == nil or ic.stacks.show ~= false)
 
     am.pandemic:SetVertexColor(Style.Color(ic.pandemicColor, false))
-    if not ic.dispelBorder then am.dispel:Hide() end
+    if not Style.OrTemplate(ic.dispelBorder, D.icons.dispelBorder) then am.dispel:Hide() end
 
     if engine then
         Icons.Bind(frame, am, cfg, ic)
@@ -112,7 +113,7 @@ function Icons.Bind(frame, am, cfg, ic)
     if ic.stacks == nil or ic.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
     Style.Bind(frame, "ClearDispelTypeTextures")
-    if ic.dispelBorder then
+    if Style.OrTemplate(ic.dispelBorder, D.icons.dispelBorder) then
         Style.Bind(frame, "AddDispelTypeTexture", am.dispel, {
             showWhenHarmful = true, showWhenHelpful = false,
             style = Compat.DispelStyle("Border"),
