@@ -71,6 +71,42 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write runs the normalize hook of every row under it, with the target id
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 
+### test_schema_paths.lua (33)
+
+- schema paths: the seam validates before it resolves, so a bad value names the value, not the container
+- schema paths: normalize is handed the resolved id, so a container keeps its own name in any case
+- schema paths: the seam writes, then reacts, then logs, then announces — each seeing the stored value
+- schema paths: onChange, the [Set] line and CONFIG_CHANGED all see the normalized value
+- schema paths: a refused write reacts to nothing, logs nothing and announces nothing
+- schema paths: a path that is not a string is refused by every seam, naming what was passed
+- schema paths: a selection naming a container that no longer exists falls back to the first
+- schema paths: an explicit container id that does not exist is refused, never redirected to the selection
+- schema paths: an absolute path writes the profile whatever container is named or selected
+- schema paths: GetSetting reads paths that are not rows, and a container path reads nil with no containers
+- schema paths: a table value is stored as a copy, so the caller's table can never edit the container
+- schema paths: a row's validate runs at the seam — the attach target refuses a non-number and a cycle
+- schema paths: DefaultFor answers the template or the profile defaults, as a copy, never the stored value
+- schema paths: RegisterSchemaRows stamps a resolvable row's default, and leaves session and unresolved rows alone
+- schema paths: ValidateSchema fails an unknown page, an unknown type and an empty group, and says which
+- schema paths: SchemaForPage keeps declaration order and drops hidden rows and rows the container's type does not take
+- schema paths: Choices keeps the key order and localizes each label, falling back to the key
+- schema paths: a spell set goes to the container it names, announced as filters and logged once
+- schema paths: a spell set or a section with no container to land in is refused, naming why
+- schema paths: category edits drop an empty edit set and store a truthy edit as true
+- schema paths: exactly the six documented sections are whole-writable
+- schema paths: a section write fires onChange only for the leaves it changed, with the target id
+- schema paths: a row under a section that refuses its leaf refuses the whole section — CheckWrite says the same
+- schema paths: a section write backfills a copy, so the caller's table comes back as it went in
+- schema paths: a section replaces the stored one from the template, not merges into it, and normalizes its spell sets
+- schema paths: a section's [Set] line renders the stored table with sorted keys and nested tables elided
+- schema paths: a section's [Set] line is not even built while debug is off
+- schema paths: with no containers CheckWrite refuses a container row and passes a global one
+- schema paths: ApplyDefault is a no-op for nothing, a row with no path, and a row with no default
+- schema paths: ApplyDefault restores a session row through its own set
+- schema paths: a session row needs no database — it checks and writes before InitDB has run
+- schema paths: a session row's validate still guards it
+- schema paths: a session row with no get reads nil, never the profile
+
 ### test_filtercompiler.lua (28)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
@@ -250,7 +286,45 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_bulklog.lua (13)
+### test_slash_verbs.lua (35)
+
+- slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
+- slash verbs: the landing page's rows are /am help's rows without the chat indent
+- slash verbs: /am and /auramaster both reach the one dispatcher
+- slash verbs: /am options is an alias of /am config, and both open the settings panel
+- slash verbs: /am version prints the version on its own line
+- slash verbs: get, set and reset with no path print a usage line naming /am
+- slash verbs: an unknown path, or one in the wrong case, is not found and nothing is written
+- slash verbs: a global row reads with no note; a container row names the container it read
+- slash verbs: with no containers, get and list read a container row as nil and note nothing
+- slash verbs: set clamps a number to the row's range and echoes what was stored
+- slash verbs: set refuses what the row's type cannot take, and stores and announces nothing
+- slash verbs: set writes a color in the stored {r, g, b, a} shape; get decodes a partial one channel by channel
+- slash verbs: a value the parser takes but the seam refuses prints the seam's reason, then the unchanged value
+- slash verbs: set and reset reach a session row, which never lands in the profile
+- slash verbs: reset restores the selected container's row only, and its echo carries no note
+- slash verbs: set on a global row writes the profile through the seam
+- slash verbs: /am list prints every row once, grouped by page in page order, noting container rows
+- slash verbs: /am resetall resets the profile once, with no popup, and says so
+- slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
+- slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
+- slash verbs: /am lock ends preview mode through the seam; /am unlock says how to drag
+- slash verbs: /am test reads its word in any case, toggles on anything else, and says which
+- slash verbs: /am pick with no containers, or in combat, never starts the picker
+- slash verbs: /am pick attaches the container selected when it began, even if the selection moves
+- slash verbs: a right-click cancels /am pick, says so, and attaches nothing
+- slash verbs: /am perf prints every line the harness returns, tagged, and hands it the rest of the line
+- slash verbs: a bare /am debug toggles the window and leaves the flag; /am debug ON is read in any case
+- slash verbs: /am containers marks the selection and a disabled container, and says when there are none
+- slash verbs: /am select matches a name in any case, and a miss moves nothing
+- slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
+- slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
+- slash verbs: /am resetposition and /am forgettimed do their act and say so
+- slash verbs: without the library each schema verb names what is missing, and writes nothing
+- slash verbs: without the library /am still prints its help, aliases still route, and an unknown verb says so
+- slash verbs: without the library the host verbs keep working
+
+### test_bulklog.lua (20)
 
 - bulklog: a container page's Defaults is one [Set] line counting the rows it changed
 - bulklog: General's Defaults is one [Set] line counting the rows it changed
@@ -264,6 +338,13 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: a bracket inside a bracket logs once, summed, when the outer one closes
 - bulklog: a -0 stored over 0 is not a change, so a settled ResetPositions counts none
 - bulklog: a bulk act that raises still logs its one line, marked, and the seam logs again
+- bulklog: a stray bulkEnd with no bracket open logs nothing, and the next bracket still counts itself
+- bulklog: a spell set written in a bracket counts once when it changed and not at all when it did not
+- bulklog: a section written in a bracket counts each row and spell set under it that changed, and its own line is muted
+- bulklog: a session row written in a bracket is counted through its own get
+- bulklog: each act starts its own count and its own error mark
+- bulklog: an error inside a nested bracket marks the outer act's one line
+- bulklog: Bulk.Run stays silent only when its act answers true, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
 ### test_optionssetup.lua (17)
@@ -286,13 +367,45 @@ badge and any count quoted in the docs must agree with it.
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 
-### test_perf.lua (5)
+### test_options_descriptor.lua (16)
+
+- options descriptor: a rendered widget reads the selected container and writes it through the seam
+- options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
+- options descriptor: a page's Defaults resets the page's session rows too
+- options descriptor: Reset all writes only session rows through the seam and resets only the active profile
+- options descriptor: Reset all never writes a Profiles-page row, live or degraded
+- options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
+- options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
+- options descriptor: the Containers page's picker is a plain dropdown on the chrome ledger that selects
+- options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
+- options descriptor: with no containers a page draws the one empty-registry line and no intro
+- options descriptor: a page's own header replaces the banner
+- options descriptor: a re-render returns the last render's chrome widgets to the pool, after it draws
+- options descriptor: RenderWarnings draws one orange line per thing the engine will not do
+- options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
+- options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
+- options descriptor: the stub's composers emit the paths and types the live composers do
+
+### test_perf.lua (8)
 
 - perf: every declared bucket is reached by a real bracket
 - perf: a dormant probe notes nothing
 - perf: suspend makes the addon inert without a reload, and resume restores it
 - perf: suspend holds a queued apply until resume
+- perf: the buckets are declared in report order, and only the per-container apply nests
+- perf: suspend and resume log to the console whatever the debug flag says
+- perf: resume re-registers exactly the lifecycle events suspend took away
 - perf: without the library, /am perf answers one honest line
+
+### test_debuglogsetup.lua (7)
+
+- debuglog: enabling logging writes the [Init] summary — name, version, schema, profile and container count
+- debuglog: the flag is NS.State.debug itself — the sink and IsEnabled read it live
+- debuglog: the chat acknowledgment goes through the addon's tagged printer; the console brackets both ends
+- debuglog: showing or hiding the console refreshes open panels, so the Master controls row follows it
+- debuglog: the Debug console row shows and hides the window and never touches the logging flag
+- debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
+- debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
 ### test_locale.lua (2)
 
@@ -341,6 +454,7 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 8 |
 | test_database.lua | 12 |
 | test_schema.lua | 26 |
+| test_schema_paths.lua | 33 |
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 37 |
@@ -348,13 +462,16 @@ badge and any count quoted in the docs must agree with it.
 | test_style.lua | 19 |
 | test_timedspells.lua | 11 |
 | test_slash.lua | 23 |
-| test_bulklog.lua | 13 |
+| test_slash_verbs.lua | 35 |
+| test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
-| test_perf.lua | 5 |
+| test_options_descriptor.lua | 16 |
+| test_perf.lua | 8 |
+| test_debuglogsetup.lua | 7 |
 | test_locale.lua | 2 |
 | test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **267** |
+| **Total** | **368** |
