@@ -256,7 +256,13 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`
   past the highest id, and seeds the starter containers on a profile whose `seeded` flag is unset.
   A container key that is neither a number nor a numeric string (a hand-edited file) is dropped,
-  with one `[Migrate] dropped container key` debug line each, so the profile still loads.
+  with one `[Migrate] dropped container key` debug line each, so the profile still loads. So is a
+  numeric string whose id is already stored as a number: the numeric key is the form the addon
+  writes, so the string twin is the stale copy and never overwrites it. The load path's backfill
+  also repairs: a stored value that is not a table where the template holds a section (a
+  hand-edited `position = "junk"`) is replaced by the template's section. A whole-section write
+  through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
+  silently fixed.
   A new category key reaches every container the same way, through `NeutralStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: bump to
   `to = 2`, transform the stored value, and remember that containers live in every profile, not only
