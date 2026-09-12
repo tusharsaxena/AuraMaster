@@ -146,8 +146,9 @@ test("bulklog: a profile reset and a profile copy are one [Set] line each; a swi
     NS2.db:CopyProfile("Raid")
     assertEqual(#lines, 1, dump(lines))
     assertTrue(lines[1]:find("^%[Set%] copied profile '.-' → 'Default'$") ~= nil, lines[1])
-    -- The kit's AceDB fires every callback with the CURRENT profile as its third argument; AceDB
-    -- proper passes OnProfileCopied the SOURCE. The handler's own contract, with a source:
+    -- Since kit revision 18 the kit's AceDB passes OnProfileCopied the SOURCE, as AceDB proper
+    -- does, so the line above reads 'Raid' → 'Default'; the pattern above does not pin the source.
+    -- The handler's own contract, called directly with a source:
     lines = capture(NS2)
     NS2.OnProfileCopied("Raid")
     assertEqual(lines[1], "[Set] copied profile 'Raid' → 'Default'")
