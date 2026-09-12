@@ -48,7 +48,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups (`modules/Style.lua:26`) |
-| LibKa0s v1.29.0 | Eight modules wired, one setup file each — table below |
+| LibKa0s v1.30.0 | Eight modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -303,8 +303,8 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 
 Every `.md` under `docs/` appears in exactly one table below (documentation-§3). Frozen and
 generated directories are named once and never enumerated: `docs/audits/`, `docs/reviews/`,
-`docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/superpowers/`,
-`docs/investigations/`.
+`docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/revendor/<date>/`,
+`docs/superpowers/`, `docs/investigations/`.
 
 ### Required (documentation-§3, Tier 1)
 
