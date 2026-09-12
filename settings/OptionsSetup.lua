@@ -49,6 +49,11 @@ local descriptor = {
         local db = NS.db
         if db and db.ResetProfile then db:ResetProfile() end
     end,
+    -- The bulk bracket (LibKa0s-Options minor 16, debug-logging-§10), paired as the contract asks:
+    -- RestoreDefaults and RestoreAllDefaults write through the seam muted, and settings/Schema.lua
+    -- logs the act once. A Reset all is logged by NS.OnProfileReset alone.
+    bulkBegin = function(...) NS.Bulk.Begin(...) end,
+    bulkEnd   = function(...) NS.Bulk.End(...) end,
 
     scheduleTimer = function(fn, delay) return NS.addon:ScheduleTimer(fn, delay) end,
     getLSM        = function() return LibStub("LibSharedMedia-3.0", true) end,
@@ -156,12 +161,18 @@ if not lib then
 
     -- Kept although it is reached at call time: `/am resetall` is a recovery path, and the player
     -- whose panel will not open is the one who needs it.
+    -- One bulk act, like the library's: the session rows are written muted, and the profile reset
+    -- is logged once, by NS.OnProfileReset (debug-logging-§10).
     Helpers.RestoreAllDefaults = function()
-        for _, row in ipairs(NS.Schema or {}) do
-            if not vetoedFromResetAll(row) then NS.ApplyDefault(row) end
-        end
-        local db = NS.db
-        if db and db.ResetProfile then db:ResetProfile() end
+        NS.Bulk.Run("reset", "all", function()
+            for _, row in ipairs(NS.Schema or {}) do
+                if not vetoedFromResetAll(row) then NS.ApplyDefault(row) end
+            end
+            local db = NS.db
+            if not (db and db.ResetProfile) then return false end
+            db:ResetProfile()
+            return true
+        end)
     end
 
     -- Reached only from a builder, a render or a user action, so a no-op is the honest answer.

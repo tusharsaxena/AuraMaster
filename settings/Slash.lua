@@ -344,6 +344,10 @@ cli = SlashLib:New({
     applyDefault = function(row) NS.ApplyDefault(row) end,
     allRows      = function() return NS.Schema end,
     groupKey     = function(row) return row.page end,
+    -- The same bulk pair the Options descriptor takes (LibKa0s-Slash minor 8): CliResetAll writes
+    -- through the seam muted and logs one `[Set] reset all: N rows` line (debug-logging-§10).
+    bulkBegin    = function(...) NS.Bulk.Begin(...) end,
+    bulkEnd      = function(...) NS.Bulk.End(...) end,
 
     colorDecode = function(c)
         if type(c) ~= "table" then c = {} end

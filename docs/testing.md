@@ -61,6 +61,12 @@ drawn frames — that is the smoke suite.
 
 Suites worth knowing by name:
 
+- **`tests/test_bulklog.lua`**: debug-logging-§10, act by act. A page's Defaults, Reset all (live
+  and degraded), `CliResetAll`, `CopyFrom` and `ResetPositions` each log one `[Set]` line whose N
+  counts only the rows that changed (a `-0` over a `0` is no change), and no per-row line. A profile
+  reset or copy logs one line, from its handler; the reset's carries no count. A nested bracket logs
+  once. An act an error stops logs its line once, marked ` (stopped by an error)`, counting the writes
+  it stored.
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
   `## Documentation map` agreeing with `docs/` in both directions, and every `file:line` citation in

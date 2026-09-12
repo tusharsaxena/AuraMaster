@@ -63,6 +63,7 @@ Kit.run{
         "test_style",
         "test_timedspells",
         "test_slash",
+        "test_bulklog",
         "test_optionssetup",
         "test_perf",
         "test_locale",
