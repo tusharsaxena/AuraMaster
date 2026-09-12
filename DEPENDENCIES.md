@@ -42,7 +42,7 @@ marked as such rather than listed as a requirement.
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
 | `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:136` probes `command -v lizard` |
-| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:184` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/test_vendor_sync.lua:36` (`git ls-files -s`), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
+| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:195` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua:64` (`git check-attr`), `tests/_kit/vendor_sync.lua:371` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:138` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:185` and `:200` (`sed`), `:200-203` (`grep`), `:277`, `:306`, `:322`, `:338` (`awk`), `:87` (`date`), `:351-356` (`find`, `wc`, `sort`), `:64` (`head`), `:305` (`tail`), `:67` (`tr`) |
 | POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:35` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua:357` (`listDir`, `ls -A`) |
 | POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, `lua tests/run.lua -j N` / `-j auto`; `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua:583` (`nproc` for `--jobs auto`), `:683` (`os.execute(":")`, the POSIX-shell probe), `:704` (shards backgrounded with `&` and joined with `wait`) |
@@ -82,14 +82,14 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 ### Optional: a sibling `../LibKa0s` checkout
 
 `tests/test_vendor_sync.lua` hands the comparison to the vendored `tests/_kit/vendor_sync.lua`, which
-reads the tag named in root `CLAUDE.md` (`v1.29.0`) out of a checkout at `../LibKa0s` and compares
+reads the tag named in root `CLAUDE.md` (`v1.30.0`) out of a checkout at `../LibKa0s` and compares
 `libs/LibKa0s/` and `tests/_kit/` against it. Without that checkout the case records a **skip with
 its reason**, not a pass and not a failure (testing-§11). Clone it if you touch `libs/`, re-vendor,
 or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.29.0   # verify: prints a commit
+git -C ../LibKa0s rev-parse --short v1.30.0   # verify: prints a commit
 ```
 
 ### Not dependencies of this repo

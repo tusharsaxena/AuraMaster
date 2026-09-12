@@ -11,7 +11,6 @@
 --   * The engine's enums, so Compat.HasAuraContainer answers true as it does on a 12.1 client.
 --   * C_Secrets, driven by `M.__aurasSecret`, so the defer-while-secret path is reachable.
 --   * The frame picker's cursor, buttons and focus stack.
---   * AceGUI:Release, which the base kit does not model; the chrome band releases its widgets.
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -164,64 +163,8 @@ return function()
     -- ── class colors (LibKa0s-Core's resolver reads RAID_CLASS_COLORS) ─────────────────────
     M.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }
 
-    -- ── AceGUI:Release ─────────────────────────────────────────────────────────────────────
-    -- The kit's factory never takes a widget back; the chrome block releases its own. Modeled on
-    -- the real one's observable effect plus a recorder, and reported upstream
-    -- (tusharsaxena/LibKa0s#27) rather than patched into the vendored kit.
-    local aceGUI = M.__libs["AceGUI-3.0"]
-    aceGUI.__released = {}
-    function aceGUI:Release(widget)
-        if not widget then return end
-        widget.__released = true
-        if widget.frame then widget.frame:Hide() end
-        self.__released[#self.__released + 1] = widget
-    end
-
-    -- ── AceConsole's Printf ────────────────────────────────────────────────────────────────
-    -- The LibKa0s v1.29.0 kit's NewAddon stamps Print but not Printf (tusharsaxena/LibKa0s#30);
-    -- delete on the re-vendor that adds it. The real AceConsole-3.0 Embed stamps both mixins, so
-    -- NS.Printf is clobbered exactly as NS.Print is, and core/AuraMaster.lua must reclaim both.
-    -- Mirrored as the real one behaves when called bare (`NS.Printf(fmt, …)`): the format string
-    -- lands in `self`, green with a trailing colon, and the rest are formatted without it.
-    local aceAddon = M.__libs["AceAddon-3.0"]
-    local kitNewAddon = aceAddon.NewAddon
-    aceAddon.NewAddon = function(lib, target, ...)
-        target = kitNewAddon(lib, target, ...)
-        target.Printf = function(selfOrFmt, ...)
-            local body = select("#", ...) > 0 and string.format(...) or ""
-            if DEFAULT_CHAT_FRAME then
-                DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99" .. tostring(selfOrFmt) .. "|r: " .. body)
-            end
-        end
-        return target
-    end
-
-    -- ── AceEvent's event half on an embed ──────────────────────────────────────────────────
-    -- The LibKa0s v1.29.0 kit's AceEvent Embed has no RegisterEvent (tusharsaxena/LibKa0s#29);
-    -- delete this on the re-vendor that adds it. The real Embed stamps RegisterEvent,
-    -- UnregisterEvent and UnregisterAllEvents on every target, and a module's own target from
-    -- NS.NewBusTarget() registers game events on it. Recorded rather than no-opped, so a test can
-    -- see what is registered right now and fire a handler as CallbackHandler would:
-    -- `handler(event, ...)`. Cleared in place, so a table a test captured stays the live one.
-    local aceEvent = M.__libs["AceEvent-3.0"]
-    local kitEmbed = aceEvent.Embed
-    aceEvent.Embed = function(lib, obj)
-        obj = kitEmbed(lib, obj)
-        obj.__events = {}
-        obj.RegisterEvent = function(self, event, handler)
-            self.__events[event] = handler or true
-            return self
-        end
-        obj.UnregisterEvent = function(self, event)
-            self.__events[event] = nil
-            return self
-        end
-        obj.UnregisterAllEvents = function(self)
-            for k in pairs(self.__events) do self.__events[k] = nil end
-            return self
-        end
-        return obj
-    end
+    -- AceGUI:Release, AceConsole's Printf and AceEvent's event half on an embed are the kit's
+    -- (kit revision 16, tusharsaxena/LibKa0s#27, #29, #30); this file once shimmed all three.
 
     -- ── _G ──────────────────────────────────────────────────────────────────────────────────
     -- The loader resolves a bare global against the mock first, but `_G.X` in addon code reads the

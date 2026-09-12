@@ -300,7 +300,7 @@ badge and any count quoted in the docs must agree with it.
 
 - libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
 - tests/_kit is the test kit that shipped with that release
-- vendor: the automated-test runner is recorded executable (100755)
+- the automated-test runner is recorded executable (100755)
 
 ### test_lintconfig.lua (5)
 
