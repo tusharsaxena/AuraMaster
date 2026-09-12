@@ -142,19 +142,35 @@ local function applySurfaces(am, b)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))
 end
 
---- Dress the name, time and stack texts, and show each one its settings leave on.
-local function applyTexts(am, b)
-    Style.ApplyText(am.name, b.name, am.bar, D.bars.name)
-    Style.ApplyText(am.time, b.time, am.bar, D.bars.time)
-    local stackHost = (b.icon ~= "NONE") and am.icon or am.bar
-    Style.ApplyText(am.stacks, b.stacks, stackHost, D.bars.stacks)
-    -- The name stops short of the time text rather than running under it.
-    if b.name and b.time and b.time.show ~= false then
-        am.name:SetPoint("RIGHT", am.time, "LEFT", -4, 0)
-    end
-    am.name:SetShown(b.name == nil or b.name.show ~= false)
-    am.time:SetShown(b.time == nil or b.time.show ~= false)
-    am.stacks:SetShown(b.stacks == nil or b.stacks.show ~= false)
+--- The width of the bar area: the element (`w` x `h`) minus the icon and its gap.
+local function barAreaWidth(b, w, h)
+    if b.icon == "NONE" then return w end
+    return w - iconSizeFor(b, h) - (tonumber(b.iconGap) or D.bars.iconGap)
+end
+
+--- Whether a text block leaves its text shown (a missing block does).
+local function textShown(t)
+    return t == nil or t.show ~= false
+end
+
+--- Dress the name, time and stack texts, each boxed to its host so its justification shows, and show
+--- each one its settings leave on.
+local function applyTexts(am, b, w, h)
+    local area = barAreaWidth(b, w, h)
+    local nameStops = b.name and b.time and textShown(b.name) and textShown(b.time)
+    Style.ApplyText(am.name, b.name, am.bar, D.bars.name, area)
+    -- While the name stops short of it, the time sizes to its own string: a time boxed across the bar
+    -- would put its left edge at the bar's start and leave the name no room.
+    Style.ApplyText(am.time, b.time, am.bar, D.bars.time, (not nameStops) and area or nil)
+    local onIcon = b.icon ~= "NONE"
+    Style.ApplyText(am.stacks, b.stacks, onIcon and am.icon or am.bar, D.bars.stacks,
+        onIcon and iconSizeFor(b, h) or area)
+    -- The name stops short of the time text rather than running under it; the second anchor
+    -- overrides the name's own box.
+    if nameStops then am.name:SetPoint("RIGHT", am.time, "LEFT", -4, 0) end
+    am.name:SetShown(textShown(b.name))
+    am.time:SetShown(textShown(b.time))
+    am.stacks:SetShown(textShown(b.stacks))
 end
 
 function Bars.Apply(frame, cfg, engine)
@@ -167,7 +183,7 @@ function Bars.Apply(frame, cfg, engine)
     applySurfaces(am, b)
     wireFill(am, b)
     am.spark:SetSize(tonumber(b.sparkWidth) or D.bars.sparkWidth, h * 2)
-    applyTexts(am, b)
+    applyTexts(am, b, w, h)
 
     am.pandemic:SetVertexColor(Style.Color(b.pandemicColor, false))
 
@@ -213,13 +229,6 @@ local function previewText(am, aura)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
 end
 
---- The width of the bar area: the element minus the icon and its gap.
-local function barAreaWidth(cfg, b)
-    local w, h = Style.ElementSize(cfg)
-    if b.icon == "NONE" then return w end
-    return w - iconSizeFor(b, h) - (tonumber(b.iconGap) or D.bars.iconGap)
-end
-
 --- Fill a PREVIEW element with placeholder values (modules/Preview.lua). The regions are ours, so
 --- this is ordinary drawing; the fraction stands in for what the engine's timer would show.
 function Bars.FillPreview(frame, aura, cfg)
@@ -235,7 +244,8 @@ function Bars.FillPreview(frame, aura, cfg)
     am.fill:ClearAllPoints()
     am.fill:SetPoint("TOP" .. side, am.bar, "TOP" .. side, 0, 0)
     am.fill:SetPoint("BOTTOM" .. side, am.bar, "BOTTOM" .. side, 0, 0)
-    am.fill:SetWidth(math.max(1, barAreaWidth(cfg, b) * frac))
+    local w, h = Style.ElementSize(cfg)
+    am.fill:SetWidth(math.max(1, barAreaWidth(b, w, h) * frac))
     local c = (b.colorMode == "dispel") and b.dispelColors and b.dispelColors.Magic
     if c then am.fill:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1) end
     am.spark:ClearAllPoints()

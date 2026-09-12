@@ -97,8 +97,9 @@ function Icons.Apply(frame, cfg, engine)
         borderSizeOf(ic), ic.borderColor, ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
 
-    Style.ApplyText(am.time, ic.time, frame, D.icons.time)
-    Style.ApplyText(am.stacks, ic.stacks, frame, D.icons.stacks)
+    -- Each text is boxed to the icon's width, so its justification shows.
+    Style.ApplyText(am.time, ic.time, frame, D.icons.time, w)
+    Style.ApplyText(am.stacks, ic.stacks, frame, D.icons.stacks, w)
     am.time:SetShown(ic.time == nil or ic.time.show ~= false)
     am.stacks:SetShown(ic.stacks == nil or ic.stacks.show ~= false)
 

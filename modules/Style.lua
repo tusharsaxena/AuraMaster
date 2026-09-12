@@ -87,10 +87,19 @@ end
 local FLAG_MAP = { NONE = "", OUTLINE = "OUTLINE", THICKOUTLINE = "THICKOUTLINE",
     MONOCHROME = "MONOCHROME", MONOCHROMEOUTLINE = "MONOCHROME,OUTLINE" }
 
+--- A text's width inside a box `boxWidth` wide, less its X offset so it stays inside its host; never
+--- under one pixel. No box answers 0: the font string sizes to its own string.
+local function textWidth(boxWidth, x)
+    if not boxWidth then return 0 end
+    return math.max(1, boxWidth - math.abs(x))
+end
+
 --- Apply one text block (the six canonical font leaves plus point / x / y / justify / show) to a
 --- FontString parented under `anchorTo`. `tdef` is the template's block for the same element, which
---- the size, point and justify fall back to.
-function Style.ApplyText(fs, t, anchorTo, tdef)
+--- the size, point and justify fall back to. `boxWidth` is the width the text may take (its host's):
+--- a single-anchor font string sized to its own string has nothing to justify within, so a text given
+--- a box is as wide as the box less its offset. A second anchor, set after this, overrides the width.
+function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
     if not (fs and t) then return end
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
@@ -105,7 +114,9 @@ function Style.ApplyText(fs, t, anchorTo, tdef)
     end
     fs:ClearAllPoints()
     local point = t.point or tdef.point
-    fs:SetPoint(point, anchorTo, point, tonumber(t.x) or 0, tonumber(t.y) or 0)
+    local x = tonumber(t.x) or 0
+    fs:SetPoint(point, anchorTo, point, x, tonumber(t.y) or 0)
+    fs:SetWidth(textWidth(boxWidth, x))
     fs:SetJustifyH(t.justify or tdef.justify)
     fs:SetWordWrap(false)
 end

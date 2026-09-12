@@ -137,6 +137,13 @@ test("icons: the time and stack texts are laid against the icon's frame and show
     assertFalse(am.stacks:IsShown())
 end)
 
+test("icons: the time and stack texts are boxed to the icon's width less their offsets", function()
+    local _, am = dressed(cfg({ icons = { width = 40, height = 20 } }))
+    -- red under: Icons.Apply handing the texts no box (their justification has nothing to align within)
+    assertEqual(am.time:__last("SetWidth")[1], 40, "time, at no offset")
+    assertEqual(am.stacks:__last("SetWidth")[1], 40 - 1, "stacks, 1px in")
+end)
+
 test("icons: a hidden text is never handed to the engine; a shown one is, as its own region", function()
     local frame = dressed(cfg({ icons = { time = { show = false }, stacks = { show = false } } }), true)
     -- red under: Icons.Bind binding the texts whatever their show setting

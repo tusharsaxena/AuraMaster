@@ -246,6 +246,25 @@ test("bars: the name and time are laid against the bar, in their configured corn
     assertTrue(am.time:__calls("SetPoint")[1][2] == am.bar)
 end)
 
+test("bars: each text is boxed to its host less its offset: the bar area, or the icon for the stacks on it", function()
+    -- The template's 220 x 18 element with a left icon of the bar's height and a 1px gap: a 201px bar area.
+    local _, am = dressed(cfg({ bars = { name = { show = false } } }))
+    -- red under: applyTexts handing the texts no box (their justification has nothing to align within)
+    assertEqual(am.time:__last("SetWidth")[1], 201 - 4, "time, with no name beside it")
+    assertEqual(am.stacks:__last("SetWidth")[1], 18 - 1, "stacks on the icon")
+    _, am = dressed(cfg({ bars = { icon = "NONE" } }))
+    -- red under: the stacks boxed to the icon when there is none and they sit on the bar
+    assertEqual(am.stacks:__last("SetWidth")[1], 220 - 1, "stacks on the bar")
+    assertEqual(am.name:__last("SetWidth")[1], 220 - 4, "name")
+end)
+
+test("bars: the time sizes to its own text while the name stops short of it, so the name keeps its room", function()
+    local _, am = dressed(cfg())
+    -- red under: a time text boxed across the bar area (the name's stop lands at the bar's start)
+    assertEqual(am.time:__last("SetWidth")[1], 0)
+    assertEqual(am.name:__last("SetWidth")[1], 201 - 4, "the name's own box, which its second anchor overrides")
+end)
+
 -- ── engine bindings ───────────────────────────────────────────────────────────────────────────
 
 test("bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on", function()
