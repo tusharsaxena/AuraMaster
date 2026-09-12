@@ -148,6 +148,16 @@ function Style.Bind(frame, method, ...)
     return ok
 end
 
+--- Empty the engine's two ADDITIVE binding lists (AddDispelTypeTexture and AddPandemicRegion append,
+--- so a restyle that re-added them would stack a second tint and a second highlight). Called FIRST in
+--- a live dress, before any other binding: every Set* / Add* binding re-runs the engine's whole apply
+--- pass, which re-tints whatever dispel texture is still listed, while the Clear itself restores
+--- nothing (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q1, B-4).
+function Style.ClearAdditiveBindings(frame)
+    Style.Bind(frame, "ClearDispelTypeTextures")
+    Style.Bind(frame, "ClearPandemicRegions")
+end
+
 -- ---------------------------------------------------------------------------
 -- Built once per look
 -- ---------------------------------------------------------------------------

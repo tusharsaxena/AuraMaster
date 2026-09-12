@@ -319,6 +319,57 @@ test("bars: dispel coloring tints the fill through the engine with the stored di
     assertEqual(frame:__count("ClearDispelTypeTextures"), 1, "and an earlier tint is cleared")
 end)
 
+-- ── Color by: dispel type lets go (B-4) ──────────────────────────────────────────────────────────
+
+local engineButton = dofile("tests/engine_recorder.lua")
+local MAGIC = { 0.2, 0.4, 1, 1 }   -- the engine's dispel tint, a color no swatch below uses
+
+--- Dress ONE live bar button for each colorMode in `modes`, in turn, the button answering like the
+--- client's (tests/engine_recorder.lua; `aura` false: a pooled button holding no aura). Every log is
+--- emptied before the last dress, so the logs hold that dress alone.
+local function toggled(modes, aura)
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+        { bars = { barColor = { r = 0.9, g = 0.5, b = 0.1, a = 1 }, useClassColorBar = false } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    engineButton(frame, { tint = MAGIC, aura = aura })
+    local last = #modes
+    for i, mode in ipairs(modes) do
+        if i == last then
+            frame.__log = {}
+            for _, r in pairs(frame.__am) do r.__log = {} end
+        end
+        c.bars.colorMode = mode
+        NS2.Style.Element(frame, c, true)
+    end
+    return frame, frame.__am, table.concat({ NS2.Style.Color(c.bars.barColor, false) }, ",")
+end
+
+test("bars: switching Color by from dispel type back to static paints the bar's own color again", function()
+    local frame, am, barColor = toggled({ "static", "dispel", "static" }, true)
+    -- red under: Bars.Bind clearing the dispel texture after SetDurationBar, whose apply pass re-tints the fill
+    assertEqual(am.fill:__joined("SetVertexColor"), barColor, "the static color is the last word")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < am.fill:__lastSeq("SetVertexColor"),
+        "the tint is cleared before the fill is painted")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < frame:__lastSeq("SetDurationBar"),
+        "and before any binding can run a pass over it")
+    assertTrue(am.fill:IsShown(), "the fill shows")
+end)
+
+test("bars: back to static on a button holding no aura, the fill the engine hid shows again", function()
+    local _, am = toggled({ "static", "dispel", "static" }, false)
+    -- red under: applySurfaces never showing the fill (the engine's no-aura pass hid it, and Clear restores nothing)
+    assertTrue(am.fill:IsShown())
+end)
+
+test("bars: in dispel mode the engine's tint stays the fill's last color", function()
+    local _, am = toggled({ "static", "dispel" }, true)
+    -- red under: repainting the static color after the bindings (the dispel tint then never shows)
+    assertEqual(am.fill:__joined("SetVertexColor"), table.concat(MAGIC, ","))
+end)
+
 test("bars: the refresh-window highlight is bound only when turned on, and always cleared first", function()
     local frame, am = dressed(cfg({ bars = { pandemic = true } }), true)
     assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic)

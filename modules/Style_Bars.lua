@@ -124,12 +124,27 @@ local function wireFill(am, b)
     end
 end
 
+--- Paint the fill and show it. A live dispel-colored fill takes the bar color here and the engine's
+--- tint over it; a PREVIEW dispel-colored fill stands in with the Magic color, since no placeholder
+--- names a type. The tint is part of the dress, so a later static dress is never left tinted. The fill
+--- is shown every dress: the engine's no-aura pass hides a dispel texture, and clearing the binding
+--- does not show it again.
+local function paintFill(am, b, preview)
+    am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
+    local m = preview and b.colorMode == "dispel" and b.dispelColors and b.dispelColors.Magic
+    if m then
+        am.fill:SetVertexColor(m.r or 1, m.g or 1, m.b or 1, 1)
+    else
+        am.fill:SetVertexColor(Style.Color(b.barColor, b.useClassColorBar))
+    end
+    am.fill:SetAlpha(tonumber(b.barAlpha) or D.bars.barAlpha)
+    am.fill:Show()
+end
+
 --- Paint the surfaces: the fill, the background, the border and the spark. Each surface's opacity
 --- multiplies onto its color's own alpha, so a color's alpha still applies.
-local function applySurfaces(am, b)
-    am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
-    am.fill:SetVertexColor(Style.Color(b.barColor, b.useClassColorBar))
-    am.fill:SetAlpha(tonumber(b.barAlpha) or D.bars.barAlpha)
+local function applySurfaces(am, b, preview)
+    paintFill(am, b, preview)
 
     am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
     am.bg:SetVertexColor(Style.Color(b.bgColor, b.useClassColorBg))
@@ -177,10 +192,13 @@ function Bars.Apply(frame, cfg, engine)
     local b = cfg.bars or {}
     local w, h = Style.ElementSize(cfg)
     local am = Style.RegionsFor(frame, "bars", build)
+    -- Before anything is painted or bound: a binding run with a stale dispel texture still listed
+    -- would re-tint the fill after the static color (B-4).
+    if engine then Style.ClearAdditiveBindings(frame) end
 
     frame:SetSize(w, h)
     layout(frame, am, b, h)
-    applySurfaces(am, b)
+    applySurfaces(am, b, not engine)
     wireFill(am, b)
     am.spark:SetSize(tonumber(b.sparkWidth) or D.bars.sparkWidth, h * 2)
     applyTexts(am, b, w, h)
@@ -192,9 +210,8 @@ function Bars.Apply(frame, cfg, engine)
     end
 end
 
---- Hand the regions to the engine. Every call is guarded (Style.Bind), and the two ADDITIVE bindings
---- are cleared first: AddDispelTypeTexture and AddPandemicRegion append, so a restyle that re-added
---- them would stack a second tint and a second highlight on every settings change.
+--- Hand the regions to the engine. Every call is guarded (Style.Bind). The two ADDITIVE bindings only
+--- add here: Bars.Apply has already cleared them, before any binding (Style.ClearAdditiveBindings).
 function Bars.Bind(frame, am, cfg, b)
     local Compat = NS.Compat
     Style.Bind(frame, "SetDurationBar", am.bar, {
@@ -206,7 +223,6 @@ function Bars.Bind(frame, am, cfg, b)
     if b.time == nil or b.time.show ~= false then Style.BindDurationText(frame, am.time, b, D.bars) end
     if b.stacks == nil or b.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
-    Style.Bind(frame, "ClearDispelTypeTextures")
     if b.colorMode == "dispel" then
         Style.Bind(frame, "AddDispelTypeTexture", am.fill, {
             showAlways = true, showWithoutDispelType = true,
@@ -214,8 +230,6 @@ function Bars.Bind(frame, am, cfg, b)
             customDispelColorMap = Style.DispelColorMap(b.dispelColors),
         })
     end
-
-    Style.Bind(frame, "ClearPandemicRegions")
     if b.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end
 
     Style.ApplyBehavior(frame, cfg)
@@ -246,8 +260,6 @@ function Bars.FillPreview(frame, aura, cfg)
     am.fill:SetPoint("BOTTOM" .. side, am.bar, "BOTTOM" .. side, 0, 0)
     local w, h = Style.ElementSize(cfg)
     am.fill:SetWidth(math.max(1, barAreaWidth(b, w, h) * frac))
-    local c = (b.colorMode == "dispel") and b.dispelColors and b.dispelColors.Magic
-    if c then am.fill:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1) end
     am.spark:ClearAllPoints()
     am.spark:SetPoint("CENTER", am.fill, fromRight and "LEFT" or "RIGHT", 0, 0)
 end

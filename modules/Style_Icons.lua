@@ -90,6 +90,9 @@ function Icons.Apply(frame, cfg, engine)
     local ic = cfg.icons or {}
     local w, h = Style.ElementSize(cfg)
     local am = Style.RegionsFor(frame, "icons", build)
+    -- Before anything is hidden or bound: a binding run with a stale dispel texture still listed
+    -- would show the dispel border again after the hide below (B-4).
+    if engine then Style.ClearAdditiveBindings(frame) end
 
     frame:SetSize(w, h)
     layoutIcon(am, frame, ic, w, h)
@@ -111,8 +114,9 @@ function Icons.Apply(frame, cfg, engine)
     end
 end
 
---- Hand the regions to the engine. The two ADDITIVE bindings are cleared first so a restyle does not
---- stack a second border or highlight (see modules/Style_Bars.lua's Bind).
+--- Hand the regions to the engine. The two ADDITIVE bindings only add here: Icons.Apply has already
+--- cleared them, before any binding, so a restyle neither stacks a second border or highlight nor
+--- lets a binding's apply pass show a border just turned off (Style.ClearAdditiveBindings).
 function Icons.Bind(frame, am, cfg, ic)
     local Compat = NS.Compat
     Style.Bind(frame, "SetIcon", am.icon)
@@ -120,15 +124,12 @@ function Icons.Bind(frame, am, cfg, ic)
     if ic.time == nil or ic.time.show ~= false then Style.BindDurationText(frame, am.time, ic, D.icons) end
     if ic.stacks == nil or ic.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
-    Style.Bind(frame, "ClearDispelTypeTextures")
     if Style.OrTemplate(ic.dispelBorder, D.icons.dispelBorder) then
         Style.Bind(frame, "AddDispelTypeTexture", am.dispel, {
             showWhenHarmful = true, showWhenHelpful = false,
             style = Compat.DispelStyle("Border"),
         })
     end
-
-    Style.Bind(frame, "ClearPandemicRegions")
     if ic.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end
 
     Style.ApplyBehavior(frame, cfg)

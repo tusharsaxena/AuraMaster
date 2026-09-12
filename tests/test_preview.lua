@@ -179,6 +179,32 @@ test("preview: a missing layout block grows down and right from the top left wit
     assertEqual(x, D.icons.width); assertEqual(y, 0)
 end)
 
+test("preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)", function()
+    local c = cfg({ style = "bars", bars = { colorMode = "dispel", useClassColorBar = false,
+        barColor = { r = 0.9, g = 0.5, b = 0.1, a = 1 } } })
+    local k = container(c)
+    NS.Preview.Show(k)
+    for _, f in ipairs(k.frames) do
+        for key in pairs(f.__am) do f.__am[key] = R() end
+    end
+    local function fills()
+        local out = {}
+        for i, f in ipairs(k.previewPools.bars.active) do out[i] = f.__am.fill:__joined("SetVertexColor") end
+        return out
+    end
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local m = c.bars.dispelColors.Magic
+    local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
+    for i, got in ipairs(fills()) do assertEqual(got, magic, "dispel: placeholder " .. i .. " stands in with Magic") end
+    c.bars.colorMode = "static"
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local own = table.concat({ NS.Style.Color(c.bars.barColor, false) }, ",")
+    -- red under: the dress painting the Magic stand-in whatever the colorMode
+    for i, got in ipairs(fills()) do assertEqual(got, own, "static: placeholder " .. i .. " paints the bar color") end
+end)
+
 -- ── a style switch while previewing (C-4) ───────────────────────────────────────────────────────
 
 --- Switch container `id`'s style while unlocked and flush the apply, returning whether it raised.

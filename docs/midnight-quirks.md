@@ -123,8 +123,14 @@ TinyBuffBars' (MIT).
 
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
-**What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
-before adding again (`modules/Style_Bars.lua:209-219`, `modules/Style_Icons.lua:123-132`).
+**What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:156`), and then adds again
+(`modules/Style_Bars.lua:197`, `modules/Style_Icons.lua:95`). The order matters: every `Set*` /
+`Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
+texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
+the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
+reason the dress shows the bar's fill every time: the engine's pass on a button holding no aura
+hides it, and clearing does not show it again.
 
 ## The engine does not notice a unit token changing
 

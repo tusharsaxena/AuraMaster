@@ -183,6 +183,25 @@ test("icons: the dispel border turned off is hidden and never bound", function()
     assertEqual(frame:__count("ClearDispelTypeTextures"), 1, "an earlier binding is cleared")
 end)
 
+test("icons: turning the dispel border off on a live button keeps it hidden (B-4)", function()
+    local NS2 = fresh({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+    end })
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+        icons = { dispelBorder = true } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    dofile("tests/engine_recorder.lua")(frame, { tint = { 1, 1, 1, 1 }, aura = true })
+    NS2.Style.Element(frame, c, true)
+    assertTrue(frame.__am.dispel:IsShown(), "on: the engine shows it")
+    c.icons.dispelBorder = false
+    NS2.Style.Element(frame, c, true)
+    -- red under: Icons.Bind clearing the dispel texture after SetIcon, whose apply pass shows it again
+    assertFalse(frame.__am.dispel:IsShown())
+end)
+
 test("icons: the refresh-window highlight is bound only when on, in the pandemic color", function()
     local frame, am = dressed(cfg({ icons = { pandemic = true, pandemicColor = { r = 1, g = 0, b = 1, a = 0.5 } } }), true)
     assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic)
