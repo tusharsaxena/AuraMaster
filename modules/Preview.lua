@@ -55,26 +55,53 @@ local function factory(parent)
     end
 end
 
---- Draw the placeholders for one container. They are dressed again only when they were hidden in
---- between or the container's settings were applied since the last dress (`previewDirty`, set by
---- ContainerClass:Apply): a visibility pass alone leaves them as they are.
-function Preview.Show(container)
-    local cfg = container:Cfg()
-    if not cfg then return end
-    if container.previewShown and not container.previewDirty then return end
-    local pool = container.previewPool
+--- Park every placeholder of every style's pool.
+local function releaseAll(pools)
+    for _, pool in pairs(pools) do NS.Pool.ReleaseAll(pool) end
+end
+
+--- `style`'s pool for `container`, created on demand, after parking every style's placeholders.
+local function poolFor(container, style)
+    local pools = container.previewPools
+    if not pools then
+        pools = {}
+        container.previewPools = pools
+    end
+    releaseAll(pools)
+    local pool = pools[style]
     if not pool then
         pool = NS.Pool.New()
-        container.previewPool = pool
+        pools[style] = pool
     end
-    NS.Pool.ReleaseAll(pool)
+    return pool
+end
 
+--- How many placeholders `cfg` shows: every placeholder aura, under the per-group cap, and at most
+--- two (main hand and off hand) for a weapon-enchant container.
+local function placeholderCount(cfg)
     local count = #C.PREVIEW_AURAS
     local cap = tonumber(cfg.filter and cfg.filter.maxAuras) or 0
     if cap > 0 and cap < count then count = cap end
     if cfg.auraType == "ENCHANT" then count = math.min(count, 2) end
+    return count
+end
 
-    local styler = (cfg.style == "icons") and NS.Style.Icons or NS.Style.Bars
+--- Draw the placeholders for one container. They are dressed again only when they were hidden in
+--- between or the container's settings were applied since the last dress (`previewDirty`, set by
+--- ContainerClass:Apply): a visibility pass alone leaves them as they are.
+---
+--- ONE POOL PER STYLE (`container.previewPools[style]`, C-4): a placeholder built as a bar is never
+--- handed out again as an icon, so a style switch cannot re-dress a frame with the other style's
+--- regions (Style.RegionsFor is the element-level guard). Every pool is released before acquiring,
+--- so a switch leaves none of the old style's placeholders drawn.
+function Preview.Show(container)
+    local cfg = container:Cfg()
+    if not cfg then return end
+    if container.previewShown and not container.previewDirty then return end
+    local style = (cfg.style == "icons") and "icons" or "bars"
+    local pool = poolFor(container, style)
+    local count = placeholderCount(cfg)
+    local styler = (style == "icons") and NS.Style.Icons or NS.Style.Bars
     local make = container.previewFactory or factory(container.anchor)
     container.previewFactory = make
     for i = 1, count do
@@ -88,8 +115,8 @@ function Preview.Show(container)
     container.previewShown, container.previewDirty = true, false
 end
 
---- Remove one container's placeholders.
+--- Remove one container's placeholders, of every style.
 function Preview.Hide(container)
-    if container.previewPool then NS.Pool.ReleaseAll(container.previewPool) end
+    if container.previewPools then releaseAll(container.previewPools) end
     container.previewShown = false
 end

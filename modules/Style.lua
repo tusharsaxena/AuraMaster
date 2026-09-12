@@ -222,6 +222,57 @@ function Style.ElementSize(cfg)
     return tonumber(b.width) or D.bars.width, tonumber(b.height) or D.bars.height
 end
 
+--- Hide `am`'s regions and remember which were shown, so a return to that style draws them as they
+--- were (the pandemic wash, say, stays hidden). Never the host itself: the harness's textures ARE the
+--- frame, and a region that was the host would hide the whole element.
+local function stashRegions(frame, am)
+    local was = {}
+    for _, v in pairs(am) do
+        if v ~= frame and type(v) == "table" and v.Hide then
+            was[v] = v:IsShown() and true or false
+            v:Hide()
+        end
+    end
+    frame.__amShown = frame.__amShown or {}
+    frame.__amShown[am] = was
+end
+
+--- Put back the visibility stashRegions recorded for `am`.
+local function restoreRegions(frame, am)
+    local was = frame.__amShown and frame.__amShown[am]
+    if not was then return end
+    for region, shown in pairs(was) do region:SetShown(shown) end
+    frame.__amShown[am] = nil
+end
+
+--- The regions `frame` carries for `style` ("bars" | "icons"), building them when absent or built
+--- for the other style (C-4: a button restyled from bars to icons must not be dressed with a bar's
+--- regions, which have no cooldown). The other style's regions are hidden, never destroyed: frames
+--- are never freed in WoW, so a switch back finds and re-shows them. Identity is `__amByStyle`, the
+--- per-frame map of the tables built so far; `am.style` is the tag each build sets.
+function Style.RegionsFor(frame, style, build)
+    local byStyle = frame.__amByStyle
+    if not byStyle then
+        byStyle = {}
+        frame.__amByStyle = byStyle
+    end
+    local am = frame.__am
+    if am and (byStyle[style] == am or am.style == style) then
+        byStyle[style] = am
+        return am
+    end
+    if am then stashRegions(frame, am) end
+    am = byStyle[style]
+    if am then
+        frame.__am = am
+        restoreRegions(frame, am)
+        return am
+    end
+    am = build(frame)
+    byStyle[style] = am
+    return am
+end
+
 -- The dress in progress, handed to runDress through upvalues: Lua 5.1's xpcall passes no arguments
 -- to the function it calls, and a closure per dress would allocate on every button.
 local dressStyler, dressFrame, dressCfg, dressEngine

@@ -25,10 +25,12 @@ Style.Bars = Style.Bars or {}
 local Bars = Style.Bars
 
 --- Build the regions once. Every region is a DESCENDANT of the button — the engine rejects anything
---- else — and each lives on `frame.__am`, a table of ours on the button.
+--- else — and each lives on `frame.__am`, a table of ours on the button, tagged with the style that
+--- built it (Style.RegionsFor).
 local function build(frame)
     local am = {}
     frame.__am = am
+    am.style = "bars"
 
     am.border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     am.border:SetAllPoints(frame)
@@ -158,7 +160,7 @@ end
 function Bars.Apply(frame, cfg, engine)
     local b = cfg.bars or {}
     local w, h = Style.ElementSize(cfg)
-    local am = frame.__am or build(frame)
+    local am = Style.RegionsFor(frame, "bars", build)
 
     frame:SetSize(w, h)
     layout(frame, am, b, h)

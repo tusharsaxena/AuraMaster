@@ -20,6 +20,7 @@ local Icons = Style.Icons
 local function build(frame)
     local am = {}
     frame.__am = am
+    am.style = "icons"   -- the tag Style.RegionsFor reads
 
     am.icon = frame:CreateTexture(nil, "ARTWORK")
 
@@ -88,7 +89,7 @@ end
 function Icons.Apply(frame, cfg, engine)
     local ic = cfg.icons or {}
     local w, h = Style.ElementSize(cfg)
-    local am = frame.__am or build(frame)
+    local am = Style.RegionsFor(frame, "icons", build)
 
     frame:SetSize(w, h)
     layoutIcon(am, frame, ic, w, h)

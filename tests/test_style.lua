@@ -763,3 +763,48 @@ test("style: a style leaf left nil draws the template's value, never a literal o
     assertEqual(frame:__last("SetCancelAuraButtons")[1], D.behavior.cancelOnRightClick and "RightButtonUp" or nil,
         "behavior: right-click cancel")
 end)
+
+-- ── one element, two styles (C-4) ───────────────────────────────────────────────────────────────
+
+test("style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's", function()
+    local frame = R()
+    local c = cfg()
+    c.style = "bars"
+    NS.Style.Element(frame, c, false)
+    local bars = frame.__am
+    assertEqual(bars.style, "bars", "tagged with the style that built it")
+    for k, v in pairs(bars) do if type(v) == "table" then bars[k] = R() end end
+    bars.icon:Show(); bars.pandemic:Hide()
+    c.style = "icons"
+    local ok, err = pcall(NS.Style.Element, frame, c, false)
+    -- red under: Icons.Apply reusing the bar's __am (it has no cd)
+    assertTrue(ok, tostring(err))
+    local icons = frame.__am
+    assertTrue(icons ~= bars, "icon regions of its own")
+    assertEqual(icons.style, "icons")
+    assertTrue(icons.cd ~= nil)
+    -- red under: RegionsFor leaving the other style's regions drawn under the new ones
+    for k, v in pairs(bars) do
+        if type(v) == "table" then assertTrue(not v:IsShown(), "the bar's " .. k .. " is hidden") end
+    end
+    c.style = "bars"
+    NS.Style.Element(frame, c, false)
+    -- red under: RegionsFor building a second set of bar regions (a frame is never freed)
+    assertTrue(frame.__am == bars, "the bar's own regions again")
+    assertTrue(bars.icon:IsShown(), "shown again as it was")
+    -- red under: re-showing every region (the pandemic wash drawn on a bar that is not in its window)
+    assertTrue(not bars.pandemic:IsShown(), "the pandemic wash stays as it was: hidden")
+end)
+
+test("style: hiding the other style's regions never hides the element itself", function()
+    local frame = mocks.__stubFrame()
+    frame:Show()
+    local c = cfg()
+    c.style = "bars"
+    NS.Style.Element(frame, c, false)
+    c.style = "icons"
+    NS.Style.Element(frame, c, false)
+    -- red under: HideRegions hiding a region that is the host (the kit's textures ARE the frame;
+    -- a region handed the host in-game would hide the whole button)
+    assertTrue(frame:IsShown(), "the element still draws")
+end)

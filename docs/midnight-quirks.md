@@ -54,7 +54,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
 - **Creates every region as a descendant of the button**, once, in `initializeFrame`, stored on
-  `frame.__am` (`modules/Style_Bars.lua:31`, `modules/Style_Icons.lua:22`).
+  `frame.__am` (`modules/Style_Bars.lua:32`, `modules/Style_Icons.lua:22`).
 - **Guards every binding** with `pcall` (`Style.Bind`, `callEngine`), so a refusal costs one binding,
   not the engine's frame batch.
 
@@ -116,7 +116,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:106`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:108`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Additive bindings stack
@@ -124,7 +124,7 @@ TinyBuffBars' (MIT).
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
-before adding again (`modules/Style_Bars.lua:191-201`, `modules/Style_Icons.lua:121-130`).
+before adding again (`modules/Style_Bars.lua:193-203`, `modules/Style_Icons.lua:122-131`).
 
 ## The engine does not notice a unit token changing
 

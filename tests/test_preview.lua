@@ -28,7 +28,7 @@ local function container(c)
 end
 
 local function active(k)
-    local _, n = NS.Pool.Counts(k.previewPool)
+    local _, n = NS.Pool.Counts(k.previewPools.bars)
     return n
 end
 
@@ -39,7 +39,7 @@ test("preview: every placeholder aura is drawn, each where Preview.Offset puts i
     local count = #NS.Constants.PREVIEW_AURAS
     assertEqual(active(k), count)
     for i = 1, count do
-        local f = k.previewPool.active[i]
+        local f = k.previewPools.bars.active[i]
         local p = f:__last("SetPoint")
         local point, x, y = NS.Preview.Offset(c, i)
         -- red under: Preview.Show placing every element at the anchor's corner
@@ -89,11 +89,11 @@ test("preview: a lower cap hides the extra placeholders rather than leaving them
     c.filter.maxAuras = 2
     k.previewDirty = true
     NS.Preview.Show(k)
-    local free, used = NS.Pool.Counts(k.previewPool)
+    local free, used = NS.Pool.Counts(k.previewPools.bars)
     assertEqual(used, 2)
     assertEqual(free, #NS.Constants.PREVIEW_AURAS - 2)
     -- red under: Preview.Show acquiring without releasing the last dress's elements first
-    for _, f in ipairs(k.previewPool.free) do assertFalse(f:IsShown(), "a released placeholder still draws") end
+    for _, f in ipairs(k.previewPools.bars.free) do assertFalse(f:IsShown(), "a released placeholder still draws") end
 end)
 
 test("preview: Hide releases every placeholder, and the next Show dresses them again", function()
@@ -144,14 +144,14 @@ test("preview: /am test shows placeholders on a locked addon, with the engine of
     assertTrue(NS2.db.profile.locked, "locked by default")
     local inst = CM.instances[1]
     CM.SetPreview(true)
-    local _, n = NS2.Pool.Counts(inst.previewPool)
+    local _, n = NS2.Pool.Counts(inst.previewPools.bars)
     -- red under: ShouldShow reading only the lock for previewing
     assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
     assertFalse(inst.engine.__enabled, "real auras do not draw over the placeholders")
     -- red under: ApplyVisibility showing the handle for a preview on a locked addon
     assertFalse(inst.handle:IsShown(), "a locked addon has nothing to drag")
     CM.SetPreview(false)
-    _, n = NS2.Pool.Counts(inst.previewPool)
+    _, n = NS2.Pool.Counts(inst.previewPools.bars)
     assertEqual(n, 0)
     assertTrue(inst.engine.__enabled, "the engine is back")
 end)
@@ -177,4 +177,82 @@ test("preview: a missing layout block grows down and right from the top left wit
     -- red under: Offset indexing cfg.layout without its `or {}`
     assertEqual(point, "TOPLEFT")
     assertEqual(x, D.icons.width); assertEqual(y, 0)
+end)
+
+-- ── a style switch while previewing (C-4) ───────────────────────────────────────────────────────
+
+--- Switch container `id`'s style while unlocked and flush the apply, returning whether it raised.
+local function switchStyle(NS2, mocks, id, style)
+    NS2.SetByPath("container.style", style, id)
+    return pcall(mocks.__fireTimers)
+end
+
+test("preview: switching a previewed container from bars to icons re-dresses without error", function()
+    local NS2, mocks = fresh()
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local inst = NS2.ContainerManager.instances[1]       -- Player buffs, bars
+    assertTrue(inst.previewShown)
+    local ok, err = switchStyle(NS2, mocks, 1, "icons")
+    -- red under: reusing a bars-built __am for icons (Style_Icons.lua 'attempt to index cd')
+    assertTrue(ok, tostring(err))
+    assertTrue(inst.previewShown, "the preview re-drew as icons")
+    local _, n = NS2.Pool.Counts(inst.previewPools.icons)
+    assertEqual(n, #NS2.Constants.PREVIEW_AURAS, "every placeholder drawn as an icon")
+end)
+
+test("preview: switching a previewed container from icons to bars re-dresses without error", function()
+    local NS2, mocks = fresh()
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local inst = NS2.ContainerManager.instances[2]       -- Player debuffs, icons
+    assertTrue(inst.previewShown)
+    local ok, err = switchStyle(NS2, mocks, 2, "bars")
+    -- red under: reusing an icons-built __am for bars (no bar, fill or spark on it)
+    assertTrue(ok, tostring(err))
+    assertTrue(inst.previewShown, "the preview re-drew as bars")
+    local _, n = NS2.Pool.Counts(inst.previewPools.bars)
+    assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
+end)
+
+test("preview: a bar container duplicated while unlocked, then switched to icons, re-dresses (the owner's steps)", function()
+    local NS2, mocks = fresh()
+    local CM = NS2.ContainerManager
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local id = CM.Duplicate(1)
+    mocks.__fireTimers()
+    local copy
+    for _, inst in ipairs(CM.instances) do
+        if inst.id == id then copy = inst end
+    end
+    assertTrue(copy ~= nil and copy.previewShown, "the copy previews as bars")
+    local ok, err = switchStyle(NS2, mocks, id, "icons")
+    -- red under: a pooled bar placeholder re-dressed as an icon with the bar's regions
+    assertTrue(ok, tostring(err))
+    assertTrue(copy.previewShown, "the copy re-drew as icons")
+end)
+
+test("preview: each style keeps its own pool, and a switch parks the other style's placeholders", function()
+    local c = cfg({ style = "bars" })
+    local k = container(c)
+    NS.Preview.Show(k)
+    local count = #NS.Constants.PREVIEW_AURAS
+    local bars = {}
+    for i, f in ipairs(k.previewPools.bars.active) do bars[i] = f end
+    c.style = "icons"
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local free, used = NS.Pool.Counts(k.previewPools.bars)
+    -- red under: one pool shared by both styles (a bar placeholder re-dressed as an icon)
+    assertEqual(used, 0, "no bar placeholder is still drawn")
+    assertEqual(free, count)
+    for i, f in ipairs(k.previewPools.icons.active) do
+        for _, b in ipairs(bars) do assertFalse(f == b, "icon " .. i .. " is not a bar's frame") end
+    end
+    assertEqual(k.built, 2 * count, "one set of frames per style")
+    NS.Preview.Hide(k)
+    local _, iconsUsed = NS.Pool.Counts(k.previewPools.icons)
+    -- red under: Preview.Hide releasing only the current style's pool
+    assertEqual(iconsUsed, 0)
 end)

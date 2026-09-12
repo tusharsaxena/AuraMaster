@@ -5,7 +5,7 @@ local _, NS = ...
 -- The pool serves the preview's placeholder elements (modules/Preview.lua is its only caller); the
 -- live aura buttons are the Blizzard engine's own and never come from here. Each preview dress
 -- re-acquires its placeholders, and WoW never frees a frame once created, so a preview that made
--- fresh frames on every dress would leak. So each container keeps an ARRAY-shaped pool (the
+-- fresh frames on every dress would leak. So each container keeps an ARRAY-shaped pool per style (the
 -- library's `{ free, active }`), acquires one placeholder per slot on a dress and releases them all
 -- before the next. The keyed shape is not used here: placeholders are positional, not identified.
 --
