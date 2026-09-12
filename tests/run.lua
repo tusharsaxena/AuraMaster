@@ -64,6 +64,7 @@ Kit.run{
         "test_style",
         "test_timedspells",
         "test_slash",
+        "test_slash_verbs",
         "test_bulklog",
         "test_optionssetup",
         "test_perf",
