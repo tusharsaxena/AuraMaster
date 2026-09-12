@@ -68,3 +68,70 @@ test("locale: every key enUS.lua defines is used somewhere in the source", funct
     table.sort(dead)
     assertEqual(#dead, 0, "defined but never used: " .. table.concat(dead, "; "))
 end)
+
+--- Every `L[...] = ...` line of enUS.lua as { key, value, line }; `value` is nil where the right-hand
+--- side is not one plain string literal.
+local function definitions()
+    local out, n = {}, 0
+    for line in readFile("locales/enUS.lua"):gmatch("[^\n]+") do
+        n = n + 1
+        line = line:gsub("\r$", "")
+        if line:find('^L%[') then
+            local key, value = line:match('^L%["(.-)"%] = "(.*)"$')
+            local def = { key = key or line, value = value, line = n }
+            out[#out + 1] = def
+        end
+    end
+    return out
+end
+
+test("locale: no key is defined twice in enUS.lua", function()
+    local seen, dupes = {}, {}
+    for _, d in ipairs(definitions()) do
+        if seen[d.key] then
+            dupes[#dupes + 1] = ("%s (lines %d and %d)"):format(d.key, seen[d.key], d.line)
+        end
+        seen[d.key] = seen[d.key] or d.line
+    end
+    -- red under: a second definition of a key (the later one silently wins)
+    assertEqual(#dupes, 0, table.concat(dupes, "; "))
+end)
+
+test("locale: every enUS value is its own key, so the English build shows the source string", function()
+    local drift = {}
+    for _, d in ipairs(definitions()) do
+        if d.value ~= d.key then
+            drift[#drift + 1] = ("line %d: %s"):format(d.line, d.key)
+        end
+    end
+    -- red under: an English value edited away from its key (localization-§2: the key IS the
+    -- English source string, and a translator copies this file)
+    assertEqual(#drift, 0, table.concat(drift, "; "))
+end)
+
+test("locale: every string routed by value has its key — Constants labels, categories, filter warnings", function()
+    local NS = T.NS
+    local keys = defined()
+    local missing = {}
+    local function need(where, s)
+        if type(s) == "string" and not keys[s] then
+            missing[#missing + 1] = where .. ": " .. s
+        end
+    end
+    for name, tbl in pairs(NS.Constants) do
+        if type(name) == "string" and name:find("_LABELS$") and type(tbl) == "table" then
+            for k, label in pairs(tbl) do need(name .. "." .. tostring(k), label) end
+        end
+    end
+    for _, list in ipairs({ NS.Categories.HELPFUL, NS.Categories.HARMFUL }) do
+        for _, def in ipairs(list) do
+            need("category " .. def.key, def.label)
+            need("category " .. def.key, def.desc)
+        end
+    end
+    for k, w in pairs(NS.FilterCompiler.WARN) do need("warning " .. k, w) end
+    table.sort(missing)
+    -- red under: a label added to a Constants table, a category or a warning without its enUS line
+    -- (the literal-subscript scan above cannot see a key routed through a variable)
+    assertEqual(#missing, 0, "routed but not defined: " .. table.concat(missing, "; "))
+end)
