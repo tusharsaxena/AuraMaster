@@ -19,6 +19,11 @@ display what to show and how to dress it, and the game handles the rest, in comb
 
 Everything is set up from the addon's page under Settings → AddOns, or from chat with `/am`.
 
+## Screenshots
+
+No screenshots yet. They'll come before the first release, taken in the game itself: a bar
+container, an icon container, an unlocked container with its handle, and each settings page.
+
 ## Usage
 
 Your first login gives you three containers to start from: your buffs as bars near the top right of
