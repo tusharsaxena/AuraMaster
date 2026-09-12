@@ -169,7 +169,9 @@ The schema reaches the session state through two `sessionOnly` rows, `state.debu
 A second top-level global, owned by `LibKa0s-Perf-1.0` and named in `core/PerfSetup.lua:37`. It
 holds the most recent in-game perf captures in the library's record schema, outside the AceDB tree
 so a profile copy, reset or switch never touches it (performance-§5). This addon writes nothing to
-it directly.
+it directly. Recorded data a vendored library writes, not a setting: its owner (`core/PerfSetup.lua`)
+and its one writer (the library's `P.Save`, behind `/am perf finish`) are named in
+`docs/ARCHITECTURE.md` → Settings Schema (architecture-§5).
 
 ## How the schema paths map onto this shape
 

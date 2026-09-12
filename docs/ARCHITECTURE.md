@@ -121,8 +121,8 @@ screen. The per-container `container.filter.whitelist`, `.blacklist` and `.categ
 values the seam takes whole at its carve-out paths, not registries. Only its named writer and
 load pass write the registry, so it is compliant and carries no Documented deviations row.
 
-The addon holds one piece of named non-setting state (architecture-§5), learned data that no control
-sets and no row addresses.
+The addon holds two pieces of named non-setting state (architecture-§5). The first is learned
+data that no control sets and no row addresses.
 
 - **Storage key:** `global.timedSpells` (`db.global.timedSpells`), `[spellId] = true` for every buff
   seen carrying a duration. It is account-wide, so a profile switch, copy or reset never touches it.
@@ -135,6 +135,18 @@ sets and no row addresses.
   (`NS.RunMigrations` backfills it, as does the no-AceDB fallback in `NS.InitDB`). The two compile
   sites in `modules/Container.lua` and `settings/OptionsSetup.lua` hand it to `FilterCompiler.Compile`,
   which only reads it.
+
+The second is recorded data that a vendored library writes into a key the addon hands it: the perf
+capture ring. No control sets it and no row addresses it.
+
+- **Storage key:** `AuraMasterPerfDB`, a SavedVariables global of its own (`AuraMaster.toc:7`),
+  outside the AceDB tree, so a profile switch, copy or reset never touches it (performance-§5).
+- **Owner:** `core/PerfSetup.lua`, which hands the key to `LibKa0s-Perf-1.0` as the descriptor's
+  `sv`.
+- **Writers:** the library's `P.Save`, and nothing else. `/am perf finish` reaches it. It appends the
+  finished capture, drops the oldest record once the ring holds more than ten (the library's
+  `DEFAULT_RING`, since this addon sets no `ring`), and discards a ring stored under an older record
+  schema. No addon code writes it, and no verb clears it.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
