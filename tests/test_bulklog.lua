@@ -255,6 +255,105 @@ test("bulklog: a bulk act that raises still logs its one line, marked, and the s
     assertEqual(lines[2], "[Set] alpha = 0.75", "the mute is released")
 end)
 
+-- ── the bracket's own mechanics (settings/Schema.lua's NS.Bulk) ───────────────────────────────
+
+test("bulklog: a stray bulkEnd with no bracket open logs nothing, and the next bracket still counts itself", function()
+    local NS2 = fresh()
+    local lines = capture(NS2)
+    NS2.Bulk.End("reset", "stray", 5, nil, nil)
+    -- red under: Bulk.End without its depth == 0 guard (it logs, and the depth goes negative)
+    assertEqual(#lines, 0, dump(lines))
+    NS2.Bulk.Begin()
+    NS2.SetByPath("alpha", 0.5)
+    -- red under: N taken from bulkEnd's `count` (99) rather than the seam's own tally
+    NS2.Bulk.End("reset", "real", 99)
+    assertEqual(dump(lines), "{[Set] reset real: 1 rows}")
+end)
+
+test("bulklog: a spell set written in a bracket counts once when it changed and not at all when it did not", function()
+    local NS2 = fresh()
+    NS2.SetByPath("container.filter.whitelist", {}, 1)   -- settle
+    NS2.SetByPath("container.filter.blacklist", {}, 1)
+    local lines = capture(NS2)
+    NS2.Bulk.Run("copy", "sets", function()
+        NS2.SetByPath("container.filter.whitelist", { [5] = true }, 1)
+        NS2.SetByPath("container.filter.whitelist", { [5] = true }, 1)   -- the same set again
+        NS2.SetByPath("container.filter.blacklist", {}, 1)                -- already empty
+    end)
+    -- red under: writeCarveOut not tallying (0), or tallying every write whether it changed or not (3)
+    assertEqual(dump(lines), "{[Set] copy sets: 1 rows}")
+end)
+
+test("bulklog: a section written in a bracket counts each row and spell set under it that changed, and its own line is muted", function()
+    local NS2 = fresh()
+    NS2.SetByPath("container.filter", {}, 1)            -- settle: the template's filter
+    local lines = capture(NS2)
+    NS2.Bulk.Run("copy", "section", function()
+        NS2.SetByPath("container.filter", { castBy = "mine", whitelist = { [7] = true } }, 1)
+    end)
+    -- red under: countSectionChanges skipping the carve-outs (1), or logSection ignoring the bracket
+    assertEqual(dump(lines), "{[Set] copy section: 2 rows}")
+end)
+
+test("bulklog: a session row written in a bracket is counted through its own get", function()
+    local NS2 = fresh()
+    NS2.SetByPath("state.preview", false)
+    local lines = capture(NS2)
+    NS2.Bulk.Run("reset", "session", function()
+        NS2.SetByPath("state.preview", true)
+        NS2.SetByPath("state.preview", true)             -- no change: get() already answers true
+    end)
+    -- red under: rowChanges reading the profile for a session row, or tallying unchanged writes
+    assertEqual(dump(lines), "{[Set] reset session: 1 rows}")
+    NS2.SetByPath("state.preview", false)
+end)
+
+test("bulklog: each act starts its own count and its own error mark", function()
+    local NS2 = fresh()
+    NS2.SetByPath("alpha", 1)
+    local lines = capture(NS2)
+    pcall(NS2.Bulk.Run, "copy", "first", function()
+        NS2.SetByPath("alpha", 0.5)
+        error("boom", 0)
+    end)
+    NS2.Bulk.Run("copy", "second", function() NS2.SetByPath("alpha", 0.25) end)
+    -- red under: Bulk.Begin at depth 0 not resetting `rows` (2) or `failed` (the second line marked)
+    assertEqual(dump(lines), "{[Set] copy first: 1 rows (stopped by an error) | [Set] copy second: 1 rows}")
+end)
+
+test("bulklog: an error inside a nested bracket marks the outer act's one line", function()
+    local NS2 = fresh()
+    NS2.SetByPath("alpha", 1)
+    local lines = capture(NS2)
+    NS2.Bulk.Begin()
+    NS2.Bulk.Begin()
+    NS2.SetByPath("alpha", 0.5)
+    NS2.Bulk.End("reset", "inner", nil, "boom")
+    assertEqual(#lines, 0, "the inner level logs nothing: " .. dump(lines))
+    NS2.Bulk.End("reset", "outer")
+    -- red under: the failure flag recorded only by the level that logs
+    assertEqual(dump(lines), "{[Set] reset outer: 1 rows (stopped by an error)}")
+end)
+
+test("bulklog: Bulk.Run stays silent only when its act answers true, the profile reset's signal", function()
+    local NS2 = fresh()
+    NS2.SetByPath("alpha", 1)
+    local lines = capture(NS2)
+    NS2.Bulk.Run("reset", "whole", function()
+        NS2.SetByPath("alpha", 0.5)
+        return true
+    end)
+    -- red under: Run ignoring fn's return (the act logs beside the profile handler's line)
+    assertEqual(#lines, 0, dump(lines))
+    assertEqual(NS2.db.profile.alpha, 0.5, "the write still happened, muted")
+    NS2.Bulk.Run("reset", "truthy", function()
+        NS2.SetByPath("alpha", 0.25)
+        return 1
+    end)
+    -- red under: `fn() == true` loosened to a truthiness test
+    assertEqual(dump(lines), "{[Set] reset truthy: 1 rows}")
+end)
+
 test("bulklog: a library Defaults a row's onChange stops counts the write it stored", function()
     local NS2 = fresh()
     NS2.State.SetActiveContainer(1)
