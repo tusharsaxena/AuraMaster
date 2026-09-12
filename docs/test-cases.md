@@ -161,7 +161,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 
-### test_anchors.lua (24)
+### test_anchors.lua (43)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -187,8 +187,27 @@ badge and any count quoted in the docs must agree with it.
 - picker: it arms on release, then a left-click on a named frame picks it
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
+- anchors: a screen container sits at its stored point on UIParent, sized to one element
+- anchors: a container attaches to its target's engine frame at the stored point, or to its anchor before it has one
+- anchors: a container never attaches to itself or to one that does not exist
+- anchors: a frame target takes the stored attach point, relative point and offsets
+- anchors: a frame that refuses the anchor falls back to the screen, cleanly re-placed
+- anchors: an empty frame name is a screen fallback that waits on nothing
+- anchors: a waiting container set back to the screen stops waiting
+- anchors: a waiting container deleted before its frame appears is dropped from the wait
+- anchors: an add-on loading re-places only the containers still waiting
+- anchors: a loop among other containers is refused, and the walk still ends
+- anchors: a chain that ends at a screen container is no loop; one that returns to the start is
+- anchors: a real, unforbidden frame resolves, even one without IsForbidden; a name that is not a string never does
+- anchors: a drag with no relative point stores the point for both, and each offset to one decimal
+- anchors: an anchor that reads back no point writes nothing
+- handle: the strip names its container, and a container whose settings are gone hides it
+- handle: an attached container's tooltip says where its offsets are set; a screen one does not
+- handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
+- handle: the strip sits fifty levels above its anchor, over the container's elements
+- handle: a left click on the strip opens nothing; a right click opens this container's settings
 
-### test_style.lua (19)
+### test_style.lua (38)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -209,8 +228,27 @@ badge and any count quoted in the docs must agree with it.
 - style: a dress that raises a non-string value hands that value on unchanged
 - style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
+- style: the Solid border is registered with the media library as the flat white texture
+- style: a media key resolves through the media library; an unknown, empty, odd or broken one draws the fallback
+- style: a font the client refuses falls back to the built-in font at the same size and flags
+- style: each outline setting reaches the font as the client's flag string
+- style: a font shadow is a one-pixel black drop when on, and no offset when off
+- style: a text's corner, offsets and justification come from its block, the template filling what is missing
+- style: a missing text block leaves its font string untouched
+- style: a text's color is its own swatch, or the dress's class when its companion is on
+- style: a missing color paints opaque white rather than raising
+- style: a border is hidden when off, styled None, or without a positive size
+- style: a shown border takes the media edge, its size and its color
+- style: a binding the client lacks is skipped, and one it refuses costs that binding alone
+- style: a class color is looked for only in the active style's block, text blocks included
+- style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color
+- style: tooltips and click-through decide whether a button takes the mouse at all
+- style: right-click cancel reaches weapon enchants, never the player's debuffs, and never when turned off
+- style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
+- style: the time text gets the engine's formatter for its format, and the expiring color at its threshold
+- style: a style leaf left nil draws the template's value, never a literal of its own
 
-### test_timedspells.lua (11)
+### test_timedspells.lua (19)
 
 - timed: nothing is needed until a container shows only timeless auras
 - timed: it hears UNIT_AURA through AceEvent only while needed and readable
@@ -223,6 +261,105 @@ badge and any count quoted in the docs must agree with it.
 - timed: while auras are secret nothing is read
 - timed: what was learned reaches the filter as excluded ids, and Forget clears it
 - timed: Forget traces what it cleared
+- timed: the pet's timed buffs are learned too
+- timed: an aura read that raises ends that unit's scan, not the other unit's
+- timed: a secret spell id or a secret duration is never learned
+- timed: a burst of the player's aura changes queues one scan
+- timed: Forget is announced as the player's own change, and the next readable scan learns again
+- timed: a scan tick the gate drops is never bracketed; one that reads is, once
+- timed: a disabled container, or one showing debuffs, needs no scan
+- timed: a client without the aura API learns nothing and raises nothing
+
+### test_style_bars.lua (27)
+
+- bars: the element takes its configured size, and a left icon is a square of the bar's height
+- bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
+- bars: without an icon the bar fills the whole element and the icon is hidden
+- bars: the background sits under the bar area, never under the icon
+- bars: the icon zoom crops the texture evenly from every side
+- bars: draining left, the fill runs from the bar's start to the timer's edge and the spark rides its right end
+- bars: draining right, the fill runs from the timer's edge to the bar's end and the spark rides its left end
+- bars: the spark shows unless turned off, twice the bar's height, in its own width and color
+- bars: class colors paint the fill, background, spark and border with the dress's class, keeping each alpha
+- bars: the class companions left off paint every surface its stored swatch
+- bars: a bar border shows only when turned on, with its style, size and color
+- bars: the refresh-window highlight takes the pandemic color, never a class color
+- bars: the name stops short of the time text, and runs to the bar's end when the time is hidden
+- bars: each text shows or hides on its own setting
+- bars: the stack count sits on the icon, or on the bar when there is no icon
+- bars: the name and time are laid against the bar, in their configured corners
+- bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on
+- bars: a hidden region is never handed to the engine
+- bars: every shown region is bound to its own engine field
+- bars: dispel coloring tints the fill through the engine with the stored dispel colors
+- bars: the refresh-window highlight is bound only when turned on, and always cleared first
+- bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
+- bars: a timeless preview aura draws a full bar with no time text, and an expired one keeps one pixel
+- bars: preview text shows the name, whole seconds left, and stacks only above one
+- bars: a preview fill drains from the configured side, spark at its leading edge
+- bars: a dispel-colored preview paints the Magic color, since no real aura names a type
+- bars: filling a preview element that was never dressed does nothing and raises nothing
+
+### test_style_icons.lua (18)
+
+- icons: the art sits inside a shown border, inset by the border's size
+- icons: a hidden border, or the None style, leaves the art edge to edge
+- icons: a square icon is zoomed evenly from every side
+- icons: a wide icon is cropped top and bottom, a tall one left and right, never squashed
+- icons: the border takes its style, size and color, and the dress's class when asked
+- icons: the cooldown draws a swipe in the configured opacity, its edge and direction on their settings
+- icons: the cooldown turned off hides the swipe and never binds it to the engine
+- icons: Blizzard's countdown numbers show only when asked for
+- icons: the time and stack texts are laid against the icon's frame and show on their own settings
+- icons: a hidden text is never handed to the engine; a shown one is, as its own region
+- icons: the dispel border is the engine's debuff art on harmful auras only
+- icons: the dispel border turned off is hidden and never bound
+- icons: the refresh-window highlight is bound only when on, in the pandemic color
+- icons: an icon's buttons get the shared mouse behavior
+- icons: a restyle re-dresses the regions it built, and builds none
+- icons: a preview icon's cooldown starts as long ago as its placeholder has run
+- icons: a timeless preview icon clears its cooldown and shows no time
+- icons: filling a preview icon that was never dressed does nothing and raises nothing
+
+### test_preview.lua (10)
+
+- preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
+- preview: the per-group cap limits the placeholders, and an enchant container shows at most two
+- preview: a shown preview with nothing applied is left alone; an applied one is dressed again in the same frames
+- preview: a lower cap hides the extra placeholders rather than leaving them drawn
+- preview: Hide releases every placeholder, and the next Show dresses them again
+- preview: a container whose settings are gone draws nothing and raises nothing
+- preview: placeholders paint with the container's class snapshot, as its real buttons do
+- preview: /am test shows placeholders on a locked addon, with the engine off and no drag handle
+- preview: a vertical layout wraps into a new column one element's width plus the line spacing across
+- preview: a missing layout block grows down and right from the top left with no spacing
+
+### test_blizzardframes.lua (8)
+
+- blizzard: hiding moves the frame under a hidden parent of ours; restoring puts back the parent it had
+- blizzard: applying twice remembers the first parent, so a restore never lands on our hidden frame
+- blizzard: buffs and debuffs are hidden and restored independently
+- blizzard: a frame the setting never hid is left where it is, whoever moved it
+- blizzard: a frame that had no parent is restored to UIParent
+- blizzard: a client without the frame, or a global that is not one, is skipped without raising
+- blizzard: in combat nothing moves and Apply says it has to wait; with no profile, nothing is waiting
+- blizzard: a profile switch applies the new profile's choice
+
+### test_framepicker.lua (13)
+
+- picker: the screen and the world are never a target, and the walk ends there
+- picker: the walk climbs past one of this addon's own frames to a named frame above it
+- picker: the walk gives up after thirty-two unnamed frames
+- picker: hovering a named frame outlines it and names it beside the cursor
+- picker: the label follows the cursor at the UI's scale
+- picker: over nothing named the outline hides and the label says what to do
+- picker: a frame the outline may not anchor to hides the outline instead of raising
+- picker: the outline carries the template that lets it outline an aura container
+- picker: a right-click cancels, and nothing is picked
+- picker: a left-click over nothing named keeps the pick going
+- picker: Escape keeps its key from the game for that press only, and cancels
+- picker: any other key passes through and the pick continues
+- picker: a new pick waits for the buttons to be released again before it can pick
 
 ### test_slash.lua (23)
 
@@ -344,9 +481,14 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 37 |
-| test_anchors.lua | 24 |
-| test_style.lua | 19 |
-| test_timedspells.lua | 11 |
+| test_anchors.lua | 43 |
+| test_style.lua | 38 |
+| test_timedspells.lua | 19 |
+| test_style_bars.lua | 27 |
+| test_style_icons.lua | 18 |
+| test_preview.lua | 10 |
+| test_blizzardframes.lua | 8 |
+| test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
 | test_bulklog.lua | 13 |
 | test_optionssetup.lua | 17 |
@@ -357,4 +499,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **267** |
+| **Total** | **389** |
