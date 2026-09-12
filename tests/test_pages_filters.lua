@@ -131,6 +131,21 @@ test("filters: choosing another category lists its spells, by name where the cli
         "a spell the client does not know is shown by id")
 end)
 
+test("filters: unticking a starter spell stores it as removed; ticking it again drops the edit", function()
+    local NS, _, P = filters()
+    P.show("Filters")
+    local ws = P.tab("filters", "spellLists")
+    local id = starterIds(NS, "defensives")[1]
+    spellBox(P, ws, id):__fire("OnValueChanged", false)
+    -- red under: a starter's untick storing nil (the starter list would put it straight back)
+    assertEqual(NS.Database.FindContainer(1).filter.categorySpells.defensives[id], false)
+    assertNil(next(NS.Database.FindContainer(2).filter.categorySpells), "the selected container only")
+    ws = P.rerender("Filters")
+    assertFalse(spellBox(P, ws, id).value, "drawn unticked")
+    spellBox(P, ws, id):__fire("OnValueChanged", true)
+    assertNil(NS.Database.FindContainer(1).filter.categorySpells.defensives, "no edit left to store")
+end)
+
 test("filters: Add spell ID adds the number typed and ignores a box without one", function()
     local NS, _, P = filters()
     P.show("Filters")
