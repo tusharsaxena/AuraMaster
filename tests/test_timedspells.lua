@@ -2,7 +2,8 @@
 -- the "only auras without a duration" filter the aura engine cannot express on its own.
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
 local function withAuras(mocks, list)
@@ -198,4 +199,137 @@ test("timed: Forget traces what it cleared", function()
     -- red under: TS.Forget without its NS.Debug trace
     assertEqual(#lines, 1, "one forget line")
     assertTrue(lines[1]:find("forgot 2", 1, true) ~= nil, lines[1])
+end)
+
+--- Auras for more than one unit: `byUnit[unit]` is that unit's list.
+local function withUnits(mocks, byUnit)
+    mocks.C_UnitAuras = {
+        GetAuraDataByIndex = function(unit, i)
+            local list = byUnit[unit]
+            if type(list) == "function" then return list(i) end
+            return list and list[i]
+        end,
+    }
+end
+
+test("timed: the pet's timed buffs are learned too", function()
+    local NS, mocks = fresh()
+    withUnits(mocks, { player = { { spellId = 11, duration = 10 } }, pet = { { spellId = 99, duration = 20 } } })
+    assertEqual(NS.TimedSpells.Scan(), 2)
+    -- red under: SCAN_UNITS without "pet" (a hunter's pet buffs would never be excluded)
+    assertTrue(NS.db.global.timedSpells[99])
+end)
+
+test("timed: an aura read that raises ends that unit's scan, not the other unit's", function()
+    local NS, mocks = fresh()
+    withUnits(mocks, {
+        player = function(i)
+            if i == 1 then return { spellId = 11, duration = 10 } end
+            error("aura index out of range")
+        end,
+        pet = { { spellId = 99, duration = 20 } },
+    })
+    local ok, learned = pcall(NS.TimedSpells.Scan)
+    -- red under: GetAuraDataByIndex called unguarded
+    assertTrue(ok, tostring(learned))
+    assertEqual(learned, 2, "the player's first buff and the pet's")
+end)
+
+test("timed: a secret spell id or a secret duration is never learned", function()
+    local NS, mocks = fresh({ before = function(m)
+        m.issecretvalue = function(v) return v == 666 or v == 9.5 end
+    end })
+    withUnits(mocks, { player = {
+        { spellId = 666, duration = 10 }, { spellId = 22, duration = 9.5 }, { spellId = 33, duration = 4 },
+    } })
+    -- red under: Scan keying the store with an unproven spell id, or comparing an unproven duration
+    assertEqual(NS.TimedSpells.Scan(), 1)
+    assertTrue(NS.db.global.timedSpells[33])
+    assertNil(NS.db.global.timedSpells[22])
+end)
+
+test("timed: a burst of the player's aura changes queues one scan", function()
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+    local before = #mocks.__timers
+    onUnitAura("UNIT_AURA", "player")
+    onUnitAura("UNIT_AURA", "pet")
+    onUnitAura("UNIT_AURA", "player")
+    -- red under: scheduleScan without its scanScheduled latch (a scan per aura change)
+    assertEqual(#mocks.__timers, before + 1)
+    withAuras(mocks, { { spellId = 5, duration = 3 } })
+    mocks.__fireTimers()
+    assertEqual(NS.TimedSpells.Count(), 1, "the one queued scan ran")
+    -- The scan's announcement queued the manager's apply; the next change adds one scan beside it.
+    local after = #mocks.__timers
+    onUnitAura("UNIT_AURA", "player")
+    assertEqual(#mocks.__timers, after + 1, "and a later change queues the next")
+end)
+
+test("timed: Forget is announced as the player's own change, and the next readable scan learns again", function()
+    local NS, mocks = fresh()
+    withAuras(mocks, { { spellId = 44, duration = 30 } })
+    local payloads = {}
+    NS.NewBusTarget():RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function(_, p)
+        local n = #payloads
+        payloads[n + 1] = p or false
+    end)
+    NS.TimedSpells.Scan()
+    NS.TimedSpells.Forget()
+    assertEqual(#payloads, 2)
+    assertFalse(payloads[1] and payloads[1].byPlayer, "a scan is not the player's change")
+    -- red under: Forget announced like a scan (an apply it queues in combat would never say so)
+    assertTrue(payloads[2] and payloads[2].byPlayer, "a forget is")
+    assertEqual(NS.TimedSpells.Count(), 0)
+    assertEqual(NS.TimedSpells.Scan(), 1, "relearned")
+end)
+
+test("timed: a scan tick the gate drops is never bracketed; one that reads is, once", function()
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local notes = 0
+    local P = NS.Perf
+    local note = P.Note
+    P.Note = function(key, ...)
+        if key == "timedScan" then notes = notes + 1 end
+        return note(key, ...)
+    end
+    P.on = true
+    local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+    onUnitAura("UNIT_AURA", "player")
+    mocks.__lockdown = true
+    mocks.__fireTimers()
+    local dropped = notes
+    mocks.__lockdown = false
+    onUnitAura("UNIT_AURA", "player")
+    mocks.__fireTimers()
+    P.on, P.Note = false, note
+    -- red under: the timedScan bracket opened before the readable gate (a dropped tick reports a scan)
+    assertEqual(dropped, 0, "a dropped tick")
+    assertEqual(notes, 1, "a scan that ran")
+end)
+
+test("timed: a disabled container, or one showing debuffs, needs no scan", function()
+    local NS = fresh()
+    local c1, c2 = NS.Database.FindContainer(1), NS.Database.FindContainer(2)
+    c2.filter.durationMode = "timeless"
+    -- red under: Needed without its HELPFUL check (the exclusion list only exists for buffs)
+    assertFalse(NS.TimedSpells.Needed(), "a debuff container")
+    c1.filter.durationMode, c1.enabled = "timeless", false
+    -- red under: Needed without its enabled check
+    assertFalse(NS.TimedSpells.Needed(), "a disabled buff container")
+    c1.enabled = true
+    assertTrue(NS.TimedSpells.Needed())
+end)
+
+test("timed: a client without the aura API learns nothing and raises nothing", function()
+    local NS, mocks = fresh()
+    mocks.C_UnitAuras = nil
+    local ok, learned = pcall(NS.TimedSpells.Scan)
+    -- red under: Scan indexing C_UnitAuras unguarded
+    assertTrue(ok, tostring(learned))
+    assertEqual(learned, 0)
 end)

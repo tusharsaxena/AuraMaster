@@ -291,3 +291,108 @@ test("filter: the whole plan for four rich containers is unchanged (characteriza
     end
     assertEqual(#off, 0, table.concat(off, " || "))
 end)
+
+-- ── edges ────────────────────────────────────────────────────────────────────────────────────
+
+test("filter: Signature tells a number from its string and a boolean from its name", function()
+    -- red under: Signature dropping the type prefix (a 60 and a "60" filter would compare equal)
+    assertTrue(FC.Signature(1) ~= FC.Signature("1"))
+    assertTrue(FC.Signature(true) ~= FC.Signature("true"))
+    assertTrue(FC.Signature({ maxDuration = 60 }) ~= FC.Signature({ maxDuration = "60" }))
+    assertTrue(FC.Signature(nil) ~= FC.Signature(false))
+end)
+
+test("filter: numeric strings in the duration and cap settings are read as numbers", function()
+    local g = compile({ filter = { maxDuration = "45", maxAuras = "4" } }).groups[1]
+    -- red under: applyDuration without its tonumber (a stored string limit would raise or never filter)
+    assertEqual(g.candidateFilters.maxDuration, 45)
+    assertEqual(g.maxFrameCount, 4)
+    -- red under: lookOf without its math.floor
+    assertEqual(compile({ filter = { maxAuras = 3.7 } }).groups[1].maxFrameCount, 3, "a cap is whole")
+    assertEqual(compile({ filter = { maxAuras = -2 } }).groups[1].maxFrameCount, HUGE, "a negative cap is none")
+    assertNil(compile({ filter = { maxDuration = "soon" } }).groups[1].candidateFilters)
+end)
+
+test("filter: spell lists accept string ids and drop ids switched off", function()
+    local plan = compile({ filter = { whitelist = { ["500"] = true, [600] = false, soon = true } } })
+    local inc = plan.groups[1].candidateFilters.includeSpellIDs
+    -- red under: spellSet keeping an id stored as false
+    assertEqual(setOf(inc), "500")
+    -- red under: spellSet keying by the stored key instead of its number
+    assertTrue(inc[500], "keyed by number, as the engine matches")
+end)
+
+test("filter: a category's spell edits accept string ids and ignore keys that are not ids", function()
+    local def = NS.Categories.Find("HELPFUL", "movement")
+    local starter = next(def.spells)
+    local set = FC.CategorySpells(def, { filter = { categorySpells = { movement = {
+        ["999002"] = true, notAnId = true, [tostring(starter)] = false,
+    } } } })
+    -- red under: CategorySpells without its tonumber (the edits would be keyed by string)
+    assertTrue(set[999002])
+    assertNil(set[starter], "a starter removed by its string id is gone")
+    assertNil(set.notAnId)
+    assertTrue(next(FC.CategorySpells(def, nil)) ~= nil, "no container: the starter list")
+end)
+
+test("filter: an unknown aura type compiles as buffs, and only buffs append weapon enchants", function()
+    -- red under: Compile handing the stored aura type to the engine as its token
+    assertEqual(compile({ auraType = "BOGUS" }).groups[1].filter, "HELPFUL")
+    assertEqual(compile({ auraType = false }).groups[1].filter, "HELPFUL")
+    -- red under: dropping the HELPFUL check (a debuff container would grow enchant slots)
+    assertNil(compile({ auraType = "HARMFUL", unit = "player", filter = { includeEnchants = true } }).enchants)
+end)
+
+test("filter: the spell-list warning follows the unit and the aura type", function()
+    local cases = {
+        { "HARMFUL", "pet", "own character or pet" },
+        { "HARMFUL", "focus", "while the unit is hostile" },
+        { "HELPFUL", "focus", "while the unit is friendly" },
+        { "HELPFUL", "pet", nil },
+    }
+    for _, c in ipairs(cases) do
+        local plan = compile({ auraType = c[1], unit = c[2], filter = { blacklist = { [1] = true } } })
+        local label = c[1] .. " on " .. c[2]
+        if c[3] then
+            -- red under: identityWarning treating the pet as a hostile unit
+            assertTrue(hasWarning(plan, c[3]), label)
+        else
+            assertEqual(#plan.warnings, 0, label .. ": the pet is friendly, and its buffs honor ids")
+        end
+    end
+end)
+
+test("filter: 'only timeless' with nothing learned yet filters no ids and warns about none", function()
+    local empty = compile({ unit = "target", filter = { durationMode = "timeless" } }, { timedSpells = {} })
+    -- red under: applyDuration reporting a spell-id filter for an empty learned set
+    assertNil(empty.groups[1].candidateFilters)
+    assertEqual(#empty.warnings, 0)
+    local learned = compile({ unit = "target", filter = { durationMode = "timeless" } }, { timedSpells = { [7] = true } })
+    assertTrue(hasWarning(learned, "friendly"), "once ids are excluded, the friendly-only rule applies")
+end)
+
+test("filter: a hidden spell category with every id removed excludes nothing", function()
+    local def = NS.Categories.Find("HELPFUL", "consumables")
+    local removed = {}
+    for id in pairs(def.spells) do removed[id] = false end
+    local plan = compile({ filter = { categories = { consumables = "hide" }, categorySpells = { consumables = removed } } })
+    assertEqual(#plan.groups, 1)
+    -- red under: applyCategory adding an empty exclude map for a hidden category
+    assertNil(plan.groups[1].candidateFilters)
+end)
+
+test("filter: group keys stay consecutive when a contradiction drops a group", function()
+    -- Update addresses the live engine's groups by these keys, so a key must not depend on which
+    -- categories happened to compile to a group.
+    local def = NS.Categories.Find("HELPFUL", "movement")
+    local removed = {}
+    for id in pairs(def.spells) do removed[id] = false end
+    local plan = compile({ filter = {
+        categories = { defensives = "show", movement = "show", consumables = "show" },
+        categorySpells = { movement = removed },
+    } })
+    assertEqual(#plan.groups, 2, "the emptied movement group is dropped")
+    -- red under: keying a group by its category's position instead of the groups already added
+    assertEqual(plan.groups[2].key, "g2")
+    assertEqual(plan.groups[2].label, "Consumables")
+end)

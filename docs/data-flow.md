@@ -15,7 +15,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:546
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:549
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
@@ -43,7 +43,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:242
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:249
         │  build the regions once (icon, bar, fill, spark, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -192,10 +192,11 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:79`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:89`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists), unless that would loop;
-to a named frame, if it exists and is not forbidden — otherwise the container is marked pending and
-re-placed on the next `ADDON_LOADED`; else to the screen at `container.position`. A pending resolve
+to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container
+pending, re-placed on the next `ADDON_LOADED`; a forbidden one is never waited on, since no add-on
+loading makes it a target); else to the screen at `container.position`. A pending resolve
 is skipped under combat lockdown, so `PLAYER_REGEN_ENABLED` runs it again once combat ends. A
 container set to a container or a frame that lands on the screen instead writes one `[Anchor]` debug
 line, and so does a skipped resolve. Positions are stored, never read back off an engine frame, whose

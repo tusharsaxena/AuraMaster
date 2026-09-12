@@ -100,6 +100,8 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `tests/fresh_env.lua` | Builds a fresh, fully loaded environment for a suite that mutates state |
 | `tests/degraded_env.lua` | Builds a second environment with LibKa0s absent, so every setup file takes its real fallback |
 | `tests/perf.lua` | The offline performance scenario runner (outside the green gate) — `docs/performance.md` |
+| `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves), for the `test_pages_*` suites |
+| `tests/region_recorder.lua` | Not a suite: a stand-in frame region that records every method called on it, so the style suites can tell one region's paint from another's (the kit hands a frame back as its own texture) |
 | `tests/test_*.lua` | One suite per subject, in the order `tests/run.lua` declares them; the cases are enumerated in the generated `docs/test-cases.md` |
 
 The suites, in the order `tests/run.lua` runs them (it is the authority on the list):
@@ -108,17 +110,43 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 |---|---|
 | `test_loadorder.lua` | The TOC's load-bearing positions; the runners' load lists derived from the TOC and the XML |
 | `test_setups.lua` | The LibKa0s seams' addon-side wiring (printer, media, env, debug flag) and a real library-absent load |
-| `test_database.lua` | `core/Database.lua`: seeding once, repair of ids and order, backfill that keeps a stored `false` |
+| `test_database.lua` | `core/Database.lua`: seeding once, repair of ids, order and wrong-typed sections, backfill that keeps a stored `false`, the migration runner, the no-AceDB fallback |
 | `test_schema.lua` | `settings/Schema.lua`: every row resolves, class-color companions, the container-relative path model, the carve-outs |
+| `test_schema_paths.lua` | `settings/Schema.lua` in depth: the write seam's order, the relative and absolute path models, registration and validation, carve-outs, whole sections, `CheckWrite`, `ApplyDefault`, the session rows |
 | `test_filtercompiler.lua` | `modules/FilterCompiler.lua`: settings in, aura groups and warnings out |
 | `test_container.lua` | `modules/Container.lua` against the recorded engine: call order, update in place vs rebuild, the show ladder, preview |
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, combat and secrecy deferral |
-| `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, pending frames, picking and canceling |
+| `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
+| `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue` |
+| `test_bus.lua` | `core/Bus.lua`: the message catalog, a target per receiver, one sender per message |
+| `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; `CM.SetPreview` stores a strict boolean |
+| `test_lifecycle.lua` | `core/AuraMaster.lua`: the lifecycle events and the three AceDB profile handlers, fired through AceEvent |
+| `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, pending and forbidden frames, the drag handle |
 | `test_style.lua` | `modules/Style*.lua` and `modules/Preview.lua`: element sizes, preview layout, engine bindings |
 | `test_timedspells.lua` | `modules/TimedSpells.lua`: readable-state listening, the bus announcement, learning out of combat, feeding the timeless filter |
+| `test_style_bars.lua` | `modules/Style_Bars.lua`: every bar setting reaching the region it paints, icon side and gap, drain direction, texts, bindings, preview fill |
+| `test_style_icons.lua` | `modules/Style_Icons.lua`: the art inside its border, the aspect crop, the cooldown swipe, the dispel border, texts, bindings, preview fill |
+| `test_preview.lua` | `modules/Preview.lua`: how many placeholders are drawn and where, the pool, when they are dressed again |
+| `test_blizzardframes.lua` | `modules/BlizzardFrames.lua`: reparenting `BuffFrame`/`DebuffFrame` under a hidden parent and back |
+| `test_framepicker.lua` | `modules/FramePicker.lua`: the named-ancestor walk, the outline and label that track the cursor, every way a pick ends |
 | `test_slash.lua` | `settings/Slash.lua`: `NS.COMMANDS` and every host verb through the real dispatcher |
+| `test_slash_verbs.lua` | `settings/Slash.lua` verb by verb through the real dispatcher: the help surface, the schema verbs over relative and absolute paths, the host verbs, the degradation stub |
+| `test_bulklog.lua` | debug-logging-§10's bulk rule, act by act: one `[Set]` line per bulk act counting the rows it changed; one line per profile reset or copy |
 | `test_optionssetup.lua` | The panel: pages, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
+| `test_options_descriptor.lua` | `settings/OptionsSetup.lua`'s descriptor seams through real widgets and resets: the Profiles veto, the banner and picker, `RenderContainerPage`, the coalesced refresh, `OpenOptionsPage`, the stub's composers |
+| `test_pages_general.lua` | `settings/General.lua` through its widgets: each Master control and Display row, the composer's two buttons, Defaults |
+| `test_pages_containers.lua` | `settings/Containers.lua` through its widgets: the identity rows, Duplicate / Delete / Copy settings from, the Overview tab, the picker |
+| `test_pages_filters.lua` | `settings/Filters.lua` through its widgets: the rows each aura type is offered, the two spell-set tabs, the warnings |
+| `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the attach rows and their cycle guard, the picker's two buttons, what a Growth or Frame row re-applies, Defaults |
+| `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs, the not-drawn-as-bars notice, sliders and swatches, Defaults |
+| `test_pages_icons.lua` | `settings/Icons.lua` through its widgets: tabs, the not-drawn-as-icons notice, rows, Defaults |
+| `test_pages_about.lua` | `settings/About.lua`: the command list, the Notes line and the logo, and when each is read |
+| `test_pages_profiles.lua` | `settings/Profiles.lua`: the table it registers, how often it opens the dialog and into what, when it opts out |
+| `test_envsetup.lua` | `core/EnvSetup.lua` on both arms (live and library-absent): which manifest `NS.Meta` reads, what `NS.Version` answers |
+| `test_poolsetup.lua` | `core/PoolSetup.lua`: the library seam, and a library-absent fallback that recycles exactly as the library does |
+| `test_defaults.lua` | `defaults/Profile.lua` and `defaults/Categories.lua`: the shape invariants the code relies on |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |
+| `test_debuglogsetup.lua` | `core/DebugLogSetup.lua`: the descriptor this addon owns (flag, `[Init]` summary, chat acknowledgment, visibility refresh) and its stub |
 | `test_locale.lua` | `locales/enUS.lua` defines every routed string and nothing unused |
 | `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways, every file:line citation resolving to a non-blank line |
 | `test_surface_parity.lua` | Each degradation stub against the live surface it stands in for |

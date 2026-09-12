@@ -28,7 +28,7 @@ eight-or-more trigger (documentation-§3).
 | 4 | `disable` | host | `NS.SetByPath("enabled", false)`; the visibility pass disables every engine through its own `SetEnabled`, combat included |
 | 5 | `list` | library | `cli:CliList()` over `NS.Schema`, grouped by page |
 | 6 | `get path` | library | `cli:CliGet` → `NS.GetSetting(path)`; also answers sub-tables such as `container.filter.whitelist` |
-| 7 | `set path value` | library | `cli:CliSet` → type-aware parse → `NS.SetByPath(path, value)`; an error from the seam is printed |
+| 7 | `set path value` | library | `cli:CliSet` → type-aware parse (a string row takes the whole rest of the line, trimmed) → `NS.SetByPath(path, value)`; an error from the seam is printed |
 | 8 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page |
 | 9 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); not refused in combat, where it takes the parked teardown like Profiles → Reset Profile |
 | 10 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |

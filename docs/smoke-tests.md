@@ -41,8 +41,9 @@ suite covers what only the client can show.
     real auras are hidden. The handle is a dark strip with a thin gold edge and a gold label, sitting
     outside the container: above it when the auras grow down, below when they grow up, lined up with
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
-    Hovering the help mark at the handle's right end shows the name and "Drag to move. Right-click for
-    settings."
+    Hovering the strip or the help mark at its right end shows, at the cursor, the name and "Drag to
+    move. Right-click for settings.", with no Lua error. Run this after a `/reload` and again after
+    Profiles → Reset Profile.
     **Screen edge.** `/am unlock`, drag a container that grows down flush against the top of the
     screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
     its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
@@ -183,6 +184,9 @@ suite covers what only the client can show.
 
 ## L. Profiles
 
+**The page draws.** Open another addon's options page first, then Aura Master → Profiles → the
+AceDBOptions controls render (current profile, New, Copy From, Delete, Reset Profile): never a blank
+page under the header.
 50. Profiles → create a new profile → the three starter containers appear on it; switch back → your
     own set returns, each where you left it.
 51. **Copy** a profile into the active one → its containers replace yours.

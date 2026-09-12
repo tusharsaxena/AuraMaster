@@ -71,6 +71,12 @@ inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to a
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
 
+**The cost of the template: no tooltip can anchor under an anchor.** The restriction carries down the
+anchor chain. `GameTooltip` does not inherit the template, so `GameTooltip:SetOwner` on the drag handle
+or its help mark, both anchored under the anchor, raises "Anchoring disallowed as dependent object
+would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
+`UIParent` with `ANCHOR_CURSOR` instead, so it depends on nothing under the anchor.
+
 ## Groups are add-only, and some setters reset a group
 
 **The restriction.** An engine cannot remove a group, and WoW never frees a frame.
@@ -110,7 +116,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:100`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:106`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Additive bindings stack
@@ -118,7 +124,7 @@ TinyBuffBars' (MIT).
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
-before adding again (`modules/Style_Bars.lua:185-195`, `modules/Style_Icons.lua:114-123`).
+before adding again (`modules/Style_Bars.lua:191-201`, `modules/Style_Icons.lua:121-130`).
 
 ## The engine does not notice a unit token changing
 

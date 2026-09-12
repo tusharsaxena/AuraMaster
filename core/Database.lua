@@ -23,16 +23,27 @@ local copy = Database.DeepCopy
 --- stored `false`, `0` or empty string is the player's choice and survives (savedvariables-§5).
 --- A template table whose shape is a MAP the player fills (categories, spell lists) is empty in the
 --- template, so there is nothing to fill into it and the player's entries are never touched.
---- @return number  how many leaves were filled
-function Database.Backfill(dst, template)
+---
+--- `repair`, for the LOAD path only: a stored value that is not a table where the template holds a
+--- section (a hand-edited `position = "junk"`) is replaced by the template's section. Nothing a player
+--- sets through the addon can produce one, and left in place it survived the load and raised later
+--- (ContainerManager.Duplicate indexed it). A whole-section WRITE backfills without it, so a malformed
+--- section handed to NS.SetByPath is still validated and refused rather than silently repaired.
+--- @return number  how many leaves were filled or repaired
+function Database.Backfill(dst, template, repair)
     local filled = 0
     for k, tv in pairs(template) do
         local dv = dst[k]
         if dv == nil then
             dst[k] = copy(tv)
             filled = filled + 1
-        elseif type(tv) == "table" and type(dv) == "table" then
-            filled = filled + Database.Backfill(dv, tv)
+        elseif type(tv) == "table" then
+            if type(dv) == "table" then
+                filled = filled + Database.Backfill(dv, tv, repair)
+            elseif repair then
+                dst[k] = copy(tv)
+                filled = filled + 1
+            end
         end
     end
     return filled
@@ -99,7 +110,9 @@ end
 --- Keys come back from SavedVariables as numbers, but a hand-edited file or an old export can carry
 --- string ids; normalize so FindContainer(3) and FindContainer("3") cannot disagree. A key that is
 --- neither a number nor a numeric string has no id to become, and every later pass compares ids as
---- numbers, so it is dropped (one gated [Migrate] line each).
+--- numbers, so it is dropped (one gated [Migrate] line each). A numeric string whose id is already
+--- stored as a number is dropped the same way: the numeric key is the form this addon writes, so the
+--- string twin is the stale copy and never overwrites it.
 --- Collected first, then moved: assigning a new key while `pairs` walks the same table is
 --- undefined in Lua and raises "invalid key to 'next'".
 local function normalizeKeys(p)
@@ -114,8 +127,13 @@ local function normalizeKeys(p)
         end
     end
     for _, k in ipairs(renames) do
-        p.containers[tonumber(k)] = p.containers[k]
-        p.containers[k] = nil
+        local id = tonumber(k)
+        if p.containers[id] == nil then
+            p.containers[id] = p.containers[k]
+            p.containers[k] = nil
+        else
+            drops[#drops + 1] = k
+        end
     end
     for _, k in ipairs(drops) do
         p.containers[k] = nil
@@ -153,7 +171,7 @@ local function backfillContainers(p)
     local maxId = 0
     for id, c in pairs(p.containers) do
         if type(c) == "table" then
-            Database.Backfill(c, NS.CONTAINER_TEMPLATE)
+            Database.Backfill(c, NS.CONTAINER_TEMPLATE, true)
             c.id = id
             if id > maxId then maxId = id end
         else
@@ -228,8 +246,8 @@ function NS.InitDB()
         AuraMasterDB = AuraMasterDB or {}
         AuraMasterDB.profile = AuraMasterDB.profile or {}
         AuraMasterDB.global = AuraMasterDB.global or {}
-        Database.Backfill(AuraMasterDB.profile, NS.defaults.profile)
-        Database.Backfill(AuraMasterDB.global, NS.defaults.global)
+        Database.Backfill(AuraMasterDB.profile, NS.defaults.profile, true)
+        Database.Backfill(AuraMasterDB.global, NS.defaults.global, true)
         NS.db = { profile = AuraMasterDB.profile, global = AuraMasterDB.global }
     end
     NS.RunMigrations()

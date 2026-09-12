@@ -16,7 +16,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## AceDB setup
 
-`NS.InitDB` (`core/Database.lua:212`), called from `OnInitialize`:
+`NS.InitDB` (`core/Database.lua:230`), called from `OnInitialize`:
 
 - `AceDB:New("AuraMasterDB", NS.defaults, true)` — `true` puts every character on the shared
   `Default` profile until the player picks a per-character, per-class or per-realm one.
@@ -76,6 +76,10 @@ act, with the same popup wording. The global reset's own row walk skips the Prof
 profile-backed row (`vetoedFromResetAll`, `settings/OptionsSetup.lua:23`), leaving it only the
 session rows a profile reset cannot reach. Other profiles are untouched. Neither surface is refused
 in combat: like Reset Profile, both take the parked teardown described above.
+
+The button's tooltip names the equivalence, because the options descriptor sets `profilesPage =
+true` beside `resetProfile` in `settings/OptionsSetup.lua`: *Reset the current profile to its
+defaults — the same thing Profiles → Reset Profile does. Your other profiles are not affected.*
 
 ## The Profiles sub-page
 

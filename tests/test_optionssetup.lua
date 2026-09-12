@@ -23,6 +23,30 @@ test("options: every page registers, in TOC order, and Profiles opts out without
     assertNil(mocks.__subcategories.Profiles, "the harness has no AceDBOptions; the page returns nil")
 end)
 
+test("options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one", function()
+    -- AceGUI:Release hides a widget's frame before pooling it, and neither AceGUI:Create nor
+    -- AceConfigDialog:Open shows it again. The container is created on first show, when the pool
+    -- is rarely empty, so AceConfigDialog filled a hidden frame and the page read as blank. The kit's
+    -- frames start hidden, which is exactly the pooled case.
+    -- red under: the renderer not calling container.frame:Show().
+    local opened = {}
+    local _, m = fresh({ before = function(mk)
+        mk.__libs["AceDBOptions-3.0"] = { GetOptionsTable = function() return { type = "group", args = {} } end }
+        mk.__libs["AceConfig-3.0"] = { RegisterOptionsTable = function() end }
+        mk.__libs["AceConfigDialog-3.0"] = { Open = function(_, app, container)
+            opened[#opened + 1] = { app = app, container = container }
+        end }
+    end })
+    local panel = m.__subcategories.Profiles
+    assertTrue(panel ~= nil, "with AceDBOptions present the Profiles page registers")
+    panel:__fire("OnShow")
+    assertEqual(#opened, 1, "the first show opens the AceDBOptions table once")
+    assertEqual(opened[1].app, "AuraMaster-Profiles")
+    local frame = opened[1].container and opened[1].container.frame
+    assertTrue(frame ~= nil, "AceConfigDialog is handed an AceGUI container")
+    assertTrue(frame:IsShown(), "the container AceConfigDialog fills is shown")
+end)
+
 test("options: every page renders without a reported error", function()
     local NS2, m = fresh()
     local lines = {}

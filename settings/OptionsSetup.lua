@@ -49,6 +49,10 @@ local descriptor = {
         local db = NS.db
         if db and db.ResetProfile then db:ResetProfile() end
     end,
+    -- This addon ships the AceDBOptions Profiles sub-page (settings/Profiles.lua), so the Reset-all
+    -- tooltip names the equivalence §12 asks for: "the same thing Profiles → Reset Profile does"
+    -- (LibKa0s-Options minor 18). Read by MasterControls alone, with resetProfile supplied.
+    profilesPage = true,
     -- The bulk bracket (LibKa0s-Options minor 16, debug-logging-§10), paired as the contract asks:
     -- RestoreDefaults and RestoreAllDefaults write through the seam muted, and settings/Schema.lua
     -- logs the act once. A Reset all is logged by NS.OnProfileReset alone.

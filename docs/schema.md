@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:215`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:233`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -195,8 +195,10 @@ the write re-applies its container, or every container for a global row. A `sess
 announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs in
 `Container:Apply`.
 
-A row may declare `normalize(value, id)`, an optional hook `NS.SetByPath` runs after `validate` and
-after the container id is resolved, just before the write. Whatever it returns is what gets stored, and
+A row's `validate(value, id)` and its optional `normalize(value, id)` hook are both handed the id of
+the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`
+resolves that id first and then validates, so a bad value is still refused before a missing container
+is. `normalize` runs after both, just before the write. Whatever it returns is what gets stored, and
 it is also the value `onChange` and the announcement see. The `container.name` row uses it to store the
 trimmed name made unique by `ContainerManager.UniqueName`, and that comparison ignores case (`buffs`
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
@@ -210,9 +212,8 @@ no key can be dropped. Then it runs the spell-set carve-outs under that section,
 section is written, `onChange` fires for each row whose leaf actually changed, compared by
 `FilterCompiler.Signature`. The write logs one `[Set]` line that renders the stored table (for example
 `container.position = {point=TOP, relativePoint=CENTER, x=5, y=0}`), built only while debug is on, and
-sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section. No
-caller writes it whole, and its `container` validator checks for cycles against the active container
-rather than the target.
+sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section: no
+caller writes it whole.
 
 **A bulk copy or reset is one line** (debug-logging-§10). `NS.Bulk` brackets every act that
 rewrites a set of rows wholesale. That covers a page's Defaults and Reset all (the library's
@@ -243,19 +244,25 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:241`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:259`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
 - **Schema v1** is the shape the addon shipped with at 0.1.0. **The ladder is empty**, and
   `Database.CurrentSchemaVersion()` answers `1`.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:195`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`
   past the highest id, and seeds the starter containers on a profile whose `seeded` flag is unset.
   A container key that is neither a number nor a numeric string (a hand-edited file) is dropped,
-  with one `[Migrate] dropped container key` debug line each, so the profile still loads.
+  with one `[Migrate] dropped container key` debug line each, so the profile still loads. So is a
+  numeric string whose id is already stored as a number: the numeric key is the form the addon
+  writes, so the string twin is the stale copy and never overwrites it. The load path's backfill
+  also repairs: a stored value that is not a table where the template holds a section (a
+  hand-edited `position = "junk"`) is replaced by the template's section. A whole-section write
+  through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
+  silently fixed.
   A new category key reaches every container the same way, through `NeutralStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: bump to
   `to = 2`, transform the stored value, and remember that containers live in every profile, not only
