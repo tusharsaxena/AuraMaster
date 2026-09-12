@@ -55,9 +55,17 @@ local function toScreen(anchor, cfg)
         tonumber(pos.x) or 0, tonumber(pos.y) or 0)
 end
 
+--- Whether `name` names a frame that EXISTS but is forbidden to add-ons: never a target, now or after
+--- any add-on loads.
+local function isForbidden(name)
+    local f = _G[name]
+    return type(f) == "table" and type(f.IsForbidden) == "function" and f:IsForbidden() and true or false
+end
+
 --- The frame container `container` attaches to and the mode that names it, or nil when its setting
 --- names nothing usable: a missing or looping container, or a frame that is absent or forbidden. A
---- named frame that simply does not exist YET is remembered, to be retried when an add-on loads.
+--- named frame that simply does not exist YET is remembered, to be retried when an add-on loads; a
+--- forbidden one is not, since no add-on loading makes it a target.
 local function targetFor(container, at)
     if at.mode == "container" then
         local targetId = tonumber(at.container)
@@ -68,7 +76,9 @@ local function targetFor(container, at)
     elseif at.mode == "frame" then
         local f = Anchors.ResolveFrame(at.frame)
         if f then return f, "frame" end
-        if at.frame and at.frame ~= "" then pending[container.id] = true end
+        if at.frame and at.frame ~= "" and not isForbidden(at.frame) then
+            pending[container.id] = true
+        end
     end
     return nil
 end

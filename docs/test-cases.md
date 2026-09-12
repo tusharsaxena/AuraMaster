@@ -308,7 +308,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (43)
+### test_anchors.lua (44)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -316,6 +316,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a frame that appears during combat is attached when combat ends
 - anchors: a screen fallback and a skipped resolve are traced
 - anchors: a forbidden frame, or something that is not a frame, is never a target
+- anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - anchors: a drag saves the position in one write
 - handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark
@@ -832,7 +833,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 43 |
+| test_anchors.lua | 44 |
 | test_style.lua | 38 |
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 27 |
@@ -864,4 +865,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **674** |
+| **Total** | **675** |

@@ -192,10 +192,11 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:79`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:89`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists), unless that would loop;
-to a named frame, if it exists and is not forbidden — otherwise the container is marked pending and
-re-placed on the next `ADDON_LOADED`; else to the screen at `container.position`. A pending resolve
+to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container
+pending, re-placed on the next `ADDON_LOADED`; a forbidden one is never waited on, since no add-on
+loading makes it a target); else to the screen at `container.position`. A pending resolve
 is skipped under combat lockdown, so `PLAYER_REGEN_ENABLED` runs it again once combat ends. A
 container set to a container or a frame that lands on the screen instead writes one `[Anchor]` debug
 line, and so does a skipped resolve. Positions are stored, never read back off an engine frame, whose

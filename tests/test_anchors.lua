@@ -109,6 +109,34 @@ test("anchors: a forbidden frame, or something that is not a frame, is never a t
     assertNil(NS.Anchors.ResolveFrame(""))
 end)
 
+test("anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it", function()
+    local NS, mocks = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Anchor" then
+            lines[#lines + 1] = fmt:format(...)
+        end
+    end
+    plant(mocks, "LockedBar", { forbidden = true })
+    local c = NS.Database.FindContainer(1)
+    c.attach.mode, c.attach.frame = "frame", "LockedBar"
+    local CM = NS.ContainerManager
+    assertEqual(NS.Anchors.Place(CM.instances[1]), "screen", "the screen fallback")
+    assertEqual(#lines, 1, "the fallback is traced as any other")
+    assertTrue(lines[1]:find("screen fallback", 1, true) ~= nil, lines[1])
+    -- red under: targetFor queuing every frame name that does not resolve, the forbidden one included
+    assertEqual(#NS.Anchors.Pending(), 0, "a forbidden frame never becomes a target, so nothing waits")
+    local placed = {}
+    local place = NS.Anchors.Place
+    NS.Anchors.Place = function(inst)
+        placed[#placed + 1] = inst.id
+        return place(inst)
+    end
+    NS.addon:OnAddonLoaded()
+    NS.Anchors.Place = place
+    assertEqual(#placed, 0, "an add-on load re-places nothing")
+end)
+
 test("anchors: a drag saves the dragged container's position, rounded, whatever is selected", function()
     local NS = fresh()
     local inst = NS.ContainerManager.instances[1]
