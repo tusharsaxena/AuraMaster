@@ -161,7 +161,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 
-### test_anchors.lua (23)
+### test_anchors.lua (24)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -179,6 +179,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
+- handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: without the media library the help mark falls back to Blizzard's information icon
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
@@ -342,7 +343,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 28 |
 | test_container.lua | 16 |
 | test_containermanager.lua | 37 |
-| test_anchors.lua | 23 |
+| test_anchors.lua | 24 |
 | test_style.lua | 19 |
 | test_timedspells.lua | 11 |
 | test_slash.lua | 23 |
@@ -355,4 +356,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **265** |
+| **Total** | **266** |

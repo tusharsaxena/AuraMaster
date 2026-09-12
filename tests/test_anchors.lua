@@ -365,6 +365,27 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
+test("handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark", function()
+    -- Every anchor inherits DisableUntrustedLayoutScriptsTemplate, so the strip and its help mark sit in
+    -- a restricted layout chain, and the client refuses GameTooltip:SetOwner on either: "Anchoring
+    -- disallowed as dependent object would inherit forbidden aspects: UntrustedLayoutScriptExecution".
+    -- red under: showTooltip owning the tooltip by the hovered frame (the old SetOwner(owner, "ANCHOR_TOP")).
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    local owners = {}
+    rawset(mocks.GameTooltip, "SetOwner", function(_, owner, anchor)
+        owners[#owners + 1] = { owner = owner, anchor = anchor }
+    end)
+    h:__fire("OnEnter")
+    h.help:__fire("OnEnter")
+    assertEqual(#owners, 2, "the strip and the help mark both show the tooltip")
+    for i, o in ipairs(owners) do
+        assertTrue(o.owner == mocks.UIParent, "hover " .. i .. " is owned by UIParent")
+        assertEqual(o.anchor, "ANCHOR_CURSOR", "hover " .. i .. " follows the cursor")
+    end
+end)
+
 test("handle: a left-drag that starts on the help mark moves the container as one on the strip does", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]

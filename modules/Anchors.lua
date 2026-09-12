@@ -168,10 +168,16 @@ local function openSettings(container)
 end
 
 --- One tooltip for the strip and its help mark: the container's name, then how to use the handle.
-local function showTooltip(owner, container)
+---
+--- OWNED BY UIParent AT THE CURSOR, never by the hovered frame. The anchor inherits
+--- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
+--- frame anchored under it: the strip and the mark. GameTooltip does not inherit the template, so the
+--- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
+--- forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on nothing under the anchor.
+local function showTooltip(container)
     if not GameTooltip then return end
     local cfg = container:Cfg()
-    GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
     GameTooltip:SetText(cfg and cfg.name or NS.L["Container"], 1, 0.82, 0)
     GameTooltip:AddLine(NS.L["Drag to move. Right-click for settings."], 1, 1, 1, true)
     if cfg and cfg.attach and cfg.attach.mode ~= "screen" then
@@ -219,7 +225,7 @@ local function buildHelp(handle, container)
     icon:SetAllPoints(help)
     icon:SetTexture(NS.Icon and NS.Icon("help") or HELP_TEXTURE)
     help.icon = icon
-    help:SetScript("OnEnter", function(self) showTooltip(self, container) end)
+    help:SetScript("OnEnter", function() showTooltip(container) end)
     help:SetScript("OnLeave", hideTooltip)
     help:SetScript("OnClick", function() openSettings(container) end)
     return help
@@ -255,7 +261,7 @@ function Anchors.BuildHandle(container)
     handle:SetScript("OnClick", function(_, button)
         if button == "RightButton" then openSettings(container) end
     end)
-    handle:SetScript("OnEnter", function(self) showTooltip(self, container) end)
+    handle:SetScript("OnEnter", function() showTooltip(container) end)
     handle:SetScript("OnLeave", hideTooltip)
     return handle
 end

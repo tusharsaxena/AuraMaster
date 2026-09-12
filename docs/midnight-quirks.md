@@ -71,6 +71,12 @@ inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to a
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
 
+**The cost of the template: no tooltip can anchor under an anchor.** The restriction carries down the
+anchor chain. `GameTooltip` does not inherit the template, so `GameTooltip:SetOwner` on the drag handle
+or its help mark, both anchored under the anchor, raises "Anchoring disallowed as dependent object
+would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
+`UIParent` with `ANCHOR_CURSOR` instead, so it depends on nothing under the anchor.
+
 ## Groups are add-only, and some setters reset a group
 
 **The restriction.** An engine cannot remove a group, and WoW never frees a frame.

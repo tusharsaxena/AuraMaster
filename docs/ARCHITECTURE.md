@@ -230,6 +230,11 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
   Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:38-41`).
+- **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
+  anchored under the anchor, the drag handle and its help mark included, and the client refuses
+  `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
+  forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
+  `UIParent` and follows the cursor (`modules/Anchors.lua`, `showTooltip`).
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
