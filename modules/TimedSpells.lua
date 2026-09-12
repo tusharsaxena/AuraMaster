@@ -163,7 +163,12 @@ end
 --- Forget everything learned (`/am forgettimed`). Relearned on the next readable scan.
 function TS.Forget()
     local g = NS.db and NS.db.global
-    if g then g.timedSpells = {} end
+    if g then
+        local forgotten = TS.Count()
+        g.timedSpells = {}
+        -- A forget of learned data is a data mutation (debug-logging-§8).
+        NS.Debug("Timed", "forgot %s learned timed spell(s)", forgotten)
+    end
     -- The player's own change, unlike a scan's: an apply it queues in combat is announced.
     NS.bus:SendMessage(NS.MSG.TIMED_SPELLS_CHANGED, { byPlayer = true })
 end

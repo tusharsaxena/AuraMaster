@@ -182,3 +182,20 @@ test("timed: what was learned reaches the filter as excluded ids, and Forget cle
     NS.TimedSpells.Forget()
     assertEqual(NS.TimedSpells.Count(), 0)
 end)
+
+test("timed: Forget traces what it cleared", function()
+    -- A forget of learned data is a data mutation debug-logging-§8 traces.
+    local NS, mocks = fresh()
+    withAuras(mocks, { { spellId = 11, duration = 10 }, { spellId = 33, duration = 5 } })
+    NS.TimedSpells.Scan()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Timed" then
+            lines[#lines + 1] = fmt:format(...)
+        end
+    end
+    NS.TimedSpells.Forget()
+    -- red under: TS.Forget without its NS.Debug trace
+    assertEqual(#lines, 1, "one forget line")
+    assertTrue(lines[1]:find("forgot 2", 1, true) ~= nil, lines[1])
+end)
