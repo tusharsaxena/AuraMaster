@@ -74,6 +74,11 @@ suite covers what only the client can show.
     **[ General ][ Overview ]**. General shows Name, Enabled, Unit, Aura type, Style, then Duplicate and
     Delete, then (with two or more containers) Copy settings from. Overview lists every container with a
     Select button.
+    **Style switch with auras up.** Locked, with live auras in a container, switch its **Style** from
+    Bars to Icons, then back to Bars, then to Icons again → each time the elements redraw in the new
+    style only: no cooldown swipe or icon border left over a bar, no bar, bar text or background left
+    behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
+    each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
     show ][ Categories ][ Sorting ][ Spell lists ][ Always / never ]**; switch the container's aura type
     to Debuffs → **Spell lists** disappears and Categories offers the debuff categories; switch to

@@ -775,6 +775,8 @@ test("style: a frame dressed as a bar, then as an icon, builds icon regions and 
     assertEqual(bars.style, "bars", "tagged with the style that built it")
     for k, v in pairs(bars) do if type(v) == "table" then bars[k] = R() end end
     bars.icon:Show(); bars.pandemic:Hide()
+    -- bar and text: shown by build, never re-shown by Bars.Apply (only the icon is, in its layout)
+    bars.bar:Show(); bars.text:Show()
     c.style = "icons"
     local ok, err = pcall(NS.Style.Element, frame, c, false)
     -- red under: Icons.Apply reusing the bar's __am (it has no cd)
@@ -792,6 +794,10 @@ test("style: a frame dressed as a bar, then as an icon, builds icon regions and 
     -- red under: RegionsFor building a second set of bar regions (a frame is never freed)
     assertTrue(frame.__am == bars, "the bar's own regions again")
     assertTrue(bars.icon:IsShown(), "shown again as it was")
+    -- red under: RegionsFor dropping restoreRegions (Bars.Apply never re-shows the bar or the text
+    -- frame, so a bars -> icons -> bars button would draw no fill, no name and no time)
+    assertTrue(bars.bar:IsShown(), "the bar is shown again")
+    assertTrue(bars.text:IsShown(), "the texts' frame is shown again")
     -- red under: re-showing every region (the pandemic wash drawn on a bar that is not in its window)
     assertTrue(not bars.pandemic:IsShown(), "the pandemic wash stays as it was: hidden")
 end)
