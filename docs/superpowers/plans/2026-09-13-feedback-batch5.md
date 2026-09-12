@@ -68,7 +68,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | Task | Req | Repo | Status | Commit | Notes |
 |---|---|---|---|---|---|
 | P0 spec + plan | — | AM | done | (this commit) | |
-| R0 engine research | B-3 B-4 G-3 I-1 I-2 L-3 | AM | todo | | notes file |
+| R0 engine research | B-3 B-4 G-3 I-1 I-2 L-3 | AM | done | 370d5c0 | notes file |
 | A1 disabledIf + page disable | X-3 | LibKa0s | todo | | |
 | A2 ChoiceGrid | X-2 | LibKa0s | todo | | |
 | A3 IdInput / IdList | X-1 | LibKa0s | todo | | |
@@ -76,7 +76,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | B1 preview style switch | C-4 | AM | done | 1020798 | Style.RegionsFor + per-style preview pools |
 | B2 apply error isolation | B-5 | AM | done | 6e9739c | xpcall + Style.WithStack, geterrorhandler |
 | B3 justify width | B-5 | AM | done | c138d55 | ApplyText boxWidth; bar time unboxed while name stops at it |
-| B4 dispel color order | B-4 | AM | todo | | needs R0 |
+| B4 dispel color order | B-4 | AM | done | e94f771 | additive bindings cleared first in both styles; fill shown each dress |
 | B5 icon border color | I-1 | AM | todo | | needs R0 |
 | B6 countdown rounding | I-2 | AM | todo | | needs R0 |
 | B7 world-tooltip bleed + strata | L-3 | AM | todo | | needs R0; **CP-B** |
