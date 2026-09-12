@@ -900,3 +900,63 @@ test("manager: a client without the aura engine is told once, at startup", funct
     -- red under: CM.Init not checking EnsureAuraContainer
     assertEqual(countLines(lines, "no aura container API"), 1)
 end)
+
+-- B-5: one container whose Apply raises must not drop the rest of the pass. FlushPending clears the
+-- queue before applying, so an unguarded raise loses every later container and replaceAttached.
+
+--- Container 1 raises; container 2 only counts (its real Apply would Place it too, hiding whether
+--- replaceAttached ran). Container 2 is attached to container 1, so replaceAttached Places it.
+local function raisingPass(NS)
+    local CM = NS.ContainerManager
+    CM.instances[1].Apply = function() error("boom") end
+    local inst2, seen = CM.instances[2], { applied = 0, placed = 0 }
+    inst2.Apply = function() seen.applied = seen.applied + 1 end
+    local c2 = NS.Database.FindContainer(2)
+    c2.attach.mode, c2.attach.container = "container", 1
+    local place = NS.Anchors.Place
+    NS.Anchors.Place = function(inst, ...)
+        if inst == inst2 then seen.placed = seen.placed + 1 end
+        return place(inst, ...)
+    end
+    CM.RequestApply()
+    return seen
+end
+
+test("apply: an error in one container's Apply does not stop the others or replaceAttached", function()
+    local reported = { count = 0 }
+    local function handler(err)
+        reported.count = reported.count + 1
+        reported.last = err
+    end
+    local NS = fresh({ before = function(m)
+        m.debugstack = function() return debug.traceback("stack:", 2) end
+        m.geterrorhandler = function() return handler end
+    end })
+    local containers = NS.Database.GetContainers()
+    local total = #containers
+    local seen = raisingPass(NS)
+    local ok, applied = pcall(NS.ContainerManager.FlushPending)
+    -- red under: an unguarded inst:Apply() in applyDirty (the raise escapes, container 2 never applies)
+    assertTrue(ok, tostring(applied))
+    assertEqual(seen.applied, 1, "container 2 still applied")
+    assertEqual(seen.placed, 1, "replaceAttached still ran")
+    -- red under: counting the failed container as applied
+    assertEqual(applied, total - 1, "only successes count")
+    -- red under: reporting the error twice, or not handing it to the client's error handler
+    assertEqual(reported.count, 1, "the error is reported once")
+    assertTrue(tostring(reported.last):find("boom", 1, true) ~= nil, tostring(reported.last))
+    -- red under: a bare pcall (the handler sees no stack from where Apply raised)
+    assertTrue(tostring(reported.last):find("\n", 1, true) ~= nil, "the stack travels with the error")
+end)
+
+test("apply: with no client error handler the pass finishes, then the first error is raised", function()
+    local NS = fresh()
+    local seen = raisingPass(NS)
+    local ok, err = pcall(NS.ContainerManager.FlushPending)
+    -- red under: swallowing the error when geterrorhandler is absent (a headless failure goes silent)
+    assertFalse(ok, "the error is not swallowed")
+    assertTrue(tostring(err):find("boom", 1, true) ~= nil, tostring(err))
+    -- red under: re-raising from inside the loop rather than after the pass
+    assertEqual(seen.applied, 1, "container 2 applied before the raise")
+    assertEqual(seen.placed, 1, "replaceAttached ran before the raise")
+end)

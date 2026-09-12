@@ -290,6 +290,9 @@ local function withStack(err)
     if type(debugstack) ~= "function" or type(err) ~= "string" then return err end
     return tostring(err) .. "\n" .. debugstack(2)
 end
+--- The same handler for any other guarded call whose error goes on to an error handler: the apply
+--- pass (modules/ContainerManager.lua's applyDirty) reports a failing container through it.
+Style.WithStack = withStack
 
 --- Dress one element for `cfg` (a container's stored table). `engine` true binds the regions to the
 --- engine's aura data; false leaves them for the preview to fill. `classColor` is the container's
