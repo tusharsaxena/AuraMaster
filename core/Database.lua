@@ -110,7 +110,9 @@ end
 --- Keys come back from SavedVariables as numbers, but a hand-edited file or an old export can carry
 --- string ids; normalize so FindContainer(3) and FindContainer("3") cannot disagree. A key that is
 --- neither a number nor a numeric string has no id to become, and every later pass compares ids as
---- numbers, so it is dropped (one gated [Migrate] line each).
+--- numbers, so it is dropped (one gated [Migrate] line each). A numeric string whose id is already
+--- stored as a number is dropped the same way: the numeric key is the form this addon writes, so the
+--- string twin is the stale copy and never overwrites it.
 --- Collected first, then moved: assigning a new key while `pairs` walks the same table is
 --- undefined in Lua and raises "invalid key to 'next'".
 local function normalizeKeys(p)
@@ -125,8 +127,13 @@ local function normalizeKeys(p)
         end
     end
     for _, k in ipairs(renames) do
-        p.containers[tonumber(k)] = p.containers[k]
-        p.containers[k] = nil
+        local id = tonumber(k)
+        if p.containers[id] == nil then
+            p.containers[id] = p.containers[k]
+            p.containers[k] = nil
+        else
+            drops[#drops + 1] = k
+        end
     end
     for _, k in ipairs(drops) do
         p.containers[k] = nil

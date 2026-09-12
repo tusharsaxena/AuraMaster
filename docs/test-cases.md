@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (22)
+### test_database.lua (24)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -46,6 +46,8 @@ badge and any count quoted in the docs must agree with it.
 - database: an existing SavedVariables file keeps its containers
 - database: a stored section of the wrong type is replaced from the template on load
 - database: a non-numeric container key is dropped and the profile loads
+- database: a string key naming an id already stored as a number is dropped; the numeric key wins
+- database: a dropped string twin leaves one [Migrate] line naming the key
 - database: PrepareProfile seeds an empty profile from its own counter, in declaration order
 - database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
 - database: a schema version newer than this build is never lowered
@@ -816,7 +818,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 22 |
+| test_database.lua | 24 |
 | test_schema.lua | 26 |
 | test_schema_paths.lua | 33 |
 | test_filtercompiler.lua | 37 |
@@ -859,4 +861,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **669** |
+| **Total** | **671** |

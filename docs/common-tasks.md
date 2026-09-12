@@ -78,7 +78,7 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 2, apply = function(db) … end }` to `SCHEMA_STEPS` in `core/Database.lua:252`. The
+2. Append `{ to = 2, apply = function(db) … end }` to `SCHEMA_STEPS` in `core/Database.lua:259`. The
    ladder is account-wide (`global.schemaVersion`), but containers live in **every** profile: walk
    `db.sv.profiles` (AceDB's raw store, guarded — the no-AceDB fallback has no `sv`) and transform
    `profile.containers[*]` in each, not only `db.profile`. Test the stored value with `== nil`, never

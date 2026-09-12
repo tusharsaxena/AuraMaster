@@ -151,6 +151,50 @@ test("database: a non-numeric container key is dropped and the profile loads", f
     assertEqual(NS.db.profile.containers[4].name, "Mine")
 end)
 
+test("database: a string key naming an id already stored as a number is dropped; the numeric key wins", function()
+    local seeded = {
+        profiles = { Default = {
+            seeded = true, nextContainerId = 5,
+            containers = {
+                [2] = { name = "Numeric", unit = "player", auraType = "HELPFUL", style = "bars" },
+                ["2"] = { name = "Stale", unit = "player", auraType = "HARMFUL", style = "icons" },
+                ["4"] = { name = "Lone", unit = "player", auraType = "HELPFUL", style = "bars" },
+            },
+            containerOrder = { 2, 4 },
+        } },
+        global = { schemaVersion = 1 },
+    }
+    -- red under: normalizeKeys moving every numeric-string key over its number (the stale copy wins)
+    local NS = fresh({ savedVariables = seeded })
+    local p = NS.db.profile
+    assertEqual(p.containers[2].name, "Numeric", "the numeric key is the form the addon writes")
+    assertEqual(p.containers[2].style, "bars")
+    assertNil(p.containers["2"], "the string twin is gone")
+    assertEqual(p.containers[4].name, "Lone", "a string key with no numeric twin is still converted")
+    assertNil(p.containers["4"])
+    assertEqual(#NS.Database.GetContainers(), 2)
+end)
+
+test("database: a dropped string twin leaves one [Migrate] line naming the key", function()
+    local NS = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Migrate" then
+            lines[#lines + 1] = fmt:format(...)
+        end
+    end
+    local p = {
+        seeded = true, nextContainerId = 3,
+        containers = { [2] = { name = "Numeric" }, ["2"] = { name = "Stale" } },
+        containerOrder = { 2 },
+    }
+    NS.Database.PrepareProfile(p)
+    -- red under: dropping the twin without its trace
+    assertEqual(#lines, 1, table.concat(lines, " | "))
+    assertTrue(lines[1]:find("dropped container key 2", 1, true) ~= nil, lines[1])
+    assertEqual(p.containers[2].name, "Numeric")
+end)
+
 -- Characterization (testing-§13): pinned on the single-function PrepareProfile before it was split
 -- into local helpers, so the split is proven to change nothing.
 
