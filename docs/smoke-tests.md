@@ -184,6 +184,9 @@ suite covers what only the client can show.
 
 ## L. Profiles
 
+**The page draws.** Open another addon's options page first, then Aura Master → Profiles → the
+AceDBOptions controls render (current profile, New, Copy From, Delete, Reset Profile): never a blank
+page under the header.
 50. Profiles → create a new profile → the three starter containers appear on it; switch back → your
     own set returns, each where you left it.
 51. **Copy** a profile into the active one → its containers replace yours.

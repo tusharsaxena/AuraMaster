@@ -266,10 +266,11 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: a bulk act that raises still logs its one line, marked, and the seam logs again
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
-### test_optionssetup.lua (16)
+### test_optionssetup.lua (17)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
+- options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
 - options: the Filters page offers the spell-list tab only for a buff container
@@ -348,7 +349,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 11 |
 | test_slash.lua | 23 |
 | test_bulklog.lua | 13 |
-| test_optionssetup.lua | 16 |
+| test_optionssetup.lua | 17 |
 | test_perf.lua | 5 |
 | test_locale.lua | 2 |
 | test_docs.lua | 6 |
@@ -356,4 +357,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **266** |
+| **Total** | **267** |
