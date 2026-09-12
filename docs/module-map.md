@@ -50,7 +50,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `IsSafeKey` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
-| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the empty `SCHEMA_STEPS` ladder, `PrepareProfile` (the load repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps outside the write seam: the architecture-§5 row), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
+| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the empty `SCHEMA_STEPS` ladder, `PrepareProfile` (the registry's load pass: repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps directly, as architecture-§5 allows a named load pass), `NewContainerData` (the id mint, called only by the registry writer), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
 
 ## `defaults/`
 
@@ -73,7 +73,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor; left-click picks, right-click or Escape cancels |
 | `modules/BlizzardFrames.lua` | Reparents `BuffFrame`/`DebuffFrame` to a hidden parent and back, out of combat only |
 | `modules/Container.lua` | One live container: its anchor and handle, building, updating or retiring its engine, restyling, the per-apply class snapshot, the show ladder; bucket `applyContainer` |
-| `modules/ContainerManager.lua` | The registry's runtime writer (create, delete, duplicate; `Database.PrepareProfile` also writes it on load, and the architecture-§5 row names every writer), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
+| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate; `Database.PrepareProfile` is its load pass, and `docs/ARCHITECTURE.md` → Settings Schema names both), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
 
 ## `settings/` (TOC order)
 

@@ -148,8 +148,9 @@ after they were hidden; a visibility pass alone leaves them as they are.
 
 ## Registry changes
 
-Create, delete, duplicate, rename, copy-from and reset positions all live in
-`modules/ContainerManager.lua`, the one writer of the registry. A structural change calls `Announce`
+Create, delete and duplicate live in `modules/ContainerManager.lua`, the registry's one writer;
+`Database.PrepareProfile` is its load pass (`docs/ARCHITECTURE.md` → Settings Schema). Rename,
+copy-from and reset positions live there too, but write through the seam. A structural change calls `Announce`
 (instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`). Copy-from and
 reset positions are settings writes, not registry changes: each section they replace is one
 whole-section write through `NS.SetByPath`, which announces `CONFIG_CHANGED`, and the applies those

@@ -100,14 +100,26 @@ path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.black
 `.position`, `.bars`, `.icons`) are written through the same seam and normalized there. A drag, a
 copy between containers, a position reset and a delete's fallback to the screen all write that way.
 
-The registry (which containers exist, their order and the id counter: `containers` membership,
-`containerOrder`, `nextContainerId`) is not a settings path. No schema row addresses it, and none
-can, since a row is a leaf. Its writers are `ContainerManager.Create` (with
-`Database.NewContainerData` taking the id), `ContainerManager.Delete`, `ContainerManager.Duplicate`
-(through `Create`), and `Database.PrepareProfile`'s load repair and first-run seeding
-(`seedStarters`, `normalizeKeys`, `backfillContainers`, `rebuildOrder` and the `nextContainerId`
-bump). Those writes bypass `NS.SetByPath`, which is the `architecture-§5` row in Documented
-deviations.
+The addon holds one structural registry, the containers (architecture-§5). No schema row addresses
+it, and none can, since a row is a leaf.
+
+- **Storage keys:** the profile's `containers` (members keyed by numeric id, each stamped with its
+  `c.id`), `containerOrder` (display order), `nextContainerId` (the id counter) and `seeded` (the
+  sentinel recording that first-run seeding has run).
+- **Registry writer:** `modules/ContainerManager.lua`. `ContainerManager.Create`, `.Delete` and
+  `.Duplicate` (through `Create`) make every runtime membership change, and
+  `Database.NewContainerData` mints the id and stamps `c.id` for it. `NewContainerData` has no
+  other caller, so it is part of the writer.
+- **Load pass:** `Database.PrepareProfile` (`core/Database.lua`), run from `NS.RunMigrations` at
+  initialization and from `NS.OnProfileChanged` on AceDB's profile changed, copied and reset
+  callbacks, and from nowhere else. It runs `seedStarters`, `normalizeKeys`, `backfillContainers`,
+  the `nextContainerId` bump and `rebuildOrder`.
+
+A member field a row addresses goes through `NS.SetByPath` with a container id even when
+ContainerManager is the caller: rename, copy-from, position reset and a delete's fallback to the
+screen. The per-container `container.filter.whitelist`, `.blacklist` and `.categorySpells` sets are
+values the seam takes whole at its carve-out paths, not registries. Only its named writer and
+load pass write the registry, so it is compliant and carries no Documented deviations row.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
@@ -349,5 +361,4 @@ None.
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
-| `architecture-§5` | The container registry (`containers` membership, `containerOrder`, `nextContainerId`) is written outside `NS.SetByPath`: by `ContainerManager.Create` (with `Database.NewContainerData` taking the id and stamping `c.id`), `.Delete` and `.Duplicate` (through `Create`), and by `Database.PrepareProfile`'s load repair and first-run seeding (`seedStarters`, `normalizeKeys`, `backfillContainers`, `rebuildOrder` and the `nextContainerId` bump). That load pass also writes the profile's `seeded` flag, backfills missing template leaves into every stored container and stamps each container's `c.id` from its key | The registry is not addressable by any schema row, since a row is a leaf; membership changes are structural and go through ContainerManager, and the load repair normalizes what AceDB loaded and, on a brand-new profile, seeds the starters, before any reader sees the registry; follow-up to docs/reviews/2026-09-11 F-006, whose settings writes now go through the seam, leaving only the registry, which is not a settings path. Accepted by the owner 2026-09-12 as an interim deviation pending tusharsaxena/WowAddonStandards#7, a proposed change to the standard; retired when #7 is decided. | 2026-09-12 | tusharsaxena/WowAddonStandards#7 is decided: if architecture-§5 is scoped to schema rows, the row is retired as compliant; if it covers registries, the registry writers move behind the write seam (a registry address on `NS.SetByPath`) and the row is retired with that change. It also ends sooner if a schema row (or the seam) gains a registry address |
 | `documentation-§1` | README has no `## Screenshots` section (item 5) | Screenshots can only be captured in a live client and none exist yet; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20; the capture is tracked as issue tusharsaxena/AuraMaster#3. Ratified by the owner 2026-09-12. | 2026-09-12 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when the section lands |
