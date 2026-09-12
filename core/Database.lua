@@ -23,16 +23,27 @@ local copy = Database.DeepCopy
 --- stored `false`, `0` or empty string is the player's choice and survives (savedvariables-§5).
 --- A template table whose shape is a MAP the player fills (categories, spell lists) is empty in the
 --- template, so there is nothing to fill into it and the player's entries are never touched.
---- @return number  how many leaves were filled
-function Database.Backfill(dst, template)
+---
+--- `repair`, for the LOAD path only: a stored value that is not a table where the template holds a
+--- section (a hand-edited `position = "junk"`) is replaced by the template's section. Nothing a player
+--- sets through the addon can produce one, and left in place it survived the load and raised later
+--- (ContainerManager.Duplicate indexed it). A whole-section WRITE backfills without it, so a malformed
+--- section handed to NS.SetByPath is still validated and refused rather than silently repaired.
+--- @return number  how many leaves were filled or repaired
+function Database.Backfill(dst, template, repair)
     local filled = 0
     for k, tv in pairs(template) do
         local dv = dst[k]
         if dv == nil then
             dst[k] = copy(tv)
             filled = filled + 1
-        elseif type(tv) == "table" and type(dv) == "table" then
-            filled = filled + Database.Backfill(dv, tv)
+        elseif type(tv) == "table" then
+            if type(dv) == "table" then
+                filled = filled + Database.Backfill(dv, tv, repair)
+            elseif repair then
+                dst[k] = copy(tv)
+                filled = filled + 1
+            end
         end
     end
     return filled
@@ -153,7 +164,7 @@ local function backfillContainers(p)
     local maxId = 0
     for id, c in pairs(p.containers) do
         if type(c) == "table" then
-            Database.Backfill(c, NS.CONTAINER_TEMPLATE)
+            Database.Backfill(c, NS.CONTAINER_TEMPLATE, true)
             c.id = id
             if id > maxId then maxId = id end
         else
@@ -228,8 +239,8 @@ function NS.InitDB()
         AuraMasterDB = AuraMasterDB or {}
         AuraMasterDB.profile = AuraMasterDB.profile or {}
         AuraMasterDB.global = AuraMasterDB.global or {}
-        Database.Backfill(AuraMasterDB.profile, NS.defaults.profile)
-        Database.Backfill(AuraMasterDB.global, NS.defaults.global)
+        Database.Backfill(AuraMasterDB.profile, NS.defaults.profile, true)
+        Database.Backfill(AuraMasterDB.global, NS.defaults.global, true)
         NS.db = { profile = AuraMasterDB.profile, global = AuraMasterDB.global }
     end
     NS.RunMigrations()

@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (21)
+### test_database.lua (22)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -44,6 +44,7 @@ badge and any count quoted in the docs must agree with it.
 - database: a new container's data is a deep copy of the template with a fresh id
 - database: the migration runner stamps the schema and creates the timed-spell store
 - database: an existing SavedVariables file keeps its containers
+- database: a stored section of the wrong type is replaced from the template on load
 - database: a non-numeric container key is dropped and the profile loads
 - database: PrepareProfile seeds an empty profile from its own counter, in declaration order
 - database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
@@ -756,13 +757,14 @@ badge and any count quoted in the docs must agree with it.
 - perf: resume re-registers exactly the lifecycle events suspend took away
 - perf: without the library, /am perf answers one honest line
 
-### test_debuglogsetup.lua (7)
+### test_debuglogsetup.lua (8)
 
 - debuglog: enabling logging writes the [Init] summary — name, version, schema, profile and container count
 - debuglog: the flag is NS.State.debug itself — the sink and IsEnabled read it live
 - debuglog: the chat acknowledgment goes through the addon's tagged printer; the console brackets both ends
 - debuglog: showing or hiding the console refreshes open panels, so the Master controls row follows it
 - debuglog: the Debug console row shows and hides the window and never touches the logging flag
+- debuglog: Reset all closes an open console, because the console row carries a default
 - debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
@@ -814,7 +816,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 21 |
+| test_database.lua | 22 |
 | test_schema.lua | 26 |
 | test_schema_paths.lua | 33 |
 | test_filtercompiler.lua | 37 |
@@ -850,11 +852,11 @@ badge and any count quoted in the docs must agree with it.
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 9 |
 | test_perf.lua | 8 |
-| test_debuglogsetup.lua | 7 |
+| test_debuglogsetup.lua | 8 |
 | test_locale.lua | 5 |
 | test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **667** |
+| **Total** | **669** |

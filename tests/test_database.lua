@@ -109,6 +109,29 @@ test("database: an existing SavedVariables file keeps its containers", function(
     assertFalse(list[1].id ~= 4)
 end)
 
+test("database: a stored section of the wrong type is replaced from the template on load", function()
+    local seeded = {
+        profiles = { Default = {
+            seeded = true, nextContainerId = 5,
+            containers = { [4] = {
+                name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                position = "junk", bars = { width = 150, name = false },
+            } },
+            containerOrder = { 4 },
+        } },
+        global = { schemaVersion = 1 },
+    }
+    -- red under: Backfill without the load path's `repair` — the non-table section survives
+    -- PrepareProfile, and ContainerManager.Duplicate then indexes it and raises
+    local NS = fresh({ savedVariables = seeded })
+    local c = NS.db.profile.containers[4]
+    assertEqual(type(c.position), "table", "the junk position is replaced by the template's section")
+    assertEqual(c.position.point, NS.CONTAINER_TEMPLATE.position.point)
+    assertEqual(type(c.bars.name), "table", "a nested section of the wrong type is repaired too")
+    assertEqual(c.bars.width, 150, "a stored leaf beside it is the player's and survives")
+    assertTrue((pcall(NS.ContainerManager.Duplicate, 4)), "Duplicate on the repaired container does not raise")
+end)
+
 test("database: a non-numeric container key is dropped and the profile loads", function()
     local seeded = {
         profiles = { Default = {

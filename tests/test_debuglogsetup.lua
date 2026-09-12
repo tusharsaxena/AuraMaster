@@ -94,6 +94,17 @@ test("debuglog: the Debug console row shows and hides the window and never touch
     assertFalse(NS2.DebugLog:IsShown())
 end)
 
+test("debuglog: Reset all closes an open console, because the console row carries a default", function()
+    -- options-ui-§12 names the debug console among the session rows a global reset MUST restore.
+    -- red under: the console row without `default = false` (settings/General.lua) — the reset's
+    -- session sweep has no value to write, and the window stays open
+    local NS2 = fresh()
+    assertTrue(NS2.SetByPath("state.debugConsole", true))
+    assertTrue(NS2.DebugLog:IsShown())
+    NS2.Helpers.RestoreAllDefaults()
+    assertFalse(NS2.DebugLog:IsShown())
+end)
+
 -- ── the stub ──────────────────────────────────────────────────────────────────────────────────
 
 --- The degraded build's chat lines, minus the Core stub's one-time "running on reduced fallbacks".

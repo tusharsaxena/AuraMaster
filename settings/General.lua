@@ -65,6 +65,10 @@ for _, row in ipairs(masterRows) do
     row.effect = masterEffect[row.path]
     if row.path == DEBUG_CONSOLE_PATH then
         row.get, row.set = console.get, console.set
+        -- Closed, stated here because the library's composer gives the row none. Without it a
+        -- global reset (and the page's Defaults) could never close the console, where options-ui-§12
+        -- names the debug console among the session rows a reset MUST restore.
+        row.default = false
         -- Explicitly nothing: toggling a window re-applies no container.
         row.onChange = function() end
     end
