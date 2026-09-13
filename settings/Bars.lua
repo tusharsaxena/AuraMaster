@@ -157,7 +157,7 @@ NS.RegisterSchemaRows(HI)
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
     intro = function(ctx, cfg)
         if cfg.style ~= "bars" then
-            H.TextRow(ctx, "|cffffa040" .. L["This container is drawn as icons; these settings apply once its style is Bars (Containers page)."] .. "|r")
+            H.TextRow(ctx, "|cffffa040" .. L["This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."] .. "|r")
         end
     end,
 })

@@ -73,7 +73,7 @@ test("options descriptor: a color swatch shows the stored color and stores the p
     NS2.State.SetActiveContainer(1)
     m.__subcategories.Bars:__fire("OnShow")
     local row = NS2.FindSchemaRow("container.bars.barColor")
-    clickTab(NS2.Helpers.__containerCtx.bars, row.group)
+    clickTab(NS2.Helpers.__pageCtx.bars, row.group)
     local cp = widget(m, "ColorPicker", row.label)
     assertTrue(cp ~= nil, "the " .. row.group .. " tab drew the bar color swatch")
     local stored = NS2.Database.FindContainer(1).bars.barColor
@@ -186,7 +186,7 @@ test("options descriptor: the banner lists every container in display order and 
     local NS2, m = fresh()
     NS2.State.SetActiveContainer(2)
     m.__subcategories.Bars:__fire("OnShow")
-    local dd = NS2.Helpers.__containerCtx.bars.__bannerWidget
+    local dd = NS2.Helpers.__pageCtx.bars.__bannerWidget
     assertEqual(table.concat(dd.order, ","), table.concat(NS2.db.profile.containerOrder, ","))
     assertEqual(dd.list[2], "Player debuffs  |cff888888(Player debuffs, icons)|r")
     assertEqual(dd.value, 2)
@@ -200,26 +200,28 @@ test("options descriptor: the banner lists every container in display order and 
     assertEqual(refreshes[1], 1)
 end)
 
-test("options descriptor: the Containers page's picker is a plain dropdown on the chrome ledger that selects", function()
+test("options descriptor: General → Containers' picker is a plain dropdown in the tab body that selects", function()
     local NS2, m = fresh()
     NS2.State.SetActiveContainer(1)
-    m.__subcategories.Containers:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.containers
-    local dd = ctx.__bannerWidget
-    assertEqual(dd.type, "Dropdown")
-    assertEqual(dd.labelText, "Container")
-    local onLedger = false
-    for _, w in ipairs(ctx.__chromeWidgets) do if w == dd then onLedger = true end end
-    assertTrue(onLedger, "released with the rest of the chrome")
+    m.__subcategories.General:__fire("OnShow")
+    local ctx = NS2.Helpers.__pageCtx.general
+    clickTab(ctx, "Containers")
+    local dd = widget(m, "Dropdown", "Container")
+    assertTrue(dd ~= nil, "the tab drew its picker")
+    assertEqual(table.concat(dd.order, ","), "1,2,3")
+    -- red under: the picker drawn into a chrome block (the General page draws no banner, D1)
+    assertNil(ctx.__bannerWidget)
+    local kids = ctx.__chromeKids or {}
+    assertEqual(#kids, 0, "nothing in the band above the strip")
     dd:__fire("OnValueChanged", 2)
-    -- red under: ContainerPickerWidget's callback not reaching SelectContainer
+    -- red under: ContainerPickerCell's callback not reaching SelectContainer
     assertEqual(NS2.State.activeContainerId, 2)
 end)
 
 test("options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits", function()
     local NS2, m = fresh()
     m.__subcategories.Bars:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.bars
+    local ctx = NS2.Helpers.__pageCtx.bars
     NS2.State.SetActiveContainer(2)                   -- a debuff container
     local intro, drawn = {}, {}
     local spec = {
@@ -263,7 +265,7 @@ end)
 test("options descriptor: with no containers a page draws the one empty-registry line and no intro", function()
     local NS2, m = fresh()
     m.__subcategories.Bars:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.bars
+    local ctx = NS2.Helpers.__pageCtx.bars
     deleteAll(NS2)
     local rows, introduced = {}, { 0 }
     local textRow = NS2.Helpers.TextRow
@@ -274,39 +276,52 @@ test("options descriptor: with no containers a page draws the one empty-registry
     NS2.Helpers.RenderContainerPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end })
     -- red under: renderActiveTab calling spec.intro with a nil cfg
     assertEqual(introduced[1], 0)
-    assertEqual(table.concat(rows, "|"), "No containers yet. Create one on the Containers page, or type /am new.")
+    assertEqual(table.concat(rows, "|"), "No containers yet. Create one on General → Containers, or type /am new.")
     assertEqual(ctx.__tabs[1].label, "Container", "the placeholder tab")
 end)
 
-test("options descriptor: a page's own header replaces the banner", function()
+test("options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it", function()
     local NS2, m = fresh()
     m.__subcategories.Bars:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.bars
-    assertTrue(ctx.__bannerWidget ~= nil, "the plain page draws the banner")
-    local frame
-    NS2.Helpers.RenderContainerPage(ctx, "bars", { header = function(_, f) frame = f end })
-    -- red under: RenderContainerPage drawing the banner whatever the spec says
-    assertTrue(frame ~= nil, "the header was handed its chrome frame")
+    local ctx = NS2.Helpers.__pageCtx.bars
+    assertTrue(ctx.__bannerWidget ~= nil, "a container page draws the banner")
+    local strips = counter(NS2.Helpers, "TabStrip")
+    NS2.Helpers.RenderTabbedPage(ctx, "bars", {})
+    -- red under: RenderTabbedPage drawing the container banner (General would grow one, against D1)
     assertNil(ctx.__bannerWidget)
+    assertEqual(strips[1], 1, "the strip is still drawn")
+    NS2.Helpers.RenderContainerPage(ctx, "bars", {})
+    assertTrue(ctx.__bannerWidget ~= nil, "and the container page draws it again")
 end)
 
-test("options descriptor: a re-render returns the last render's chrome widgets to the pool, after it draws", function()
+test("options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place", function()
     local NS2, m = fresh()
-    m.__subcategories.Containers:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.containers
-    local first = ctx.__bannerWidget
-    assertTrue(first ~= nil and not first.__released, "the Containers page's picker is live")
-    NS2.Helpers.RefreshAllPanels()                  -- a hidden panel is marked dirty
-    m.__subcategories.Containers:__fire("OnShow")
-    -- red under: releaseStaleChromeWidgets dropped (every render leaks its picker and New button)
-    assertTrue(first.__released, "the previous picker went back to the pool")
-    assertTrue(ctx.__bannerWidget ~= first and not ctx.__bannerWidget.__released, "the new one is live")
+    m.__subcategories.Bars:__fire("OnShow")
+    local ctx = NS2.Helpers.__pageCtx.bars
+    deleteAll(NS2)
+    local drawn = {}
+    NS2.Helpers.RenderTabbedPage(ctx, "general", {
+        addonWide = true,
+        tabs = { { key = "Containers", label = "Containers", render = function(_, cfg, rows)
+            local list = rows or {}
+            local count = #list
+            drawn[#drawn + 1] = { cfg = cfg, rows = count }
+        end } },
+    })
+    local keys = {}
+    for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
+    -- red under: collectTabs returning no tabs without a container, or adding the bespoke tab twice
+    assertEqual(table.concat(keys, ","), "Master controls,Display,Containers")
+    clickTab(ctx, "Containers")
+    assertEqual(#drawn, 1, "the bespoke render replaced the group's rows")
+    assertNil(drawn[1].cfg, "with no container")
+    assertEqual(drawn[1].rows, 5, "and was handed the group's rows")
 end)
 
 test("options descriptor: RenderWarnings draws one orange line per thing the engine will not do", function()
     local NS2, m = fresh()
     m.__subcategories.Bars:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.bars
+    local ctx = NS2.Helpers.__pageCtx.bars
     local rows = {}
     NS2.Helpers.TextRow = function(_, text)
         rows[#rows + 1] = text

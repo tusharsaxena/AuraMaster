@@ -61,7 +61,8 @@ suite covers what only the client can show.
 
 19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
     Slash Commands list matching `/am help`, and no tab strip.
-20. **General** → the strip **[ Master controls ][ Display ]**. Master controls reads, two per line:
+20. **General** → the strip **[ Master controls ][ Display ][ Containers ]**, and no Container picker
+    above it. Master controls reads, two per line:
     Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
     then **Reset position** and **Reset all settings**.
 21. Untick **Enable Aura Master** → every container disappears; re-tick → back. Set **General
@@ -70,10 +71,12 @@ suite covers what only the client can show.
     they take effect immediately (visibility is legal in combat).
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
-23. **Containers** → the band holds the Container picker and **New container** on one row; the strip is
-    **[ General ][ Overview ]**. General shows Name, Enabled, Unit, Aura type, Style, then Duplicate and
-    Delete, then (with two or more containers) Copy settings from. Overview lists every container with a
-    Select button.
+23. **General → Containers** → the tab body's first line holds the Container picker and **New
+    container**, side by side and aligned. Below: Name, Enabled, Unit, Aura type, Style, then Duplicate
+    and Delete, then (with two or more containers) Copy settings from. Select a container and
+    **Delete** it → the picker and New container are still there, and the picker lists what is left.
+    Rename a container and change its Unit, then press the page's **Defaults** → Enabled, Unit, Aura
+    type and Style go back to their defaults and the name stays.
     **Style switch with auras up.** Locked, with live auras in a container, switch its **Style** from
     Bars to Icons, then back to Bars, then to Icons again → each time the elements redraw in the new
     style only: no cooldown swipe or icon border left over a bar, no bar, bar text or background left

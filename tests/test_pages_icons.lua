@@ -15,7 +15,7 @@ local function icons(opts)
     return NS, m, P, P.show("Icons")
 end
 
-local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (Containers page)."
+local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (General → Containers)."
 
 test("icons: a bars container's tabs carry the orange notice; an icons container's carry none", function()
     local NS, _, P, ws = icons()

@@ -16,7 +16,7 @@ end
 
 --- The attach-target dropdown. The banner is labeled "Container" too, so it is excluded by identity.
 local function targetDropdown(NS, P, ws)
-    local banner = NS.Helpers.__containerCtx.layout.__bannerWidget
+    local banner = NS.Helpers.__pageCtx.layout.__bannerWidget
     for _, w in ipairs(P.all(ws, "Dropdown", NS.L["Container"])) do
         if w ~= banner then return w end
     end
@@ -188,9 +188,9 @@ test("layout: after the banner moves, the page draws the newly selected containe
     P.show("Layout")
     local ws = P.tab("layout", NS.L["Frame"])
     assertEqual(P.row(ws, "container.layout.scale").value, 1, "container 1's scale")
-    NS.Helpers.__containerCtx.layout.__bannerWidget:__fire("OnValueChanged", 3)
+    NS.Helpers.__pageCtx.layout.__bannerWidget:__fire("OnValueChanged", 3)
     ws = P.show("Layout")
     -- red under: the page caching the container it first drew, or losing its tab on the switch
-    assertEqual(NS.Helpers.__containerCtx.layout.activeTab, NS.L["Frame"], "the tab survives the switch")
+    assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Frame"], "the tab survives the switch")
     assertEqual(P.row(ws, "container.layout.scale").value, 1.5)
 end)

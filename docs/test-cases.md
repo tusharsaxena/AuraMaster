@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (24)
+### test_database.lua (39)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -59,8 +59,23 @@ badge and any count quoted in the docs must agree with it.
 - database: NewContainerData takes an id from the counter without registering the container
 - database: seeded starters share no table with each other or with the template
 - database: a file from before the seeded flag, the id counter and the order keeps its containers
+- database v2: the schema is at version 2
+- database v2: spell additions from every container are united in the profile
+- database v2: a starter is removed profile-wide only when every container that edited it removed it
+- database v2: an addition beats another container's removal of the same spell
+- database v2: the two healing lists' spell edits merge under healing
+- database v2: a container's two healing states merge — show beats hide beats neutral
+- database v2: dispel colors come from the first dispel-colored container in display order
+- database v2: with no dispel-colored container the first container's colors win, completed from the defaults
+- database v2: a profile with no containers gets the default dispel colors and empty spell lists
+- database v2: stored Medium strata rises to High and every other strata is kept
+- database v2: the step is idempotent over a profile it already migrated
+- database v2: RunMigrations migrates every stored profile, the inactive one included
+- database v2: RunMigrations logs one [Migrate] line per profile, and a second run is a no-op
+- database v2: without AceDB the step migrates the one profile there is
+- database v2: a fresh profile carries the profile-wide spell lists and dispel colors
 
-### test_schema.lua (26)
+### test_schema.lua (28)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -84,6 +99,8 @@ badge and any count quoted in the docs must agree with it.
 - schema: a spell set is written whole and normalized to positive integer ids
 - schema: a carve-out's refusal is the locale's sentence
 - schema: category spell edits keep only real spell categories
+- schema: the spell lists are one profile-wide set at the absolute path categorySpells (schema v2)
+- schema: the validator resolves the profile-wide sets, and the dispel swatches are profile rows
 - schema: a whole section written through the seam replaces it, backfills it, logs once and announces once
 - schema: a section write refuses a non-section path, a non-table, and a value a row rejects
 - schema: a section write runs the normalize hook of every row under it, with the target id
@@ -128,7 +145,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (37)
+### test_filtercompiler.lua (39)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -144,6 +161,8 @@ badge and any count quoted in the docs must agree with it.
 - filter: two shown categories are a union, and the second excludes the first
 - filter: a token shown after a token excludes it by negation
 - filter: a category's spell edits add and remove ids
+- filter: spell edits are the profile's, handed in ctx; a container's own old copy is ignored (schema v2)
+- filter: both compile sites hand the compiler the profile's spell lists
 - filter: a shown spell category with every id removed can never match, and says so
 - filter: the whitelist is its own first group and every other group excludes it
 - filter: the blacklist is excluded everywhere and beats the whitelist
@@ -206,7 +225,7 @@ badge and any count quoted in the docs must agree with it.
 - container: a button the engine creates is dressed with the container's class snapshot
 - container: on a client without the aura engine a container is deleted without error
 
-### test_containermanager.lua (48)
+### test_containermanager.lua (51)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -221,6 +240,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
 - manager: /am test, /am lock and a rename under lockdown print no deferral notice
 - manager: a master visibility row hides containers at once, with no apply pass
+- manager: a profile-wide dispel color or spell-list write re-applies every container (G-2, G-3)
 - manager: disabling a container in combat hides it at once, with no apply and no deferral notice
 - manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line
 - manager: the regen edge never escalates the notice; a later held request does
@@ -256,8 +276,10 @@ badge and any count quoted in the docs must agree with it.
 - manager: a duplicate of an attached container keeps its position; an unknown id is refused
 - manager: a rebuilt engine re-anchors every container attached to it
 - manager: a client without the aura engine is told once, at startup
+- apply: an error in one container's Apply does not stop the others or replaceAttached
+- apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (16)
+### test_compat.lua (19)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -269,8 +291,11 @@ badge and any count quoted in the docs must agree with it.
 - compat: the enchant sort and placement read their enums, else 1
 - compat: flow axis and direction use AnchorUtil's enums, else pass the name through
 - compat: the status-bar and dispel-style enums answer nil on a client without them
-- compat: no duration formatter for Blizzard's own text, without C_StringUtil, or when creation fails
+- compat: no duration formatter without C_StringUtil, or when creation fails
 - compat: a detailed formatter shows two units with a carry, a short one a single unit
+- compat: every time format rounds a fractional second up, as the cooldown countdown does (I-2)
+- compat: the Blizzard format copies the engine's default formatter, rounding up (I-2)
+- compat: without the curve API, or with a curve that refuses a point, the Blizzard format tops out at days
 - compat: the expiring text color is a step curve from the expiring color to the normal one at the threshold
 - compat: no curve API, or a curve that refuses a point, gives no text color
 - compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global
@@ -355,7 +380,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: the strip sits fifty levels above its anchor, over the container's elements
 - handle: a left click on the strip opens nothing; a right click opens this container's settings
 
-### test_style.lua (38)
+### test_style.lua (40)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -374,7 +399,6 @@ badge and any count quoted in the docs must agree with it.
 - style: a dress that raises still clears its class color, and the error reaches the caller
 - style: a dress that raises hands the error handler the failing styler's stack
 - style: a dress that raises a non-string value hands that value on unchanged
-- style: the Blizzard time format asks for no formatter of our own
 - style: buttons of one look share one formatter and curve; a new color builds a new curve
 - style: the Solid border is registered with the media library as the flat white texture
 - style: a media key resolves through the media library; an unknown, empty, odd or broken one draws the fallback
@@ -382,6 +406,7 @@ badge and any count quoted in the docs must agree with it.
 - style: each outline setting reaches the font as the client's flag string
 - style: a font shadow is a one-pixel black drop when on, and no offset when off
 - style: a text's corner, offsets and justification come from its block, the template filling what is missing
+- style: a text given a box is as wide as the box less its offset, so its justification has room to show
 - style: a missing text block leaves its font string untouched
 - style: a text's color is its own swatch, or the dress's class when its companion is on
 - style: a missing color paints opaque white rather than raising
@@ -395,6 +420,8 @@ badge and any count quoted in the docs must agree with it.
 - style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
 - style: the time text gets the engine's formatter for its format, and the expiring color at its threshold
 - style: a style leaf left nil draws the template's value, never a literal of its own
+- style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's
+- style: hiding the other style's regions never hides the element itself
 
 ### test_timedspells.lua (19)
 
@@ -418,7 +445,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (31)
+### test_style_bars.lua (36)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -438,10 +465,15 @@ badge and any count quoted in the docs must agree with it.
 - bars: each text shows or hides on its own setting
 - bars: the stack count sits on the icon, or on the bar when there is no icon
 - bars: the name and time are laid against the bar, in their configured corners
+- bars: each text is boxed to its host less its offset: the bar area, or the icon for the stacks on it
+- bars: the time sizes to its own text while the name stops short of it, so the name keeps its room
 - bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on
 - bars: a hidden region is never handed to the engine
 - bars: every shown region is bound to its own engine field
 - bars: dispel coloring tints the fill through the engine with the stored dispel colors
+- bars: switching Color by from dispel type back to static paints the bar's own color again
+- bars: back to static on a button holding no aura, the fill the engine hid shows again
+- bars: in dispel mode the engine's tint stays the fill's last color
 - bars: the refresh-window highlight is bound only when turned on, and always cleared first
 - bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
 - bars: a preview with a missing icon gap measures the template's gap, as the layout does
@@ -452,7 +484,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: a dispel-colored preview paints the Magic color, since no real aura names a type
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (19)
+### test_style_icons.lua (23)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -464,9 +496,13 @@ badge and any count quoted in the docs must agree with it.
 - icons: the cooldown turned off hides the swipe and never binds it to the engine
 - icons: Blizzard's countdown numbers show only when asked for
 - icons: the time and stack texts are laid against the icon's frame and show on their own settings
+- icons: the time and stack texts are boxed to the icon's width less their offsets
 - icons: a hidden text is never handed to the engine; a shown one is, as its own region
 - icons: the dispel border is the engine's debuff art on harmful auras only
+- icons: the dispel border is tinted in the profile's dispel colors (G-3)
+- icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
 - icons: the dispel border turned off is hidden and never bound
+- icons: turning the dispel border off on a live button keeps it hidden (B-4)
 - icons: the refresh-window highlight is bound only when on, in the pandemic color
 - icons: an icon's buttons get the shared mouse behavior
 - icons: a restyle re-dresses the regions it built, and builds none
@@ -474,7 +510,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_preview.lua (10)
+### test_preview.lua (16)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders, and an enchant container shows at most two
@@ -486,6 +522,12 @@ badge and any count quoted in the docs must agree with it.
 - preview: /am test shows placeholders on a locked addon, with the engine off and no drag handle
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
+- preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
+- preview: switching a previewed container from bars to icons re-dresses without error
+- preview: switching a previewed container from icons to bars re-dresses without error
+- preview: a bar container duplicated while unlocked, then switched to icons, re-dresses (the owner's steps)
+- preview: each style keeps its own pool, and a switch parks the other style's placeholders
+- preview: a placeholder holds the mouse's hover as its container's buttons do, so no world tooltip shows through (L-3)
 
 ### test_blizzardframes.lua (8)
 
@@ -613,7 +655,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
-- options: the Containers page's New button creates and selects a container
+- options: General → Containers' New button creates and selects a container
 - options: a page's Defaults button restores only the selected container
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
 - options: opening a page in combat refuses with the canonical gray line
@@ -631,17 +673,17 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Reset all never writes a Profiles-page row, live or degraded
 - options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
 - options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
-- options descriptor: the Containers page's picker is a plain dropdown on the chrome ledger that selects
+- options descriptor: General → Containers' picker is a plain dropdown in the tab body that selects
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
-- options descriptor: a page's own header replaces the banner
-- options descriptor: a re-render returns the last render's chrome widgets to the pool, after it draws
+- options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it
+- options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (13)
+### test_pages_general.lua (35)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -655,24 +697,29 @@ badge and any count quoted in the docs must agree with it.
 - general: Reset all settings asks first and resets nothing until the answer
 - general: the Reset-all tooltip names the equivalence with Profiles → Reset Profile
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
-- general: Defaults restores the General rows of the profile and no container setting
-
-### test_pages_containers.lua (14)
-
-- containers: the Name box renames the selected container, trimmed, and no other
-- containers: a blank name is refused and the container keeps its name
-- containers: a rename re-lists every picker and re-applies no container
-- containers: the Unit dropdown offers the four units in order and writes the selected container
-- containers: changing the aura type redraws an open Filters page for the new type, on the next frame
-- containers: the Style dropdown offers bars and icons and writes the selected container
-- containers: New and Duplicate in combat refuse in gray and create nothing
-- containers: Duplicate copies the selected container and selects the copy
-- containers: Delete asks first, naming the container, and deletes it only on Yes
-- containers: the copy block offers every other container and copies only the chosen section
-- containers: copying Everything takes what the source is, never its name or position
-- containers: with one container the page offers Duplicate and Delete but no copy block
-- containers: Overview describes every container and where it is attached; Select selects it
-- containers: the band's picker lists every container, and choosing one retargets the page
+- general: Defaults restores the General rows of the profile and no container setting outside the Containers tab
+- general: Defaults restores the selected container's Enabled, Unit, Aura type and Style, and never its name
+- general: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
+- general: /am reset container.name says a name has no default and changes nothing
+- general: the tab strip reads Master controls, Display, Containers, and no page is keyed containers
+- general: NS.OpenOptionsPage('containers') opens no page, where 'layout' still opens its own
+- general → containers: the tab body opens with the Container picker and New container on one line
+- general → containers: the picker retargets the tab and every page
+- general → containers: New container creates a container and selects it
+- general → containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
+- general → containers: with no containers the tab draws the picker, New container and one line instead of the rows
+- general → containers: the Name box renames the selected container, trimmed, and no other
+- general → containers: a blank name is refused and the container keeps its name
+- general → containers: a rename re-lists every picker and re-applies no container
+- general → containers: the Unit dropdown offers the four units in order and writes the selected container
+- general → containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+- general → containers: the Style dropdown offers bars and icons and writes the selected container
+- general → containers: New and Duplicate in combat refuse in gray and create nothing
+- general → containers: Duplicate copies the selected container and selects the copy
+- general → containers: Delete asks first, naming the container, and deletes it only on Yes
+- general → containers: the copy block offers every other container and copies only the chosen section
+- general → containers: copying Everything takes what the source is, never its name or position
+- general → containers: with one container the tab offers Duplicate and Delete but no copy block
 
 ### test_pages_filters.lua (12)
 
@@ -747,16 +794,19 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (9)
+### test_defaults.lua (12)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
 - defaults: spell categories are buff categories, and IsSpellCategory names exactly them
 - defaults: every leaf of the container template is edited by a settings row or is a spell set
-- defaults: every profile default is a settings row or the registry's own bookkeeping
+- defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
 - defaults: every dropdown's default is one of its choices
 - defaults: every slider's default lies inside its range
-- defaults: the dispel palette covers every dispel type, and the template holds its own copy
+- defaults: the dispel palette covers every dispel type, and the profile holds its own copy
+- defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)
+- defaults: one Healing category holds both retired healing lists, where Core healing was
+- defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)
 - defaults: the global schema stamp defaults to 1, never the current version
 
 ### test_perf.lua (8)
@@ -829,23 +879,23 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 24 |
-| test_schema.lua | 26 |
+| test_database.lua | 39 |
+| test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 37 |
+| test_filtercompiler.lua | 39 |
 | test_container.lua | 35 |
-| test_containermanager.lua | 48 |
-| test_compat.lua | 16 |
+| test_containermanager.lua | 51 |
+| test_compat.lua | 19 |
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
 | test_anchors.lua | 44 |
-| test_style.lua | 38 |
+| test_style.lua | 40 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 31 |
-| test_style_icons.lua | 19 |
-| test_preview.lua | 10 |
+| test_style_bars.lua | 36 |
+| test_style_icons.lua | 23 |
+| test_preview.lua | 16 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
@@ -853,8 +903,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 16 |
-| test_pages_general.lua | 13 |
-| test_pages_containers.lua | 14 |
+| test_pages_general.lua | 35 |
 | test_pages_filters.lua | 12 |
 | test_pages_layout.lua | 12 |
 | test_pages_bars.lua | 6 |
@@ -863,7 +912,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 9 |
+| test_defaults.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 5 |
@@ -872,4 +921,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **682** |
+| **Total** | **735** |

@@ -10,8 +10,7 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
-| General | Master controls · Display | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames |
-| Containers | General · Overview | Create, select, rename, enable, unit, aura type and style of a container; duplicate, delete, copy settings between containers; a one-line overview of every container |
+| General | Master controls · Display · Containers | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | Filters | What to show · Categories · Sorting · Spell lists · Always / never | Who cast it, timed or permanent, max duration, weapon enchants; the tri-state categories; sort order and cap; per-category spell edits; the always and never lists. Tabs vary with the aura type |
 | Layout | Position · Growth · Frame · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
 | Bars | Size · Bar · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
@@ -28,10 +27,12 @@ is a defect in this doc (documentation-§3).
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
-- **Five pages edit one container.** Containers, Filters, Layout, Bars and Icons are registered with
-  `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`
-  (`settings/OptionsSetup.lua:416`): the page's schema groups become tabs, the page's bespoke tabs
-  follow, and every row resolves against the selected container. General is addon-wide.
+- **Four pages edit one container.** Filters, Layout, Bars and Icons are registered with
+  `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`, which is the container
+  banner plus `Helpers.RenderTabbedPage` (`settings/OptionsSetup.lua`): the page's schema groups
+  become tabs, the page's bespoke tabs follow, and every row resolves against the selected container.
+  General is addon-wide and renders through `Helpers.RenderTabbedPage` with no banner; its
+  Containers tab edits the selected container.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
   weapon-enchant container sees only the rows that mean something for it.
@@ -49,16 +50,20 @@ band holds **the picker itself** (options-ui-§14):
 - **Filters, Layout, Bars, Icons** draw `Helpers.ContainerBanner` — a Container dropdown built through
   the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
   page's only picker.
-- **Containers** has more page-wide acts than fit one row, so it takes the one-row-band escape: the
-  band carries only the identity controls — the Container picker and **New container**
-  (`settings/Containers.lua:232`) — and every act on the selected container (Duplicate, Delete, Copy
-  settings from) sits on the page's first tab, named **General**. No page-wide act is drawn on any
-  other tab. The band is not boxed a second time.
+- **General → Containers** is the one exception, an accepted deviation from options-ui-§14
+  (`docs/ARCHITECTURE.md` → Documented deviations). The tab edits the selected container, but its
+  Container picker and **New container** sit on the first line of the tab body
+  (`settings/GeneralContainers.lua`), and every act on the selected container (Duplicate, Delete,
+  Copy settings from) follows its rows. The General page draws no banner, and its first tab stays
+  Master controls (options-ui-§15). Drawn in the body, the picker and New are redrawn with the scroll,
+  so a Delete's two refreshes cannot lose them.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
 - **The Defaults button stays page-wide**: on a container page it restores every row of that page, for
-  the selected container. On General it restores the General rows of the profile. Either press logs
+  the selected container. On General it restores the General rows of the profile, and the selected
+  container's Enabled, Unit, Aura type and Style; a container's name is never reset (its row carries
+  `noReset`), and `/am reset container.name` says so and changes nothing. Either press logs
   one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
 
 ## Page → tab → row
@@ -66,7 +71,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (9 rows, `settings/General.lua`)
+### General (14 rows, `settings/General.lua`, `settings/GeneralContainers.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -94,15 +99,13 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 | Blizzard frames | Hide Blizzard buffs | `hideBlizzardBuffs` | bool | Reparents `BuffFrame` (and the weapon enchants in it); out of combat |
 | Blizzard frames | Hide Blizzard debuffs | `hideBlizzardDebuffs` | bool | Reparents `DebuffFrame`; out of combat |
 
-### Containers (5 rows, `settings/Containers.lua`)
-
-Band: Container picker · **New container** (a player-buff bar container, then selected).
-
-**General**
+**Containers** — the tab body opens with the Container picker and **New container** (a player-buff
+bar container, then selected) on one line. With no container, that line and one sentence are all
+the tab draws.
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
-| Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker |
+| Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
 | Enabled | `container.enabled` | bool | A disabled container keeps its settings |
 | Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
 | Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
@@ -111,9 +114,6 @@ Band: Container picker · **New container** (a player-buff bar container, then s
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
-
-**Overview** — bespoke: one line per container (name, unit, type, style, what it is attached to) with
-a **Select** button.
 
 ### Filters (40 rows, `settings/Filters.lua`)
 

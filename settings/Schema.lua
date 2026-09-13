@@ -47,7 +47,7 @@ NS.Schema = NS.Schema or {}
 
 local CONTAINER = "container"
 local L = NS.L
-local NO_CONTAINER = L["No container exists yet — create one on the Containers page."]
+local NO_CONTAINER = L["No container exists yet — create one on General → Containers."]
 
 -- ---------------------------------------------------------------------------
 -- Path plumbing
@@ -608,9 +608,15 @@ function NS.CheckWrite(path, value, containerId)
 end
 
 --- Restore one row to its shipped default, through the same seam everything else writes through.
+--- A row flagged `noReset` has no meaningful default (a container's name): no reset restores it —
+--- not a page's Defaults, not `/am reset` — and the refusal carries the row's `noResetReason` for
+--- the CLI to print. Its template value still backfills a new container.
+--- @return boolean|nil ok, string|nil why
 function NS.ApplyDefault(row)
-    if type(row) ~= "table" or row.path == nil or row.default == nil then return end
-    NS.SetByPath(row.path, copy(row.default))
+    if type(row) ~= "table" or row.path == nil then return false end
+    if row.noReset then return false, row.noResetReason end
+    if row.default == nil then return false end
+    return NS.SetByPath(row.path, copy(row.default))
 end
 
 -- ---------------------------------------------------------------------------
@@ -630,7 +636,7 @@ end
 -- ---------------------------------------------------------------------------
 
 local VALID_PAGES = {
-    general = true, containers = true, filters = true, layout = true, bars = true, icons = true,
+    general = true, filters = true, layout = true, bars = true, icons = true,
     profiles = true,
 }
 local VALID_TYPES = { bool = true, number = true, string = true, color = true }

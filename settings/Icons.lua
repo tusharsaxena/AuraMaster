@@ -102,7 +102,7 @@ NS.RegisterSchemaRows({
 NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {
     intro = function(ctx, cfg)
         if cfg.style ~= "icons" then
-            H.TextRow(ctx, "|cffffa040" .. L["This container is drawn as bars; these settings apply once its style is Icons (Containers page)."] .. "|r")
+            H.TextRow(ctx, "|cffffa040" .. L["This container is drawn as bars; these settings apply once its style is Icons (General → Containers)."] .. "|r")
         end
     end,
 })

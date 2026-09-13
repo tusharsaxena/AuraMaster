@@ -93,7 +93,7 @@ return function(NS, m)
 
     --- Click the tab `key` on a container page and answer what that render drew.
     function P.tab(pageKey, key)
-        local ctx = NS.Helpers.__containerCtx[pageKey]
+        local ctx = NS.Helpers.__pageCtx[pageKey]
         for i, t in ipairs(ctx.__tabs) do
             if t.key == key then
                 return P.during(function() ctx.__tabKids[i]:__fire("OnClick") end)
@@ -105,7 +105,7 @@ return function(NS, m)
     --- The tab keys a container page's last render drew, in order.
     function P.tabKeys(pageKey)
         local out = {}
-        for i, t in ipairs(NS.Helpers.__containerCtx[pageKey].__tabs or {}) do out[i] = t.key end
+        for i, t in ipairs(NS.Helpers.__pageCtx[pageKey].__tabs or {}) do out[i] = t.key end
         return out
     end
 

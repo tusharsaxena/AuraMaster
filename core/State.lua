@@ -19,7 +19,7 @@ State.activeContainerId = nil
 State.preview = false
 
 --- Point every container-relative settings path at `id` (or nil for "the first container").
---- The ONE writer of the pointer: the settings banner, the Containers page's create/duplicate/delete
+--- The ONE writer of the pointer: the settings banner, General → Containers' create/duplicate/delete
 --- and the CLI all come through here, so a later side effect has one home.
 --- @param id number|nil
 function State.SetActiveContainer(id)

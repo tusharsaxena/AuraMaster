@@ -81,10 +81,10 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 |---|---|
 | `settings/Schema.lua` | The path machinery: container-relative resolution, `NS.RegisterSchemaRows`, the read seam `NS.GetSetting`, the write seam `NS.SetByPath`, the carve-outs, `NS.Choices`, `NS.ValidateSchema` |
 | `settings/Slash.lua` | `NS.COMMANDS` (22 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
-| `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor and its load-completing stub; the container banner, `RenderContainerPage`, `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
+| `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor and its load-completing stub; the container banner and the body picker cell, `RenderTabbedPage` and `RenderContainerPage`, `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
-| `settings/General.lua` | The General page: the composed Master controls tab and the Display tab; the Reset all popup |
-| `settings/Containers.lua` | The Containers page: name, enable, unit, aura type, style; New / Duplicate / Delete / Copy settings from; the Overview tab |
+| `settings/GeneralContainers.lua` | General → Containers: the picker and New container in the tab body, the name, enable, unit, aura type and style rows (registered by `settings/General.lua`), Duplicate / Delete / Copy settings from |
+| `settings/General.lua` | The General page: the composed Master controls tab, the Display tab and the Containers tab; the Reset all popup |
 | `settings/Filters.lua` | The Filters page: what to show, the generated category rows, sorting, and the bespoke Spell lists and Always / never tabs |
 | `settings/Layout.lua` | The Layout page: attach and screen position, growth, frame, mouse; Pick a frame and Attach to the screen |
 | `settings/Bars.lua` | The Bars page: size, the composed bar, border and font blocks, spark, background, text placement, highlights |
@@ -133,9 +133,8 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_slash_verbs.lua` | `settings/Slash.lua` verb by verb through the real dispatcher: the help surface, the schema verbs over relative and absolute paths, the host verbs, the degradation stub |
 | `test_bulklog.lua` | debug-logging-§10's bulk rule, act by act: one `[Set]` line per bulk act counting the rows it changed; one line per profile reset or copy |
 | `test_optionssetup.lua` | The panel: pages, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
-| `test_options_descriptor.lua` | `settings/OptionsSetup.lua`'s descriptor seams through real widgets and resets: the Profiles veto, the banner and picker, `RenderContainerPage`, the coalesced refresh, `OpenOptionsPage`, the stub's composers |
-| `test_pages_general.lua` | `settings/General.lua` through its widgets: each Master control and Display row, the composer's two buttons, Defaults |
-| `test_pages_containers.lua` | `settings/Containers.lua` through its widgets: the identity rows, Duplicate / Delete / Copy settings from, the Overview tab, the picker |
+| `test_options_descriptor.lua` | `settings/OptionsSetup.lua`'s descriptor seams through real widgets and resets: the Profiles veto, the banner and picker, `RenderTabbedPage` and `RenderContainerPage`, the coalesced refresh, `OpenOptionsPage`, the stub's composers |
+| `test_pages_general.lua` | `settings/General.lua` and `settings/GeneralContainers.lua` through their widgets: each Master control and Display row, the composer's two buttons, Defaults (the name kept); the Containers tab's picker and New in the tab body, its identity rows, Duplicate / Delete / Copy settings from, and a Delete that keeps the picker |
 | `test_pages_filters.lua` | `settings/Filters.lua` through its widgets: the rows each aura type is offered, the two spell-set tabs, the warnings |
 | `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the attach rows and their cycle guard, the picker's two buttons, what a Growth or Frame row re-applies, Defaults |
 | `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs, the not-drawn-as-bars notice, sliders and swatches, Defaults |

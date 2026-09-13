@@ -14,7 +14,7 @@ local function bars(opts)
     return NS, m, P, P.show("Bars")
 end
 
-local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (Containers page)."
+local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."
 
 test("bars: every tab of an icons container carries the orange notice; a bars container's carry none", function()
     local NS, _, P, ws = bars()
@@ -51,7 +51,7 @@ test("bars: Width writes the selected container, and the page re-reads after the
     -- red under: the row resolving against anything but the selection
     assertEqual(NS.Database.FindContainer(1).bars.width, 300)
     assertEqual(NS.Database.FindContainer(2).bars.width, NS.CONTAINER_TEMPLATE.bars.width)
-    NS.Helpers.__containerCtx.bars.__bannerWidget:__fire("OnValueChanged", 2)
+    NS.Helpers.__pageCtx.bars.__bannerWidget:__fire("OnValueChanged", 2)
     ws = P.show("Bars")
     assertEqual(P.row(ws, "container.bars.width").value, NS.CONTAINER_TEMPLATE.bars.width, "container 2's width")
 end)

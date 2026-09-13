@@ -101,7 +101,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 | Symptom | Fix |
 |---------|-----|
-| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on the Containers page. |
+| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on General → Containers. |
 | I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am test off`. |
 | A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category with every spell unticked. Loosen one of them, for example by setting a category back to its neutral dash. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |

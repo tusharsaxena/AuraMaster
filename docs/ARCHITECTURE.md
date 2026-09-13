@@ -83,8 +83,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **193** rows across six pages — General 9, Containers 5, Filters 40, Layout 26,
-Bars 71, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
+`NS.Schema` holds **193** rows across five pages — General 14 (its Containers tab's five among them),
+Filters 40, Layout 26, Bars 71, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:549`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
@@ -273,7 +273,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   profile change parks because the new profile lacks its id is marked `staleData`, so a later Create
   or Duplicate that reuses the id (a reset rewinds the counter) revives it still parked too.
 - **Registry verbs that create or destroy frames are refused in combat** with a gray line
-  (options-ui-§2): `/am new`, `/am delete`, and the Containers page's New container, Duplicate and
+  (options-ui-§2): `/am new`, `/am delete`, and General → Containers' New container, Duplicate and
   Delete popup. `ContainerManager.Create` refuses itself, so every creating caller is covered.
 - **Reset all is Profiles → Reset Profile, in combat as well (options-ui-§12).** `/am resetall` and
   the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
@@ -408,3 +408,4 @@ None.
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
 | `documentation-§1` | README's `## Screenshots` section (item 5) is a placeholder with no captioned images | Screenshots can only be captured in a live client and none exist yet, so the section says so in one line and shows nothing; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20; the capture is tracked as issue tusharsaxena/AuraMaster#3. Ratified by the owner 2026-09-12. | 2026-09-12 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when captioned images land in the section |
+| `options-ui-§14` | The General page's `Containers` tab edits one selected container, but carries its Container picker and New container inside the tab body rather than in a band above the strip. The General page draws no banner, and its first tab stays `Master controls` (options-ui-§15). Filters, Layout, Bars and Icons keep the banner picker | The owner keeps a container's identity (create, name, enable, unit, aura type, style, duplicate, delete, copy) with the addon-wide settings on General instead of on a page of its own. Ratified by the owner 2026-09-13 | 2026-09-13 | The standard gains a registry-tab form for a General page, or a Containers page returns; the row is retired then |

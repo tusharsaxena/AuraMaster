@@ -58,7 +58,7 @@ test("parity: the Options stub carries every helper a page file reaches at load"
         "LSMValues",
         -- This addon's own decorations on the live instance (settings/OptionsSetup.lua, About.lua):
         -- every one is a render-time helper for a panel the degraded build never draws.
-        "SelectContainer", "ContainerBanner", "PlaceInHeader", "ContainerPickerWidget",
+        "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderTabbedPage",
         "RenderWarnings", "RenderContainerPage", "BuildMainContent",
     })
 end)

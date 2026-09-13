@@ -341,7 +341,12 @@ cli = SlashLib:New({
         if not ok and err then print(err) end
     end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
-    applyDefault = function(row) NS.ApplyDefault(row) end,
+    -- A row with no meaningful default (the container name's `noReset`) is refused with a reason:
+    -- say it, or `/am reset` would echo the unchanged value as if the reset had worked.
+    applyDefault = function(row)
+        local ok, why = NS.ApplyDefault(row)
+        if ok == false and why then print(why) end
+    end,
     allRows      = function() return NS.Schema end,
     groupKey     = function(row) return row.page end,
     -- The same bulk pair the Options descriptor takes (LibKa0s-Slash minor 8): CliResetAll writes
