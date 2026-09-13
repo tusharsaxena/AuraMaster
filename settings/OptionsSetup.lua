@@ -82,7 +82,8 @@ local descriptor = {
 -- nil the page file raises, its rows never register, and most of the schema — with /am list,
 -- /am set and the profile defaults — silently vanishes. So this stub publishes every member a page
 -- file touches at load, measured by deleting one and re-running tests/degraded_env.lua, and
--- nothing else: no widget maker, no flow engine, no header, no LAYOUT constant.
+-- nothing else: no copy of a widget maker, no flow engine, no header, no LAYOUT constant. The
+-- render-time members it does carry are no-ops.
 --
 -- The composers reproduce the STORED SURFACE only — one row per canonical leaf at the path the live
 -- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this
@@ -179,8 +180,11 @@ if not lib then
         end)
     end
 
-    -- Reached only from a builder, a render or a user action, so a no-op is the honest answer.
-    for _, name in ipairs({ "RefreshAllPanels", "RefreshScalars", "RestoreDefaults" }) do
+    -- Reached only from a builder, a render or a user action, so a no-op is the honest answer. The
+    -- v1.35.0 widgets (ChoiceGrid, ResolveId, IdInput, IdList) are called only at render time, so
+    -- they answer as no-ops too (options-ui-§1) and the stub still carries every member (testing-§8).
+    for _, name in ipairs({ "RefreshAllPanels", "RefreshScalars", "RestoreDefaults",
+            "ChoiceGrid", "ResolveId", "IdInput", "IdList" }) do
         Helpers[name] = function() end
     end
 
