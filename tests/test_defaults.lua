@@ -185,6 +185,11 @@ test("defaults: the dispel palette covers every dispel type, and the template ho
     end
 end)
 
+test("defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)", function()
+    -- red under: the template's strata left at MEDIUM
+    assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "HIGH")
+end)
+
 test("defaults: the global schema stamp defaults to 1, never the current version", function()
     -- red under: defaulting the stamp to the current schema version — AceDB fills an absent key
     -- before NS.RunMigrations reads it, so every old database would read as already migrated

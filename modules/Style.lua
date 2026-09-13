@@ -343,12 +343,21 @@ local function cancelEnabled(cfg, b)
     return cfg.unit == "player" and (cfg.auraType == "HELPFUL" or cfg.auraType == "ENCHANT")
 end
 
+--- Whether `cfg`'s elements hold the mouse's hover: yes unless the container is click-through or
+--- shows no tooltips. An element that holds it is the mouse focus, so the world unit under it is not
+--- moused over and its GameTooltip does not show beside the aura's own (L-3). The aura tooltip is the
+--- engine's separate AuraButtonTooltip, so strata cannot stop that bleed; only the hover can. One rule
+--- for the live buttons (Style.ApplyBehavior) and the placeholders (Preview.Show).
+function Style.TakesHover(cfg)
+    local b = cfg.behavior or {}
+    return not b.clickThrough and b.tooltips ~= false
+end
+
 --- The mouse behavior shared by both styles: tooltips, click-through and right-click cancel.
 function Style.ApplyBehavior(frame, cfg)
     local b = cfg.behavior or {}
-    local through = b.clickThrough and true or false
     local cancel = cancelEnabled(cfg, b)
-    if frame.SetMouseMotionEnabled then frame:SetMouseMotionEnabled(not through and b.tooltips ~= false) end
+    if frame.SetMouseMotionEnabled then frame:SetMouseMotionEnabled(Style.TakesHover(cfg)) end
     if frame.SetMouseClickEnabled then frame:SetMouseClickEnabled(cancel) end
     -- One click phase only — never both. A button reassigned to a different aura between the press
     -- and the release would cancel the wrong one.

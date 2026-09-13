@@ -126,7 +126,7 @@ NS.CONTAINER_TEMPLATE = {
     layout = {
         axis = "vertical", growH = "right", growV = "down",
         spacing = 2, lineSpacing = 2, perLine = 0,
-        scale = 1.0, alpha = 1.0, strata = "MEDIUM", level = 5,
+        scale = 1.0, alpha = 1.0, strata = "HIGH", level = 5,
     },
 
     -- Mouse behavior shared by both styles.

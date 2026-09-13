@@ -49,10 +49,17 @@ end
 
 local function factory(parent)
     return function()
-        local f = CreateFrame("Button", nil, parent)
-        f:EnableMouse(false)
-        return f
+        return CreateFrame("Button", nil, parent)
     end
+end
+
+--- A placeholder holds the hover exactly when its container's real buttons would (Style.TakesHover),
+--- so the world unit under it is not moused over and its tooltip does not show (L-3). It has no aura,
+--- so it shows no tooltip of its own. It never takes clicks: those reach whatever is under it, and
+--- the drag handle sits above every placeholder (modules/Anchors.lua).
+local function setMouse(f, cfg)
+    f:SetMouseMotionEnabled(NS.Style.TakesHover(cfg))
+    f:SetMouseClickEnabled(false)
 end
 
 --- Park every placeholder of every style's pool.
@@ -108,6 +115,7 @@ function Preview.Show(container)
         local f = NS.Pool.Acquire(pool, make)
         NS.Style.Element(f, cfg, false, container.classColor)
         styler.FillPreview(f, C.PREVIEW_AURAS[i], cfg)
+        setMouse(f, cfg)
         local point, x, y = Preview.Offset(cfg, i)
         f:ClearAllPoints()
         f:SetPoint(point, container.anchor, point, x, y)

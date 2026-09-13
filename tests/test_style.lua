@@ -88,7 +88,7 @@ test("style: a stored-nil leaf falls back to the template's own value", function
     -- The value is READ from the template, not restated beside it: move the template and the
     -- fallback moves with it. The restore runs even when an assertion fails.
     local saved = { D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize }
-    D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = 221, 33, "HIGH", 13
+    D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = 221, 33, "DIALOG", 13
     local ok, err = pcall(expectTemplate)
     D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = saved[1], saved[2], saved[3], saved[4]
     if not ok then error(err, 0) end

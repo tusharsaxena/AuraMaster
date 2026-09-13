@@ -140,7 +140,7 @@ NS.RegisterSchemaRows({
 
     {
         path = "container.behavior.tooltips", page = PAGE, group = G_MOUSE, type = "bool",
-        label = L["Show tooltips"], desc = L["Show an aura's tooltip when hovering it."],
+        label = L["Show tooltips"], desc = L["Show an aura's tooltip when hovering it. Off, the hover reaches what is behind the container, so a unit there shows its own tooltip."],
     },
     {
         path = "container.behavior.tooltipInCombat", page = PAGE, group = G_MOUSE, type = "bool",

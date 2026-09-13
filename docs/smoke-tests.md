@@ -189,6 +189,12 @@ suite covers what only the client can show.
 49. Hover an aura → its tooltip at the configured position; untick **Tooltips in combat** → none in
     combat. Right-click one of your own buffs in a player-buff container → it is canceled; untick
     **Right-click to cancel** → nothing happens. **Click-through** → no tooltip and clicks pass through.
+    **World tooltips (L-3).** Put a bar or icon container over a world unit (an NPC or a player).
+    Hover an element → only the aura's tooltip shows, never the unit's tooltip beside it. A unit
+    tooltip that was already up when the cursor entered the element fades rather than lingering.
+    Unlock and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
+    **Click-through** on, the hover reaches the world by design → the unit's tooltip shows. A new
+    container sits in the **High** strata (Layout → Frame → Strata).
 
 ## L. Profiles
 

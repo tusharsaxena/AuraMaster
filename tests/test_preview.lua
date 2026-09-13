@@ -282,3 +282,23 @@ test("preview: each style keeps its own pool, and a switch parks the other style
     -- red under: Preview.Hide releasing only the current style's pool
     assertEqual(iconsUsed, 0)
 end)
+
+test("preview: a placeholder holds the mouse's hover as its container's buttons do, so no world tooltip shows through (L-3)", function()
+    --- The last hover and click settings the first placeholder was given, for container settings `over`.
+    local function mouseOf(over)
+        local k = container(cfg(over))
+        NS.Preview.Show(k)
+        local f = k.previewPools.bars.active[1]
+        return f:__joined("SetMouseMotionEnabled"), f:__joined("SetMouseClickEnabled")
+    end
+    local motion, click = mouseOf({ style = "bars" })
+    -- red under: a placeholder left transparent to the mouse (the world unit under it is moused
+    -- over and its GameTooltip shows beside the placeholder)
+    assertEqual(motion, "true", "hover stops at the placeholder")
+    -- red under: a placeholder that swallows clicks meant for the world under it
+    assertEqual(click, "false", "clicks pass through")
+    -- red under: a placeholder that ignores Click-through or Show tooltips (it must behave as the
+    -- container's real buttons do: Style.TakesHover)
+    assertEqual((mouseOf({ style = "bars", behavior = { clickThrough = true } })), "false", "click-through")
+    assertEqual((mouseOf({ style = "bars", behavior = { tooltips = false } })), "false", "tooltips off")
+end)

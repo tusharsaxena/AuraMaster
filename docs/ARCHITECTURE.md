@@ -288,7 +288,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:353-355`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:362-364`).
 
 ## Known Limitations
 
@@ -330,7 +330,11 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   one; WoW never frees a frame, so
   each such change leaves one hidden frame for the session.
 - **Preview elements are addon-owned frames**, dressed by the same `Style` code but laid out by
-  `Preview.Offset`'s arithmetic rather than by the engine.
+  `Preview.Offset`'s arithmetic rather than by the engine. Like the live buttons, they hold the
+  mouse's hover unless the container is click-through or shows no tooltips (`Style.TakesHover`), and
+  they take no clicks. A world unit's tooltip appears only when no mouse-enabled frame is under the
+  cursor, and the aura tooltip is the engine's own `AuraButtonTooltip`, not `GameTooltip`. So only
+  the hover stops that bleed; strata cannot (L-3).
 - **Class colors follow the container's unit, snapshotted per apply.** After a target, focus or pet
   swap under combat lockdown or while auras are secret, a class-colored container keeps the previous
   unit's class until it re-applies. Under lockdown alone (open world, auras readable) that happens

@@ -147,10 +147,10 @@ test("layout: Strata offers the five layers in order and stores the one chosen",
     local ws = P.tab("layout", NS.L["Frame"])
     local dd = P.row(ws, "container.layout.strata")
     assertEqual(table.concat(dd.order, ","), table.concat(NS.Constants.STRATA, ","))
-    assertEqual(dd.value, "MEDIUM")
-    dd:__fire("OnValueChanged", "HIGH")
+    assertEqual(dd.value, "HIGH")
+    dd:__fire("OnValueChanged", "DIALOG")
     -- red under: the strata row writing any path but layout.strata
-    assertEqual(NS.Database.FindContainer(1).layout.strata, "HIGH")
+    assertEqual(NS.Database.FindContainer(1).layout.strata, "DIALOG")
 end)
 
 test("layout: the Mouse tab's rows write the selected container's behavior", function()
