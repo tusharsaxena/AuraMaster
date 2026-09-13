@@ -253,10 +253,219 @@ function NS.InitDB()
     NS.RunMigrations()
 end
 
--- The account-wide schema ladder, in order, one row per version. v1 is the shape this file was born
--- with, so the ladder is empty; the runner exists from day one because a migration is a from-day-one
--- concern (toc-file-§2), and the next stored-shape change adds a row here in the same change.
-local SCHEMA_STEPS = {}
+-- ---------------------------------------------------------------------------
+-- Schema v2: profile-wide spell lists and dispel colors, the Healing merge, strata High
+-- ---------------------------------------------------------------------------
+--
+-- Pure functions over ONE raw profile table. A profile that has never been activated is stored as
+-- the SavedVariables file had it (AceDB merges its defaults only on activation), so nothing here
+-- assumes a key exists. Each rule's old keys are deleted only after their values are written to the
+-- new home.
+
+-- The two healing lists v1 shipped, and the one list v2 ships in their place.
+local HEALING_V1 = { coreHealing = true, lesserHealing = true }
+local HEALING_V2 = "healing"
+
+--- A profile's containers in display order: `containerOrder` first (a numeric or a string id),
+--- then any container the order misses, by id. Table entries only, each once.
+local function orderedContainers(p)
+    local containers = type(p.containers) == "table" and p.containers or {}
+    local out, seen = {}, {}
+    local function take(key)
+        local c = containers[key]
+        if type(c) == "table" and not seen[c] then
+            seen[c] = true
+            out[#out + 1] = c
+        end
+    end
+    for _, id in ipairs(type(p.containerOrder) == "table" and p.containerOrder or {}) do
+        take(tonumber(id) or id)
+        take(tostring(id))
+    end
+    local rest = {}
+    for key in pairs(containers) do
+        rest[#rest + 1] = key
+    end
+    table.sort(rest, function(a, b) return (tonumber(a) or math.huge) < (tonumber(b) or math.huge) end)
+    for _, key in ipairs(rest) do take(key) end
+    return out
+end
+
+--- Fold one stored edit set into `into`: an id either set adds beats the other's removal.
+local function foldEdits(into, set)
+    for id, on in pairs(set) do
+        id = tonumber(id)
+        if id and id > 0 and id == math.floor(id) then
+            into[id] = (on and true) or into[id] == true
+        end
+    end
+end
+
+--- One editor's spell edits re-keyed to v2: the two healing lists fold into `healing`, and a key
+--- that is no spell category of this build, or an empty set, is dropped.
+local function rekeyEdits(src)
+    local out = {}
+    if type(src) ~= "table" then return out end
+    for key, set in pairs(src) do
+        local k = HEALING_V1[key] and HEALING_V2 or key
+        if type(set) == "table" and type(k) == "string" and NS.Categories.IsSpellCategory(k) then
+            out[k] = out[k] or {}
+            foldEdits(out[k], set)
+            if next(out[k]) == nil then out[k] = nil end
+        end
+    end
+    return out
+end
+
+--- Count, per category, its editors, every id any of them added and how many removed each id.
+local function tallyEditors(editors)
+    local t = { editors = {}, adds = {}, removes = {} }
+    for _, ed in ipairs(editors) do
+        for key, set in pairs(ed) do
+            t.editors[key] = (t.editors[key] or 0) + 1
+            t.adds[key] = t.adds[key] or {}
+            t.removes[key] = t.removes[key] or {}
+            for id, on in pairs(set) do
+                if on then
+                    t.adds[key][id] = true
+                else
+                    t.removes[key][id] = (t.removes[key][id] or 0) + 1
+                end
+            end
+        end
+    end
+    return t
+end
+
+--- The profile-wide edits (spec §7): an id any editor added is added; a starter is removed only
+--- when every editor of that category removed it. An editor with no edit for a category has no say.
+local function mergeEditors(editors)
+    local t = tallyEditors(editors)
+    local out = {}
+    for key, n in pairs(t.editors) do
+        local e = {}
+        for id, count in pairs(t.removes[key]) do
+            if count == n then e[id] = false end
+        end
+        for id in pairs(t.adds[key]) do e[id] = true end
+        if next(e) ~= nil then out[key] = e end
+    end
+    return out
+end
+
+--- Lift every container's spell edits to `profile.categorySpells`, then delete the containers'
+--- copies. The profile's own set, if any, is one more editor, so a second run changes nothing.
+local function liftSpellEdits(p, list)
+    local editors = { rekeyEdits(p.categorySpells) }
+    for _, c in ipairs(list) do
+        local f = type(c.filter) == "table" and c.filter or {}
+        editors[#editors + 1] = rekeyEdits(f.categorySpells)
+    end
+    p.categorySpells = mergeEditors(editors)
+    for _, c in ipairs(list) do
+        if type(c.filter) == "table" then c.filter.categorySpells = nil end
+    end
+end
+
+--- The strongest of two category states: show beats hide beats neutral.
+local function strongerState(a, b)
+    if a == "show" or b == "show" then return "show" end
+    if a == "hide" or b == "hide" then return "hide" end
+    return ""
+end
+
+--- One container's coreHealing and lesserHealing states become its `healing` state.
+local function mergeHealingStates(c)
+    local cats = type(c.filter) == "table" and c.filter.categories
+    if type(cats) ~= "table" or (cats.coreHealing == nil and cats.lesserHealing == nil) then return end
+    cats[HEALING_V2] = strongerState(strongerState(cats.coreHealing, cats.lesserHealing), cats[HEALING_V2])
+    for old in pairs(HEALING_V1) do cats[old] = nil end
+end
+
+--- The palette to lift: the first container in display order colored by dispel type, else the
+--- first container that carries a palette at all, else nil.
+local function sourceDispelColors(list)
+    local first
+    for _, c in ipairs(list) do
+        local b = c.bars
+        if type(b) == "table" and type(b.dispelColors) == "table" then
+            if b.colorMode == "dispel" then return b.dispelColors end
+            first = first or b.dispelColors
+        end
+    end
+    return first
+end
+
+--- Lift a container's palette to `profile.dispelColors`, completed from the defaults, then delete
+--- every container's copy. With none to lift, the profile keeps what it has (a second run).
+local function liftDispelColors(p, list)
+    local src = sourceDispelColors(list)
+    if src then
+        p.dispelColors = copy(src)
+    elseif type(p.dispelColors) ~= "table" then
+        p.dispelColors = {}
+    end
+    Database.Backfill(p.dispelColors, NS.defaults.profile.dispelColors, true)
+    for _, c in ipairs(list) do
+        if type(c.bars) == "table" then c.bars.dispelColors = nil end
+    end
+end
+
+--- Stored MEDIUM, the v1 default, rises to HIGH (the v2 default). Any other strata was a choice.
+local function raiseStrata(list)
+    for _, c in ipairs(list) do
+        if type(c.layout) == "table" and c.layout.strata == "MEDIUM" then c.layout.strata = "HIGH" end
+    end
+end
+
+--- Schema v2 over one profile table (docs/schema.md, Migration path). A test seam as well as the
+--- step's body: tests/test_database.lua runs it over raw v1 tables.
+--- @return number  the containers it walked
+function Database.MigrateV2(p)
+    if type(p) ~= "table" then return 0 end
+    local list = orderedContainers(p)
+    liftSpellEdits(p, list)
+    liftDispelColors(p, list)
+    local walked = 0
+    for _, c in ipairs(list) do
+        mergeHealingStates(c)
+        walked = walked + 1
+    end
+    raiseStrata(list)
+    return walked
+end
+
+--- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
+--- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
+local function eachProfile(db, fn)
+    local store = type(db.sv) == "table" and db.sv.profiles
+    if type(store) ~= "table" then
+        if type(db.profile) == "table" then fn(db.profile, "Default") end
+        return
+    end
+    local names = {}
+    for name in pairs(store) do
+        names[#names + 1] = name
+    end
+    table.sort(names, function(a, b) return tostring(a) < tostring(b) end)
+    for _, name in ipairs(names) do
+        if type(store[name]) == "table" then fn(store[name], name) end
+    end
+end
+
+-- The account-wide schema ladder, in order, one row per version. v1 is the shape the addon shipped
+-- with; each stored-shape change adds a row here in the same change (toc-file-§2). Containers live in
+-- every profile, so a step walks them all, not only the active one.
+local SCHEMA_STEPS = {
+    { to = 2, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV2(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v2 profile '%s': spell lists, dispel colors, healing and strata over %s container(s)", name, n)
+            end
+        end)
+    end },
+}
 
 --- Current schema version: the last step's `to`, or 1. A test seam: tests/test_database.lua calls
 --- it; production (NS.RunMigrations) walks SCHEMA_STEPS directly.

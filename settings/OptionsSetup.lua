@@ -350,9 +350,7 @@ end
 --- One orange line per thing the aura engine will silently not do for this container, above the
 --- tab's rows (modules/FilterCompiler.lua's plan warnings).
 function Helpers.RenderWarnings(ctx, cfg)
-    local plan = NS.FilterCompiler.Compile(cfg, {
-        timedSpells = NS.db and NS.db.global and NS.db.global.timedSpells,
-    })
+    local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     for _, w in ipairs(plan.warnings or {}) do
         Helpers.TextRow(ctx, "|cffffa040" .. L[w] .. "|r")
     end

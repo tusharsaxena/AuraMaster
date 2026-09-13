@@ -383,12 +383,12 @@ end)
 
 test("schema paths: category edits drop an empty edit set and store a truthy edit as true", function()
     local NS2 = fresh()
-    assertTrue(NS2.SetByPath("container.filter.categorySpells", {
+    assertTrue(NS2.SetByPath("categorySpells", {
         defensives = {},
         externals = "not a set",
         movement = { ["10"] = "yes", [11] = false, [0] = true },
-    }, 1))
-    local edits = NS2.Database.FindContainer(1).filter.categorySpells
+    }))
+    local edits = NS2.db.profile.categorySpells
     -- red under: normalizeCategoryEdits storing an empty edit set
     assertNil(edits.defensives)
     assertNil(edits.externals)

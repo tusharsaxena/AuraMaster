@@ -46,7 +46,8 @@ local function choices(row)
 end
 
 -- The spell sets are written whole through the seam (settings/Schema.lua's carve-outs), not by row.
-local CARVE_OUTS = set({ "filter.categorySpells", "filter.whitelist", "filter.blacklist" })
+local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
+local PROFILE_CARVE_OUTS = set({ "categorySpells" })
 
 test("defaults: every starter container is a valid container whose every override the template knows", function()
     local units, types, styles = set(C.UNITS), set(C.AURA_TYPES), set(C.STYLES)
@@ -135,11 +136,12 @@ test("defaults: every leaf of the container template is edited by a settings row
     assertEqual(#orphans, 0, "no row for: " .. table.concat(orphans, ", "))
 end)
 
-test("defaults: every profile default is a settings row or the registry's own bookkeeping", function()
+test("defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping", function()
     local BOOKKEEPING = set({ "containers", "containerOrder", "nextContainerId", "seeded" })
     local orphans = {}
-    for k in pairs(NS.defaults.profile) do
-        if not BOOKKEEPING[k] and not NS.FindSchemaRow(k) then
+    for _, leaf in ipairs(leaves(NS.defaults.profile, "")) do
+        local k = leaf[1]
+        if not BOOKKEEPING[k] and not PROFILE_CARVE_OUTS[k] and not NS.FindSchemaRow(k) then
             orphans[#orphans + 1] = k
         end
     end
@@ -172,17 +174,45 @@ test("defaults: every slider's default lies inside its range", function()
     assertEqual(#bad, 0, table.concat(bad, "; "))
 end)
 
-test("defaults: the dispel palette covers every dispel type, and the template holds its own copy", function()
+test("defaults: the dispel palette covers every dispel type, and the profile holds its own copy", function()
     local palette, types = C.DEFAULT_DISPEL_COLORS, set(C.DISPEL_TYPES)
     for name in pairs(palette) do assertTrue(types[name], "palette entry for an unknown type: " .. name) end
     for name in pairs(types) do
-        local want, got = palette[name], NS.CONTAINER_TEMPLATE.bars.dispelColors[name]
+        local want, got = palette[name], NS.defaults.profile.dispelColors[name]
         -- red under: a dispel type added to DISPEL_TYPES without its palette color (its swatch
         -- and its bar color resolve to nothing)
         assertTrue(want ~= nil and got ~= nil, "a color for " .. name)
-        assertTrue(got ~= want, name .. ": the template's color is its own table, not the constant")
+        assertTrue(got ~= want, name .. ": the profile default is its own table, not the constant")
         assertEqual(got.r + got.g + got.b + got.a, want.r + want.g + want.b + want.a, name)
     end
+end)
+
+test("defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)", function()
+    -- red under: leaving either key in the template (the load backfill would put back on every
+    -- container what the v2 step just lifted to the profile)
+    assertEqual(NS.CONTAINER_TEMPLATE.filter.categorySpells, nil)
+    assertEqual(NS.CONTAINER_TEMPLATE.bars.dispelColors, nil)
+    assertEqual(type(NS.defaults.profile.categorySpells), "table")
+    assertEqual(next(NS.defaults.profile.categorySpells), nil, "no spell edits by default")
+end)
+
+test("defaults: one Healing category holds both retired healing lists, where Core healing was", function()
+    local HEALING = { 774, 8936, 33763, 48438, 139, 17, 194384, 41635, 61295, 974, 119611, 124682,
+        364343, 366155, 53563, 102352, 155777, 207386, 115175, 156910, 200025, 287280 }
+    local def = Cat.Find("HELPFUL", "healing")
+    -- red under: keeping coreHealing and lesserHealing as two categories
+    assertTrue(def ~= nil and def.kind == "spells", "a healing spell category")
+    assertEqual(def.label, "Healing")
+    assertEqual(def.desc, "Heal-over-time effects, shields and beacons.")
+    for _, id in ipairs(HEALING) do assertTrue(def.spells[id] ~= nil, "starter " .. id) end
+    local n = 0
+    for _ in pairs(def.spells) do n = n + 1 end
+    assertEqual(n, #HEALING, "the union, nothing more")
+    assertEqual(Cat.Find("HELPFUL", "coreHealing"), nil)
+    assertEqual(Cat.Find("HELPFUL", "lesserHealing"), nil)
+    -- red under: appending healing at the end (the editor's category order would move)
+    assertEqual(Cat.HELPFUL[6].key, "offensiveCDs")
+    assertTrue(Cat.HELPFUL[7] == def, "after Offensive cooldowns, where Core healing buffs sat")
 end)
 
 test("defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)", function()

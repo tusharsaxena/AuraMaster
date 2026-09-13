@@ -124,20 +124,47 @@ end)
 test("filter: a category's spell edits add and remove ids", function()
     local def = NS.Categories.Find("HELPFUL", "movement")
     local starter = next(def.spells)
-    local plan = compile({ filter = {
-        categories = { movement = "show" },
-        categorySpells = { movement = { [starter] = false, [999001] = true } },
-    } })
+    local plan = compile({ filter = { categories = { movement = "show" } } },
+        { categorySpells = { movement = { [starter] = false, [999001] = true } } })
     local inc = plan.groups[1].candidateFilters.includeSpellIDs
     assertNil(inc[starter], "a removed starter id is gone")
     assertTrue(inc[999001], "an added id is included")
+end)
+
+test("filter: spell edits are the profile's, handed in ctx; a container's own old copy is ignored (schema v2)", function()
+    local def = NS.Categories.Find("HELPFUL", "movement")
+    local starter = next(def.spells)
+    local plan = compile({ filter = { categories = { movement = "show" },
+        categorySpells = { movement = { [starter] = false } } } })
+    -- red under: Compile still reading cfg.filter.categorySpells (the v1 per-container store)
+    assertTrue(plan.groups[1].candidateFilters.includeSpellIDs[starter])
+end)
+
+test("filter: both compile sites hand the compiler the profile's spell lists", function()
+    local NS2 = dofile("tests/fresh_env.lua")()
+    local seen, n = {}, 0
+    local real = NS2.FilterCompiler.Compile
+    NS2.FilterCompiler.Compile = function(c, ctx)
+        n = n + 1
+        seen[n] = ctx and ctx.categorySpells or false
+        return real(c, ctx)
+    end
+    NS2.ContainerManager.RequestApply()
+    NS2.ContainerManager.FlushPending()
+    NS2.Helpers.RenderWarnings({}, NS2.Database.FindContainer(1))
+    NS2.FilterCompiler.Compile = real
+    assertTrue(n >= 2, "an apply and a warnings render compiled")
+    for i = 1, n do
+        -- red under: a compile site passing no categorySpells (every spell edit silently ignored)
+        assertTrue(seen[i] == NS2.db.profile.categorySpells, "compile " .. i)
+    end
 end)
 
 test("filter: a shown spell category with every id removed can never match, and says so", function()
     local def = NS.Categories.Find("HELPFUL", "consumables")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = { categories = { consumables = "show" }, categorySpells = { consumables = removed } } })
+    local plan = compile({ filter = { categories = { consumables = "show" } } }, { categorySpells = { consumables = removed } })
     assertEqual(#plan.groups, 0, "a contradiction is dropped rather than handed to the engine")
     assertTrue(hasWarning(plan, "can never match"))
 end)
@@ -325,14 +352,14 @@ end)
 test("filter: a category's spell edits accept string ids and ignore keys that are not ids", function()
     local def = NS.Categories.Find("HELPFUL", "movement")
     local starter = next(def.spells)
-    local set = FC.CategorySpells(def, { filter = { categorySpells = { movement = {
+    local set = FC.CategorySpells(def, { movement = {
         ["999002"] = true, notAnId = true, [tostring(starter)] = false,
-    } } } })
+    } })
     -- red under: CategorySpells without its tonumber (the edits would be keyed by string)
     assertTrue(set[999002])
     assertNil(set[starter], "a starter removed by its string id is gone")
     assertNil(set.notAnId)
-    assertTrue(next(FC.CategorySpells(def, nil)) ~= nil, "no container: the starter list")
+    assertTrue(next(FC.CategorySpells(def, nil)) ~= nil, "no edits: the starter list")
 end)
 
 test("filter: an unknown aura type compiles as buffs, and only buffs append weapon enchants", function()
@@ -375,7 +402,7 @@ test("filter: a hidden spell category with every id removed excludes nothing", f
     local def = NS.Categories.Find("HELPFUL", "consumables")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = { categories = { consumables = "hide" }, categorySpells = { consumables = removed } } })
+    local plan = compile({ filter = { categories = { consumables = "hide" } } }, { categorySpells = { consumables = removed } })
     assertEqual(#plan.groups, 1)
     -- red under: applyCategory adding an empty exclude map for a hidden category
     assertNil(plan.groups[1].candidateFilters)
@@ -389,8 +416,7 @@ test("filter: group keys stay consecutive when a contradiction drops a group", f
     for id in pairs(def.spells) do removed[id] = false end
     local plan = compile({ filter = {
         categories = { defensives = "show", movement = "show", consumables = "show" },
-        categorySpells = { movement = removed },
-    } })
+    } }, { categorySpells = { movement = removed } })
     assertEqual(#plan.groups, 2, "the emptied movement group is dropped")
     -- red under: keying a group by its category's position instead of the groups already added
     assertEqual(plan.groups[2].key, "g2")

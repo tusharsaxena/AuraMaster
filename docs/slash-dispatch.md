@@ -88,7 +88,8 @@ Examples:
 /am reset container.bars.height
 ```
 
-The whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, `.categorySpells`) are settable
+The whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the profile-wide
+`categorySpells`) are settable
 through the seam but have no row, so `/am list` does not print them; the Filters page is their editor.
 
 ## Degraded path

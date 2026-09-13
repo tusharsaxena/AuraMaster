@@ -48,7 +48,7 @@ end)
 -- Palette definitions — one color per dispel type or per state — are options-ui-§17's one
 -- exemption from the class-color companion.
 local function isPalette(path)
-    return path:find("%.dispelColors%.") or path:find("%.expiringColor$") or path:find("%.pandemicColor$")
+    return path:find("^dispelColors%.") or path:find("%.expiringColor$") or path:find("%.pandemicColor$")
 end
 
 test("schema: every color row has its class-color companion next to it, or is a palette swatch", function()
@@ -228,7 +228,7 @@ test("schema: a carve-out's refusal is the locale's sentence", function()
     assertFalse(ok)
     -- red under: normalizeIdSet returning an English literal instead of its L key
     assertEqual(err, "ID SET REFUSED")
-    ok, err = NS2.SetByPath("container.filter.categorySpells", 5, 1)
+    ok, err = NS2.SetByPath("categorySpells", 5)
     assertFalse(ok)
     -- red under: normalizeCategoryEdits returning an English literal instead of its L key
     assertEqual(err, "EDITS REFUSED")
@@ -236,17 +236,37 @@ end)
 
 test("schema: category spell edits keep only real spell categories", function()
     local NS2 = fresh()
-    NS2.State.SetActiveContainer(1)
-    NS2.SetByPath("container.filter.categorySpells", {
+    NS2.SetByPath("categorySpells", {
         defensives = { [1] = false, ["2"] = true },
         crowdControl = { [3] = true },   -- a token category: no editable spells
         nonsense = { [4] = true },
     })
-    local edits = NS2.Database.FindContainer(1).filter.categorySpells
+    local edits = NS2.db.profile.categorySpells
     assertEqual(edits.defensives[1], false)
     assertEqual(edits.defensives[2], true)
     assertNil(edits.crowdControl)
     assertNil(edits.nonsense)
+end)
+
+test("schema: the spell lists are one profile-wide set at the absolute path categorySpells (schema v2)", function()
+    local NS2 = fresh()
+    -- red under: the carve-out still keyed container.filter.categorySpells
+    assertTrue(NS2.SetByPath("categorySpells", { defensives = { [871] = false } }))
+    assertEqual(NS2.db.profile.categorySpells.defensives[871], false)
+    for _, c in ipairs(NS2.Database.GetContainers()) do
+        assertNil(c.filter.categorySpells, "container " .. c.id .. " keeps no copy")
+    end
+    assertFalse((NS2.SetByPath("container.filter.categorySpells", {})), "the v1 per-container path is gone")
+end)
+
+test("schema: the validator resolves the profile-wide sets, and the dispel swatches are profile rows", function()
+    assertEqual(type(NS.DefaultFor("categorySpells")), "table")
+    assertEqual(type(NS.DefaultFor("dispelColors.Magic")), "table")
+    for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
+        -- red under: the swatches left on container.bars.dispelColors (a path the template lost)
+        assertTrue(NS.FindSchemaRow("dispelColors." .. name) ~= nil, name)
+        assertNil(NS.FindSchemaRow("container.bars.dispelColors." .. name), name)
+    end
 end)
 
 -- ── whole-section writes ──────────────────────────────────────────────────────────────────────

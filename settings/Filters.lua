@@ -158,21 +158,21 @@ local function spellCategories()
     return out
 end
 
-local function renderSpellLists(ctx, cfg)
+local function renderSpellLists(ctx)
     local AceGUI = NS.AceGUI
     local defs = spellCategories()
     local def = Cat.Find("HELPFUL", spellCategory) or defs[1]
     spellCategory = def.key
 
-    local edits = NS.Database.DeepCopy(cfg.filter.categorySpells or {})
+    local edits = NS.Database.DeepCopy(NS.db.profile.categorySpells or {})
     local mine = edits[def.key] or {}
     local function commit()
         edits[def.key] = mine
-        NS.SetByPath("container.filter.categorySpells", edits)
+        NS.SetByPath("categorySpells", edits)
         rerender()
     end
 
-    H.TextRow(ctx, L["The spells each category matches, for this container only. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."])
+    H.TextRow(ctx, L["The spells each category matches, shared by every container. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."])
     local items = {
         { make = function(_, parent, rel)
             local list, order = {}, {}

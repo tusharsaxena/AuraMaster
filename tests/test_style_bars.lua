@@ -312,7 +312,8 @@ test("bars: dispel coloring tints the fill through the engine with the stored di
     -- red under: the bar asking for the Border style, which paints Blizzard's debuff art over the bar
     assertEqual(add[2].style, 32, "PreserveAsset keeps our texture")
     assertTrue(add[2].showAlways and add[2].showWithoutDispelType, "shown for every aura")
-    assertTrue(add[2].customDispelColorMap == NS2.Style.DispelColorMap(c.bars.dispelColors), "the stored colors")
+    -- red under: the bar still reading a per-container bars.dispelColors (schema v2 lifted it)
+    assertTrue(add[2].customDispelColorMap == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors), "the profile's colors")
     c.bars.colorMode = "static"
     frame = dressed(c, true, nil, NS2)
     assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
@@ -457,7 +458,7 @@ test("bars: a dispel-colored preview paints the Magic color, since no real aura 
     local c = cfg({ bars = { colorMode = "dispel" } })
     local frame, am = dressed(c, false)
     NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS[1], c)
-    local m = c.bars.dispelColors.Magic
+    local m = NS.db.profile.dispelColors.Magic
     -- red under: FillPreview ignoring colorMode (the preview then looks unlike the engine's tint)
     assertEqual(am.fill:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 1 }, ","))
 end)

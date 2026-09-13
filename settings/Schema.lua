@@ -243,10 +243,13 @@ local function normalizeCategoryEdits(value)
     return out
 end
 
+-- The always/never lists are a container's. The spell-category edits are the profile's (schema v2:
+-- one set every container shares), so theirs is an absolute path, resolved against the profile, and
+-- its write announces no container id: every container re-applies.
 local CARVE_OUTS = {
-    ["container.filter.whitelist"]      = normalizeIdSet,
-    ["container.filter.blacklist"]      = normalizeIdSet,
-    ["container.filter.categorySpells"] = normalizeCategoryEdits,
+    ["container.filter.whitelist"] = normalizeIdSet,
+    ["container.filter.blacklist"] = normalizeIdSet,
+    ["categorySpells"]             = normalizeCategoryEdits,
 }
 
 -- ---------------------------------------------------------------------------

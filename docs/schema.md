@@ -21,6 +21,8 @@ otherwise (`docs/profiles.md`).
 | `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and the preview |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
+| `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2). Written whole through the `categorySpells` carve-out |
+| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type; shared by every container (schema v2) |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
@@ -57,7 +59,6 @@ path, never to a number restated in `modules/`.
 | Key | Default | Meaning |
 |---|---|---|
 | `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral |
-| `categorySpells` | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over the starter lists |
 | `whitelist` | `{}` | `[spellId] = true` — always shown |
 | `blacklist` | `{}` | `[spellId] = true` — never shown; beats the whitelist |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
@@ -103,7 +104,7 @@ path, never to a number restated in `modules/`.
 | `width` | `220` | `height` | `18` |
 | `barTexture` | `"Blizzard"` | `barAlpha` | `1.0` |
 | `barColor` | `{ r=0.20, g=0.55, b=0.95, a=1 }` | `useClassColorBar` | `false` |
-| `colorMode` | `"static"` (`static`, `dispel`) | `dispelColors` | per dispel type, from `core/Constants.lua:143` |
+| `colorMode` | `"static"` (`static`, `dispel`: tinted by the profile's `dispelColors`) | | |
 | `drain` | `"left"` (`left`, `right`) | `smooth` | `false` |
 | `bgTexture` | `"Blizzard"` | `bgAlpha` | `1.0` |
 | `bgColor` | `{ 0, 0, 0, 0.5 }` | `useClassColorBg` | `false` |
@@ -119,7 +120,7 @@ path, never to a number restated in `modules/`.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-`dispelColors` defaults: Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`core/Constants.lua:143`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
 `{0.80, 0.00, 0.00}`, all alpha 1.
 
@@ -244,12 +245,25 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:259`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:459`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
-- **Schema v1** is the shape the addon shipped with at 0.1.0. **The ladder is empty**, and
-  `Database.CurrentSchemaVersion()` answers `1`.
+- **Schema v1** is the shape the addon shipped with at 0.1.0.
+- **Schema v2** (`Database.MigrateV2`) runs over **every** stored profile: AceDB's raw
+  `sv.profiles`, the inactive ones included, or the no-AceDB fallback's one profile. It logs one
+  `[Migrate] v2 profile '<name>'` line each, and `Database.CurrentSchemaVersion()` answers `2`.
+  - `profile.categorySpells` (new): the union of every container's added ids. A starter id stays
+    removed (`false`) only if every container that had an edit for that category removed it; a
+    container with no edit for the category has no say. `container.filter.categorySpells` is deleted.
+  - `coreHealing` + `lesserHealing` → `healing`: their spell edits merge by the rule above (a
+    container's two lists count as one editor). A container's state becomes `show` if either was
+    `show`, else `hide` if either was `hide`, else `""`. Both old keys leave `filter.categories`.
+  - `profile.dispelColors` (new): copied from the first container in `containerOrder` colored by
+    dispel type, else the first container that carries a palette, else the defaults, and completed
+    from the defaults. `bars.dispelColors` is deleted from every container.
+  - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
+  - Additive keys ride the ordinary backfill with no step.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

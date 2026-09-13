@@ -194,7 +194,7 @@ test("preview: switching Color by from dispel type back to static leaves no disp
     end
     k.previewDirty = true
     NS.Preview.Show(k)
-    local m = c.bars.dispelColors.Magic
+    local m = NS.db.profile.dispelColors.Magic
     local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
     for i, got in ipairs(fills()) do assertEqual(got, magic, "dispel: placeholder " .. i .. " stands in with Magic") end
     c.bars.colorMode = "static"

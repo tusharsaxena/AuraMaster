@@ -308,9 +308,7 @@ function ContainerClass:Apply()
     if not cfg then return nil end
     local t0 = Perf.on and debugprofilestop()
 
-    local plan = NS.FilterCompiler.Compile(cfg, {
-        timedSpells = NS.db and NS.db.global and NS.db.global.timedSpells,
-    })
+    local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     self.warnings = plan.warnings
 
     local anchor = self.anchor

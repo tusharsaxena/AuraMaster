@@ -120,12 +120,12 @@ test("filters: choosing another category lists its spells, by name where the cli
     local NS, _, P = filters()
     P.show("Filters")
     local ws = P.tab("filters", "spellLists")
-    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "coreHealing")
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "healing")
     -- red under: the category dropdown not keeping its choice across the re-render it asks for
     ws = P.rerender("Filters")
-    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "coreHealing")
+    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "healing")
     local rejuv = spellBox(P, ws, 774)
-    assertTrue(rejuv ~= nil, "Rejuvenation is a core healing buff")
+    assertTrue(rejuv ~= nil, "Rejuvenation is a healing buff")
     assertTrue(rejuv.labelText:find("Rejuvenation", 1, true) ~= nil, rejuv.labelText)
     assertTrue(spellBox(P, ws, 8936).labelText:find("Unknown spell 8936", 1, true) ~= nil,
         "a spell the client does not know is shown by id")
@@ -138,12 +138,13 @@ test("filters: unticking a starter spell stores it as removed; ticking it again 
     local id = starterIds(NS, "defensives")[1]
     spellBox(P, ws, id):__fire("OnValueChanged", false)
     -- red under: a starter's untick storing nil (the starter list would put it straight back)
-    assertEqual(NS.Database.FindContainer(1).filter.categorySpells.defensives[id], false)
-    assertNil(next(NS.Database.FindContainer(2).filter.categorySpells), "the selected container only")
+    assertEqual(NS.db.profile.categorySpells.defensives[id], false)
+    -- red under: the tab still writing the v1 per-container set (schema v2 made the lists profile-wide)
+    assertNil(NS.Database.FindContainer(1).filter.categorySpells, "no container keeps its own copy")
     ws = P.rerender("Filters")
     assertFalse(spellBox(P, ws, id).value, "drawn unticked")
     spellBox(P, ws, id):__fire("OnValueChanged", true)
-    assertNil(NS.Database.FindContainer(1).filter.categorySpells.defensives, "no edit left to store")
+    assertNil(NS.db.profile.categorySpells.defensives, "no edit left to store")
 end)
 
 test("filters: Add spell ID adds the number typed and ignores a box without one", function()
@@ -157,22 +158,22 @@ test("filters: Add spell ID adds the number typed and ignores a box without one"
     -- red under: addBox committing without a positive id
     assertEqual(msgs.config, 0, "nothing written")
     box:__fire("OnEnterPressed", " 424242x")
-    assertEqual(NS.Database.FindContainer(1).filter.categorySpells.defensives[424242], true)
+    assertEqual(NS.db.profile.categorySpells.defensives[424242], true)
     ws = P.rerender("Filters")
     local added = spellBox(P, ws, 424242)
     assertTrue(added ~= nil and added.value == true, "the added spell is listed, ticked")
     added:__fire("OnValueChanged", false)
-    assertNil(NS.Database.FindContainer(1).filter.categorySpells.defensives, "unticking an added spell removes it")
+    assertNil(NS.db.profile.categorySpells.defensives, "unticking an added spell removes it")
 end)
 
 test("filters: Restore this category's starter list clears that category's edits and no other's", function()
     local NS, _, P = filters()
-    NS.SetByPath("container.filter.categorySpells",
-        { defensives = { [118038] = false }, raidCDs = { [99] = true } }, 1)
+    NS.SetByPath("categorySpells",
+        { defensives = { [118038] = false }, raidCDs = { [99] = true } })
     P.show("Filters")
     local ws = P.tab("filters", "spellLists")
     P.find(ws, "Button", NS.L["Restore this category's starter list"]):__fire("OnClick")
-    local edits = NS.Database.FindContainer(1).filter.categorySpells
+    local edits = NS.db.profile.categorySpells
     -- red under: the restore writing an empty set for every category
     assertNil(edits.defensives)
     assertEqual(edits.raidCDs[99], true)

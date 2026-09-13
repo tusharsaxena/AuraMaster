@@ -386,7 +386,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
         style = "bars", bars = { timeFormat = "short", expiringColorOn = true, colorMode = "dispel" } })
     local dispelLeaves = 0
     for _, name in ipairs(NS2.Constants.DISPEL_TYPES) do
-        if type(c.bars.dispelColors[name]) == "table" then dispelLeaves = dispelLeaves + 1 end
+        if type(NS2.db.profile.dispelColors[name]) == "table" then dispelLeaves = dispelLeaves + 1 end
     end
     local f0, c0, k0 = built.formatters, built.curves, built.colors
     local b1, b2 = button(), button()
@@ -407,7 +407,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     assertEqual(built.curves - c0, 2, "a new expiring color builds a new curve")
     assertEqual(built.formatters - f0, 1, "the format did not change, so neither did the formatter")
     -- A replaced dispel leaf invalidates the memoized map.
-    c.bars.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
+    NS2.db.profile.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
     local k1 = built.colors
     NS2.Style.Element(b1, c, true)
     assertEqual(built.colors - k1, dispelLeaves, "a new dispel color rebuilds the map")

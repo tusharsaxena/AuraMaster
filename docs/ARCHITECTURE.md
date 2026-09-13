@@ -104,8 +104,8 @@ Almost every row belongs to one container, so container rows use a **relative pa
 (`NS.State.activeContainerId`), falling back to the first one. Addon-wide rows keep absolute paths
 (`enabled`, `hideBlizzardBuffs`). A row's `default` is never typed in a page file —
 `NS.RegisterSchemaRows` stamps it from `defaults/Profile.lua`, and `NS.ValidateSchema` proves every
-path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`,
-`.categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
+path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the
+profile-wide `categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
 `.position`, `.bars`, `.icons`) are written through the same seam and normalized there. A drag, a
 copy between containers, a position reset and a delete's fallback to the screen all write that way.
 
@@ -126,9 +126,10 @@ it, and none can, since a row is a leaf.
 
 A member field a row addresses goes through `NS.SetByPath` with a container id even when
 ContainerManager is the caller: rename, copy-from, position reset and a delete's fallback to the
-screen. The per-container `container.filter.whitelist`, `.blacklist` and `.categorySpells` sets are
-values the seam takes whole at its carve-out paths, not registries. Only its named writer and
-load pass write the registry, so it is compliant and carries no Documented deviations row.
+screen. The per-container `container.filter.whitelist` and `.blacklist` sets, and the profile-wide
+`categorySpells` set, are values the seam takes whole at its carve-out paths, not registries. Only
+its named writer and load pass write the registry, so it is compliant and carries no Documented
+deviations row.
 
 The addon holds two pieces of named non-setting state (architecture-§5). The first is learned
 data that no control sets and no row addresses.

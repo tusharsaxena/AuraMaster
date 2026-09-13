@@ -78,12 +78,14 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 2, apply = function(db) … end }` to `SCHEMA_STEPS` in `core/Database.lua:259`. The
-   ladder is account-wide (`global.schemaVersion`), but containers live in **every** profile: walk
-   `db.sv.profiles` (AceDB's raw store, guarded — the no-AceDB fallback has no `sv`) and transform
-   `profile.containers[*]` in each, not only `db.profile`. Test the stored value with `== nil`, never
-   `or` (savedvariables-§5).
-3. `RunMigrations` calls the step, stamps `schemaVersion = 2`, logs one `[Migrate]` line, and then
+2. Append `{ to = 3, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
+   `core/Database.lua:459`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
+   (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
+   transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure
+   function over one profile table, as `Database.MigrateV2` is, so a test can run it over a raw one.
+   Test the stored value with `== nil`, never `or` (savedvariables-§5).
+3. `RunMigrations` calls the step, stamps its `to`, logs one `[Migrate]` line, and then
    `PrepareProfile` backfills whatever the step did not set.
 4. A case in `tests/test_database.lua` with a v1-shaped profile (and a second, inactive profile), and
    the migration in `docs/schema.md`.

@@ -78,11 +78,11 @@ test("bars: Highlights draws one swatch per dispel type, each writing its own co
     P.show("Bars")
     local ws = P.tab("bars", NS.L["Highlights"])
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
-        local cp = P.row(ws, "container.bars.dispelColors." .. name)
+        local cp = P.row(ws, "dispelColors." .. name)
         assertTrue(cp ~= nil and cp.type == "ColorPicker", "a swatch for " .. name)
     end
-    P.row(ws, "container.bars.dispelColors.Poison"):__fire("OnValueConfirmed", 1, 0, 1, 1)
-    local dc = NS.Database.FindContainer(1).bars.dispelColors
+    P.row(ws, "dispelColors.Poison"):__fire("OnValueConfirmed", 1, 0, 1, 1)
+    local dc = NS.db.profile.dispelColors
     -- red under: the dispel rows sharing one path
     assertEqual(dc.Poison.g, 0)
     assertEqual(dc.Magic.r, NS.Constants.DEFAULT_DISPEL_COLORS.Magic.r, "the other types keep theirs")

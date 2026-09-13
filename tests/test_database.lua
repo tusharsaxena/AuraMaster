@@ -323,3 +323,233 @@ test("database: a file from before the seeded flag, the id counter and the order
     assertEqual(p.nextContainerId, 7)
     assertEqual(NS.ContainerManager.Create({}), 7)
 end)
+
+-- ── schema v2 (feedback batch 5, spec §7): profile-wide spell lists and dispel colors, the Healing
+-- merge, strata High. Each case builds a raw v1 profile table and runs the pure step over it. ─────
+
+--- A raw v1 profile: `list[i]` becomes container i, in that display order unless `order` is given.
+local function v1profile(list, order)
+    local p = { containers = {}, containerOrder = order or {} }
+    for i, c in ipairs(list) do
+        p.containers[i] = c
+        if not order then p.containerOrder[i] = i end
+    end
+    return p
+end
+
+local function edits(t) return { filter = { categorySpells = t } } end
+
+test("database v2: the schema is at version 2", function()
+    local NS = fresh()
+    -- red under: the v2 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 2)
+    assertEqual(NS.db.global.schemaVersion, 2)
+end)
+
+test("database v2: spell additions from every container are united in the profile", function()
+    local NS = fresh()
+    local p = v1profile({ edits({ defensives = { [111] = true } }), edits({ defensives = { [222] = true } }) })
+    NS.Database.MigrateV2(p)
+    -- red under: lifting only the first container's edits
+    assertEqual(p.categorySpells.defensives[111], true)
+    assertEqual(p.categorySpells.defensives[222], true)
+    for id, c in pairs(p.containers) do
+        -- red under: leaving the per-container copy behind (it would never be read again)
+        assertNil(c.filter.categorySpells, "container " .. id .. " keeps no spell edits of its own")
+    end
+end)
+
+test("database v2: a starter is removed profile-wide only when every container that edited it removed it", function()
+    local NS = fresh()
+    local p = v1profile({
+        edits({ defensives = { [871] = false, [118038] = false } }),
+        edits({ defensives = { [118038] = false } }),
+        edits({ raidCDs = { [97463] = false } }),
+        { filter = {} },
+    })
+    NS.Database.MigrateV2(p)
+    local d = p.categorySpells.defensives
+    -- red under: keeping a removal any one container made (it would hide the spell in every container)
+    assertNil(d[871], "container 2 edited defensives and kept 871")
+    -- red under: counting a container with no edit for the category as a veto
+    assertEqual(d[118038], false, "every editor of defensives removed it")
+    assertEqual(p.categorySpells.raidCDs[97463], false, "a lone editor's removal stands")
+end)
+
+test("database v2: an addition beats another container's removal of the same spell", function()
+    local NS = fresh()
+    local p = v1profile({ edits({ movement = { [2983] = true } }), edits({ movement = { [2983] = false } }) })
+    NS.Database.MigrateV2(p)
+    -- red under: mergeEditors letting any one removal stand, and an addition not overriding it
+    assertEqual(p.categorySpells.movement[2983], true)
+end)
+
+test("database v2: the two healing lists' spell edits merge under healing", function()
+    local NS = fresh()
+    local p = v1profile({
+        edits({ coreHealing = { [5] = true, [774] = false }, lesserHealing = { [6] = true } }),
+        edits({ lesserHealing = { [774] = false, [102352] = false } }),
+    })
+    NS.Database.MigrateV2(p)
+    local h = p.categorySpells.healing
+    -- red under: dropping the retired keys' edits instead of merging them
+    assertEqual(h[5], true)
+    assertEqual(h[6], true)
+    assertEqual(h[774], false, "both containers removed Rejuvenation, one through each old list")
+    -- red under: counting a container's two old lists as two editors (container 1 edited healing and kept it)
+    assertNil(h[102352])
+    assertNil(p.categorySpells.coreHealing)
+    assertNil(p.categorySpells.lesserHealing)
+end)
+
+test("database v2: a container's two healing states merge — show beats hide beats neutral", function()
+    local NS = fresh()
+    local function cats(core, lesser) return { filter = { categories = { coreHealing = core, lesserHealing = lesser } } } end
+    local p = v1profile({ cats("show", ""), cats("", "hide"), cats("hide", "show"), cats("", ""), cats("hide", nil) })
+    NS.Database.MigrateV2(p)
+    local want = { "show", "hide", "show", "", "hide" }
+    for i, w in ipairs(want) do
+        local c = p.containers[i].filter.categories
+        -- red under: taking only the coreHealing state, or letting hide beat show
+        assertEqual(c.healing, w, "container " .. i)
+        assertNil(c.coreHealing, "container " .. i .. ": the old key is gone")
+        assertNil(c.lesserHealing, "container " .. i .. ": the old key is gone")
+    end
+end)
+
+test("database v2: dispel colors come from the first dispel-colored container in display order", function()
+    local NS = fresh()
+    local function bars(mode, r) return { bars = { colorMode = mode, dispelColors = { Magic = { r = r, g = 0, b = 0, a = 1 } } } } end
+    local p = v1profile({ bars("dispel", 0.1), bars("static", 0.2), bars("dispel", 0.3) }, { 2, 3, 1 })
+    NS.Database.MigrateV2(p)
+    -- red under: walking the containers table instead of containerOrder (container 1 would win)
+    assertEqual(p.dispelColors.Magic.r, 0.3)
+    for id, c in pairs(p.containers) do
+        -- red under: leaving bars.dispelColors on a container (the template no longer knows it)
+        assertNil(c.bars.dispelColors, "container " .. id)
+    end
+end)
+
+test("database v2: with no dispel-colored container the first container's colors win, completed from the defaults", function()
+    local NS = fresh()
+    local p = v1profile({
+        { bars = { colorMode = "static", dispelColors = { Magic = { r = 0.5, g = 0.5, b = 0.5, a = 1 } } } },
+        { bars = { colorMode = "static", dispelColors = { Magic = { r = 0.9, g = 0.9, b = 0.9, a = 1 } } } },
+    }, { 2, 1 })
+    NS.Database.MigrateV2(p)
+    assertEqual(p.dispelColors.Magic.r, 0.9, "container 2 is first in display order")
+    -- red under: storing the lifted table as it was (a type it lacks would have no color)
+    assertEqual(p.dispelColors.Curse.g, NS.Constants.DEFAULT_DISPEL_COLORS.Curse.g)
+end)
+
+test("database v2: a profile with no containers gets the default dispel colors and empty spell lists", function()
+    local NS = fresh()
+    local p = v1profile({})
+    NS.Database.MigrateV2(p)
+    local want = NS.Constants.DEFAULT_DISPEL_COLORS
+    for name, w in pairs(want) do
+        assertEqual(p.dispelColors[name].b, w.b, name)
+        -- red under: storing the constant itself (a swatch edit would repaint the default)
+        assertTrue(p.dispelColors[name] ~= w, name .. " is the profile's own table")
+    end
+    assertEqual(next(p.categorySpells), nil)
+end)
+
+test("database v2: stored Medium strata rises to High and every other strata is kept", function()
+    local NS = fresh()
+    local p = v1profile({ { layout = { strata = "MEDIUM" } }, { layout = { strata = "LOW" } }, {} })
+    NS.Database.MigrateV2(p)
+    -- red under: the strata step missing (Medium stays under the default UI's own frames)
+    assertEqual(p.containers[1].layout.strata, "HIGH")
+    assertEqual(p.containers[2].layout.strata, "LOW", "a strata the player chose is theirs")
+    assertNil(p.containers[3].layout, "a container with no layout gets none from the step")
+end)
+
+test("database v2: the step is idempotent over a profile it already migrated", function()
+    local NS = fresh()
+    local p = v1profile({
+        { filter = { categories = { coreHealing = "show" }, categorySpells = { coreHealing = { [5] = true } } },
+          bars = { colorMode = "dispel", dispelColors = { Magic = { r = 0.3, g = 0, b = 0, a = 1 } } },
+          layout = { strata = "MEDIUM" } },
+    })
+    NS.Database.MigrateV2(p)
+    local once = NS.Database.DeepCopy(p)
+    NS.Database.MigrateV2(p)
+    local Sig = NS.FilterCompiler.Signature
+    -- red under: a second pass resetting the lifted colors or spell lists to the defaults
+    assertEqual(Sig(p), Sig(once))
+end)
+
+test("database v2: RunMigrations migrates every stored profile, the inactive one included", function()
+    local function raw()
+        return {
+            seeded = true, nextContainerId = 5, containerOrder = { 4 },
+            containers = { [4] = {
+                name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                filter = { categories = { lesserHealing = "hide" }, categorySpells = { defensives = { [111] = true } } },
+                bars = { colorMode = "dispel", dispelColors = { Magic = { r = 0.3, g = 0, b = 0, a = 1 } } },
+                layout = { strata = "MEDIUM" },
+            } },
+        }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 1 } } })
+    assertEqual(NS.db.global.schemaVersion, 2)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local p = NS.db.sv.profiles[name]
+        local c = p.containers[4]
+        -- red under: the step migrating NS.db.profile only (Raid would keep its v1 shape for ever)
+        assertEqual(p.categorySpells.defensives[111], true, name)
+        assertEqual(p.dispelColors.Magic.r, 0.3, name)
+        assertNil(c.filter.categorySpells, name)
+        assertNil(c.bars.dispelColors, name)
+        assertEqual(c.filter.categories.healing, "hide", name)
+        assertEqual(c.layout.strata, "HIGH", name)
+    end
+end)
+
+test("database v2: RunMigrations logs one [Migrate] line per profile, and a second run is a no-op", function()
+    local NS = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Migrate" then
+            lines[#lines + 1] = fmt:format(...)
+        end
+    end
+    NS.db.sv.profiles.Other = v1profile({ { layout = { strata = "MEDIUM" } } })
+    NS.db.global.schemaVersion = 1
+    NS.RunMigrations()
+    local perProfile = 0
+    for _, l in ipairs(lines) do
+        if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
+    end
+    -- red under: logging once for the whole step, or not at all per profile
+    assertEqual(perProfile, 2, table.concat(lines, " | "))
+    assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
+    local before = #lines
+    NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
+    NS.RunMigrations()
+    -- red under: RunMigrations re-running a step the stamp already passed
+    assertEqual(#lines, before, "nothing logged")
+    assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "MEDIUM", "nothing migrated")
+end)
+
+test("database v2: without AceDB the step migrates the one profile there is", function()
+    local NS = fresh({
+        savedVariables = { profile = { seeded = true, containerOrder = { 1 },
+            containers = { [1] = { name = "Solo", layout = { strata = "MEDIUM" } } } }, global = { schemaVersion = 1 } },
+        before = function(m) m.__libs["AceDB-3.0"] = nil end,
+    })
+    -- red under: the step walking db.sv only (the no-AceDB fallback has none)
+    assertEqual(NS.db.profile.containers[1].layout.strata, "HIGH")
+    assertEqual(NS.db.global.schemaVersion, 2)
+end)
+
+test("database v2: a fresh profile carries the profile-wide spell lists and dispel colors", function()
+    local NS = fresh()
+    local p = NS.db.profile
+    -- red under: the two profile defaults missing from NS.defaults.profile
+    assertEqual(type(p.categorySpells), "table")
+    for name, w in pairs(NS.Constants.DEFAULT_DISPEL_COLORS) do
+        assertEqual(p.dispelColors[name].r, w.r, name)
+    end
+end)
