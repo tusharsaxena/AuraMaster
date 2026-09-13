@@ -312,8 +312,12 @@ pages, and the six `dispelColors.*` on General → Dispel Colors.
 
 With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-completing** stub
 (options-ui-§1): the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
-`MasterControls`), `MASTER_GROUP`, a real `RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`,
-logged once by `NS.OnProfileReset`), and no-op refreshers — every member a
-page file touches at file load — so every row still registers and `/am list|get|set` and the defaults
-keep working. The panel itself answers one line naming the missing library. `tests/degraded_env.lua`
-builds that environment for the suite.
+`MasterControls`) and `MASTER_GROUP` (every member a page file touches at file load), and a real
+`RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`), so
+every row still registers and `/am list|get|set` and the defaults keep working. Every other function
+member of the live instance, this addon's decorations (`SelectContainer`, `ContainerPickerCell`,
+`RenderTabbedPage`, …) included, is carried as a no-op, so no call site finds a member missing
+(testing-§8); the library's layout and composer constants, `AceGUI` and `LSMValues` are not copied.
+The panel itself (`CreateOptionsPanel`, `OpenOptionsPanel`) answers one line naming the missing
+library. `tests/degraded_env.lua` builds that environment for the suite, and
+`tests/test_surface_parity.lua` compares its member set against the live instance.

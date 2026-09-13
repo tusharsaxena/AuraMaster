@@ -94,14 +94,18 @@ local descriptor = {
 --
 -- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD. With any of those
 -- nil the page file raises, its rows never register, and most of the schema — with /am list,
--- /am set and the profile defaults — silently vanishes. So this stub publishes every member a page
--- file touches at load, measured by deleting one and re-running tests/degraded_env.lua, and
--- nothing else: no copy of a widget maker, no flow engine, no header, no LAYOUT constant. The
--- render-time members it does carry are no-ops.
+-- /am set and the profile defaults — silently vanishes. So this stub publishes, real enough to
+-- finish the load, every member a page file touches at load (measured by deleting one and
+-- re-running tests/degraded_env.lua), plus the recovery reset. Every other function member of the
+-- live instance, the host's own decorations included, is carried too, as a no-op or one honest
+-- line: load-completing narrows what a member does, never which members exist (testing-§8). What
+-- it never carries is a copy of the library: no widget maker's body, no flow engine, no header, no
+-- LAYOUT or composer constant, no AceGUI, no media lister.
 --
 -- The composers reproduce the STORED SURFACE only — one row per canonical leaf at the path the live
 -- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this
--- build has none. tests/test_optionssetup.lua pins the member set and the schema row count.
+-- build has none. tests/test_surface_parity.lua pins the member set against the live instance;
+-- tests/test_optionssetup.lua pins the schema row count.
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
@@ -194,13 +198,29 @@ if not lib then
         end)
     end
 
-    -- Reached only from a builder, a render or a user action, so a no-op is the honest answer. The
-    -- v1.35.0 widgets (ChoiceGrid, ResolveId, IdInput, IdList) are called only at render time, so
-    -- they answer as no-ops too (options-ui-§1) and the stub still carries every member (testing-§8).
-    for _, name in ipairs({ "RefreshAllPanels", "RefreshScalars", "RestoreDefaults",
-            "ChoiceGrid", "ResolveId", "IdInput", "IdList" }) do
+    -- Reached only from a builder, a render or a user action, and a library-less build draws no
+    -- panel, so a no-op is the honest answer (options-ui-§1). Every function member of the live
+    -- instance is here, the host decorations below the `return` included, so no call site finds a
+    -- member missing (testing-§8, tests/test_surface_parity.lua).
+    for _, name in ipairs({
+        -- refreshers and resets
+        "RefreshAllPanels", "RefreshScalars", "RefreshPanel", "RestoreDefaults",
+        -- panel shell and registration
+        "CreatePanel", "RegisterOptionsPage", "EnsureDefaultsButton", "EnsureScroll", "ClearScroll",
+        "PatchAlwaysShowScrollbar", "SetChromeHeight", "SetRenderer", "BuildLandingPage",
+        -- renderers and widget makers
+        "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
+        "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
+        "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
+        "IdList",
+        -- this addon's decorations on the live instance (defined below the `return`)
+        "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderWarnings",
+        "RenderTabbedPage", "RenderContainerPage",
+    }) do
         Helpers[name] = function() end
     end
+    Helpers.CreateOptionsPanel = sayMissing
+    Helpers.OpenOptionsPanel = sayMissing
 
     NS.RegisterOptionsPage = function() end
     NS.RefreshOptionsPanel = function() end

@@ -926,7 +926,7 @@ badge and any count quoted in the docs must agree with it.
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
-- parity: the Options stub carries every helper a page file reaches at load
+- parity: the Options stub carries every helper the host calls, off the load path as a no-op
 - parity: the Slash stub carries every dispatcher member the addon calls
 
 ### test_vendor_sync.lua (3)
