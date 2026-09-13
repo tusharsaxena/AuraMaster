@@ -91,7 +91,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | E1 inherited flow + derived points | L-6 | AM | done | bcc54f3 | EffectiveLayout/DerivedPoints/Followers; Growth rows dimmed via panel-only row panelGet |
 | E2 attached handle in preview | L-4 | AM | done | a27d172 | Preview.Extent + Anchors.PlaceAttached; strip level set per placement; **CP-E reached** |
 | F1 render coverage test | B-5 | AM | done | 078eef9 53ba33b 025ab2d, lint fix af3b3bc | walk found preview time format + running-out color (fixed); smooth/pandemic engine-only |
-| F2 docs | §9 | AM | todo | | **CP-F** |
+| F2 docs | §9 | AM | done | 5615872 | counts from the live schema (198 rows, 40 files), stale citations repointed, smoke section P (checks 58-70); **CP-F reached** |
 | G1 ConsumableMaster IdInput | X-4 | CM | todo | | needs CP-A |
 | G2 BankLedger IdList | X-4 | BL | todo | | needs CP-A |
 | G3 LootHistory IdList | X-4 | LH | todo | | needs CP-A; **CP-G** |
