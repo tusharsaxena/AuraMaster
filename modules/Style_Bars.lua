@@ -227,19 +227,29 @@ local function textShown(t)
     return t == nil or t.show ~= false
 end
 
+--- The box a time text takes beside the name: the widest string its format writes at its font size
+--- (C.TIME_TEXT_EMS), plus its offset, which Style.ApplyText takes back off; never wider than the bar
+--- area. A format this build does not know gets the widest budget.
+local function timeBoxWidth(b, area)
+    local t = b.time or {}
+    local size = tonumber(t.fontSize) or D.bars.time.fontSize
+    local ems = C.TIME_TEXT_EMS[b.timeFormat] or C.TIME_TEXT_EMS.long
+    return math.min(area, math.ceil(size * ems) + math.abs(tonumber(t.x) or 0))
+end
+
 --- Dress the name, time and stack texts, each boxed to its host so its justification shows, and show
 --- each one its settings leave on.
 local function applyTexts(am, b, w, h)
     local area = barAreaWidth(b, w, h)
     local nameStops = b.name and b.time and textShown(b.name) and textShown(b.time)
     Style.ApplyText(am.name, b.name, am.bar, D.bars.name, area)
-    -- While the name stops short of it, the time sizes to its own string: a time boxed across the bar
-    -- would put its left edge at the bar's start and leave the name no room.
-    Style.ApplyText(am.time, b.time, am.bar, D.bars.time, (not nameStops) and area or nil)
+    -- While the name stops short of it, the time takes a box of its own format's width: one across
+    -- the bar would put its left edge at the bar's start and leave the name no room.
+    Style.ApplyText(am.time, b.time, am.bar, D.bars.time, nameStops and timeBoxWidth(b, area) or area)
     local onIcon = b.icon ~= "NONE"
     Style.ApplyText(am.stacks, b.stacks, onIcon and am.icon or am.bar, D.bars.stacks,
         onIcon and iconSizeFor(b, h) or area)
-    -- The name stops short of the time text rather than running under it; the second anchor
+    -- The name stops short of the time's box rather than running under it; the second anchor
     -- overrides the name's own box.
     if nameStops then am.name:SetPoint("RIGHT", am.time, "LEFT", -4, 0) end
     am.name:SetShown(textShown(b.name))

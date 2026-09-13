@@ -315,8 +315,10 @@ listed here too, so the batch can be signed off in one pass.
     and reads as a live aura's does in the same format. Tick Highlights → **Running out** → the
     *Shield Wall* placeholder (4 s left) takes the running-out color.
 66. **Text justify (B-5).** On Bars → Name text set **Justify** to Right → the name moves to the
-    right end of its box and stops short of the time text. On Icons → Time text set it to Left, then
-    Right → the time text moves across the icon's width.
+    right end of its box and stops short of the time text. On Bars → Time text, with the name shown,
+    set **Justify** to Left, then Right → the time moves across a box as wide as its format's longest
+    string ("59m"; "23h 59m" in the detailed format), and the name stops short of that box. On Icons →
+    Time text set it to Left, then Right → the time text moves across the icon's width.
 67. **Inherited flow (L-6).** Attach container B to A (Layout → Anchor → *Another container*) where A
     fills in columns growing down → B continues below A's last element, and the line beside the
     Container dropdown names the points. Set A's **Grow vertically** to up → B moves above A, with

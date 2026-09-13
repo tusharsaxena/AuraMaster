@@ -498,7 +498,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: the stack count sits on the icon, or on the bar when there is no icon
 - bars: the name and time are laid against the bar, in their configured corners
 - bars: each text is boxed to its host less its offset: the bar area, or the icon for the stacks on it
-- bars: the time sizes to its own text while the name stops short of it, so the name keeps its room
+- bars: beside the name the time is boxed to its format's widest string, so its justify shows and the name keeps its room
 - bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on
 - bars: a hidden region is never handed to the engine
 - bars: every shown region is bound to its own engine field
@@ -516,7 +516,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: a dispel-colored preview paints the Magic color, since no real aura names a type
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (23)
+### test_style_icons.lua (25)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -533,6 +533,8 @@ badge and any count quoted in the docs must agree with it.
 - icons: the dispel border is the engine's debuff art on harmful auras only
 - icons: the dispel border is tinted in the profile's dispel colors (G-3)
 - icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
+- icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge
+- icons: a non-square icon's dispel art reaches past it by a sixth of each side
 - icons: the dispel border turned off is hidden and never bound
 - icons: turning the dispel border off on a live button keeps it hidden (B-4)
 - icons: the refresh-window highlight is bound only when on, in the pandemic color
@@ -965,7 +967,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style.lua | 43 |
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 46 |
-| test_style_icons.lua | 23 |
+| test_style_icons.lua | 25 |
 | test_preview.lua | 19 |
 | test_render_coverage.lua | 2 |
 | test_blizzardframes.lua | 8 |
@@ -993,4 +995,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **803** |
+| **Total** | **805** |

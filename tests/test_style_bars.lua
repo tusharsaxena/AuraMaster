@@ -406,11 +406,24 @@ test("bars: each text is boxed to its host less its offset: the bar area, or the
     assertEqual(am.name:__last("SetWidth")[1], 220 - 4, "name")
 end)
 
-test("bars: the time sizes to its own text while the name stops short of it, so the name keeps its room", function()
+test("bars: beside the name the time is boxed to its format's widest string, so its justify shows and the name keeps its room", function()
+    -- The template's 11pt time in the Blizzard format (one unit, "59m"): 2.5 ems, 28px.
     local _, am = dressed(cfg())
+    -- red under: a time sized to its own string beside the name (its Justify has nothing to align within)
+    assertEqual(am.time:__last("SetWidth")[1], 28)
+    assertTrue(am.time:__last("SetPoint")[2] == am.bar, "the box hangs off its own point on the bar")
     -- red under: a time text boxed across the bar area (the name's stop lands at the bar's start)
-    assertEqual(am.time:__last("SetWidth")[1], 0)
+    assertTrue(am.time:__last("SetWidth")[1] < 201 - 4, "not the whole bar area")
     assertEqual(am.name:__last("SetWidth")[1], 201 - 4, "the name's own box, which its second anchor overrides")
+    -- red under: one width budget for every format (two units need more room than one)
+    _, am = dressed(cfg({ bars = { timeFormat = "long" } }))
+    assertEqual(am.time:__last("SetWidth")[1], 50, "the detailed format's two units, 4.5 ems")
+    -- red under: a budget that ignores the font size
+    _, am = dressed(cfg({ bars = { time = { fontSize = 20 } } }))
+    assertEqual(am.time:__last("SetWidth")[1], 50, "2.5 ems of a 20pt font")
+    -- red under: a budget wider than the bar area on a narrow bar
+    _, am = dressed(cfg({ bars = { width = 40, time = { fontSize = 40 } } }))
+    assertEqual(am.time:__last("SetWidth")[1], 40 - 18 - 1 - 4, "held to the bar area less the offset")
 end)
 
 -- ── engine bindings ───────────────────────────────────────────────────────────────────────────

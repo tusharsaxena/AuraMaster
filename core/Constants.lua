@@ -137,6 +137,10 @@ C.TOOLTIP_ANCHOR_LABELS = {
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s → 1 m)", short = "Short (1 unit)",
     long = "Detailed (2 units, 1h 15m)" }
+-- The width a Bars time text is boxed to beside the name, in ems of its font size: the widest string
+-- each format writes ("59m" in one unit, "23h 59m" in two). The engine writes the text secret, so
+-- its width cannot be read back; a fixed budget is what gives the time's Justify a box (B-5).
+C.TIME_TEXT_EMS = { blizzard = 2.5, short = 2.5, long = 4.5 }
 
 -- The dispel types the engine names, plus "None" for an aura without one.
 C.DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "None" }
