@@ -389,7 +389,10 @@ end
 --- the formatter the engine is handed for the same format (formatterFor). A placeholder's seconds
 --- are a plain number, so the formatter's own Format answers here (research notes Q7). A client
 --- without the formatter, or one that refuses, writes whole seconds; a timeless aura writes nothing.
-function Style.PreviewTime(fs, aura, s)
+--- Below the running-out threshold the text takes the running-out color, as the engine's step curve
+--- (curveFor) paints a live one; above it, the font color the dress just set stands. `sdef` is the
+--- template's style block, which the threshold and the color fall back to.
+function Style.PreviewTime(fs, aura, s, sdef)
     if aura.duration <= 0 then
         fs:SetText("")
         return
@@ -398,4 +401,7 @@ function Style.PreviewTime(fs, aura, s)
     local ok, text = false, nil
     if f and f.Format then ok, text = pcall(f.Format, f, aura.remaining) end
     fs:SetText((ok and type(text) == "string") and text or ("%ds"):format(aura.remaining))
+    if s.expiringColorOn and aura.remaining < (tonumber(s.expiringThreshold) or sdef.expiringThreshold) then
+        fs:SetTextColor(Style.Color(s.expiringColor or sdef.expiringColor, false))
+    end
 end

@@ -298,7 +298,7 @@ end
 local function previewText(am, aura, b)
     am.icon:SetTexture(aura.icon)
     am.name:SetText(aura.name)
-    Style.PreviewTime(am.time, aura, b)
+    Style.PreviewTime(am.time, aura, b, D.bars)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
 end
 

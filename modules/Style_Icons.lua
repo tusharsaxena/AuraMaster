@@ -159,7 +159,7 @@ function Icons.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not am then return end
     am.icon:SetTexture(aura.icon)
-    Style.PreviewTime(am.time, aura, (cfg and cfg.icons) or {})
+    Style.PreviewTime(am.time, aura, (cfg and cfg.icons) or {}, D.icons)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
     if am.cd.SetCooldown and aura.duration > 0 then
         am.cd:SetCooldown((GetTime() or 0) - (aura.duration - aura.remaining), aura.duration)

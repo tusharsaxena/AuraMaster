@@ -790,6 +790,50 @@ test("style: a placeholder's time text is what its format's formatter writes, th
     end
 end)
 
+test("style: a placeholder running out takes the running-out color, as the engine's curve paints a live one (B-5)", function()
+    local red = { r = 0.9, g = 0.1, b = 0.2, a = 1 }
+    local function timeColor(style, over, aura)
+        local c = cfg({ style = style, [style] = over })
+        local f = R()
+        NS.Style.Element(f, c, false)
+        f.__am.time = R()
+        local fill = (style == "icons") and NS.Style.Icons.FillPreview or NS.Style.Bars.FillPreview
+        fill(f, aura, c)
+        return f.__am.time:__joined("SetTextColor")
+    end
+    local low = { name = "X", icon = 1, remaining = 3, duration = 8, stacks = 0 }
+    local high = { name = "X", icon = 1, remaining = 11, duration = 12, stacks = 0 }
+    local timeless = { name = "X", icon = 1, remaining = 0, duration = 0, stacks = 0 }
+    for _, style in ipairs({ "bars", "icons" }) do
+        local on = { expiringColorOn = true, expiringThreshold = 5, expiringColor = red }
+        -- red under: a placeholder's time text left in its font color below the threshold
+        assertEqual(timeColor(style, on, low), "0.9,0.1,0.2,1", style .. ": below the threshold")
+        assertNil(timeColor(style, on, high), style .. ": at or above it, the font color stands")
+        assertNil(timeColor(style, on, timeless), style .. ": a timeless aura never runs out")
+        assertNil(timeColor(style, { expiringColorOn = false, expiringColor = red }, low), style .. ": off")
+        local c = cfg()
+        c[style].expiringThreshold = nil
+        c[style].expiringColorOn, c[style].expiringColor = true, red
+        c.style = style
+        local f = R()
+        NS.Style.Element(f, c, false)
+        f.__am.time = R()
+        local fill = (style == "icons") and NS.Style.Icons.FillPreview or NS.Style.Bars.FillPreview
+        fill(f, { name = "X", icon = 1, remaining = D[style].expiringThreshold - 1, duration = 60, stacks = 0 }, c)
+        assertEqual(f.__am.time:__joined("SetTextColor"), "0.9,0.1,0.2,1", style .. ": a missing threshold is the template's")
+    end
+end)
+
+test("style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)", function()
+    local seen = 0
+    for _, a in ipairs(NS.Constants.PREVIEW_AURAS) do
+        if a.duration > 0 and a.remaining < D.bars.expiringThreshold then seen = seen + 1 end
+    end
+    -- red under: every placeholder above the default threshold (the setting would show no change)
+    assertTrue(seen >= 1, "a placeholder under the default running-out threshold")
+    assertEqual(D.icons.expiringThreshold, D.bars.expiringThreshold, "one default for both styles")
+end)
+
 test("style: a style leaf left nil draws the template's value, never a literal of its own", function()
     -- The one home for defaults is the template (savedvariables-§2; Style.lua's header). A backfilled
     -- profile never holds a nil leaf, so this is the fallback a reader must still honor.

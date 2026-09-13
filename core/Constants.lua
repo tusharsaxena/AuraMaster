@@ -153,7 +153,7 @@ C.DEFAULT_DISPEL_COLORS = {
 C.PREVIEW_AURAS = {
     { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },
     { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0 },
-    { name = "Shield Wall",           icon = 132362, remaining = 6,    duration = 8,    stacks = 0 },
+    { name = "Shield Wall",           icon = 132362, remaining = 4,    duration = 8,    stacks = 0 },
     { name = "Ignore Pain",           icon = 1377132, remaining = 11,  duration = 12,   stacks = 3 },
     { name = "Well Fed",              icon = 136000, remaining = 0,    duration = 0,    stacks = 0 },
 }

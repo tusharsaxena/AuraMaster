@@ -399,7 +399,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 
-### test_style.lua (41)
+### test_style.lua (43)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -439,6 +439,8 @@ badge and any count quoted in the docs must agree with it.
 - style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
 - style: the time text gets the engine's formatter for its format, and the expiring color at its threshold
 - style: a placeholder's time text is what its format's formatter writes, the one the engine is handed (B-5)
+- style: a placeholder running out takes the running-out color, as the engine's curve paints a live one (B-5)
+- style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)
 - style: a style leaf left nil draws the template's value, never a literal of its own
 - style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's
 - style: hiding the other style's regions never hides the element itself
@@ -955,7 +957,7 @@ badge and any count quoted in the docs must agree with it.
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
 | test_anchors.lua | 63 |
-| test_style.lua | 41 |
+| test_style.lua | 43 |
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 46 |
 | test_style_icons.lua | 23 |
@@ -985,4 +987,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **799** |
+| **Total** | **801** |
