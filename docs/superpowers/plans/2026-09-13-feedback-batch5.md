@@ -97,9 +97,11 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | G3 LootHistory IdList | X-4 | LH | done | b4b2f16 1d6e3c8 | re-vendor + three IdLists (items; currencies by id/link); review approved; **CP-G reached** |
 | I-3 icon dispel border inset (owner report) | I-1 follow-up | AM | done | bb07037 | dispel art outset by a sixth of the icon, as Blizzard sizes it; smoke check 71 |
 | H1 adversarial review + fixes | all | all | done | e588dcf 8fd54a8 a928141 6a8f00e 7ac8dcf | 5 of 6 AM findings fixed; I-1 cause unconfirmed, smoke 60 (/fstack on a buff icon) owed in game |
-| H2 final battery + report | all | all | todo | | **CP-H** |
+| H1b owner decisions (G-3 icons, G-1 Reset all) | G-1 G-3 | AM | done | 71cf5f3 3583eb2 | icons drop customDispelColorMap (Blizzard's art); Dispel Colors tab/rows say bars only; smoke 61 rewritten; Reset all renaming starters ratified in settings-panel.md + spec G-1 |
+| H1c re-cut + re-vendor | X-1 X-4 | all | done | LibKa0s abd87e6 3c68fc3 5385cf3; AM 7b18a4b; CM d375596; BL a91c384; LH 16d19bb fff585a | IdList item-quality color; v1.35.0 re-cut in place (no bump), LOCAL tag moved to 5385cf3; four consumers re-vendored; LH dead helpers deleted |
+| H2 final battery + report | all | all | done | (this commit) | AM 806/0, LibKa0s 972/0, CM 881/0, BL 884/0, LH 745/0; luacheck 0/0 and 0 functions over CCN 15 in all five; trees clean; tag == HEAD, not pushed; **CP-H reached** |
 
-Workflow runs: `wf_0af661b7-6d2` (A1-A2, R0, B1-B7) · `wf_8e85fdd5-5fa` (A3, A4, C1, C2; D+ and G not reached because of a script matcher bug) · `wf_9b7e7c55-ccd` (D1-F2, G1-G3) · run 4 (H1, H2)
+Workflow runs: `wf_0af661b7-6d2` (A1-A2, R0, B1-B7) · `wf_8e85fdd5-5fa` (A3, A4, C1, C2; D+ and G not reached because of a script matcher bug) · `wf_9b7e7c55-ccd` (D1-F2, G1-G3) · `wf_3b9692d5-be8` (H1 review: 19 found, 16 confirmed) · `wf_ee51ba1c-d51` (owner decisions, re-cut, re-vendor)
 
 **Dependency order:**
 - R0, A* and B1–B3 can run concurrently (different repos, or independent files).
