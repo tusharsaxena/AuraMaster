@@ -80,7 +80,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | B5 icon border color | I-1 | AM | done | f5ec19c | dispel art on its own frame above our border; icon frame levels set in build |
 | B6 countdown rounding | I-2 | AM | done | 2280071 | every format RoundUp; Blizzard format a round-up copy of the engine default |
 | B7 world-tooltip bleed + strata | L-3 | AM | done | 3197c05 | placeholders hold the hover (Style.TakesHover); strata HIGH; **CP-B reached** |
-| C1 schema v2 migration + defaults | G-2 G-3 L-3 §7 | AM | todo | | |
+| C1 schema v2 migration + defaults | G-2 G-3 L-3 §7 | AM | done | 835d095 | v2 over every profile; readers repointed; sparkTimeless/iconBorder* keys deferred to D6 |
 | C2 consumers read profile sets | G-2 G-3 | AM | todo | | **CP-C** |
 | D1 re-vendor v1.35.0 | X-4 | AM | todo | | needs CP-A |
 | D2 General → Containers; retire page | G-1 C-3 D1 | AM | todo | | |
