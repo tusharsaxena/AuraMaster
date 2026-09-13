@@ -333,7 +333,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (59)
+### test_anchors.lua (63)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -394,6 +394,10 @@ badge and any count quoted in the docs must agree with it.
 - anchors: the engine's flow, the placeholders and the handle all read the inherited flow
 - anchors: detaching a container restores its own stored flow at the next apply
 - anchors: a write that moves a container's flow re-applies every container following it
+- anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
+- anchors: locking re-anchors an attached container to its parent's engine, and unlocking back to the extent (L-4)
+- anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)
+- handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 
 ### test_style.lua (40)
 
@@ -535,7 +539,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_preview.lua (16)
+### test_preview.lua (19)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders, and an enchant container shows at most two
@@ -553,6 +557,9 @@ badge and any count quoted in the docs must agree with it.
 - preview: a bar container duplicated while unlocked, then switched to icons, re-dresses (the owner's steps)
 - preview: each style keeps its own pool, and a switch parks the other style's placeholders
 - preview: a placeholder holds the mouse's hover as its container's buttons do, so no world tooltip shows through (L-3)
+- preview: the extent covers the placeholder block from the corner it starts at, sized by Preview.Offset (L-4)
+- preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
+- preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
 
 ### test_blizzardframes.lua (8)
 
@@ -946,12 +953,12 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 59 |
+| test_anchors.lua | 63 |
 | test_style.lua | 40 |
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 46 |
 | test_style_icons.lua | 23 |
-| test_preview.lua | 16 |
+| test_preview.lua | 19 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
@@ -977,4 +984,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **791** |
+| **Total** | **798** |

@@ -158,7 +158,9 @@ suite covers what only the client can show.
 ## G. Attach
 
 41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
-    as it grows and shrinks. Try to attach A to B and B to A → the second is refused.
+    as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked, with
+    B attached to A → B's placeholders start just past A's last placeholder rather than on top of A,
+    and B's handle draws above A's placeholders; `/am lock` → B follows A's real auras again.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout

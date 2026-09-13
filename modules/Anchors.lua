@@ -66,12 +66,24 @@ end
 --- names nothing usable: a missing or looping container, or a frame that is absent or forbidden. A
 --- named frame that simply does not exist YET is remembered, to be retried when an add-on loads; a
 --- forbidden one is not, since no add-on loading makes it a target.
+--- The live container `container`'s attach settings `at` name, or nil when it cannot be used: missing,
+--- itself, or closing a loop.
+local function targetContainer(container, at)
+    local targetId = tonumber(at.container)
+    local target = targetId and NS.ContainerManager and NS.ContainerManager.instances[targetId]
+    if target and targetId ~= container.id and not Anchors.WouldCycle(container.id, targetId) then
+        return target
+    end
+    return nil
+end
+
 local function targetFor(container, at)
     if at.mode == "container" then
-        local targetId = tonumber(at.container)
-        local target = NS.ContainerManager and NS.ContainerManager.instances[targetId]
-        if target and targetId ~= container.id and not Anchors.WouldCycle(container.id, targetId) then
-            return target.engine or target.anchor, "container"
+        local target = targetContainer(container, at)
+        if target then
+            -- A previewing target's engine is disabled and keeps a stale rect; its preview extent
+            -- covers its placeholders instead (Preview.Extent, L-4).
+            return (target.previewShown and target.previewExtent) or target.engine or target.anchor, "container"
         end
     elseif at.mode == "frame" then
         local f = Anchors.ResolveFrame(at.frame)
@@ -224,6 +236,26 @@ function Anchors.Place(container)
     return "screen"
 end
 
+--- Re-place every container attached to `target` once its preview has come or gone since they were
+--- last placed (L-4): they hang from its preview extent while it previews and from its engine
+--- otherwise (targetFor). Called on every visibility pass (ContainerClass:ApplyVisibility), so a pass
+--- that changes nothing re-places nothing. Layout work beside an aura engine, so never under
+--- lockdown: the last placement stands, unrecorded, and the first pass after combat catches up.
+function Anchors.PlaceAttached(target)
+    local previewing = target.previewShown == true
+    if target.attachedPlacedFor == previewing or InCombatLockdown() then return end
+    target.attachedPlacedFor = previewing
+    local CM = NS.ContainerManager
+    if not CM then return end
+    for _, inst in pairs(CM.instances) do
+        local cfg = inst ~= target and inst:Cfg()
+        local at = cfg and cfg.attach
+        if at and at.mode == "container" and tonumber(at.container) == target.id then
+            inst.placedAs = Anchors.Place(inst)
+        end
+    end
+end
+
 --- Re-place every container whose frame target did not exist when it was placed. Called whenever an
 --- add-on loads, since that is when a new named frame can appear, and when combat ends, since an
 --- add-on that loaded during combat could not be resolved then.
@@ -279,6 +311,7 @@ local HANDLE_H     = 18   -- strip height
 local HANDLE_GAP   = 2    -- gap between the strip and the anchor
 local HANDLE_PAD   = 24   -- horizontal padding around the label
 local HANDLE_HELP  = 14   -- the help mark's edge, inside the strip's far end
+local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
 local BACKDROP_TEX = [[Interface\Buttons\WHITE8X8]]
 -- The LAST rung of the help mark's ladder: the catalog's `help` icon through NS.Icon first, and this
 -- Blizzard texture only when the media library is absent or stops carrying that name.
@@ -363,7 +396,7 @@ function Anchors.BuildHandle(container)
     local anchor = container.anchor
     local handle = CreateFrame("Button", nil, anchor, "BackdropTemplate")
     handle:SetHeight(HANDLE_H)
-    handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + 50)
+    handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + HANDLE_LEVEL)
     handle:SetBackdrop({ bgFile = BACKDROP_TEX, edgeFile = BACKDROP_TEX, edgeSize = 1 })
     handle:SetBackdropColor(0, 0, 0, 0.75)
     handle:SetBackdropBorderColor(1, 0.82, 0, 0.6)
@@ -393,9 +426,25 @@ end
 --- below when they grow up, its edge lined up with the edge they start from so it runs along the
 --- first line. At least as wide as one element, and as its label with room for the help mark. The
 --- growth is the effective one: an attached container's auras grow the way its parent's do (L-6).
+--- The strip's frame level, set wherever it is placed, since the first apply sets its anchor's level
+--- after BuildHandle ran: HANDLE_LEVEL above its anchor. A container attached to another also clears
+--- that one's placeholders (L-4), which it sits beside with its strip toward them; every placeholder,
+--- inner frames included, stacks under that container's own strip, HANDLE_LEVEL above its anchor.
+--- Levels order frames within one strata only: a target in a higher strata still draws on top.
+local function handleLevel(container, cfg)
+    local level = (container.anchor:GetFrameLevel() or 0) + HANDLE_LEVEL
+    local at = cfg.attach
+    local target = at and at.mode == "container" and targetContainer(container, at)
+    if target then
+        level = math.max(level, (target.anchor:GetFrameLevel() or 0) + HANDLE_LEVEL + 1)
+    end
+    return level
+end
+
 --- @return number  how far the strip runs past the anchor along the line
 local function placeHandle(container, cfg)
     local handle = container.handle
+    handle:SetFrameLevel(handleLevel(container, cfg))
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
     local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
     local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")

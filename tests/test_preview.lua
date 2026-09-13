@@ -302,3 +302,67 @@ test("preview: a placeholder holds the mouse's hover as its container's buttons 
     assertEqual((mouseOf({ style = "bars", behavior = { clickThrough = true } })), "false", "click-through")
     assertEqual((mouseOf({ style = "bars", behavior = { tooltips = false } })), "false", "tooltips off")
 end)
+
+-- ── the preview extent (L-4) ────────────────────────────────────────────────────────────────────
+-- A container attached to a previewing one hangs from this frame rather than the disabled engine,
+-- so it sits where it would beside real auras (tests/test_anchors.lua has the attach side).
+
+test("preview: the extent covers the placeholder block from the corner it starts at, sized by Preview.Offset (L-4)", function()
+    local c = cfg({ style = "bars", bars = { width = 100, height = 10 },
+        layout = { axis = "vertical", perLine = 2, spacing = 1, lineSpacing = 5, growH = "left", growV = "up" } })
+    local k = container(c)
+    k.previewExtent = R()
+    assertEqual(#NS.Constants.PREVIEW_AURAS, 5, "five placeholders")
+    NS.Preview.Show(k)
+    local p = k.previewExtent:__last("SetPoint")
+    -- red under: the extent hung from a corner other than the one the placeholders start from
+    assertEqual(p[1], "BOTTOMRIGHT"); assertTrue(p[2] == k.anchor); assertEqual(p[3], "BOTTOMRIGHT")
+    assertEqual(p[4], 0); assertEqual(p[5], 0)
+    local s = k.previewExtent:__last("SetSize")
+    -- Five in columns of two: three columns across, two elements up.
+    -- red under: an extent one element in size (a child would sit on the parent's second column)
+    assertEqual(s[1], 3 * 100 + 2 * 5); assertEqual(s[2], 2 * 10 + 1)
+    c.filter.maxAuras = 1
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    s = k.previewExtent:__last("SetSize")
+    -- red under: an extent sized once and never again (a lower cap would leave a gap before the child)
+    assertEqual(s[1], 100); assertEqual(s[2], 10)
+end)
+
+test("preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)", function()
+    local NS2 = fresh()
+    local inst = NS2.ContainerManager.instances[1]
+    NS2.SetByPath("locked", false)
+    local extent = inst.previewExtent
+    -- red under: Preview.Show without its Preview.Extent call
+    assertTrue(extent ~= nil, "built on the first preview")
+    assertEqual(extent.__frameType, "Frame"); assertTrue(extent.__parent == inst.anchor)
+    NS2.SetByPath("locked", true)
+    NS2.SetByPath("locked", false)
+    -- red under: a new extent per preview (WoW never frees a frame)
+    assertTrue(inst.previewExtent == extent, "the same frame")
+end)
+
+test("preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)", function()
+    local NS2, mocks = fresh()
+    local c = cfg({ style = "bars" }, NS2)
+    local k = container(c)
+    k.previewExtent = R()
+    mocks.__lockdown = true
+    NS2.Preview.Show(k)
+    -- red under: an extent first drawn in combat left without points (a container re-placed onto it
+    -- once combat ends would hang from nothing)
+    assertEqual(k.previewExtent:__count("SetPoint"), 1, "placed once: nothing hangs from it yet")
+    c.filter.maxAuras = 1
+    k.previewDirty = true
+    NS2.Preview.Show(k)
+    -- red under: re-sizing the extent under lockdown (an attached container's anchor, which parents an
+    -- aura engine, would move with it: events-frames-taint-§2)
+    assertEqual(k.previewExtent:__count("SetPoint"), 1)
+    assertEqual(k.previewExtent:__count("SetSize"), 1)
+    mocks.__lockdown = false
+    k.previewDirty = true
+    NS2.Preview.Show(k)
+    assertEqual(k.previewExtent:__count("SetSize"), 2, "out of combat it follows the block again")
+end)

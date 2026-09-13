@@ -121,7 +121,41 @@ function Preview.Show(container)
         f:ClearAllPoints()
         f:SetPoint(point, container.anchor, point, x, y)
     end
+    Preview.Extent(container, count)
     container.previewShown, container.previewDirty = true, false
+end
+
+--- The frame a container attached to this one hangs from while this one previews (L-4). The engine
+--- is disabled then and keeps only a stale rect (its provisional 1x1 on a fresh build), so a child
+--- anchored to it sat on the first placeholder with its handle among them. The extent is a plain
+--- frame of ours under the anchor, hung from the corner the placeholders start at and as wide and
+--- tall as their block, by Preview.Offset's arithmetic: the child sits where it would beside real
+--- auras. It is never hidden, so a child still hanging from it has a rect to hang from.
+---
+--- Placing it moves every container attached to it, whose anchor parents an aura engine: layout
+--- work (events-frames-taint-§2). Under lockdown a placed extent stands; one never placed is placed
+--- once, because nothing hangs from it yet (Anchors.Place never runs under lockdown).
+--- @return table|nil  the extent, or nil when the container's settings are gone
+function Preview.Extent(container, count)
+    local cfg = container:Cfg()
+    if not cfg then return nil end
+    local extent = container.previewExtent
+    if not extent then
+        extent = CreateFrame("Frame", nil, container.anchor)
+        container.previewExtent = extent
+    end
+    if extent.placed and InCombatLockdown() then return extent end
+    local w, h = NS.Style.ElementSize(cfg)
+    local corner, farX, farY = Preview.Offset(cfg, 1), 0, 0
+    for i = 2, count or placeholderCount(cfg) do
+        local _, x, y = Preview.Offset(cfg, i)
+        farX, farY = math.max(farX, math.abs(x)), math.max(farY, math.abs(y))
+    end
+    extent:ClearAllPoints()
+    extent:SetPoint(corner, container.anchor, corner, 0, 0)
+    extent:SetSize(farX + w, farY + h)
+    extent.placed = true
+    return extent
 end
 
 --- Remove one container's placeholders, of every style.

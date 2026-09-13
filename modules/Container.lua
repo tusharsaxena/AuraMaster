@@ -386,6 +386,8 @@ function ContainerClass:ApplyVisibility()
         NS.Preview.Hide(self)
     end
     NS.Anchors.UpdateHandle(self, previewing and p and not p.locked)
+    -- Containers attached to this one hang from its preview extent while it previews (L-4).
+    NS.Anchors.PlaceAttached(self)
     return show, previewing
 end
 

@@ -352,10 +352,14 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   20px lower (the 18px strip and its 2px gap) until `/am lock`, and a handle wider than one element
   pushes a container off the side edge it runs toward the same way. Locking puts it back, and the
   stored position never changes.
-- **An attached container's handle can lie over the container it is attached to.** The handle sits
-  outside its own container, on the side its auras do not grow into, and an attached container often
-  has its target on exactly that side. The handle shows only while unlocked, and an attached
-  container is placed by its Layout-page offsets rather than dragged, so nothing is lost.
+- **While unlocked, a container attached to another hangs from that container's preview extent.** A
+  previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
+  re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as
+  it would beside real auras; locking puts it back on the engine. Its handle lies toward its parent,
+  so the strip is raised above every one of the parent's placeholders. That raise is a frame level:
+  a parent set to a higher strata still draws over it. A lock or unlock in combat re-places nothing
+  (events-frames-taint-§2): the attached container stays where it was until the first visibility
+  pass after combat.
 
 ## Documentation map
 

@@ -1005,3 +1005,94 @@ test("anchors: a write that moves a container's flow re-applies every container 
     mocks.__fireTimers()
     assertEqual(engineAnchorPoint(NS, 3), "TOPRIGHT", "3 follows 2's rows growing left and down")
 end)
+
+-- ── an attached container while its parent previews (L-4) ────────────────────────────────────
+-- The cause, confirmed with a recorder: while container 1 previews, its engine is disabled and holds
+-- only its provisional 1x1 rect (Container:Build's SetSize(1, 1); no layout pass replaces it), and 2
+-- hung TOPLEFT → BOTTOMLEFT from that engine: on 1's first placeholder, 2's handle among them.
+
+--- Container 2 attached to container 1, unlocked and flushed: 1 previews, its engine off.
+local function previewPair()
+    local NS, mocks = fresh()
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers()
+    return NS, mocks, NS.ContainerManager
+end
+
+--- The frame a recorded anchor was last pointed at.
+local function lastTarget(rec)
+    local n = #rec.points
+    return rec.points[n] and rec.points[n][2]
+end
+
+test("anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)", function()
+    local NS, _, CM = previewPair()
+    local one, two = CM.instances[1], CM.instances[2]
+    assertFalse(one.engine.__enabled, "the parent's engine is off while it previews")
+    local at = NS.Database.FindContainer(2).attach
+    at.point, at.relativePoint = "CENTER", "CENTER"   -- stored points no derived pair has
+    local rec = recordAnchor(two)
+    NS.Anchors.Place(two)
+    -- red under: targetFor answering the target's engine while the target previews
+    assertTrue(one.previewExtent ~= nil and lastTarget(rec) == one.previewExtent, "the parent's preview extent")
+    -- red under: the extent path skipping the derived points (1 fills columns right and down)
+    assertEqual(rec.points[1][1], "TOPLEFT"); assertEqual(rec.points[1][3], "BOTTOMLEFT")
+    NS.SetByPath("container.attach.container", 2, 3)
+    NS.SetByPath("container.attach.mode", "container", 3)
+    local rec3 = recordAnchor(CM.instances[3])
+    NS.Anchors.Place(CM.instances[3])
+    -- red under: an extent built only for a container nothing else is attached to
+    assertTrue(two.previewExtent ~= nil and lastTarget(rec3) == two.previewExtent, "a chain: 3 hangs from 2's extent")
+end)
+
+test("anchors: locking re-anchors an attached container to its parent's engine, and unlocking back to the extent (L-4)", function()
+    local NS, mocks, CM = previewPair()
+    local one, two = CM.instances[1], CM.instances[2]
+    local rec = recordAnchor(two)
+    NS.SetByPath("locked", true)
+    mocks.__fireTimers()
+    -- red under: ApplyVisibility leaving the followers where the preview put them
+    assertTrue(lastTarget(rec) == one.engine, "locked: the engine, which lays out the real auras again")
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers()
+    assertTrue(lastTarget(rec) == one.previewExtent, "unlocked: the extent again")
+    local placed = #rec.points
+    CM.ApplyVisibility()
+    -- red under: re-placing the followers on every visibility pass (a pass that changes nothing moves nothing)
+    assertEqual(#rec.points, placed)
+end)
+
+test("anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)", function()
+    local NS, mocks, CM = previewPair()
+    local rec = recordAnchor(CM.instances[2])
+    mocks.__lockdown = true
+    NS.SetByPath("locked", true)
+    mocks.__fireTimers()
+    -- red under: re-placing a follower under lockdown (its anchor parents an aura engine:
+    -- events-frames-taint-§2)
+    assertEqual(#rec.points, 0, "the last placement stands")
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: recording the followers as placed when lockdown skipped them
+    assertTrue(lastTarget(rec) == CM.instances[1].engine, "combat over: onto the engine")
+end)
+
+test("handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)", function()
+    local NS, mocks, CM = previewPair()
+    NS.SetByPath("container.layout.level", 100, 1)
+    NS.SetByPath("container.layout.level", 1, 2)
+    mocks.__fireTimers()
+    local one, two = CM.instances[1], CM.instances[2]
+    -- red under: the strip's level set only in BuildHandle, before the first apply set its anchor's
+    assertEqual(one.handle:GetFrameLevel(), one.anchor:GetFrameLevel() + 50, "a screen container: fifty above its anchor")
+    -- Every placeholder of 1, inner frames included, stacks under 1's own strip (fifty above its
+    -- anchor), so 2's strip clears them by sitting above that.
+    -- red under: an attached strip at its own anchor + 50 (51, under 1's placeholders at 101 and up)
+    assertTrue(two.handle:GetFrameLevel() > one.anchor:GetFrameLevel() + 50, "above 1's placeholders")
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    mocks.__fireTimers()
+    -- red under: the raise kept after a detach
+    assertEqual(two.handle:GetFrameLevel(), two.anchor:GetFrameLevel() + 50, "detached: its own anchor's again")
+end)
