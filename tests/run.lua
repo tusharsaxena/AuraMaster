@@ -71,6 +71,7 @@ Kit.run{
         "test_style_bars",
         "test_style_icons",
         "test_preview",
+        "test_render_coverage",
         "test_blizzardframes",
         "test_framepicker",
         "test_slash",

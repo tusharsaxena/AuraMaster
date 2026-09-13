@@ -564,6 +564,11 @@ badge and any count quoted in the docs must agree with it.
 - preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
 - preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
 
+### test_render_coverage.lua (2)
+
+- coverage: every Bars row reaches a drawn region, on a live button and on the preview
+- coverage: every Icons row reaches a drawn region, on a live button and on the preview
+
 ### test_blizzardframes.lua (8)
 
 - blizzard: hiding moves the frame under a hidden parent of ours; restoring puts back the parent it had
@@ -962,6 +967,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style_bars.lua | 46 |
 | test_style_icons.lua | 23 |
 | test_preview.lua | 19 |
+| test_render_coverage.lua | 2 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
@@ -987,4 +993,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **801** |
+| **Total** | **803** |

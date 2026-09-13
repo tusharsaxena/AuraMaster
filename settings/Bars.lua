@@ -48,7 +48,9 @@ NS.RegisterSchemaRows(H.BarGroup({
           label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General → Dispel Colors)."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
-        { path = P .. "smooth", type = "bool", label = L["Smooth animation"],
+        -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
+        -- once, at a fixed fraction, and never moves (tests/test_render_coverage.lua).
+        { path = P .. "smooth", type = "bool", label = L["Smooth animation"], coverage = "engine-only",
           desc = L["Ease the bar between updates instead of stepping."] },
     },
 }))
@@ -163,8 +165,11 @@ local HI = {
     -- Palette definition (options-ui-§17 exemption): identifies a state, not a player.
     { path = P .. "expiringColor", page = PAGE, group = G_HI, subgroup = L["Running out"], type = "color",
       startsLine = true, label = L["Running-out color"], desc = L["The time text's color in the last seconds."] },
+    -- engine-only: the refresh window is the engine's to find (CustomAuraButton's pandemic window, a
+    -- per-spell rule Lua cannot read); a placeholder is a made-up aura with none (the color below
+    -- still reaches the wash on both).
     { path = P .. "pandemic", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "bool",
-      startsLine = true, label = L["Highlight the refresh window"],
+      startsLine = true, label = L["Highlight the refresh window"], coverage = "engine-only",
       desc = L["Wash the bar while the aura can be refreshed without losing any of its duration."] },
     { path = P .. "pandemicColor", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "color",
       label = L["Refresh-window color"], desc = L["The highlight's color."] },

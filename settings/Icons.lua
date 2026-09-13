@@ -92,8 +92,10 @@ NS.RegisterSchemaRows({
     -- Palette definitions (options-ui-§17 exemption): each identifies a state, not a player.
     { path = P .. "expiringColor", page = PAGE, group = G_HI, subgroup = L["Running out"], type = "color",
       startsLine = true, label = L["Running-out color"], desc = L["The time text's color in the last seconds."] },
+    -- engine-only: as on settings/Bars.lua, the refresh window is the engine's to find and a
+    -- placeholder has none (tests/test_render_coverage.lua).
     { path = P .. "pandemic", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "bool",
-      startsLine = true, label = L["Highlight the refresh window"],
+      startsLine = true, label = L["Highlight the refresh window"], coverage = "engine-only",
       desc = L["Wash the icon while the aura can be refreshed without losing any of its duration."] },
     { path = P .. "pandemicColor", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "color",
       label = L["Refresh-window color"], desc = L["The highlight's color."] },
