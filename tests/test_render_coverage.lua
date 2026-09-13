@@ -21,6 +21,13 @@ local test, assertTrue, assertEqual = T.test, T.assertTrue, T.assertEqual
 local R = dofile("tests/region_recorder.lua")
 local fresh = dofile("tests/fresh_env.lua")
 
+--- Append `v` to list `t`. The length sits on a line of its own: lizard reads a `#` as a comment
+--- (tests/test_lintconfig.lua).
+local function push(t, v)
+    local n = #t
+    t[n + 1] = v
+end
+
 -- ── the environment ───────────────────────────────────────────────────────────────────────────
 
 local FORMATTER_METHODS = { "SetDefaultAbbreviation", "SetRounding", "SetMinInterval", "SetCanRoundUpLastUnit",
@@ -94,7 +101,7 @@ local function ser(v, names, depth)
     if getmetatable(v) or depth > 5 then return "<obj>" end
     local keys = {}
     for k, x in pairs(v) do
-        if type(x) ~= "function" then keys[#keys + 1] = k end
+        if type(x) ~= "function" then push(keys, k) end
     end
     table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
     local parts = {}
@@ -117,9 +124,9 @@ local function recordersOf(frame)
     local list = { frame }
     for _, r in pairs(frame.__am or {}) do
         if type(r) == "table" then
-            list[#list + 1] = r
+            push(list, r)
             local edge = rawget(r, "__edge")
-            if edge then list[#list + 1] = edge end
+            if edge then push(list, edge) end
         end
     end
     return list
@@ -143,7 +150,7 @@ local function signature(frame, names)
     local keys = {}
     for k, v in pairs(frame.__am or {}) do
         if type(v) == "table" then
-            keys[#keys + 1] = k
+            push(keys, k)
             local edge = rawget(v, "__edge")
             if edge and not names[edge] then names[edge] = names[v] .. ".edge" end
         end
@@ -152,9 +159,9 @@ local function signature(frame, names)
     local parts = { "frame:" .. serLog(frame, names) }
     for _, k in ipairs(keys) do
         local r = frame.__am[k]
-        parts[#parts + 1] = k .. ":" .. serLog(r, names)
+        push(parts, k .. ":" .. serLog(r, names))
         local edge = rawget(r, "__edge")
-        if edge then parts[#parts + 1] = k .. ".edge:" .. serLog(edge, names) end
+        if edge then push(parts, k .. ".edge:" .. serLog(edge, names)) end
     end
     return table.concat(parts, "\n")
 end
@@ -210,7 +217,7 @@ end
 
 local function clearLogs(k)
     local frames = { k.button }
-    for _, f in ipairs(placeholders(k)) do frames[#frames + 1] = f end
+    for _, f in ipairs(placeholders(k)) do push(frames, f) end
     for _, f in ipairs(frames) do
         for _, r in ipairs(recordersOf(f)) do r.__log = {} end
     end
@@ -235,7 +242,7 @@ local function choices(row)
     if type(v) == "function" then v = v() end
     local out = {}
     for key, x in pairs(v or {}) do
-        out[#out + 1] = (type(x) == "table" and x.value ~= nil) and x.value or key
+        push(out, (type(x) == "table" and x.value ~= nil) and x.value or key)
     end
     table.sort(out, function(a, b) return tostring(a) < tostring(b) end)
     return out
@@ -283,10 +290,10 @@ local function gaps(page)
         local cov = row.coverage
         assertTrue(cov == nil or cov == "engine-only" or cov == "preview-only", row.path .. ": a known coverage")
         local liveMoved, prevMoved = liveA ~= liveB, prevA ~= prevB
-        if not liveMoved and cov ~= "preview-only" then out[#out + 1] = row.path .. " (live)" end
-        if not prevMoved and cov ~= "engine-only" then out[#out + 1] = row.path .. " (preview)" end
-        if cov == "engine-only" and prevMoved then out[#out + 1] = row.path .. " (reaches the preview; drop engine-only)" end
-        if cov == "preview-only" and liveMoved then out[#out + 1] = row.path .. " (reaches the engine; drop preview-only)" end
+        if not liveMoved and cov ~= "preview-only" then push(out, row.path .. " (live)") end
+        if not prevMoved and cov ~= "engine-only" then push(out, row.path .. " (preview)") end
+        if cov == "engine-only" and prevMoved then push(out, row.path .. " (reaches the preview; drop engine-only)") end
+        if cov == "preview-only" and liveMoved then push(out, row.path .. " (reaches the engine; drop preview-only)") end
     end
     return out, #rows
 end
