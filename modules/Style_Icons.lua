@@ -153,12 +153,13 @@ function Icons.Bind(frame, am, cfg, ic)
     Style.ApplyBehavior(frame, cfg)
 end
 
---- Fill a PREVIEW icon with placeholder values (modules/Preview.lua).
-function Icons.FillPreview(frame, aura)
+--- Fill a PREVIEW icon with placeholder values (modules/Preview.lua), the time in the icon's own
+--- format (Style.PreviewTime).
+function Icons.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not am then return end
     am.icon:SetTexture(aura.icon)
-    am.time:SetText(aura.duration > 0 and ("%ds"):format(aura.remaining) or "")
+    Style.PreviewTime(am.time, aura, (cfg and cfg.icons) or {})
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
     if am.cd.SetCooldown and aura.duration > 0 then
         am.cd:SetCooldown((GetTime() or 0) - (aura.duration - aura.remaining), aura.duration)

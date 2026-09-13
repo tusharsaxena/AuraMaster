@@ -384,3 +384,18 @@ function Style.BindDurationText(frame, fs, s, sdef)
     end
     Style.Bind(frame, "SetDurationText", fs, opts)
 end
+
+--- A placeholder's time text, written as a live button's reads (B-5): the remaining seconds through
+--- the formatter the engine is handed for the same format (formatterFor). A placeholder's seconds
+--- are a plain number, so the formatter's own Format answers here (research notes Q7). A client
+--- without the formatter, or one that refuses, writes whole seconds; a timeless aura writes nothing.
+function Style.PreviewTime(fs, aura, s)
+    if aura.duration <= 0 then
+        fs:SetText("")
+        return
+    end
+    local f = formatterFor(s.timeFormat)
+    local ok, text = false, nil
+    if f and f.Format then ok, text = pcall(f.Format, f, aura.remaining) end
+    fs:SetText((ok and type(text) == "string") and text or ("%ds"):format(aura.remaining))
+end

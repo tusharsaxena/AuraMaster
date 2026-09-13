@@ -572,6 +572,40 @@ mixins and an `OnUpdate` script.
 
 ---
 
+## Q7 (B-5, added in task F1): can a placeholder's time text use the formatter the engine is handed?
+
+**Answer: yes.** A `SecondsFormatter` (what `C_StringUtil.CreateSecondsFormatter` returns, and what
+we hand `SetDurationText` as `textFormatter`) has a `Format` method that turns a number of seconds
+into the string the engine's text binding would write. A placeholder's remaining time is a plain
+number of ours, so the call is untainted and legal.
+
+`Interface/AddOns/Blizzard_APIDocumentationGenerated/SecondsFormatterAPIDocumentation.lua`
+(fetched 2026-09-13):
+
+```lua
+{
+	Name = "Format",
+	Type = "Function",
+	ConstSecretAccessor = true,
+	SecretArguments = "AllowedWhenUntainted",
+	Documentation = { "Formats a number of seconds and returns the resulting string." },
+	Arguments = {
+		{ Name = "seconds", Type = "DurationSecondsDouble", Nilable = false },
+		{ Name = "abbreviation", Type = "SecondsFormatterAbbreviation", Nilable = true },
+	},
+	Returns = {
+		{ Name = "formattedSeconds", Type = "string", Nilable = false },
+	},
+},
+```
+
+**Implication.** `Style.PreviewTime` writes a placeholder's time through `formatterFor(format)`, so
+the preview reads in the chosen time format. With no `abbreviation`, the formatter's default
+(`SetDefaultAbbreviation(OneLetter)`, `core/Compat.lua`) applies. It is guarded: a client without
+the formatter, or one that refuses, writes whole seconds as before.
+
+---
+
 ## Summary: what is settled, and what needs the client
 
 | Q | Settled by source | UNSETTLED — in-game check required |
@@ -582,3 +616,4 @@ mixins and an `OnUpdate` script.
 | 4 I-2 | Enum `RoundUp=0`, `Truncate=1`; the engine default text truncates; `SetCountdownFormatter` exists | Cooldown countdown's default rounding; `SetCountdownFormatter` accepted on `am.cd` |
 | 5 B-3 | No duration-presence binding; `SetDurationBar` does not hide or reset; permanent = `SetTimeSpan(0, 0)` | Zero-duration `SetTimerDuration` value and texture edge; clip-frame spark hides on timeless bars |
 | 6 L-3 | No mouse or hit-rect setup in the engine; tooltip is the separate `AuraButtonTooltip`; previews are `EnableMouse(false)` | Motion-only button blocks world mouseover; preview fix removes the bleed |
+| 7 B-5 | `SecondsFormatter:Format(seconds, abbreviation?)` returns the formatted string, `AllowedWhenUntainted` | A placeholder's time text reads as the live text does in each format |

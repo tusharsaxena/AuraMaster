@@ -753,6 +753,43 @@ test("style: the time text gets the engine's formatter for its format, and the e
     assertEqual(points[n][1], NS2.CONTAINER_TEMPLATE.icons.expiringThreshold, "a missing threshold is the template's")
 end)
 
+test("style: a placeholder's time text is what its format's formatter writes, the one the engine is handed (B-5)", function()
+    local made = 0
+    local nop = function() end
+    local NS2 = fresh({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.SecondsFormatterAbbreviation = { OneLetter = 1 }
+        m.Enum.SecondsFormatterRounding = { RoundUp = 0, Truncate = 1 }
+        m.Enum.SecondsFormatterInterval = { Seconds = 1, Days = 4 }
+        m.C_StringUtil = { CreateSecondsFormatter = function()
+            made = made + 1
+            local id = made
+            return setmetatable({ Format = function(_, s) return ("F%d:%d"):format(id, s) end },
+                { __index = function() return nop end })
+        end }
+    end })
+    local timed = { name = "X", icon = 1, remaining = 75, duration = 90, stacks = 0 }
+    local timeless = { name = "Well Fed", icon = 1, remaining = 0, duration = 0, stacks = 0 }
+    for _, style in ipairs({ "bars", "icons" }) do
+        local fill = (style == "icons") and NS2.Style.Icons.FillPreview or NS2.Style.Bars.FillPreview
+        for _, fmt in ipairs(NS2.Constants.TIME_FORMATS) do
+            local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+                { style = style, [style] = { timeFormat = fmt } })
+            local live = R()
+            NS2.Style.Element(live, c, true)
+            local want = live:__last("SetDurationText")[2].textFormatter:Format(75)
+            local f = R()
+            NS2.Style.Element(f, c, false)
+            f.__am.time = R()
+            fill(f, timed, c)
+            -- red under: a placeholder's time written as plain seconds whatever the format
+            assertEqual(f.__am.time:__last("SetText")[1], want, style .. " " .. fmt)
+            fill(f, timeless, c)
+            assertEqual(f.__am.time:__last("SetText")[1], "", style .. " " .. fmt .. ": a timeless aura writes none")
+        end
+    end
+end)
+
 test("style: a style leaf left nil draws the template's value, never a literal of its own", function()
     -- The one home for defaults is the template (savedvariables-§2; Style.lua's header). A backfilled
     -- profile never holds a nil leaf, so this is the fallback a reader must still honor.

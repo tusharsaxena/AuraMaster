@@ -294,11 +294,11 @@ function Bars.Bind(frame, am, cfg, b)
     Style.ApplyBehavior(frame, cfg)
 end
 
---- A placeholder's icon and texts.
-local function previewText(am, aura)
+--- A placeholder's icon and texts, the time in the bar's own format (Style.PreviewTime).
+local function previewText(am, aura, b)
     am.icon:SetTexture(aura.icon)
     am.name:SetText(aura.name)
-    am.time:SetText(aura.duration > 0 and ("%ds"):format(aura.remaining) or "")
+    Style.PreviewTime(am.time, aura, b)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
 end
 
@@ -315,7 +315,7 @@ function Bars.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not am then return end
     local b = cfg.bars or {}
-    previewText(am, aura)
+    previewText(am, aura, b)
 
     -- Preview draws the fill directly, as the fraction of the bar area the engine's timer would.
     local frac = aura.duration > 0 and (aura.remaining / aura.duration) or 1
