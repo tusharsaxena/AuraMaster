@@ -15,12 +15,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:549
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:552
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:513
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:520
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
@@ -108,7 +108,7 @@ signatures differ (`modules/Container.lua:260-262`), because the engine clears a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:178`).
+`SetUnit` last (`modules/Container.lua:228`).
 
 ## Visibility, separate from applying
 

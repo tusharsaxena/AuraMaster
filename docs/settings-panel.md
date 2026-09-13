@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 199 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 198 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -12,7 +12,7 @@ is a defect in this doc (documentation-§3).
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
 | General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration, weapon enchants; the Default / Whitelist / Blacklist category grids; sort order and cap; the whitelist and blacklist spell lists. Tabs vary with the aura type |
-| Layout | Frame · Anchor · Growth · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
+| Layout | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | Bars | Size · Bar · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
@@ -135,7 +135,7 @@ The page's Defaults does not touch these lists; each category's restore does.
 `.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type, and the
 tint on an icon's dispel border. Profile-wide, so a write re-applies every container.
 
-### Filters (40 rows, `settings/Filters.lua`)
+### Filters (39 rows, `settings/Filters.lua`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
@@ -150,10 +150,10 @@ here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
 | *Weapon enchants:* Also show weapon enchants | `container.filter.includeEnchants` | bool | buffs | Appends the enchant slots on a player buff container |
 | *Weapon enchants:* Hide enchants without a duration | `container.filter.hidePermanentEnchants` | bool | buffs, enchants | Engine `hidePermanent` |
 
-**Categories** — 32 generated rows, one per `defaults/Categories.lua` entry, at
+**Categories** — 31 generated rows, one per `defaults/Categories.lua` entry, at
 `container.filter.categories.<key>`, stored `""` / `"show"` / `"hide"` and labeled Default /
 Whitelist / Blacklist (`/am get` and `/am list` print the label, then the stored value in gray).
-Buff containers see the 16 buff rows, debuff containers the 16 debuff rows. The rows carry
+Buff containers see the 15 buff rows, debuff containers the 16 debuff rows. The rows carry
 `skipRender`, so the flow engine draws nothing for them; the tab is bespoke (keyed by the group's
 name) and draws one `ChoiceGrid` per row `grid`, each a header line
 `Default · Whitelist · Blacklist · Category` and then a line of three radios and the label per

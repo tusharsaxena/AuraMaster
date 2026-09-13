@@ -38,7 +38,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:86`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:96`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -58,7 +58,7 @@ path, never to a number restated in `modules/`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral |
+| `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral. The panel labels the three states Default, Whitelist and Blacklist. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
 | `whitelist` | `{}` | `[spellId] = true` — always shown |
 | `blacklist` | `{}` | `[spellId] = true` — never shown; beats the whitelist |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
@@ -152,7 +152,7 @@ six canonical font leaves (options-ui-§16) and then its placement: `show` (`tru
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:188`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:198`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -198,6 +198,22 @@ up on `PLAYER_REGEN_ENABLED`, and the row's `onChange` prints the combat deferra
 the write re-applies its container, or every container for a global row. A `sessionOnly` row
 announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs in
 `Container:Apply`.
+
+A few row fields are this addon's own, beyond the library's row shape. Each has one named reader:
+
+- `noReset`, with `noResetReason`: the restore walk skips the row, and `NS.ApplyDefault` refuses it
+  and returns that reason (`container.name`; `/am reset container.name` prints it).
+- `printLabel`: `/am get` and `/am list` print the value's label before the stored value
+  (`formatValue` in `settings/Slash.lua`; the Filters category rows).
+- `grid`: the `ChoiceGrid` on Filters → Categories that draws the row (`blizzard`, `custom`, `dispel`
+  or `who`). Those rows also carry the library's `skipRender`, so the flow engine draws nothing for
+  them.
+- `panelGet`: the value the panel shows instead of the stored one (`panelRead` in
+  `settings/OptionsSetup.lua`). Fill and both growth rows use it to show the inherited flow of a
+  container attached to another. `/am get` and every module read the stored value.
+- `coverage = "engine-only" | "preview-only"`: exempts a Bars or Icons row from one half of
+  `tests/test_render_coverage.lua`'s walk. Each use carries a comment saying why: `bars.smooth`,
+  `bars.pandemic` and `icons.pandemic` act only through the engine.
 
 A row's `validate(value, id)` and its optional `normalize(value, id)` hook are both handed the id of
 the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`
@@ -281,6 +297,6 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
   silently fixed.
   A new category key reaches every container the same way, through `NeutralStates()`.
-- **A rename, removal or type change needs a step** in the same change that makes it: bump to
-  `to = 2`, transform the stored value, and remember that containers live in every profile, not only
-  the active one (`docs/common-tasks.md` has the recipe).
+- **A rename, removal or type change needs a step** in the same change that makes it: append the
+  next rung (`to = 3`), transform the stored value, and remember that containers live in every
+  profile, not only the active one (`docs/common-tasks.md` has the recipe).

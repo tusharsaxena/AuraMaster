@@ -7,7 +7,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:86`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:96`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:33`).
 - **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
   enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container may
@@ -15,10 +15,11 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
-  anyone but me), timed-only or permanent-only, a maximum full duration, 32 tri-state categories
-  (defined in `defaults/Categories.lua`: spell lists, Blizzard aura flags and filter tokens, dispel
-  types, player-or-creature source), editable per-container spell lists, an always-show list and a
-  never-show list, sort method and direction, and a per-group cap.
+  anyone but me), timed-only or permanent-only, a maximum full duration, 31 categories set to
+  Default, Whitelist or Blacklist (defined in `defaults/Categories.lua`: spell lists, Blizzard aura
+  flags and filter tokens, dispel types, player-or-creature source), the spell categories' lists
+  (editable, and shared by every container in the profile), a per-container whitelist and
+  blacklist of spells, sort method and direction, and a per-group cap.
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked or via
@@ -86,7 +87,8 @@ These are not declined; the game forbids them, and a request for one is answered
   (options-ui-§17; audit 2026-09-11 AM-03).
 - **Container settings share one relative path model** (`container.…`) so one schema, one write seam
   and one CLI serve every container (`settings/Schema.lua` header).
-- **Categories are tri-state** (`""` / `show` / `hide`). Showing any category narrows the container to
-  the union of the shown ones; hiding one excludes it; neutral leaves it alone.
+- **Categories have three states**, labeled Default, Whitelist and Blacklist and stored `""` / `show`
+  / `hide`. Whitelisting any category narrows the container to the union of the whitelisted ones;
+  blacklisting one excludes it; Default leaves it alone.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
   and the starter containers come back.

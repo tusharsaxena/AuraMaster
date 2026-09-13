@@ -37,17 +37,21 @@ Those sample auras are the preview, and `/am test` shows them without unlocking 
 quickest way to try textures, fonts and sizes before a real buff turns up. Real auras stay hidden
 while the preview is on, and locking or a `/reload` turns it off.
 
-Five of the settings pages edit one container at a time, and a Container dropdown at the top of each
-picks which one. The choice follows you from page to page. Containers is where you create, rename,
-duplicate and delete them, change a container's unit, aura type or style, or copy another container's
-settings onto it. Filters decides what gets shown: who cast it, timed or permanent auras, a maximum
-duration, categories like defensives, crowd control or boss debuffs (each one set to Show, Hide or
-left alone), your own spell lists, and an always-show and a never-show list. When a filter can't work
-where you've put it, an orange line at the top of the page tells you why. Bars and Icons hold the
-look for each style.
+General → Containers is where you create, rename, duplicate and delete containers, change a
+container's unit, aura type or style, or copy another container's settings onto it. Its own Container
+dropdown picks which one you're editing. The Filters, Layout, Bars and Icons pages also edit one
+container at a time, each with a Container dropdown at the top, and the choice follows you from page
+to page. Filters decides what gets shown: who cast it, timed or permanent auras, a maximum duration,
+and categories like defensives, crowd control or boss debuffs, each set to Default, Whitelist or
+Blacklist in a grid. Its Overrides tab holds a whitelist and a blacklist you add spells to by name,
+by id or by shift-clicking a link. When a filter can't work where you've put it, an orange line at
+the top of the page tells you why. General → Spell Categories edits which spells each spell category
+holds, for every container at once, and General → Dispel Colors picks the color for each dispel type.
+Bars and Icons hold the look for each style. On the page for the style a container doesn't use, a
+notice says so and the controls are dimmed.
 
 Layout decides where a container lives. It can sit on the screen, follow another container as that
-one grows, or attach to any named frame, like your unit frame or an action bar; **Pick a frame…**
+one grows (carrying on in the same direction), or attach to any named frame, like your unit frame or an action bar; **Pick a frame…**
 closes the settings so you can just click the frame you want. The same page covers growth direction,
 spacing, scale and tooltips, and right-clicking one of your own buffs cancels it unless you switch
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
@@ -103,7 +107,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 |---------|-----|
 | Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on General → Containers. |
 | I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am test off`. |
-| A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category with every spell unticked. Loosen one of them, for example by setting a category back to its neutral dash. |
+| A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category with every spell unticked. Loosen one of them, for example by setting a category back to Default. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |
 | I can't drag a container | Only containers attached to the screen can be dragged, and not during combat. An attached container follows its target; move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
