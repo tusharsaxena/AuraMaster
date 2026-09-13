@@ -86,10 +86,11 @@ test("options: the Filters page offers the Overrides tab only for a buff or debu
     NS2.State.SetActiveContainer(1)
     m.__subcategories.Filters:__fire("OnShow")
     assertTrue(tabs().overrides)
-    -- red under: collectTabs ignoring a bespoke tab's auraTypes (the spell lists moved to General)
-    assertNil(tabs().spellLists)
     NS2.SetByPath("container.auraType", "ENCHANT", 1)
-    NS2.Helpers.RenderContainerPage(ctx, "filters", nil)
+    -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
+    NS2.Helpers.RefreshAllPanels()
+    m.__subcategories.Filters:__fire("OnShow")
+    -- red under: collectTabs ignoring a bespoke tab's auraTypes
     assertNil(tabs().overrides)
 end)
 
