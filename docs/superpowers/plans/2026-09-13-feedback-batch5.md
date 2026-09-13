@@ -83,7 +83,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | C1 schema v2 migration + defaults | G-2 G-3 L-3 §7 | AM | done | 835d095 | v2 over every profile; readers repointed; sparkTimeless/iconBorder* keys deferred to D6 |
 | C2 consumers read profile sets | G-2 G-3 | AM | done | 09038bf | icons bind the profile dispel map; profile-wide writes re-apply every container; **CP-C reached** |
 | D1 re-vendor v1.35.0 | X-4 | AM | done | 9ba3d01 | Options 18.16.5.3, kit 20; four no-op stub members |
-| D2 General → Containers; retire page | G-1 C-3 D1 | AM | done | bbdf178 | picker + New in the tab body; RenderTabbedPage; container.name noReset; D1 deviation row |
+| D2 General → Containers; retire page | G-1 C-3 D1 | AM | done | bbdf178, fixes d7600d9 38747fe 6d87ee8 | picker + New in the tab body; RenderTabbedPage; container.name noReset; D1 deviation row. Review fixes: lint gate red at bbdf178 (length operator on an if line) restored; C-3 and OpenOptionsPage tests strengthened; Reset all out of noReset scope recorded in settings-panel.md |
 | D3 Spell Categories + Dispel Colors | G-2 G-3 | AM | todo | | |
 | D4 Filters grid + Overrides | F-1 F-3 | AM | todo | | |
 | D5 Layout tabs, subsections, dimming | L-1 L-2 L-5 | AM | todo | | |
