@@ -90,7 +90,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | D6 Bars Icon tab, wrong-style, spark | B-1 B-2 B-3 B-6 | AM | done | 8174c2e | Icon tab + iconBorder* block; spec.disabledFor/disabledNotice page disable; sparkTimeless by clip frame (option 2, in-game check smoke 26); **CP-D reached** |
 | E1 inherited flow + derived points | L-6 | AM | done | bcc54f3 | EffectiveLayout/DerivedPoints/Followers; Growth rows dimmed via panel-only row panelGet |
 | E2 attached handle in preview | L-4 | AM | done | a27d172 | Preview.Extent + Anchors.PlaceAttached; strip level set per placement; **CP-E reached** |
-| F1 render coverage test | B-5 | AM | todo | | |
+| F1 render coverage test | B-5 | AM | done | 078eef9 53ba33b 025ab2d, lint fix af3b3bc | walk found preview time format + running-out color (fixed); smooth/pandemic engine-only |
 | F2 docs | §9 | AM | todo | | **CP-F** |
 | G1 ConsumableMaster IdInput | X-4 | CM | todo | | needs CP-A |
 | G2 BankLedger IdList | X-4 | BL | todo | | needs CP-A |
