@@ -267,7 +267,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:258`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:261`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **Teardown under lockdown is parked, never hidden.** A container that leaves the registry while
   `MustDefer` is true is parked (`Container:Park`): its engine is disabled through `SetEnabled`, its

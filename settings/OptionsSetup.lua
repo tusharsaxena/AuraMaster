@@ -212,13 +212,16 @@ if not lib then
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
-        "IdList",
+        "IdList", "UnnamedCandidates",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderWarnings",
         "RenderTabbedPage", "RenderContainerPage",
     }) do
         Helpers[name] = function() end
     end
+    -- The one table member the ID widgets add: the hint strings a host tooltip may quote. The host
+    -- keeps its own localized copy, so an empty table is the inert answer.
+    Helpers.ID_NAME_HINT = {}
     Helpers.CreateOptionsPanel = sayMissing
     Helpers.OpenOptionsPanel = sayMissing
 
