@@ -221,6 +221,31 @@ test("icons: our border draws above the swipe, the dispel border above ours, the
     assertTrue(am.text:GetFrameLevel() > host:GetFrameLevel(), "the texts above the dispel border")
 end)
 
+test("icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge", function()
+    -- Blizzard draws its debuff border art larger than the icon: a 40x40 border over a 30x30 icon
+    -- (Blizzard_BuffFrame/BuffFrameTemplates.xml), a sixth of the icon's size past each edge. The
+    -- art is transparent padding round a ring, so drawn at the icon's own size the ring lands INSIDE
+    -- the icon (the owner's report, 2026-09-13).
+    local _, am = dressed(cfg({ icons = { width = 32, height = 32, borderShow = true, borderStyle = "Solid",
+        borderSize = 1, dispelBorder = true } }), true)
+    local p = am.dispel:__calls("SetPoint")
+    local o = 30 / 6    -- the art: 32 less a 1 px border each side
+    -- red under: the dispel texture left at SetAllPoints(frame) (the ring drawn inside the icon)
+    assertEqual(p[1][1], "TOPLEFT"); assertTrue(p[1][2] == am.icon); assertEqual(p[1][3], "TOPLEFT")
+    assertEqual(p[1][4], -o); assertEqual(p[1][5], o)
+    assertEqual(p[2][1], "BOTTOMRIGHT"); assertTrue(p[2][2] == am.icon); assertEqual(p[2][3], "BOTTOMRIGHT")
+    assertEqual(p[2][4], o); assertEqual(p[2][5], -o)
+end)
+
+test("icons: a non-square icon's dispel art reaches past it by a sixth of each side", function()
+    local _, am = dressed(cfg({ icons = { width = 50, height = 26, borderShow = true, borderStyle = "Solid",
+        borderSize = 1, dispelBorder = true } }), true)
+    local p = am.dispel:__calls("SetPoint")
+    -- red under: one outset for both axes (a wide icon's ring off its top and bottom edges)
+    assertEqual(p[1][4], -48 / 6); assertEqual(p[1][5], 24 / 6)
+    assertEqual(p[2][4], 48 / 6); assertEqual(p[2][5], -24 / 6)
+end)
+
 test("icons: the dispel border turned off is hidden and never bound", function()
     local frame, am = dressed(cfg({ icons = { dispelBorder = false } }), true)
     -- red under: Icons.Apply leaving a previously shown dispel border drawn

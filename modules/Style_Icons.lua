@@ -39,8 +39,7 @@ local function build(frame)
     -- wherever it has none (I-1; docs/superpowers/research/2026-09-13-aura-engine-notes.md Q3).
     am.dispelHost = CreateFrame("Frame", nil, frame)
     am.dispelHost:SetAllPoints(frame)
-    am.dispel = am.dispelHost:CreateTexture(nil, "OVERLAY")
-    am.dispel:SetAllPoints(frame)
+    am.dispel = am.dispelHost:CreateTexture(nil, "OVERLAY")   -- placed per dress (layoutDispel)
 
     -- Text above the cooldown swipe, so the countdown is never shaded by it.
     am.text = CreateFrame("Frame", nil, frame)
@@ -71,7 +70,7 @@ local function borderSizeOf(ic)
 end
 
 --- Place the icon INSIDE the border, so a thick border never hides the art, and crop the zoom to
---- the element's aspect ratio, so a non-square icon is cropped rather than squashed.
+--- the element's aspect ratio, so a non-square icon is cropped rather than squashed. Returns the inset.
 local function layoutIcon(am, frame, ic, w, h)
     local shown = Style.OrTemplate(ic.borderShow, D.icons.borderShow)
     local inset = (shown and ic.borderStyle ~= "None") and borderSizeOf(ic) or 0
@@ -86,6 +85,22 @@ local function layoutIcon(am, frame, ic, w, h)
         zx = z + (1 - 2 * z) * (1 - w / h) / 2
     end
     am.icon:SetTexCoord(zx, 1 - zx, zy, 1 - zy)
+    return inset
+end
+
+-- Blizzard draws its debuff border art LARGER than the icon it frames: a 40x40 border over a 30x30
+-- icon (Blizzard_BuffFrame/BuffFrameTemplates.xml, DebuffBorder), a sixth of the icon past each
+-- edge. The art is a ring inside transparent padding, so stretched to the icon's own size the ring
+-- lands inside the icon, an inner border across the art (owner report 2026-09-13).
+local DISPEL_ART_DIVISOR = 6
+
+--- Size the dispel border's art to the icon the way Blizzard does, so its ring sits on the icon's edge.
+--- Per dress, because it follows the icon's size and the border's inset.
+local function layoutDispel(am, iconW, iconH)
+    local ox, oy = iconW / DISPEL_ART_DIVISOR, iconH / DISPEL_ART_DIVISOR
+    am.dispel:ClearAllPoints()
+    am.dispel:SetPoint("TOPLEFT", am.icon, "TOPLEFT", -ox, oy)
+    am.dispel:SetPoint("BOTTOMRIGHT", am.icon, "BOTTOMRIGHT", ox, -oy)
 end
 
 --- The cooldown swipe's look.
@@ -108,7 +123,8 @@ function Icons.Apply(frame, cfg, engine)
     if engine then Style.ClearAdditiveBindings(frame) end
 
     frame:SetSize(w, h)
-    layoutIcon(am, frame, ic, w, h)
+    local inset = layoutIcon(am, frame, ic, w, h)
+    layoutDispel(am, w - 2 * inset, h - 2 * inset)
     Style.ApplyBorder(am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow), ic.borderStyle,
         borderSizeOf(ic), ic.borderColor, ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
