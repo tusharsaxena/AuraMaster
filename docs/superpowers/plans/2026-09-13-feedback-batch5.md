@@ -96,7 +96,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | G2 BankLedger IdList | X-4 | BL | done | b4e0a04 6bc8d37 | re-vendor + Blacklist/Whitelist IdList (items); review approved |
 | G3 LootHistory IdList | X-4 | LH | done | b4b2f16 1d6e3c8 | re-vendor + three IdLists (items; currencies by id/link); review approved; **CP-G reached** |
 | I-3 icon dispel border inset (owner report) | I-1 follow-up | AM | done | bb07037 | dispel art outset by a sixth of the icon, as Blizzard sizes it; smoke check 71 |
-| H1 adversarial review + fixes | all | all | todo | | |
+| H1 adversarial review + fixes | all | all | done | e588dcf 8fd54a8 a928141 6a8f00e 7ac8dcf | 5 of 6 AM findings fixed; I-1 cause unconfirmed, smoke 60 (/fstack on a buff icon) owed in game |
 | H2 final battery + report | all | all | todo | | **CP-H** |
 
 Workflow runs: `wf_0af661b7-6d2` (A1-A2, R0, B1-B7) · `wf_8e85fdd5-5fa` (A3, A4, C1, C2; D+ and G not reached because of a script matcher bug) · `wf_9b7e7c55-ccd` (D1-F2, G1-G3) · run 4 (H1, H2)
