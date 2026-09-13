@@ -305,7 +305,8 @@ test("general: the tab strip reads Master controls, Display, Containers, and no 
 end)
 
 test("general: NS.OpenOptionsPage('containers') opens no page, where 'layout' still opens its own", function()
-    local names, opened = {}, {}
+    -- Subcategory ids start at 101: the kit's main category answers GetID() == 1.
+    local names, byId, opened = {}, {}, {}
     local NS = fresh({ before = function(mk)
         local register = mk.Settings.RegisterCanvasLayoutSubcategory
         local count = 0
@@ -313,20 +314,26 @@ test("general: NS.OpenOptionsPage('containers') opens no page, where 'layout' st
             local cat = register(parent, panel, name)
             count = count + 1
             names[count] = name
-            local id = count
+            local id = 100 + count
+            byId[id] = name
             cat.GetID = function() return id end
             return cat
         end
         mk.Settings.OpenToCategory = function(id)
-            local name = names[id] or "main"
+            local name = byId[id] or "main"
             opened[#opened + 1] = name
         end
     end })
     NS.OpenOptionsPage("layout")
     assertEqual(opened[1], "Layout")
     NS.OpenOptionsPage("containers")
-    -- red under: the Containers page still registering (its key opens its own category)
-    assertTrue(opened[2] ~= "Containers", "opened " .. tostring(opened[2]))
+    -- red under: the Containers page still registering (a category of its own, which its key opens)
+    for _, name in ipairs(names) do
+        assertTrue(name ~= "Containers", "no Containers category is registered")
+    end
+    -- red under: OpenOptionsPage opening nothing (or a stale page) for a key it no longer knows,
+    -- instead of falling back to the addon's main category
+    assertEqual(opened[2], "main", "an unknown key opens the main category")
 end)
 
 test("general → containers: the tab body opens with the Container picker and New container on one line", function()
@@ -406,8 +413,15 @@ test("general → containers: Delete keeps the picker and New through both refre
     assertEqual(#pickers, 1, "one picker in the tab body")
     assertEqual(#news, 1, "one New container in the tab body")
     assertEqual(table.concat(pickers[1].order, ","), "1,3", "the picker lists the remaining containers")
-    local kids = NS.Helpers.__pageCtx.general.__chromeKids or {}
-    assertEqual(#kids, 0, "and nothing sits in the band")
+    -- red under: the second refresh drawing New on a line of its own, or dropping it from the
+    -- picker's line (the pair must survive both renders together, as the first render drew it)
+    local line
+    for _, row in ipairs(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.general).children) do
+        for _, c in ipairs(row.children or {}) do
+            if c == pickers[1] then line = row end
+        end
+    end
+    assertTrue(line ~= nil and line.children[2] == news[1], "New still sits beside the picker")
 end)
 
 test("general → containers: with no containers the tab draws the picker, New container and one line instead of the rows", function()
