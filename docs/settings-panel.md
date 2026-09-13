@@ -11,7 +11,7 @@ is a defect in this doc (documentation-§3).
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
 | General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
-| Filters | What to show · Categories · Sorting · Always / never | Who cast it, timed or permanent, max duration, weapon enchants; the tri-state categories; sort order and cap; the always and never lists. Tabs vary with the aura type |
+| Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration, weapon enchants; the Default / Whitelist / Blacklist category grids; sort order and cap; the whitelist and blacklist spell lists. Tabs vary with the aura type |
 | Layout | Position · Growth · Frame · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
 | Bars | Size · Bar · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
@@ -150,16 +150,21 @@ here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
 | *Weapon enchants:* Also show weapon enchants | `container.filter.includeEnchants` | bool | buffs | Appends the enchant slots on a player buff container |
 | *Weapon enchants:* Hide enchants without a duration | `container.filter.hidePermanentEnchants` | bool | buffs, enchants | Engine `hidePermanent` |
 
-**Categories** — 32 generated rows, one per `defaults/Categories.lua` entry, each a dropdown
-`—` / Show / Hide at `container.filter.categories.<key>`. Buff containers see the 16 buff rows,
-debuff containers the 16 debuff rows.
+**Categories** — 32 generated rows, one per `defaults/Categories.lua` entry, at
+`container.filter.categories.<key>`, stored `""` / `"show"` / `"hide"` and labeled Default /
+Whitelist / Blacklist (`/am get` and `/am list` print the label, then the stored value in gray).
+Buff containers see the 16 buff rows, debuff containers the 16 debuff rows. The rows carry
+`skipRender`, so the flow engine draws nothing for them; the tab is bespoke (keyed by the group's
+name) and draws one `ChoiceGrid` per row `grid`, each a header line
+`Default · Whitelist · Blacklist · Category` and then a line of three radios and the label per
+category. A grid with no row for the aura type is not drawn.
 
-| Subgroup | Buff categories | Debuff categories |
+| Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
-| Spell lists | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables | — |
-| Blizzard flags | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Dispel types | — | dispels, magic, curse, disease, poison, bleed |
-| Who cast it | — | fromNonPlayers, fromPlayers |
+| Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
+| Custom Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables | — |
+| Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
+| Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 
 **Sorting**
 
@@ -169,8 +174,12 @@ debuff containers the 16 debuff rows.
 | Direction | `container.filter.sortDirection` | string | every type (also orders weapon enchants) |
 | Max auras (0 = no limit) | `container.filter.maxAuras` | number 0–40 | buffs, debuffs; per group |
 
-**Always / never** (buff and debuff containers) — bespoke: an add box and a list with **Remove** for
-`container.filter.whitelist` and for `container.filter.blacklist`.
+**Overrides** (buff and debuff containers) — bespoke: a **Whitelist** and a **Blacklist** section,
+each the library's `IdList` in spell mode over `container.filter.whitelist` /
+`container.filter.blacklist`, adding by spell id, link or name (a name the client cannot find is
+matched against the spell categories' starters and the learned timed buffs, as on General → Spell
+Categories), each entry with **Remove**. Each set is written whole through the seam's carve-out;
+the lists are not schema rows, so the page's Defaults leaves them alone.
 
 A weapon-enchant container sees only **What to show** (one row) and **Sorting** (one row).
 

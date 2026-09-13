@@ -83,9 +83,13 @@ suite covers what only the client can show.
     behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
-    show ][ Categories ][ Sorting ][ Always / never ]**, with no Spell lists tab on any aura type;
-    switch the container's aura type to Debuffs → Categories offers the debuff categories; switch to
-    Weapon enchants → only **What to show** and **Sorting**, one row each.
+    show ][ Categories ][ Sorting ][ Overrides ]**, with no Spell lists tab on any aura type.
+    **Categories** on a buff container is two grids, **Blizzard Categories** then **Custom
+    Categories**, each headed once, with columns **Default · Whitelist · Blacklist** and the category
+    name (hover it for its description); click **Whitelist** on a line → that line's radio moves, and
+    `/am get container.filter.categories.<key>` prints `Whitelist`. Switch the container's aura type
+    to Debuffs → **Blizzard Categories**, **Dispel Types** and **Who Cast It**; switch to Weapon
+    enchants → only **What to show** and **Sorting**, one row each.
 25. **Layout** → **[ Position ][ Growth ][ Frame ][ Mouse ]**; Position ends with **Pick a frame…** and
     **Attach to the screen**.
 26. **Bars** → **[ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][
@@ -128,8 +132,10 @@ suite covers what only the client can show.
     nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
     **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color, and an icon's
     Magic dispel border is tinted by it.
-37. **Always / never.** Add a buff to *Never show* → gone; add a buff to *Always show* on a container
-    whose categories exclude it → it shows; the same id on both lists → hidden.
+37. **Overrides.** Add a buff to the *Blacklist* → gone; add a buff to the *Whitelist* by name on a
+    container whose categories exclude it → it is listed with its icon and id, and it shows; a name
+    the game does not know → nothing added, and the reason under the box; the same id on both lists
+    → hidden.
 38. **Max duration** `60` → hour-long buffs disappear, short ones stay, permanent ones go.
 39. **Duration → Only auras without a duration** on a player buff container → timed buffs disappear
     out of combat once learned; a brand-new timed buff cast in combat may show once. `/am forgettimed`

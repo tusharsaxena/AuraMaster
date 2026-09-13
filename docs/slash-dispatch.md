@@ -74,8 +74,13 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:102`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:361`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:389`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
+
+A Filters category row (`printLabel`) prints the label the Categories grid shows, Default /
+Whitelist / Blacklist, with the stored value `/am set` takes after it in gray: `Whitelist (show)`.
+The descriptor's `format` hook (`formatValue`, `settings/Slash.lua:336`) does it; every other row
+prints as the library formats it.
 
 Examples:
 

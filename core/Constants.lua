@@ -55,7 +55,7 @@ C.DURATION_MODE_LABELS = { any = "Any duration", timed = "Only auras with a dura
 
 -- Tri-state category selection.
 C.CATEGORY_STATES = { "", "show", "hide" }
-C.CATEGORY_STATE_LABELS = { [""] = "—", show = "Show", hide = "Hide" }
+C.CATEGORY_STATE_LABELS = { [""] = "Default", show = "Whitelist", hide = "Blacklist" }
 
 -- Sort methods: our key → the engine's AuraContainerSortMethod member name.
 C.SORT_METHODS = { "default", "expiration", "expirationOnly", "name", "nameOnly",

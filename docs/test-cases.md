@@ -651,7 +651,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
-- options: the Filters page offers the Always / never tab only for a buff or debuff container
+- options: the Filters page offers the Overrides tab only for a buff or debuff container
 - options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
@@ -733,15 +733,21 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (8)
+### test_pages_filters.lua (14)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container is offered the weapon-enchant rows; a debuff container is not
 - filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
-- filters: a category dropdown stores show, hide or neutral for the selected container
-- filters: each category row sits under the subgroup its kind names
+- filters: a buff container's Categories tab is two grids, Blizzard Categories then Custom Categories, each once
+- filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once
+- filters: every grid's columns are Default, Whitelist and Blacklist, then the category
+- filters: a grid radio stores show, hide or "" for the selected container and re-syncs its line
+- filters: /am get and /am list print a category's state as Default, Whitelist or Blacklist
+- filters: every category row is skipRender and names its grid
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
-- filters: Always / never adds to one list at a time, and Remove takes an id off
+- filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
+- filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
+- filters: an Overrides name the game cannot find adds nothing and says why on the add line
 - filters: every tab opens with what the engine will not honor here, in orange
 
 ### test_pages_layout.lua (12)
@@ -912,7 +918,7 @@ badge and any count quoted in the docs must agree with it.
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 17 |
 | test_pages_general.lua | 46 |
-| test_pages_filters.lua | 8 |
+| test_pages_filters.lua | 14 |
 | test_pages_layout.lua | 12 |
 | test_pages_bars.lua | 6 |
 | test_pages_icons.lua | 5 |
@@ -929,4 +935,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **743** |
+| **Total** | **749** |

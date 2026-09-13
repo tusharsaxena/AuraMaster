@@ -17,7 +17,7 @@ local _, NS = ...
 -- (settings/Schema.lua), so an edit here re-applies every container. A starter the player unticks is
 -- stored `false` (nil would let the shipped list bring it back), a spell the player adds `true`, and
 -- the carve-out's normalizer stores no category left with no edits. The lists are not schema rows, so
--- the page's Defaults leaves them alone, as the Filters page's leaves its Always / never lists; each
+-- the page's Defaults leaves them alone, as the Filters page's leaves its Overrides lists; each
 -- category has its own restore.
 --
 -- DISPEL COLORS are six plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
@@ -28,7 +28,8 @@ local _, NS = ...
 --
 -- This file registers nothing. settings/General.lua registers DISPEL_ROWS after the Containers rows,
 -- so the Dispel Colors tab follows Containers, and draws both tabs through TABS. It loads before
--- General.lua for that reason.
+-- General.lua for that reason, and before settings/Filters.lua, whose Overrides lists read
+-- `candidates` and `ID_STRINGS` from here.
 
 local L = NS.L
 local H = NS.Helpers
@@ -228,4 +229,6 @@ local TABS = {
     { key = DISPEL, label = DISPEL, render = renderDispel },
 }
 
-NS.GeneralSpells = { DISPEL_ROWS = DISPEL_ROWS, TABS = TABS }
+-- `candidates` and `ID_STRINGS` are shared with the Filters page's Overrides lists, which resolve a
+-- typed name the same way.
+NS.GeneralSpells = { DISPEL_ROWS = DISPEL_ROWS, TABS = TABS, candidates = candidates, ID_STRINGS = ID_STRINGS }
