@@ -168,5 +168,59 @@ return function(NS, m)
         return shown
     end
 
+    --- The ID widgets' suggestion dropdown (LibKa0s-Options, issue #31). Call it BEFORE the first
+    --- keystroke: the library builds the dropdown once, the first time it shows one, through
+    --- CreateFrame, and it is a frame of the library's rather than an AceGUI widget, so the one
+    --- carrying `rows` is found among the frames recorded from here on. A row's `entry` (its id) and
+    --- `labelText` are the library's own record of what it shows; the kit's font strings keep none.
+    --- The environment needs the suggestions' sources: fresh({ before = ... }) installing
+    --- tests/_kit/mock_ids.lua and calling installIdSuggestions().
+    function P.suggestions()
+        local made, real = {}, m.CreateFrame
+        m.CreateFrame = function(...)
+            local f = real(...)
+            made[#made + 1] = f
+            return f
+        end
+        local S = {}
+        local function frame()
+            for _, f in ipairs(made) do
+                if type(f.rows) == "table" then return f end
+            end
+        end
+        --- Type `text` into the AceGUI EditBox `box` as the client reports it, then let the
+        --- debounce run.
+        function S.type(box, text)
+            box:SetText(text)
+            box:__fire("OnTextChanged", text)
+            m.__fireTimers()
+        end
+        --- The rows the dropdown shows, in its order; none while it is hidden.
+        function S.rows()
+            local f, out = frame(), {}
+            if not (f and f:IsShown()) then return out end
+            for _, row in ipairs(f.rows) do
+                if row:IsShown() and row.entry then
+                    out[#out + 1] = row
+                end
+            end
+            return out
+        end
+        --- The shown rows' ids joined by commas, in the dropdown's order or ascending when `sorted`.
+        function S.ids(sorted)
+            local out = {}
+            for i, row in ipairs(S.rows()) do out[i] = row.entry.id end
+            if sorted then table.sort(out) end
+            return table.concat(out, ",")
+        end
+        --- The shown row for id `id`, or nil.
+        function S.row(id)
+            for _, row in ipairs(S.rows()) do
+                if row.entry.id == id then return row end
+            end
+        end
+        return S
+    end
+
     return P
 end

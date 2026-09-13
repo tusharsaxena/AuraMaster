@@ -30,7 +30,7 @@ local _, NS = ...
 -- This file registers nothing. settings/General.lua registers DISPEL_ROWS after the Containers rows,
 -- so the Dispel Colors tab follows Containers, and draws both tabs through TABS. It loads before
 -- General.lua for that reason, and before settings/Filters.lua, whose Overrides lists read
--- `candidates` and `ID_STRINGS` from here.
+-- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` from here.
 
 local L = NS.L
 local H = NS.Helpers
@@ -113,36 +113,68 @@ local function entriesFor(def)
     return out
 end
 
---- What a typed name is matched against when the client cannot look it up (it finds only spells the
---- character knows): every starter of every spell category, and every timed buff Aura Master has
---- learned (modules/TimedSpells.lua).
+--- Every spell id Aura Master knows, for the ID lists to name: what a typed name is matched against
+--- and what the suggestions list beside the spellbook. The client finds a spell by name only in the
+--- character's own spellbook and cannot enumerate any other, so these are the only other names a
+--- player can type. Every starter of every spell category, every spell the profile's categories edit
+--- (added or unticked), every spell on any container's whitelist or blacklist, and every timed buff
+--- Aura Master has learned (modules/TimedSpells.lua); each once, ascending. The library may call it
+--- at every draw and every submit.
 local function candidates()
     local seen, out = {}, {}
-    local function add(id)
-        if type(id) == "number" and not seen[id] then
-            seen[id] = true
-            out[#out + 1] = id
+    local function addKeys(set)
+        if type(set) ~= "table" then return end
+        for id in pairs(set) do
+            if type(id) == "number" and not seen[id] then
+                seen[id] = true
+                out[#out + 1] = id
+            end
         end
     end
-    for _, def in ipairs(spellCategories()) do
-        for id in pairs(def.spells or {}) do add(id) end
+    for _, def in ipairs(spellCategories()) do addKeys(def.spells) end
+    local p = NS.db and NS.db.profile
+    for _, edits in pairs(p and p.categorySpells or {}) do addKeys(edits) end
+    for _, c in ipairs(NS.Database.GetContainers()) do
+        local f = c.filter
+        if f then
+            addKeys(f.whitelist)
+            addKeys(f.blacklist)
+        end
     end
     local g = NS.db and NS.db.global
-    for id in pairs(g and g.timedSpells or {}) do add(id) end
+    addKeys(g and g.timedSpells)
     table.sort(out)
     return out
 end
 
+-- Where a typed name can come from, in the add line's tooltip and at the end of its refusal (the
+-- library fills `{hint}` from `nameHint`): the spellbook, or the lists `candidates` reads. The enUS
+-- copy is the library's own spell hint (O.ID_NAME_HINT.spell), localized here, so a translation
+-- rewords the tooltip and the refusal together.
+local NAME_HINT = L["Names work for spells in your spellbook and ones this list knows; otherwise use the id or shift-click a link."]
+
 -- The IdList's words, through the locale (the library's own are English literals). Kind-specific
 -- rather than the library's `{noun}` forms, so a translation never has to agree with an English noun.
+-- A name several spells share is refused, never resolved to one of them: the suggestions list each
+-- with its rank to pick from. `looking` is the item lookup's line, which a spell list never shows,
+-- carried so no English literal can reach a localized build.
 local ID_STRINGS = {
     add       = L["Add"],
     remove    = L["Remove"],
     empty     = L["Type a spell id, a spell link or a spell name."],
-    notFound  = L["No spell named '{text}'."],
-    ambiguous = L["Several spells are named '{text}'. Use the id."],
+    notFound  = L["No spell named '{text}' in your spellbook. {hint}"],
+    ambiguous = L["Several spells are named '{text}' — pick one from the list, or use the id."],
     unknown   = L["Unknown spell {id}"],
+    looking   = L["Looking up spells…"],
+    nameHint  = NAME_HINT,
+    more      = L["+{count} more"],
 }
+
+-- Both widgets' tooltip on every spell ID list: how to add, then where a name can come from. One
+-- routed sentence with a `{hint}` token (localization-§1), filled by a function so no `%` in a
+-- translation is read as a pattern.
+local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shift-click a spell link into the box, then press Enter or Add. {hint}"]
+    :gsub("{hint}", function() return NAME_HINT end))
 
 local function categoryCell(defs, def)
     return { make = function(_, parent, rel)
@@ -173,7 +205,7 @@ local function renderSpells(ctx)
     H.IdList(ctx, {
         kind       = "spell",
         label      = L["Add a spell"],
-        tooltip    = L["Type a spell id or name, or shift-click a spell link into the box, then press Enter or Add. A name the game cannot find is matched against every category's starter spells and the timed buffs Aura Master has learned."],
+        tooltip    = ID_TOOLTIP,
         strings    = ID_STRINGS,
         candidates = candidates,
         entries    = function() return entriesFor(def) end,
@@ -230,6 +262,9 @@ local TABS = {
     { key = DISPEL, label = DISPEL, render = renderDispel },
 }
 
--- `candidates` and `ID_STRINGS` are shared with the Filters page's Overrides lists, which resolve a
--- typed name the same way.
-NS.GeneralSpells = { DISPEL_ROWS = DISPEL_ROWS, TABS = TABS, candidates = candidates, ID_STRINGS = ID_STRINGS }
+-- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` are shared with the Filters page's Overrides lists,
+-- which suggest and resolve a typed name the same way.
+NS.GeneralSpells = {
+    DISPEL_ROWS = DISPEL_ROWS, TABS = TABS,
+    candidates = candidates, ID_STRINGS = ID_STRINGS, ID_TOOLTIP = ID_TOOLTIP,
+}

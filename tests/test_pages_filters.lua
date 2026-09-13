@@ -266,7 +266,67 @@ test("filters: an Overrides name the game cannot find adds nothing and says why 
     -- red under: onAdd reached with something other than a resolved id
     assertEqual(msgs.config, 0, "an unknown name writes nothing")
     assertNil(next(NS.Database.FindContainer(1).filter.whitelist or {}))
-    assertTrue(P.hasText(ws, "No spell named 'No Such Spell'."))
+    assertTrue(P.hasText(ws, "No spell named 'No Such Spell' in your spellbook."))
+end)
+
+--- The Filters page on a client with the suggestions' sources (tests/_kit/mock_ids.lua), `seed`
+--- run before the Overrides tab draws: NS, m, P, its widgets, the dropdown's reader and the two
+--- add boxes (whitelist first).
+local function overridesSuggesting(seed)
+    local NS, m, P = filters({ before = function(m2)
+        dofile("tests/_kit/mock_ids.lua")(m2)
+        m2.installIdSuggestions()
+    end })
+    seed(NS, m)
+    local ws = P.tab("filters", "overrides")
+    return NS, m, P, ws, P.suggestions(), P.all(ws, "EditBox", NS.L["Add a spell"])
+end
+
+test("filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once", function()
+    local NS, _, _, _, S, boxes = overridesSuggesting(function(NS2, m)
+        m.__spells[5701] = { name = "Gale Ward", iconID = 1 }
+        m.__spells[5702] = { name = "Gale Veil", iconID = 1 }
+        NS2.SetByPath("categorySpells", { healing = { [5701] = true } })
+        NS2.SetByPath("container.filter.blacklist", { [5702] = true }, 1)
+    end)
+    S.type(boxes[1], "gale")
+    -- red under: candidates() omitting the profile's categorySpells ids or the containers' lists
+    assertEqual(S.ids(true), "5701,5702")
+    local first = S.rows()[1].entry.id
+    local paths = {}
+    local real = NS.SetByPath
+    NS.SetByPath = function(path, ...)
+        paths[#paths + 1] = path
+        return real(path, ...)
+    end
+    boxes[1].editbox:__fire("OnArrowPressed", "DOWN")
+    boxes[1]:__fire("OnEnterPressed", "gale")
+    -- red under: a pick bypassing onAdd, or onAdd writing the set more than once or elsewhere
+    assertEqual(table.concat(paths, ","), "container.filter.whitelist")
+    assertEqual(NS.Database.FindContainer(1).filter.whitelist[first], true)
+end)
+
+test("filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from", function()
+    local NS, m, P, ws, S, boxes = overridesSuggesting(function(NS2, m2)
+        for rank, id in ipairs({ 5711, 5712 }) do
+            m2.__spells[id] = { name = "Hushed Gale", iconID = 1 }
+            m2.setSpellSubtext(id, "Rank " .. rank)
+        end
+        NS2.db.global.timedSpells = { [5711] = true, [5712] = true }
+    end)
+    local msgs = P.messages()
+    boxes[1]:__fire("OnEnterPressed", "Hushed Gale")
+    -- red under: a shared name resolving to one rank the player did not pick
+    assertEqual(msgs.config, 0)
+    assertTrue(P.hasText(ws, "Several spells are named 'Hushed Gale' — pick one from the list, or use the id."))
+    assertEqual(S.ids(), "5711,5712", "the refusal lists both ranks")
+    local lines = {}
+    rawset(m.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    boxes[2]:__fire("OnEnter")
+    -- red under: the Overrides tooltip still promising any name the game cannot find is matched
+    assertTrue((lines[1] or ""):find(NS.Helpers.ID_NAME_HINT.spell, 1, true) ~= nil)
 end)
 
 test("filters: every tab opens with what the engine will not honor here, in orange", function()

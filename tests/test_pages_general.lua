@@ -713,7 +713,120 @@ test("general → spell categories: a name resolves through the candidates — a
     local msgs = P.messages()
     box:__fire("OnEnterPressed", "No Such Spell")
     assertEqual(msgs.config, 0, "an unknown name writes nothing")
-    assertTrue(P.hasText(ws, "No spell named 'No Such Spell'."), "and says why on the add line")
+    assertTrue(P.hasText(ws, "No spell named 'No Such Spell' in your spellbook."), "and says why on the add line")
+end)
+
+-- ── the Spell Categories add line: suggestions while typing, and where a name can come from (#31) ─
+
+--- The id lookups and the suggestions' sources (the bags, the spellbook, a spell's subtext), from
+--- the kit's opt-in tests/_kit/mock_ids.lua. AM's own C_Spell.GetSpellInfo keeps answering.
+local function withIds(m)
+    dofile("tests/_kit/mock_ids.lua")(m)
+    m.installIdSuggestions()
+end
+
+--- Seed spell `id` with `name` in the mock client, which never finds a spell BY NAME: only the
+--- candidates can resolve one.
+local function spell(m, id, name, rank)
+    m.__spells[id] = { name = name, iconID = 1 }
+    if rank then m.setSpellSubtext(id, rank) end
+end
+
+--- The Spell Categories tab drawn again after `seed(NS, m)`, recording the suggestion dropdown:
+--- NS, m, P, the widgets, the dropdown's reader and the Add a spell box.
+local function suggesting(seed)
+    local NS, m, P = spells({ before = withIds })
+    if seed then seed(NS, m) end
+    local ws = P.rerender("General")
+    return NS, m, P, ws, P.suggestions(), P.find(ws, "EditBox", NS.L["Add a spell"])
+end
+
+--- Four spells only the candidates know: an added spell in another category, one on a container's
+--- whitelist, one on another container's blacklist, and a learned timed buff.
+local function seedZephyrs(NS, m)
+    spell(m, 5601, "Zephyr Ward"); spell(m, 5602, "Zephyr Veil")
+    spell(m, 5603, "Zephyr Step"); spell(m, 5604, "Zephyr Guard")
+    NS.SetByPath("categorySpells", { raidCDs = { [5601] = true } })
+    NS.SetByPath("container.filter.whitelist", { [5602] = true }, 1)
+    NS.SetByPath("container.filter.blacklist", { [5604] = true }, 2)
+    NS.db.global.timedSpells = { [5603] = true }
+end
+
+test("general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs", function()
+    local _, _, _, _, S, box = suggesting(seedZephyrs)
+    S.type(box, "zephyr")
+    -- red under: candidates() omitting the profile's categorySpells ids (5601) or the containers'
+    -- whitelist and blacklist ids (5602, 5604) — the client cannot enumerate spells a character
+    -- does not know, so the list shows only what the candidates hand it
+    assertEqual(S.ids(true), "5601,5602,5603,5604")
+    S.type(box, "rejuv")
+    assertEqual(S.ids(), "774", "and any category's starter")
+end)
+
+test("general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides", function()
+    local NS, _, _, _, _, box = suggesting(seedZephyrs)
+    box:__fire("OnEnterPressed", "Zephyr Ward")
+    -- red under: candidates() omitting the profile's categorySpells ids
+    assertEqual(NS.db.profile.categorySpells.defensives[5601], true)
+    box:__fire("OnEnterPressed", "zephyr guard")
+    -- red under: candidates() reading the selected container's lists only (5604 is container 2's)
+    assertEqual(NS.db.profile.categorySpells.defensives[5604], true)
+end)
+
+test("general → spell categories: picking a suggestion adds it through the one writer, exactly once", function()
+    local NS, _, _, _, S, box = suggesting(seedZephyrs)
+    S.type(box, "zephyr w")
+    local row = S.row(5601)
+    assertTrue(row ~= nil, "Zephyr Ward is offered")
+    local paths = spyPaths(NS)
+    row:__fire("OnClick")
+    -- red under: a pick that bypasses onAdd, or an onAdd that writes more than the whole set once
+    assertEqual(table.concat(paths, ","), "categorySpells")
+    assertEqual(NS.db.profile.categorySpells.defensives[5601], true)
+    assertEqual(S.ids(), "", "the pick closes the list")
+end)
+
+test("general → spell categories: a name two ranks share lists both, labeled; Enter without a pick adds neither", function()
+    local NS, _, P, ws, S, box = suggesting(function(NS2, m)
+        spell(m, 5611, "Hushed Zephyr", "Rank 1")
+        spell(m, 5612, "Hushed Zephyr", "Rank 2")
+        NS2.db.global.timedSpells = { [5611] = true, [5612] = true }
+    end)
+    S.type(box, "hushed zephyr")
+    assertEqual(S.ids(), "5611,5612", "every rank is its own row")
+    assertTrue(S.row(5611).labelText:find("Rank 1", 1, true) ~= nil, "labeled with its rank")
+    assertTrue(S.row(5612).labelText:find("Rank 2", 1, true) ~= nil)
+    local msgs = P.messages()
+    box:__fire("OnEnterPressed", "Hushed Zephyr")
+    -- red under: a shared name resolving to one rank the player did not pick (or to both)
+    assertEqual(msgs.config, 0, "Enter without a pick writes nothing")
+    assertNil(NS.db.profile.categorySpells.defensives)
+    -- red under: the host's ambiguous string still saying only "Use the id", with a list up to pick from
+    assertTrue(P.hasText(ws, "Several spells are named 'Hushed Zephyr' — pick one from the list, or use the id."))
+    assertEqual(S.ids(), "5611,5612", "the refusal lists the ranks to pick from")
+    S.row(5612):__fire("OnClick")
+    assertEqual(NS.db.profile.categorySpells.defensives[5612], true, "the picked rank is added")
+    assertNil(NS.db.profile.categorySpells.defensives[5611], "and only it")
+end)
+
+test("general → spell categories: the add line's tooltip and its refusal say where a name can come from", function()
+    local NS, m, P, ws = spells()
+    local hint = NS.L["Names work for spells in your spellbook and ones this list knows; otherwise use the id or shift-click a link."]
+    -- red under: the enUS hint drifting from the library's own (the tooltip and the refusal quote it)
+    assertEqual(hint, NS.Helpers.ID_NAME_HINT.spell)
+    local lines = {}
+    rawset(m.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    local box = P.find(ws, "EditBox", NS.L["Add a spell"])
+    box:__fire("OnEnter")
+    -- red under: the tooltip without the hint, or still promising that any name "the game cannot
+    -- find" is matched (a spell no list knows and the spellbook lacks cannot be named at all)
+    assertTrue((lines[1] or ""):find(hint, 1, true) ~= nil, "the tooltip carries the hint")
+    assertFalse((lines[1] or ""):find("cannot find", 1, true) ~= nil)
+    box:__fire("OnEnterPressed", "No Such Spell")
+    -- red under: spec.strings without nameHint (the library's `{hint}` would read empty)
+    assertTrue(P.hasText(ws, "No spell named 'No Such Spell' in your spellbook. " .. hint))
 end)
 
 test("general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit", function()

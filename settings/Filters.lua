@@ -172,7 +172,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
     H.IdList(ctx, {
         kind       = "spell",
         label      = L["Add a spell"],
-        tooltip    = L["Type a spell id or name, or shift-click a spell link into the box, then press Enter or Add. A name the game cannot find is matched against every category's starter spells and the timed buffs Aura Master has learned."],
+        tooltip    = NS.GeneralSpells.ID_TOOLTIP,
         strings    = NS.GeneralSpells.ID_STRINGS,
         candidates = NS.GeneralSpells.candidates,
         entries    = function()
