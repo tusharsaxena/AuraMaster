@@ -92,13 +92,14 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | E2 attached handle in preview | L-4 | AM | done | a27d172 | Preview.Extent + Anchors.PlaceAttached; strip level set per placement; **CP-E reached** |
 | F1 render coverage test | B-5 | AM | done | 078eef9 53ba33b 025ab2d, lint fix af3b3bc | walk found preview time format + running-out color (fixed); smooth/pandemic engine-only |
 | F2 docs | §9 | AM | done | 5615872 | counts from the live schema (198 rows, 40 files), stale citations repointed, smoke section P (checks 58-70); **CP-F reached** |
-| G1 ConsumableMaster IdInput | X-4 | CM | todo | | needs CP-A |
-| G2 BankLedger IdList | X-4 | BL | todo | | needs CP-A |
-| G3 LootHistory IdList | X-4 | LH | todo | | needs CP-A; **CP-G** |
+| G1 ConsumableMaster IdInput | X-4 | CM | done | 193f4b9 553b5d4 5944551 | re-vendor + Add-by-ID IdInput (id, link or name); review approved |
+| G2 BankLedger IdList | X-4 | BL | done | b4e0a04 6bc8d37 | re-vendor + Blacklist/Whitelist IdList (items); review approved |
+| G3 LootHistory IdList | X-4 | LH | done | b4b2f16 1d6e3c8 | re-vendor + three IdLists (items; currencies by id/link); review approved; **CP-G reached** |
+| I-3 icon dispel border inset (owner report) | I-1 follow-up | AM | done | bb07037 | dispel art outset by a sixth of the icon, as Blizzard sizes it; smoke check 71 |
 | H1 adversarial review + fixes | all | all | todo | | |
 | H2 final battery + report | all | all | todo | | **CP-H** |
 
-Workflow runs: `wf_0af661b7-6d2` (A1-A2, R0, B1-B7) · `wf_8e85fdd5-5fa` (A3, A4, C1, C2; D+ and G not reached because of a script matcher bug) · run 3 (D1-F2, G1-G3)
+Workflow runs: `wf_0af661b7-6d2` (A1-A2, R0, B1-B7) · `wf_8e85fdd5-5fa` (A3, A4, C1, C2; D+ and G not reached because of a script matcher bug) · `wf_9b7e7c55-ccd` (D1-F2, G1-G3) · run 4 (H1, H2)
 
 **Dependency order:**
 - R0, A* and B1–B3 can run concurrently (different repos, or independent files).

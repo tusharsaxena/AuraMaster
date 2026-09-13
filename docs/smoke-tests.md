@@ -331,3 +331,8 @@ listed here too, so the batch can be signed off in one pass.
     added with its icon and name. Do the same on Filters → Overrides → Whitelist. If the shift-click
     goes to the chat box instead, report it: the list reads spell links, but the client decides
     which box a shift-click fills.
+71. **Dispel border sits on the icon's edge (owner report 2026-09-13).** On an icon container
+    showing debuffs with a dispel type (your own DoTs on a target), with Icons → Border →
+    **Color the border by dispel type** on → Blizzard's colored border art frames each icon at its
+    edge, with no second ring inside the icon's art. The art reaches a sixth of the icon past each
+    edge, as Blizzard's buff frame sizes it; if the ring lands a pixel in or out, report which.
