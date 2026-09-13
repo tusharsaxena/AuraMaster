@@ -215,8 +215,8 @@ local function dispelMapCurrent(entry, stored)
     return true
 end
 
---- The profile's dispel palette (profile-wide since schema v2; both styles read it), or nil before the
---- database exists.
+--- The profile's dispel palette (profile-wide since schema v2; bars colored by dispel type read it,
+--- icons keep Blizzard's own dispel colors), or nil before the database exists.
 function Style.ProfileDispelColors()
     local p = NS.db and NS.db.profile
     return p and p.dispelColors

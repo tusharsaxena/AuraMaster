@@ -140,8 +140,8 @@ suite covers what only the client can show.
     → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
     a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
     nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
-    **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color, and an icon's
-    Magic dispel border is tinted by it.
+    **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
+    Magic dispel border keeps Blizzard's own blue art.
 37. **Overrides.** Add a buff to the *Blacklist* → gone; add a buff to the *Whitelist* by name on a
     container whose categories exclude it → it is listed with its icon and id, and it shows; a name
     the game does not know → nothing added, and the reason under the box; the same id on both lists
@@ -293,11 +293,11 @@ listed here too, so the batch can be signed off in one pass.
     **Dispel border** on, a debuff with a dispel type shows Blizzard's colored border art over yours;
     a debuff without one, and every buff, keeps yours. If a border does not change, `/fstack` over
     that icon and report the frame it names.
-61. **Dispel border tint (G-3, question Q2).** The engine multiplies the Dispel Colors color onto
-    Blizzard's already colored border art, so it tints rather than recolors. Set Magic to white → a
-    Magic dispel border looks as Blizzard draws it; set it to pure red → note whether it reads red or
-    a dark blend. The bar side is check 36. If a clean recolor is wanted, the notes' `CustomAsset`
-    route is the follow-up.
+61. **Icons keep Blizzard's dispel art; bars take the colors (G-3, owner 2026-09-13).** On
+    General → Dispel Colors set Magic to pure red. An icon container with **Dispel border** on,
+    showing a Magic debuff → the border is Blizzard's stock blue Magic art, untinted. A bar container
+    with **Color by** set to dispel type, showing the same debuff → the fill is red. The tab's line
+    and each swatch's tooltip say the colors drive bars only.
 62. **Countdown and time text agree (I-2, question Q4).** Check 27. Also note the cooldown's own
     number with 12.x s left: 13 means the countdown rounds up, as the time text now does. The notes'
     stronger option, handing the cooldown frame our formatter (`SetCountdownFormatter`), was not

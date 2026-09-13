@@ -235,6 +235,8 @@ The atlases (`Blizzard_FrameXMLUtil/AuraUtil.lua:5-10`) are per-type colored art
     required:** CustomAsset plus the default-noicon atlas plus our map shows the chosen swatch
     color.
 - Either way, the General → Dispel Colors tab need not say "bars only".
+- **Decided 2026-09-13 (owner):** neither route. Icons show Blizzard's own dispel border art, with
+  no `customDispelColorMap`; the Dispel Colors drive bars only, and the tab and each row say so.
 
 ---
 

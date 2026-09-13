@@ -97,6 +97,9 @@ the `containers` page move with it.
   border when the engine's `Border` dispel style accepts a `customDispelColorMap` (verify in
   `Blizzard_CustomAuraContainer`; if it does not, icons keep Blizzard's art and the tab says the
   colors apply to bars).
+  Amended 2026-09-13 (owner): icons show Blizzard's own dispel border art, with no
+  `customDispelColorMap` (the engine only tints its colored atlas). The colors drive bars only, and
+  the tab text and each row's desc say so.
 - Writing a dispel color re-applies every container (a global row, `effect` absent).
 - `container.bars.dispelColors` is removed from the template and from stored containers by the v2
   migration (section 7).

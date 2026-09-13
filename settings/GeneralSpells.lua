@@ -21,8 +21,9 @@ local _, NS = ...
 -- category has its own restore.
 --
 -- DISPEL COLORS are six plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
--- no `effect`, so a write re-applies every container. Both styles read them — a bar colored by dispel
--- type, and the tint on an icon's dispel border (modules/Style_Icons.lua). They are palette
+-- no `effect`, so a write re-applies every container. Only bars read them, a bar colored by dispel
+-- type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua, owner
+-- 2026-09-13). They are palette
 -- definitions, one color per dispel type, and carry no class-color companion: the one exemption
 -- options-ui-§17 makes.
 --
@@ -211,14 +212,14 @@ local DISPEL_ROWS = {}
 for _, name in ipairs(C.DISPEL_TYPES) do
     local row = {
         path = "dispelColors." .. name, page = PAGE, group = DISPEL, type = "color", label = L[name],
-        desc = L["This dispel type's color: a bar's fill when Color by is set to dispel type, and the tint on an icon's dispel border."],
+        desc = L["This dispel type's color for a bar's fill when Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."],
     }
     DISPEL_ROWS[#DISPEL_ROWS + 1] = row
 end
 
 --- The Dispel Colors tab: one line saying who reads the colors, then the group's six rows.
 local function renderDispel(ctx, _, rows)
-    H.TextRow(ctx, L["One color per dispel type, shared by every container: the fill of a bar colored by dispel type, and the tint on an icon's dispel border."])
+    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type. An icon's dispel border keeps Blizzard's own colors."])
     H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
 end
 

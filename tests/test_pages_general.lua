@@ -771,7 +771,7 @@ end)
 
 -- ── the Dispel Colors tab (G-3) ───────────────────────────────────────────────────────────────
 
-test("general → dispel colors: six profile-wide swatches with no class-color companion, under a line naming bars and icons", function()
+test("general → dispel colors: six profile-wide swatches with no class-color companion, under a line saying they drive bars only", function()
     local NS, _, P, _, tab = general()
     local ws = tab(NS.L["Dispel Colors"])
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
@@ -785,8 +785,14 @@ test("general → dispel colors: six profile-wide swatches with no class-color c
     assertEqual(#P.all(ws, "ColorPicker"), 6)
     -- red under: a class-color companion beside a palette swatch (options-ui-§17's exemption)
     assertEqual(#P.all(ws, "CheckBox"), 0)
-    -- red under: the tab saying the colors are for bars only (icons tint their dispel border too)
-    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container: the fill of a bar colored by dispel type, and the tint on an icon's dispel border."]))
+    -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13: icons
+    -- keep Blizzard's own dispel colors, so the palette drives bars only)
+    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type. An icon's dispel border keeps Blizzard's own colors."]))
+    for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
+        local desc = NS.FindSchemaRow("dispelColors." .. name).desc
+        -- red under: a row desc still naming the tint on an icon's dispel border
+        assertEqual(desc, NS.L["This dispel type's color for a bar's fill when Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."], name)
+    end
 end)
 
 test("general → dispel colors: a swatch writes its own type's color and re-applies every container", function()

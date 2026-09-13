@@ -132,8 +132,9 @@ starter list**. Writes the whole set to `categorySpells` (a carve-out, so every 
 The page's Defaults does not touch these lists; each category's restore does.
 
 **Dispel Colors** — one line saying who reads the colors, then six swatches, `dispelColors.Magic`,
-`.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type, and the
-tint on an icon's dispel border. Profile-wide, so a write re-applies every container.
+`.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type. They
+drive bars only; an icon's dispel border keeps Blizzard's own colored art (owner, 2026-09-13), and
+the tab line and each row's tooltip say so. Profile-wide, so a write re-applies every container.
 
 ### Filters (39 rows, `settings/Filters.lua`)
 

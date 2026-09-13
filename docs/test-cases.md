@@ -532,7 +532,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the time and stack texts are boxed to the icon's width less their offsets
 - icons: a hidden text is never handed to the engine; a shown one is, as its own region
 - icons: the dispel border is the engine's debuff art on harmful auras only
-- icons: the dispel border is tinted in the profile's dispel colors (G-3)
+- icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)
 - icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
 - icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge
 - icons: a non-square icon's dispel art reaches past it by a sixth of each side
@@ -773,7 +773,7 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore this category's starter list clears that category's edits and no other's
 - general → spell categories: the tab and Dispel Colors are drawn with no container at all
-- general → dispel colors: six profile-wide swatches with no class-color companion, under a line naming bars and icons
+- general → dispel colors: six profile-wide swatches with no class-color companion, under a line saying they drive bars only
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 

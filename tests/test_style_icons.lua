@@ -174,23 +174,20 @@ test("icons: the dispel border is the engine's debuff art on harmful auras only"
     assertFalse(add[2].showWhenHelpful, "buffs do not")
 end)
 
-test("icons: the dispel border is tinted in the profile's dispel colors (G-3)", function()
+test("icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)", function()
     local NS2 = dofile("tests/fresh_env.lua")({ before = function(m)
         m.Enum = m.Enum or {}
         m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
     end })
     local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
         icons = { dispelBorder = true } })
+    NS2.db.profile.dispelColors.Magic = { r = 1, g = 0, b = 0, a = 1 }
     local frame = dressed(c, true, nil, NS2)
-    local map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
-    -- red under: Icons.Bind binding no customDispelColorMap (the General palette reaching bars only)
-    assertTrue(map ~= nil and map == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors), "the profile's colors")
-    NS2.db.profile.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
-    frame = dressed(c, true, nil, NS2)
-    map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
-    -- red under: Icons.Bind building its map once and keeping it after the palette changed
-    assertEqual(map.Magic.r, 0, "an edited color reaches the next dress")
-    assertEqual(map.Magic.b, 1)
+    local opts = frame:__last("AddDispelTypeTexture")[2]
+    -- red under: Icons.Bind passing the profile's customDispelColorMap (a tint over Blizzard's colored
+    -- border art, which the owner turned down: icons show the stock art)
+    assertNil(opts.customDispelColorMap, "no custom color map on an icon's dispel border")
+    assertEqual(opts.style, 31, "still Blizzard's border art")
 end)
 
 test("icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)", function()
