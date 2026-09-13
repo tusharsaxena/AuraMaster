@@ -104,7 +104,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `tests/fresh_env.lua` | Builds a fresh, fully loaded environment for a suite that mutates state |
 | `tests/degraded_env.lua` | Builds a second environment with LibKa0s absent, so every setup file takes its real fallback |
 | `tests/perf.lua` | The offline performance scenario runner (outside the green gate) — `docs/performance.md` |
-| `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves), for the `test_pages_*` suites |
+| `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves, and `P.suggestions()`, which reads the ID lists' suggestion dropdown), for the `test_pages_*` suites |
 | `tests/region_recorder.lua` | Not a suite: a stand-in frame region that records every method called on it, so the style suites can tell one region's paint from another's (the kit hands a frame back as its own texture) |
 | `tests/test_*.lua` | One suite per subject, in the order `tests/run.lua` declares them; the cases are enumerated in the generated `docs/test-cases.md` |
 

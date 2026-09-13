@@ -128,9 +128,16 @@ Bar style, Icon style) and **Copy onto this container**. Name and position are n
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
 dropdown of the nine spell categories (defensives, activeMitigation, raidCDs, offensiveCDs, healing,
 support, movement, utility, consumables), then that category's ID list (the library's `IdList`):
-**Add a spell** takes a spell id, a shift-clicked link or a name (a name the client cannot find is
-matched against every category's starters and the timed buffs Aura Master has learned; an unknown
-one adds nothing and says why under the box), then one line per starter spell with a checkbox
+**Add a spell** takes a spell id, a shift-clicked link or a name. While you type, a dropdown lists
+the matching spells (the library's suggestions, LibKa0s issue #31), each with its rank where the
+client gives one; a click, or Up/Down then Enter, picks one. The client finds a spell by name only
+in the character's spellbook and cannot list any other, so the page hands the library `candidates`:
+every category's starters, every spell the profile's categories edit, every spell on any
+container's whitelist or blacklist, and the timed buffs Aura Master has learned. A name two of
+them share is refused until one is picked ("pick one from the list, or use the id"), never
+resolved to one rank; a name neither knows adds nothing, and the line under the box says where
+names come from (the library's spell hint, localized, which the tooltip quotes too). Then one line
+per starter spell with a checkbox
 (untick to leave it out) and one per added spell with **Remove**, then **Restore this category's
 starter list**. Writes the whole set to `categorySpells` (a carve-out, so every container re-applies).
 The page's Defaults does not touch these lists; each category's restore does.
@@ -181,9 +188,9 @@ category. A grid with no row for the aura type is not drawn.
 
 **Overrides** (buff and debuff containers) — bespoke: a **Whitelist** and a **Blacklist** section,
 each the library's `IdList` in spell mode over `container.filter.whitelist` /
-`container.filter.blacklist`, adding by spell id, link or name (a name the client cannot find is
-matched against the spell categories' starters and the learned timed buffs, as on General → Spell
-Categories), each entry with **Remove**. Each set is written whole through the seam's carve-out;
+`container.filter.blacklist`, adding by spell id, link or name with the same suggestions,
+candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
+words, `NS.GeneralSpells`), each entry with **Remove**. Each set is written whole through the seam's carve-out;
 the lists are not schema rows, so the page's Defaults leaves them alone.
 
 A weapon-enchant container sees only **What to show** (one row) and **Sorting** (one row).

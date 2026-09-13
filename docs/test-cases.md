@@ -728,7 +728,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (46)
+### test_pages_general.lua (51)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -769,6 +769,11 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet
 - general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+- general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
+- general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides
+- general → spell categories: picking a suggestion adds it through the one writer, exactly once
+- general → spell categories: a name two ranks share lists both, labeled; Enter without a pick adds neither
+- general → spell categories: the add line's tooltip and its refusal say where a name can come from
 - general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore this category's starter list clears that category's edits and no other's
@@ -777,7 +782,7 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (14)
+### test_pages_filters.lua (16)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container is offered the weapon-enchant rows; a debuff container is not
@@ -792,6 +797,8 @@ badge and any count quoted in the docs must agree with it.
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
 - filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
 - filters: an Overrides name the game cannot find adds nothing and says why on the add line
+- filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once
+- filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from
 - filters: every tab opens with what the engine will not honor here, in orange
 
 ### test_pages_layout.lua (22)
@@ -978,8 +985,8 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 46 |
-| test_pages_filters.lua | 14 |
+| test_pages_general.lua | 51 |
+| test_pages_filters.lua | 16 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 10 |
 | test_pages_icons.lua | 7 |
@@ -996,4 +1003,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **806** |
+| **Total** | **813** |

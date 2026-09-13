@@ -338,3 +338,23 @@ listed here too, so the batch can be signed off in one pass.
     **Color the border by dispel type** on → Blizzard's colored border art frames each icon at its
     edge, with no second ring inside the icon's art. The art reaches a sixth of the icon past each
     edge, as Blizzard's buff frame sizes it; if the ring lands a pixel in or out, report which.
+72. **Suggestions while typing (#31).** On General → Spell Categories type `rej` into **Add a
+    spell** → a dropdown opens under the box listing Rejuvenation with its icon and id, plus any
+    matching spell in your spellbook; a spell the client gives a rank shows it ("Rank 2") beside
+    the name. Press Down, then Enter → that spell is added once, with its icon and name, and the
+    dropdown closes. Type again and click a row instead → the same. Repeat on Filters → Overrides →
+    Whitelist.
+73. **A name the lists know resolves without the spellbook (#31).** Type the full name of a
+    category starter your character does not have (*Ironbark* on a non-druid) and press Enter → it
+    is added. Add a spell by id to Filters → Overrides → Blacklist, then type that spell's name on
+    General → Spell Categories → it resolves too.
+74. **A shared name is refused until picked (#31).** Add two spells that share a name by id to the
+    Overrides Whitelist (for example the *Blood Fury* racials 20572 and 33697), then on General →
+    Spell Categories type `Blood Fury` and press Enter without picking → nothing is added, the line
+    under the box reads "Several spells are named 'Blood Fury' — pick one from the list, or use the
+    id.", and the dropdown lists each of them. Pick one → only it is added.
+75. **An unknown name says where names come from (#31).** Type a name no list knows and your
+    spellbook lacks (`Zzz Spell`) and press Enter → nothing is added, and the line under the box
+    reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and
+    ones this list knows; otherwise use the id or shift-click a link." Hover the box → the tooltip
+    ends with the same hint, and promises nothing about names the game cannot find.
