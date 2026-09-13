@@ -333,7 +333,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (44)
+### test_anchors.lua (59)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -361,7 +361,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: combat starting mid-pick cancels it
 - picker: Escape cancels
 - anchors: a screen container sits at its stored point on UIParent, sized to one element
-- anchors: a container attaches to its target's engine frame at the stored point, or to its anchor before it has one
+- anchors: a container attaches to its target's engine frame at the derived points, or to its anchor before it has one
 - anchors: a container never attaches to itself or to one that does not exist
 - anchors: a frame target takes the stored attach point, relative point and offsets
 - anchors: a frame that refuses the anchor falls back to the screen, cleanly re-placed
@@ -379,6 +379,21 @@ badge and any count quoted in the docs must agree with it.
 - handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
 - handle: the strip sits fifty levels above its anchor, over the container's elements
 - handle: a left click on the strip opens nothing; a right click opens this container's settings
+- anchors: derived points continue a vertical/right/down parent
+- anchors: derived points continue a vertical/left/down parent
+- anchors: derived points continue a vertical/right/up parent
+- anchors: derived points continue a vertical/left/up parent
+- anchors: derived points continue a horizontal/right/down parent
+- anchors: derived points continue a horizontal/right/up parent
+- anchors: derived points continue a horizontal/left/down parent
+- anchors: derived points continue a horizontal/left/up parent
+- anchors: an attached container flows as its parent does, and its own flow stays stored
+- anchors: a chain inherits its root's flow; a broken or looping chain stops where it breaks
+- anchors: a container attached to another takes derived points from the parent's flow
+- anchors: a frame-attached container keeps its stored points
+- anchors: the engine's flow, the placeholders and the handle all read the inherited flow
+- anchors: detaching a container restores its own stored flow at the next apply
+- anchors: a write that moves a container's flow re-applies every container following it
 
 ### test_style.lua (40)
 
@@ -761,7 +776,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: an Overrides name the game cannot find adds nothing and says why on the add line
 - filters: every tab opens with what the engine will not honor here, in orange
 
-### test_pages_layout.lua (18)
+### test_pages_layout.lua (22)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
 - layout: the Anchor tab is broken into Screen, Another container, Named frame and Offset
@@ -781,6 +796,10 @@ badge and any count quoted in the docs must agree with it.
 - layout: the Mouse tab's rows write the selected container's behavior
 - layout: Defaults restores the selected container's placement and arrangement, and not its look
 - layout: after the banner moves, the page draws the newly selected container's values
+- layout: an attached container's Fill and growth are dimmed and show its parent's
+- layout: a screen or frame container's growth rows are its own and live, with no follow line
+- layout: the follow line is drawn on the Growth tab only
+- layout: Another container names the derived points and the container it is attached to
 
 ### test_pages_bars.lua (10)
 
@@ -927,7 +946,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 44 |
+| test_anchors.lua | 59 |
 | test_style.lua | 40 |
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 46 |
@@ -942,7 +961,7 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 46 |
 | test_pages_filters.lua | 14 |
-| test_pages_layout.lua | 18 |
+| test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 10 |
 | test_pages_icons.lua | 7 |
 | test_pages_about.lua | 3 |
@@ -958,4 +977,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **772** |
+| **Total** | **791** |

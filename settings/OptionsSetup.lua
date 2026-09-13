@@ -27,6 +27,20 @@ end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
 
+--- What the PANEL shows for `path`. A row may carry `panelGet()`, answering the value to show in
+--- place of the stored one, or nil to show what is stored: Layout's Fill and growth rows show the
+--- flow an attached container inherits (L-6). Only the panel reads through here — /am get
+--- (settings/Slash.lua's own descriptor) and every module read the store — so what is written and
+--- what a detach restores stay the container's own.
+local function panelRead(path)
+    local row = NS.FindSchemaRow(path)
+    if row and row.panelGet then
+        local shown = row.panelGet()
+        if shown ~= nil then return shown end
+    end
+    return NS.GetSetting(path)
+end
+
 local descriptor = {
     parentTitle   = PARENT_TITLE,
     mainPanelName = "AuraMasterMainPanel",
@@ -34,7 +48,7 @@ local descriptor = {
     print = function(line) print(line) end,
     debug = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,
 
-    get          = function(path) return NS.GetSetting(path) end,
+    get          = panelRead,
     set          = function(path, value) NS.SetByPath(path, value) end,
     applyDefault = function(row) NS.ApplyDefault(row) end,
     allRows      = function() return NS.Schema end,

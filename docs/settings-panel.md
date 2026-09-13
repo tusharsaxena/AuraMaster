@@ -195,7 +195,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | Used in screen mode; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | Corner of this container / of the frame |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
@@ -211,6 +211,25 @@ mode, because a pick sets the mode to Named frame itself.
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow
 vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40), Line spacing
 `container.layout.lineSpacing` (0–40).
+
+**Inherited flow (L-6).** A container attached to another container continues that container's
+flow. Its fill axis and both growth directions are its chain root's, resolved up the chain by
+`Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points come from
+`Anchors.DerivedPoints`: a column parent stacks the child below it (above, when growing up), and a
+row parent puts it beside it. `container.attach.point` / `.relativePoint` are read only in `frame`
+mode; the offsets apply in both attached modes. `Container.FlowSettings`, `Preview.Offset` and the
+handle's placement and clamp all read the effective layout. A write that moves a container's flow or
+attachment re-applies every container following it (`Anchors.Followers`). On this tab, in that mode,
+Fill, Grow horizontally and Grow vertically are dimmed and show the inherited values. They do that
+through a row `panelGet` that only the panel descriptor reads; `/am get` and every module read the
+stored values. The line "Fill and growth follow '*root*'" sits above them. Per row, Spacing and Line
+spacing stay the container's own and stay live. The stored flow is never written, so a detach
+restores it at the next apply. A container attached to a missing or looping target sits on the
+screen and keeps its own flow.
+
+**Frame and Mouse inherit nothing.** That was audited, not assumed: scale, opacity, strata and frame
+level are applied to the container's own anchor in `ContainerClass:Apply` / `ApplyVisibility`, and
+the Mouse rows are read per element by the stylers. Neither reads the chain.
 
 **Mouse** — Show tooltips `container.behavior.tooltips`, Tooltips in combat
 `container.behavior.tooltipInCombat`, Tooltip position `container.behavior.tooltipAnchor`,

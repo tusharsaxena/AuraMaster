@@ -303,3 +303,95 @@ test("layout: after the banner moves, the page draws the newly selected containe
     assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Frame"], "the tab survives the switch")
     assertEqual(P.row(ws, "container.layout.scale").value, 1.5)
 end)
+
+-- ── inherited flow (L-6) ──────────────────────────────────────────────────────────────────────
+
+--- Container 2 attached to container 1, whose flow (columns growing right and up) differs from 2's
+--- own (rows growing left and down) on every inherited row; 2 selected and the Layout page drawn.
+local function attachedChild()
+    local NS, m, P = layout()
+    NS.SetByPath("container.layout.growV", "up", 1)
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.Helpers.SelectContainer(2)
+    P.show("Layout")
+    return NS, m, P
+end
+
+local INHERITED = { axis = "vertical", growH = "right", growV = "up" }
+
+test("layout: an attached container's Fill and growth are dimmed and show its parent's", function()
+    local NS, _, P = attachedChild()
+    local ws = P.tab("layout", NS.L["Growth"])
+    for key, want in pairs(INHERITED) do
+        local w = P.row(ws, "container.layout." .. key)
+        -- red under: the inherited rows without their disabledIf
+        assertTrue(w.disabled, key .. " is dimmed")
+        -- red under: the panel descriptor reading the stored value instead of the row's panelGet
+        assertEqual(w.value, want, key .. " shows the parent's value")
+    end
+    for _, key in ipairs({ "perLine", "spacing", "lineSpacing" }) do
+        -- red under: dimming every Growth row (per row and spacing stay the child's own)
+        assertFalse(P.row(ws, "container.layout." .. key).disabled and true or false, key .. " stays live")
+    end
+    -- red under: the Growth tab without its follow line
+    assertTrue(P.hasText(ws, NS.L["Fill and growth follow '%s'"]:format("Player buffs")), "the follow line")
+    -- red under: panelGet reached by every reader (/am get and the apply path read what is stored)
+    assertEqual(NS.GetSetting("container.layout.axis"), "horizontal")
+    assertEqual(NS.Database.FindContainer(2).layout.growH, "left")
+end)
+
+test("layout: a screen or frame container's growth rows are its own and live, with no follow line", function()
+    for _, mode in ipairs({ "screen", "frame" }) do
+        local NS, _, P = attachedChild()
+        NS.SetByPath("container.attach.mode", mode, 2)
+        P.show("Layout")
+        local ws = P.tab("layout", NS.L["Growth"])
+        local axis = P.row(ws, "container.layout.axis")
+        -- red under: the inherited-row predicate dimming every attached mode
+        assertFalse(axis.disabled and true or false, mode .. ": Fill is live")
+        assertEqual(axis.value, "horizontal", mode .. ": 2's own rows")
+        assertFalse(P.hasText(ws, NS.L["Fill and growth follow '%s'"]:format("Player buffs")), mode .. ": no line")
+    end
+end)
+
+test("layout: the follow line is drawn on the Growth tab only", function()
+    local NS, _, P = attachedChild()
+    local line = NS.L["Fill and growth follow '%s'"]:format("Player buffs")
+    for _, key in ipairs({ NS.L["Frame"], NS.L["Anchor"], NS.L["Mouse"] }) do
+        local ws = (NS.Helpers.__pageCtx.layout.activeTab == key) and P.rerender("Layout") or P.tab("layout", key)
+        assertTrue(#ws > 0, key .. " drew")
+        -- red under: the intro drawn above every tab
+        assertFalse(P.hasText(ws, line), key .. " carries no follow line")
+    end
+    assertTrue(P.hasText(P.tab("layout", NS.L["Growth"]), line), "Growth does")
+end)
+
+test("layout: Another container names the derived points and the container it is attached to", function()
+    local NS, m, P = attachedChild()
+    -- layout() opened the Anchor tab and the show kept it, and a click on the active tab draws
+    -- nothing: draw it again instead.
+    assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Anchor"])
+    local ws = P.rerender("Layout")
+    assertTrue(#ws > 0, "the Anchor tab drew")
+    local PL = NS.Constants.POINT_LABELS
+    local want = NS.L["Attached by its %s to the %s of '%s'"]
+    -- 1 fills columns growing right and up: 2 sits on top of it.
+    -- red under: the Container dropdown without its pairWith line
+    assertTrue(P.hasText(ws, want:format(PL.BOTTOMLEFT, PL.TOPLEFT, "Player buffs")), "the derived line")
+    m.__subcategories.Layout:Show()   -- a hidden kit panel only marks itself dirty
+    -- Run any refresh the setup queued now, so the only one left to run is the target row's own.
+    local settled = P.during(function() m.__fireTimers() end)
+    local settledCount = #settled
+    local dd = targetDropdown(NS, P, (settledCount > 0) and settled or ws)
+    dd:__fire("OnValueChanged", 3)
+    -- red under: the target row without its structural onChange (the line would name the old target)
+    local redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(P.hasText(redrawn, want:format(PL.TOPLEFT, PL.TOPRIGHT, "Target debuffs (mine)")),
+        "3 fills rows growing right and down: 2 continues beside it")
+    NS.SetByPath("container.attach.mode", "frame", 2)
+    ws = P.during(function() NS.Helpers.RefreshAllPanels() end)
+    assertTrue(#ws > 0, "the open page drew again")
+    -- red under: the line drawn for a container that follows nothing
+    assertFalse(P.hasText(ws, "Target debuffs (mine)"), "no line outside container mode")
+end)

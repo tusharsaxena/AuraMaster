@@ -40,6 +40,23 @@ end
 local SCREEN_ONLY, CONTAINER_ONLY, FRAME_ONLY = onlyIn("screen"), onlyIn("container"), onlyIn("frame")
 local ATTACHED_ONLY = onlyIn("container", "frame")
 
+--- A `disabledIf` predicate: the selected container follows another container's flow (L-6), so its
+--- Fill and growth rows are dimmed. Only while the attachment is usable: a container set to follow
+--- one it cannot (missing, a loop) sits on the screen with its own flow, and its rows stay live.
+local function inherits()
+    return NS.Anchors.FlowRoot(NS.ActiveContainer()) ~= nil
+end
+
+--- A Growth row's `panelGet` (settings/OptionsSetup.lua): the inherited value of layout `key` while
+--- the selected container follows another, else nil, which shows the stored value. The row keeps its
+--- path, so a write, /am get and a detach all use the container's own.
+local function inherited(key)
+    return function()
+        local root = NS.Anchors.FlowRoot(NS.ActiveContainer())
+        return root and root.layout and root.layout[key] or nil
+    end
+end
+
 --- The containers the active one may attach to: every other one, plus "None".
 local function attachTargets()
     local _, activeId = NS.ActiveContainer()
@@ -99,7 +116,9 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
         disabledIf = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
-        desc = L["The container to attach to when 'Another container' is chosen. A chain that would loop falls back to the screen."],
+        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, and the attachment points are set for you. A chain that would loop falls back to the screen."],
+        -- Structural: the attachment line beside it (attachedLine) names the target.
+        onChange = structural,
         -- `fromId` is the container the write targets, resolved by the seam: the id a caller names,
         -- else the selected container. A loop is checked from there, never from the selection.
         validate = function(v, fromId)
@@ -133,10 +152,13 @@ NS.RegisterSchemaRows({
         label = L["Y offset"], desc = L["Vertical offset from the attachment point, in pixels."],
     },
 
+    -- Fill and both growth rows are dimmed, showing the inherited values, while the container follows
+    -- another's flow (L-6); per row, spacing and line spacing stay its own and stay live.
     {
         path = "container.layout.axis", page = PAGE, group = G_GROW, type = "string",
         values = NS.Choices(C.AXES, C.AXIS_LABELS), label = L["Fill"],
         desc = L["Lay auras out in rows or in columns. Bars usually stack in a column."],
+        disabledIf = inherits, panelGet = inherited("axis"),
     },
     {
         path = "container.layout.perLine", page = PAGE, group = G_GROW, type = "number", min = 0, max = 40, step = 1,
@@ -147,11 +169,13 @@ NS.RegisterSchemaRows({
         path = "container.layout.growH", page = PAGE, group = G_GROW, type = "string",
         values = NS.Choices(C.GROW_H, C.GROW_H_LABELS), label = L["Grow horizontally"],
         desc = L["Which way new auras are added across."],
+        disabledIf = inherits, panelGet = inherited("growH"),
     },
     {
         path = "container.layout.growV", page = PAGE, group = G_GROW, type = "string",
         values = NS.Choices(C.GROW_V, C.GROW_V_LABELS), label = L["Grow vertically"],
         desc = L["Which way new auras are added down or up."],
+        disabledIf = inherits, panelGet = inherited("growV"),
     },
     {
         path = "container.layout.spacing", page = PAGE, group = G_GROW, type = "number", min = 0, max = 40, step = 1,
@@ -219,6 +243,44 @@ local function pickButton(_, line)
     return btn
 end
 
+-- ---------------------------------------------------------------------------
+-- Inherited flow (L-6)
+-- ---------------------------------------------------------------------------
+
+--- Where the selected container is attached, in words, while it follows another container: the
+--- derived points and the target's name. Empty in any other case (the line is still drawn, so the
+--- dropdown keeps its half).
+local function attachedText()
+    local cfg = NS.ActiveContainer()
+    if not NS.Anchors.FlowRoot(cfg) then return "" end
+    local target = NS.Database.FindContainer(tonumber(cfg.attach.container))
+    local point, relativePoint = NS.Anchors.DerivedPoints(NS.Anchors.EffectiveLayout(cfg))
+    return L["Attached by its %s to the %s of '%s'"]:format(L[C.POINT_LABELS[point]],
+        L[C.POINT_LABELS[relativePoint]], tostring(target and target.name))
+end
+
+--- The Container dropdown's right half (pairWith): the read-only attachment line. The points are
+--- derived from the parent's flow, never stored, so there is nothing to edit.
+local function attachedLine(_, line)
+    local label = NS.AceGUI:Create("Label")
+    label:SetRelativeWidth(0.5)
+    label:SetText(attachedText())
+    line:AddChild(label)
+    return label
+end
+
+--- Above the Growth tab of a container that follows another: whose flow it follows. Named by the
+--- chain root, because that is where the values come from.
+local function growthIntro(ctx, cfg)
+    if ctx.activeTab ~= G_GROW then return end
+    local root = NS.Anchors.FlowRoot(cfg)
+    if root then H.TextRow(ctx, L["Fill and growth follow '%s'"]:format(tostring(root.name))) end
+end
+
 NS.RegisterContainerPage(PAGE, L["Layout"], "AuraMasterLayoutPanel", {
-    pairWith = { ["container.attach.frame"] = pickButton },
+    intro = growthIntro,
+    pairWith = {
+        ["container.attach.container"] = attachedLine,
+        ["container.attach.frame"] = pickButton,
+    },
 })

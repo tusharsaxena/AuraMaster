@@ -75,9 +75,11 @@ local function maxLineSize(perLine, elementSize, spacing)
 end
 
 --- The engine's flow-layout settings for `cfg`, as plain values (a test seam as much as a helper).
+--- The axis and growth are the EFFECTIVE ones: a container attached to another continues its chain
+--- root's flow (Anchors.EffectiveLayout, L-6). The per-line count and spacing are always its own.
 --- @return table { axis, anchorPoint, growH, growV, maxLineSize }
 function NS.Container.FlowSettings(cfg)
-    local L = cfg.layout or {}
+    local L = NS.Anchors.EffectiveLayout(cfg) or {}
     local w, h = NS.Style.ElementSize(cfg)
     local vertical = (L.axis == "vertical")
     local growH, growV = growthOf(L)

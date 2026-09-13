@@ -18,11 +18,12 @@ local Preview = NS.Preview
 local C = NS.Constants
 
 --- Where preview element `index` (1-based) sits relative to the anchor, for `cfg`'s flow settings.
---- Pure arithmetic, so the layout rules are testable headlessly.
+--- Pure arithmetic, so the layout rules are testable headlessly. The axis and growth are the
+--- effective ones, inherited by a container attached to another (Anchors.EffectiveLayout, L-6).
 --- @return string point, number x, number y
 function Preview.Offset(cfg, index)
     local w, h = NS.Style.ElementSize(cfg)
-    local L = cfg.layout or {}
+    local L = NS.Anchors.EffectiveLayout(cfg) or {}
     local spacing, lineSpacing = tonumber(L.spacing) or 0, tonumber(L.lineSpacing) or 0
     local perLine = tonumber(L.perLine) or 0
     local vertical = (L.axis == "vertical")

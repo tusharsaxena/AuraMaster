@@ -501,6 +501,13 @@ end
 
 local ev
 
+--- A write that moves a container's flow or its attachment moves every container following it too
+--- (L-6): they continue its flow and anchor at points derived from it, so each is re-applied.
+local function requestFollowers(p)
+    if not (p.containerId and NS.Anchors.MovesFollowers(p.path)) then return end
+    for _, id in ipairs(NS.Anchors.Followers(p.containerId)) do CM.RequestApply(id) end
+end
+
 --- Build every container and start listening. Called once from core/AuraMaster.lua's OnEnable.
 function CM.Init()
     if not NS.Compat.EnsureAuraContainer() then
@@ -515,7 +522,10 @@ function CM.Init()
             local row = p.path and NS.FindSchemaRow(p.path)
             local effect = row and row.effect
             if effect == "visibility" then CM.ApplyVisibility()
-            elseif effect ~= "none" then CM.RequestApply(p.containerId) end
+            elseif effect ~= "none" then
+                CM.RequestApply(p.containerId)
+                requestFollowers(p)
+            end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)
         -- The learned timed-spell set changed: every container's excluded ids may have moved. A
