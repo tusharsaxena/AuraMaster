@@ -71,8 +71,8 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | R0 engine research | B-3 B-4 G-3 I-1 I-2 L-3 | AM | done | 370d5c0 | notes file |
 | A1 disabledIf + page disable | X-3 | LibKa0s | done | c64e5ee | nested renders inherit; rows w/o disabledIf untouched |
 | A2 ChoiceGrid | X-2 | LibKa0s | done | 54ac640 07704ad | spec.disabled added; review fix 07704ad |
-| A3 IdInput / IdList | X-1 | LibKa0s | in progress | | blocked by a duplicate-agent collision; green result salvaged from scratchpad/a3-snapshot-idactionrel, landing in run 2 |
-| A4 release v1.35.0 (local tag) | X-4 | LibKa0s | todo | | **CP-A** |
+| A3 IdInput / IdList | X-1 | LibKa0s | done | a833a4c | landed from the salvaged run; kit 20 opt-in mock_ids.lua |
+| A4 release v1.35.0 (local tag) | X-4 | LibKa0s | done | 07e55cd 98eddd3 | Options 18.16.5.3 (W16), kit 20; local tag v1.35.0 on 98eddd3, NOT pushed; **CP-A reached** |
 | B1 preview style switch | C-4 | AM | done | 1020798 | Style.RegionsFor + per-style preview pools |
 | B2 apply error isolation | B-5 | AM | done | 6e9739c | xpcall + Style.WithStack, geterrorhandler |
 | B3 justify width | B-5 | AM | done | c138d55 | ApplyText boxWidth; bar time unboxed while name stops at it |
@@ -98,7 +98,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | H1 adversarial review + fixes | all | all | todo | | |
 | H2 final battery + report | all | all | todo | | **CP-H** |
 
-Workflow runs: `wf_0af661b7-6d2` (phases A1-A2, R0, B1-B7; A3 blocked by a duplicate-agent collision) · run 2 (A3 land, A4, C-G) recorded below when started
+Workflow runs: `wf_0af661b7-6d2` (A1-A2, R0, B1-B7) · `wf_8e85fdd5-5fa` (A3, A4, C1, C2; D+ and G not reached because of a script matcher bug) · run 3 (D1-F2, G1-G3)
 
 **Dependency order:**
 - R0, A* and B1–B3 can run concurrently (different repos, or independent files).
