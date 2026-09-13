@@ -86,7 +86,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | D2 General → Containers; retire page | G-1 C-3 D1 | AM | done | bbdf178, fixes d7600d9 38747fe 6d87ee8 | picker + New in the tab body; RenderTabbedPage; container.name noReset; D1 deviation row. Review fixes: lint gate red at bbdf178 (length operator on an if line) restored; C-3 and OpenOptionsPage tests strengthened; Reset all out of noReset scope recorded in settings-panel.md |
 | D3 Spell Categories + Dispel Colors | G-2 G-3 | AM | done | e697a4f, e20a014 | IdList over profile categorySpells; dispel rows on General; Filters Spell lists tab gone; bespoke tab `before` |
 | D4 Filters grid + Overrides | F-1 F-3 | AM | done | fe556b2 | ChoiceGrid per grid key on a bespoke Categories tab; Overrides IdLists; /am get prints labels via Slash format hook |
-| D5 Layout tabs, subsections, dimming | L-1 L-2 L-5 | AM | todo | | |
+| D5 Layout tabs, subsections, dimming | L-1 L-2 L-5 | AM | done | 1514e59 | onlyIn(mode) disabledIf per subsection; Pick via pairWith (spec.pairWith plumbed); test_schema disabledIf ban scoped to color rows |
 | D6 Bars Icon tab, wrong-style, spark | B-1 B-2 B-3 B-6 | AM | todo | | **CP-D** |
 | E1 inherited flow + derived points | L-6 | AM | todo | | |
 | E2 attached handle in preview | L-4 | AM | todo | | **CP-E** |
