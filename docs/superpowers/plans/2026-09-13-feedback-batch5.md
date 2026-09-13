@@ -89,7 +89,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | D5 Layout tabs, subsections, dimming | L-1 L-2 L-5 | AM | done | 1514e59 | onlyIn(mode) disabledIf per subsection; Pick via pairWith (spec.pairWith plumbed); test_schema disabledIf ban scoped to color rows |
 | D6 Bars Icon tab, wrong-style, spark | B-1 B-2 B-3 B-6 | AM | done | 8174c2e | Icon tab + iconBorder* block; spec.disabledFor/disabledNotice page disable; sparkTimeless by clip frame (option 2, in-game check smoke 26); **CP-D reached** |
 | E1 inherited flow + derived points | L-6 | AM | done | bcc54f3 | EffectiveLayout/DerivedPoints/Followers; Growth rows dimmed via panel-only row panelGet |
-| E2 attached handle in preview | L-4 | AM | todo | | **CP-E** |
+| E2 attached handle in preview | L-4 | AM | done | a27d172 | Preview.Extent + Anchors.PlaceAttached; strip level set per placement; **CP-E reached** |
 | F1 render coverage test | B-5 | AM | todo | | |
 | F2 docs | §9 | AM | todo | | **CP-F** |
 | G1 ConsumableMaster IdInput | X-4 | CM | todo | | needs CP-A |
