@@ -44,7 +44,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and calls initializeFrame for each new one
         ▼
  6  Style.Element(button, cfg, true)                           modules/Style.lua:331
-        │  build the regions once (icon, bar, fill, spark, text, border, pandemic wash)
+        │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
         │  SetCancelAuraButtons, tooltip options

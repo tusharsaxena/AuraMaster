@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 193 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 199 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -13,7 +13,7 @@ is a defect in this doc (documentation-§3).
 | General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration, weapon enchants; the Default / Whitelist / Blacklist category grids; sort order and cap; the whitelist and blacklist spell lists. Tabs vary with the aura type |
 | Layout | Frame · Anchor · Growth · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
-| Bars | Size · Bar · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
+| Bars | Size · Bar · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
@@ -217,14 +217,17 @@ vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40)
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (65 rows, `settings/Bars.lua`)
+### Bars (71 rows, `settings/Bars.lua`)
 
-A notice in orange heads every tab when the selected container is drawn as icons.
+When the selected container is drawn as icons, a large orange notice heads every tab, naming
+General → Containers, and every control below it is drawn disabled (the spec's `disabledFor`,
+`settings/OptionsSetup.lua`'s renderActiveTab). The tabs and the container picker stay live.
 
 | Tab | Rows (all under `container.bars.`) |
 |---|---|
-| Size (6) | `width` 40–600, `height` 6–80; *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3 |
-| Bar (11) | *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark` |
+| Size (2) | `width` 40–600, `height` 6–80 |
+| Bar (12) | *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark`, `sparkTimeless` (show the spark on auras without a duration) |
+| Icon (9) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` / `iconBorderColor` · `useClassColorIconBorder` |
 | Background & border (9) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
@@ -232,7 +235,9 @@ A notice in orange heads every tab when the selected container is drawn as icons
 | Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:108`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:168`);
+`sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
+(docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
 as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
@@ -247,7 +252,8 @@ background texture, and `bgColor`'s own alpha still applies, so the default look
 
 ### Icons (42 rows, `settings/Icons.lua`)
 
-A notice in orange heads every tab when the selected container is drawn as bars.
+When the selected container is drawn as bars, a large orange notice heads every tab and every
+control is drawn disabled, as on the Bars page.
 
 | Tab | Rows (all under `container.icons.`) |
 |---|---|

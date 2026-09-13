@@ -116,8 +116,22 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:108`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:168`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
+
+## Nothing tells a region whether an aura has a duration
+
+**The restriction.** No binding shows or hides an arbitrary region by whether the aura has a
+duration, and the duration itself is secret, so Lua cannot test it. `SetDurationBar` neither hides
+nor resets the bar for a permanent aura.
+
+**What this addon does.** With Bars → Bar → **Show the spark on auras without a duration** off, a
+live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:149`).
+A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
+timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
+leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
+preview reads its placeholders' durations and hides the spark directly.
 
 ## Additive bindings stack
 
@@ -125,7 +139,7 @@ TinyBuffBars' (MIT).
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:156`), and then adds again
-(`modules/Style_Bars.lua:198`, `modules/Style_Icons.lua:108`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:256`, `modules/Style_Icons.lua:108`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same

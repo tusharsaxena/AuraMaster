@@ -36,6 +36,8 @@ local function build(frame)
     am.border:SetAllPoints(frame)
 
     am.icon = frame:CreateTexture(nil, "ARTWORK")
+    -- The icon's own border, around the icon's box; the art is inset inside it (layoutIcon).
+    am.iconBorder = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     am.bg = frame:CreateTexture(nil, "BACKGROUND")
 
     -- The engine's StatusBar, invisible on purpose (see the file header).
@@ -45,7 +47,10 @@ local function build(frame)
     am.bar:SetMinMaxValues(0, 1)
 
     am.fill = am.bar:CreateTexture(nil, "ARTWORK")
-    am.spark = am.bar:CreateTexture(nil, "OVERLAY")
+    -- The spark lives on a frame of its own, which clips it when a timeless aura must not show one
+    -- (wireSpark).
+    am.sparkClip = CreateFrame("Frame", nil, am.bar)
+    am.spark = am.sparkClip:CreateTexture(nil, "OVERLAY")
     am.spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
     am.spark:SetBlendMode("ADD")
 
@@ -53,6 +58,12 @@ local function build(frame)
     -- alpha set on the bar.
     am.text = CreateFrame("Frame", nil, frame)
     am.text:SetAllPoints(frame)
+
+    -- Sibling frames made at one level stack in no promised order, so set it: the spark's frame over
+    -- the bar, the texts over the spark. Once, here, where every level is a fresh frame's own.
+    local level = am.bar:GetFrameLevel()
+    am.sparkClip:SetFrameLevel(level + 1)
+    am.text:SetFrameLevel(level + 2)
     am.name = am.text:CreateFontString(nil, "OVERLAY")
     am.time = am.text:CreateFontString(nil, "OVERLAY")
     am.stacks = am.text:CreateFontString(nil, "OVERLAY")
@@ -73,6 +84,32 @@ local function iconSizeFor(b, h)
     return size > 0 and size or h
 end
 
+--- The icon border's thickness when it draws, else 0: how far the art is inset inside the icon's box.
+local function iconInset(b)
+    if not Style.OrTemplate(b.iconBorderShow, D.bars.iconBorderShow) then return 0 end
+    if Style.OrTemplate(b.iconBorderStyle, D.bars.iconBorderStyle) == "None" then return 0 end
+    return tonumber(b.iconBorderSize) or D.bars.iconBorderSize
+end
+
+--- Place the icon's `size` box at `side` of the element: the icon border takes the whole box and the
+--- art sits inside it, inset by the border's thickness, as modules/Style_Icons.lua's layoutIcon does,
+--- so a thick border never hides the art.
+local function layoutIcon(frame, am, b, side, size)
+    local inset = iconInset(b)
+    am.iconBorder:ClearAllPoints()
+    am.iconBorder:SetSize(size, size)
+    am.iconBorder:SetPoint(side, frame, side, 0, 0)
+    Style.ApplyBorder(am.iconBorder, inset > 0, Style.OrTemplate(b.iconBorderStyle, D.bars.iconBorderStyle), inset,
+        b.iconBorderColor or D.bars.iconBorderColor, b.useClassColorIconBorder)
+
+    local art = math.max(0, size - 2 * inset)
+    am.icon:Show()
+    am.icon:SetSize(art, art)
+    am.icon:SetPoint(side, frame, side, side == "RIGHT" and -inset or inset, 0)
+    local z = tonumber(b.iconZoom) or D.bars.iconZoom
+    am.icon:SetTexCoord(z, 1 - z, z, 1 - z)
+end
+
 --- Lay the icon and the bar area out inside the element.
 local function layout(frame, am, b, h)
     local iconPos = b.icon or D.bars.icon
@@ -85,43 +122,64 @@ local function layout(frame, am, b, h)
 
     if iconPos == "NONE" then
         am.icon:Hide()
+        am.iconBorder:Hide()
         am.bar:SetAllPoints(frame)
+    elseif iconPos == "RIGHT" then
+        layoutIcon(frame, am, b, "RIGHT", iconSize)
+        am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+        am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(iconSize + gap), 0)
     else
-        am.icon:Show()
-        am.icon:SetSize(iconSize, iconSize)
-        if iconPos == "RIGHT" then
-            am.icon:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
-            am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-            am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(iconSize + gap), 0)
-        else
-            am.icon:SetPoint("LEFT", frame, "LEFT", 0, 0)
-            am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", iconSize + gap, 0)
-            am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-        end
-        local z = tonumber(b.iconZoom) or D.bars.iconZoom
-        am.icon:SetTexCoord(z, 1 - z, z, 1 - z)
+        layoutIcon(frame, am, b, "LEFT", iconSize)
+        am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", iconSize + gap, 0)
+        am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     end
     am.bg:SetAllPoints(am.bar)
 end
 
+--- Where the spark rides (B-3). By default: centered on the fill's moving edge, nothing clipped.
+---
+--- With `sparkTimeless` off on a LIVE bar it rides a clip frame bounded by the ELAPSED region — the
+--- engine's status-bar texture — and sits wholly on that side of the edge. A timeless aura has zero
+--- elapsed, so the clip frame has no width and the spark is clipped away; a timed bar's spark sits
+--- just inside its moving edge. Geometry decides because nothing else can: no engine binding shows a
+--- region by whether the aura has a duration, and Lua cannot read a secret one
+--- (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q5, whose in-game checks this rests
+--- on). The clip frame reaches half the bar's height past each edge, so the double-height spark is
+--- not cut. A preview has no timer driving that region; FillPreview hides a timeless spark itself.
+local function wireSpark(am, b, edge, engine, h)
+    local clip = am.sparkClip
+    local right = b.drain == "right"
+    clip:ClearAllPoints()
+    am.spark:ClearAllPoints()
+    if engine and not Style.OrTemplate(b.sparkTimeless, D.bars.sparkTimeless) then
+        clip:SetPoint("TOPLEFT", edge, "TOPLEFT", 0, h / 2)
+        clip:SetPoint("BOTTOMRIGHT", edge, "BOTTOMRIGHT", 0, -h / 2)
+        clip:SetClipsChildren(true)
+        local side = right and "RIGHT" or "LEFT"
+        am.spark:SetPoint(side, edge, side, 0, 0)
+    else
+        clip:SetAllPoints(am.bar)
+        clip:SetClipsChildren(false)
+        am.spark:SetPoint("CENTER", am.fill, right and "LEFT" or "RIGHT", 0, 0)
+    end
+end
+
 --- Point the fill and the spark at the status bar's moving edge, per drain direction.
-local function wireFill(am, b)
+local function wireFill(am, b, engine, h)
     local edge = am.bar:GetStatusBarTexture()
     am.fill:ClearAllPoints()
-    am.spark:ClearAllPoints()
     if b.drain == "right" then
         -- Elapsed grows from the LEFT; remaining is the part right of the texture's right edge.
         am.bar:SetReverseFill(false)
         am.fill:SetPoint("TOPLEFT", edge, "TOPRIGHT", 0, 0)
         am.fill:SetPoint("BOTTOMRIGHT", am.bar, "BOTTOMRIGHT", 0, 0)
-        am.spark:SetPoint("CENTER", am.fill, "LEFT", 0, 0)
     else
         -- Elapsed grows from the RIGHT; remaining is the part left of the texture's left edge.
         am.bar:SetReverseFill(true)
         am.fill:SetPoint("TOPLEFT", am.bar, "TOPLEFT", 0, 0)
         am.fill:SetPoint("BOTTOMRIGHT", edge, "BOTTOMLEFT", 0, 0)
-        am.spark:SetPoint("CENTER", am.fill, "RIGHT", 0, 0)
     end
+    wireSpark(am, b, edge, engine, h)
 end
 
 --- Paint the fill and show it. A live dispel-colored fill takes the bar color here and the engine's
@@ -200,7 +258,7 @@ function Bars.Apply(frame, cfg, engine)
     frame:SetSize(w, h)
     layout(frame, am, b, h)
     applySurfaces(am, b, not engine)
-    wireFill(am, b)
+    wireFill(am, b, engine, h)
     am.spark:SetSize(tonumber(b.sparkWidth) or D.bars.sparkWidth, h * 2)
     applyTexts(am, b, w, h)
 
@@ -244,6 +302,13 @@ local function previewText(am, aura)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
 end
 
+--- Whether a placeholder's spark shows. Its duration is readable, so `sparkTimeless` is honored
+--- directly: a timeless placeholder shows none when the option is off.
+local function previewSparkShown(b, aura)
+    if b.spark == false then return false end
+    return aura.duration > 0 or Style.OrTemplate(b.sparkTimeless, D.bars.sparkTimeless) and true or false
+end
+
 --- Fill a PREVIEW element with placeholder values (modules/Preview.lua). The regions are ours, so
 --- this is ordinary drawing; the fraction stands in for what the engine's timer would show.
 function Bars.FillPreview(frame, aura, cfg)
@@ -263,4 +328,5 @@ function Bars.FillPreview(frame, aura, cfg)
     am.fill:SetWidth(math.max(1, barAreaWidth(b, w, h) * frac))
     am.spark:ClearAllPoints()
     am.spark:SetPoint("CENTER", am.fill, fromRight and "LEFT" or "RIGHT", 0, 0)
+    am.spark:SetShown(previewSparkShown(b, aura))
 end

@@ -445,7 +445,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (36)
+### test_style_bars.lua (46)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -455,6 +455,16 @@ badge and any count quoted in the docs must agree with it.
 - bars: draining left, the fill runs from the bar's start to the timer's edge and the spark rides its right end
 - bars: draining right, the fill runs from the timer's edge to the bar's end and the spark rides its left end
 - bars: the spark shows unless turned off, twice the bar's height, in its own width and color
+- bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region
+- bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge
+- bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered
+- bars: a missing timeless-spark setting reads the template's
+- bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it
+- bars: the texts sit above the spark's clip frame, which sits above the bar
+- bars: a shown icon border frames the icon's box and the art insets by its size
+- bars: a right-hand icon insets from the right edge
+- bars: an icon border turned off, styled None or with no icon draws nothing and insets nothing
+- bars: the icon border takes the class color through its own companion, and a missing size the template's
 - bars: class colors paint the fill, background, spark and border with the dress's class, keeping each alpha
 - bars: the class companions left off paint every surface its stored swatch
 - bars: a missing bar opacity paints the template's, never a number restated in the composer
@@ -664,7 +674,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 
-### test_options_descriptor.lua (17)
+### test_options_descriptor.lua (18)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -676,6 +686,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: General → Containers' picker is a plain dropdown in the tab body that selects
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
+- options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
 - options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
@@ -771,18 +782,24 @@ badge and any count quoted in the docs must agree with it.
 - layout: Defaults restores the selected container's placement and arrangement, and not its look
 - layout: after the banner moves, the page draws the newly selected container's values
 
-### test_pages_bars.lua (6)
+### test_pages_bars.lua (10)
 
 - bars: every tab of an icons container carries the orange notice; a bars container's carry none
-- bars: the seven tabs are drawn in order, whatever the container shows
+- bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
+- bars: the wrong-style notice is drawn large, then a spacer before the first control (B-2)
+- bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
+- bars: the Bar tab's Spark subsection turns the spark off on auras without a duration (B-3)
+- bars: the eight tabs are drawn in order, whatever the container shows
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
 - bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
-### test_pages_icons.lua (5)
+### test_pages_icons.lua (7)
 
 - icons: a bars container's tabs carry the orange notice; an icons container's carry none
+- icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
+- icons: the wrong-style notice is drawn large, then a spacer before the first control (B-2)
 - icons: the six tabs are drawn in order
 - icons: Width on the Icons page writes the icon width, never the bar width
 - icons: the Cooldown rows write the selected container's swipe
@@ -913,7 +930,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 44 |
 | test_style.lua | 40 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 36 |
+| test_style_bars.lua | 46 |
 | test_style_icons.lua | 23 |
 | test_preview.lua | 16 |
 | test_blizzardframes.lua | 8 |
@@ -922,12 +939,12 @@ badge and any count quoted in the docs must agree with it.
 | test_slash_verbs.lua | 36 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
-| test_options_descriptor.lua | 17 |
+| test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 46 |
 | test_pages_filters.lua | 14 |
 | test_pages_layout.lua | 18 |
-| test_pages_bars.lua | 6 |
-| test_pages_icons.lua | 5 |
+| test_pages_bars.lua | 10 |
+| test_pages_icons.lua | 7 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -941,4 +958,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **755** |
+| **Total** | **772** |

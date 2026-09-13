@@ -112,9 +112,12 @@ path, never to a number restated in `modules/`.
 | `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
 | `useClassColorBorder` | `false` | `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) |
 | `iconSize` | `0` (= bar height) | `iconGap` | `1` |
-| `iconZoom` | `0.08` | `spark` | `true` |
-| `sparkWidth` | `8` | `sparkColor` | `{ 1, 1, 1, 0.9 }` |
-| `useClassColorSpark` | `false` | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
+| `iconZoom` | `0.08` | `iconBorderShow` | `false` |
+| `iconBorderStyle` | `"Solid"` | `iconBorderSize` | `1` |
+| `iconBorderColor` | `{ 0, 0, 0, 1 }` | `useClassColorIconBorder` | `false` |
+| `spark` | `true` | `sparkWidth` | `8` |
+| `sparkColor` | `{ 1, 1, 1, 0.9 }` | `useClassColorSpark` | `false` |
+| `sparkTimeless` | `true` (`false`: no spark on an aura without a duration) | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
 | `time` | text block: size 11, `RIGHT`, x −4, y 0, justify `RIGHT` | `stacks` | text block: size 10, `BOTTOMRIGHT`, x −1, y 1, justify `RIGHT` |
 | `timeFormat` | `"blizzard"` (`blizzard`, `short`, `long`) | `expiringColorOn` | `false` |
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |

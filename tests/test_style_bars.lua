@@ -130,6 +130,154 @@ test("bars: the spark shows unless turned off, twice the bar's height, in its ow
     assertEqual(am.spark:__last("SetSize")[1], D.bars.sparkWidth, "a missing width is the template's")
 end)
 
+-- ── spark on timeless auras (B-3) ─────────────────────────────────────────────────────────────
+
+--- A fresh environment whose template holds `value` at bars.<key>, for a fallback case: the shared
+--- environment's template is read by every suite, so a case moves one of its own.
+local function ownTemplate(key, value)
+    local ns = dofile("tests/fresh_env.lua")()
+    ns.CONTAINER_TEMPLATE.bars[key] = value
+    return ns
+end
+
+test("bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region", function()
+    local _, am = dressed(cfg({ bars = { height = 16, drain = "left", sparkTimeless = false } }), true)
+    local edge = am.bar:GetStatusBarTexture()
+    -- red under: the clip frame never clipping (a timeless bar's spark shows at the bar's end)
+    assertEqual(am.sparkClip:__joined("SetClipsChildren"), "true")
+    local pts = am.sparkClip:__calls("SetPoint")
+    -- red under: the clip frame bounded by the bar (no geometry ever hides the spark)
+    assertEqual(pts[1][1], "TOPLEFT"); assertTrue(pts[1][2] == edge); assertEqual(pts[1][3], "TOPLEFT")
+    assertEqual(pts[1][5], 8, "half a bar above, so the double-height spark is not cut")
+    assertEqual(pts[2][1], "BOTTOMRIGHT"); assertTrue(pts[2][2] == edge); assertEqual(pts[2][3], "BOTTOMRIGHT")
+    assertEqual(pts[2][5], -8)
+    local s = am.spark:__last("SetPoint")
+    -- red under: the spark left centered on the edge (half of it shows on a timeless bar)
+    assertEqual(s[1], "LEFT"); assertTrue(s[2] == edge); assertEqual(s[3], "LEFT")
+end)
+
+test("bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge", function()
+    local _, am = dressed(cfg({ bars = { drain = "right", sparkTimeless = false } }), true)
+    local edge = am.bar:GetStatusBarTexture()
+    local s = am.spark:__last("SetPoint")
+    -- red under: the clipped spark ignoring the drain (it would sit on the fill's side, clipped away)
+    assertEqual(s[1], "RIGHT"); assertTrue(s[2] == edge); assertEqual(s[3], "RIGHT")
+end)
+
+test("bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered", function()
+    local _, am = dressed(cfg({ bars = { sparkTimeless = true } }), true)
+    -- red under: clipping whatever the option (the default look would change)
+    assertEqual(am.sparkClip:__joined("SetClipsChildren"), "false")
+    local s = am.spark:__last("SetPoint")
+    assertEqual(s[1], "CENTER"); assertTrue(s[2] == am.fill)
+    _, am = dressed(cfg({ bars = { sparkTimeless = false } }), false)
+    -- red under: the preview clipping to an elapsed region no timer drives (every preview spark vanishes)
+    assertEqual(am.sparkClip:__joined("SetClipsChildren"), "false")
+end)
+
+test("bars: a missing timeless-spark setting reads the template's", function()
+    local ns = ownTemplate("sparkTimeless", false)
+    local c = cfg()
+    c.bars.sparkTimeless = nil
+    local _, am = dressed(c, true, nil, ns)
+    -- red under: wireSpark reading a missing sparkTimeless as off, or as on, instead of the template's
+    assertEqual(am.sparkClip:__joined("SetClipsChildren"), "true")
+end)
+
+test("bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it", function()
+    local timeless = { name = "Well Fed", icon = 1, remaining = 0, duration = 0, stacks = 0 }
+    local timed = { name = "X", icon = 1, remaining = 5, duration = 10, stacks = 0 }
+    local c = cfg({ bars = { sparkTimeless = false } })
+    local frame, am = dressed(c, false)
+    NS.Style.Bars.FillPreview(frame, timeless, c)
+    -- red under: FillPreview ignoring sparkTimeless
+    assertFalse(am.spark:IsShown())
+    NS.Style.Bars.FillPreview(frame, timed, c)
+    assertTrue(am.spark:IsShown(), "a timed aura's spark")
+    c.bars.sparkTimeless = true
+    NS.Style.Bars.FillPreview(frame, timeless, c)
+    assertTrue(am.spark:IsShown(), "on: today's look")
+    c.bars.spark = false
+    NS.Style.Bars.FillPreview(frame, timed, c)
+    -- red under: FillPreview showing a spark turned off
+    assertFalse(am.spark:IsShown())
+end)
+
+test("bars: the texts sit above the spark's clip frame, which sits above the bar", function()
+    local frame = R()
+    NS.Style.Element(frame, cfg(), false)
+    local am = frame.__am
+    -- red under: build leaving the frame levels to chance (the spark drawn over the name)
+    assertTrue(am.sparkClip:GetFrameLevel() > am.bar:GetFrameLevel(), "clip above the bar")
+    assertTrue(am.text:GetFrameLevel() > am.sparkClip:GetFrameLevel(), "texts above the spark")
+end)
+
+-- ── icon border (B-1) ─────────────────────────────────────────────────────────────────────────
+
+test("bars: a shown icon border frames the icon's box and the art insets by its size", function()
+    local frame, am = dressed(cfg({ bars = { height = 20, icon = "LEFT", iconSize = 0,
+        iconBorderShow = true, iconBorderStyle = "Solid", iconBorderSize = 3,
+        iconBorderColor = { r = 1, g = 0, b = 0, a = 1 } } }))
+    -- red under: nothing painting am.iconBorder (the icon-border rows reach no region)
+    assertTrue(am.iconBorder:IsShown())
+    local bd = am.iconBorder:__last("SetBackdrop")[1]
+    assertEqual(bd.edgeSize, 3)
+    assertEqual(bd.edgeFile, NS.Style.Fetch("border", "Solid", NS.Constants.FALLBACK_BORDER))
+    assertEqual(am.iconBorder:__joined("SetBackdropBorderColor"), "1,0,0,1")
+    assertEqual(am.iconBorder:__joined("SetSize"), "20,20", "the border takes the icon's whole box")
+    local b = am.iconBorder:__last("SetPoint")
+    assertEqual(b[1], "LEFT"); assertTrue(b[2] == frame)
+    -- red under: the art laid at the box's full size under a thick border
+    assertEqual(am.icon:__joined("SetSize"), "14,14")
+    local p = am.icon:__last("SetPoint")
+    assertEqual(p[1], "LEFT"); assertTrue(p[2] == frame); assertEqual(p[4], 3)
+    assertEqual(am.bar:__calls("SetPoint")[1][4], 20 + D.bars.iconGap, "the bar still starts after the whole box")
+end)
+
+test("bars: a right-hand icon insets from the right edge", function()
+    local frame, am = dressed(cfg({ bars = { icon = "RIGHT", iconSize = 24,
+        iconBorderShow = true, iconBorderStyle = "Solid", iconBorderSize = 2 } }))
+    local p = am.icon:__last("SetPoint")
+    -- red under: the inset applied toward the bar rather than inward from the element's edge
+    assertEqual(p[1], "RIGHT"); assertTrue(p[2] == frame); assertEqual(p[4], -2)
+    assertEqual(am.icon:__joined("SetSize"), "20,20")
+    assertEqual(am.iconBorder:__last("SetPoint")[1], "RIGHT")
+end)
+
+test("bars: an icon border turned off, styled None or with no icon draws nothing and insets nothing", function()
+    local _, am = dressed(cfg({ bars = { height = 20, iconSize = 0, iconBorderShow = false, iconBorderSize = 3 } }))
+    -- red under: the inset read from iconBorderSize alone
+    assertFalse(am.iconBorder:IsShown())
+    assertEqual(am.icon:__joined("SetSize"), "20,20")
+    _, am = dressed(cfg({ bars = { height = 20, iconSize = 0, iconBorderShow = true, iconBorderStyle = "None",
+        iconBorderSize = 3 } }))
+    assertFalse(am.iconBorder:IsShown(), "None")
+    assertEqual(am.icon:__joined("SetSize"), "20,20")
+    -- A restyle of one element from a bordered icon to none: a fresh recorder was never shown, so
+    -- only a border that WAS shown can prove the NONE branch hides it.
+    local frame
+    frame, am = dressed(cfg({ bars = { icon = "LEFT", iconBorderShow = true, iconBorderStyle = "Solid" } }))
+    assertTrue(am.iconBorder:IsShown(), "shown while there is an icon")
+    NS.Style.Element(frame, cfg({ bars = { icon = "NONE", iconBorderShow = true, iconBorderStyle = "Solid" } }))
+    assertTrue(frame.__am.iconBorder == am.iconBorder, "the same element, restyled")
+    -- red under: the NONE branch leaving a border around an icon that is not there
+    assertFalse(am.iconBorder:IsShown(), "no icon")
+end)
+
+test("bars: the icon border takes the class color through its own companion, and a missing size the template's", function()
+    local _, am = dressed(cfg({ bars = { iconBorderShow = true, iconBorderStyle = "Solid",
+        iconBorderColor = { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, useClassColorIconBorder = true,
+        useClassColorBorder = false } }), false, { r = 0.9, g = 0.8, b = 0.7 })
+    -- red under: the icon border reading the bar border's companion
+    assertEqual(am.iconBorder:__joined("SetBackdropBorderColor"), "0.9,0.8,0.7,0.5")
+    local ns = ownTemplate("iconBorderSize", 5)
+    local c = cfg({ bars = { iconBorderShow = true, iconBorderStyle = "Solid" } })
+    c.bars.iconBorderSize = nil
+    _, am = dressed(c, false, nil, ns)
+    -- red under: a missing iconBorderSize read as nothing (no border) or a literal
+    assertEqual(am.iconBorder:__last("SetBackdrop")[1].edgeSize, 5)
+end)
+
 -- ── surfaces ──────────────────────────────────────────────────────────────────────────────────
 
 test("bars: class colors paint the fill, background, spark and border with the dress's class, keeping each alpha", function()

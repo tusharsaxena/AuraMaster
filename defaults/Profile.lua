@@ -156,8 +156,11 @@ NS.CONTAINER_TEMPLATE = {
         borderColor = color(0, 0, 0, 1), useClassColorBorder = false,
 
         icon = "LEFT", iconSize = 0, iconGap = 1, iconZoom = 0.08,
+        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderSize = 1,
+        iconBorderColor = color(0, 0, 0, 1), useClassColorIconBorder = false,
 
         spark = true, sparkWidth = 8, sparkColor = color(1, 1, 1, 0.9), useClassColorSpark = false,
+        sparkTimeless = true,   -- false: no spark on an aura without a duration (modules/Style_Bars.lua)
 
         name   = text(true, 11, "LEFT", 4, 0, "LEFT"),
         time   = text(true, 11, "RIGHT", -4, 0, "RIGHT"),

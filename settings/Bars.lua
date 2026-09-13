@@ -3,7 +3,10 @@ local _, NS = ...
 -- settings/Bars.lua — how a container drawn as BARS looks (modules/Style_Bars.lua draws it).
 --
 --     band   [Container ▾]
---     [ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
+--     [ Size ][ Bar ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
+--
+-- A container drawn as icons sees every row here disabled, under a notice naming where its style is
+-- changed (B-2; settings/OptionsSetup.lua's renderActiveTab).
 --
 -- The font, border, bar and background blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
 -- with anything extra appended after the block — and every color row has its class-color companion
@@ -21,7 +24,7 @@ local PAGE = "bars"
 local P = "container.bars."
 local UNIT = { source = "unit" }
 
-local G_SIZE, G_BAR, G_BG = L["Size"], L["Bar"], L["Background & border"]
+local G_SIZE, G_BAR, G_ICON, G_BG = L["Size"], L["Bar"], L["Icon"], L["Background & border"]
 local G_NAME, G_TIME, G_STACK, G_HI = L["Name text"], L["Time text"], L["Stack text"], L["Highlights"]
 
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
@@ -34,15 +37,6 @@ NS.RegisterSchemaRows({
       label = L["Width (px)"], desc = L["The width of one bar, icon included."] },
     { path = P .. "height", page = PAGE, group = G_SIZE, type = "number", min = 6, max = 80, step = 1,
       label = L["Height (px)"], desc = L["The height of one bar."] },
-    { path = P .. "icon", page = PAGE, group = G_SIZE, subgroup = L["Icon"], type = "string",
-      values = NS.Choices(C.ICON_POSITIONS, C.ICON_POSITION_LABELS), label = L["Icon position"],
-      desc = L["Where the aura's icon sits, or hide it."] },
-    { path = P .. "iconSize", page = PAGE, group = G_SIZE, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
-      label = L["Icon size (0 = bar height)"], desc = L["A square icon this many pixels wide."] },
-    { path = P .. "iconGap", page = PAGE, group = G_SIZE, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
-      label = L["Icon gap (px)"], desc = L["Space between the icon and the bar."] },
-    { path = P .. "iconZoom", page = PAGE, group = G_SIZE, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
-      label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 
 -- ── Bar ───────────────────────────────────────────────────────────────────────────────────────
@@ -69,6 +63,38 @@ NS.RegisterSchemaRows(H.ColorPair({
     prefix = P, page = PAGE, group = G_BAR, subgroup = L["Spark"], key = "sparkColor",
     companionKey = "useClassColorSpark", label = L["Spark color"], classColor = UNIT,
 }))
+-- Off: a live bar's spark rides a clip frame bounded by the elapsed region, which a timeless aura
+-- leaves empty (modules/Style_Bars.lua's wireSpark).
+NS.RegisterSchemaRows({
+    { path = P .. "sparkTimeless", page = PAGE, group = G_BAR, subgroup = L["Spark"], type = "bool", startsLine = true,
+      label = L["Show the spark on auras without a duration"],
+      desc = L["A permanent aura's bar is full and never moves. Turn this off to hide its spark; a timed bar's spark then sits just inside its moving edge."] },
+})
+
+-- ── Icon ──────────────────────────────────────────────────────────────────────────────────────
+
+NS.RegisterSchemaRows({
+    { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
+      values = NS.Choices(C.ICON_POSITIONS, C.ICON_POSITION_LABELS), label = L["Icon position"],
+      desc = L["Where the aura's icon sits, or hide it."] },
+    { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
+      label = L["Icon size (0 = bar height)"], desc = L["A square icon this many pixels wide."] },
+    { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
+      label = L["Icon gap (px)"], desc = L["Space between the icon and the bar."] },
+    { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
+      label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
+})
+-- The composed border block (options-ui-§16) on the icon's own leaves; modules/Style_Bars.lua draws
+-- it around the icon's box and insets the art inside it.
+local iconBorder = H.BorderGroup({
+    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT,
+    keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
+             borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
+})
+for _, row in ipairs(iconBorder) do
+    if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
+end
+NS.RegisterSchemaRows(iconBorder)
 
 -- ── Background & border ───────────────────────────────────────────────────────────────────────
 
@@ -146,9 +172,6 @@ local HI = {
 NS.RegisterSchemaRows(HI)
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
-    intro = function(ctx, cfg)
-        if cfg.style ~= "bars" then
-            H.TextRow(ctx, "|cffffa040" .. L["This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."] .. "|r")
-        end
-    end,
+    disabledFor = function(cfg) return cfg.style ~= "bars" end,
+    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."],
 })

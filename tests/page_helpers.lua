@@ -109,6 +109,31 @@ return function(NS, m)
         return out
     end
 
+    --- Visit every tab of a container page in strip order, calling `fn(key, widgets)` with what
+    --- that tab drew. The active tab is the show's own draw: a click on it draws nothing.
+    function P.eachTab(page, pageKey, fn)
+        local first = P.show(page)
+        local active = NS.Helpers.__pageCtx[pageKey].activeTab
+        for _, key in ipairs(P.tabKeys(pageKey)) do
+            fn(key, key == active and first or P.tab(pageKey, key))
+        end
+    end
+
+    --- The widgets among `widgets` drawn for a schema row of `group` on `pageKey`, by label.
+    function P.rowWidgets(widgets, pageKey, group)
+        local labels = {}
+        for _, row in ipairs(NS.SchemaForPage(pageKey)) do
+            if row.group == group and row.label then labels[row.label] = true end
+        end
+        local out = {}
+        for _, w in ipairs(widgets) do
+            if w.labelText and labels[w.labelText] then
+                out[#out + 1] = w
+            end
+        end
+        return out
+    end
+
     --- Capture chat from here on; answers the live list.
     function P.chat()
         local lines = {}

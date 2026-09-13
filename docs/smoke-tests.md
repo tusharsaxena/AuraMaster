@@ -95,8 +95,15 @@ suite covers what only the client can show.
     and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
     row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
     the same frame; → *Another container* → Another container and Offset are live.
-26. **Bars** → **[ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Highlights ]**. On an icon container every tab carries the orange "drawn as icons" notice. On
+26. **Bars** → **[ Size ][ Bar ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
+    Highlights ]**. On an icon container every tab carries the large orange "drawn as icons" notice
+    naming General → Containers, a gap below it, and every control dimmed and unclickable; the tabs
+    and the Container dropdown still work. On **Icon** tick **Show border**, set the thickness to 3 →
+    a border frames each bar's icon and the art shrinks inside it rather than under it. On **Bar**
+    untick **Show the spark on auras without a duration** → a permanent buff's full bar shows no
+    spark, and a timed buff's spark still rides its moving edge, sitting just inside it (the
+    in-game check docs/midnight-quirks.md names; if the permanent bar still shows a spark, or the
+    timed one loses it, report it). In the preview the "Well Fed" placeholder loses its spark. On
     **Background & border**, Background reads **Background texture** · **Background opacity** /
     **Background color** · **Use class color**; drag **Background opacity** down → the bars'
     background fades while the fill stays as it was.

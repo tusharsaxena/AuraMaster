@@ -379,20 +379,42 @@ local function settleActiveTab(ctx, tabs)
     ctx.activeTab = tabs[1].key
 end
 
+--- The notice over a page drawn disabled: large and orange, then a gap before the first control.
+local function drawDisabledNotice(ctx, text)
+    Helpers.TextRow(ctx, "|cffffa040" .. text .. "|r", { fontObject = "GameFontNormalLarge" })
+    local scroll = Helpers.EnsureScroll(ctx)
+    if scroll then Helpers.AddSpacer(scroll, 12) end
+end
+
+--- A bespoke tab's renderer under the page's disable, as RenderRows' `opts.disabled` holds it: the
+--- library's makers read `ctx.__renderDisabled`, which is restored on the way out, a raise included,
+--- so one failed render never leaves every later one disabled.
+local function renderBespoke(ctx, cfg, tab, rows, disabled)
+    local outer = ctx.__renderDisabled
+    ctx.__renderDisabled = (disabled or outer) and true or nil
+    local ok, err = pcall(tab.render, ctx, cfg, rows)
+    ctx.__renderDisabled = outer
+    if not ok then error(err, 0) end
+end
+
 --- The active tab's content, under the page's intro; a per-container page with no container draws
 --- the empty registry's one line instead. A bespoke tab is handed its group's schema rows when it
---- stands in for one.
+--- stands in for one. A page whose `disabledFor(cfg)` answers true draws its `disabledNotice` and
+--- every control disabled (B-2: the Bars page on an icons container, and the reverse).
 local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
     if not (cfg or spec.addonWide) then
         Helpers.TextRow(ctx, L["No containers yet. Create one on General → Containers, or type /am new."])
         return
     end
+    local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false
     if cfg and spec.intro then spec.intro(ctx, cfg) end
+    if disabled and spec.disabledNotice then drawDisabledNotice(ctx, spec.disabledNotice) end
     local b = bespoke[ctx.activeTab]
     if b then
-        b.render(ctx, cfg, byGroup[ctx.activeTab])
+        renderBespoke(ctx, cfg, b, byGroup[ctx.activeTab], disabled)
     elseif byGroup[ctx.activeTab] then
-        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, spec.pairWith, { noHeadings = true })
+        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, spec.pairWith,
+            { noHeadings = true, disabled = disabled })
     end
 end
 
@@ -407,6 +429,8 @@ end
 ---                        tabs, after the schema's own; one keyed by a schema group replaces that
 ---                        group's rows, and one with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
+---   disabledFor(cfg)     true draws every control of every tab disabled (bespoke tabs through
+---                        `ctx.__renderDisabled`), under `disabledNotice`, drawn large
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
 ---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
 function Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)

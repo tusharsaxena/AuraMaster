@@ -88,7 +88,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `settings/General.lua` | The General page: the composed Master controls tab, the Display tab and the Containers tab; the Reset all popup |
 | `settings/Filters.lua` | The Filters page: what to show, the generated category rows (drawn as Default / Whitelist / Blacklist grids by a bespoke Categories tab), sorting, and the bespoke Overrides tab (two ID lists) |
 | `settings/Layout.lua` | The Layout page: frame, anchor (Screen / Another container / Named frame / Offset, dimmed by attach mode), growth, mouse; Pick a frame |
-| `settings/Bars.lua` | The Bars page: size, the composed bar, border and font blocks, spark, background, text placement, highlights |
+| `settings/Bars.lua` | The Bars page: size, the composed bar, border and font blocks, spark, the icon and its composed border, background, text placement, highlights; disabled for an icons container |
 | `settings/Icons.lua` | The Icons page: size, the composed border and font blocks, cooldown, text placement, highlights |
 | `settings/Profiles.lua` | The Profiles sub-page: AceDBOptions drawn by AceConfigDialog inside the canvas |
 
