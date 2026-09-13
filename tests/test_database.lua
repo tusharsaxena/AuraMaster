@@ -395,9 +395,12 @@ test("database v2: the two healing lists' spell edits merge under healing", func
     -- red under: dropping the retired keys' edits instead of merging them
     assertEqual(h[5], true)
     assertEqual(h[6], true)
+    -- red under: counting a container's two old lists as two editors (774 would have two removals
+    -- among three editors)
     assertEqual(h[774], false, "both containers removed Rejuvenation, one through each old list")
-    -- red under: counting a container's two old lists as two editors (container 1 edited healing and kept it)
-    assertNil(h[102352])
+    -- red under: container 1 not counted as a healing editor (102352 would be removed on container
+    -- 2's say alone)
+    assertNil(h[102352], "container 1 edited healing and kept it")
     assertNil(p.categorySpells.coreHealing)
     assertNil(p.categorySpells.lesserHealing)
 end)
