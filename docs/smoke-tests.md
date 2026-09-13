@@ -61,7 +61,7 @@ suite covers what only the client can show.
 
 19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
     Slash Commands list matching `/am help`, and no tab strip.
-20. **General** → the strip **[ Master controls ][ Display ][ Containers ]**, and no Container picker
+20. **General** → the strip **[ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
     above it. Master controls reads, two per line:
     Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
     then **Reset position** and **Reset all settings**.
@@ -83,8 +83,8 @@ suite covers what only the client can show.
     behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
-    show ][ Categories ][ Sorting ][ Spell lists ][ Always / never ]**; switch the container's aura type
-    to Debuffs → **Spell lists** disappears and Categories offers the debuff categories; switch to
+    show ][ Categories ][ Sorting ][ Always / never ]**, with no Spell lists tab on any aura type;
+    switch the container's aura type to Debuffs → Categories offers the debuff categories; switch to
     Weapon enchants → only **What to show** and **Sorting**, one row each.
 25. **Layout** → **[ Position ][ Growth ][ Frame ][ Mouse ]**; Position ends with **Pick a frame…** and
     **Attach to the screen**.
@@ -122,9 +122,12 @@ suite covers what only the client can show.
 35. **Categories.** On a buff container set *Defensives* to **Show** → only defensive cooldowns appear;
     also set *Offensive cooldowns* to **Show** → both, each aura once. Set *Consumables* to **Hide** on
     a neutral container → your flask disappears from it.
-36. **Spell lists.** Untick one starter spell in *Defensives*, cast it → it no longer shows in that
-    container. **Add spell ID** with a spell of yours → it counts as a defensive. **Restore this
-    category's starter list** → back to shipped.
+36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensives*, cast it
+    → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
+    a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
+    nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
+    **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color, and an icon's
+    Magic dispel border is tinted by it.
 37. **Always / never.** Add a buff to *Never show* → gone; add a buff to *Always show* on a container
     whose categories exclude it → it shows; the same id on both lists → hidden.
 38. **Max duration** `60` → hour-long buffs disappear, short ones stay, permanent ones go.

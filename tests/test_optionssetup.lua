@@ -75,7 +75,7 @@ test("options: the General page leads with Master controls, in canonical order",
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 
-test("options: the Filters page offers the spell-list tab only for a buff container", function()
+test("options: the Filters page offers the Always / never tab only for a buff or debuff container", function()
     local NS2, m = fresh()
     local ctx = NS2.Helpers.__pageCtx.filters
     local function tabs()
@@ -85,11 +85,12 @@ test("options: the Filters page offers the spell-list tab only for a buff contai
     end
     NS2.State.SetActiveContainer(1)
     m.__subcategories.Filters:__fire("OnShow")
-    assertTrue(tabs().spellLists)
     assertTrue(tabs().alwaysNever)
-    NS2.Helpers.SelectContainer(2)
-    NS2.Helpers.RenderContainerPage(ctx, "filters", nil)
+    -- red under: collectTabs ignoring a bespoke tab's auraTypes (the spell lists moved to General)
     assertNil(tabs().spellLists)
+    NS2.SetByPath("container.auraType", "ENCHANT", 1)
+    NS2.Helpers.RenderContainerPage(ctx, "filters", nil)
+    assertNil(tabs().alwaysNever)
 end)
 
 -- Characterization (testing-§13): pinned on RenderContainerPage as one function, before its tab
@@ -107,7 +108,6 @@ test("options: a container page's tabs are its schema groups, then its admitted 
             want[#want + 1] = row.group
         end
     end
-    want[#want + 1] = "spellLists"
     want[#want + 1] = "alwaysNever"
     local got = {}
     for i, t in ipairs(ctx.__tabs) do got[i] = t.key end

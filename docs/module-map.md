@@ -84,8 +84,9 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor and its load-completing stub; the container banner and the body picker cell, `RenderTabbedPage` and `RenderContainerPage`, `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
 | `settings/GeneralContainers.lua` | General → Containers: the picker and New container in the tab body, the name, enable, unit, aura type and style rows (registered by `settings/General.lua`), Duplicate / Delete / Copy settings from |
+| `settings/GeneralSpells.lua` | General → Spell Categories (one spell category's ID list over the profile's `categorySpells`, and its restore) and General → Dispel Colors (the six profile-wide `dispelColors.<type>` rows); registers nothing itself, `settings/General.lua` registers its rows and draws its tabs |
 | `settings/General.lua` | The General page: the composed Master controls tab, the Display tab and the Containers tab; the Reset all popup |
-| `settings/Filters.lua` | The Filters page: what to show, the generated category rows, sorting, and the bespoke Spell lists and Always / never tabs |
+| `settings/Filters.lua` | The Filters page: what to show, the generated category rows, sorting, and the bespoke Always / never tab |
 | `settings/Layout.lua` | The Layout page: attach and screen position, growth, frame, mouse; Pick a frame and Attach to the screen |
 | `settings/Bars.lua` | The Bars page: size, the composed bar, border and font blocks, spark, background, text placement, highlights |
 | `settings/Icons.lua` | The Icons page: size, the composed border and font blocks, cooldown, text placement, highlights |

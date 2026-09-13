@@ -331,10 +331,23 @@ function Helpers.RenderWarnings(ctx, cfg)
     end
 end
 
+--- Add a bespoke tab to the strip: ahead of the tab `before` names when this render draws it, else
+--- last.
+local function placeTab(tabs, entry, before)
+    for i, t in ipairs(tabs) do
+        if before ~= nil and t.key == before then
+            table.insert(tabs, i, entry)
+            return
+        end
+    end
+    tabs[#tabs + 1] = entry
+end
+
 --- A tabbed page's tabs: its schema groups in first-seen order, then the bespoke tabs the
 --- container's aura type admits. A bespoke tab keyed by a schema group takes that group's place in
---- the strip rather than adding a second tab. A per-container page with no container has no tabs;
---- an addon-wide page (`spec.addonWide`) has its tabs whatever the registry holds.
+--- the strip rather than adding a second tab; one with `before` is drawn ahead of that tab. A
+--- per-container page with no container has no tabs; an addon-wide page (`spec.addonWide`) has its
+--- tabs whatever the registry holds.
 --- @return table tabs, table byGroup, table bespoke
 local function collectTabs(cfg, pageKey, spec)
     local tabs, byGroup, bespoke = {}, {}, {}
@@ -350,7 +363,7 @@ local function collectTabs(cfg, pageKey, spec)
     for _, t in ipairs(spec.tabs or {}) do
         if not t.auraTypes or (cfg and t.auraTypes[cfg.auraType]) then
             if not byGroup[t.key] then
-                tabs[#tabs + 1] = { key = t.key, label = t.label }
+                placeTab(tabs, { key = t.key, label = t.label }, t.before)
             end
             bespoke[t.key] = t
         end
@@ -390,8 +403,9 @@ end
 ---
 --- `spec` fields, all optional:
 ---   addonWide            the page's tabs do not depend on a container existing (General)
----   tabs                 { { key, label, render(ctx, cfg, rows), auraTypes } } bespoke tabs, after
----                        the schema's own; one keyed by a schema group replaces that group's rows
+---   tabs                 { { key, label, render(ctx, cfg, rows), auraTypes, before } } bespoke
+---                        tabs, after the schema's own; one keyed by a schema group replaces that
+---                        group's rows, and one with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
 function Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)

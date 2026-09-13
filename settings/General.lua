@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- settings/General.lua — the addon-wide page, and the home of each container's identity.
 --
---     [ Master controls ][ Display ][ Containers ]
+--     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
 --
 --     Master controls  [Enable Aura Master]  [General visibility]
 --                      [Master scale]        [Master alpha]
@@ -12,6 +12,8 @@ local _, NS = ...
 --                      -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
 --     Containers       settings/GeneralContainers.lua: the picker and New container, then the
 --                      selected container's name, enable, unit, aura type and style, and its acts
+--     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
+--     Dispel Colors    settings/GeneralSpells.lua: one color per dispel type, profile-wide
 --
 -- MASTER CONTROLS LEADS AND IS COMPOSED (options-ui-§15): H.MasterControls emits the canonical
 -- rows from one declaration. Every row applies — containers are movable frames — so nothing is
@@ -25,6 +27,7 @@ local L = NS.L
 local H = NS.Helpers
 local print = NS.Print
 local GC = NS.GeneralContainers
+local GS = NS.GeneralSpells
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
 
@@ -107,8 +110,10 @@ NS.RegisterSchemaRows({
     },
 })
 
--- After the Display rows, so the Containers tab is the strip's third.
+-- After the Display rows, so the Containers tab is the strip's third; the Dispel Colors rows after
+-- those, so theirs is last (Spell Categories, bespoke, is placed ahead of it).
 NS.RegisterSchemaRows(GC.rows)
+NS.RegisterSchemaRows(GS.DISPEL_ROWS)
 
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →
 -- Reset Profile.
@@ -131,12 +136,13 @@ StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {
 }
 
 -- The page's tabs: its schema groups, with the Containers group drawn by its own renderer (the
--- picker line above the rows). `addonWide`: every tab is drawn whether or not a container exists.
+-- picker line above the rows), then Spell Categories and Dispel Colors (settings/GeneralSpells.lua).
+-- `addonWide`: every tab is drawn whether or not a container exists.
 local PAGE_SPEC = {
     addonWide  = true,
     -- The group name IS the hook key, read off the instance rather than spelled again.
     afterGroup = { [H.MASTER_GROUP] = masterTail },
-    tabs       = { { key = GC.GROUP, label = GC.GROUP, render = GC.render } },
+    tabs       = { { key = GC.GROUP, label = GC.GROUP, render = GC.render }, GS.TABS[1], GS.TABS[2] },
 }
 
 local function build(mainCategory)
@@ -145,8 +151,9 @@ local function build(mainCategory)
         pageKey         = "general",
         defaultsButton  = true,
         -- Page-wide (options-ui-§13): the Containers tab's rows are this page's, so Defaults takes
-        -- the selected container's identity back too — all but its name, which has no default.
-        defaultsTooltip = L["Restore every General setting on this profile to its addon default, and the selected container's Enabled, Unit, Aura type and Style. Its name is kept."],
+        -- the selected container's identity back too — all but its name, which has no default — and
+        -- the dispel colors. The spell categories' lists are not rows; each has its own restore.
+        defaultsTooltip = L["Restore every General setting on this profile to its addon default, and the selected container's Enabled, Unit, Aura type and Style. Its name is kept, and so are the spell categories' lists: each category has its own restore."],
     })
     ctx.panel.defaultsOnClick = function() H.RestoreDefaults("general", ctx) end
     H.__pageCtx.general = ctx

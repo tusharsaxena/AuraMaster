@@ -10,8 +10,8 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
-| General | Master controls · Display · Containers | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| Filters | What to show · Categories · Sorting · Spell lists · Always / never | Who cast it, timed or permanent, max duration, weapon enchants; the tri-state categories; sort order and cap; per-category spell edits; the always and never lists. Tabs vary with the aura type |
+| General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| Filters | What to show · Categories · Sorting · Always / never | Who cast it, timed or permanent, max duration, weapon enchants; the tri-state categories; sort order and cap; the always and never lists. Tabs vary with the aura type |
 | Layout | Position · Growth · Frame · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
 | Bars | Size · Bar · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
@@ -30,7 +30,8 @@ is a defect in this doc (documentation-§3).
 - **Four pages edit one container.** Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`, which is the container
   banner plus `Helpers.RenderTabbedPage` (`settings/OptionsSetup.lua`): the page's schema groups
-  become tabs, the page's bespoke tabs follow, and every row resolves against the selected container.
+  become tabs, the page's bespoke tabs follow (one may name the tab it is drawn ahead of, as
+  General's Spell Categories does), and every row resolves against the selected container.
   General is addon-wide and renders through `Helpers.RenderTabbedPage` with no banner; its
   Containers tab edits the selected container.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
@@ -76,7 +77,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (14 rows, `settings/General.lua`, `settings/GeneralContainers.lua`)
+### General (20 rows, `settings/General.lua`, `settings/GeneralContainers.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -120,6 +121,20 @@ Then **Duplicate** and **Delete** (asks first), and — with more than one conta
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
 
+**Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
+dropdown of the nine spell categories (defensives, activeMitigation, raidCDs, offensiveCDs, healing,
+support, movement, utility, consumables), then that category's ID list (the library's `IdList`):
+**Add a spell** takes a spell id, a shift-clicked link or a name (a name the client cannot find is
+matched against every category's starters and the timed buffs Aura Master has learned; an unknown
+one adds nothing and says why under the box), then one line per starter spell with a checkbox
+(untick to leave it out) and one per added spell with **Remove**, then **Restore this category's
+starter list**. Writes the whole set to `categorySpells` (a carve-out, so every container re-applies).
+The page's Defaults does not touch these lists; each category's restore does.
+
+**Dispel Colors** — one line saying who reads the colors, then six swatches, `dispelColors.Magic`,
+`.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type, and the
+tint on an icon's dispel border. Profile-wide, so a write re-applies every container.
+
 ### Filters (40 rows, `settings/Filters.lua`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
@@ -141,7 +156,7 @@ debuff containers the 16 debuff rows.
 
 | Subgroup | Buff categories | Debuff categories |
 |---|---|---|
-| Spell lists | defensives, activeMitigation, raidCDs, offensiveCDs, coreHealing, lesserHealing, support, movement, utility, consumables | — |
+| Spell lists | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables | — |
 | Blizzard flags | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
 | Dispel types | — | dispels, magic, curse, disease, poison, bleed |
 | Who cast it | — | fromNonPlayers, fromPlayers |
@@ -153,10 +168,6 @@ debuff containers the 16 debuff rows.
 | Sort by | `container.filter.sortMethod` | string (9 methods) | buffs, debuffs |
 | Direction | `container.filter.sortDirection` | string | every type (also orders weapon enchants) |
 | Max auras (0 = no limit) | `container.filter.maxAuras` | number 0–40 | buffs, debuffs; per group |
-
-**Spell lists** (buff containers only) — bespoke: a category dropdown, an **Add spell ID** box, one
-checkbox per starter spell (untick to remove it) and per added spell, and **Restore this category's
-starter list**. Writes the whole set to `container.filter.categorySpells`.
 
 **Always / never** (buff and debuff containers) — bespoke: an add box and a list with **Remove** for
 `container.filter.whitelist` and for `container.filter.blacklist`.
@@ -194,7 +205,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (71 rows, `settings/Bars.lua`)
+### Bars (65 rows, `settings/Bars.lua`)
 
 A notice in orange heads every tab when the selected container is drawn as icons.
 
@@ -206,12 +217,12 @@ A notice in orange heads every tab when the selected container is drawn as icons
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
-| Highlights (11) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`; *Dispel type colors:* `dispelColors.Magic`, `.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None` |
+| Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
 a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:108`);
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
-as a dispel-type texture tinted from `dispelColors`; every `timeFormat` hands the engine a
+as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
 (`core/Compat.lua:174`); the running-out color is a step color curve over
 remaining time (`core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
@@ -258,7 +269,7 @@ With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `f
 
 **Palette-definition swatches carry no companion** — they identify a state or a dispel type, not a
 player, which is the one exemption options-ui-§17 makes: `expiringColor` and `pandemicColor` on both
-pages, and the six `bars.dispelColors.*`.
+pages, and the six `dispelColors.*` on General → Dispel Colors.
 
 ## The degraded panel
 

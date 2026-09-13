@@ -3,7 +3,7 @@ local _, NS = ...
 -- settings/Filters.lua — what a container shows.
 --
 --     band          [Container ▾]
---     [ What to show ][ Categories ][ Sorting ][ Spell lists ][ Always / never ]
+--     [ What to show ][ Categories ][ Sorting ][ Always / never ]
 --
 -- Every row here compiles, through modules/FilterCompiler.lua, into the aura groups Blizzard's aura
 -- engine evaluates in its own code — we never read an aura while it is secret, so every filter is a
@@ -12,8 +12,9 @@ local _, NS = ...
 --
 -- The category rows are generated from defaults/Categories.lua and offered only for the aura type
 -- they belong to (`auraTypes`); a category is a three-state choice, stored as "" / "show" / "hide".
--- The two spell-set tabs are bespoke: a set is written WHOLE through the write seam
--- (settings/Schema.lua's carve-outs).
+-- Which spells a spell category matches is the profile's, edited on General → Spell Categories
+-- (settings/GeneralSpells.lua). The Always / never tab is bespoke: a set is written WHOLE through
+-- the write seam (settings/Schema.lua's carve-outs).
 
 local L = NS.L
 local H = NS.Helpers
@@ -144,89 +145,6 @@ local function addBox(label, onAdd)
     end }
 end
 
--- ── Spell lists: edit one category's spells ───────────────────────────────────────────────────
-
-local spellCategory   -- session: which spell category the tab is editing
-
-local function spellCategories()
-    local out = {}
-    for _, def in ipairs(Cat.For("HELPFUL")) do
-        if def.kind == "spells" then
-            out[#out + 1] = def
-        end
-    end
-    return out
-end
-
-local function renderSpellLists(ctx)
-    local AceGUI = NS.AceGUI
-    local defs = spellCategories()
-    local def = Cat.Find("HELPFUL", spellCategory) or defs[1]
-    spellCategory = def.key
-
-    local edits = NS.Database.DeepCopy(NS.db.profile.categorySpells or {})
-    local mine = edits[def.key] or {}
-    local function commit()
-        edits[def.key] = mine
-        NS.SetByPath("categorySpells", edits)
-        rerender()
-    end
-
-    H.TextRow(ctx, L["The spells each category matches, shared by every container. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."])
-    local items = {
-        { make = function(_, parent, rel)
-            local list, order = {}, {}
-            for i, d in ipairs(defs) do list[d.key] = L[d.label]; order[i] = d.key end
-            local dd = AceGUI:Create("Dropdown")
-            dd:SetLabel(L["Category"])
-            dd:SetList(list, order)
-            dd:SetValue(def.key)
-            dd:SetRelativeWidth(rel or 0.5)
-            dd:SetCallback("OnValueChanged", function(_, _, v) spellCategory = v; rerender() end)
-            parent:AddChild(dd)
-            return dd
-        end },
-        addBox(L["Add spell ID"], function(id) mine[id] = true; commit() end),
-    }
-
-    -- Starter spells first (ticked unless removed), then the ones the player added.
-    local rows = {}
-    for id in pairs(def.spells or {}) do
-        rows[#rows + 1] = { id = id, starter = true }
-    end
-    table.sort(rows, function(a, b) return a.id < b.id end)
-    for _, id in ipairs(sortedIds(mine)) do
-        if mine[id] == true and not (def.spells and def.spells[id]) then
-            rows[#rows + 1] = { id = id, starter = false }
-        end
-    end
-    for _, r in ipairs(rows) do
-        table.insert(items, { make = function(_, parent, rel)
-            local cb = AceGUI:Create("CheckBox")
-            cb:SetLabel(spellText(r.id))
-            cb:SetRelativeWidth(rel or 0.5)
-            cb:SetValue(mine[r.id] ~= false)
-            cb:SetCallback("OnValueChanged", function(_, _, on)
-                if r.starter then
-                    -- A removed starter is stored as false (nil would let the starter list bring it
-                    -- back); re-ticking drops the edit.
-                    if on then mine[r.id] = nil else mine[r.id] = false end
-                else
-                    mine[r.id] = on and true or nil
-                end
-                commit()
-            end)
-            parent:AddChild(cb)
-            return cb
-        end })
-    end
-    H.RenderGrid(ctx, items)
-    H.InlineButtonPair(ctx, {
-        text = L["Restore this category's starter list"],
-        onClick = function() mine = {}; commit() end,
-    }, nil)
-end
-
 -- ── Always / never: the whitelist and the blacklist ───────────────────────────────────────────
 
 local function renderIdSet(ctx, cfg, key, heading, blurb)
@@ -274,7 +192,6 @@ end
 NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
     tabs = {
-        { key = "spellLists", label = L["Spell lists"], auraTypes = { HELPFUL = true }, render = renderSpellLists },
         { key = "alwaysNever", label = L["Always / never"], auraTypes = BUFFS_DEBUFFS, render = renderAlwaysNever },
     },
 })

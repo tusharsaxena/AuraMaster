@@ -311,11 +311,31 @@ test("options descriptor: an addon-wide tabbed page draws every tab with no cont
     local keys = {}
     for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
     -- red under: collectTabs returning no tabs without a container, or adding the bespoke tab twice
-    assertEqual(table.concat(keys, ","), "Master controls,Display,Containers")
+    assertEqual(table.concat(keys, ","), "Master controls,Display,Containers,Dispel Colors")
     clickTab(ctx, "Containers")
     assertEqual(#drawn, 1, "the bespoke render replaced the group's rows")
     assertNil(drawn[1].cfg, "with no container")
     assertEqual(drawn[1].rows, 5, "and was handed the group's rows")
+end)
+
+test("options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last", function()
+    local NS2, m = fresh()
+    m.__subcategories.Bars:__fire("OnShow")
+    local ctx = NS2.Helpers.__pageCtx.bars
+    local function strip(before)
+        NS2.Helpers.RenderTabbedPage(ctx, "general", {
+            addonWide = true,
+            tabs = { { key = "Extra", label = "Extra", before = before, render = function() end } },
+        })
+        local keys = {}
+        for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
+        return table.concat(keys, ",")
+    end
+    -- red under: placeTab ignoring `before` (every bespoke tab appended after the schema groups)
+    assertEqual(strip("Display"), "Master controls,Extra,Display,Containers,Dispel Colors")
+    -- red under: placeTab dropping a tab whose `before` names nothing this render draws
+    assertEqual(strip("No such tab"), "Master controls,Display,Containers,Dispel Colors,Extra")
+    assertEqual(strip(nil), "Master controls,Display,Containers,Dispel Colors,Extra")
 end)
 
 test("options descriptor: RenderWarnings draws one orange line per thing the engine will not do", function()

@@ -9,9 +9,9 @@ local _, NS = ...
 -- with anything extra appended after the block — and every color row has its class-color companion
 -- (options-ui-§17), declared `source = "unit"`: the class is that of the unit the container tracks,
 -- snapshotted once per apply (modules/Container.lua's SnapshotClass, modules/Style.lua's
--- Style.Color), so a player container reads the player's. The dispel, expiring and pandemic swatches are PALETTE
--- definitions — one color per dispel type or per state — and carry no companion, the one exemption
--- §17 makes.
+-- Style.Color), so a player container reads the player's. The expiring and pandemic swatches are PALETTE
+-- definitions — one color per state — and carry no companion, the one exemption §17 makes. The
+-- dispel type colors are the profile's, on General → Dispel Colors (settings/GeneralSpells.lua).
 
 local L = NS.L
 local H = NS.Helpers
@@ -51,7 +51,7 @@ NS.RegisterSchemaRows(H.BarGroup({
     prefix = P, page = PAGE, group = G_BAR, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (set on the Highlights tab)."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General → Dispel Colors)."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         { path = P .. "smooth", type = "bool", label = L["Smooth animation"],
@@ -143,15 +143,6 @@ local HI = {
     { path = P .. "pandemicColor", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "color",
       label = L["Refresh-window color"], desc = L["The highlight's color."] },
 }
-for _, name in ipairs(C.DISPEL_TYPES) do
-    -- Palette definition: one color per dispel type, used by a bar colored by dispel type and by an
-    -- icon's dispel border. Profile-wide (schema v2), so an absolute path: a write re-applies every
-    -- container.
-    local row = { path = "dispelColors." .. name, page = PAGE, group = G_HI, subgroup = L["Dispel type colors"],
-        type = "color", label = L[name],
-        desc = L["This dispel type's color: a bar's fill when Color by is set to dispel type, and the tint on an icon's dispel border."] }
-    HI[#HI + 1] = row
-end
 NS.RegisterSchemaRows(HI)
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {

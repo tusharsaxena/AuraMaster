@@ -83,8 +83,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **193** rows across five pages — General 14 (its Containers tab's five among them),
-Filters 40, Layout 26, Bars 71, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
+`NS.Schema` holds **193** rows across five pages — General 20 (its Containers tab's five and its Dispel Colors tab's six among them),
+Filters 40, Layout 26, Bars 65, Icons 42 — plus the AceConfig-drawn Profiles page, which carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:549`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and

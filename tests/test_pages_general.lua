@@ -265,7 +265,7 @@ test("general: the page's Defaults tooltip says it takes the selected container'
     local NS, m = general()
     -- red under: the tooltip still describing a page of profile rows only
     assertEqual(m.__subcategories.General.defaultsTooltip,
-        NS.L["Restore every General setting on this profile to its addon default, and the selected container's Enabled, Unit, Aura type and Style. Its name is kept."])
+        NS.L["Restore every General setting on this profile to its addon default, and the selected container's Enabled, Unit, Aura type and Style. Its name is kept, and so are the spell categories' lists: each category has its own restore."])
 end)
 
 test("general: /am reset container.name says a name has no default and changes nothing", function()
@@ -285,11 +285,13 @@ end)
 
 -- ── the Containers tab ────────────────────────────────────────────────────────────────────────
 
-test("general: the tab strip reads Master controls, Display, Containers, and no page is keyed containers", function()
+test("general: the tab strip reads Master controls, Display, Containers, Spell Categories, Dispel Colors, and no page is keyed containers", function()
     local NS, m, P = general()
     local keys = P.tabKeys("general")
-    -- red under: the identity rows left on their own page, or the bespoke Containers tab added twice
-    assertEqual(table.concat({ keys[1], keys[2], keys[3] }, ","), "Master controls,Display,Containers")
+    -- red under: the identity rows left on their own page, or the bespoke Containers tab added twice;
+    -- and under collectTabs ignoring a bespoke tab's `before` (Spell Categories drawn after Dispel
+    -- Colors, a schema group, because every schema group is collected first)
+    assertEqual(table.concat(keys, ","), "Master controls,Display,Containers,Spell Categories,Dispel Colors")
     local seen = {}
     for _, k in ipairs(keys) do
         assertNil(seen[k], "tab " .. k .. " drawn twice")
@@ -486,18 +488,18 @@ test("general → containers: changing the aura type redraws an open Filters pag
     local NS, m, P, ws = containers()
     P.show("Filters")
     m.__subcategories.Filters:Show()   -- on screen, so only a STRUCTURAL refresh re-renders it
-    local function hasSpellTab()
-        for _, k in ipairs(P.tabKeys("filters")) do if k == "spellLists" then return true end end
+    local function hasCategoriesTab()
+        for _, k in ipairs(P.tabKeys("filters")) do if k == NS.L["Categories"] then return true end end
         return false
     end
-    assertTrue(hasSpellTab(), "a buff container has the spell-list tab")
-    P.row(ws, "container.auraType"):__fire("OnValueChanged", "HARMFUL")
-    assertEqual(NS.Database.FindContainer(1).auraType, "HARMFUL")
-    assertTrue(hasSpellTab(), "never inside the dropdown's own callback")
+    assertTrue(hasCategoriesTab(), "a buff container has the Categories tab")
+    P.row(ws, "container.auraType"):__fire("OnValueChanged", "ENCHANT")
+    assertEqual(NS.Database.FindContainer(1).auraType, "ENCHANT")
+    assertTrue(hasCategoriesTab(), "never inside the dropdown's own callback")
     m.__fireTimers()
     -- red under: the aura type row losing its structural onChange (the page keeps offering the
-    -- buff categories and the spell lists on a debuff container)
-    assertFalse(hasSpellTab(), "redrawn for a debuff container")
+    -- buff categories on a weapon-enchant container)
+    assertFalse(hasCategoriesTab(), "redrawn for a weapon-enchant container")
 end)
 
 test("general → containers: the Style dropdown offers bars and icons and writes the selected container", function()
@@ -597,4 +599,213 @@ test("general → containers: with one container the tab offers Duplicate and De
     -- red under: afterContainers drawing the copy block with nothing to copy from
     assertNil(P.find(ws, "Dropdown", NS.L["Source container"]))
     assertNil(P.find(ws, "Button", NS.L["Copy onto this container"]))
+end)
+
+-- ── the Spell Categories tab (G-2) ────────────────────────────────────────────────────────────
+
+--- The General page on its Spell Categories tab.
+local function spells(opts)
+    local NS, m, P, _, tab = general(opts)
+    return NS, m, P, tab(NS.L["Spell Categories"])
+end
+
+--- The line an IdList drew for spell `id`: its label, and the widget beside it (the starter's
+--- checkbox, or an added spell's Remove).
+local function entry(ws, id)
+    for _, w in ipairs(ws) do
+        local lbl = w.children and w.children[1]
+        if lbl and lbl.type == "InteractiveLabel" then
+            local t = lbl.text or ""
+            if t:find("(" .. id .. ")|r", 1, true) or t == "Unknown spell " .. id then
+                return lbl, w.children[2]
+            end
+        end
+    end
+    return nil
+end
+
+local function starterIds(NS, key)
+    local out = {}
+    for id in pairs(NS.Categories.Find("HELPFUL", key).spells) do
+        out[#out + 1] = id
+    end
+    table.sort(out)
+    return out
+end
+
+--- Record every NS.SetByPath call's path from here on.
+local function spyPaths(NS)
+    local paths = {}
+    local real = NS.SetByPath
+    NS.SetByPath = function(path, ...)
+        paths[#paths + 1] = path
+        return real(path, ...)
+    end
+    return paths
+end
+
+test("general → spell categories: a dropdown of the nine spell categories, Healing among them, opening on the first", function()
+    local NS, _, _, ws = spells()
+    local dd
+    for _, w in ipairs(ws) do
+        if w.type == "Dropdown" and w.labelText == NS.L["Category"] then dd = w end
+    end
+    assertTrue(dd ~= nil, "the category dropdown is drawn")
+    assertTrue(inScroll(NS, dd), "in the tab body")
+    -- red under: the dropdown offering a flag or token category (only spell categories have lists)
+    assertEqual(#dd.order, 9)
+    for _, k in ipairs(dd.order) do
+        assertTrue(NS.Categories.IsSpellCategory(k), "a spell category: " .. k)
+    end
+    assertEqual(dd.list.healing, NS.L["Healing"], "the merged Healing category is offered")
+    assertEqual(dd.order[1], "defensives")
+    assertEqual(dd.value, "defensives")
+end)
+
+test("general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet", function()
+    local NS, _, P, ws = spells()
+    local want = starterIds(NS, "defensives")
+    for _, id in ipairs(want) do
+        local _, act = entry(ws, id)
+        -- red under: the starters drawn as removable entries (Remove would forget a shipped spell
+        -- rather than switch it off)
+        assertTrue(act ~= nil and act.type == "CheckBox", "a checkbox beside starter " .. id)
+        assertTrue(act.value == true, "ticked: " .. id)
+    end
+    assertEqual(#P.all(ws, "CheckBox"), #want, "one checkbox per starter")
+    assertEqual(#P.all(ws, "Button", NS.L["Remove"]), 0)
+    assertTrue(P.find(ws, "EditBox", NS.L["Add a spell"]) ~= nil, "the add line is drawn")
+end)
+
+test("general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off", function()
+    local NS, _, P, ws = spells()
+    NS.SetByPath("categorySpells", { raidCDs = { [99] = true } })
+    local paths = spyPaths(NS)
+    P.find(ws, "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", "424242")
+    local edits = NS.db.profile.categorySpells
+    -- red under: onAdd writing anything but the whole profile set at `categorySpells`
+    assertEqual(table.concat(paths, ","), "categorySpells")
+    assertEqual(edits.defensives[424242], true)
+    assertEqual(edits.raidCDs[99], true, "another category's edits are kept")
+    assertNil(NS.Database.FindContainer(1).filter.categorySpells, "no container keeps its own copy")
+    ws = P.rerender("General")
+    local lbl, act = entry(ws, 424242)
+    assertTrue(lbl ~= nil, "the added spell is listed")
+    assertEqual(lbl.text, "Unknown spell 424242", "by id where the client cannot name it")
+    assertTrue(act ~= nil and act.type == "Button" and act.text == NS.L["Remove"], "with Remove")
+    act:__fire("OnClick")
+    -- red under: onRemove leaving the id in the set
+    assertNil(NS.db.profile.categorySpells.defensives, "no edit left to store")
+end)
+
+test("general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell", function()
+    local NS, m, P, ws = spells()
+    NS.db.global.timedSpells = { [5555] = true }
+    m.__spells[5555] = { name = "Learned Buff", iconID = 1 }
+    local box = P.find(ws, "EditBox", NS.L["Add a spell"])
+    box:__fire("OnEnterPressed", "rejuvenation")
+    -- red under: candidates() omitting the other categories' starters (the mock client finds no
+    -- spell by name, so only the candidates can resolve one)
+    assertEqual(NS.db.profile.categorySpells.defensives[774], true, "Rejuvenation, a Healing starter")
+    box:__fire("OnEnterPressed", "Learned Buff")
+    -- red under: candidates() omitting NS.db.global.timedSpells
+    assertEqual(NS.db.profile.categorySpells.defensives[5555], true)
+    local msgs = P.messages()
+    box:__fire("OnEnterPressed", "No Such Spell")
+    assertEqual(msgs.config, 0, "an unknown name writes nothing")
+    assertTrue(P.hasText(ws, "No spell named 'No Such Spell'."), "and says why on the add line")
+end)
+
+test("general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit", function()
+    local NS, _, P, ws = spells()
+    local id = starterIds(NS, "defensives")[1]
+    local _, cb = entry(ws, id)
+    cb:__fire("OnValueChanged", false)
+    -- red under: a starter's untick storing nil (the starter list would put it straight back)
+    assertEqual(NS.db.profile.categorySpells.defensives[id], false)
+    ws = P.rerender("General")
+    _, cb = entry(ws, id)
+    assertFalse(cb.value, "drawn unticked")
+    cb:__fire("OnValueChanged", true)
+    assertNil(NS.db.profile.categorySpells.defensives, "ticking it drops the edit")
+    NS.SetByPath("categorySpells", { defensives = { [id] = false } })
+    ws = P.rerender("General")
+    P.find(ws, "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", tostring(id))
+    -- red under: onAdd storing `true` for a starter (an addition that duplicates the shipped spell)
+    assertNil(NS.db.profile.categorySpells.defensives, "adding a removed starter back includes it again")
+end)
+
+test("general → spell categories: choosing another category lists its starters, by name where the client knows them", function()
+    local NS, _, P, ws = spells()
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "healing")
+    -- red under: the category dropdown not keeping its choice across the re-render it asks for
+    ws = P.rerender("General")
+    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "healing")
+    local rejuv = entry(ws, 774)
+    assertTrue(rejuv ~= nil and rejuv.text:find("Rejuvenation", 1, true) ~= nil, "Rejuvenation is listed by name")
+    assertTrue(entry(ws, 8936) ~= nil, "a spell the client does not know is listed by id")
+    assertNil(entry(ws, starterIds(NS, "defensives")[1]), "the defensives are not")
+end)
+
+test("general → spell categories: Restore this category's starter list clears that category's edits and no other's", function()
+    local NS, _, P = spells()
+    NS.SetByPath("categorySpells", { defensives = { [118038] = false, [424242] = true }, raidCDs = { [99] = true } })
+    local ws = P.rerender("General")
+    P.find(ws, "Button", NS.L["Restore this category's starter list"]):__fire("OnClick")
+    local edits = NS.db.profile.categorySpells
+    -- red under: the restore writing an empty set for every category
+    assertNil(edits.defensives)
+    assertEqual(edits.raidCDs[99], true)
+end)
+
+test("general → spell categories: the tab and Dispel Colors are drawn with no container at all", function()
+    local NS, _, P = general()
+    for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
+    P.rerender("General")
+    -- red under: the tabs gated on a container (they edit the profile, which exists regardless)
+    local ws = P.tab("general", NS.L["Spell Categories"])
+    assertTrue(P.find(ws, "Dropdown", NS.L["Category"]) ~= nil)
+    ws = P.tab("general", NS.L["Dispel Colors"])
+    assertTrue(P.row(ws, "dispelColors.Magic") ~= nil)
+end)
+
+-- ── the Dispel Colors tab (G-3) ───────────────────────────────────────────────────────────────
+
+test("general → dispel colors: six profile-wide swatches with no class-color companion, under a line naming bars and icons", function()
+    local NS, _, P, _, tab = general()
+    local ws = tab(NS.L["Dispel Colors"])
+    for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
+        local row = NS.FindSchemaRow("dispelColors." .. name)
+        -- red under: the rows left on the Bars page's Highlights tab
+        assertEqual(row.page, "general", name)
+        assertEqual(row.group, NS.L["Dispel Colors"], name)
+        local cp = P.row(ws, "dispelColors." .. name)
+        assertTrue(cp ~= nil and cp.type == "ColorPicker", "a swatch for " .. name)
+    end
+    assertEqual(#P.all(ws, "ColorPicker"), 6)
+    -- red under: a class-color companion beside a palette swatch (options-ui-§17's exemption)
+    assertEqual(#P.all(ws, "CheckBox"), 0)
+    -- red under: the tab saying the colors are for bars only (icons tint their dispel border too)
+    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container: the fill of a bar colored by dispel type, and the tint on an icon's dispel border."]))
+end)
+
+test("general → dispel colors: a swatch writes its own type's color and re-applies every container", function()
+    local NS, _, P, _, tab = general()
+    local ws = tab(NS.L["Dispel Colors"])
+    local calls = spyApply(NS)
+    P.row(ws, "dispelColors.Poison"):__fire("OnValueConfirmed", 1, 0, 1, 1)
+    local dc = NS.db.profile.dispelColors
+    -- red under: the dispel rows sharing one path, or carrying an `effect` (no re-apply)
+    assertEqual(dc.Poison.g, 0)
+    assertEqual(dc.Magic.r, NS.Constants.DEFAULT_DISPEL_COLORS.Magic.r, "the other types keep theirs")
+    assertEqual(#calls, 1)
+    assertEqual(calls[1], "all", "a profile-wide row re-applies every container")
+end)
+
+test("general → dispel colors: the page's Defaults restores them", function()
+    local NS, m = general()
+    NS.SetByPath("dispelColors.Magic", { r = 0, g = 0, b = 0, a = 1 })
+    m.__subcategories.General.defaultsOnClick()
+    -- red under: the rows registered on a page other than General (its Defaults would miss them)
+    assertEqual(NS.db.profile.dispelColors.Magic.r, NS.Constants.DEFAULT_DISPEL_COLORS.Magic.r)
 end)

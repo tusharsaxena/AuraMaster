@@ -651,7 +651,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
-- options: the Filters page offers the spell-list tab only for a buff container
+- options: the Filters page offers the Always / never tab only for a buff or debuff container
 - options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
@@ -664,7 +664,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 
-### test_options_descriptor.lua (16)
+### test_options_descriptor.lua (17)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -678,12 +678,13 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
+- options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (35)
+### test_pages_general.lua (46)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -701,7 +702,7 @@ badge and any count quoted in the docs must agree with it.
 - general: Defaults restores the selected container's Enabled, Unit, Aura type and Style, and never its name
 - general: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 - general: /am reset container.name says a name has no default and changes nothing
-- general: the tab strip reads Master controls, Display, Containers, and no page is keyed containers
+- general: the tab strip reads Master controls, Display, Containers, Spell Categories, Dispel Colors, and no page is keyed containers
 - general: NS.OpenOptionsPage('containers') opens no page, where 'layout' still opens its own
 - general → containers: the tab body opens with the Container picker and New container on one line
 - general → containers: the picker retargets the tab and every page
@@ -720,19 +721,26 @@ badge and any count quoted in the docs must agree with it.
 - general → containers: the copy block offers every other container and copies only the chosen section
 - general → containers: copying Everything takes what the source is, never its name or position
 - general → containers: with one container the tab offers Duplicate and Delete but no copy block
+- general → spell categories: a dropdown of the nine spell categories, Healing among them, opening on the first
+- general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet
+- general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off
+- general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+- general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit
+- general → spell categories: choosing another category lists its starters, by name where the client knows them
+- general → spell categories: Restore this category's starter list clears that category's edits and no other's
+- general → spell categories: the tab and Dispel Colors are drawn with no container at all
+- general → dispel colors: six profile-wide swatches with no class-color companion, under a line naming bars and icons
+- general → dispel colors: a swatch writes its own type's color and re-applies every container
+- general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (12)
+### test_pages_filters.lua (8)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container is offered the weapon-enchant rows; a debuff container is not
 - filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
 - filters: a category dropdown stores show, hide or neutral for the selected container
 - filters: each category row sits under the subgroup its kind names
-- filters: Spell lists opens on the first spell category, every starter spell ticked
-- filters: choosing another category lists its spells, by name where the client knows them
-- filters: unticking a starter spell stores it as removed; ticking it again drops the edit
-- filters: Add spell ID adds the number typed and ignores a box without one
-- filters: Restore this category's starter list clears that category's edits and no other's
+- filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
 - filters: Always / never adds to one list at a time, and Remove takes an id off
 - filters: every tab opens with what the engine will not honor here, in orange
 
@@ -757,7 +765,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: the seven tabs are drawn in order, whatever the container shows
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
-- bars: Highlights draws one swatch per dispel type, each writing its own color
+- bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
 ### test_pages_icons.lua (5)
@@ -902,9 +910,9 @@ badge and any count quoted in the docs must agree with it.
 | test_slash_verbs.lua | 36 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
-| test_options_descriptor.lua | 16 |
-| test_pages_general.lua | 35 |
-| test_pages_filters.lua | 12 |
+| test_options_descriptor.lua | 17 |
+| test_pages_general.lua | 46 |
+| test_pages_filters.lua | 8 |
 | test_pages_layout.lua | 12 |
 | test_pages_bars.lua | 6 |
 | test_pages_icons.lua | 5 |
@@ -921,4 +929,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **735** |
+| **Total** | **743** |

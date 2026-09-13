@@ -21,8 +21,8 @@ otherwise (`docs/profiles.md`).
 | `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and the preview |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
-| `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2). Written whole through the `categorySpells` carve-out |
-| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type; shared by every container (schema v2) |
+| `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
+| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type and the tint on an icon's dispel border; shared by every container (schema v2) and edited on General → Dispel Colors |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |

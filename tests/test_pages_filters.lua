@@ -1,6 +1,8 @@
 -- tests/test_pages_filters.lua — settings/Filters.lua, driven through its widgets: the rows each aura
--- type is offered, what each writes, the two bespoke spell-set tabs, and the warnings above every
--- tab. The compiler's reading of what these rows store is tests/test_filtercompiler.lua's.
+-- type is offered, what each writes, the bespoke Always / never tab, and the warnings above every
+-- tab. The compiler's reading of what these rows store is tests/test_filtercompiler.lua's. The spell
+-- categories' lists are profile-wide and edited on General → Spell Categories
+-- (tests/test_pages_general.lua).
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -12,24 +14,6 @@ local function filters(opts)
     local NS, m = fresh(opts)
     local P = pages(NS, m)
     return NS, m, P, P.show("Filters")
-end
-
---- The checkbox a spell-list render drew for spell `id` (its label is the spell's text).
-local function spellBox(P, ws, id)
-    for _, w in ipairs(P.all(ws, "CheckBox")) do
-        local l = w.labelText or ""
-        if l:find("(" .. id .. ")|r", 1, true) or l:find("Unknown spell " .. id .. "|r", 1, true) then return w end
-    end
-    return nil
-end
-
-local function starterIds(NS, key)
-    local out = {}
-    for id in pairs(NS.Categories.Find("HELPFUL", key).spells) do
-        out[#out + 1] = id
-    end
-    table.sort(out)
-    return out
 end
 
 test("filters: Cast by writes the selected container's filter and no other", function()
@@ -98,85 +82,16 @@ test("filters: each category row sits under the subgroup its kind names", functi
     assertEqual(sub("boss"), L["Blizzard flags"], "every other flag stays a Blizzard flag")
 end)
 
-test("filters: Spell lists opens on the first spell category, every starter spell ticked", function()
+test("filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories", function()
     local NS, _, P = filters()
-    P.show("Filters")
-    local ws = P.tab("filters", "spellLists")
-    local cat = P.find(ws, "Dropdown", NS.L["Category"])
-    assertEqual(cat.value, "defensives")
-    assertEqual(cat.order[1], "defensives")
-    for _, k in ipairs(cat.order) do
-        assertTrue(NS.Categories.IsSpellCategory(k), "only spell categories are offered: " .. k)
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL", "ENCHANT" }) do
+        NS.SetByPath("container.auraType", auraType, 1)
+        P.rerender("Filters")
+        for _, k in ipairs(P.tabKeys("filters")) do
+            -- red under: the Filters page still registering its spellLists tab (G-2)
+            assertTrue(k ~= "spellLists" and k ~= NS.L["Spell lists"], auraType .. ": " .. k)
+        end
     end
-    local want = starterIds(NS, "defensives")
-    assertEqual(#P.all(ws, "CheckBox"), #want, "one box per starter spell")
-    for _, id in ipairs(want) do
-        local cb = spellBox(P, ws, id)
-        assertTrue(cb ~= nil and cb.value == true, "starter spell ticked: " .. id)
-    end
-end)
-
-test("filters: choosing another category lists its spells, by name where the client knows them", function()
-    local NS, _, P = filters()
-    P.show("Filters")
-    local ws = P.tab("filters", "spellLists")
-    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "healing")
-    -- red under: the category dropdown not keeping its choice across the re-render it asks for
-    ws = P.rerender("Filters")
-    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "healing")
-    local rejuv = spellBox(P, ws, 774)
-    assertTrue(rejuv ~= nil, "Rejuvenation is a healing buff")
-    assertTrue(rejuv.labelText:find("Rejuvenation", 1, true) ~= nil, rejuv.labelText)
-    assertTrue(spellBox(P, ws, 8936).labelText:find("Unknown spell 8936", 1, true) ~= nil,
-        "a spell the client does not know is shown by id")
-end)
-
-test("filters: unticking a starter spell stores it as removed; ticking it again drops the edit", function()
-    local NS, _, P = filters()
-    P.show("Filters")
-    local ws = P.tab("filters", "spellLists")
-    local id = starterIds(NS, "defensives")[1]
-    spellBox(P, ws, id):__fire("OnValueChanged", false)
-    -- red under: a starter's untick storing nil (the starter list would put it straight back)
-    assertEqual(NS.db.profile.categorySpells.defensives[id], false)
-    -- red under: the tab still writing the v1 per-container set (schema v2 made the lists profile-wide)
-    assertNil(NS.Database.FindContainer(1).filter.categorySpells, "no container keeps its own copy")
-    ws = P.rerender("Filters")
-    assertFalse(spellBox(P, ws, id).value, "drawn unticked")
-    spellBox(P, ws, id):__fire("OnValueChanged", true)
-    assertNil(NS.db.profile.categorySpells.defensives, "no edit left to store")
-end)
-
-test("filters: Add spell ID adds the number typed and ignores a box without one", function()
-    local NS, _, P = filters()
-    P.show("Filters")
-    local ws = P.tab("filters", "spellLists")
-    local msgs = P.messages()
-    local box = P.find(ws, "EditBox", NS.L["Add spell ID"])
-    box:__fire("OnEnterPressed", "no digits")
-    box:__fire("OnEnterPressed", "0")
-    -- red under: addBox committing without a positive id
-    assertEqual(msgs.config, 0, "nothing written")
-    box:__fire("OnEnterPressed", " 424242x")
-    assertEqual(NS.db.profile.categorySpells.defensives[424242], true)
-    ws = P.rerender("Filters")
-    local added = spellBox(P, ws, 424242)
-    assertTrue(added ~= nil and added.value == true, "the added spell is listed, ticked")
-    added:__fire("OnValueChanged", false)
-    assertNil(NS.db.profile.categorySpells.defensives, "unticking an added spell removes it")
-end)
-
-test("filters: Restore this category's starter list clears that category's edits and no other's", function()
-    local NS, _, P = filters()
-    NS.SetByPath("categorySpells",
-        { defensives = { [118038] = false }, raidCDs = { [99] = true } })
-    P.show("Filters")
-    local ws = P.tab("filters", "spellLists")
-    P.find(ws, "Button", NS.L["Restore this category's starter list"]):__fire("OnClick")
-    local edits = NS.db.profile.categorySpells
-    -- red under: the restore writing an empty set for every category
-    assertNil(edits.defensives)
-    assertEqual(edits.raidCDs[99], true)
 end)
 
 test("filters: Always / never adds to one list at a time, and Remove takes an id off", function()

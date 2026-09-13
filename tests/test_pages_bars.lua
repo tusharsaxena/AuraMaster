@@ -73,19 +73,18 @@ test("bars: a confirmed fill color is stored on the selected container, as a tab
     assertEqual(NS.Database.FindContainer(2).bars.barColor.r, NS.CONTAINER_TEMPLATE.bars.barColor.r)
 end)
 
-test("bars: Highlights draws one swatch per dispel type, each writing its own color", function()
+test("bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)", function()
     local NS, _, P = bars()
     P.show("Bars")
     local ws = P.tab("bars", NS.L["Highlights"])
+    -- red under: the dispel rows still registered on the Bars page (they are profile-wide, G-3)
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
-        local cp = P.row(ws, "dispelColors." .. name)
-        assertTrue(cp ~= nil and cp.type == "ColorPicker", "a swatch for " .. name)
+        assertEqual(NS.FindSchemaRow("dispelColors." .. name).page, "general", name)
     end
-    P.row(ws, "dispelColors.Poison"):__fire("OnValueConfirmed", 1, 0, 1, 1)
-    local dc = NS.db.profile.dispelColors
-    -- red under: the dispel rows sharing one path
-    assertEqual(dc.Poison.g, 0)
-    assertEqual(dc.Magic.r, NS.Constants.DEFAULT_DISPEL_COLORS.Magic.r, "the other types keep theirs")
+    assertEqual(#P.all(ws, "ColorPicker"), 2, "the running-out and refresh-window colors only")
+    -- red under: the tooltip still sending the player to the Highlights tab
+    local desc = NS.FindSchemaRow("container.bars.colorMode").desc
+    assertTrue(desc:find("General → Dispel Colors", 1, true) ~= nil, desc)
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()
