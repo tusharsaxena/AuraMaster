@@ -69,9 +69,9 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 |---|---|---|---|---|---|
 | P0 spec + plan | — | AM | done | (this commit) | |
 | R0 engine research | B-3 B-4 G-3 I-1 I-2 L-3 | AM | done | 370d5c0 | notes file |
-| A1 disabledIf + page disable | X-3 | LibKa0s | todo | | |
-| A2 ChoiceGrid | X-2 | LibKa0s | todo | | |
-| A3 IdInput / IdList | X-1 | LibKa0s | todo | | |
+| A1 disabledIf + page disable | X-3 | LibKa0s | done | c64e5ee | nested renders inherit; rows w/o disabledIf untouched |
+| A2 ChoiceGrid | X-2 | LibKa0s | done | 54ac640 07704ad | spec.disabled added; review fix 07704ad |
+| A3 IdInput / IdList | X-1 | LibKa0s | in progress | | blocked by a duplicate-agent collision; green result salvaged from scratchpad/a3-snapshot-idactionrel, landing in run 2 |
 | A4 release v1.35.0 (local tag) | X-4 | LibKa0s | todo | | **CP-A** |
 | B1 preview style switch | C-4 | AM | done | 1020798 | Style.RegionsFor + per-style preview pools |
 | B2 apply error isolation | B-5 | AM | done | 6e9739c | xpcall + Style.WithStack, geterrorhandler |
@@ -98,7 +98,7 @@ BankLedger and LootHistory re-vendor and adopt the widget on their own branches.
 | H1 adversarial review + fixes | all | all | todo | | |
 | H2 final battery + report | all | all | todo | | **CP-H** |
 
-Workflow runs: *(record `runId` + phase here as each starts)*
+Workflow runs: `wf_0af661b7-6d2` (phases A1-A2, R0, B1-B7; A3 blocked by a duplicate-agent collision) · run 2 (A3 land, A4, C-G) recorded below when started
 
 **Dependency order:**
 - R0, A* and B1–B3 can run concurrently (different repos, or independent files).
