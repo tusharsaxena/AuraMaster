@@ -266,27 +266,27 @@ end
 local HEALING_V1 = { coreHealing = true, lesserHealing = true }
 local HEALING_V2 = "healing"
 
---- A profile's containers in display order: `containerOrder` first (a numeric or a string id),
---- then any container the order misses, by id. Table entries only, each once.
+--- A profile's containers in display order: `containerOrder` first (a numeric or a numeric-string
+--- id), then any container the order misses, by id. Table entries only, each once. The keys are
+--- numeric by now (Database.MigrateV2 applies normalizeKeys first).
 local function orderedContainers(p)
     local containers = type(p.containers) == "table" and p.containers or {}
     local out, seen = {}, {}
     local function take(key)
-        local c = containers[key]
+        local c = key ~= nil and containers[key]
         if type(c) == "table" and not seen[c] then
             seen[c] = true
             out[#out + 1] = c
         end
     end
     for _, id in ipairs(type(p.containerOrder) == "table" and p.containerOrder or {}) do
-        take(tonumber(id) or id)
-        take(tostring(id))
+        take(tonumber(id))
     end
     local rest = {}
     for key in pairs(containers) do
         rest[#rest + 1] = key
     end
-    table.sort(rest, function(a, b) return (tonumber(a) or math.huge) < (tonumber(b) or math.huge) end)
+    table.sort(rest)
     for _, key in ipairs(rest) do take(key) end
     return out
 end
@@ -423,6 +423,9 @@ end
 --- @return number  the containers it walked
 function Database.MigrateV2(p)
     if type(p) ~= "table" then return 0 end
+    -- The key rules PrepareProfile applies, applied first: a string twin of a numeric id and a
+    -- non-numeric key are dropped there, so neither may supply a palette or an editor here.
+    if type(p.containers) == "table" then normalizeKeys(p) end
     local list = orderedContainers(p)
     liftSpellEdits(p, list)
     liftDispelColors(p, list)

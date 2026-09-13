@@ -264,7 +264,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:459`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:462`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -272,6 +272,9 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
 - **Schema v2** (`Database.MigrateV2`) runs over **every** stored profile: AceDB's raw
   `sv.profiles`, the inactive ones included, or the no-AceDB fallback's one profile. It logs one
   `[Migrate] v2 profile '<name>'` line each, and `Database.CurrentSchemaVersion()` answers `2`.
+  - The container key rules `PrepareProfile` applies (below) run first, so a string twin of a
+    numeric id and a non-numeric key are dropped before any merge and never supply a palette or an
+    editor.
   - `profile.categorySpells` (new): the union of every container's added ids. A starter id stays
     removed (`false`) only if every container that had an edit for that category removed it; a
     container with no edit for the category has no say. `container.filter.categorySpells` is deleted.

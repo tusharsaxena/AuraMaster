@@ -442,6 +442,32 @@ test("database v2: with no dispel-colored container the first container's colors
     assertEqual(p.dispelColors.Curse.g, NS.Constants.DEFAULT_DISPEL_COLORS.Curse.g)
 end)
 
+test("database v2: a stale string twin or a non-numeric container key takes no part in the merge", function()
+    local NS = fresh()
+    local function c(mode, r, spells)
+        return { bars = { colorMode = mode, dispelColors = { Magic = { r = r, g = 0, b = 0, a = 1 } } },
+                 filter = { categorySpells = { defensives = spells } } }
+    end
+    local p = { containers = {}, containerOrder = { 1, 2 } }
+    p.containers[1] = c("static", 0.1, { [111] = true })
+    p.containers["1"] = c("dispel", 0.9, { [871] = false, [222] = true })
+    p.containers.junk = c("dispel", 0.8, { [333] = true })
+    p.containers["2"] = c("static", 0.2, { [444] = true })
+    NS.Database.MigrateV2(p)
+    -- red under: MigrateV2 merging before the key rules PrepareProfile applies (the twin PrepareProfile
+    -- then drops would supply the palette)
+    assertEqual(p.dispelColors.Magic.r, 0.1, "the kept container 1's palette")
+    local d = p.categorySpells.defensives
+    assertNil(d[222], "the twin's addition")
+    assertNil(d[871], "the twin's removal")
+    assertNil(d[333], "the non-numeric key's addition")
+    assertEqual(d[111], true)
+    -- red under: normalizing by dropping every string key (a lone numeric string is a real id)
+    assertEqual(d[444], true, "container \"2\", stored under a string key with no twin")
+    assertNil(p.containers["1"]); assertNil(p.containers.junk)
+    assertTrue(p.containers[2] ~= nil, "renamed to its numeric id")
+end)
+
 test("database v2: a profile with no containers gets the default dispel colors and empty spell lists", function()
     local NS = fresh()
     local p = v1profile({})

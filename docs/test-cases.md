@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (39)
+### test_database.lua (40)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -67,6 +67,7 @@ badge and any count quoted in the docs must agree with it.
 - database v2: a container's two healing states merge — show beats hide beats neutral
 - database v2: dispel colors come from the first dispel-colored container in display order
 - database v2: with no dispel-colored container the first container's colors win, completed from the defaults
+- database v2: a stale string twin or a non-numeric container key takes no part in the merge
 - database v2: a profile with no containers gets the default dispel colors and empty spell lists
 - database v2: stored Medium strata rises to High and every other strata is kept
 - database v2: the step is idempotent over a profile it already migrated
@@ -952,7 +953,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 39 |
+| test_database.lua | 40 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 39 |
@@ -995,4 +996,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **805** |
+| **Total** | **806** |
