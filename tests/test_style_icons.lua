@@ -174,6 +174,25 @@ test("icons: the dispel border is the engine's debuff art on harmful auras only"
     assertFalse(add[2].showWhenHelpful, "buffs do not")
 end)
 
+test("icons: the dispel border is tinted in the profile's dispel colors (G-3)", function()
+    local NS2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+    end })
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+        icons = { dispelBorder = true } })
+    local frame = dressed(c, true, nil, NS2)
+    local map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
+    -- red under: Icons.Bind binding no customDispelColorMap (the General palette reaching bars only)
+    assertTrue(map ~= nil and map == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors), "the profile's colors")
+    NS2.db.profile.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
+    frame = dressed(c, true, nil, NS2)
+    map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
+    -- red under: Icons.Bind building its map once and keeping it after the palette changed
+    assertEqual(map.Magic.r, 0, "an edited color reaches the next dress")
+    assertEqual(map.Magic.b, 1)
+end)
+
 test("icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)", function()
     -- Its own environment: every frame there makes textures of their own, each tagged with the
     -- frame that made it (the kit's texture is the frame itself, which cannot name an owner).

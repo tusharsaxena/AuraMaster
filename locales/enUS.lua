@@ -107,7 +107,7 @@ L["Wash the bar while the aura can be refreshed without losing any of its durati
 L["Refresh-window color"] = "Refresh-window color"
 L["The highlight's color."] = "The highlight's color."
 L["Dispel type colors"] = "Dispel type colors"
-L["The fill color for this dispel type when Color by is set to dispel type."] = "The fill color for this dispel type when Color by is set to dispel type."
+L["This dispel type's color: a bar's fill when Color by is set to dispel type, and the tint on an icon's dispel border."] = "This dispel type's color: a bar's fill when Color by is set to dispel type, and the tint on an icon's dispel border."
 L["Bars"] = "Bars"
 L["This container is drawn as icons; these settings apply once its style is Bars (Containers page)."] = "This container is drawn as icons; these settings apply once its style is Bars (Containers page)."
 L["General"] = "General"

@@ -124,12 +124,6 @@ local function wireFill(am, b)
     end
 end
 
---- The profile's dispel palette (profile-wide since schema v2), or nil before the database exists.
-local function dispelColors()
-    local p = NS.db and NS.db.profile
-    return p and p.dispelColors
-end
-
 --- Paint the fill and show it. A live dispel-colored fill takes the bar color here and the engine's
 --- tint over it; a PREVIEW dispel-colored fill stands in with the Magic color, since no placeholder
 --- names a type. The tint is part of the dress, so a later static dress is never left tinted. The fill
@@ -137,7 +131,7 @@ end
 --- does not show it again.
 local function paintFill(am, b, preview)
     am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
-    local dc = preview and b.colorMode == "dispel" and dispelColors()
+    local dc = preview and b.colorMode == "dispel" and Style.ProfileDispelColors()
     local m = dc and dc.Magic
     if m then
         am.fill:SetVertexColor(m.r or 1, m.g or 1, m.b or 1, 1)
@@ -234,7 +228,7 @@ function Bars.Bind(frame, am, cfg, b)
         Style.Bind(frame, "AddDispelTypeTexture", am.fill, {
             showAlways = true, showWithoutDispelType = true,
             style = Compat.DispelStyle("PreserveAsset"),
-            customDispelColorMap = Style.DispelColorMap(dispelColors()),
+            customDispelColorMap = Style.DispelColorMap(Style.ProfileDispelColors()),
         })
     end
     if b.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end

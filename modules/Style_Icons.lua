@@ -138,9 +138,14 @@ function Icons.Bind(frame, am, cfg, ic)
     if ic.stacks == nil or ic.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
     if Style.OrTemplate(ic.dispelBorder, D.icons.dispelBorder) then
+        -- The profile's palette (General → Dispel Colors) tints the engine's border art. The engine
+        -- applies the map after any style's step, so Border honors it; that step sets Blizzard's
+        -- colored atlas at a white vertex color, so the map multiplies onto colored art rather than
+        -- recoloring it (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q2).
         Style.Bind(frame, "AddDispelTypeTexture", am.dispel, {
             showWhenHarmful = true, showWhenHelpful = false,
             style = Compat.DispelStyle("Border"),
+            customDispelColorMap = Style.DispelColorMap(Style.ProfileDispelColors()),
         })
     end
     if ic.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end

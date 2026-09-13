@@ -203,6 +203,41 @@ test("manager: a master visibility row hides containers at once, with no apply p
     assertEqual(CM.FlushPending(), 0)
 end)
 
+--- Spy on RequestApply around `write`; returns the ids it was asked for (nil recorded as "all").
+local function requestsOn(CM, write)
+    local asked, orig = {}, CM.RequestApply
+    CM.RequestApply = function(id, ...)
+        local key = id
+        if key == nil then key = "all" end
+        asked[#asked + 1] = key
+        return orig(id, ...)
+    end
+    write()
+    CM.RequestApply = orig
+    return asked
+end
+
+test("manager: a profile-wide dispel color or spell-list write re-applies every container (G-2, G-3)", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    local second = CM.Create({ name = "Second" })
+    CM.FlushPending()
+    local count = 0
+    for _ in pairs(CM.instances) do count = count + 1 end
+    assertTrue(count >= 2 and CM.instances[second] ~= nil, "two containers to re-apply")
+    local writes = {
+        dispel = function() assertTrue(NS.SetByPath("dispelColors.Magic", { r = 0, g = 0, b = 1, a = 1 }, second)) end,
+        spells = function() assertTrue(NS.SetByPath("categorySpells", { movement = { [999001] = true } }, second)) end,
+    }
+    for name, write in pairs(writes) do
+        local asked = requestsOn(CM, write)
+        -- red under: the swatch or the carve-out announcing the selected container's id (only it re-applies)
+        -- red under: the dispelColors rows marked effect = "none" (nothing re-applies)
+        assertEqual(table.concat(asked, ","), "all", name)
+        assertEqual(CM.FlushPending(), count, name .. ": every container applied")
+    end
+end)
+
 test("manager: disabling a container in combat hides it at once, with no apply and no deferral notice", function()
     local NS, mocks = fresh()
     local lines = chat(mocks)

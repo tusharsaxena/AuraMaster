@@ -144,10 +144,12 @@ local HI = {
       label = L["Refresh-window color"], desc = L["The highlight's color."] },
 }
 for _, name in ipairs(C.DISPEL_TYPES) do
-    -- Palette definition: one color per dispel type, used when the bar is colored by dispel type.
-    -- Profile-wide (schema v2), so an absolute path: a write re-applies every container.
+    -- Palette definition: one color per dispel type, used by a bar colored by dispel type and by an
+    -- icon's dispel border. Profile-wide (schema v2), so an absolute path: a write re-applies every
+    -- container.
     local row = { path = "dispelColors." .. name, page = PAGE, group = G_HI, subgroup = L["Dispel type colors"],
-        type = "color", label = L[name], desc = L["The fill color for this dispel type when Color by is set to dispel type."] }
+        type = "color", label = L[name],
+        desc = L["This dispel type's color: a bar's fill when Color by is set to dispel type, and the tint on an icon's dispel border."] }
     HI[#HI + 1] = row
 end
 NS.RegisterSchemaRows(HI)
