@@ -90,8 +90,11 @@ suite covers what only the client can show.
     `/am get container.filter.categories.<key>` prints `Whitelist`. Switch the container's aura type
     to Debuffs → **Blizzard Categories**, **Dispel Types** and **Who Cast It**; switch to Weapon
     enchants → only **What to show** and **Sorting**, one row each.
-25. **Layout** → **[ Position ][ Growth ][ Frame ][ Mouse ]**; Position ends with **Pick a frame…** and
-    **Attach to the screen**.
+25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
+    **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
+    and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
+    row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
+    the same frame; → *Another container* → Another container and Offset are live.
 26. **Bars** → **[ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][
     Highlights ]**. On an icon container every tab carries the orange "drawn as icons" notice. On
     **Background & border**, Background reads **Background texture** · **Background opacity** /
@@ -147,7 +150,7 @@ suite covers what only the client can show.
 
 ## G. Attach
 
-41. **To a container.** Layout → Attach to → *Another container*, pick one → it follows that container
+41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
     as it grows and shrinks. Try to attach A to B and B to A → the second is refused.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to

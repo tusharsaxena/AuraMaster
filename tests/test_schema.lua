@@ -55,7 +55,11 @@ test("schema: every color row has its class-color companion next to it, or is a 
     local rows = NS.Schema
     local checked = 0
     for i, row in ipairs(rows) do
-        assertNil(row.disabledIf, "disabledIf is forbidden on any row here: " .. row.path)
+        -- anti-pattern #74: a swatch is still read for its alpha, so it is never grayed. Other rows
+        -- may dim (Layout's Anchor subsections do); a color row may not.
+        if row.type == "color" then
+            assertNil(row.disabledIf, "disabledIf is forbidden on a color row: " .. row.path)
+        end
         if row.type == "color" and not isPalette(row.path) then
             local nxt = rows[i + 1]
             assertTrue(nxt and nxt.type == "bool" and nxt.path:find("useClassColor"),

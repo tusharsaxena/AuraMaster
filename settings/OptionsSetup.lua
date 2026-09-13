@@ -392,7 +392,7 @@ local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
     if b then
         b.render(ctx, cfg, byGroup[ctx.activeTab])
     elseif byGroup[ctx.activeTab] then
-        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, nil, { noHeadings = true })
+        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, spec.pairWith, { noHeadings = true })
     end
 end
 
@@ -408,6 +408,7 @@ end
 ---                        group's rows, and one with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
+---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
 function Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)
     spec = spec or {}
     Helpers.ClearScroll(ctx)

@@ -87,7 +87,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `settings/GeneralSpells.lua` | General → Spell Categories (one spell category's ID list over the profile's `categorySpells`, and its restore) and General → Dispel Colors (the six profile-wide `dispelColors.<type>` rows); registers nothing itself, `settings/General.lua` registers its rows and draws its tabs |
 | `settings/General.lua` | The General page: the composed Master controls tab, the Display tab and the Containers tab; the Reset all popup |
 | `settings/Filters.lua` | The Filters page: what to show, the generated category rows (drawn as Default / Whitelist / Blacklist grids by a bespoke Categories tab), sorting, and the bespoke Overrides tab (two ID lists) |
-| `settings/Layout.lua` | The Layout page: attach and screen position, growth, frame, mouse; Pick a frame and Attach to the screen |
+| `settings/Layout.lua` | The Layout page: frame, anchor (Screen / Another container / Named frame / Offset, dimmed by attach mode), growth, mouse; Pick a frame |
 | `settings/Bars.lua` | The Bars page: size, the composed bar, border and font blocks, spark, background, text placement, highlights |
 | `settings/Icons.lua` | The Icons page: size, the composed border and font blocks, cooldown, text placement, highlights |
 | `settings/Profiles.lua` | The Profiles sub-page: AceDBOptions drawn by AceConfigDialog inside the canvas |

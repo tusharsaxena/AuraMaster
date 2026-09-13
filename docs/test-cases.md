@@ -750,13 +750,19 @@ badge and any count quoted in the docs must agree with it.
 - filters: an Overrides name the game cannot find adds nothing and says why on the add line
 - filters: every tab opens with what the engine will not honor here, in orange
 
-### test_pages_layout.lua (12)
+### test_pages_layout.lua (18)
 
+- layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
+- layout: the Anchor tab is broken into Screen, Another container, Named frame and Offset
+- layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen
+- layout: in screen mode only the subsections that apply are enabled
+- layout: in container mode only the subsections that apply are enabled
+- layout: in frame mode only the subsections that apply are enabled
+- layout: changing Attach to re-dims the same widgets before any redraw
 - layout: Attach to writes the mode and redraws an open page on the next frame
 - layout: the Container dropdown offers None and every other container, never the selected one
 - layout: a target that would close a loop is refused; any other, or None, is stored
 - layout: Frame name stores the typed name for the selected container
-- layout: Attach to the screen detaches the selected container and no other
 - layout: Pick a frame in combat refuses in gray and starts nothing
 - layout: a pick attaches the container selected when it began, and reopens the page
 - layout: a Growth write re-applies only the selected container
@@ -919,7 +925,7 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 17 |
 | test_pages_general.lua | 46 |
 | test_pages_filters.lua | 14 |
-| test_pages_layout.lua | 12 |
+| test_pages_layout.lua | 18 |
 | test_pages_bars.lua | 6 |
 | test_pages_icons.lua | 5 |
 | test_pages_about.lua | 3 |
@@ -935,4 +941,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **749** |
+| **Total** | **755** |

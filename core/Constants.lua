@@ -96,7 +96,7 @@ C.POINT_LABELS = {
 
 -- What a container is attached to.
 C.ATTACH_MODES = { "screen", "container", "frame" }
-C.ATTACH_MODE_LABELS = { screen = "The screen", container = "Another container", frame = "A named frame" }
+C.ATTACH_MODE_LABELS = { screen = "Screen", container = "Another container", frame = "Named frame" }
 
 -- Growth.
 C.AXES = { "horizontal", "vertical" }

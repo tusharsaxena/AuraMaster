@@ -12,7 +12,7 @@ is a defect in this doc (documentation-§3).
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
 | General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration, weapon enchants; the Default / Whitelist / Blacklist category grids; sort order and cap; the whitelist and blacklist spell lists. Tabs vary with the aura type |
-| Layout | Position · Growth · Frame · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
+| Layout | Frame · Anchor · Growth · Mouse | Attach to the screen, a container or a named frame, and the frame picker; growth direction and spacing; scale, opacity, strata; tooltips, cancel, click-through |
 | Bars | Size · Bar · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
@@ -185,29 +185,32 @@ A weapon-enchant container sees only **What to show** (one row) and **Sorting** 
 
 ### Layout (26 rows, `settings/Layout.lua`)
 
-**Position**
+**Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
+Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
+
+**Anchor**
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
-| Attach to | `container.attach.mode` | string | The screen / Another container / A named frame; structural |
-| Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused |
-| Frame name | `container.attach.frame` | string, edit box | A global frame name |
-| Point | `container.attach.point` | string | Corner of this container |
-| Relative point | `container.attach.relativePoint` | string | Corner of the target |
-| X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | |
-| *On the screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | Used in screen mode; set by dragging |
-| *On the screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
+| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
+| *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | Used in screen mode; set by dragging |
+| *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused |
+| *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
+| *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | Corner of this container / of the frame |
+| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
 
-Then **Pick a frame…** (closes the settings, starts the picker, reopens this page) and **Attach to
-the screen**.
+Each subsection's rows carry a `disabledIf` predicate on the selected container's attach mode, so
+the ones the mode does not read are dimmed: in `screen` mode only Screen is live; in `container`
+mode Another container and Offset; in `frame` mode Named frame and Offset. Changing **Attach to**
+re-dims them on the same frame through the scalar refresh. **Pick a frame…** (closes the settings,
+starts the picker, reopens this page) is Frame name's `pairWith` partner and stays live in every
+mode, because a pick sets the mode to Named frame itself.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow
 vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40), Line spacing
 `container.layout.lineSpacing` (0–40).
-
-**Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
-Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
 
 **Mouse** — Show tooltips `container.behavior.tooltips`, Tooltips in combat
 `container.behavior.tooltipInCombat`, Tooltip position `container.behavior.tooltipAnchor`,

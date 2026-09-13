@@ -8,10 +8,13 @@ local test, assertEqual, assertTrue, assertFalse =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
+--- A fresh environment with the Layout page drawn and its Anchor tab open (Frame is the first tab,
+--- so the attach rows are one click away). Answers what the Anchor tab drew.
 local function layout(opts)
     local NS, m = fresh(opts)
     local P = pages(NS, m)
-    return NS, m, P, P.show("Layout")
+    P.show("Layout")
+    return NS, m, P, P.tab("layout", NS.L["Anchor"])
 end
 
 --- The attach-target dropdown. The banner is labeled "Container" too, so it is excluded by identity.
@@ -22,6 +25,122 @@ local function targetDropdown(NS, P, ws)
     end
     return nil
 end
+
+-- The Anchor tab's subsections and the rows each one holds, in drawing order.
+local SUBSECTIONS = {
+    { key = "Screen", paths = { "container.position.point", "container.position.relativePoint",
+                                "container.position.x", "container.position.y" } },
+    { key = "Another container", paths = { "container.attach.container" } },
+    { key = "Named frame", paths = { "container.attach.frame", "container.attach.point",
+                                     "container.attach.relativePoint" } },
+    { key = "Offset", paths = { "container.attach.x", "container.attach.y" } },
+}
+
+--- The widget each Anchor row drew, by path. Two rows share the label "Point" (and two
+--- "Relative point"), so a label's nth widget belongs to that label's nth row in schema order; the
+--- banner is dropped first, because it is a second "Container" dropdown.
+local function anchorWidgets(NS, ws)
+    local banner = NS.Helpers.__pageCtx.layout.__bannerWidget
+    local byLabel = {}
+    for _, w in ipairs(ws) do
+        local label = w.labelText or w.text
+        if w ~= banner and label then
+            byLabel[label] = byLabel[label] or {}
+            table.insert(byLabel[label], w)
+        end
+    end
+    local out, seen = {}, {}
+    for _, row in ipairs(NS.SchemaForPage("layout")) do
+        if row.group == NS.L["Anchor"] then
+            seen[row.label] = (seen[row.label] or 0) + 1
+            out[row.path] = (byLabel[row.label] or {})[seen[row.label]]
+        end
+    end
+    return out
+end
+
+--- Assert which subsections read enabled for `mode`: every row of an `on` subsection enabled, every
+--- other one disabled, and the Attach to row itself always live.
+local function assertDimming(widgets, mode, on)
+    for _, sub in ipairs(SUBSECTIONS) do
+        for _, path in ipairs(sub.paths) do
+            local w = widgets[path]
+            assertTrue(w ~= nil, "no widget for " .. path)
+            local want = not on[sub.key]
+            assertEqual(w.disabled and true or false, want,
+                ("%s in %s mode (%s)"):format(path, mode, sub.key))
+        end
+    end
+    assertTrue(not widgets["container.attach.mode"].disabled, "Attach to is never dimmed")
+end
+
+local ON = {
+    screen    = { Screen = true },
+    container = { ["Another container"] = true, Offset = true },
+    frame     = { ["Named frame"] = true, Offset = true },
+}
+
+test("layout: the tabs are Frame, Anchor, Growth, Mouse, in that order", function()
+    local NS, _, P = layout()
+    local L = NS.L
+    -- red under: the Position rows declared before the Frame rows (tab order is first-seen group order)
+    assertEqual(table.concat(P.tabKeys("layout"), ","),
+        table.concat({ L["Frame"], L["Anchor"], L["Growth"], L["Mouse"] }, ","))
+end)
+
+test("layout: the Anchor tab is broken into Screen, Another container, Named frame and Offset", function()
+    local NS, _, _, ws = layout()
+    local heads = {}
+    for _, w in ipairs(ws) do
+        if w.type == "Heading" then
+            local n = #heads
+            heads[n + 1] = w.text
+        end
+    end
+    -- red under: a row left without its subgroup, or a subgroup out of order (a heading repeats)
+    assertEqual(table.concat(heads, ","), table.concat({ NS.L["Screen"], NS.L["Another container"],
+        NS.L["Named frame"], NS.L["Offset"] }, ","))
+end)
+
+test("layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen", function()
+    local NS, _, P, ws = layout()
+    local box = P.row(ws, "container.attach.frame")
+    local line
+    for _, w in ipairs(ws) do
+        if w.children and w.children[1] == box then line = w end
+    end
+    assertTrue(line ~= nil, "Frame name is on a line of its own group")
+    local pick = line.children[2]
+    -- red under: Pick drawn by an afterGroup (its own line after Offset) instead of paired with Frame name
+    assertTrue(pick ~= nil and pick.type == "Button" and pick.text == NS.L["Pick a frame…"],
+        "Pick a frame… is Frame name's right half")
+    -- red under: the redundant Attach to the screen button still drawn (the dropdown does the same)
+    assertEqual(P.find(ws, "Button", "Attach to the screen"), nil)
+end)
+
+for _, mode in ipairs({ "screen", "container", "frame" }) do
+    test("layout: in " .. mode .. " mode only the subsections that apply are enabled", function()
+        local NS, _, P = layout()
+        NS.SetByPath("container.attach.mode", mode, 1)
+        local ws = P.rerender("Layout")
+        -- red under: a subsection's rows without their disabledIf, or onlyIn naming the wrong mode
+        assertDimming(anchorWidgets(NS, ws), mode, ON[mode])
+        -- A pick switches the mode to frame itself, so the button is a way into Named frame from any mode.
+        assertTrue(not P.find(ws, "Button", NS.L["Pick a frame…"]).disabled, "Pick a frame… stays live")
+    end)
+end
+
+test("layout: changing Attach to re-dims the same widgets before any redraw", function()
+    local NS, m, _, ws = layout()
+    m.__subcategories.Layout:Show()
+    local widgets = anchorWidgets(NS, ws)
+    assertDimming(widgets, "screen", ON.screen)
+    widgets["container.attach.mode"]:__fire("OnValueChanged", "frame")
+    -- red under: dimming fixed at render (a disabled flag, not a predicate re-read on RefreshScalars)
+    assertDimming(widgets, "frame", ON.frame)
+    widgets["container.attach.mode"]:__fire("OnValueChanged", "container")
+    assertDimming(widgets, "container", ON.container)
+end)
 
 test("layout: Attach to writes the mode and redraws an open page on the next frame", function()
     local NS, m, P, ws = layout()
@@ -72,16 +191,6 @@ test("layout: Frame name stores the typed name for the selected container", func
     -- red under: the frame row writing any container but the selection
     assertEqual(NS.Database.FindContainer(1).attach.frame, "PlayerFrame")
     assertEqual(NS.Database.FindContainer(2).attach.frame, "")
-end)
-
-test("layout: Attach to the screen detaches the selected container and no other", function()
-    local NS, _, P, ws = layout()
-    NS.SetByPath("container.attach.mode", "frame", 1)
-    NS.SetByPath("container.attach.mode", "frame", 2)
-    P.find(ws, "Button", NS.L["Attach to the screen"]):__fire("OnClick")
-    -- red under: the button writing a fixed container id
-    assertEqual(NS.Database.FindContainer(1).attach.mode, "screen")
-    assertEqual(NS.Database.FindContainer(2).attach.mode, "frame")
 end)
 
 test("layout: Pick a frame in combat refuses in gray and starts nothing", function()
