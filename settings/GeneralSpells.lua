@@ -208,10 +208,11 @@ end
 
 local DISPEL_ROWS = {}
 for _, name in ipairs(C.DISPEL_TYPES) do
-    DISPEL_ROWS[#DISPEL_ROWS + 1] = {
+    local row = {
         path = "dispelColors." .. name, page = PAGE, group = DISPEL, type = "color", label = L[name],
         desc = L["This dispel type's color: a bar's fill when Color by is set to dispel type, and the tint on an icon's dispel border."],
     }
+    DISPEL_ROWS[#DISPEL_ROWS + 1] = row
 end
 
 --- The Dispel Colors tab: one line saying who reads the colors, then the group's six rows.
