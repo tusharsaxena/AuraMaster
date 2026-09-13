@@ -65,6 +65,11 @@ band holds **the picker itself** (options-ui-§14):
   container's Enabled, Unit, Aura type and Style; a container's name is never reset (its row carries
   `noReset`), and `/am reset container.name` says so and changes nothing. Either press logs
   one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
+- **`noReset` does not reach Reset all settings, on purpose.** Reset all is a whole-profile reset
+  (options-ui-§12, `db:ResetProfile`), not a row walk: it removes your own containers rather than
+  renaming them, and brings the starter containers back under their shipped names. No name is
+  reset to a default there, so the flag has nothing to guard. Spec G-1's "excluded from Reset all"
+  is met that way, with no row flag involved.
 
 ## Page → tab → row
 
