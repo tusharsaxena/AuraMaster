@@ -183,7 +183,8 @@ local function afterRows(ctx)
     H.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
         { text = L["Delete"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
-    if #NS.Database.GetContainers() > 1 then renderCopy(ctx) end
+    local count = #NS.Database.GetContainers()
+    if count > 1 then renderCopy(ctx) end
 end
 
 -- ---------------------------------------------------------------------------
