@@ -71,6 +71,10 @@ band holds **the picker itself** (options-ui-§14):
   renaming them, and brings the starter containers back under their shipped names. No name is
   reset to a default there, so the flag has nothing to guard. Spec G-1's "excluded from Reset all"
   is met that way, with no row flag involved.
+- **Ratified 2026-09-13 (owner): a renamed container's name does not survive Reset all.** Because it
+  is a whole-profile reset, it re-seeds the starter containers under their shipped names, so a
+  starter you renamed comes back under its shipped name. The owner accepted this; it is not a
+  deviation from G-1.
 
 ## Page → tab → row
 

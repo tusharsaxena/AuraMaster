@@ -72,6 +72,9 @@ the `containers` page move with it.
   row is excluded from both the page's Defaults and Reset all through a row flag the restore walk
   honors (`noDefault = true`, or the library's existing equivalent if one exists). The name row
   keeps its template default only for the backfill.
+  Amended 2026-09-13 (owner): Reset all is a whole-profile reset (`db:ResetProfile`), not a row
+  walk. It re-seeds the starter containers under their shipped names, so a renamed container's name
+  does not survive it. That is accepted; `noReset` guards the page's Defaults and `/am reset` only.
 - **Acceptance:** the tab draws the picker and New; selecting a container re-points every page;
   the Containers page no longer registers; `/am` verbs are unchanged.
 
