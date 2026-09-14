@@ -672,17 +672,20 @@ end)
 
 test("v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind=\"enchant\" category", function()
     local NS = fresh()
-    -- Simulates task B3 landing: weaponEnchants becomes a real category of kind "enchant". Run 1 has
-    -- no filter.categories table for liftCategoryWhitelist to act on (it runs BEFORE liftEnchantFlag,
+    -- weaponEnchants (defaults/Categories.lua) is a real kind=="enchant" category now, so this
+    -- appends a SECOND, differently-keyed one alongside it, to prove the exclusion in
+    -- filterableCategories is categorical on `kind`, not special-cased to the one key "weaponEnchants"
+    -- — it holds however many enchant-kind rows a container's category list carries. Run 1 has no
+    -- filter.categories table for liftCategoryWhitelist to act on (it runs BEFORE liftEnchantFlag,
     -- which is the one that creates the table, holding only weaponEnchants) — so the real categories
     -- get their first decision on run 2, the first run where the table liftEnchantFlag made on run 1
     -- exists when liftCategoryWhitelist looks. Without the categorical kind == "enchant" exclusion,
-    -- run 2 sees exactly one category at "show" (weaponEnchants), reads the container as narrowed, and
-    -- sweeps every other HELPFUL category to "hide" — a near-total blackout of a container the player
-    -- never touched. Run 3 then checks the true fixed point: nothing changes once every category has
-    -- its first decision.
+    -- run 2 would see two categories at "show" (both enchant rows), read the container as narrowed,
+    -- and sweep every other HELPFUL category to "hide" — a near-total blackout of a container the
+    -- player never touched. Run 3 then checks the true fixed point: nothing changes once every
+    -- category has its first decision.
     local HELPFUL = NS.Categories.HELPFUL
-    HELPFUL[#HELPFUL + 1] = { key = "weaponEnchants", kind = "enchant", label = "Weapon enchants", desc = "test stand-in for B3" }
+    HELPFUL[#HELPFUL + 1] = { key = "secondEnchantRow", kind = "enchant", label = "Second enchant row", desc = "test stand-in: a second enchant-kind category" }
     local p = { containers = { { auraType = "HELPFUL", filter = { includeEnchants = true } } } }
     NS.Database.MigrateV3(p)
     -- red under: kind == "enchant" counting toward "was this container narrowed" once it is a real

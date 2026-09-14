@@ -84,7 +84,17 @@ test("filters: a buff container's Categories tab offers the weapon-enchant rows;
     local NS, _, P = filters()
     local ws = P.tab("filters", NS.L["Categories"])
     assertTrue(gridLine(NS, ws, "weaponEnchants") ~= nil, "a buff container offers the enchant category")
-    assertTrue(P.row(ws, "container.filter.hidePermanentEnchants") ~= nil, "and the hide-permanent row")
+    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
+    assertTrue(cb ~= nil, "and the hide-permanent row")
+    -- red under: hidePermanentEnchants back on a `grid` — a ChoiceGrid radio lights by comparing
+    -- the stored value against a column's "show"/"hide" string, which a bool can never match, so it
+    -- would draw as an always-unlit pair of radios rather than the checkbox this row actually is
+    assertEqual(cb.type, "CheckBox", "a plain bool row, not a grid cell")
+    cb:__fire("OnValueChanged", false)
+    local stored = NS.Database.FindContainer(1).filter.hidePermanentEnchants
+    -- red under: the same mutation — a grid cell's click would write the STRING "hide" here
+    assertEqual(stored, false)
+    assertEqual(type(stored), "boolean", "a boolean, not a grid cell's stored string")
     NS.Helpers.SelectContainer(2)
     ws = P.rerender("Filters")
     -- red under: the enchant rows losing their `auraTypes` (a debuff container can show no enchant)
@@ -92,6 +102,20 @@ test("filters: a buff container's Categories tab offers the weapon-enchant rows;
     assertNil(P.row(ws, "container.filter.hidePermanentEnchants"))
     assertTrue(gridLine(NS, ws, "defensives") == nil, "no buff category either")
     assertTrue(gridLine(NS, ws, "magic") ~= nil, "the debuff container keeps its own categories")
+end)
+
+test("filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.auraType", "ENCHANT", 1)
+    local ws = P.rerender("Filters")
+    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
+    -- red under: hidePermanentEnchants back on a `grid` — a weapon-enchant container reaches the
+    -- Categories tab too (its own auraTypes now includes ENCHANT), so the same bug would hit it
+    assertEqual(cb.type, "CheckBox")
+    cb:__fire("OnValueChanged", true)
+    local stored = NS.Database.FindContainer(1).filter.hidePermanentEnchants
+    assertEqual(stored, true)
+    assertEqual(type(stored), "boolean")
 end)
 
 test("filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs", function()

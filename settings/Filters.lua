@@ -87,13 +87,16 @@ end
 NS.RegisterSchemaRows(categoryRows("HELPFUL"))
 NS.RegisterSchemaRows(categoryRows("HARMFUL"))
 
--- hidePermanentEnchants stays a typed row of its own (not a Show/Hide category), but moves in with
--- the category group and carries `skipRender`, so B5's Categories tab can draw it under the
--- weaponEnchants row it belongs to.
+-- hidePermanentEnchants stays a typed row of its own (not a Show/Hide category, so no `grid`: a
+-- ChoiceGrid cell lights by comparing the stored value against a column's "show"/"hide" string,
+-- which a bool row can never match — the click would still WRITE the string, though, permanently
+-- truthy from then on). It moves in with the category group and carries `skipRender`, so
+-- renderCategories' plain-row pass below draws it as an ordinary checkbox; B5's tab re-places it
+-- under the weaponEnchants row it belongs to.
 NS.RegisterSchemaRows({
     {
         path = "container.filter.hidePermanentEnchants", page = PAGE, group = G_CATS,
-        grid = "custom", skipRender = true,
+        skipRender = true,
         auraTypes = { HELPFUL = true, ENCHANT = true }, type = "bool", label = L["Hide enchants without a duration"],
         desc = L["Skip weapon enchants that never expire."],
     },
@@ -138,8 +141,25 @@ for i, value in ipairs(C.CATEGORY_STATES) do
     COLUMNS[i] = { value = value, label = L[C.CATEGORY_STATE_LABELS[value]] }
 end
 
---- The Categories tab: the group's rows (already the ones this aura type is offered), a grid each.
+--- A shallow copy of `row` with `skipRender` lifted, so the flow engine (which otherwise leaves
+--- every `skipRender` row untouched, on the assumption that a grid or another bespoke drawer owns
+--- it) draws it here instead. The SCHEMA row itself keeps `skipRender = true` — this copy is only
+--- for this one render call, so `/am get|set|list`, Defaults and any future bespoke placement still
+--- see the row as the host's to draw, not the flow engine's.
+local function forRenderRows(row)
+    local copy = {}
+    for k, v in pairs(row) do copy[k] = v end
+    copy.skipRender = nil
+    return copy
+end
+
+--- The Categories tab: the group's rows (already the ones this aura type is offered), a grid each,
+--- then any row that names no `grid` (hidePermanentEnchants: a plain bool, not a Show/Hide choice —
+--- a ChoiceGrid cell lights by comparing the stored value against a column's string, which a bool
+--- can never match) drawn as an ordinary row. A future tab may re-place it nearer the category it
+--- belongs to; this only makes it render correctly as the checkbox it is.
 local function renderCategories(ctx, _, rows)
+    local plain = {}
     for _, g in ipairs(GRIDS) do
         local mine = {}
         for _, row in ipairs(rows or {}) do
@@ -150,6 +170,14 @@ local function renderCategories(ctx, _, rows)
         if mine[1] then
             H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
         end
+    end
+    for _, row in ipairs(rows or {}) do
+        if not row.grid then
+            plain[#plain + 1] = forRenderRows(row)
+        end
+    end
+    if plain[1] then
+        H.RenderRows(ctx, plain, nil, nil, { noHeadings = true })
     end
 end
 
