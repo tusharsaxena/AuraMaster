@@ -246,9 +246,12 @@ local function forRender(row)
     return copy
 end
 
---- The Weapon enchants entry: which slots count, and where the per-container switch lives.
+--- The Weapon enchants entry: which slots count, where the per-container switch lives, and the
+--- all-slots fallback (modules/FilterCompiler.lua's enchantBlock) so unticking every slot here does
+--- not read as a broken control.
 local function renderEnchant(ctx)
     H.TextRow(ctx, L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."])
+    H.TextRow(ctx, L["Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."])
     local rows = {}
     for i, row in ipairs(ENCHANT_ROWS) do rows[i] = forRender(row) end
     H.RenderRows(ctx, rows, nil, nil, { noHeadings = true })

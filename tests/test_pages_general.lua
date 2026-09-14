@@ -891,6 +891,15 @@ test("general → spell categories: choosing Weapon enchants draws slot toggles,
     assertTrue(P.hasText(ws, "Filters -> Categories"), "says where the per-container switch lives")
 end)
 
+test("general → spell categories: the Weapon enchants entry explains the all-slots fallback", function()
+    local NS, _, P, ws = spells()
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
+    ws = P.rerender("General")
+    -- red under: deleting the fallback explanation (unticking every slot still reads all three,
+    -- modules/FilterCompiler.lua's enchantBlock), which would leave the panel looking broken
+    assertTrue(P.hasText(ws, "all three are read anyway"), "says unticking every slot changes nothing")
+end)
+
 test("general → spell categories: unticking a weapon slot writes the profile, one row at a time", function()
     local NS, _, P, ws = spells()
     P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")

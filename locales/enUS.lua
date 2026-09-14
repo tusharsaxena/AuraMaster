@@ -187,6 +187,7 @@ L["The spells each category matches, shared by every container. Untick one to le
 L["Category"] = "Category"
 L["Restore this category's starter list"] = "Restore this category's starter list"
 L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."] = "Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."
+L["Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."] = "Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."
 L["Main hand"] = "Main hand"
 L["Off hand"] = "Off hand"
 L["Ranged"] = "Ranged"
