@@ -102,6 +102,18 @@ NS.RegisterSchemaRows({
     },
 })
 
+-- D8: "only these categories" drops the catch-all group (modules/FilterCompiler.lua, R-9), so a
+-- container draws only the Overrides whitelist and whatever is set to Show. `skipRender`: B5's tab
+-- draws it at the top, above the grids, rather than the flow engine's ordinary checkbox row.
+NS.RegisterSchemaRows({
+    {
+        path = "container.filter.onlyShown", page = PAGE, group = G_CATS,
+        skipRender = true, auraTypes = BUFFS_DEBUFFS, type = "bool",
+        label = L["Only these categories"],
+        desc = L["Draw only the Overrides whitelist and the categories set to Show; drop everything else, including auras in no category at all."],
+    },
+})
+
 -- ── Sorting ───────────────────────────────────────────────────────────────────────────────────
 
 NS.RegisterSchemaRows({
@@ -223,7 +235,7 @@ local function renderOverrides(ctx, cfg)
     overrideList(ctx, cfg, "whitelist", L["Whitelist"],
         L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."])
     overrideList(ctx, cfg, "blacklist", L["Blacklist"],
-        L["These spells are never shown in this container. A spell on both lists is hidden."])
+        L["These spells are never shown in this container, unless the whitelist also names them — the whitelist wins."])
 end
 
 -- The Categories tab now carries hidePermanentEnchants (auraTypes HELPFUL + ENCHANT), so its own

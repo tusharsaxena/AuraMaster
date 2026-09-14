@@ -31,7 +31,7 @@ Categories tab on the new widgets, and fixes the tooltip bleed with a container-
   to master, pushing a tag, and bumping any addon's version. The LibKa0s tag `v1.36.0` is created
   LOCALLY only — every adopter's `tests/test_vendor_sync.lua` needs it to exist, and pushing it
   would publish a release the owner has not approved.
-- **Branches:** AM `feat/2026-09-14-feedback-batch6`; LibKa0s `feat/2026-09-14-v1.36.0`; the eight
+- **Branches:** AM `feat/2026-09-14-feedback-batch6`; LibKa0s `feat/2026-09-14-v1.36.0`; the nine
   other adopters `chore/2026-09-14-revendor-v1.36.0`.
 - **Commit trailers:** every commit message ends with the two attribution lines this session's
   system prompt specifies (`Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>` and
@@ -90,7 +90,8 @@ in the task's own commit or the one immediately after.
 | A5 release v1.36.0 (local tag) | K-1…K-4 | LibKa0s | done | 3dcf3a8 | Options 18->19, Widgets 16->17, key 19.17.5.3; tag v1.36.0 LOCAL, verified not on origin; **CP-A reached** |
 | B1 Show/Hide compiler + constants | C-1…C-6 F-6 | AM | done | df16eaf 8fec9d9 | Cat.DefaultStates() replaces NeutralStates; setFlag's `soft` removal is a REAL behavior change (see ledger), documented + tested |
 | B2 schema v3 migration | E-8 E-5 | AM | done | c4e3b6e 47e406a 180327a | 2 fix rounds: 3 idempotency bugs; narrowed containers also gain the whitelisted ids on filter.whitelist; kind=='enchant' excluded from the sweep |
-| B3 enchant category kind | E-1…E-4 E-7 | AM | todo | | **CP-B** |
+| B3 enchant category kind | E-1…E-4 E-7 | AM | done | d5af512 1606f7e | fix round 1: a bool row must not sit in the ChoiceGrid; Categories tab widened to ENCHANT |
+| B11 priority order + only-these toggle | R-1…R-11 | AM | todo | | supersedes part of C-2; reverts E-8's id copy |
 | B4 re-vendor v1.36.0 | K-* | AM | todo | | needs A5 |
 | B5 Filters → Categories tab | F-1…F-7 | AM | todo | | needs B4 |
 | B6 ExplainSpell + Overrides notes | P-1 P-3 P-4 | AM | todo | | needs B4 |
@@ -98,8 +99,11 @@ in the task's own commit or the one immediately after.
 | B8 max duration | D-1…D-4 | AM | todo | | |
 | B9 container mouse blocker | T-1…T-5 | AM | todo | | |
 | B10 docs | P-2 D-3 | AM | todo | | **CP-C** |
-| C1 re-vendor the other eight | K-* | 8 repos | todo | | needs A5 |
+| C1 re-vendor the other nine | K-* | 9 repos | todo | | roster confirmed 2026-09-15 |
 | C2 final battery + report | all | all | todo | | **CP-D** |
+
+**B11 was added on 2026-09-15** after the owner revised the priority order. It runs after B3 (same
+file) and before B5/B6, which render its rules and explain them. See spec sections 6 and 6b.
 
 **Dependency order:** A1–A4 are independent of each other and all precede A5. B1 → B2 → B3 are
 sequential (they touch the same stored shape). B4 needs A5. B5, B6, B7 need B4 and B3. B8 and B9
@@ -1019,6 +1023,44 @@ git commit -m "Filters: weapon enchants are a category, with profile-wide slots 
 
 ---
 
+### Task B11: The revised filter priority
+
+**Files:**
+- Modify: `modules/FilterCompiler.lua`, `core/Database.lua` (revert E-8's id copy), `settings/Filters.lua` (Overrides blurb), `locales/enUS.lua`
+- Test: `tests/test_filtercompiler.lua`, `tests/test_database.lua`
+
+**Interfaces:**
+- Consumes: B1's `excludeCategory`, B3's `enchant` kind.
+- Produces: the rank order in spec section 6; a positive sibling to `excludeCategory`; `plan.groups`
+  may again hold more than one category group.
+
+The owner revised the priority on 2026-09-15. Read spec sections 6 and 6b — they are binding and
+they supersede `C-2` and `C-4`. The two substantive changes:
+
+1. The Overrides **whitelist beats the blacklist** (it was the other way round).
+2. A category's **Show is a positive claim**: an aura in at least one Show category is drawn even
+   if it is also in a Hide category. Only an aura whose categories ALL say Hide is removed. An aura
+   in no category is drawn.
+
+- [x] **Step 1: Write the failing tests** — at minimum: whitelist beats blacklist; an aura in one
+      Show and one Hide category is drawn; an aura in two Hide categories is not; an aura in no
+      category is drawn; no Hide anywhere still yields exactly ONE group (`R-3`); a Hide plus a Show
+      yields a group per shown category plus the catch-all (`R-4`), with no aura drawn twice.
+- [x] **Step 2: Run them and confirm they fail.**
+- [x] **Step 3: Implement** per `R-1`…`R-7`.
+- [x] **Step 4: Revert the v3 migration's whitelist-id copy** (`liftWhitelistSpells` and its tests).
+      Rank 3 now does that job properly, for every category kind rather than only `spells`. Leave
+      the rest of `MigrateV3` alone.
+- [x] **Step 5: Reword the Overrides blurb** — the whitelist now wins where both lists name a spell.
+- [x] **Step 6: Add the "only these categories" toggle** per spec section 6c (`R-8`…`R-11`): the
+      `container.filter.onlyShown` schema row (bool, default false, Categories group, `skipRender`
+      — B5 draws it), the compiler branch that drops the catch-all group while it is on, and
+      `FC.WARN.ONLY_SHOWN_NONE` for the draws-nothing case. Tests: on + one Show category draws only
+      that category's auras and NOT an uncategorized one; on + nothing shown carries the new warning;
+      off behaves exactly as before.
+- [x] **Step 7: Gate, commit, push, ledger.**
+
+---
 ### Task B4: Re-vendor LibKa0s v1.36.0 into Aura Master
 
 **Files:**
@@ -1697,10 +1739,13 @@ git commit -m "Docs: filter priority, the Show/Hide model, the v3 shape and the 
 
 ### Task C1: Re-vendor v1.36.0 into the other eight addons
 
-**Repos:** AbsorbTracker, BankLedger, BuffTextNotifications, ConsumableMaster, KickCD, LootHistory,
-MultiMeters, PanelMaster, PrettyChat, SimplePartyTargets, WhatGroup, WhoGotLoots — whichever of
-these the roster lists as current LibKa0s consumers. Confirm the list from
-`../WowAddonStandards/standards/ADDONS.md` before starting; do not guess it.
+**Repos — confirmed 2026-09-15 against `../WowAddonStandards/standards/ADDONS.md` and by checking
+`libs/LibKa0s/` on disk, not guessed.** Nine siblings vendor the library: AbsorbTracker, BankLedger,
+ConsumableMaster, KickCD, LootHistory, MultiMeters, PanelMaster, PrettyChat, WhatGroup. With Aura
+Master (task B4) that is the roster's ten addons.
+
+**BuffTextNotifications, SimplePartyTargets and WhoGotLoots do NOT vendor LibKa0s** — an earlier
+draft of this task listed them in error. Do not touch them.
 
 For each repo, in its own branch `chore/2026-09-14-revendor-v1.36.0`:
 

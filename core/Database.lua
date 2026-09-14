@@ -448,6 +448,12 @@ end
 -- verbatim would silently WIDEN what an already-stored container draws, so the old intent is written
 -- out longhand instead (liftCategoryWhitelist), before the unrelated enchant-flag lift runs.
 --
+-- The owner's 2026-09-15 filter-priority revision (spec section 6, E-8) made a Show a positive claim
+-- that beats a Hide on the same aura (modules/FilterCompiler.lua's rank 3), for every category kind
+-- rather than only `spells`. That is what the old "show" rows needed protecting for in the first
+-- place, so the id-copying half of this lift (once `liftWhitelistSpells`, onto `filter.whitelist`) is
+-- gone: the compiler now does that job itself, on every run, not just at migration time.
+--
 -- Only recognized aura types are touched. `Cat.For(nil)` and `Cat.For("garbage")` both fall back to
 -- the (empty) ENCHANT list, so liftCategoryWhitelist is already a no-op for them — but the string
 -- compare `auraType == "ENCHANT"` that used to gate liftEnchantFlag does NOT catch nil or garbage, so
@@ -456,61 +462,34 @@ end
 -- neither runs for such a container: it is left untouched rather than half-converted.
 local KNOWN_AURA_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
 
---- Categories are not a partition of the aura space, so "hide everything the container did not
---- whitelist" cannot fully reproduce the old exclusive whitelist: an aura that also matched a NOW
---- hidden category would stop being drawn, when the old whitelist group drew it regardless. This
---- copies the ids of every "show" spell category onto `filter.whitelist` (Overrides, rank 2 in
---- modules/FilterCompiler.lua — it beats a category Hide) so those auras keep being drawn exactly as
---- before. Merges into any existing whitelist; an id already on `filter.blacklist` (rank 1, a
---- player's explicit never) is left there alone — a migration must not overturn it.
---- `shown` is the container's "show" category defs for its aura type, gathered by the caller before
---- the sweep below converts every non-"show" row to "hide".
-local function liftWhitelistSpells(p, c, shown)
-    local ids = {}
-    for _, cat in ipairs(shown) do
-        if cat.kind == "spells" then
-            for id in pairs(NS.FilterCompiler.CategorySpells(cat, p.categorySpells)) do
-                ids[id] = true
-            end
-        end
-    end
-    if not next(ids) then return end
-    local f = c.filter
-    local blacklist = type(f.blacklist) == "table" and f.blacklist or {}
-    if type(f.whitelist) ~= "table" then f.whitelist = {} end
-    for id in pairs(ids) do
-        if not blacklist[id] then f.whitelist[id] = true end
-    end
-end
-
 --- The whitelist lift: if a container had ANY category of its aura type at "show", it was an
 --- exclusive whitelist under the old three-state model — so every category of that type NOT "show"
 --- (an unset "" or an explicit "hide", the old model excluded both from the whitelist's one group)
---- becomes "hide", the longhand of that exclusion, and the "show" spell categories' ids are copied to
---- `filter.whitelist` (liftWhitelistSpells) to cover the half of that exclusion a pure category sweep
---- cannot reproduce. With no "show" present the container already drew everything except its explicit
---- "hide" rows (the old model's default group), so only the unset "" rows need a decision at all, and
---- they become "show" — an explicit "hide" is left exactly as it was.
+--- becomes "hide", the longhand of that exclusion. With no "show" present the container already drew
+--- everything except its explicit "hide" rows (the old model's default group), so only the unset ""
+--- rows need a decision at all, and they become "show" — an explicit "hide" is left exactly as it was.
+--- Under the current filter priority (docs/superpowers/specs/2026-09-14-feedback-batch6-design.md
+--- section 6, rank 3) a Show beats a Hide on the same aura, for every category kind, so a container
+--- narrowed this way keeps drawing exactly what it drew before without any id needing to be copied
+--- onto `filter.whitelist` — the compiler's own category groups do that job now.
 --- Idempotent: an already-migrated container has every category of its type explicitly "show" or
 --- "hide" — no unset "" left, and no key still missing — which is exactly the pre-v3 shape this lift
 --- exists to close. So it runs only while that gap remains; once every key already carries a decision
---- there is nothing left to convert, and it returns without touching state OR copying ids again. This
---- is load-bearing, not a nicety: without it, a container that started with NO "show" (the no-whitelist
+--- there is nothing left to convert, and it returns without touching state again. This is
+--- load-bearing, not a nicety: without it, a container that started with NO "show" (the no-whitelist
 --- branch) ends its first run with EVERY key at "show" — because Show is the new model's "no decision
 --- needed" — and a second run would then read that as "some category is show" and misfire the
---- WHITELISTED branch on a container that was never narrowed, sweeping it to near-nothing and copying
---- every spell category's ids onto its whitelist.
+--- WHITELISTED branch on a container that was never narrowed, sweeping it to near-nothing.
 --- Runs before liftEnchantFlag and only ever touches `NS.Categories.For(c.auraType)`'s FILTERABLE keys
 --- (filterableCategories below) — a `kind == "enchant"` category, `weaponEnchants` once B3 adds it, is
 --- excluded categorically, not because it happens not to exist in `def` yet. That is what makes the
 --- order below safe both before and after B3: an enchant row is a container capability ("does this
 --- container have weapon-enchant slots"), not a filter over auras — it matches no aura and joins no
 --- aura group (modules/FilterCompiler.lua's own `splitCategories` skips it the same way), so it must
---- never count toward "was this container narrowed", never be swept to "hide" by that decision, and
---- (via the `kind == "spells"` check in liftWhitelistSpells) never contributes ids. Without the
---- exclusion, a container with NO `filter.categories` table at all is the sharpest case: run 1 has
---- nothing for this lift to do (no categories table yet), so liftEnchantFlag alone creates the table
---- holding only `weaponEnchants`; run 2 would then see exactly one category at "show" once
+--- never count toward "was this container narrowed", and never be swept to "hide" by that decision.
+--- Without the exclusion, a container with NO `filter.categories` table at all is the sharpest case:
+--- run 1 has nothing for this lift to do (no categories table yet), so liftEnchantFlag alone creates
+--- the table holding only `weaponEnchants`; run 2 would then see exactly one category at "show" once
 --- `weaponEnchants` is real, read that as narrowed, and sweep every other category of the container to
 --- "hide" — a near-total blackout of a container the player never touched.
 --- Whether every FILTERABLE category of `def` already carries an explicit "show" or "hide" on `cats`
@@ -537,16 +516,12 @@ local function categoriesDecided(def, cats)
     return true
 end
 
---- The category defs currently at "show", in declaration order.
-local function shownCategories(def, cats)
-    local shown = {}
+--- Whether any category def in `def` is currently at "show".
+local function anyShown(def, cats)
     for _, cat in ipairs(def) do
-        if cats[cat.key] == "show" then
-            local n = #shown
-            shown[n + 1] = cat
-        end
+        if cats[cat.key] == "show" then return true end
     end
-    return shown
+    return false
 end
 
 --- No category was whitelisted: only the unset "" (or missing) rows need a decision, and they become
@@ -557,28 +532,26 @@ local function liftUnwhitelisted(def, cats)
     end
 end
 
---- At least one category was whitelisted: every category NOT "show" becomes "hide", and the shown
---- spell categories' ids are copied onto filter.whitelist (liftWhitelistSpells).
-local function liftWhitelisted(p, c, def, cats, shown)
+--- At least one category was whitelisted: every category NOT "show" becomes "hide" — the longhand of
+--- the old exclusive whitelist (see the doc comment above `anyShown`'s callers for why no id copy is
+--- needed any more).
+local function liftWhitelisted(def, cats)
     for _, cat in ipairs(def) do
         if cats[cat.key] ~= "show" then cats[cat.key] = "hide" end
     end
-    liftWhitelistSpells(p, c, shown)
 end
 
-local function liftCategoryWhitelist(p, c)
+local function liftCategoryWhitelist(c)
     local def = NS.Categories and NS.Categories.For(c.auraType)
     local cats = type(c.filter) == "table" and c.filter.categories
     if type(def) ~= "table" or type(cats) ~= "table" then return end
     local filterable = filterableCategories(def)
     local filterableCount = #filterable
     if filterableCount == 0 or categoriesDecided(filterable, cats) then return end
-    local shown = shownCategories(filterable, cats)
-    local shownCount = #shown
-    if shownCount == 0 then
-        liftUnwhitelisted(filterable, cats)
+    if anyShown(filterable, cats) then
+        liftWhitelisted(filterable, cats)
     else
-        liftWhitelisted(p, c, filterable, cats, shown)
+        liftUnwhitelisted(filterable, cats)
     end
 end
 
@@ -614,7 +587,7 @@ function Database.MigrateV3(p)
     for key, c in pairs(p.containers) do
         if type(c) == "table" then
             if KNOWN_AURA_TYPES[c.auraType] then
-                liftCategoryWhitelist(p, c)
+                liftCategoryWhitelist(c)
                 liftEnchantFlag(c)
                 walked = walked + 1
             elseif NS.Debug then

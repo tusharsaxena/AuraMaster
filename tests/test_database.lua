@@ -703,51 +703,19 @@ test("v3: a container with no filter.categories table at all converges without a
     assertEqual(Sig(p), Sig(converged), "run 3 is a true no-op at the fixed point")
 end)
 
-test("v3: a narrowed container copies its whitelisted spell categories' ids onto filter.whitelist", function()
+test("v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now", function()
+    -- red under: the id-copying half of the old whitelist lift (liftWhitelistSpells) coming back —
+    -- the 2026-09-15 filter-priority revision made rank 3 (a Show beats a Hide on the same aura) the
+    -- compiler's own job, for every category kind, so migration must not write filter.whitelist at all.
     local NS = fresh()
-    local Cat = NS.Categories.Find("HELPFUL", "defensives")
-    local defensivesIds = NS.FilterCompiler.CategorySpells(Cat, nil)
     local p = { containers = { { auraType = "HELPFUL",
         filter = { blacklist = { [118038] = true },
             categories = { defensives = "show", raidCDs = "" } } } } }
-    -- red under: the narrowing half of the whitelist lift being skipped entirely — an aura in
-    -- "defensives" that ALSO matches another (now hidden) category would stop being drawn, when the
-    -- old exclusive whitelist drew it regardless.
-    NS.Database.MigrateV3(p)
-    local w = p.containers[1].filter.whitelist
-    local n = 0
-    for id in pairs(defensivesIds) do
-        if id ~= 118038 then
-            assertEqual(w[id], true, "id " .. id)
-            n = n + 1
-        end
-    end
-    assertTrue(n > 0, "the starter defensives list is non-empty")
-    -- red under: a migration overturning a player's explicit blacklist entry
-    assertNil(w[118038], "already blacklisted, left alone rather than added to the whitelist")
-end)
-
-test("v3: a container that was not narrowed gains nothing on filter.whitelist", function()
-    local NS = fresh()
-    local p = { containers = { { auraType = "HELPFUL",
-        filter = { categories = { defensives = "", raidCDs = "hide" } } } } }
-    -- red under: copying ids even when no category was whitelisted
     NS.Database.MigrateV3(p)
     assertNil(p.containers[1].filter.whitelist)
-end)
-
-test("v3: the whitelist spell copy respects the profile's own category edits, and merges into an existing whitelist", function()
-    local NS = fresh()
-    local p = { categorySpells = { defensives = { [9999] = true, [871] = false } },
-        containers = { { auraType = "HELPFUL",
-            filter = { whitelist = { [42] = true },
-                categories = { defensives = "show", raidCDs = "" } } } } }
-    -- red under: reading only the shipped starter list instead of FC.CategorySpells(def, p.categorySpells)
-    NS.Database.MigrateV3(p)
-    local w = p.containers[1].filter.whitelist
-    assertEqual(w[42], true, "an id already on the whitelist survives the merge")
-    assertEqual(w[9999], true, "the profile's own addition to defensives is honored")
-    assertNil(w[871], "the profile's own removal from defensives is honored")
+    local c = p.containers[1].filter.categories
+    assertEqual(c.defensives, "show")
+    assertEqual(c.raidCDs, "hide")
 end)
 
 test("v3: MigrateV3 returns the number of containers it walked", function()

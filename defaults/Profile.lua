@@ -116,6 +116,10 @@ NS.CONTAINER_TEMPLATE = {
         durationMode    = "any",
         maxDuration     = 0,    -- seconds; 0 = no limit
         hidePermanentEnchants = true,
+        -- D8: drop the catch-all group (modules/FilterCompiler.lua) so only the whitelist and the
+        -- categories set to Show are drawn. Off by default: nothing changes for a container that
+        -- does not ask for it.
+        onlyShown       = false,
         sortMethod      = "expirationOnly",
         sortDirection   = "normal",
         maxAuras        = 0,    -- per group; 0 = no limit
