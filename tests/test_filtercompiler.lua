@@ -477,3 +477,17 @@ test("filter: a contradiction drops the category group without disturbing the wh
     assertEqual(plan.groups[1].key, "g1")
     assertEqual(plan.groups[1].label, "Always shown")
 end)
+
+-- red under: setFlag regaining its old "soft" forgiveness for a Hide negation, which would let one
+-- of the two contradictory hides silently win (and a group survive) instead of the container being
+-- reported as unmatchable.
+test("filter: hiding two categories that contradict on the same flag leaves nothing, and says so", function()
+    -- fromPlayers and fromNonPlayers share isFromPlayerOrPlayerPet at opposite values; hiding both,
+    -- with no whitelist to keep a group alive, is a genuine contradiction that drops the container's
+    -- only group — the one case that still exercises finishWarnings' zero-group NEVER_MATCHES branch.
+    local plan = compile({ auraType = "HARMFUL", filter = {
+        categories = { fromPlayers = "hide", fromNonPlayers = "hide" },
+    } })
+    assertEqual(#plan.groups, 0, "isFromPlayerOrPlayerPet can't be both true and false")
+    assertTrue(hasWarning(plan, "can never match"))
+end)

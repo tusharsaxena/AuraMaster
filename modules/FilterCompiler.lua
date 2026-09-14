@@ -78,9 +78,13 @@ local function addToken(con, token)
     con.tokens[#con.tokens + 1] = token
 end
 
---- Set a boolean candidate filter. Two categories asking for opposite values on the same field is a
---- genuine contradiction — every remaining caller is a Hide negation (schema v3 deleted the positive
---- path), so there is no "soft" collision left to forgive.
+--- Set a boolean candidate filter. Before schema v3 this took a `soft` flag: a Hide's negation could
+--- collide with an earlier Show's positive requirement on the same field, and that collision was
+--- FORGIVEN — the two categories were already disjoint (nothing could ever match both), so the
+--- negation was simply redundant rather than a real contradiction. The positive path is gone now, so
+--- every caller is a Hide negation, and two categories that both hide to opposite values on the same
+--- field (fromPlayers and fromNonPlayers, both on isFromPlayerOrPlayerPet, say) are asking for `X`
+--- and `!X` in earnest: a genuine contradiction, reported via `con.conflict` rather than swallowed.
 local function setFlag(con, field, value)
     local current = con.cand[field]
     if current == nil then

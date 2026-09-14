@@ -6,15 +6,18 @@ local _, NS = ...
 -- something Blizzard's aura container evaluates in its own secure code (we never see aura data in
 -- combat, so every filter has to be declared up front — see docs/data-flow.md):
 --
---   token   an aura filter token (`BIG_DEFENSIVE`, `CROWD_CONTROL`, …). Showing it adds the token to
---           the group's filter string; hiding it adds the negation `!TOKEN`.
---   flag    a boolean candidate filter on the aura (`isBossAura`, `isRoleAura`, …). Showing it asks
---           for `value`; hiding it asks for `not value`.
---   dispel  a set of dispel types. Showing it is `includeDispelTypes`; hiding it `excludeDispelTypes`.
---   spells  a curated list of spell ids. Showing it is `includeSpellIDs`; hiding it `excludeSpellIDs`.
---           Blizzard only honors spell ids for BUFFS ON FRIENDLY UNITS and DEBUFFS ON HOSTILE ONES,
---           so every spell category here is a buff category; the Filters page says so where it
---           matters (docs/scope.md, "What the engine cannot do").
+-- Show is the absence of a decision (schema v3): it never adds anything to a group. Only Hide writes
+-- a constraint, an exclusion, on the container's one category group (modules/FilterCompiler.lua).
+--
+--   token   an aura filter token (`BIG_DEFENSIVE`, `CROWD_CONTROL`, …). Hiding it adds the negation
+--           `!TOKEN` to the group's filter string.
+--   flag    a boolean candidate filter on the aura (`isBossAura`, `isRoleAura`, …). Hiding it asks
+--           for `not value`.
+--   dispel  a set of dispel types. Hiding it adds to `excludeDispelTypes`.
+--   spells  a curated list of spell ids. Hiding it adds to `excludeSpellIDs`. Blizzard only honors
+--           spell ids for BUFFS ON FRIENDLY UNITS and DEBUFFS ON HOSTILE ONES, so every spell
+--           category here is a buff category; the Filters page says so where it matters
+--           (docs/scope.md, "What the engine cannot do").
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any

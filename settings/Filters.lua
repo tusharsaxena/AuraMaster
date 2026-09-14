@@ -111,7 +111,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "number", min = 0, max = 40, step = 1, label = L["Max auras (0 = no limit)"],
-        desc = L["Draw at most this many auras for each shown category."],
+        desc = L["Draw at most this many auras in this container."],
     },
 })
 

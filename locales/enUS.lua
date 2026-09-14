@@ -183,7 +183,7 @@ L["The order auras are drawn in. 'Grouped' variants keep permanent auras togethe
 L["Direction"] = "Direction"
 L["Reverse the order."] = "Reverse the order."
 L["Max auras (0 = no limit)"] = "Max auras (0 = no limit)"
-L["Draw at most this many auras for each shown category."] = "Draw at most this many auras for each shown category."
+L["Draw at most this many auras in this container."] = "Draw at most this many auras in this container."
 L["The spells each category matches, shared by every container. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."] = "The spells each category matches, shared by every container. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."
 L["Category"] = "Category"
 L["Restore this category's starter list"] = "Restore this category's starter list"
