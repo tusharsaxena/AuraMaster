@@ -32,6 +32,7 @@ Every requirement below has an ID (`K-2`, `P-1`, …) that the plan, the commits
 | D4 | **The grid cell change ships in LibKa0s, not as an AuraMaster fork.** options-ui-§6 forbids per-panel layout code in a host; a library widget keeps AM conformant with no deviation. LibKa0s is bumped and re-vendored across all ten addons in this effort |
 | D5 | **The filter priority is documented and surfaced.** Its ranks are unchanged in spirit; D7 removes one of them |
 | D7 | **Categories become Show / Hide, defaulting to Show, and Show means "not excluded".** The three-state model goes: `""` and `"show"` collapse into one state that contributes nothing, and `"hide"` excludes. A container is therefore *every aura of its type minus what its Hidden categories exclude* — always one category group, never one per shown category. **What this costs:** a container can no longer be built as "only Defensives" from this tab; that is done by hiding the other categories, or with the Overrides whitelist. The v3 migration preserves the intent of anyone who used the old Whitelist (section 5, `E-8`) |
+| D8 | **"Draw only these" is restored as a per-container toggle** (owner, 2026-09-15, revising the same day's earlier acceptance of the loss). Categories alone still cannot express it — rank 5 draws an aura in no category — so a switch on the Categories tab drops the catch-all group instead. Off by default, so nothing changes for a container that does not ask for it |
 | D6 | **The double tooltip is fixed with a container-wide mouse blocker**, gated on the existing `Style.TakesHover(cfg)` rule. It is not reproducible headlessly, so the headless test asserts the blocker's existence and gating, and `docs/smoke-tests.md` carries the in-client confirmation |
 
 ## 3. LibKa0s v1.36.0
@@ -85,30 +86,65 @@ at profile scope, drops `includeEnchants` from `CONTAINER_TEMPLATE` (line 115), 
 shipped `Player buffs` container's `includeEnchants = true` (line 201) — the new Show default covers it.
 It also stamps every category row at `"show"` in `CONTAINER_TEMPLATE` (`F-6`).
 
-## 6. Filter priority
+## 6. Filter priority (revised by the owner, 2026-09-15)
 
-Three ranks decide, and a fourth is the absence of a decision:
+**This supersedes the order the batch was started with.** Two things changed: the Overrides
+whitelist now beats the blacklist, and a category's Show is a positive claim on an aura rather than
+merely the absence of a Hide.
 
-| Rank | Rule | Mechanism |
+| Rank | Rule | Outcome |
 |---|---|---|
-| 1 | Overrides → Blacklist | ids stripped from the whitelist set, then `excludeSpellIDs` on the base the category group clones |
-| 2 | Overrides → Whitelist | its own group, added first, carrying the aura type and those ids alone; the category group excludes them |
-| 3 | Category → Hide | applied as an exclusion to the category group |
-| 4 | Category → Show | no effect: the aura is drawn because nothing removed it |
+| 1 | On the Overrides **whitelist** | **Shown.** Always, whatever anything else says |
+| 2 | On the Overrides **blacklist** | **Hidden**, unless rank 1 already claimed it |
+| 3 | In **at least one** category set to Show | **Shown**, even if it is also in a category set to Hide |
+| 4 | In one or more categories, **all** of them set to Hide | **Hidden** |
+| 5 | In **no** category at all | **Shown** — nothing removed it (owner, 2026-09-15) |
+
+Stated as one sentence: an aura is hidden when the blacklist names it, or when every category it
+belongs to says Hide; everything else is drawn, and the whitelist overrides both.
+
+Rank 3 is the substantive change. Under the superseded order a single Hide removed an aura even if
+another category showed it — so a Defensive that was also Cancelable vanished from a container that
+wanted defensives. Now a Show anywhere rescues it.
+
+### 6b. How that compiles
+
+The engine ANDs the constraints inside one group and ORs the groups, so "in ANY shown category"
+is a union and therefore needs a group per shown category — the machinery `C-2` deleted, brought
+back and extended with a catch-all.
 
 | ID | Requirement |
 |---|---|
-| `P-1` | The four rules, in order, as a blurb at the top of Filters → Categories and Filters → Overrides |
-| `P-2` | The table above in `docs/ARCHITECTURE.md` (new *Filter priority* section) and `docs/settings-panel.md`, and as a numbered list in the `FilterCompiler.lua` header comment, replacing the tri-state prose in the *HOW CATEGORIES COMBINE* block |
-| `P-3` | New pure `FC.ExplainSpell(cfg, id, ctx)` → `{ verdict = "shown" \| "hidden", rank = 1..4, categories = { { key, label, state } } }`. Pure in the file's existing sense: no frames, no database, `cfg` and `ctx` in, a table out |
-| `P-4` | Each Overrides entry carries that verdict as its `note` (`K-3`) — for example `also in Defensives (Hide) — hidden by rule 3`. An id claimed by no category and contradicted by nothing gets no note |
+| `R-1` | The **whitelist group** is emitted first: the aura type and those ids alone. The blacklist is NOT applied to it (rank 1 beats rank 2) |
+| `R-2` | `applyLists` inverts: whitelisted ids are removed from the **blacklist**, not the other way round. The Overrides blurb stops saying "a spell on both lists is hidden" and says the whitelist wins |
+| `R-3` | **When no category is set to Hide**, exactly one category group is emitted: the base, minus the whitelist. A shown category cannot rescue anything when nothing is hiding, so the extra groups would be pure cost. This keeps a default container at one group |
+| `R-4` | **When at least one category is Hidden**, one group per SHOWN category is emitted — the base plus that category's positive constraint, minus every earlier shown category and minus the whitelist, so no aura is drawn twice — followed by the catch-all |
+| `R-5` | The **catch-all group** is last: the base, minus every hidden category, minus every shown category, minus the whitelist. It is what draws an aura belonging to no category (rank 5) |
+| `R-6` | `excludeCategory` regains a positive sibling for `R-4`. Kind `enchant` takes part in neither — it matches no aura |
+| `R-7` | The blacklist applies to the base, so it reaches the shown groups and the catch-all but never the whitelist group |
 
-`ExplainSpell` resolves the rank by asking, in order: is the id on `filter.blacklist`; on
-`filter.whitelist`; in any `spells`-kind category whose state is `hide`. Failing all three the
-verdict is `shown` at rank 4. It reports categories through `FC.CategorySpells`, so a profile edit
-on General → Spell Categories moves the verdict the same way it moves the filter. It reasons about
-`spells`-kind categories only — a token, flag or dispel category matches auras the addon cannot
-enumerate by id, and guessing there would be worse than silence.
+Consequence for `E-8`: once this lands, **the v3 migration's whitelist-id copying is no longer
+needed and is reverted.** It existed only to stop a Hide from removing an aura that a Show also
+claimed — which is now rank 3's job, done properly and for every category kind rather than only
+for `spells`-kind ids.
+
+### 6c. "Only these categories" (`D8`)
+
+Rank 5 is what makes "draw only these" impossible: an aura in no category is drawn because nothing
+removed it. The toggle turns rank 5 off for one container.
+
+| ID | Requirement |
+|---|---|
+| `R-8` | New per-container `container.filter.onlyShown`, a bool defaulting to **false**. A schema row in the Categories group carrying `skipRender` — task B5 draws it at the top of the tab, above the grids |
+| `R-9` | When it is **on**, the catch-all group (`R-5`) is not emitted. The groups are then the whitelist group plus one per shown category, so an aura is drawn only if the whitelist names it or at least one of its categories says Show. `R-3`'s single-group optimization does NOT apply while it is on: the shown groups ARE the container, whether or not anything is hidden |
+| `R-10` | While it is on, **Hide means "not shown" rather than "removed"** — an aura reaches rank 4 only by failing rank 3, and rank 3 is now the only way in. The Hide cells stay live and clickable, because Hide is the only way to un-Show a row; the tab's blurb says what the two states mean under each setting. Do NOT dim the Hide column |
+| `R-11` | On, with no category set to Show and nothing on the whitelist, a container draws nothing. That is a legitimate configuration to arrive at by accident, so it carries its own warning — `FC.WARN.ONLY_SHOWN_NONE`, "Only the categories set to Show are drawn, and no category is set to Show." — in place of the generic `NEVER_MATCHES` |
+
+`ExplainSpell` follows: with `onlyShown` on, an aura that reaches rank 5 is reported `hidden`, not
+`shown`, and the note says the container draws only its shown categories.
+
+The toggle is deliberately per-container and not profile-wide: one container showing a curated set
+while another shows everything is the normal case.
 
 ### 6a. The compiler simplification (`D7`)
 
