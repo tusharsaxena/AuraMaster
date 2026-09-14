@@ -14,14 +14,15 @@ local _, NS = ...
 -- is what makes the filtering rules testable headlessly (tests/test_filtercompiler.lua) when nothing
 -- else about an aura can be.
 --
--- HOW CATEGORIES COMBINE (the tri-state):
---   * No category shown  → ONE group: every aura of the type, minus every hidden category.
---   * Some shown         → one group PER shown category (their union), each minus the hidden ones
---                          and minus every shown category declared before it, so an aura matching
---                          two shown categories appears once, under the first.
---   * A whitelist        → its own group first (always shown, whatever the categories say), and every
---                          other group excludes those ids so nothing is drawn twice.
---   * A blacklist        → excluded from every group.
+-- HOW CATEGORIES COMBINE (schema v3). A category is Show or Hide, and Show is the absence of a
+-- decision. There is always exactly ONE category group: every aura of the type, minus every
+-- category set to Hide, minus the Overrides whitelist (which has its own group, so nothing is
+-- drawn twice). The priority, highest first:
+--
+--   1. Overrides -> Blacklist.  Never drawn. Beats everything, the Overrides whitelist included.
+--   2. Overrides -> Whitelist.  Always drawn, in its own group, whatever the categories say.
+--   3. Category  -> Hide.       Not drawn, unless rule 2 already claimed it.
+--   4. Category  -> Show.       Drawn, because nothing removed it. Contributes no constraint.
 --
 -- A group whose constraints contradict themselves (it would need both `X` and `!X`) is dropped rather
 -- than handed to the engine, because it could never match anything.
@@ -77,14 +78,14 @@ local function addToken(con, token)
     con.tokens[#con.tokens + 1] = token
 end
 
---- Set a boolean candidate filter. `soft` marks a NEGATION of an earlier category: when it collides
---- with a positive requirement on the same field the two categories are already disjoint, so the
---- negation is simply unnecessary rather than a contradiction.
-local function setFlag(con, field, value, soft)
+--- Set a boolean candidate filter. Two categories asking for opposite values on the same field is a
+--- genuine contradiction — every remaining caller is a Hide negation (schema v3 deleted the positive
+--- path), so there is no "soft" collision left to forgive.
+local function setFlag(con, field, value)
     local current = con.cand[field]
     if current == nil then
         con.cand[field] = value
-    elseif current ~= value and not soft then
+    elseif current ~= value then
         con.conflict = true
     end
 end
@@ -119,29 +120,21 @@ end
 
 local function isEmpty(t) return next(t) == nil end
 
---- Apply category `def` to `con`, positively ("show") or negatively (as an exclusion).
-local function applyCategory(con, def, spellEdits, positive)
+--- Exclude category `def` from `con`. Categories are a pure exclusion filter since schema v3: a row
+--- is Hide, which removes what it matches, or Show, which is the absence of a decision and reaches
+--- this function never. Kind `enchant` matches no aura at all — it decides whether the container's
+--- weapon-enchant slots exist — so it contributes nothing here.
+local function excludeCategory(con, def, spellEdits)
     local kind = def.kind
     if kind == "token" then
-        addToken(con, positive and def.token or ("!" .. def.token))
+        addToken(con, "!" .. def.token)
     elseif kind == "flag" then
-        if positive then
-            setFlag(con, def.field, def.value, false)
-        else
-            setFlag(con, def.field, not def.value, true)
-        end
+        setFlag(con, def.field, not def.value)
     elseif kind == "dispel" then
-        addToSet(con, positive and "includeDispelTypes" or "excludeDispelTypes", def.types)
+        addToSet(con, "excludeDispelTypes", def.types)
     elseif kind == "spells" then
         local set = FC.CategorySpells(def, spellEdits)
-        if positive then
-            -- A shown spell category with no ids left would pass NOTHING — including it as an empty
-            -- include-map is what the engine would honor, and an empty group is honest about that.
-            if isEmpty(set) then con.conflict = true return end
-            addToSet(con, "includeSpellIDs", set)
-        elseif not isEmpty(set) then
-            addToSet(con, "excludeSpellIDs", set)
-        end
+        if not isEmpty(set) then addToSet(con, "excludeSpellIDs", set) end
     end
 end
 
@@ -266,20 +259,18 @@ local function applyLists(base, filter)
     return whitelist, true
 end
 
---- The categories set to show and to hide, in declaration order.
---- @return table shown, table hidden, boolean usesSpellIds
+--- The categories set to Hide, in declaration order. Kind `enchant` is skipped: it never narrows an
+--- aura group, it decides whether the container has enchant slots (compileEnchant / Compile).
+--- @return table hidden, boolean usesSpellIds
 local function splitCategories(Categories, auraType, states)
-    local shown, hidden, usesSpellIds = {}, {}, false
+    local hidden, usesSpellIds = {}, false
     for _, def in ipairs(Categories.For(auraType)) do
-        local state = states[def.key]
-        if state == "show" then
-            shown[#shown + 1] = def
-        elseif state == "hide" then
+        if states[def.key] == "hide" and def.kind ~= "enchant" then
             hidden[#hidden + 1] = def
+            if def.kind == "spells" then usesSpellIds = true end
         end
-        if (state == "show" or state == "hide") and def.kind == "spells" then usesSpellIds = true end
     end
-    return shown, hidden, usesSpellIds
+    return hidden, usesSpellIds
 end
 
 --- One engine group for `con`, unless it is a contradiction.
@@ -309,29 +300,13 @@ local function addWhitelistGroup(plan, auraType, whitelist, look)
     return true
 end
 
---- The category groups: one "All" group, or one per shown category. Each excludes the hidden
---- categories, the whitelist, and every shown category before it. `cats.spellEdits` is the
---- profile's spell-list edits.
-local function addCategoryGroups(plan, base, cats, look)
-    local edits = cats.spellEdits
-    local function withExclusions(con)
-        for _, def in ipairs(cats.hidden) do applyCategory(con, def, edits, false) end
-        if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
-        return con
-    end
-
-    local shown = cats.shown
-    local shownCount = #shown
-    if shownCount == 0 then
-        addGroup(plan, withExclusions(cloneCon(base)), "All", look)
-        return
-    end
-    for i, def in ipairs(shown) do
-        local con = cloneCon(base)
-        applyCategory(con, def, edits, true)
-        for j = 1, i - 1 do applyCategory(con, shown[j], edits, false) end
-        addGroup(plan, withExclusions(con), def.label, look)
-    end
+--- The one category group: the base, minus every hidden category, minus the Overrides whitelist
+--- (which has its own group and must not be drawn twice).
+local function addCategoryGroup(plan, base, cats, look)
+    local con = cloneCon(base)
+    for _, def in ipairs(cats.hidden) do excludeCategory(con, def, cats.spellEdits) end
+    if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
+    addGroup(plan, con, "All", look)
 end
 
 --- The warnings that depend on the finished plan.
@@ -382,11 +357,11 @@ function FC.Compile(cfg, ctx)
     local timedIds = applyDuration(base, plan, filter, auraType, ctx.timedSpells)
     local whitelist, blacklisted = applyLists(base, filter)
 
-    -- ── Categories: shown and hidden, in declaration order ───────────────────────────────────
-    local shown, hidden, categoryIds = splitCategories(Categories, auraType, filter.categories or {})
+    -- ── Categories: the one group, minus everything set to Hide ─────────────────────────────
+    local hidden, categoryIds = splitCategories(Categories, auraType, filter.categories or {})
     local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
-    addCategoryGroups(plan, base,
-        { shown = shown, hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells }, look)
+    addCategoryGroup(plan, base,
+        { hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells }, look)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     if auraType == "HELPFUL" and filter.includeEnchants and cfg.unit == "player" then

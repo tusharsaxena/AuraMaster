@@ -102,10 +102,10 @@ NS.CONTAINER_TEMPLATE = {
 
     -- What the container shows. See modules/FilterCompiler.lua for how each field reaches the engine.
     filter = {
-        -- [categoryKey] = "" (neutral) | "show" | "hide". Every key of both lists, so each resolves
-        -- as a schema row (settings/Filters.lua) and a key added later backfills as neutral.
-        -- defaults/Categories.lua loads first for exactly this line.
-        categories      = NS.Categories.NeutralStates(),
+        -- [categoryKey] = "show" | "hide". Every key of both lists, so each resolves as a schema
+        -- row (settings/Filters.lua) and a key added later backfills as Show (the default: it
+        -- excludes nothing). defaults/Categories.lua loads first for exactly this line.
+        categories      = NS.Categories.DefaultStates(),
         -- The spell-list edits are the profile's since schema v2 (`profile.categorySpells`).
         whitelist       = {},   -- [spellId] = true — always shown, whatever the categories say
         blacklist       = {},   -- [spellId] = true — never shown

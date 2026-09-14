@@ -80,16 +80,21 @@ test("filter: 'only timeless' on a debuff container is reported and treated as a
     assertTrue(hasWarning(plan, "buffs only"))
 end)
 
--- ── categories ────────────────────────────────────────────────────────────────────────────────
+-- ── categories (schema v3: Show / Hide) ──────────────────────────────────────────────────────
 
-test("filter: showing a token category adds the token", function()
+test("filter: showing a token category adds nothing — there is always exactly one group", function()
+    -- was: "showing a token category adds the token". Show is the absence of a decision now, so it
+    -- contributes no token at all; the container draws every aura of its type.
     local plan = compile({ filter = { categories = { bigDefensive = "show" } } })
     assertEqual(#plan.groups, 1)
-    assertEqual(plan.groups[1].filter, "HELPFUL|BIG_DEFENSIVE")
+    assertEqual(plan.groups[1].filter, "HELPFUL")
+    assertEqual(plan.groups[1].label, "All")
+    assertNil(plan.groups[1].candidateFilters)
 end)
 
-test("filter: hiding a token category adds its negation to every group", function()
+test("filter: hiding a token category adds its negation to the one group", function()
     local plan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
+    assertEqual(#plan.groups, 1)
     assertEqual(plan.groups[1].filter, "HARMFUL|!CROWD_CONTROL")
 end)
 
@@ -98,46 +103,52 @@ test("filter: hiding a flag category asks for the opposite value", function()
     assertEqual(plan.groups[1].candidateFilters.isBossAura, false)
 end)
 
-test("filter: a dispel category shown includes, hidden excludes", function()
+test("filter: a dispel category shown includes nothing, hidden excludes", function()
+    -- was: "a dispel category shown includes, hidden excludes". The positive (includeDispelTypes)
+    -- path is deleted; showing a dispel category contributes no constraint at all.
     local shown = compile({ auraType = "HARMFUL", filter = { categories = { magic = "show" } } })
-    assertEqual(setOf(shown.groups[1].candidateFilters.includeDispelTypes), "Magic")
+    assertNil(shown.groups[1].candidateFilters)
     local hidden = compile({ auraType = "HARMFUL", filter = { categories = { poison = "hide" } } })
     assertEqual(setOf(hidden.groups[1].candidateFilters.excludeDispelTypes), "Poison")
 end)
 
-test("filter: two shown categories are a union, and the second excludes the first", function()
-    -- defensives (a spell list) is declared before bigDefensive (a token) in defaults/Categories.lua.
+test("filter: two shown categories still compile to the one, unfiltered group", function()
+    -- was: "two shown categories are a union, and the second excludes the first" (two groups).
+    -- Schema v3 deleted the per-shown-category group: showing defensives and bigDefensive together
+    -- is exactly the same as showing neither.
     local plan = compile({ filter = { categories = { defensives = "show", bigDefensive = "show" } } })
-    assertEqual(#plan.groups, 2)
-    local def = NS.Categories.Find("HELPFUL", "defensives")
-    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), setOf(def.spells))
-    assertEqual(plan.groups[2].filter, "HELPFUL|BIG_DEFENSIVE")
-    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), setOf(def.spells),
-        "an aura in both categories is drawn once, under the first")
+    assertEqual(#plan.groups, 1)
+    assertEqual(plan.groups[1].filter, "HELPFUL")
+    assertNil(plan.groups[1].candidateFilters)
 end)
 
-test("filter: a token shown after a token excludes it by negation", function()
-    local plan = compile({ filter = { categories = { bigDefensive = "show", externals = "show" } } })
-    assertEqual(plan.groups[2].filter, "HELPFUL|EXTERNAL_DEFENSIVE|!BIG_DEFENSIVE")
+test("filter: two hidden token categories both negate, in the one group", function()
+    -- was: "a token shown after a token excludes it by negation" (a second shown-category group).
+    -- There is only ever one group now, so two Hidden tokens simply both negate it.
+    local plan = compile({ filter = { categories = { bigDefensive = "hide", externals = "hide" } } })
+    assertEqual(#plan.groups, 1)
+    assertEqual(plan.groups[1].filter, "HELPFUL|!BIG_DEFENSIVE|!EXTERNAL_DEFENSIVE")
 end)
 
-test("filter: a category's spell edits add and remove ids", function()
+test("filter: a hidden category's spell edits add and remove ids from the exclusion", function()
+    -- was: "a category's spell edits add and remove ids" (against a Shown category's includeSpellIDs).
+    -- The edits now land on Hide's excludeSpellIDs, the only spell-id path left.
     local def = NS.Categories.Find("HELPFUL", "movement")
     local starter = next(def.spells)
-    local plan = compile({ filter = { categories = { movement = "show" } } },
+    local plan = compile({ filter = { categories = { movement = "hide" } } },
         { categorySpells = { movement = { [starter] = false, [999001] = true } } })
-    local inc = plan.groups[1].candidateFilters.includeSpellIDs
-    assertNil(inc[starter], "a removed starter id is gone")
-    assertTrue(inc[999001], "an added id is included")
+    local exc = plan.groups[1].candidateFilters.excludeSpellIDs
+    assertNil(exc[starter], "a removed starter id is not excluded")
+    assertTrue(exc[999001], "an added id is excluded")
 end)
 
 test("filter: spell edits are the profile's, handed in ctx; a container's own old copy is ignored (schema v2)", function()
     local def = NS.Categories.Find("HELPFUL", "movement")
     local starter = next(def.spells)
-    local plan = compile({ filter = { categories = { movement = "show" },
+    local plan = compile({ filter = { categories = { movement = "hide" },
         categorySpells = { movement = { [starter] = false } } } })
     -- red under: Compile still reading cfg.filter.categorySpells (the v1 per-container store)
-    assertTrue(plan.groups[1].candidateFilters.includeSpellIDs[starter])
+    assertTrue(plan.groups[1].candidateFilters.excludeSpellIDs[starter])
 end)
 
 test("filter: both compile sites hand the compiler the profile's spell lists", function()
@@ -160,19 +171,64 @@ test("filter: both compile sites hand the compiler the profile's spell lists", f
     end
 end)
 
-test("filter: a shown spell category with every id removed can never match, and says so", function()
+test("filter: showing a spell category with every id removed still contributes nothing", function()
+    -- was: "a shown spell category with every id removed can never match, and says so" (a
+    -- contradiction: an empty includeSpellIDs). That whole mechanism is deleted with the positive
+    -- path — Show never writes a candidate filter, empty or otherwise.
     local def = NS.Categories.Find("HELPFUL", "consumables")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = { categories = { consumables = "show" } } }, { categorySpells = { consumables = removed } })
-    assertEqual(#plan.groups, 0, "a contradiction is dropped rather than handed to the engine")
-    assertTrue(hasWarning(plan, "can never match"))
+    local plan = compile({ filter = { categories = { consumables = "show" } } },
+        { categorySpells = { consumables = removed } })
+    assertEqual(#plan.groups, 1)
+    assertNil(plan.groups[1].candidateFilters)
+    assertEqual(#plan.warnings, 0)
+end)
+
+-- ── Show / Hide (schema v3) ───────────────────────────────────────────────────────────────────
+
+-- red under: the per-shown-category loop surviving, so two shown categories make two groups.
+test("filter: categories set to show add no group — there is always exactly one", function()
+    local plan = compile({ filter = { categories = { defensives = "show", raidCDs = "show" } } })
+    assertEqual(#plan.groups, 1)
+    assertEqual(plan.groups[1].filter, "HELPFUL")
+    assertEqual(plan.groups[1].label, "All")
+    assertNil(plan.groups[1].candidateFilters)
+end)
+
+-- red under: a hidden spell category no longer excluding, or excluding into the wrong field.
+test("filter: a category set to hide excludes its spells from the one group", function()
+    local plan = compile({ filter = { categories = { defensives = "hide" } } })
+    assertEqual(#plan.groups, 1)
+    assertTrue(plan.groups[1].candidateFilters.excludeSpellIDs[642])
+end)
+
+-- red under: a hidden token category losing its negation.
+test("filter: a token category set to hide negates its token", function()
+    local plan = compile({ filter = { categories = { cancelable = "hide" } } })
+    assertEqual(plan.groups[1].filter, "HELPFUL|!CANCELABLE")
+end)
+
+-- red under: "show" being treated as an exclusion, which would invert the whole page.
+test("filter: show and hide are not symmetric — show excludes nothing", function()
+    local shown = compile({ filter = { categories = { defensives = "show" } } })
+    assertNil(shown.groups[1].candidateFilters)
+end)
+
+-- red under: an empty hidden spell category writing an empty excludeSpellIDs map.
+test("filter: a hidden spell category with no ids left contributes no exclusion", function()
+    local edits = { defensives = {} }
+    for id in pairs(NS.Categories.Find("HELPFUL", "defensives").spells) do edits.defensives[id] = false end
+    local plan = FC.Compile(cfg({ filter = { categories = { defensives = "hide" } } }),
+        { categorySpells = edits })
+    assertEqual(#plan.groups, 1)
+    assertNil(plan.groups[1].candidateFilters)
 end)
 
 -- ── whitelist and blacklist ───────────────────────────────────────────────────────────────────
 
 test("filter: the whitelist is its own first group and every other group excludes it", function()
-    local plan = compile({ filter = { whitelist = { [500] = true }, categories = { bigDefensive = "show" } } })
+    local plan = compile({ filter = { whitelist = { [500] = true } } })
     assertEqual(plan.groups[1].label, "Always shown")
     assertEqual(plan.groups[1].filter, "HELPFUL")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "500")
@@ -199,7 +255,7 @@ test("filter: spell lists on a target's buffs only apply while it is friendly", 
 end)
 
 test("filter: the player's own buffs carry no identity warning", function()
-    local plan = compile({ unit = "player", filter = { categories = { defensives = "show" } } })
+    local plan = compile({ unit = "player", filter = { categories = { defensives = "hide" } } })
     assertEqual(#plan.warnings, 0)
 end)
 
@@ -275,30 +331,28 @@ local RICH = {
 }
 
 local RICH_SIGNATURES = {
+    -- Show/Hide (schema v3): "show" categories (bigDefensive, castable) contribute nothing; the two
+    -- "hide" categories (important, stealable) fold into the one category group alongside the base.
     "{enchants={hidePermanent=boolean:true,slots={1=string:mainHand,2=string:offHand,3=string:ranged}},"
     .. "groups={1={candidateFilters={includeSpellIDs={100=boolean:true}},filter=string:HELPFUL,key=string:g1,"
     .. "label=string:Always shown,maxFrameCount=number:5,sortDirection=string:reverse,sortMethod=string:default},"
     .. "2={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,400=boolean:true},"
-    .. "isStealable=boolean:false},filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE|!IMPORTANT,key=string:g2,"
-    .. "label=string:Big defensives (Blizzard),maxFrameCount=number:5,sortDirection=string:reverse,"
-    .. "sortMethod=string:default},"
-    .. "3={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,400=boolean:true},"
-    .. "isStealable=boolean:false},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE|!IMPORTANT,key=string:g3,"
-    .. "label=string:Castable by you,maxFrameCount=number:5,sortDirection=string:reverse,sortMethod=string:default}},"
+    .. "isStealable=boolean:false},filter=string:HELPFUL|!PLAYER|!IMPORTANT,key=string:g2,"
+    .. "label=string:All,maxFrameCount=number:5,sortDirection=string:reverse,"
+    .. "sortMethod=string:default}},"
     .. "warnings={1=string:Max duration is ignored while showing only auras without a duration.}}",
 
-    "{groups={1={candidateFilters={isBossAura=boolean:true,maxDuration=number:12},"
-    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g1,label=string:Boss debuffs,"
-    .. "maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly},"
-    .. "2={candidateFilters={includeDispelTypes={Magic=boolean:true},isBossAura=boolean:false,maxDuration=number:12},"
-    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g2,label=string:Magic,"
+    -- magic (show) contributes nothing; boss (show) contributes nothing; crowdControl (hide) negates.
+    "{groups={1={candidateFilters={maxDuration=number:12},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g1,label=string:All,"
     .. "maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly}},"
     .. "warnings={1=string:Only auras without a duration works for buffs only; this container shows every duration.}}",
 
+    -- bigDefensive (show) contributes nothing to the one category group.
     "{groups={1={candidateFilters={includeSpellIDs={500=boolean:true}},filter=string:HELPFUL,key=string:g1,"
     .. "label=string:Always shown,maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly},"
-    .. "2={candidateFilters={excludeSpellIDs={500=boolean:true},maxDuration=number:inf},filter=string:HELPFUL|BIG_DEFENSIVE,"
-    .. "key=string:g2,label=string:Big defensives (Blizzard),maxFrameCount=number:inf,sortDirection=string:normal,"
+    .. "2={candidateFilters={excludeSpellIDs={500=boolean:true},maxDuration=number:inf},filter=string:HELPFUL,"
+    .. "key=string:g2,label=string:All,maxFrameCount=number:inf,sortDirection=string:normal,"
     .. "sortMethod=string:expirationOnly}},"
     .. "warnings={1=string:Spell lists only apply while the unit is friendly.}}",
 
@@ -404,21 +458,22 @@ test("filter: a hidden spell category with every id removed excludes nothing", f
     for id in pairs(def.spells) do removed[id] = false end
     local plan = compile({ filter = { categories = { consumables = "hide" } } }, { categorySpells = { consumables = removed } })
     assertEqual(#plan.groups, 1)
-    -- red under: applyCategory adding an empty exclude map for a hidden category
+    -- red under: excludeCategory adding an empty exclude map for a hidden category
     assertNil(plan.groups[1].candidateFilters)
 end)
 
-test("filter: group keys stay consecutive when a contradiction drops a group", function()
-    -- Update addresses the live engine's groups by these keys, so a key must not depend on which
-    -- categories happened to compile to a group.
-    local def = NS.Categories.Find("HELPFUL", "movement")
-    local removed = {}
-    for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = {
-        categories = { defensives = "show", movement = "show", consumables = "show" },
-    } }, { categorySpells = { movement = removed } })
-    assertEqual(#plan.groups, 2, "the emptied movement group is dropped")
-    -- red under: keying a group by its category's position instead of the groups already added
-    assertEqual(plan.groups[2].key, "g2")
-    assertEqual(plan.groups[2].label, "Consumables")
+test("filter: a contradiction drops the category group without disturbing the whitelist group's key", function()
+    -- was: "group keys stay consecutive when a contradiction drops a group" (a dropped middle
+    -- shown-category group). Schema v3 leaves at most two groups — whitelist, then the one category
+    -- group — so the surviving case is the category group conflicting and being dropped entirely.
+    -- fromNonPlayers and fromPlayers hide the same field to opposite values: hiding both is
+    -- self-contradictory. Update addresses the live engine's groups by these keys, so the whitelist
+    -- group ahead of the drop must keep key "g1" rather than being renumbered.
+    local plan = compile({ auraType = "HARMFUL", filter = {
+        whitelist = { [500] = true },
+        categories = { fromPlayers = "hide", fromNonPlayers = "hide" },
+    } })
+    assertEqual(#plan.groups, 1, "the contradictory category group is dropped")
+    assertEqual(plan.groups[1].key, "g1")
+    assertEqual(plan.groups[1].label, "Always shown")
 end)

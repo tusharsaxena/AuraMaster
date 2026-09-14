@@ -4,7 +4,7 @@ local _, NS = ...
 --
 --     band          [Container ▾]
 --     [ What to show ][ Categories ][ Sorting ][ Overrides ]
---     Categories    Blizzard Categories   Default · Whitelist · Blacklist · Category, a line each
+--     Categories    Blizzard Categories   Show · Hide · Category, a line each
 --                   Custom Categories     (buffs)        the same grid over the spell categories
 --                   Dispel Types · Who Cast It  (debuffs)
 --     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
@@ -16,11 +16,13 @@ local _, NS = ...
 -- ids on a debuff container on yourself, say) is printed in orange above every tab.
 --
 -- The category rows are generated from defaults/Categories.lua and offered only for the aura type
--- they belong to (`auraTypes`); a category is a three-state choice, stored as "" / "show" / "hide"
--- and labeled Default / Whitelist / Blacklist. The rows stay in the schema, so `/am get|set|list`,
--- Defaults and the resets see them, but carry `skipRender`: the Categories tab, bespoke and keyed by
--- the group's name, draws them as one ChoiceGrid per `grid`. Which spells a spell category matches
--- is the profile's, edited on General → Spell Categories (settings/GeneralSpells.lua).
+-- they belong to (`auraTypes`); a category is a two-state choice, stored as "show" / "hide" and
+-- labeled Show / Hide (schema v3: Show is the absence of a decision, so it excludes nothing — a
+-- container is always every aura of its type minus what its Hidden categories remove). The rows
+-- stay in the schema, so `/am get|set|list`, Defaults and the resets see them, but carry
+-- `skipRender`: the Categories tab, bespoke and keyed by the group's name, draws them as one
+-- ChoiceGrid per `grid`. Which spells a spell category matches is the profile's, edited on
+-- General → Spell Categories (settings/GeneralSpells.lua).
 --
 -- The Overrides tab is bespoke: two ID lists over the container's whitelist and blacklist, each set
 -- written WHOLE through the write seam (settings/Schema.lua's carve-outs). They are not schema rows,
@@ -83,7 +85,7 @@ local function categoryRows(auraType)
             path = "container.filter.categories." .. def.key, page = PAGE, group = G_CATS,
             grid = gridOf(def), skipRender = true, printLabel = true, auraTypes = { [auraType] = true },
             type = "string", values = STATES, label = L[def.label],
-            desc = ("%s\n\n%s"):format(L[def.desc], L["Whitelist: this container shows only the categories set to Whitelist (and the spells on its Overrides whitelist). Blacklist: never shown here. Default: no effect."]),
+            desc = ("%s\n\n%s"):format(L[def.desc], L["Show: no effect. Hide: never shown here (unless it is on the Overrides whitelist)."]),
         }
         rows[#rows + 1] = row
     end

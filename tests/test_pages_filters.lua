@@ -37,12 +37,12 @@ local function headings(ws)
     return out
 end
 
---- The grid line for category `key`: the Default, Whitelist and Blacklist cells, then the label.
+--- The grid line for category `key`: the Show and Hide cells, then the label (schema v3).
 local function gridLine(NS, ws, key)
     local label = NS.FindSchemaRow("container.filter.categories." .. key).label
     for _, w in ipairs(ws) do
         local kids = w.children
-        local last = kids and kids[4]
+        local last = kids and kids[3]
         if last and last.type == "InteractiveLabel" and last.text == label then
             return kids
         end
@@ -134,61 +134,58 @@ test("filters: a debuff container's Categories tab is Blizzard Categories, Dispe
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 
-test("filters: every grid's columns are Default, Whitelist and Blacklist, then the category", function()
+test("filters: every grid's columns are Show and Hide, then the category (schema v3)", function()
     local NS, _, _, ws = categories()
     local L = NS.L
     local headers = 0
     for _, w in ipairs(ws) do
         local kids = w.children
-        if kids and kids[1] and kids[1].type == "Label" and kids[1].text == L["Default"] then
+        if kids and kids[1] and kids[1].type == "Label" and kids[1].text == L["Show"] then
             headers = headers + 1
             local got = {}
             for i, k in ipairs(kids) do got[i] = k.text end
-            -- red under: CATEGORY_STATE_LABELS keeping — / Show / Hide
-            assertEqual(table.concat(got, "|"),
-                L["Default"] .. "|" .. L["Whitelist"] .. "|" .. L["Blacklist"] .. "|" .. L["Category"])
+            -- red under: CATEGORY_STATE_LABELS keeping a third, Default column
+            assertEqual(table.concat(got, "|"), L["Show"] .. "|" .. L["Hide"] .. "|" .. L["Category"])
         end
     end
     assertEqual(headers, 2, "one header line per grid")
 end)
 
-test("filters: a grid radio stores show, hide or \"\" for the selected container and re-syncs its line", function()
+test("filters: a grid radio stores show or hide for the selected container and re-syncs its line", function()
     local NS, m, _, ws = categories()
     m.__subcategories.Filters:Show()   -- on screen, so a write re-syncs the widgets in place
     local cells = gridLine(NS, ws, "defensives")
     assertEqual(cells[1].checkType, "radio")
-    assertTrue(cells[1].value == true, "Default is lit for a fresh container")
+    assertTrue(cells[1].value == true, "Show is lit for a fresh container")
     cells[2]:__fire("OnValueChanged", true)
-    -- red under: the columns' values out of order (the Whitelist cell storing anything but "show")
-    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "show")
-    assertEqual(NS.Database.FindContainer(2).filter.categories.defensives, "", "no other container")
-    cells[3]:__fire("OnValueChanged", true)
+    -- red under: the columns' values out of order (the Hide cell storing anything but "hide")
     assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "hide")
-    -- red under: a cell's refresher not re-reading the row (the Whitelist cell would stay lit)
-    assertTrue(cells[3].value == true and cells[2].value == false, "the line re-syncs to Blacklist")
+    assertEqual(NS.Database.FindContainer(2).filter.categories.defensives, "show", "no other container")
+    -- red under: a cell's refresher not re-reading the row (the Show cell would stay lit)
+    assertTrue(cells[2].value == true and cells[1].value == false, "the line re-syncs to Hide")
     cells[1]:__fire("OnValueChanged", true)
-    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "")
+    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "show")
 end)
 
-test("filters: /am get and /am list print a category's state as Default, Whitelist or Blacklist", function()
+test("filters: /am get and /am list print a category's state as Show or Hide", function()
     local NS, _, P = filters()
-    NS.SetByPath("container.filter.categories.defensives", "show", 1)
+    NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local lines = P.chat()
     NS.Slash:OnSlash("get container.filter.categories.defensives")
     local got = lastLine(lines)
-    -- red under: the Slash descriptor printing the stored value ("show") rather than its label
-    assertTrue(got:find(NS.L["Whitelist"], 1, true) ~= nil, got)
-    NS.SetByPath("container.filter.categories.defensives", "", 1)
+    -- red under: the Slash descriptor printing the stored value ("hide") rather than its label
+    assertTrue(got:find(NS.L["Hide"], 1, true) ~= nil, got)
+    NS.SetByPath("container.filter.categories.defensives", "show", 1)
     NS.Slash:OnSlash("get container.filter.categories.defensives")
     got = lastLine(lines)
-    assertTrue(got:find(NS.L["Default"], 1, true) ~= nil, got)
+    assertTrue(got:find(NS.L["Show"], 1, true) ~= nil, got)
     NS.Slash:OnSlash("list")
     local listed
     for _, l in ipairs(lines) do
         if l:find("container.filter.categories.stealable", 1, true) then listed = l end
     end
     assertTrue(listed ~= nil, "the category rows stay in /am list")
-    assertTrue(listed:find(NS.L["Default"], 1, true) ~= nil, listed)
+    assertTrue(listed:find(NS.L["Show"], 1, true) ~= nil, listed)
     NS.Slash:OnSlash("get container.filter.castBy")
     got = lastLine(lines)
     assertTrue(got:find("any", 1, true) ~= nil, "every other row prints as it always has: " .. got)

@@ -51,8 +51,9 @@ test("container: a change of shape retires the engine and builds a new one", fun
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local old = inst.engine
-    NS.SetByPath("container.filter.categories.defensives", "show", 1)
-    NS.SetByPath("container.filter.categories.bigDefensive", "show", 1)
+    -- A whitelist draws its own group ahead of the one category group — schema v3 (Show/Hide) no
+    -- longer grows a group per shown category, so a whitelist is the shape change left to exercise.
+    NS.SetByPath("container.filter.whitelist", { [642] = true }, 1)
     mocks.__fireTimers()
     assertTrue(inst.engine ~= old)
     assertFalse(old.__enabled, "the old engine is disabled, not left drawing")

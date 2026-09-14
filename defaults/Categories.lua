@@ -283,14 +283,15 @@ function Cat.IsSpellCategory(key)
     return def ~= nil and def.kind == "spells"
 end
 
---- Every category key across both lists, each mapped to "" — the neutral state. The container
---- template's `filter.categories` is built from this, so a key added in a later version reaches
---- every stored container through the ordinary backfill and resolves for the schema validator.
+--- Every category key across both lists, each mapped to "show" — the default state (schema v3:
+--- Show is the absence of a decision, so it excludes nothing). The container template's
+--- `filter.categories` is built from this, so a key added in a later version reaches every stored
+--- container through the ordinary backfill and resolves for the schema validator.
 --- @return table
-function Cat.NeutralStates()
+function Cat.DefaultStates()
     local out = {}
     for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do
-        for _, def in ipairs(list) do out[def.key] = "" end
+        for _, def in ipairs(list) do out[def.key] = "show" end
     end
     return out
 end

@@ -54,13 +54,13 @@ test("database: the backfill fills a missing leaf and keeps a stored false", fun
     assertTrue(type(c.icons) == "table" and c.icons.width == NS.CONTAINER_TEMPLATE.icons.width)
 end)
 
-test("database: every category key is present on a stored container, neutral", function()
+test("database: every category key is present on a stored container, at Show (schema v3)", function()
     local NS = fresh()
     local cats = NS.Database.FindContainer(1).filter.categories
     for _, list in ipairs({ NS.Categories.HELPFUL, NS.Categories.HARMFUL }) do
         for _, def in ipairs(list) do assertTrue(cats[def.key] ~= nil, "category " .. def.key) end
     end
-    assertEqual(cats.defensives, "")
+    assertEqual(cats.defensives, "show")
 end)
 
 test("database: category keys are unique across the buff and debuff lists", function()

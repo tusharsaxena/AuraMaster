@@ -53,9 +53,10 @@ C.DURATION_MODES = { "any", "timed", "timeless" }
 C.DURATION_MODE_LABELS = { any = "Any duration", timed = "Only auras with a duration",
     timeless = "Only auras without a duration" }
 
--- Tri-state category selection.
-C.CATEGORY_STATES = { "", "show", "hide" }
-C.CATEGORY_STATE_LABELS = { [""] = "Default", show = "Whitelist", hide = "Blacklist" }
+--- Category selection (schema v3): Show is the absence of a decision (it excludes nothing);
+--- Hide removes the category's auras from the container.
+C.CATEGORY_STATES = { "show", "hide" }
+C.CATEGORY_STATE_LABELS = { show = "Show", hide = "Hide" }
 
 -- Sort methods: our key → the engine's AuraContainerSortMethod member name.
 C.SORT_METHODS = { "default", "expiration", "expirationOnly", "name", "nameOnly",
