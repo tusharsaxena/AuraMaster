@@ -4,10 +4,13 @@ local _, NS = ...
 --
 --     band          [Container ▾]
 --     [ What to show ][ Categories ][ Sorting ][ Overrides ]
---     Categories    Blizzard Categories   Show · Hide · Category, a line each
---                   Custom Categories     (buffs)        the same grid over the spell categories
+--     Categories    priority blurb (spec §6), then 'Only these categories'
+--                   Blizzard Categories   Show · Hide · Category, a line each
+--                   Spell Categories      (buffs)        the same grid, plus a `See spells` link
+--                                                         and hidePermanentEnchants beneath it
 --                   Dispel Types · Who Cast It  (debuffs)
---     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
+--     Overrides     the same priority blurb, then:
+--                   Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
 --
 -- Every row here compiles, through modules/FilterCompiler.lua, into the aura groups Blizzard's aura
@@ -17,12 +20,15 @@ local _, NS = ...
 --
 -- The category rows are generated from defaults/Categories.lua and offered only for the aura type
 -- they belong to (`auraTypes`); a category is a two-state choice, stored as "show" / "hide" and
--- labeled Show / Hide (schema v3: Show is the absence of a decision, so it excludes nothing — a
--- container is always every aura of its type minus what its Hidden categories remove). The rows
--- stay in the schema, so `/am get|set|list`, Defaults and the resets see them, but carry
--- `skipRender`: the Categories tab, bespoke and keyed by the group's name, draws them as one
--- ChoiceGrid per `grid`. Which spells a spell category matches is the profile's, edited on
--- General → Spell Categories (settings/GeneralSpells.lua).
+-- labeled Show / Hide. Show is a POSITIVE claim (spec §6, revised 2026-09-15): an aura in at least
+-- one category set to Show is drawn even if another of its categories says Hide, and only an aura
+-- whose every category says Hide is removed by them. The priority blurb at the top of both the
+-- Categories and Overrides tabs states the whole order, Overrides included. The rows stay in the
+-- schema, so `/am get|set|list`, Defaults and the resets see them, but carry `skipRender`: the
+-- Categories tab, bespoke and keyed by the group's name, draws them as one ChoiceGrid per `grid`.
+-- Which spells a spell category matches is the profile's, edited on General → Spell Categories
+-- (settings/GeneralSpells.lua); each spells/enchant row's grid line carries a `See spells` link
+-- there (F-3).
 --
 -- The Overrides tab is bespoke: two ID lists over the container's whitelist and blacklist, each set
 -- written WHOLE through the write seam (settings/Schema.lua's carve-outs). They are not schema rows,
@@ -70,6 +76,12 @@ local function gridOf(def)
     return GRID_BY_KIND[def.kind] or "blizzard"
 end
 
+-- F-7: the two-state tooltip. Show is a positive claim — it draws the aura even if another of the
+-- aura's categories says Hide (spec §6 rank 3). Hide, on its own, only removes what nothing else
+-- claims; the priority blurb above the grids spells out the full order. The old Default/Whitelist/
+-- Blacklist wording this replaced is gone from here, locales/enUS.lua and the docs.
+local STATE_DESC = L["Show: this category shows the aura, even if another of its categories says Hide. Hide: this category alone never shows it — a Show on another of its categories still can."]
+
 local function categoryRows(auraType)
     local rows = {}
     for _, def in ipairs(Cat.For(auraType)) do
@@ -77,7 +89,7 @@ local function categoryRows(auraType)
             path = "container.filter.categories." .. def.key, page = PAGE, group = G_CATS,
             grid = gridOf(def), skipRender = true, printLabel = true, auraTypes = { [auraType] = true },
             type = "string", values = STATES, label = L[def.label],
-            desc = ("%s\n\n%s"):format(L[def.desc], L["Show: no effect. Hide: never shown here (unless it is on the Overrides whitelist)."]),
+            desc = ("%s\n\n%s"):format(L[def.desc], STATE_DESC),
         }
         rows[#rows + 1] = row
     end
@@ -141,9 +153,12 @@ NS.RegisterSchemaRows({
 -- ── Categories: one grid per kind ────────────────────────────────────────────────────────────
 
 -- The grids in the order they are drawn; one with no row for this aura type is not drawn at all.
+-- F-1: the "custom" grid — spells-kind categories plus the weaponEnchants row (F-5) — is headed
+-- Spell Categories, not Custom Categories: that is what General → Spell Categories calls the same
+-- lists (settings/GeneralSpells.lua).
 local GRIDS = {
     { key = "blizzard", heading = L["Blizzard Categories"] },
-    { key = "custom",   heading = L["Custom Categories"] },
+    { key = "custom",   heading = L["Spell Categories"] },
     { key = "dispel",   heading = L["Dispel Types"] },
     { key = "who",      heading = L["Who Cast It"] },
 }
@@ -152,6 +167,46 @@ local COLUMNS = {}
 for i, value in ipairs(C.CATEGORY_STATES) do
     COLUMNS[i] = { value = value, label = L[C.CATEGORY_STATE_LABELS[value]] }
 end
+
+--- The category key a row's path names ("container.filter.categories.<key>"), or nil.
+local function keyOfCategoryRow(row)
+    return row.path and row.path:match("^container%.filter%.categories%.(.+)$")
+end
+
+-- F-3: the Spell Categories grid's extra column — a link to that row's list on General → Spell
+-- Categories, offered for a `spells`-kind row and the `enchant` row (weaponEnchants), because that
+-- tab can draw both (NS.GeneralSpells.Select). `Cat.Find` rather than `Cat.IsSpellCategory`, which
+-- only recognizes kind "spells" and would silently drop the enchant row's link. Every other kind
+-- (token, flag, dispel) never reaches this grid (GRID_BY_KIND), so `def` is never one of them here,
+-- but the guard stays honest about what earns the link rather than assuming the grid's shape.
+local CUSTOM_EXTRA = {
+    header = "",
+    cell = function(row)
+        local key = keyOfCategoryRow(row)
+        local def = key and (Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key))
+        if not (def and (def.kind == "spells" or def.kind == "enchant")) then return nil end
+        return {
+            text = L["See spells"],
+            onClick = function()
+                NS.GeneralSpells.Select(key)
+                NS.OpenOptionsPage("general")
+                H.SelectTab("general", L["Spell Categories"])
+            end,
+        }
+    end,
+}
+
+-- F-4/spec §6: the five ranks, highest first, restated verbatim on both the Categories and the
+-- Overrides tabs — two halves of one decision. Rank 1 is the whitelist, rank 2 the blacklist
+-- (revised 2026-09-15: the whitelist now beats the blacklist, and rank 3's Show is a positive claim
+-- that rescues an aura from a Hide elsewhere).
+local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown; nothing removed it."]
+
+-- R-10: while `onlyShown` is on, Hide no longer removes anything by itself — an aura is left out of
+-- rank 5 (there is no catch-all while this is on) simply by belonging to no category set to Show.
+-- The Hide column stays live and clickable regardless (it is still the only way to take a Show back
+-- off a row that belongs to more than one category) — do NOT dim it.
+local ONLY_SHOWN_NOTE = L["While this is on, Hide does not remove an aura by itself: an aura is shown only through the whitelist or a category set to Show, so here Hide means 'not shown' rather than 'removed'. It is still the only way to undo a Show on a row that belongs to more than one category."]
 
 --- A shallow copy of `row` with `skipRender` lifted, so the flow engine (which otherwise leaves
 --- every `skipRender` row untouched, on the assumption that a grid or another bespoke drawer owns
@@ -165,13 +220,33 @@ local function forRenderRows(row)
     return copy
 end
 
---- The Categories tab: the group's rows (already the ones this aura type is offered), a grid each,
---- then any row that names no `grid` (hidePermanentEnchants: a plain bool, not a Show/Hide choice —
---- a ChoiceGrid cell lights by comparing the stored value against a column's string, which a bool
---- can never match) drawn as an ordinary row. A future tab may re-place it nearer the category it
---- belongs to; this only makes it render correctly as the checkbox it is.
-local function renderCategories(ctx, _, rows)
-    local plain = {}
+--- The row at `path` among `rows`, or nil.
+local function rowAt(rows, path)
+    for _, row in ipairs(rows or {}) do
+        if row.path == path then return row end
+    end
+    return nil
+end
+
+--- The Categories tab: the priority blurb (F-4), `onlyShown` above the grids (R-8) with R-10's note
+--- while it is on, then a grid each. The Spell Categories grid (kind `custom`) carries F-2's blurb
+--- and F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide
+--- choice; a ChoiceGrid cell lights by comparing the stored value against a column's string, which a
+--- bool can never match — is drawn as an ordinary checkbox right under that grid, where the
+--- weaponEnchants row it governs lives.
+local function renderCategories(ctx, cfg, rows)
+    H.TextRow(ctx, PRIORITY_BLURB)
+
+    local onlyRow = rowAt(rows, "container.filter.onlyShown")
+    if onlyRow then
+        H.RenderRows(ctx, { forRenderRows(onlyRow) }, nil, nil, { noHeadings = true })
+        if cfg and cfg.filter and cfg.filter.onlyShown then
+            H.TextRow(ctx, ONLY_SHOWN_NOTE)
+        end
+    end
+
+    local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
+    local hideDrawn = false
     for _, g in ipairs(GRIDS) do
         local mine = {}
         for _, row in ipairs(rows or {}) do
@@ -180,16 +255,23 @@ local function renderCategories(ctx, _, rows)
             end
         end
         if mine[1] then
-            H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
+            if g.key == "custom" then
+                H.Section(ctx, g.heading)
+                H.TextRow(ctx, L["These are the lists on General → Spell Categories, shared by every container."])
+                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CUSTOM_EXTRA })
+                if hideRow then
+                    H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
+                    hideDrawn = true
+                end
+            else
+                H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
+            end
         end
     end
-    for _, row in ipairs(rows or {}) do
-        if not row.grid then
-            plain[#plain + 1] = forRenderRows(row)
-        end
-    end
-    if plain[1] then
-        H.RenderRows(ctx, plain, nil, nil, { noHeadings = true })
+    -- An ENCHANT container draws no Spell Categories grid at all (Cat.For("ENCHANT") is empty), so
+    -- hidePermanentEnchants — offered for HELPFUL and ENCHANT alike — would otherwise never draw.
+    if hideRow and not hideDrawn then
+        H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
     end
 end
 
@@ -232,6 +314,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
 end
 
 local function renderOverrides(ctx, cfg)
+    H.TextRow(ctx, PRIORITY_BLURB)
     overrideList(ctx, cfg, "whitelist", L["Whitelist"],
         L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."])
     overrideList(ctx, cfg, "blacklist", L["Blacklist"],

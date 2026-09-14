@@ -153,12 +153,13 @@ end)
 
 -- ── the Categories grid (F-1) ─────────────────────────────────────────────────────────────────
 
-test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Custom Categories, each once", function()
+test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once", function()
     local NS, _, P, ws = categories()
     local L = NS.L
     -- red under: the rows drawn by the flow engine (each subgroup heading repeats as the kinds
-    -- interleave), or the grids drawn in the wrong order
-    assertEqual(table.concat(headings(ws), "|"), L["Blizzard Categories"] .. "|" .. L["Custom Categories"])
+    -- interleave), or the grids drawn in the wrong order. F-1: the heading reads Spell Categories,
+    -- not Custom Categories.
+    assertEqual(table.concat(headings(ws), "|"), L["Blizzard Categories"] .. "|" .. L["Spell Categories"])
     assertNil(P.find(ws, "Dropdown", NS.FindSchemaRow("container.filter.categories.defensives").label),
         "a category is a grid line, not a dropdown")
     assertTrue(gridLine(NS, ws, "defensives") ~= nil, "a custom category has a grid line")
@@ -185,13 +186,81 @@ test("filters: every grid's columns are Show and Hide, then the category (schema
         local kids = w.children
         if kids and kids[1] and kids[1].type == "Label" and kids[1].text == L["Show"] then
             headers = headers + 1
-            local got = {}
-            for i, k in ipairs(kids) do got[i] = k.text end
+            -- Only the first three: the Spell Categories grid's header carries a fourth, blank cell
+            -- for F-3's `See spells` link column, checked on its own below.
+            local got = { kids[1].text, kids[2].text, kids[3].text }
             -- red under: CATEGORY_STATE_LABELS keeping a third, Default column
             assertEqual(table.concat(got, "|"), L["Show"] .. "|" .. L["Hide"] .. "|" .. L["Category"])
         end
     end
     assertEqual(headers, 2, "one header line per grid")
+end)
+
+-- ── F-2/F-3: the Spell Categories grid's blurb and its `See spells` link ─────────────────────────
+
+test("filters: the Spell Categories grid opens with a line naming where its lists live (F-2)", function()
+    local _, _, P, ws = categories()
+    -- red under: F-2's line missing, or attached under the wrong grid
+    assertTrue(P.hasText(ws, "General → Spell Categories"), "names where the lists live")
+end)
+
+test("filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets no link (F-3)", function()
+    local NS, _, P = filters()
+    P.show("General") -- render once, so H.SelectTab (K-4) has a rendered ctx to land the click on
+    local ws = P.tab("filters", NS.L["Categories"])
+    local kids = gridLine(NS, ws, "healing")
+    local link = kids[4]
+    assertTrue(link ~= nil and link.type == "InteractiveLabel", "a spells-kind row carries the link")
+    assertEqual(link.text, NS.L["See spells"])
+    -- red under: onClick reaching the wrong seam, or reaching none at all
+    link:__fire("OnClick")
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, NS.L["Spell Categories"], "lands on General -> Spell Categories")
+    local gws = P.rerender("General")
+    local dd = P.find(gws, "Dropdown", NS.L["Category"])
+    assertEqual(dd.value, "healing", "and selects the row's own category there")
+    -- a Blizzard token row's grid carries no extra column at all
+    local bigDef = gridLine(NS, ws, "bigDefensive")
+    assertTrue(bigDef ~= nil and bigDef[4] == nil, "a token row's grid line carries no extra cell")
+    -- Decision #3: the enchant row gets the link too, since that tab can also draw it
+    local enchantKids = gridLine(NS, ws, "weaponEnchants")
+    assertEqual(enchantKids[4].text, NS.L["See spells"], "the enchant row's link too")
+end)
+
+-- ── the priority blurb (F-4) and 'Only these categories' (R-8/R-10) ─────────────────────────────
+
+test("filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first", function()
+    local NS, _, P = filters()
+    local cats = P.tab("filters", NS.L["Categories"])
+    local overrides = P.tab("filters", "overrides")
+    -- red under: the blurb missing from either tab, or restating the superseded blacklist-first order
+    for _, ws in ipairs({ cats, overrides }) do
+        assertTrue(P.hasText(ws, "whitelist"), "names the whitelist")
+        assertTrue(P.hasText(ws, "blacklist"), "names the blacklist")
+        assertTrue(P.hasText(ws, "set to Show"), "Show is its own rank, not the absence of Hide")
+        assertTrue(P.hasText(ws, "all say Hide"), "only an aura hidden by every one of its categories is removed")
+    end
+end)
+
+test("filters: 'Only these categories' is drawn at the top of the Categories tab, above the grids, and its text explains Hide differently while it is on (R-8/R-10)", function()
+    local NS, _, P = filters()
+    local ws = P.tab("filters", NS.L["Categories"])
+    local cb = P.row(ws, "container.filter.onlyShown")
+    assertTrue(cb ~= nil and cb.type == "CheckBox", "a plain toggle, not a grid cell")
+    local idxCb, idxHeading
+    for i, w in ipairs(ws) do
+        if w == cb and not idxCb then idxCb = i end
+        if w.type == "Heading" and not idxHeading then idxHeading = i end
+    end
+    -- red under: the toggle drawn after the grids rather than above them
+    assertTrue(idxCb ~= nil and idxHeading ~= nil and idxCb < idxHeading, "sits above the first grid heading")
+    assertFalse(P.hasText(ws, "not shown"), "off: nothing to explain differently yet")
+    cb:__fire("OnValueChanged", true)
+    ws = P.rerender("Filters")
+    -- red under: R-10 — the tab dimming or disabling the Hide column while this is on
+    local cells = gridLine(NS, ws, "defensives")
+    assertFalse(cells[2].disabled == true, "Hide stays live: it is still the only way to un-Show a row")
+    -- red under: the note missing, so a player reads Hide as "removed" while it means "not shown"
+    assertTrue(P.hasText(ws, "not shown"), "on: explains Hide means not shown, not removed")
 end)
 
 test("filters: a grid checkbox stores show or hide for the selected container and re-syncs its line", function()
