@@ -91,7 +91,7 @@ in the task's own commit or the one immediately after.
 | B1 Show/Hide compiler + constants | C-1…C-6 F-6 | AM | done | df16eaf 8fec9d9 | Cat.DefaultStates() replaces NeutralStates; setFlag's `soft` removal is a REAL behavior change (see ledger), documented + tested |
 | B2 schema v3 migration | E-8 E-5 | AM | done | c4e3b6e 47e406a 180327a | 2 fix rounds: 3 idempotency bugs; narrowed containers also gain the whitelisted ids on filter.whitelist; kind=='enchant' excluded from the sweep |
 | B3 enchant category kind | E-1…E-4 E-7 | AM | done | d5af512 1606f7e | fix round 1: a bool row must not sit in the ChoiceGrid; Categories tab widened to ENCHANT |
-| B11 priority order + only-these toggle | R-1…R-11 | AM | todo | | supersedes part of C-2; reverts E-8's id copy |
+| B11 priority order + only-these toggle | R-1…R-11 | AM | done | d0669f8 | supersedes part of C-2; reverts E-8's id copy; `only(auraType, keys)` test fixture added (a real category list defaults every row to Show, so R-4 explodes any un-narrowed Hide test) |
 | B4 re-vendor v1.36.0 | K-* | AM | todo | | needs A5 |
 | B5 Filters → Categories tab | F-1…F-7 | AM | todo | | needs B4 |
 | B6 ExplainSpell + Overrides notes | P-1 P-3 P-4 | AM | todo | | needs B4 |
