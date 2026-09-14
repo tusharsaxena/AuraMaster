@@ -635,6 +635,88 @@ test("v3: an ENCHANT container is left alone", function()
     assertNil(p.containers[1].filter.categories.weaponEnchants)
 end)
 
+test("v3: a container with a missing or unrecognized auraType is left completely untouched", function()
+    local NS = fresh()
+    local p = { containers = {
+        { filter = { includeEnchants = true, categories = { defensives = "show", raidCDs = "" } } },
+        { auraType = "BOGUS", filter = { includeEnchants = true, categories = { defensives = "show" } } },
+    } }
+    local before = NS.Database.DeepCopy(p)
+    -- red under: liftEnchantFlag's own "auraType == ENCHANT" check letting a nil or garbage auraType
+    -- through, half-converting a container MigrateV3 never had a category list for.
+    NS.Database.MigrateV3(p)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(p), Sig(before))
+end)
+
+test("v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided", function()
+    local NS = fresh()
+    local function scenario()
+        return { containers = {
+            { auraType = "HELPFUL", filter = { includeEnchants = true,
+                categories = { defensives = "show", raidCDs = "" } } },
+            { auraType = "HELPFUL", filter = { includeEnchants = false, categories = { defensives = "" } } },
+            { auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } },
+        } }
+    end
+    local once = scenario()
+    NS.Database.MigrateV3(once)
+    local twice = NS.Database.DeepCopy(once)
+    -- red under: liftEnchantFlag reading filter.includeEnchants (already nil after run 1) instead of
+    -- checking whether categories.weaponEnchants is already decided, and re-stamping "hide"
+    NS.Database.MigrateV3(twice)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(twice), Sig(once))
+    assertEqual(twice.containers[1].filter.categories.weaponEnchants, "show", "run 1's decision survives run 2")
+end)
+
+test("v3: a narrowed container copies its whitelisted spell categories' ids onto filter.whitelist", function()
+    local NS = fresh()
+    local Cat = NS.Categories.Find("HELPFUL", "defensives")
+    local defensivesIds = NS.FilterCompiler.CategorySpells(Cat, nil)
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { blacklist = { [118038] = true },
+            categories = { defensives = "show", raidCDs = "" } } } } }
+    -- red under: the narrowing half of the whitelist lift being skipped entirely — an aura in
+    -- "defensives" that ALSO matches another (now hidden) category would stop being drawn, when the
+    -- old exclusive whitelist drew it regardless.
+    NS.Database.MigrateV3(p)
+    local w = p.containers[1].filter.whitelist
+    local n = 0
+    for id in pairs(defensivesIds) do
+        if id ~= 118038 then
+            assertEqual(w[id], true, "id " .. id)
+            n = n + 1
+        end
+    end
+    assertTrue(n > 0, "the starter defensives list is non-empty")
+    -- red under: a migration overturning a player's explicit blacklist entry
+    assertNil(w[118038], "already blacklisted, left alone rather than added to the whitelist")
+end)
+
+test("v3: a container that was not narrowed gains nothing on filter.whitelist", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "", raidCDs = "hide" } } } } }
+    -- red under: copying ids even when no category was whitelisted
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.whitelist)
+end)
+
+test("v3: the whitelist spell copy respects the profile's own category edits, and merges into an existing whitelist", function()
+    local NS = fresh()
+    local p = { categorySpells = { defensives = { [9999] = true, [871] = false } },
+        containers = { { auraType = "HELPFUL",
+            filter = { whitelist = { [42] = true },
+                categories = { defensives = "show", raidCDs = "" } } } } }
+    -- red under: reading only the shipped starter list instead of FC.CategorySpells(def, p.categorySpells)
+    NS.Database.MigrateV3(p)
+    local w = p.containers[1].filter.whitelist
+    assertEqual(w[42], true, "an id already on the whitelist survives the merge")
+    assertEqual(w[9999], true, "the profile's own addition to defensives is honored")
+    assertNil(w[871], "the profile's own removal from defensives is honored")
+end)
+
 test("v3: MigrateV3 returns the number of containers it walked", function()
     local NS = fresh()
     local p = { containers = {
