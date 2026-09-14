@@ -10,8 +10,9 @@ client. The player-facing contract is the README; the engineering boundary is th
   filters, placement and look (`defaults/Profile.lua:96`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:33`).
 - **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
-  enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container may
-  also append the weapon enchants after its buffs (`container.filter.includeEnchants`).
+  enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container also
+  appends the weapon enchants after its buffs, unless the `weaponEnchants` category
+  (`container.filter.categories.weaponEnchants`) is set to Hide.
 - **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /

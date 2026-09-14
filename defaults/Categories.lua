@@ -18,6 +18,9 @@ local _, NS = ...
 --           spell ids for BUFFS ON FRIENDLY UNITS and DEBUFFS ON HOSTILE ONES, so every spell
 --           category here is a buff category; the Filters page says so where it matters
 --           (docs/scope.md, "What the engine cannot do").
+--   enchant the player's temporary weapon enchants. The odd one out: it matches no aura and joins no
+--           aura group. Hide takes the container's enchant slots away, Show gives them back
+--           (modules/FilterCompiler.lua's Compile, not its group builder).
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
@@ -194,6 +197,10 @@ Cat.HELPFUL = {
     {
         key = "stealable", kind = "flag", field = "isStealable", value = true, label = "Stealable / purgeable",
         desc = "Buffs that can be stolen or purged — most useful on an enemy target.",
+    },
+    {
+        key = "weaponEnchants", kind = "enchant", label = "Weapon enchants",
+        desc = "Your temporary weapon enchants, drawn after the buffs. Only on a container showing your own buffs; which weapon slots count is set on General -> Spell Categories.",
     },
 }
 

@@ -54,16 +54,6 @@ NS.RegisterSchemaRows({
         type = "number", min = 0, max = 3600, step = 5, label = L["Max duration (sec, 0 = no limit)"],
         desc = L["Hide auras whose full duration is longer than this — a 60 keeps short cooldowns and drops hour-long buffs. Permanent auras are hidden while a limit is set."],
     },
-    {
-        path = "container.filter.includeEnchants", page = PAGE, group = G_SHOW, subgroup = L["Weapon enchants"],
-        auraTypes = { HELPFUL = true }, type = "bool", label = L["Also show weapon enchants"],
-        desc = L["Add your temporary weapon enchants after the buffs. Only on a container showing your own buffs."],
-    },
-    {
-        path = "container.filter.hidePermanentEnchants", page = PAGE, group = G_SHOW, subgroup = L["Weapon enchants"],
-        auraTypes = { HELPFUL = true, ENCHANT = true }, type = "bool", label = L["Hide enchants without a duration"],
-        desc = L["Skip weapon enchants that never expire."],
-    },
 })
 
 -- ── Categories ────────────────────────────────────────────────────────────────────────────────
@@ -71,7 +61,9 @@ NS.RegisterSchemaRows({
 local STATES = NS.Choices(C.CATEGORY_STATES, C.CATEGORY_STATE_LABELS)
 
 -- Which grid a category is drawn in, by its kind. Who cast it is a flag with a grid of its own.
-local GRID_BY_KIND = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel" }
+-- weaponEnchants (kind "enchant") shares "custom" with hidePermanentEnchants below, so B5's tab finds
+-- both together.
+local GRID_BY_KIND = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom" }
 
 local function gridOf(def)
     if def.field == "isFromPlayerOrPlayerPet" then return "who" end
@@ -94,6 +86,18 @@ end
 
 NS.RegisterSchemaRows(categoryRows("HELPFUL"))
 NS.RegisterSchemaRows(categoryRows("HARMFUL"))
+
+-- hidePermanentEnchants stays a typed row of its own (not a Show/Hide category), but moves in with
+-- the category group and carries `skipRender`, so B5's Categories tab can draw it under the
+-- weaponEnchants row it belongs to.
+NS.RegisterSchemaRows({
+    {
+        path = "container.filter.hidePermanentEnchants", page = PAGE, group = G_CATS,
+        grid = "custom", skipRender = true,
+        auraTypes = { HELPFUL = true, ENCHANT = true }, type = "bool", label = L["Hide enchants without a duration"],
+        desc = L["Skip weapon enchants that never expire."],
+    },
+})
 
 -- ── Sorting ───────────────────────────────────────────────────────────────────────────────────
 
@@ -194,11 +198,17 @@ local function renderOverrides(ctx, cfg)
         L["These spells are never shown in this container. A spell on both lists is hidden."])
 end
 
+-- The Categories tab now carries hidePermanentEnchants (auraTypes HELPFUL + ENCHANT), so its own
+-- auraTypes has to reach ENCHANT too — otherwise the schema loop still opens the tab (the row makes
+-- the group non-empty) but this bespoke render never claims it, and it falls through to the flow
+-- engine, which draws nothing for a `skipRender` row.
+local CATS_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
+
 NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
     tabs = {
         -- Keyed by its group, so it takes the group's place and is handed the group's rows.
-        { key = G_CATS, label = G_CATS, auraTypes = BUFFS_DEBUFFS, render = renderCategories },
+        { key = G_CATS, label = G_CATS, auraTypes = CATS_TYPES, render = renderCategories },
         { key = "overrides", label = L["Overrides"], auraTypes = BUFFS_DEBUFFS, render = renderOverrides },
     },
 })

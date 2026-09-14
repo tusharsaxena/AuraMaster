@@ -80,17 +80,18 @@ test("filters: Cast by writes the selected container's filter and no other", fun
     assertEqual(NS.Database.FindContainer(2).filter.castBy, "any")
 end)
 
-test("filters: a buff container is offered the weapon-enchant rows; a debuff container is not", function()
-    local NS, _, P, ws = filters()
-    assertTrue(P.row(ws, "container.filter.includeEnchants") ~= nil, "a buff container offers enchants")
-    P.row(ws, "container.filter.includeEnchants"):__fire("OnValueChanged", false)
-    assertFalse(NS.Database.FindContainer(1).filter.includeEnchants)
+test("filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not", function()
+    local NS, _, P = filters()
+    local ws = P.tab("filters", NS.L["Categories"])
+    assertTrue(gridLine(NS, ws, "weaponEnchants") ~= nil, "a buff container offers the enchant category")
+    assertTrue(P.row(ws, "container.filter.hidePermanentEnchants") ~= nil, "and the hide-permanent row")
     NS.Helpers.SelectContainer(2)
-    ws = P.show("Filters")
+    ws = P.rerender("Filters")
     -- red under: the enchant rows losing their `auraTypes` (a debuff container can show no enchant)
-    assertNil(P.row(ws, "container.filter.includeEnchants"))
+    assertNil(gridLine(NS, ws, "weaponEnchants"))
     assertNil(P.row(ws, "container.filter.hidePermanentEnchants"))
-    assertTrue(P.row(ws, "container.filter.castBy") ~= nil, "the debuff container keeps Cast by")
+    assertTrue(gridLine(NS, ws, "defensives") == nil, "no buff category either")
+    assertTrue(gridLine(NS, ws, "magic") ~= nil, "the debuff container keeps its own categories")
 end)
 
 test("filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs", function()
@@ -98,8 +99,10 @@ test("filters: a weapon-enchant container is offered one row on each of two tabs
     NS.SetByPath("container.auraType", "ENCHANT", 1)
     local ws = P.rerender("Filters")
     -- red under: a Filters row that means nothing for enchants dropping its `auraTypes`, or the
-    -- bespoke Categories tab losing its `auraTypes` (it would stand alone with no rows to draw)
-    assertEqual(table.concat(P.tabKeys("filters"), ","), NS.L["What to show"] .. "," .. NS.L["Sorting"])
+    -- bespoke Categories tab losing its `auraTypes` (it would stand alone with no rows to draw).
+    -- "What to show" has none of its own rows for an enchant container now that hidePermanentEnchants
+    -- lives in Categories, so it drops out and Categories takes its place.
+    assertEqual(table.concat(P.tabKeys("filters"), ","), NS.L["Categories"] .. "," .. NS.L["Sorting"])
     assertTrue(P.row(ws, "container.filter.hidePermanentEnchants") ~= nil)
     assertNil(P.row(ws, "container.filter.castBy"))
     ws = P.tab("filters", NS.L["Sorting"])
@@ -193,7 +196,7 @@ end)
 
 test("filters: every category row is skipRender and names its grid", function()
     local NS = filters()
-    local want = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel" }
+    local want = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom" }
     for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
         for _, def in ipairs(NS.Categories.For(auraType)) do
             local row = NS.FindSchemaRow("container.filter.categories." .. def.key)

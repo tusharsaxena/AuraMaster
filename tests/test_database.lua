@@ -816,9 +816,8 @@ test("v3: RunMigrations migrates every stored profile, the inactive one included
         assertEqual(c.filter.categories.defensives, "show", name)
         assertEqual(c.filter.categories.raidCDs, "hide", name)
         assertEqual(c.filter.categories.weaponEnchants, "show", name)
-        -- Not assertNil(c.filter.includeEnchants) here: the step clears it (see the direct MigrateV3
-        -- test above), but RunMigrations backfills the ACTIVE profile from CONTAINER_TEMPLATE right
-        -- after the ladder, and the template still declares includeEnchants until B3 retires it —
-        -- an expected artifact of B2 landing before B3, not a v3 step concern.
+        -- B3 retired `includeEnchants` from CONTAINER_TEMPLATE, so the ordinary backfill no longer
+        -- resurrects it on the active profile either: the v3 step's clear sticks for both.
+        assertNil(c.filter.includeEnchants, name)
     end
 end)

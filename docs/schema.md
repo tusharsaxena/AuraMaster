@@ -23,6 +23,7 @@ otherwise (`docs/profiles.md`).
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
 | `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
 | `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
+| `enchantSlots` | map | `{ mainHand = true, offHand = true, ranged = true }` | Which weapon slots the `weaponEnchants` category draws (schema v3, B3); shared by every container, like `categorySpells`. A container showing enchants with every slot off falls back to all three |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
@@ -64,8 +65,7 @@ path, never to a number restated in `modules/`.
 | `castBy` | `"any"` | `any`, `mine`, `others` |
 | `durationMode` | `"any"` | `any`, `timed`, `timeless` |
 | `maxDuration` | `0` | seconds; `0` is no limit |
-| `includeEnchants` | `false` | a player buff container also shows weapon enchants |
-| `hidePermanentEnchants` | `true` | skip enchants that never expire |
+| `hidePermanentEnchants` | `true` | skip enchants that never expire; lives on the Categories group since schema v3 (B3) |
 | `sortMethod` | `"expirationOnly"` | `default`, `expiration`, `expirationOnly`, `name`, `nameOnly`, `bigDefensive`, `important`, `unitFrameDebuff`, `applied` |
 | `sortDirection` | `"normal"` | `normal`, `reverse` |
 | `maxAuras` | `0` | per group; `0` is no limit |
@@ -157,7 +157,7 @@ over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
 |---|---|---|---|---|
-| Player buffs | player | HELPFUL | bars | `includeEnchants = true`; `TOPRIGHT` −240, −220 |
+| Player buffs | player | HELPFUL | bars | `TOPRIGHT` −240, −220; enchants draw by the `weaponEnchants` category's default (Show) |
 | Player debuffs | player | HARMFUL | icons | `TOPRIGHT` −240, −160; horizontal, grows left |
 | Target debuffs (mine) | target | HARMFUL | icons | `castBy = "mine"`; `CENTER` 0, −160; horizontal, grows right |
 

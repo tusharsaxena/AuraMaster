@@ -272,9 +272,43 @@ test("filter: an enchant container on another unit still shows the player's, and
     assertTrue(hasWarning(compile({ auraType = "ENCHANT", unit = "target" }), "your own character"))
 end)
 
-test("filter: a player buff container may append weapon enchants; a target's may not", function()
-    assertTrue(compile({ filter = { includeEnchants = true } }).enchants ~= nil)
-    assertNil(compile({ unit = "target", filter = { includeEnchants = true } }).enchants)
+test("filter: the weaponEnchants row decides the enchant slots, and adds no group", function()
+    -- red under: the enchant row being read as a category (an extra group) or ignored (no enchants)
+    local on = compile({ unit = "player", filter = { categories = { weaponEnchants = "show" } } })
+    assertEqual(#on.groups, 1)
+    assertTrue(on.enchants ~= nil)
+
+    local off = compile({ unit = "player", filter = { categories = { weaponEnchants = "hide" } } })
+    assertEqual(#off.groups, 1)
+    assertNil(off.enchants)
+end)
+
+test("filter: the enchant row does nothing on a debuff or a non-player container", function()
+    -- red under: enchants leaking onto a container that is not the player's buffs
+    assertNil(compile({ unit = "target", filter = { categories = { weaponEnchants = "show" } } }).enchants)
+    assertNil(compile({ auraType = "HARMFUL", unit = "player",
+        filter = { categories = { weaponEnchants = "show" } } }).enchants)
+end)
+
+test("filter: the enchant slots the container draws are exactly the profile's, in a fixed order", function()
+    -- red under: enchantSlots ignored, so unticking a slot changes nothing
+    local plan = FC.Compile(cfg({ unit = "player", filter = { categories = { weaponEnchants = "show" } } }),
+        { enchantSlots = { mainHand = true, offHand = false, ranged = false } })
+    assertEqual(#plan.enchants.slots, 1)
+    assertEqual(plan.enchants.slots[1], "mainHand")
+
+    local ordered = FC.Compile(cfg({ unit = "player", filter = { categories = { weaponEnchants = "show" } } }),
+        { enchantSlots = { ranged = true, mainHand = true, offHand = true } })
+    assertEqual(table.concat(ordered.enchants.slots, ","), "mainHand,offHand,ranged", "declared slot order")
+end)
+
+test("filter: an enchant container's slots also come from the profile, falling back to all three", function()
+    local none = FC.Compile(cfg({ auraType = "ENCHANT" }),
+        { enchantSlots = { mainHand = false, offHand = false, ranged = false } })
+    assertEqual(#none.enchants.slots, 3, "every slot off falls back to all three")
+    local some = FC.Compile(cfg({ auraType = "ENCHANT" }),
+        { enchantSlots = { mainHand = true, offHand = false, ranged = false } })
+    assertEqual(table.concat(some.enchants.slots, ","), "mainHand")
 end)
 
 -- ── sorting and caps ──────────────────────────────────────────────────────────────────────────
@@ -300,11 +334,12 @@ test("filter: StructureKey tracks the group count, the enchant slots and hide-pe
     local a = compile({})
     local b = compile({ filter = { castBy = "mine", maxDuration = 30 } })
     assertEqual(FC.StructureKey(a), FC.StructureKey(b), "a live-editable change is not structural")
-    local c = compile({ filter = { includeEnchants = true } })
+    -- Show is the default (a already carries enchants), so hiding is what changes the structure.
+    local c = compile({ filter = { categories = { weaponEnchants = "hide" } } })
     assertTrue(FC.StructureKey(a) ~= FC.StructureKey(c))
     -- AddItemEnchantment takes hidePermanent only at creation, so flipping it needs a new engine.
-    local hide = compile({ filter = { includeEnchants = true, hidePermanentEnchants = true } })
-    local keep = compile({ filter = { includeEnchants = true, hidePermanentEnchants = false } })
+    local hide = compile({ filter = { hidePermanentEnchants = true } })
+    local keep = compile({ filter = { hidePermanentEnchants = false } })
     assertTrue(FC.StructureKey(hide) ~= FC.StructureKey(keep), "hide-permanent is structural")
 end)
 
@@ -316,7 +351,7 @@ end)
 local RICH = {
     { { unit = "player", auraType = "HELPFUL", filter = {
         castBy = "others", durationMode = "timeless", maxDuration = 30, maxAuras = 5,
-        sortMethod = "bogus", sortDirection = "reverse", includeEnchants = true,
+        sortMethod = "bogus", sortDirection = "reverse",
         whitelist = { [100] = true, [200] = true }, blacklist = { [200] = true, [300] = true },
         categories = { bigDefensive = "show", castable = "show", important = "hide", stealable = "hide" },
     } }, { timedSpells = { [400] = true } } },
@@ -421,7 +456,8 @@ test("filter: an unknown aura type compiles as buffs, and only buffs append weap
     assertEqual(compile({ auraType = "BOGUS" }).groups[1].filter, "HELPFUL")
     assertEqual(compile({ auraType = false }).groups[1].filter, "HELPFUL")
     -- red under: dropping the HELPFUL check (a debuff container would grow enchant slots)
-    assertNil(compile({ auraType = "HARMFUL", unit = "player", filter = { includeEnchants = true } }).enchants)
+    assertNil(compile({ auraType = "HARMFUL", unit = "player",
+        filter = { categories = { weaponEnchants = "show" } } }).enchants)
 end)
 
 test("filter: the spell-list warning follows the unit and the aura type", function()

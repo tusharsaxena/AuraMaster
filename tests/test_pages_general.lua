@@ -488,18 +488,21 @@ test("general → containers: changing the aura type redraws an open Filters pag
     local NS, m, P, ws = containers()
     P.show("Filters")
     m.__subcategories.Filters:Show()   -- on screen, so only a STRUCTURAL refresh re-renders it
-    local function hasCategoriesTab()
-        for _, k in ipairs(P.tabKeys("filters")) do if k == NS.L["Categories"] then return true end end
+    -- Overrides is offered to buffs and debuffs only (a weapon-enchant container has no spell
+    -- whitelist/blacklist), so it disappearing is the redraw signal: the Categories tab itself stays
+    -- (schema v3: hidePermanentEnchants applies to ENCHANT too), so it cannot serve as one any more.
+    local function hasOverridesTab()
+        for _, k in ipairs(P.tabKeys("filters")) do if k == "overrides" then return true end end
         return false
     end
-    assertTrue(hasCategoriesTab(), "a buff container has the Categories tab")
+    assertTrue(hasOverridesTab(), "a buff container has the Overrides tab")
     P.row(ws, "container.auraType"):__fire("OnValueChanged", "ENCHANT")
     assertEqual(NS.Database.FindContainer(1).auraType, "ENCHANT")
-    assertTrue(hasCategoriesTab(), "never inside the dropdown's own callback")
+    assertTrue(hasOverridesTab(), "never inside the dropdown's own callback")
     m.__fireTimers()
     -- red under: the aura type row losing its structural onChange (the page keeps offering the
-    -- buff categories on a weapon-enchant container)
-    assertFalse(hasCategoriesTab(), "redrawn for a weapon-enchant container")
+    -- Overrides tab on a weapon-enchant container)
+    assertFalse(hasOverridesTab(), "redrawn for a weapon-enchant container")
 end)
 
 test("general → containers: the Style dropdown offers bars and icons and writes the selected container", function()

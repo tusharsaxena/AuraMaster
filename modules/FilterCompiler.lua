@@ -182,9 +182,24 @@ local function warn(plan, w)
     plan.warnings[#plan.warnings + 1] = w
 end
 
-local function enchantBlock(filter)
-    return { slots = { "mainHand", "offHand", "ranged" },
-        hidePermanent = filter.hidePermanentEnchants ~= false }
+local ENCHANT_SLOTS = { "mainHand", "offHand", "ranged" }
+
+--- The enchant block: which weapon slots the container draws, and whether a permanent enchant is
+--- skipped. The slots are the profile's (General -> Spell Categories); a profile with none, or with
+--- every slot unticked, falls back to all three, because a container showing enchants and no slots
+--- would draw nothing with nothing to explain it.
+local function enchantBlock(filter, enchantSlots)
+    local slots = {}
+    for _, name in ipairs(ENCHANT_SLOTS) do
+        if not enchantSlots or enchantSlots[name] then
+            slots[#slots + 1] = name
+        end
+    end
+    local slotCount = #slots
+    if slotCount == 0 then
+        slots = { "mainHand", "offHand", "ranged" }
+    end
+    return { slots = slots, hidePermanent = filter.hidePermanentEnchants ~= false }
 end
 
 --- How every group sorts and caps: the same for each group a container compiles to.
@@ -198,11 +213,11 @@ local function lookOf(filter)
 end
 
 --- A weapon-enchant container: the three slots and no aura groups.
-local function compileEnchant(plan, cfg, filter)
+local function compileEnchant(plan, cfg, filter, ctx)
     if cfg.unit ~= "player" then
         warn(plan, FC.WARN.ENCHANT_UNIT)
     end
-    plan.enchants = enchantBlock(filter)
+    plan.enchants = enchantBlock(filter, ctx.enchantSlots)
     return plan
 end
 
@@ -327,14 +342,16 @@ local function finishWarnings(plan, unit, auraType, usesSpellIds)
     end
 end
 
---- The context both compile sites hand Compile: the learned timed spells (account-wide) and the
---- profile's spell-list edits (schema v2). Either is nil before the database exists.
+--- The context both compile sites hand Compile: the learned timed spells (account-wide), the
+--- profile's spell-list edits (schema v2), and the profile's enchant slots (schema v3). Any of them
+--- is nil before the database exists.
 --- @return table
 function FC.ProfileContext()
     local db = NS.db
     return {
         timedSpells    = db and db.global and db.global.timedSpells,
         categorySpells = db and db.profile and db.profile.categorySpells,
+        enchantSlots   = db and db.profile and db.profile.enchantSlots,
     }
 end
 
@@ -342,7 +359,8 @@ end
 ---
 --- @param cfg table  the container's stored table (defaults/Profile.lua CONTAINER_TEMPLATE shape)
 --- @param ctx table|nil  { categories = NS.Categories, timedSpells = { [id] = true },
----                  categorySpells = the profile's spell-list edits (schema v2) }
+---                  categorySpells = the profile's spell-list edits (schema v2),
+---                  enchantSlots = the profile's weapon-enchant slots (schema v3) }
 --- @return table  plan = { groups = { {key, filter, candidateFilters, sortMethod, sortDirection,
 ---                maxFrameCount, label} }, enchants = { slots, hidePermanent } | nil, warnings = {} }
 function FC.Compile(cfg, ctx)
@@ -353,7 +371,7 @@ function FC.Compile(cfg, ctx)
     local look = lookOf(filter)
 
     local auraType = cfg.auraType
-    if auraType == "ENCHANT" then return compileEnchant(plan, cfg, filter) end
+    if auraType == "ENCHANT" then return compileEnchant(plan, cfg, filter, ctx) end
     if auraType ~= "HARMFUL" then auraType = "HELPFUL" end
 
     -- ── The base every group starts from ────────────────────────────────────────────────────
@@ -368,8 +386,11 @@ function FC.Compile(cfg, ctx)
         { hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells }, look)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
-    if auraType == "HELPFUL" and filter.includeEnchants and cfg.unit == "player" then
-        plan.enchants = enchantBlock(filter)
+    -- The weaponEnchants category row, not a group: kind `enchant` matches no aura (splitCategories
+    -- skips it), so Show is simply "this container has enchant slots".
+    local enchantState = (filter.categories or {}).weaponEnchants
+    if auraType == "HELPFUL" and cfg.unit == "player" and enchantState ~= "hide" then
+        plan.enchants = enchantBlock(filter, ctx.enchantSlots)
     end
 
     finishWarnings(plan, cfg.unit, auraType, timedIds or blacklisted or categoryIds or whitelisted)

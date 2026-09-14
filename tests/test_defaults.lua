@@ -46,8 +46,11 @@ local function choices(row)
 end
 
 -- The spell sets are written whole through the seam (settings/Schema.lua's carve-outs), not by row.
+-- enchantSlots (schema v3, B3) has no row yet either: B5 owns the tab that writes it.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
-local PROFILE_CARVE_OUTS = set({ "categorySpells" })
+local PROFILE_CARVE_OUTS = set({
+    "categorySpells", "enchantSlots.mainHand", "enchantSlots.offHand", "enchantSlots.ranged",
+})
 
 test("defaults: every starter container is a valid container whose every override the template knows", function()
     local units, types, styles = set(C.UNITS), set(C.AURA_TYPES), set(C.STYLES)
@@ -90,6 +93,9 @@ test("defaults: every category carries what its kind needs, and a label and desc
             end
             return true
         end,
+        -- The odd one out (defaults/Categories.lua's KINDS doc): it matches no aura, so it carries
+        -- nothing beyond the label and description every kind needs.
+        enchant = function() return true end,
     }
     local bad = {}
     for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do

@@ -159,8 +159,12 @@ here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
 | Cast by | `container.filter.castBy` | string | buffs, debuffs | Anyone / Me (and my pet) → `PLAYER` / Anyone but me → `!PLAYER` |
 | Duration | `container.filter.durationMode` | string | buffs, debuffs | Any / only with a duration (`maxDuration = huge`) / only without (learned exclusions) |
 | Max duration (sec, 0 = no limit) | `container.filter.maxDuration` | number 0–3600 | buffs, debuffs | Engine `maxDuration`; also hides permanent auras; ignored in "without" mode |
-| *Weapon enchants:* Also show weapon enchants | `container.filter.includeEnchants` | bool | buffs | Appends the enchant slots on a player buff container |
-| *Weapon enchants:* Hide enchants without a duration | `container.filter.hidePermanentEnchants` | bool | buffs, enchants | Engine `hidePermanent` |
+
+Weapon enchants are the `weaponEnchants` row on the Categories grid (schema v3, B3): Show (the
+default) appends the enchant slots to a player buff container, Hide takes them away. The slots drawn
+come from the profile-wide `enchantSlots`. `Hide enchants without a duration` keeps its own path
+(`container.filter.hidePermanentEnchants`, bool, buffs and enchants) but moves in with the category
+group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` row.
 
 **Categories** — 31 generated rows, one per `defaults/Categories.lua` entry, at
 `container.filter.categories.<key>`, stored `""` / `"show"` / `"hide"` and labeled Default /
