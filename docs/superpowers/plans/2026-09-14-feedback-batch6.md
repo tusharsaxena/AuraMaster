@@ -82,12 +82,12 @@ in the task's own commit or the one immediately after.
 
 | Task | Req | Repo | Status | Commit | Notes |
 |---|---|---|---|---|---|
-| P0 spec + plan | — | AM | todo | | commit + push spec and plan FIRST, so a resume has them in git |
-| A1 ChoiceGrid checkbox cell | K-1 | LibKa0s | todo | | |
-| A2 ChoiceGrid extra column | K-2 | LibKa0s | todo | | |
-| A3 IdList entry note | K-3 | LibKa0s | todo | | |
-| A4 O.SelectTab | K-4 | LibKa0s | todo | | |
-| A5 release v1.36.0 (local tag) | K-1…K-4 | LibKa0s | todo | | **CP-A** |
+| P0 spec + plan | — | AM | done | 39f5e4b | pushed; branch tracks origin |
+| A1 ChoiceGrid checkbox cell | K-1 | LibKa0s | done | 5845429 | replaced the old radio-typed test with its inverse; fill guarded, coverage split |
+| A2 ChoiceGrid extra column | K-2 | LibKa0s | done | 2f2f299 | choiceExtraCell extracted; widths 0.98 at 2 and 3 columns |
+| A3 IdList entry note | K-3 | LibKa0s | done | 4f0960a 1b3936d | also hardened choiceExtraCell onClick to a type check (A2 minor) |
+| A4 O.SelectTab | K-4 | LibKa0s | done | f5d34c3 6dcbd80 | fix round 1: RefreshPanel(ctx, true), scoped to one page, not RefreshAllPanels |
+| A5 release v1.36.0 (local tag) | K-1…K-4 | LibKa0s | done | 3dcf3a8 | Options 18->19, Widgets 16->17, key 19.17.5.3; tag v1.36.0 LOCAL, verified not on origin; **CP-A reached** |
 | B1 Show/Hide compiler + constants | C-1…C-6 F-6 | AM | todo | | |
 | B2 schema v3 migration | E-8 E-5 | AM | todo | | |
 | B3 enchant category kind | E-1…E-4 E-7 | AM | todo | | **CP-B** |
