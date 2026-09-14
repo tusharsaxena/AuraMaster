@@ -35,31 +35,23 @@ test("parity: the DebugLog stub carries every member the addon calls", function(
     })
 end)
 
-test("parity: the Options stub carries every helper a page file reaches at load", function()
+test("parity: the Options stub carries every helper the host calls, off the load path as a no-op", function()
     local NS2 = loadDegraded()
+    -- members from: grep -rnoE "\bH(elpers)?[.:][A-Za-z_]+" settings/ core/ modules/
+    -- The stub carries EVERY function member of the live instance, the host's own decorations
+    -- included: the composers and MASTER_GROUP complete the load, RestoreAllDefaults is the recovery
+    -- reset, and every other member (reached from a builder, a render or a click) answers as a no-op
+    -- or one honest line (options-ui-§1). Load-completing narrows what a member DOES, never which
+    -- members exist, so no member the host calls is missing from it (testing-§8).
     T.assertSurfaceParity(NS2.Helpers, "LibKa0s-Options-1.0", {
-        -- The load-completing stub (options-ui-§1) answers only what a page file touches at FILE
-        -- LOAD — the composers and MASTER_GROUP — plus the recovery reset. Everything below
-        -- is reached from a builder, a render or a click, and a library-less build draws no panel,
-        -- so the stub answers NS.CreateOptionsPanel / NS.OpenOptionsPanel with one honest line
-        -- instead of carrying a panel toolkit it could never use.
-        "CreatePanel", "EnsureDefaultsButton", "EnsureScroll", "ClearScroll", "Section", "AddSpacer",
-        "AttachTooltip", "InlineButtonPair", "RenderField", "RenderGrid", "RenderRows", "RenderSchema",
-        "RenderTabbedSchema", "SessionCheckbox", "SetRenderer", "SetChromeHeight", "TabStrip",
-        "SubTabStrip", "PageHeader", "PageBanner", "TextRow", "BuildLandingPage", "RefreshPanel",
-        "PatchAlwaysShowScrollbar", "CreateOptionsPanel", "OpenOptionsPanel", "RegisterOptionsPage",
-        -- lib.LAYOUT's scalars and the composer constants: read only inside a render or stamped onto
-        -- rows by the live composers; a host copy is the copy that goes stale.
+        -- What the stub MUST NOT carry (options-ui-§1): lib.LAYOUT's scalars and the composer
+        -- constants, read inside a render (settings/Layout.lua's BUTTON_PAIR_REL), behind a nil
+        -- guard at load (settings/Bars.lua's CLASS_COLOR_NOTE, which then adds no note) or stamped
+        -- onto rows by the live composers; AceGUI; and the media lister, evaluated only inside the
+        -- live composers' own row literals. A host copy of any of them is the copy that goes stale.
         "ROW_VSPACER", "SECTION_HEADING_H", "BUTTON_PAIR_REL", "PADDING_X", "CHROME_GAP", "TAB_H",
         "BANNER_H", "CLASS_COLOR_NOTE", "FONT_FLAGS", "FONT_FLAGS_SORT", "VISIBILITY_SORT",
-        "VISIBILITY_VALUES", "AceGUI",
-        -- The media lister: evaluated only inside the live composers' own row literals, never by a
-        -- page file, and the stub composers carry no media source.
-        "LSMValues",
-        -- This addon's own decorations on the live instance (settings/OptionsSetup.lua, About.lua):
-        -- every one is a render-time helper for a panel the degraded build never draws.
-        "SelectContainer", "ContainerBanner", "PlaceInHeader", "ContainerPickerWidget",
-        "RenderWarnings", "RenderContainerPage", "BuildMainContent",
+        "VISIBILITY_VALUES", "AceGUI", "LSMValues",
     })
 end)
 

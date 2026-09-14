@@ -1,17 +1,23 @@
 local _, NS = ...
 
--- settings/Containers.lua — which containers exist, and what each one is.
+-- settings/GeneralContainers.lua — General → Containers: which containers exist, and what each is.
 --
---     band      [Container ▾ picker ][ New container ]          <- the ONE chrome row (options-ui-§14)
---     [ General ][ Overview ]
---     General   [Name] [Enabled] / [Unit] [Aura type] / [Style]
---               [Duplicate] [Delete]                            <- acts on the selected container
---               -- Copy settings from --  [Source ▾] [What ▾] [Copy]
---     Overview  one line per container, each with a Select button
+--     [ Master controls ][ Display ][ Containers ]
+--     Containers  [Container ▾ picker ][ New container ]            <- the tab body's first line
+--                 [Name] [Enabled] / [Unit] [Aura type] / [Style]
+--                 [Duplicate] [Delete]                             <- acts on the selected container
+--                 -- Copy settings from --  [Source ▾] [What ▾] [Copy]
 --
--- The band carries the identity controls only — the picker and the create control — and every
--- other act on the selected container sits on the FIRST tab, named `General`, which is the page
--- the player lands on (options-ui-§14's one-row band).
+-- THE PICKER AND NEW CONTAINER SIT IN THE TAB BODY, not in a band above the strip. That is this
+-- addon's accepted deviation from options-ui-§14 (docs/ARCHITECTURE.md → Documented deviations): the
+-- owner keeps a container's identity with the addon-wide settings on General, which draws no banner
+-- and whose first tab stays Master controls (options-ui-§15). Filters, Layout, Bars and Icons keep
+-- the banner picker. Drawn in the body, the picker and New are released and redrawn with the scroll
+-- like every other widget, so a Delete's two refreshes cannot lose them.
+--
+-- This file registers nothing. settings/General.lua registers ROWS after its own rows, so the
+-- Containers tab follows Master controls and Display in the strip (a tab's place is its group's
+-- first-seen order), and draws the tab through RENDER. It loads before General.lua for that reason.
 
 local L = NS.L
 local H = NS.Helpers
@@ -20,25 +26,28 @@ local CM = NS.ContainerManager
 local print = NS.Print
 local printf = NS.Printf
 
-local PAGE = "containers"
-local GROUP = L["General"]
+local PAGE = "general"
+local GROUP = L["Containers"]
 
 -- Changing what a container IS changes which rows other pages offer (buff categories are not
 -- debuff categories), so the panel is rebuilt — on the next frame, out of the dropdown's callback.
 local function structural() if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end end
 
-NS.RegisterSchemaRows({
+local ROWS = {
     {
         path = "container.name", page = PAGE, group = GROUP, type = "string", dialogControl = "EditBox",
         maxLetters = 40, label = L["Name"],
         desc = L["What this container is called in the picker, on its drag handle and in /am containers. Press Enter to apply."],
         validate = function(v) return type(v) == "string" and v:match("%S") ~= nil end,
-        -- Every write — the panel, `/am set`, Rename, a reset — stores the trimmed name made unique
+        -- Every write — the panel, `/am set`, Rename — stores the trimmed name made unique
         -- case-insensitively, so `/am select|delete <name>` can never match two containers.
         normalize = function(v, id) return CM.UniqueName(v:match("^%s*(.-)%s*$"), id) end,
         -- NotifyRenamed is the whole effect (handles and pickers); Container:Apply never reads the
         -- name, so a rename queues no apply and, in combat, announces no deferral.
         onChange = function() CM.NotifyRenamed() end, effect = "none",
+        -- A name has no meaningful default (owner, 2026-09-13): neither General's Defaults nor
+        -- `/am reset` restores it, and `/am reset` says why. The template's name still backfills.
+        noReset = true, noResetReason = L["A container's name has no default."],
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",
@@ -62,15 +71,11 @@ NS.RegisterSchemaRows({
         desc = L["Draw each aura as a bar or as an icon. Bars and Icons each have their own settings page."],
         onChange = structural,
     },
-})
+}
 
 -- ---------------------------------------------------------------------------
 -- Acts on the selected container
 -- ---------------------------------------------------------------------------
-
-local function selectAndRefresh(id)
-    H.SelectContainer(id)
-end
 
 -- A refusal (CM.Create's third return) is the gray combat line; any other error prints plain.
 local function sayError(err, refused)
@@ -81,7 +86,7 @@ end
 local function doNew()
     local id, err, refused = CM.Create({})
     if not id then return sayError(err, refused) end
-    selectAndRefresh(id)
+    H.SelectContainer(id)
 end
 
 local function doDuplicate()
@@ -89,7 +94,7 @@ local function doDuplicate()
     if not id then return end
     local newId, err, refused = CM.Duplicate(id)
     if not newId then return sayError(err, refused) end
-    selectAndRefresh(newId)
+    H.SelectContainer(newId)
 end
 
 StaticPopupDialogs["AURAMASTER_DELETE_CONTAINER"] = {
@@ -124,56 +129,57 @@ local SECTION_LABELS = {
     behavior = "Mouse", bars = "Bar style", icons = "Icon style",
 }
 
+local function sourceCell(_, parent, rel)
+    local _, activeId = NS.ActiveContainer()
+    local list, order = {}, {}
+    for _, c in ipairs(NS.Database.GetContainers()) do
+        if c.id ~= activeId then
+            list[c.id] = tostring(c.name)
+            order[#order + 1] = c.id
+        end
+    end
+    if not list[copySource] then copySource = order[1] end
+    local dd = NS.AceGUI:Create("Dropdown")
+    dd:SetLabel(L["Source container"])
+    dd:SetList(list, order)
+    dd:SetValue(copySource)
+    dd:SetRelativeWidth(rel or 0.5)
+    dd:SetCallback("OnValueChanged", function(_, _, v) copySource = v end)
+    parent:AddChild(dd)
+    return dd
+end
+
+local function sectionCell(_, parent, rel)
+    local list, order = {}, {}
+    for i, k in ipairs(SECTION_KEYS) do list[k] = L[SECTION_LABELS[k]]; order[i] = k end
+    local dd = NS.AceGUI:Create("Dropdown")
+    dd:SetLabel(L["What to copy"])
+    dd:SetList(list, order)
+    dd:SetValue(copySection)
+    dd:SetRelativeWidth(rel or 0.5)
+    dd:SetCallback("OnValueChanged", function(_, _, v) copySection = v end)
+    parent:AddChild(dd)
+    return dd
+end
+
 local function renderCopy(ctx)
-    local AceGUI = NS.AceGUI
     local _, activeId = NS.ActiveContainer()
     H.Section(ctx, L["Copy settings from"])
-    H.RenderGrid(ctx, {
-        { make = function(_, parent, rel)
-            local list, order = {}, {}
-            for _, c in ipairs(NS.Database.GetContainers()) do
-                if c.id ~= activeId then
-                    list[c.id] = tostring(c.name)
-                    order[#order + 1] = c.id
-                end
-            end
-            if not list[copySource] then copySource = order[1] end
-            local dd = AceGUI:Create("Dropdown")
-            dd:SetLabel(L["Source container"])
-            dd:SetList(list, order)
-            dd:SetValue(copySource)
-            dd:SetRelativeWidth(rel or 0.5)
-            dd:SetCallback("OnValueChanged", function(_, _, v) copySource = v end)
-            parent:AddChild(dd)
-            return dd
-        end },
-        { make = function(_, parent, rel)
-            local list, order = {}, {}
-            for i, k in ipairs(SECTION_KEYS) do list[k] = L[SECTION_LABELS[k]]; order[i] = k end
-            local dd = AceGUI:Create("Dropdown")
-            dd:SetLabel(L["What to copy"])
-            dd:SetList(list, order)
-            dd:SetValue(copySection)
-            dd:SetRelativeWidth(rel or 0.5)
-            dd:SetCallback("OnValueChanged", function(_, _, v) copySection = v end)
-            parent:AddChild(dd)
-            return dd
-        end },
-    })
+    H.RenderGrid(ctx, { { make = sourceCell }, { make = sectionCell } })
     H.InlineButtonPair(ctx, {
         text = L["Copy onto this container"],
         tooltip = L["Replace the chosen settings of the selected container with the source's. Name and position are never copied."],
         onClick = function()
             if not (copySource and activeId) then return end
             local ok, err = CM.CopyFrom(copySource, activeId, copySection ~= "all" and copySection or nil)
-            -- The Filters page's spell lists are not scalars, so the seam's in-place refresh would
-            -- leave them stale: re-render, as the Delete popup does.
+            -- A copy can change what the selected container IS (its aura type, its style), and so
+            -- which rows every page offers: re-render, as the Delete popup does.
             if ok then H.RefreshAllPanels() else print(err) end
         end,
     }, nil)
 end
 
-local function afterGeneral(ctx)
+local function afterRows(ctx)
     H.InlineButtonPair(ctx,
         { text = L["Duplicate"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
         { text = L["Delete"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
@@ -182,63 +188,29 @@ local function afterGeneral(ctx)
 end
 
 -- ---------------------------------------------------------------------------
--- The Overview tab
+-- The tab
 -- ---------------------------------------------------------------------------
 
-local function describe(c)
-    local at = c.attach or {}
-    local where = L["the screen"]
-    if at.mode == "container" then
-        local t = NS.Database.FindContainer(tonumber(at.container))
-        where = t and ("'" .. tostring(t.name) .. "'") or L["the screen"]
-    elseif at.mode == "frame" and at.frame ~= "" then
-        where = tostring(at.frame)
-    end
-    return ("%s%s|r  |cffaaaaaa%s · %s · %s · %s %s|r"):format(c.enabled and "|cffffffff" or "|cff888888",
-        tostring(c.name), L[C.UNIT_LABELS[c.unit] or "?"], L[C.AURA_TYPE_LABELS[c.auraType] or "?"],
-        L[C.STYLE_LABELS[c.style] or "?"], L["attached to"], where)
-end
-
-local function renderOverview(ctx)
-    local AceGUI = NS.AceGUI
-    local items = {}
-    for _, c in ipairs(NS.Database.GetContainers()) do
-        table.insert(items, { make = function(_, parent, rel)
-            local lbl = AceGUI:Create("Label")
-            lbl:SetText(describe(c))
-            lbl:SetRelativeWidth(rel or 0.5)
-            parent:AddChild(lbl)
-            return lbl
-        end })
-        table.insert(items, { make = function(_, parent, rel)
-            local btn = AceGUI:Create("Button")
-            btn:SetText(L["Select"])
-            btn:SetRelativeWidth((rel or 0.5) * 0.5)
-            btn:SetCallback("OnClick", function() selectAndRefresh(c.id) end)
-            parent:AddChild(btn)
-            return btn
-        end })
-    end
-    H.RenderGrid(ctx, items)
-end
-
--- ---------------------------------------------------------------------------
--- The page
--- ---------------------------------------------------------------------------
-
-local function header(ctx, frame)
-    local picker = H.ContainerPickerWidget(ctx)
-    H.PlaceInHeader(picker, frame, "LEFT")
+local function newCell(_, parent, rel)
     local btn = NS.AceGUI:Create("Button")
-    ctx.__chromeWidgets[#ctx.__chromeWidgets + 1] = btn
     btn:SetText(L["New container"])
+    btn:SetRelativeWidth(rel or 0.5)
     btn:SetCallback("OnClick", doNew)
     H.AttachTooltip(btn, L["New container"], L["Create a container showing the player's buffs as bars. Change what it shows below."])
-    H.PlaceInHeader(btn, frame, "RIGHT")
+    parent:AddChild(btn)
+    return btn
 end
 
-NS.RegisterContainerPage(PAGE, L["Containers"], "AuraMasterContainersPanel", {
-    header     = header,
-    afterGroup = { [GROUP] = afterGeneral },
-    tabs       = { { key = "overview", label = L["Overview"], render = function(ctx) renderOverview(ctx) end } },
-})
+--- The Containers tab: the picker and New container on one line, then the selected container's
+--- identity rows and the acts on it. With no container there is nothing to edit: the line, then
+--- the one sentence saying how to make one.
+local function render(ctx, cfg, rows)
+    H.RenderGrid(ctx, { { make = H.ContainerPickerCell }, { make = newCell } })
+    if not cfg then
+        H.TextRow(ctx, L["No containers yet. Click New container, or type /am new."])
+        return
+    end
+    H.RenderRows(ctx, rows or {}, { [GROUP] = afterRows }, nil, { noHeadings = true })
+end
+
+NS.GeneralContainers = { GROUP = GROUP, rows = ROWS, render = render }

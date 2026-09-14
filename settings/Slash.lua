@@ -324,6 +324,31 @@ end
 -- The dispatcher
 -- ---------------------------------------------------------------------------
 
+local function colorDecode(c)
+    if type(c) ~= "table" then c = {} end
+    return c.r or 1, c.g or 1, c.b or 1, c.a or 1
+end
+
+--- A value as `/am get|set|list|reset` echo it. A row marked `printLabel` (the Filters categories)
+--- prints the label the panel shows, Default / Whitelist / Blacklist, with the stored value that
+--- `/am set` takes after it in gray; every other row prints as the library formats it. The hook
+--- replaces the library's formatter outright, colorDecode included, so a color is decoded here.
+local function formatValue(row, v)
+    if type(row) == "table" and row.printLabel then
+        for _, choice in ipairs(row.values or {}) do
+            if choice.value == v then
+                if v == "" then return choice.text end
+                return ("%s |cff808080(%s)|r"):format(choice.text, tostring(v))
+            end
+        end
+    end
+    if type(row) == "table" and row.type == "color" and type(v) == "table" then
+        local r, g, b, a = colorDecode(v)
+        return SlashLib.FormatValue(row, { r = r, g = g, b = b, a = a })
+    end
+    return SlashLib.FormatValue(row, v)
+end
+
 cli = SlashLib:New({
     slash        = "/am",
     slashAliases = { "/auramaster" },
@@ -341,7 +366,12 @@ cli = SlashLib:New({
         if not ok and err then print(err) end
     end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
-    applyDefault = function(row) NS.ApplyDefault(row) end,
+    -- A row with no meaningful default (the container name's `noReset`) is refused with a reason:
+    -- say it, or `/am reset` would echo the unchanged value as if the reset had worked.
+    applyDefault = function(row)
+        local ok, why = NS.ApplyDefault(row)
+        if ok == false and why then print(why) end
+    end,
     allRows      = function() return NS.Schema end,
     groupKey     = function(row) return row.page end,
     -- The same bulk pair the Options descriptor takes (LibKa0s-Slash minor 8): CliResetAll writes
@@ -349,11 +379,9 @@ cli = SlashLib:New({
     bulkBegin    = function(...) NS.Bulk.Begin(...) end,
     bulkEnd      = function(...) NS.Bulk.End(...) end,
 
-    colorDecode = function(c)
-        if type(c) ~= "table" then c = {} end
-        return c.r or 1, c.g or 1, c.b or 1, c.a or 1
-    end,
+    colorDecode = colorDecode,
     colorEncode = function(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end,
+    format      = formatValue,
 })
 
 -- A `container.` value is the SELECTED container's, and a CLI line that did not say which would

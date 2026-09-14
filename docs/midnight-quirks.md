@@ -33,7 +33,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one engine (`modules/Container.lua:181`). The addon
+**What this addon does.** Every container is one engine (`modules/Container.lua:183`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -54,7 +54,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
 - **Creates every region as a descendant of the button**, once, in `initializeFrame`, stored on
-  `frame.__am` (`modules/Style_Bars.lua:31`, `modules/Style_Icons.lua:22`).
+  `frame.__am` (`modules/Style_Bars.lua:32`, `modules/Style_Icons.lua:22`).
 - **Guards every binding** with `pcall` (`Style.Bind`, `callEngine`), so a refusal costs one binding,
   not the engine's frame batch.
 
@@ -66,7 +66,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:185-189`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:187-191`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -116,15 +116,35 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:106`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:168`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
+
+## Nothing tells a region whether an aura has a duration
+
+**The restriction.** No binding shows or hides an arbitrary region by whether the aura has a
+duration, and the duration itself is secret, so Lua cannot test it. `SetDurationBar` neither hides
+nor resets the bar for a permanent aura.
+
+**What this addon does.** With Bars → Bar → **Show the spark on auras without a duration** off, a
+live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:149`).
+A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
+timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
+leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
+preview reads its placeholders' durations and hides the spark directly.
 
 ## Additive bindings stack
 
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
-**What this addon does.** Every restyle calls `ClearDispelTypeTextures` and `ClearPandemicRegions`
-before adding again (`modules/Style_Bars.lua:191-201`, `modules/Style_Icons.lua:121-130`).
+**What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:156`), and then adds again
+(`modules/Style_Bars.lua:256`, `modules/Style_Icons.lua:108`). The order matters: every `Set*` /
+`Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
+texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
+the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
+reason the dress shows the bar's fill every time: the engine's pass on a button holding no aura
+hides it, and clearing does not show it again.
 
 ## The engine does not notice a unit token changing
 
@@ -176,6 +196,12 @@ enchants with it, and the setting's description says so.
   button that shares it (`modules/Style.lua`). That the engine accepts one formatter or curve shared
   across buttons is not yet verified in the client; if it does not, the memo moves to one per
   container.
+- **The engine's default duration text truncates** (`DefaultAuraDurationFormatter` in
+  `Blizzard_AuraContainerShared.lua` sets `SecondsFormatterRounding.Truncate`), so 12.7 s reads "12"
+  beside a cooldown countdown that reads 13. Every format the addon builds sets `RoundUp` instead, and
+  the Blizzard format is a copy of that default (one letter, one unit, the same step curve for the
+  largest unit) that rounds up. The countdown's own rounding is in C++ and undocumented, so the match
+  is an in-game check.
 - **`GetMouseFocus` was removed in 11.0** in favor of `GetMouseFoci`; the frame picker uses the first
   frame it returns (`Compat.GetMouseFocus`).
 - **Right-click cancel** is `SetCancelAuraButtons("RightButtonUp")` — one phase, so a button

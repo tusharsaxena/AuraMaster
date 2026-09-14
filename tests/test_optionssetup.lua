@@ -9,7 +9,7 @@ local NS, mocks = T.NS, T.mocks
 local fresh = dofile("tests/fresh_env.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
-local PAGES = { "General", "Containers", "Filters", "Layout", "Bars", "Icons" }
+local PAGES = { "General", "Filters", "Layout", "Bars", "Icons" }
 
 test("options: NS.Helpers IS the library instance", function()
     assertEqual(type(NS.Helpers.RenderTabbedSchema), "function")
@@ -75,9 +75,9 @@ test("options: the General page leads with Master controls, in canonical order",
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 
-test("options: the Filters page offers the spell-list tab only for a buff container", function()
+test("options: the Filters page offers the Overrides tab only for a buff or debuff container", function()
     local NS2, m = fresh()
-    local ctx = NS2.Helpers.__containerCtx.filters
+    local ctx = NS2.Helpers.__pageCtx.filters
     local function tabs()
         local keys = {}
         for _, t in ipairs(ctx.__tabs or {}) do keys[t.key] = true end
@@ -85,11 +85,13 @@ test("options: the Filters page offers the spell-list tab only for a buff contai
     end
     NS2.State.SetActiveContainer(1)
     m.__subcategories.Filters:__fire("OnShow")
-    assertTrue(tabs().spellLists)
-    assertTrue(tabs().alwaysNever)
-    NS2.Helpers.SelectContainer(2)
-    NS2.Helpers.RenderContainerPage(ctx, "filters", nil)
-    assertNil(tabs().spellLists)
+    assertTrue(tabs().overrides)
+    NS2.SetByPath("container.auraType", "ENCHANT", 1)
+    -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
+    NS2.Helpers.RefreshAllPanels()
+    m.__subcategories.Filters:__fire("OnShow")
+    -- red under: collectTabs ignoring a bespoke tab's auraTypes
+    assertNil(tabs().overrides)
 end)
 
 -- Characterization (testing-§13): pinned on RenderContainerPage as one function, before its tab
@@ -97,7 +99,7 @@ end)
 
 test("options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back", function()
     local NS2, m = fresh()
-    local ctx = NS2.Helpers.__containerCtx.filters
+    local ctx = NS2.Helpers.__pageCtx.filters
     NS2.State.SetActiveContainer(1)
     m.__subcategories.Filters:__fire("OnShow")
     local want, seen = {}, {}
@@ -107,8 +109,7 @@ test("options: a container page's tabs are its schema groups, then its admitted 
             want[#want + 1] = row.group
         end
     end
-    want[#want + 1] = "spellLists"
-    want[#want + 1] = "alwaysNever"
+    want[#want + 1] = "overrides"
     local got = {}
     for i, t in ipairs(ctx.__tabs) do got[i] = t.key end
     assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups first, then bespoke")
@@ -122,7 +123,7 @@ test("options: with no containers a container page draws one placeholder tab", f
     local NS2, m = fresh()
     for _, c in ipairs(NS2.Database.GetContainers()) do NS2.ContainerManager.Delete(c.id) end
     m.__subcategories.Filters:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.filters
+    local ctx = NS2.Helpers.__pageCtx.filters
     assertEqual(#ctx.__tabs, 1, "one tab")
     assertEqual(ctx.__tabs[1].key, "__empty")
     assertEqual(ctx.activeTab, "__empty")
@@ -131,22 +132,27 @@ end)
 test("options: the banner is the picker — choosing a container retargets every page", function()
     local NS2, m = fresh()
     m.__subcategories.Bars:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.bars
+    local ctx = NS2.Helpers.__pageCtx.bars
     assertTrue(ctx.__bannerWidget ~= nil, "the page drew its banner")
     ctx.__bannerWidget:__fire("OnValueChanged", 3)
     assertEqual(NS2.State.activeContainerId, 3)
     assertEqual(NS2.GetSetting("container.unit"), "target")
 end)
 
-test("options: the Containers page's New button creates and selects a container", function()
+test("options: General → Containers' New button creates and selects a container", function()
     local NS2, m = fresh()
-    m.__subcategories.Containers:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.containers
-    local newButton
-    for _, w in ipairs(ctx.__chromeWidgets or {}) do
-        if w.type == "Button" then newButton = w end
+    m.__subcategories.General:__fire("OnShow")
+    local ctx = NS2.Helpers.__pageCtx.general
+    for i, t in ipairs(ctx.__tabs) do
+        if t.key == "Containers" then ctx.__tabKids[i]:__fire("OnClick") end
     end
-    assertTrue(newButton ~= nil, "the chrome block carries the create control")
+    local newButton
+    local created = m.LibStub("AceGUI-3.0").__created
+    for _, w in ipairs(created) do
+        if w.type == "Button" and w.text == "New container" and not w.__released then newButton = w end
+    end
+    -- red under: the Containers tab not drawing its create control
+    assertTrue(newButton ~= nil, "the tab body carries the create control")
     newButton:__fire("OnClick")
     assertEqual(#NS2.Database.GetContainers(), 4)
     local _, id = NS2.ActiveContainer()
@@ -156,7 +162,7 @@ end)
 test("options: a page's Defaults button restores only the selected container", function()
     local NS2, m = fresh()
     m.__subcategories.Bars:__fire("OnShow")
-    local ctx = NS2.Helpers.__containerCtx.bars
+    local ctx = NS2.Helpers.__pageCtx.bars
     NS2.SetByPath("container.bars.width", 300, 1)
     NS2.SetByPath("container.bars.width", 300, 2)
     NS2.State.SetActiveContainer(1)
@@ -289,7 +295,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
         end
     end })
     local H = NS2.Helpers
-    local ctx = H.__containerCtx.bars
+    local ctx = H.__pageCtx.bars
     ctx.chrome:__setGeom(200, 0)
     H.__resetTabArtHeight()
 

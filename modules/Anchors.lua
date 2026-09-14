@@ -66,12 +66,24 @@ end
 --- names nothing usable: a missing or looping container, or a frame that is absent or forbidden. A
 --- named frame that simply does not exist YET is remembered, to be retried when an add-on loads; a
 --- forbidden one is not, since no add-on loading makes it a target.
+--- The live container `container`'s attach settings `at` name, or nil when it cannot be used: missing,
+--- itself, or closing a loop.
+local function targetContainer(container, at)
+    local targetId = tonumber(at.container)
+    local target = targetId and NS.ContainerManager and NS.ContainerManager.instances[targetId]
+    if target and targetId ~= container.id and not Anchors.WouldCycle(container.id, targetId) then
+        return target
+    end
+    return nil
+end
+
 local function targetFor(container, at)
     if at.mode == "container" then
-        local targetId = tonumber(at.container)
-        local target = NS.ContainerManager and NS.ContainerManager.instances[targetId]
-        if target and targetId ~= container.id and not Anchors.WouldCycle(container.id, targetId) then
-            return target.engine or target.anchor, "container"
+        local target = targetContainer(container, at)
+        if target then
+            -- A previewing target's engine is disabled and keeps a stale rect; its preview extent
+            -- covers its placeholders instead (Preview.Extent, L-4).
+            return (target.previewShown and target.previewExtent) or target.engine or target.anchor, "container"
         end
     elseif at.mode == "frame" then
         local f = Anchors.ResolveFrame(at.frame)
@@ -81,6 +93,118 @@ local function targetFor(container, at)
         end
     end
     return nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Inherited flow (L-6)
+-- ---------------------------------------------------------------------------
+-- A container attached to ANOTHER container continues that container's flow: its fill axis and both
+-- growth directions are its chain root's, and its anchor points are derived so it picks up where the
+-- parent's auras end. Its offsets, per-line count and spacing stay its own. Nothing is written: the
+-- stored values stay as they are, so a detach restores them at the next apply. A frame-attached or
+-- screen container inherits nothing — a named frame has no flow to continue.
+
+local FLOW_KEYS = { "axis", "growH", "growV" }
+
+-- The writes that change what a follower inherits or where its chain leads, so they re-apply every
+-- container following the one written (Anchors.Followers; modules/ContainerManager.lua).
+local FLOW_PATHS = {
+    ["container.layout"] = true,
+    ["container.layout.axis"] = true,
+    ["container.layout.growH"] = true,
+    ["container.layout.growV"] = true,
+    ["container.attach.mode"] = true,
+    ["container.attach.container"] = true,
+}
+
+--- The container whose flow `cfg` follows, or nil when it follows none: not attached to a container,
+--- or attached to one Place cannot use (missing, itself, a loop), which puts it on the screen. The
+--- walk goes up the chain while each target is itself container-attached, and stops at the first
+--- link that leads nowhere, because that container sits on the screen with its own flow.
+function Anchors.FlowRoot(cfg)
+    local at = cfg and cfg.attach
+    if not (at and at.mode == "container") then return nil end
+    local id = tonumber(at.container)
+    if id == nil or id == cfg.id or Anchors.WouldCycle(cfg.id, id) then return nil end
+    local root, hops = NS.Database.FindContainer(id), 0
+    while root and hops < 64 do
+        local up = root.attach
+        local nextId = up and up.mode == "container" and tonumber(up.container)
+        local nextCfg = nextId and NS.Database.FindContainer(nextId)
+        if not nextCfg then return root end
+        root, hops = nextCfg, hops + 1
+    end
+    return root
+end
+
+--- The layout `cfg` actually flows by. For a container that follows another it is a shallow copy of
+--- its own layout with the fill axis and both growth directions taken from its chain root; for any
+--- other it is `cfg.layout` itself, with no allocation. Every flow reader goes through this:
+--- Container.FlowSettings, Preview.Offset, the handle's side and the anchor's clamp.
+--- @return table|nil
+function Anchors.EffectiveLayout(cfg)
+    local root = Anchors.FlowRoot(cfg)
+    if not root then return cfg.layout end
+    local out = {}
+    for k, v in pairs(cfg.layout or {}) do out[k] = v end
+    local from = root.layout or {}
+    for _, k in ipairs(FLOW_KEYS) do out[k] = from[k] end
+    return out
+end
+
+--- The points that continue a parent laid out by `L`: its child's point and the parent's relative
+--- point. A column parent stacks its child below it (above, growing up), on the side its columns
+--- start from; a row parent puts it beside it (to the left, growing left), on the side its rows
+--- start from.
+--- @return string point, string relativePoint
+function Anchors.DerivedPoints(L)
+    local right = (L.growH ~= "left")
+    local down = (L.growV ~= "up")
+    if L.axis == "vertical" then
+        local h = right and "LEFT" or "RIGHT"
+        if down then return "TOP" .. h, "BOTTOM" .. h end
+        return "BOTTOM" .. h, "TOP" .. h
+    end
+    local v = down and "TOP" or "BOTTOM"
+    if right then return v .. "LEFT", v .. "RIGHT" end
+    return v .. "RIGHT", v .. "LEFT"
+end
+
+--- Whether container `c`'s chain of container attachments passes through container `id`.
+local function follows(c, id)
+    local at, hops = c.attach, 0
+    while at and at.mode == "container" and hops < 64 do
+        local targetId = tonumber(at.container)
+        if targetId == id then return true end
+        local nextCfg = targetId and NS.Database.FindContainer(targetId)
+        at, hops = nextCfg and nextCfg.attach, hops + 1
+    end
+    return false
+end
+
+--- Every container whose chain passes through container `id`, directly or further down: the ones a
+--- change to `id`'s flow or attachment moves.
+--- @return table  container ids
+function Anchors.Followers(id)
+    local out = {}
+    for _, c in ipairs(NS.Database.GetContainers()) do
+        if c.id ~= id and follows(c, id) then
+            out[#out + 1] = c.id
+        end
+    end
+    return out
+end
+
+--- Whether a write to `path` changes what a container's followers inherit or where they sit.
+function Anchors.MovesFollowers(path)
+    return FLOW_PATHS[path] == true
+end
+
+--- The anchor points container `cfg` attaches with: derived from the flow it continues when it is
+--- attached to a container, else the stored ones (a named frame).
+local function attachPoints(cfg, at, mode)
+    if mode == "container" then return Anchors.DerivedPoints(Anchors.EffectiveLayout(cfg) or {}) end
+    return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint
 end
 
 --- Place one container's anchor from its settings. Returns the mode it actually ended up in, which
@@ -99,8 +223,9 @@ function Anchors.Place(container)
     local at = cfg.attach or {}
     local target, mode = targetFor(container, at)
     if target then
-        local ok = pcall(anchor.SetPoint, anchor, at.point or D.attach.point, target,
-            at.relativePoint or D.attach.relativePoint, tonumber(at.x) or 0, tonumber(at.y) or 0)
+        local point, relativePoint = attachPoints(cfg, at, mode)
+        local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint,
+            tonumber(at.x) or 0, tonumber(at.y) or 0)
         if ok then return mode end
         anchor:ClearAllPoints()
     end
@@ -109,6 +234,26 @@ function Anchors.Place(container)
     end
     toScreen(anchor, cfg)
     return "screen"
+end
+
+--- Re-place every container attached to `target` once its preview has come or gone since they were
+--- last placed (L-4): they hang from its preview extent while it previews and from its engine
+--- otherwise (targetFor). Called on every visibility pass (ContainerClass:ApplyVisibility), so a pass
+--- that changes nothing re-places nothing. Layout work beside an aura engine, so never under
+--- lockdown: the last placement stands, unrecorded, and the first pass after combat catches up.
+function Anchors.PlaceAttached(target)
+    local previewing = target.previewShown == true
+    if target.attachedPlacedFor == previewing or InCombatLockdown() then return end
+    target.attachedPlacedFor = previewing
+    local CM = NS.ContainerManager
+    if not CM then return end
+    for _, inst in pairs(CM.instances) do
+        local cfg = inst ~= target and inst:Cfg()
+        local at = cfg and cfg.attach
+        if at and at.mode == "container" and tonumber(at.container) == target.id then
+            inst.placedAs = Anchors.Place(inst)
+        end
+    end
 end
 
 --- Re-place every container whose frame target did not exist when it was placed. Called whenever an
@@ -166,6 +311,7 @@ local HANDLE_H     = 18   -- strip height
 local HANDLE_GAP   = 2    -- gap between the strip and the anchor
 local HANDLE_PAD   = 24   -- horizontal padding around the label
 local HANDLE_HELP  = 14   -- the help mark's edge, inside the strip's far end
+local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
 local BACKDROP_TEX = [[Interface\Buttons\WHITE8X8]]
 -- The LAST rung of the help mark's ladder: the catalog's `help` icon through NS.Icon first, and this
 -- Blizzard texture only when the media library is absent or stops carrying that name.
@@ -250,7 +396,7 @@ function Anchors.BuildHandle(container)
     local anchor = container.anchor
     local handle = CreateFrame("Button", nil, anchor, "BackdropTemplate")
     handle:SetHeight(HANDLE_H)
-    handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + 50)
+    handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + HANDLE_LEVEL)
     handle:SetBackdrop({ bgFile = BACKDROP_TEX, edgeFile = BACKDROP_TEX, edgeSize = 1 })
     handle:SetBackdropColor(0, 0, 0, 0.75)
     handle:SetBackdropBorderColor(1, 0.82, 0, 0.6)
@@ -278,11 +424,28 @@ end
 
 --- Put the strip on the side the auras do not grow into: above the anchor when they grow down,
 --- below when they grow up, its edge lined up with the edge they start from so it runs along the
---- first line. At least as wide as one element, and as its label with room for the help mark.
+--- first line. At least as wide as one element, and as its label with room for the help mark. The
+--- growth is the effective one: an attached container's auras grow the way its parent's do (L-6).
+--- The strip's frame level, set wherever it is placed, since the first apply sets its anchor's level
+--- after BuildHandle ran: HANDLE_LEVEL above its anchor. A container attached to another also clears
+--- that one's placeholders (L-4), which it sits beside with its strip toward them; every placeholder,
+--- inner frames included, stacks under that container's own strip, HANDLE_LEVEL above its anchor.
+--- Levels order frames within one strata only: a target in a higher strata still draws on top.
+local function handleLevel(container, cfg)
+    local level = (container.anchor:GetFrameLevel() or 0) + HANDLE_LEVEL
+    local at = cfg.attach
+    local target = at and at.mode == "container" and targetContainer(container, at)
+    if target then
+        level = math.max(level, (target.anchor:GetFrameLevel() or 0) + HANDLE_LEVEL + 1)
+    end
+    return level
+end
+
 --- @return number  how far the strip runs past the anchor along the line
 local function placeHandle(container, cfg)
     local handle = container.handle
-    local growH, growV = NS.Container.Growth(cfg.layout or {})
+    handle:SetFrameLevel(handleLevel(container, cfg))
+    local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
     local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
     local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
     local w = NS.Style.ElementSize(cfg)
@@ -314,7 +477,7 @@ local function clampToHandle(container, cfg, overhang)
         setClamp(container, 0, 0, 0, 0)
         return
     end
-    local growH, growV = NS.Container.Growth(cfg.layout or {})
+    local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
     local reach = HANDLE_H + HANDLE_GAP
     local left = (growH == "left") and -overhang or 0
     local right = (growH == "right") and overhang or 0

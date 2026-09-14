@@ -127,13 +127,51 @@ end
 -- Duration text
 -- ---------------------------------------------------------------------------
 
---- A SecondsFormatter for one of our TIME_FORMATS, or nil for "blizzard" (the engine's own) and on a
---- client without C_StringUtil. The formatter is handed to the engine, which applies it to a secret
---- duration we never see.
+-- The largest unit of Blizzard's own DefaultAuraDurationFormatter (Blizzard_AuraContainerShared.lua)
+-- steps with the time left, each unit held to 1.5x the next: seconds to 90 s, minutes to 90 m,
+-- hours to 36 h, then days.
+local MAX_INTERVAL_STEPS = { { 0, "Seconds" }, { 91, "Minutes" }, { 5401, "Hours" }, { 129601, "Days" } }
+
+--- That step curve as a C_CurveUtil curve, or nil when the client lacks the API or refuses a point.
+local function maxIntervalCurve(E)
+    local cu = _G.C_CurveUtil
+    if not (cu and cu.CreateCurve and E.LuaCurveType) then return nil end
+    local ok, curve = pcall(cu.CreateCurve)
+    if not ok or not curve then return nil end
+    local built = pcall(function()
+        curve:SetType(E.LuaCurveType.Step)
+        for _, step in ipairs(MAX_INTERVAL_STEPS) do
+            curve:AddPoint(step[1], E.SecondsFormatterInterval[step[2]])
+        end
+    end)
+    return built and curve or nil
+end
+
+--- The unit setup of one format. "long" is two units and a carry, so 1:59:59 reads "1h 59m" rather
+--- than "1h 60m"; the others are one unit, and "blizzard" steps its largest unit like the engine's.
+local function setUnits(f, E, format)
+    local days = E.SecondsFormatterInterval.Days
+    if format == "long" then
+        f:SetCanRoundUpLastUnit(false)
+        f:SetCanRoundUpIntervals(true)
+        f:SetMaxInterval(days)
+        f:SetDesiredUnitCount(2)
+        return
+    end
+    f:SetCanRoundUpLastUnit(true)
+    f:SetDesiredUnitCount(1)
+    local curve = format == "blizzard" and maxIntervalCurve(E)
+    if not (curve and pcall(f.SetMaxIntervalCurve, f, curve)) then f:SetMaxInterval(days) end
+end
+
+--- A SecondsFormatter for one of our TIME_FORMATS, or nil on a client without C_StringUtil. The
+--- formatter is handed to the engine, which applies it to a secret duration we never see. Every
+--- format rounds a fractional second UP, as the cooldown countdown does; the engine's own default
+--- truncates, so 12.7 s would read "12" beside a countdown of 13 (I-2). "blizzard" is therefore not
+--- the engine's default but a copy of it that rounds up.
 --- @param format string  "blizzard" | "short" | "long"
 --- @return table|nil
 function Compat.CreateSecondsFormatter(format)
-    if format == "blizzard" then return nil end
     local su = _G.C_StringUtil
     local E = _G.Enum
     if not (su and su.CreateSecondsFormatter and E and E.SecondsFormatterInterval) then return nil end
@@ -141,19 +179,9 @@ function Compat.CreateSecondsFormatter(format)
     if not ok or not f then return nil end
     pcall(function()
         f:SetDefaultAbbreviation(E.SecondsFormatterAbbreviation.OneLetter)
-        f:SetRounding(E.SecondsFormatterRounding.Truncate)
+        f:SetRounding(E.SecondsFormatterRounding.RoundUp)
         f:SetMinInterval(E.SecondsFormatterInterval.Seconds)
-        if format == "long" then
-            -- Two units and a carry, so 1:59:59 reads "1h 59m" rather than "1h 60m".
-            f:SetCanRoundUpLastUnit(false)
-            f:SetCanRoundUpIntervals(true)
-            f:SetMaxInterval(E.SecondsFormatterInterval.Days)
-            f:SetDesiredUnitCount(2)
-        else
-            f:SetCanRoundUpLastUnit(true)
-            f:SetMaxInterval(E.SecondsFormatterInterval.Days)
-            f:SetDesiredUnitCount(1)
-        end
+        setUnits(f, E, format)
     end)
     return f
 end

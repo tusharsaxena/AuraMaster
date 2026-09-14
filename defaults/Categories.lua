@@ -18,7 +18,8 @@ local _, NS = ...
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
--- id per category, and those edits live in the profile (container.filter.categorySpells), never here.
+-- id per category, and those edits live in the profile (profile.categorySpells, shared by every
+-- container since schema v2), never here.
 -- An id that does not exist in the current client simply never matches, so a stale entry costs
 -- nothing but a row in the editor. Consumables change every expansion and are the list most likely to
 -- need a player's own additions.
@@ -114,24 +115,17 @@ Cat.HELPFUL = {
         }),
     },
     {
-        key = "coreHealing", kind = "spells", label = "Core healing buffs",
-        desc = "The main heal-over-time effects and shields.",
+        -- One list since schema v2: the former coreHealing and lesserHealing, united (core/Database.lua's
+        -- MigrateV2 merges a player's edits and category states of the two).
+        key = "healing", kind = "spells", label = "Healing",
+        desc = "Heal-over-time effects, shields and beacons.",
         spells = spells({
-            DRUID  = { 774, 8936, 33763, 48438 },
-            PRIEST = { 139, 17, 194384, 41635 },
-            SHAMAN = { 61295, 974 },
-            MONK   = { 119611, 124682 },
-            EVOKER = { 364343, 366155 },
-            PALADIN = { 53563 },
-        }),
-    },
-    {
-        key = "lesserHealing", kind = "spells", label = "Lesser healing buffs",
-        desc = "Secondary heal-over-time effects and beacons.",
-        spells = spells({
-            DRUID   = { 102352, 155777, 207386 },
-            MONK    = { 115175 },
-            PALADIN = { 156910, 200025, 287280 },
+            DRUID   = { 774, 8936, 33763, 48438, 102352, 155777, 207386 },
+            PRIEST  = { 139, 17, 194384, 41635 },
+            SHAMAN  = { 61295, 974 },
+            MONK    = { 119611, 124682, 115175 },
+            EVOKER  = { 364343, 366155 },
+            PALADIN = { 53563, 156910, 200025, 287280 },
         }),
     },
     {

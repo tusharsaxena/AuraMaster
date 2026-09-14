@@ -18,6 +18,15 @@ local _, NS = ...
 local C = NS.Constants
 local L = function(s) return s end   -- keys are the English strings (localization-§2)
 
+local function color(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end
+
+--- core/Constants.lua's dispel palette as stored colors, each one its own table.
+local function dispelColors()
+    local out = {}
+    for k, v in pairs(C.DEFAULT_DISPEL_COLORS) do out[k] = color(v.r, v.g, v.b, v.a) end
+    return out
+end
+
 NS.defaults = NS.defaults or {}
 
 NS.defaults.profile = {
@@ -34,6 +43,15 @@ NS.defaults.profile = {
     -- (events-frames-taint-§3), and only while not in combat.
     hideBlizzardBuffs   = false,
     hideBlizzardDebuffs = false,
+
+    -- Profile-wide since schema v2 (core/Database.lua's MigrateV2 lifted them off the containers):
+    -- every container shares one set of spell-category edits and one dispel palette.
+    -- `categorySpells` is [categoryKey] = { [spellId] = true (added) | false (removed) }, layered
+    -- over defaults/Categories.lua's starter lists, so a shipped list update still reaches a player
+    -- who has edited one. Written whole through settings/Schema.lua's `categorySpells` carve-out.
+    categorySpells = {},
+    -- One color per dispel type, for a bar colored by dispel type.
+    dispelColors   = dispelColors(),
 
     -- The container registry. `containers` is keyed by id; `containerOrder` is display order (the
     -- settings picker, the CLI, and the order containers are built in). Both are written at runtime by
@@ -57,8 +75,6 @@ NS.defaults.global = {
     timedSpells = {},
 }
 
-local function color(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end
-
 --- The font block every text element carries: the six canonical leaves (options-ui-§16), then where
 --- the text sits.
 local function text(show, size, point, x, y, justify)
@@ -77,12 +93,6 @@ local function text(show, size, point, x, y, justify)
     }
 end
 
-local function dispelColors()
-    local out = {}
-    for k, v in pairs(C.DEFAULT_DISPEL_COLORS) do out[k] = color(v.r, v.g, v.b, v.a) end
-    return out
-end
-
 NS.CONTAINER_TEMPLATE = {
     name     = L("Container"),
     enabled  = true,
@@ -96,10 +106,7 @@ NS.CONTAINER_TEMPLATE = {
         -- as a schema row (settings/Filters.lua) and a key added later backfills as neutral.
         -- defaults/Categories.lua loads first for exactly this line.
         categories      = NS.Categories.NeutralStates(),
-        -- Per-category spell-list edits: [categoryKey] = { [spellId] = true (added) | false (removed) }.
-        -- Layered over defaults/Categories.lua's starter list, so a shipped list update still reaches
-        -- a player who has edited it.
-        categorySpells  = {},
+        -- The spell-list edits are the profile's since schema v2 (`profile.categorySpells`).
         whitelist       = {},   -- [spellId] = true — always shown, whatever the categories say
         blacklist       = {},   -- [spellId] = true — never shown
         castBy          = "any",
@@ -126,7 +133,7 @@ NS.CONTAINER_TEMPLATE = {
     layout = {
         axis = "vertical", growH = "right", growV = "down",
         spacing = 2, lineSpacing = 2, perLine = 0,
-        scale = 1.0, alpha = 1.0, strata = "MEDIUM", level = 5,
+        scale = 1.0, alpha = 1.0, strata = "HIGH", level = 5,
     },
 
     -- Mouse behavior shared by both styles.
@@ -140,7 +147,7 @@ NS.CONTAINER_TEMPLATE = {
 
         barTexture = "Blizzard", barAlpha = 1.0,
         barColor = color(0.20, 0.55, 0.95, 1), useClassColorBar = false,
-        colorMode = "static", dispelColors = dispelColors(),
+        colorMode = "static",   -- "dispel" tints by the profile's dispelColors (schema v2)
         drain = "left", smooth = false,
 
         bgTexture = "Blizzard", bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
@@ -149,8 +156,11 @@ NS.CONTAINER_TEMPLATE = {
         borderColor = color(0, 0, 0, 1), useClassColorBorder = false,
 
         icon = "LEFT", iconSize = 0, iconGap = 1, iconZoom = 0.08,
+        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderSize = 1,
+        iconBorderColor = color(0, 0, 0, 1), useClassColorIconBorder = false,
 
         spark = true, sparkWidth = 8, sparkColor = color(1, 1, 1, 0.9), useClassColorSpark = false,
+        sparkTimeless = true,   -- false: no spark on an aura without a duration (modules/Style_Bars.lua)
 
         name   = text(true, 11, "LEFT", 4, 0, "LEFT"),
         time   = text(true, 11, "RIGHT", -4, 0, "RIGHT"),

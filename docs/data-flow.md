@@ -15,17 +15,17 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:549
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:552
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:483
+ 2  ContainerManager (listener)                                modules/ContainerManager.lua:520
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:214
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:243
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -43,8 +43,8 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:249
-        │  build the regions once (icon, bar, fill, spark, text, border, pandemic wash)
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:331
+        │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
         │  SetCancelAuraButtons, tooltip options
@@ -108,7 +108,7 @@ signatures differ (`modules/Container.lua:260-262`), because the engine clears a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:178`).
+`SetUnit` last (`modules/Container.lua:228`).
 
 ## Visibility, separate from applying
 
@@ -126,7 +126,7 @@ covers no element and nothing moves to make room for it.
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:61`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:104`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
 `engine = false`, fills in invented names, times and stacks, and positions it with
 `Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders
@@ -192,8 +192,9 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:89`) sizes the anchor to one element and attaches it: to
-another container's engine frame (or its anchor, before the engine exists), unless that would loop;
+`Anchors.Place` (`modules/Anchors.lua:213`) sizes the anchor to one element and attaches it: to
+another container's engine frame (or its anchor, before the engine exists; or, while that container
+previews, its preview extent, because the disabled engine keeps a stale rect), unless that would loop;
 to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container
 pending, re-placed on the next `ADDON_LOADED`; a forbidden one is never waited on, since no add-on
 loading makes it a target); else to the screen at `container.position`. A pending resolve

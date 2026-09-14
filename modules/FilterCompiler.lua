@@ -98,13 +98,14 @@ end
 -- Categories
 -- ---------------------------------------------------------------------------
 
---- The effective spell set of one spell category: the shipped starter list with the container's own
---- edits layered on (true adds an id, false removes one).
+--- The effective spell set of one spell category: the shipped starter list with the profile's edits
+--- layered on (true adds an id, false removes one). `spellEdits` is the profile-wide
+--- `categorySpells` map (schema v2: one set every container shares), or nil for the starters alone.
 --- @return table  [spellId] = true
-function FC.CategorySpells(def, cfg)
+function FC.CategorySpells(def, spellEdits)
     local out = {}
     for id in pairs(def.spells or {}) do out[id] = true end
-    local edits = cfg and cfg.filter and cfg.filter.categorySpells and cfg.filter.categorySpells[def.key]
+    local edits = type(spellEdits) == "table" and spellEdits[def.key]
     if type(edits) == "table" then
         for id, on in pairs(edits) do
             id = tonumber(id)
@@ -119,7 +120,7 @@ end
 local function isEmpty(t) return next(t) == nil end
 
 --- Apply category `def` to `con`, positively ("show") or negatively (as an exclusion).
-local function applyCategory(con, def, cfg, positive)
+local function applyCategory(con, def, spellEdits, positive)
     local kind = def.kind
     if kind == "token" then
         addToken(con, positive and def.token or ("!" .. def.token))
@@ -132,7 +133,7 @@ local function applyCategory(con, def, cfg, positive)
     elseif kind == "dispel" then
         addToSet(con, positive and "includeDispelTypes" or "excludeDispelTypes", def.types)
     elseif kind == "spells" then
-        local set = FC.CategorySpells(def, cfg)
+        local set = FC.CategorySpells(def, spellEdits)
         if positive then
             -- A shown spell category with no ids left would pass NOTHING — including it as an empty
             -- include-map is what the engine would honor, and an empty group is honest about that.
@@ -309,10 +310,12 @@ local function addWhitelistGroup(plan, auraType, whitelist, look)
 end
 
 --- The category groups: one "All" group, or one per shown category. Each excludes the hidden
---- categories, the whitelist, and every shown category before it.
-local function addCategoryGroups(plan, base, cats, cfg, look)
+--- categories, the whitelist, and every shown category before it. `cats.spellEdits` is the
+--- profile's spell-list edits.
+local function addCategoryGroups(plan, base, cats, look)
+    local edits = cats.spellEdits
     local function withExclusions(con)
-        for _, def in ipairs(cats.hidden) do applyCategory(con, def, cfg, false) end
+        for _, def in ipairs(cats.hidden) do applyCategory(con, def, edits, false) end
         if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
         return con
     end
@@ -325,8 +328,8 @@ local function addCategoryGroups(plan, base, cats, cfg, look)
     end
     for i, def in ipairs(shown) do
         local con = cloneCon(base)
-        applyCategory(con, def, cfg, true)
-        for j = 1, i - 1 do applyCategory(con, shown[j], cfg, false) end
+        applyCategory(con, def, edits, true)
+        for j = 1, i - 1 do applyCategory(con, shown[j], edits, false) end
         addGroup(plan, withExclusions(con), def.label, look)
     end
 end
@@ -345,10 +348,22 @@ local function finishWarnings(plan, unit, auraType, usesSpellIds)
     end
 end
 
+--- The context both compile sites hand Compile: the learned timed spells (account-wide) and the
+--- profile's spell-list edits (schema v2). Either is nil before the database exists.
+--- @return table
+function FC.ProfileContext()
+    local db = NS.db
+    return {
+        timedSpells    = db and db.global and db.global.timedSpells,
+        categorySpells = db and db.profile and db.profile.categorySpells,
+    }
+end
+
 --- Build the engine-facing plan for one container.
 ---
 --- @param cfg table  the container's stored table (defaults/Profile.lua CONTAINER_TEMPLATE shape)
---- @param ctx table|nil  { categories = NS.Categories, timedSpells = { [id] = true } }
+--- @param ctx table|nil  { categories = NS.Categories, timedSpells = { [id] = true },
+---                  categorySpells = the profile's spell-list edits (schema v2) }
 --- @return table  plan = { groups = { {key, filter, candidateFilters, sortMethod, sortDirection,
 ---                maxFrameCount, label} }, enchants = { slots, hidePermanent } | nil, warnings = {} }
 function FC.Compile(cfg, ctx)
@@ -370,7 +385,8 @@ function FC.Compile(cfg, ctx)
     -- ── Categories: shown and hidden, in declaration order ───────────────────────────────────
     local shown, hidden, categoryIds = splitCategories(Categories, auraType, filter.categories or {})
     local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
-    addCategoryGroups(plan, base, { shown = shown, hidden = hidden, whitelist = whitelist }, cfg, look)
+    addCategoryGroups(plan, base,
+        { shown = shown, hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells }, look)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     if auraType == "HELPFUL" and filter.includeEnchants and cfg.unit == "player" then

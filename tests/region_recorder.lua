@@ -64,6 +64,16 @@ function helpers.__count(self, name)
     return n
 end
 
+--- Where the last call to `name` falls in the run's call order, counted across EVERY recorder, so
+--- calls on two regions can be ordered; nil when it was never called.
+function helpers.__lastSeq(self, name)
+    local hit
+    for _, e in ipairs(self.__log) do
+        if e.name == name then hit = e.seq end
+    end
+    return hit
+end
+
 --- The last call to `name` as one comma-joined string (nil arguments read "nil").
 function helpers.__joined(self, name)
     local args = helpers.__last(self, name)
@@ -73,10 +83,13 @@ function helpers.__joined(self, name)
     return table.concat(parts, ",")
 end
 
+local seq = 0   -- one counter for every recorder: the run's call order (__lastSeq)
+
 local function method(name)
     return function(self, ...)
         local log = self.__log
-        log[#log + 1] = { name = name, args = { n = select("#", ...), ... } }
+        seq = seq + 1
+        log[#log + 1] = { name = name, args = { n = select("#", ...), ... }, seq = seq }
         if self.__raise[name] then error(name .. " refused", 2) end
         local change = STATE[name]
         if change then change(self, ...) end

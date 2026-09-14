@@ -55,7 +55,7 @@ C.DURATION_MODE_LABELS = { any = "Any duration", timed = "Only auras with a dura
 
 -- Tri-state category selection.
 C.CATEGORY_STATES = { "", "show", "hide" }
-C.CATEGORY_STATE_LABELS = { [""] = "—", show = "Show", hide = "Hide" }
+C.CATEGORY_STATE_LABELS = { [""] = "Default", show = "Whitelist", hide = "Blacklist" }
 
 -- Sort methods: our key → the engine's AuraContainerSortMethod member name.
 C.SORT_METHODS = { "default", "expiration", "expirationOnly", "name", "nameOnly",
@@ -96,7 +96,7 @@ C.POINT_LABELS = {
 
 -- What a container is attached to.
 C.ATTACH_MODES = { "screen", "container", "frame" }
-C.ATTACH_MODE_LABELS = { screen = "The screen", container = "Another container", frame = "A named frame" }
+C.ATTACH_MODE_LABELS = { screen = "Screen", container = "Another container", frame = "Named frame" }
 
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
@@ -133,10 +133,14 @@ C.TOOLTIP_ANCHOR_LABELS = {
     ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right", ANCHOR_CURSOR = "At the cursor",
 }
 
--- Time text. "blizzard" is the engine's own formatter; the other two are SecondsFormatter setups.
+-- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s → 1 m)", short = "Short (1 unit)",
     long = "Detailed (2 units, 1h 15m)" }
+-- The width a Bars time text is boxed to beside the name, in ems of its font size: the widest string
+-- each format writes ("59m" in one unit, "23h 59m" in two). The engine writes the text secret, so
+-- its width cannot be read back; a fixed budget is what gives the time's Justify a box (B-5).
+C.TIME_TEXT_EMS = { blizzard = 2.5, short = 2.5, long = 4.5 }
 
 -- The dispel types the engine names, plus "None" for an aura without one.
 C.DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "None" }
@@ -153,7 +157,7 @@ C.DEFAULT_DISPEL_COLORS = {
 C.PREVIEW_AURAS = {
     { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },
     { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0 },
-    { name = "Shield Wall",           icon = 132362, remaining = 6,    duration = 8,    stacks = 0 },
+    { name = "Shield Wall",           icon = 132362, remaining = 4,    duration = 8,    stacks = 0 },
     { name = "Ignore Pain",           icon = 1377132, remaining = 11,  duration = 12,   stacks = 3 },
     { name = "Well Fed",              icon = 136000, remaining = 0,    duration = 0,    stacks = 0 },
 }

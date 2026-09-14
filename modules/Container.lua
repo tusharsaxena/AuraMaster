@@ -75,9 +75,11 @@ local function maxLineSize(perLine, elementSize, spacing)
 end
 
 --- The engine's flow-layout settings for `cfg`, as plain values (a test seam as much as a helper).
+--- The axis and growth are the EFFECTIVE ones: a container attached to another continues its chain
+--- root's flow (Anchors.EffectiveLayout, L-6). The per-line count and spacing are always its own.
 --- @return table { axis, anchorPoint, growH, growV, maxLineSize }
 function NS.Container.FlowSettings(cfg)
-    local L = cfg.layout or {}
+    local L = NS.Anchors.EffectiveLayout(cfg) or {}
     local w, h = NS.Style.ElementSize(cfg)
     local vertical = (L.axis == "vertical")
     local growH, growV = growthOf(L)
@@ -308,9 +310,7 @@ function ContainerClass:Apply()
     if not cfg then return nil end
     local t0 = Perf.on and debugprofilestop()
 
-    local plan = NS.FilterCompiler.Compile(cfg, {
-        timedSpells = NS.db and NS.db.global and NS.db.global.timedSpells,
-    })
+    local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     self.warnings = plan.warnings
 
     local anchor = self.anchor
@@ -386,6 +386,8 @@ function ContainerClass:ApplyVisibility()
         NS.Preview.Hide(self)
     end
     NS.Anchors.UpdateHandle(self, previewing and p and not p.locked)
+    -- Containers attached to this one hang from its preview extent while it previews (L-4).
+    NS.Anchors.PlaceAttached(self)
     return show, previewing
 end
 

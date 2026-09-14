@@ -18,8 +18,12 @@ Example: a bar option.
    and a color row gets its class-color companion unless it is a palette swatch (options-ui-§16/§17).
 3. **The strings.** Add the label and desc to `locales/enUS.lua` as `L["…"] = "…"`, in US English.
 4. **The behavior.** Read the key in `modules/Style_Bars.lua` (`Bars.Apply` for the look,
-   `Bars.Bind` for an engine binding). Nothing else: the write seam already sends `CONFIG_CHANGED`,
-   which re-applies that container and restyles its buttons once auras are readable.
+   `Bars.Bind` for an engine binding), and paint it on the placeholder too (`Bars.FillPreview`).
+   Nothing else: the write seam already sends `CONFIG_CHANGED`, which re-applies that container and
+   restyles its buttons once auras are readable. `tests/test_render_coverage.lua` fails a Bars or
+   Icons row that reaches no drawn region on a live button and on a placeholder. A row that
+   honestly acts on only one of the two declares `coverage = "engine-only"` or `"preview-only"`,
+   with a comment saying why.
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
    the structure key in `Container:Apply` (`modules/Container.lua:327`).
@@ -43,8 +47,11 @@ Example: a bar option.
    (with `token`), `flag` (with `field` and `value`), `dispel` (with `types`) or `spells` (with
    `spells = spells({ CLASS = { ids } })`) — and `label`/`desc`.
 2. That is the whole wiring: `NeutralStates()` backfills the key as neutral into every stored
-   container, `settings/Filters.lua` generates its row, and `modules/FilterCompiler.lua` applies it by
-   kind. A new `kind` needs a branch in `applyCategory` and a subgroup in `SUBGROUP_BY_KIND`.
+   container, `settings/Filters.lua` generates its row and draws it in its kind's grid on Filters →
+   Categories, and `modules/FilterCompiler.lua` applies it by kind. A buff `spells` category also
+   joins General → Spell Categories' dropdown, and its profile-wide edits reach the compiler through
+   `FC.ProfileContext`. A new `kind` needs a branch in `applyCategory` and a grid in
+   `GRID_BY_KIND` (`settings/Filters.lua`), plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list will not work on friendly units — the engine's identity gate
    (`docs/midnight-quirks.md`). Keep spell lists on buffs.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
@@ -78,12 +85,14 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 2, apply = function(db) … end }` to `SCHEMA_STEPS` in `core/Database.lua:259`. The
-   ladder is account-wide (`global.schemaVersion`), but containers live in **every** profile: walk
-   `db.sv.profiles` (AceDB's raw store, guarded — the no-AceDB fallback has no `sv`) and transform
-   `profile.containers[*]` in each, not only `db.profile`. Test the stored value with `== nil`, never
-   `or` (savedvariables-§5).
-3. `RunMigrations` calls the step, stamps `schemaVersion = 2`, logs one `[Migrate]` line, and then
+2. Append `{ to = 3, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
+   `core/Database.lua:462`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
+   (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
+   transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure
+   function over one profile table, as `Database.MigrateV2` is, so a test can run it over a raw one.
+   Test the stored value with `== nil`, never `or` (savedvariables-§5).
+3. `RunMigrations` calls the step, stamps its `to`, logs one `[Migrate]` line, and then
    `PrepareProfile` backfills whatever the step did not set.
 4. A case in `tests/test_database.lua` with a v1-shaped profile (and a second, inactive profile), and
    the migration in `docs/schema.md`.

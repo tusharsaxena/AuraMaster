@@ -27,6 +27,20 @@ end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
 
+--- What the PANEL shows for `path`. A row may carry `panelGet()`, answering the value to show in
+--- place of the stored one, or nil to show what is stored: Layout's Fill and growth rows show the
+--- flow an attached container inherits (L-6). Only the panel reads through here — /am get
+--- (settings/Slash.lua's own descriptor) and every module read the store — so what is written and
+--- what a detach restores stay the container's own.
+local function panelRead(path)
+    local row = NS.FindSchemaRow(path)
+    if row and row.panelGet then
+        local shown = row.panelGet()
+        if shown ~= nil then return shown end
+    end
+    return NS.GetSetting(path)
+end
+
 local descriptor = {
     parentTitle   = PARENT_TITLE,
     mainPanelName = "AuraMasterMainPanel",
@@ -34,7 +48,7 @@ local descriptor = {
     print = function(line) print(line) end,
     debug = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,
 
-    get          = function(path) return NS.GetSetting(path) end,
+    get          = panelRead,
     set          = function(path, value) NS.SetByPath(path, value) end,
     applyDefault = function(row) NS.ApplyDefault(row) end,
     allRows      = function() return NS.Schema end,
@@ -80,13 +94,18 @@ local descriptor = {
 --
 -- Every page file calls a composer inside NS.RegisterSchemaRows AT FILE LOAD. With any of those
 -- nil the page file raises, its rows never register, and most of the schema — with /am list,
--- /am set and the profile defaults — silently vanishes. So this stub publishes every member a page
--- file touches at load, measured by deleting one and re-running tests/degraded_env.lua, and
--- nothing else: no widget maker, no flow engine, no header, no LAYOUT constant.
+-- /am set and the profile defaults — silently vanishes. So this stub publishes, real enough to
+-- finish the load, every member a page file touches at load (measured by deleting one and
+-- re-running tests/degraded_env.lua), plus the recovery reset. Every other function member of the
+-- live instance, the host's own decorations included, is carried too, as a no-op or one honest
+-- line: load-completing narrows what a member does, never which members exist (testing-§8). What
+-- it never carries is a copy of the library: no widget maker's body, no flow engine, no header, no
+-- LAYOUT or composer constant, no AceGUI, no media lister.
 --
 -- The composers reproduce the STORED SURFACE only — one row per canonical leaf at the path the live
 -- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this
--- build has none. tests/test_optionssetup.lua pins the member set and the schema row count.
+-- build has none. tests/test_surface_parity.lua pins the member set against the live instance;
+-- tests/test_optionssetup.lua pins the schema row count.
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
@@ -179,10 +198,32 @@ if not lib then
         end)
     end
 
-    -- Reached only from a builder, a render or a user action, so a no-op is the honest answer.
-    for _, name in ipairs({ "RefreshAllPanels", "RefreshScalars", "RestoreDefaults" }) do
+    -- Reached only from a builder, a render or a user action, and a library-less build draws no
+    -- panel, so a no-op is the honest answer (options-ui-§1). Every function member of the live
+    -- instance is here, the host decorations below the `return` included, so no call site finds a
+    -- member missing (testing-§8, tests/test_surface_parity.lua).
+    for _, name in ipairs({
+        -- refreshers and resets
+        "RefreshAllPanels", "RefreshScalars", "RefreshPanel", "RestoreDefaults",
+        -- panel shell and registration
+        "CreatePanel", "RegisterOptionsPage", "EnsureDefaultsButton", "EnsureScroll", "ClearScroll",
+        "PatchAlwaysShowScrollbar", "SetChromeHeight", "SetRenderer", "BuildLandingPage",
+        -- renderers and widget makers
+        "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
+        "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
+        "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
+        "IdList", "UnnamedCandidates",
+        -- this addon's decorations on the live instance (defined below the `return`)
+        "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderWarnings",
+        "RenderTabbedPage", "RenderContainerPage",
+    }) do
         Helpers[name] = function() end
     end
+    -- The one table member the ID widgets add: the hint strings a host tooltip may quote. The host
+    -- keeps its own localized copy, so an empty table is the inert answer.
+    Helpers.ID_NAME_HINT = {}
+    Helpers.CreateOptionsPanel = sayMissing
+    Helpers.OpenOptionsPanel = sayMissing
 
     NS.RegisterOptionsPage = function() end
     NS.RefreshOptionsPanel = function() end
@@ -298,72 +339,56 @@ function Helpers.ContainerBanner(ctx)
     return dd
 end
 
---- Place one AceGUI widget inside a PageHeader frame: "LEFT" / "RIGHT" half, or full width.
-function Helpers.PlaceInHeader(widget, frame, half)
-    local f = widget and widget.frame
-    if not f then return end
-    f:SetParent(frame)
-    f:ClearAllPoints()
-    if half == "LEFT" then
-        f:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-        f:SetPoint("TOPRIGHT", frame, "TOP", -4, 0)
-    elseif half == "RIGHT" then
-        f:SetPoint("TOPLEFT", frame, "TOP", 4, -18)
-        f:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -18)
-    else
-        f:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-        f:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-    end
-    f:Show()
-end
-
---- The picker as a plain AceGUI Dropdown, for a page whose ONE chrome block also carries a control
---- (the Containers page's New button). Recorded on the ctx's widget ledger for release.
-function Helpers.ContainerPickerWidget(ctx)
-    local AceGUI = NS.AceGUI
+--- The picker as a plain AceGUI Dropdown in a page's BODY: a `make` for Helpers.RenderGrid, so it
+--- is released with the scroll like every other body widget. General → Containers draws it on the
+--- tab's first line beside New container (the options-ui-§14 deviation, docs/ARCHITECTURE.md).
+function Helpers.ContainerPickerCell(_, parent, rel)
     local list, order = containerList()
     local _, activeId = NS.ActiveContainer()
-    local dd = AceGUI:Create("Dropdown")
-    ctx.__chromeWidgets[#ctx.__chromeWidgets + 1] = dd
+    local dd = NS.AceGUI:Create("Dropdown")
     dd:SetLabel(L["Container"])
     dd:SetList(list, order)
     dd:SetValue(activeId)
+    dd:SetRelativeWidth(rel or 0.5)
     dd:SetCallback("OnValueChanged", function(_, _, id)
         if id == nil or id == activeId then return end
         Helpers.SelectContainer(id)
     end)
-    Helpers.AttachTooltip(dd, L["Container"], L[BANNER_TOOLTIP])
-    ctx.__bannerWidget = dd
+    Helpers.AttachTooltip(dd, L["Container"], L["Which container this tab, and the Filters, Layout, Bars and Icons pages, edit. The choice is shared by every page."])
+    parent:AddChild(dd)
     return dd
-end
-
---- Return the previous render's chrome widgets to AceGUI's pool — AFTER the render, because a
---- render is usually reached from one of their own callbacks.
-local function releaseStaleChromeWidgets(ctx)
-    local AceGUI = NS.AceGUI
-    local stale = ctx.__staleChromeWidgets
-    ctx.__staleChromeWidgets = nil
-    if not (AceGUI and AceGUI.Release and stale) then return end
-    for _, w in ipairs(stale) do AceGUI:Release(w) end
 end
 
 --- One orange line per thing the aura engine will silently not do for this container, above the
 --- tab's rows (modules/FilterCompiler.lua's plan warnings).
 function Helpers.RenderWarnings(ctx, cfg)
-    local plan = NS.FilterCompiler.Compile(cfg, {
-        timedSpells = NS.db and NS.db.global and NS.db.global.timedSpells,
-    })
+    local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     for _, w in ipairs(plan.warnings or {}) do
         Helpers.TextRow(ctx, "|cffffa040" .. L[w] .. "|r")
     end
 end
 
---- A container page's tabs: its schema groups in first-seen order, then the bespoke tabs the
---- container's aura type admits. No container, no tabs.
+--- Add a bespoke tab to the strip: ahead of the tab `before` names when this render draws it, else
+--- last.
+local function placeTab(tabs, entry, before)
+    for i, t in ipairs(tabs) do
+        if before ~= nil and t.key == before then
+            table.insert(tabs, i, entry)
+            return
+        end
+    end
+    tabs[#tabs + 1] = entry
+end
+
+--- A tabbed page's tabs: its schema groups in first-seen order, then the bespoke tabs the
+--- container's aura type admits. A bespoke tab keyed by a schema group takes that group's place in
+--- the strip rather than adding a second tab; one with `before` is drawn ahead of that tab. A
+--- per-container page with no container has no tabs; an addon-wide page (`spec.addonWide`) has its
+--- tabs whatever the registry holds.
 --- @return table tabs, table byGroup, table bespoke
 local function collectTabs(cfg, pageKey, spec)
     local tabs, byGroup, bespoke = {}, {}, {}
-    if not cfg then return tabs, byGroup, bespoke end
+    if not (cfg or spec.addonWide) then return tabs, byGroup, bespoke end
     for _, row in ipairs(NS.SchemaForPage(pageKey)) do
         if not byGroup[row.group] then
             byGroup[row.group] = {}
@@ -373,8 +398,10 @@ local function collectTabs(cfg, pageKey, spec)
         rows[#rows + 1] = row
     end
     for _, t in ipairs(spec.tabs or {}) do
-        if not t.auraTypes or t.auraTypes[cfg.auraType] then
-            tabs[#tabs + 1] = { key = t.key, label = t.label }
+        if not t.auraTypes or (cfg and t.auraTypes[cfg.auraType]) then
+            if not byGroup[t.key] then
+                placeTab(tabs, { key = t.key, label = t.label }, t.before)
+            end
             bespoke[t.key] = t
         end
     end
@@ -389,43 +416,66 @@ local function settleActiveTab(ctx, tabs)
     ctx.activeTab = tabs[1].key
 end
 
---- The active tab's content, under the page's intro; the empty registry's one line instead.
+--- The notice over a page drawn disabled: large and orange, then a gap before the first control.
+local function drawDisabledNotice(ctx, text)
+    Helpers.TextRow(ctx, "|cffffa040" .. text .. "|r", { fontObject = "GameFontNormalLarge" })
+    local scroll = Helpers.EnsureScroll(ctx)
+    if scroll then Helpers.AddSpacer(scroll, 12) end
+end
+
+--- A bespoke tab's renderer under the page's disable, as RenderRows' `opts.disabled` holds it: the
+--- library's makers read `ctx.__renderDisabled`, which is restored on the way out, a raise included,
+--- so one failed render never leaves every later one disabled.
+local function renderBespoke(ctx, cfg, tab, rows, disabled)
+    local outer = ctx.__renderDisabled
+    ctx.__renderDisabled = (disabled or outer) and true or nil
+    local ok, err = pcall(tab.render, ctx, cfg, rows)
+    ctx.__renderDisabled = outer
+    if not ok then error(err, 0) end
+end
+
+--- The active tab's content, under the page's intro; a per-container page with no container draws
+--- the empty registry's one line instead. A bespoke tab is handed its group's schema rows when it
+--- stands in for one. A page whose `disabledFor(cfg)` answers true draws its `disabledNotice` and
+--- every control disabled (B-2: the Bars page on an icons container, and the reverse).
 local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
-    if not cfg then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on the Containers page, or type /am new."])
+    if not (cfg or spec.addonWide) then
+        Helpers.TextRow(ctx, L["No containers yet. Create one on General → Containers, or type /am new."])
         return
     end
-    if spec.intro then spec.intro(ctx, cfg) end
+    local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false
+    if cfg and spec.intro then spec.intro(ctx, cfg) end
+    if disabled and spec.disabledNotice then drawDisabledNotice(ctx, spec.disabledNotice) end
     local b = bespoke[ctx.activeTab]
     if b then
-        b.render(ctx, cfg)
+        renderBespoke(ctx, cfg, b, byGroup[ctx.activeTab], disabled)
     elseif byGroup[ctx.activeTab] then
-        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, nil, { noHeadings = true })
+        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, spec.pairWith,
+            { noHeadings = true, disabled = disabled })
     end
 end
 
---- Render one per-container page: the chrome block (the banner, or a host header), the tab strip
---- over the page's schema groups plus any bespoke tabs, and the active tab's content.
+--- Render one tabbed page: the optional chrome (`chrome(ctx)`, drawn before the strip so the strip
+--- reserves its band), the tab strip over the page's schema groups plus any bespoke tabs, and the
+--- active tab's content. The General page renders through this with no chrome; every per-container
+--- page through RenderContainerPage, which is this plus the container banner.
 ---
 --- `spec` fields, all optional:
----   header(ctx, frame)   build the page's one chrome block instead of the plain banner
----   tabs                 { { key, label, render(ctx, cfg), auraTypes } } bespoke tabs, after the
----                        schema's own
----   intro(ctx, cfg)      drawn above every tab's content
+---   addonWide            the page's tabs do not depend on a container existing (General)
+---   tabs                 { { key, label, render(ctx, cfg, rows), auraTypes, before } } bespoke
+---                        tabs, after the schema's own; one keyed by a schema group replaces that
+---                        group's rows, and one with `before` is drawn ahead of the tab it names
+---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
+---   disabledFor(cfg)     true draws every control of every tab disabled (bespoke tabs through
+---                        `ctx.__renderDisabled`), under `disabledNotice`, drawn large
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
-function Helpers.RenderContainerPage(ctx, pageKey, spec)
+---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
+function Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)
     spec = spec or {}
     Helpers.ClearScroll(ctx)
     local scroll = Helpers.EnsureScroll(ctx)
-
-    ctx.__staleChromeWidgets = ctx.__chromeWidgets
-    ctx.__chromeWidgets = {}
     ctx.__bannerWidget = nil
-    if spec.header then
-        Helpers.PageHeader(ctx, { height = Helpers.BANNER_H, build = function(_, frame) spec.header(ctx, frame) end })
-    else
-        Helpers.ContainerBanner(ctx)
-    end
+    if chrome then chrome(ctx) end
 
     local cfg = NS.ActiveContainer()
     local tabs, byGroup, bespoke = collectTabs(cfg, pageKey, spec)
@@ -440,19 +490,23 @@ function Helpers.RenderContainerPage(ctx, pageKey, spec)
         onSelect = function(key)
             if key == ctx.activeTab then return end
             ctx.activeTab = key
-            Helpers.RenderContainerPage(ctx, pageKey, spec)
+            Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)
         end,
     })
 
     renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
 
     if scroll and scroll.DoLayout then scroll:DoLayout() end
-    releaseStaleChromeWidgets(ctx)
 end
 
--- Test seam: the ctx each per-container page built, by page key. The library keeps its registry
--- private, and a page whose ctx is unreachable is a page whose render is untested.
-Helpers.__containerCtx = {}
+--- Render one per-container page: the container banner (options-ui-§14), then RenderTabbedPage.
+function Helpers.RenderContainerPage(ctx, pageKey, spec)
+    Helpers.RenderTabbedPage(ctx, pageKey, spec, Helpers.ContainerBanner)
+end
+
+-- Test seam: the ctx each tabbed page built, by page key. The library keeps its registry private,
+-- and a page whose ctx is unreachable is a page whose render is untested.
+Helpers.__pageCtx = {}
 
 --- Register a per-container settings page: the Blizzard subcategory, the lazily-drawn body, and a
 --- page-wide Defaults button that restores the SELECTED container's rows on this page.
@@ -466,7 +520,7 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
         })
         ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
         Helpers.SetRenderer(ctx, function(c) Helpers.RenderContainerPage(c, pageKey, spec) end)
-        Helpers.__containerCtx[pageKey] = ctx
+        Helpers.__pageCtx[pageKey] = ctx
         local cat = Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, title)
         categories[pageKey] = cat
         return cat

@@ -18,6 +18,7 @@ read_globals = {
     "Settings", "SettingsPanel", "StaticPopup_Show",
     "debugprofilestop",   -- the perf bracket's clock (performance-§2)
     "debugstack",         -- a failing styler's stack, kept for the error handler (modules/Style.lua)
+    "geterrorhandler",    -- a failing container's apply is reported, not raised (modules/ContainerManager.lua)
 }
 
 globals = {

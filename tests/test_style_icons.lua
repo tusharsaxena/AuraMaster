@@ -137,6 +137,13 @@ test("icons: the time and stack texts are laid against the icon's frame and show
     assertFalse(am.stacks:IsShown())
 end)
 
+test("icons: the time and stack texts are boxed to the icon's width less their offsets", function()
+    local _, am = dressed(cfg({ icons = { width = 40, height = 20 } }))
+    -- red under: Icons.Apply handing the texts no box (their justification has nothing to align within)
+    assertEqual(am.time:__last("SetWidth")[1], 40, "time, at no offset")
+    assertEqual(am.stacks:__last("SetWidth")[1], 40 - 1, "stacks, 1px in")
+end)
+
 test("icons: a hidden text is never handed to the engine; a shown one is, as its own region", function()
     local frame = dressed(cfg({ icons = { time = { show = false }, stacks = { show = false } } }), true)
     -- red under: Icons.Bind binding the texts whatever their show setting
@@ -167,6 +174,75 @@ test("icons: the dispel border is the engine's debuff art on harmful auras only"
     assertFalse(add[2].showWhenHelpful, "buffs do not")
 end)
 
+test("icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)", function()
+    local NS2 = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+    end })
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+        icons = { dispelBorder = true } })
+    NS2.db.profile.dispelColors.Magic = { r = 1, g = 0, b = 0, a = 1 }
+    local frame = dressed(c, true, nil, NS2)
+    local opts = frame:__last("AddDispelTypeTexture")[2]
+    -- red under: Icons.Bind passing the profile's customDispelColorMap (a tint over Blizzard's colored
+    -- border art, which the owner turned down: icons show the stock art)
+    assertNil(opts.customDispelColorMap, "no custom color map on an icon's dispel border")
+    assertEqual(opts.style, 31, "still Blizzard's border art")
+end)
+
+test("icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)", function()
+    -- Its own environment: every frame there makes textures of their own, each tagged with the
+    -- frame that made it (the kit's texture is the frame itself, which cannot name an owner).
+    local NS2, m2 = fresh()
+    local real = m2.CreateFrame
+    m2.CreateFrame = function(...)
+        local f = real(...)
+        rawset(f, "CreateTexture", function(self)
+            local tex = R()
+            tex.__owner = self
+            return tex
+        end)
+        return f
+    end
+    local frame = R()
+    NS2.Style.Element(frame, cfg(), false)
+    local am = frame.__am
+    local host = am.dispel.__owner
+    -- red under: the dispel texture made on the button itself, whose regions draw below every child
+    -- frame, so our border covers Blizzard's art instead of the art replacing it
+    assertTrue(host ~= nil and host ~= frame, "the dispel texture lives on a frame of its own")
+    assertTrue(host.__parent == frame, "a child of the button, so the engine's region rules hold")
+    -- red under: build leaving the cooldown, border and text frames at one level (their order unset)
+    assertTrue(am.border:GetFrameLevel() > am.cd:GetFrameLevel(), "our border above the cooldown swipe")
+    assertTrue(host:GetFrameLevel() > am.border:GetFrameLevel(), "the dispel border above ours")
+    assertTrue(am.text:GetFrameLevel() > host:GetFrameLevel(), "the texts above the dispel border")
+end)
+
+test("icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge", function()
+    -- Blizzard draws its debuff border art larger than the icon: a 40x40 border over a 30x30 icon
+    -- (Blizzard_BuffFrame/BuffFrameTemplates.xml), a sixth of the icon's size past each edge. The
+    -- art is transparent padding round a ring, so drawn at the icon's own size the ring lands INSIDE
+    -- the icon (the owner's report, 2026-09-13).
+    local _, am = dressed(cfg({ icons = { width = 32, height = 32, borderShow = true, borderStyle = "Solid",
+        borderSize = 1, dispelBorder = true } }), true)
+    local p = am.dispel:__calls("SetPoint")
+    local o = 30 / 6    -- the art: 32 less a 1 px border each side
+    -- red under: the dispel texture left at SetAllPoints(frame) (the ring drawn inside the icon)
+    assertEqual(p[1][1], "TOPLEFT"); assertTrue(p[1][2] == am.icon); assertEqual(p[1][3], "TOPLEFT")
+    assertEqual(p[1][4], -o); assertEqual(p[1][5], o)
+    assertEqual(p[2][1], "BOTTOMRIGHT"); assertTrue(p[2][2] == am.icon); assertEqual(p[2][3], "BOTTOMRIGHT")
+    assertEqual(p[2][4], o); assertEqual(p[2][5], -o)
+end)
+
+test("icons: a non-square icon's dispel art reaches past it by a sixth of each side", function()
+    local _, am = dressed(cfg({ icons = { width = 50, height = 26, borderShow = true, borderStyle = "Solid",
+        borderSize = 1, dispelBorder = true } }), true)
+    local p = am.dispel:__calls("SetPoint")
+    -- red under: one outset for both axes (a wide icon's ring off its top and bottom edges)
+    assertEqual(p[1][4], -48 / 6); assertEqual(p[1][5], 24 / 6)
+    assertEqual(p[2][4], 48 / 6); assertEqual(p[2][5], -24 / 6)
+end)
+
 test("icons: the dispel border turned off is hidden and never bound", function()
     local frame, am = dressed(cfg({ icons = { dispelBorder = false } }), true)
     -- red under: Icons.Apply leaving a previously shown dispel border drawn
@@ -174,6 +250,25 @@ test("icons: the dispel border turned off is hidden and never bound", function()
     assertEqual(am.dispel:__count("Hide"), 1)
     assertEqual(frame:__count("AddDispelTypeTexture"), 0)
     assertEqual(frame:__count("ClearDispelTypeTextures"), 1, "an earlier binding is cleared")
+end)
+
+test("icons: turning the dispel border off on a live button keeps it hidden (B-4)", function()
+    local NS2 = fresh({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+    end })
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+        icons = { dispelBorder = true } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    dofile("tests/engine_recorder.lua")(frame, { tint = { 1, 1, 1, 1 }, aura = true })
+    NS2.Style.Element(frame, c, true)
+    assertTrue(frame.__am.dispel:IsShown(), "on: the engine shows it")
+    c.icons.dispelBorder = false
+    NS2.Style.Element(frame, c, true)
+    -- red under: Icons.Bind clearing the dispel texture after SetIcon, whose apply pass shows it again
+    assertFalse(frame.__am.dispel:IsShown())
 end)
 
 test("icons: the refresh-window highlight is bound only when on, in the pandemic color", function()

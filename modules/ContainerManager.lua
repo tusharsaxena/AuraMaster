@@ -186,17 +186,46 @@ function CM.NoteDeferred()
     noteDeferred()
 end
 
---- Apply every container that is pending (or all of them). Returns how many were applied.
+-- The container being applied, handed to runApply through an upvalue: Lua 5.1's xpcall passes no
+-- arguments to the function it calls, and a closure per container would allocate on every pass.
+local applying
+
+local function runApply()
+    return applying:Apply()
+end
+
+--- A container's apply raised. The client's error handler gets it (BugSack shows it) and the pass
+--- goes on. A client without one (the headless harness) keeps the FIRST error for FlushPending to
+--- raise once the pass has finished, so a failure is never swallowed. Returns the error to keep.
+local function reportApplyError(err, first)
+    local handler = type(geterrorhandler) == "function" and geterrorhandler()
+    if handler then
+        handler(err)
+        return first
+    end
+    if first == nil then return err end
+    return first
+end
+
+--- Apply every container that is pending (or all of them). Each apply is guarded (B-5): one that
+--- raises is reported with its stack (Style.WithStack, as Style.Element reports a styler) and never
+--- stops the rest of the pass. Returns how many applied cleanly, and an error still to be raised.
 local function applyDirty(all, which)
-    local applied = 0
+    local applied, failed = 0, nil
     for _, c in ipairs(NS.Database.GetContainers()) do
         local inst = CM.instances[c.id]
         if inst and (all or which[c.id]) then
-            inst:Apply()
-            applied = applied + 1
+            applying = inst
+            local ok, err = xpcall(runApply, NS.Style.WithStack)
+            applying = nil
+            if ok then
+                applied = applied + 1
+            else
+                failed = reportApplyError(err, failed)
+            end
         end
     end
-    return applied
+    return applied, failed
 end
 
 --- A rebuilt engine is a NEW frame, so every container attached to one re-anchors to it. Re-placing
@@ -228,10 +257,11 @@ function CM.FlushPending(edge)
     local t0 = Perf.on and debugprofilestop()
     local all, which = pendingAll, pending
     pending, pendingAll, userPending = {}, false, false
-    local applied = applyDirty(all, which)
+    local applied, failed = applyDirty(all, which)
     replaceAttached()
     if t0 then Perf.Note("applyPass", debugprofilestop() - t0) end
     if NS.Debug then NS.Debug("Apply", "applied %s container(s)", applied) end
+    if failed ~= nil then error(failed, 0) end
     return applied
 end
 
@@ -328,7 +358,7 @@ end
 --- Create a container from the template plus `overrides`. Returns its id, or nil, a message and — for
 --- a refusal the caller should print gray — true. Refused under combat lockdown (options-ui-§2): its
 --- apply, which places the anchor and builds the engine, waits for combat to end (CM.MustDefer), so
---- it would not draw until then. That covers `/am new`, the Containers page's New and Duplicate, and
+--- it would not draw until then. That covers `/am new`, General → Containers' New and Duplicate, and
 --- any later caller.
 function CM.Create(overrides)
     if InCombatLockdown() then
@@ -365,7 +395,7 @@ function CM.Delete(id)
 end
 
 --- Rename container `id`, through the write seam so the change is logged and announced like any
---- other setting. The name row (settings/Containers.lua) makes the name unique in its normalize and
+--- other setting. The name row (settings/GeneralContainers.lua) makes the name unique in its normalize and
 --- calls CM.NotifyRenamed in its onChange, so a rename typed into the panel or `/am set
 --- container.name` lands the same way. The two checks here only give a caller a specific refusal.
 --- A test seam: tests/test_containermanager.lua calls it; no production path does.
@@ -471,6 +501,13 @@ end
 
 local ev
 
+--- A write that moves a container's flow or its attachment moves every container following it too
+--- (L-6): they continue its flow and anchor at points derived from it, so each is re-applied.
+local function requestFollowers(p)
+    if not (p.containerId and NS.Anchors.MovesFollowers(p.path)) then return end
+    for _, id in ipairs(NS.Anchors.Followers(p.containerId)) do CM.RequestApply(id) end
+end
+
 --- Build every container and start listening. Called once from core/AuraMaster.lua's OnEnable.
 function CM.Init()
     if not NS.Compat.EnsureAuraContainer() then
@@ -485,7 +522,10 @@ function CM.Init()
             local row = p.path and NS.FindSchemaRow(p.path)
             local effect = row and row.effect
             if effect == "visibility" then CM.ApplyVisibility()
-            elseif effect ~= "none" then CM.RequestApply(p.containerId) end
+            elseif effect ~= "none" then
+                CM.RequestApply(p.containerId)
+                requestFollowers(p)
+            end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)
         -- The learned timed-spell set changed: every container's excluded ids may have moved. A

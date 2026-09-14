@@ -552,7 +552,7 @@ test("anchors: a screen container sits at its stored point on UIParent, sized to
     assertEqual(p[5], 0, "a missing offset is 0")
 end)
 
-test("anchors: a container attaches to its target's engine frame at the stored point, or to its anchor before it has one", function()
+test("anchors: a container attaches to its target's engine frame at the derived points, or to its anchor before it has one", function()
     local NS = fresh()
     local CM = NS.ContainerManager
     local c2 = NS.Database.FindContainer(2)
@@ -562,7 +562,11 @@ test("anchors: a container attaches to its target's engine frame at the stored p
     local p = rec.points[1]
     -- red under: targetFor anchoring to the target's anchor (a container would not follow its target's growth)
     assertTrue(p[2] == CM.instances[1].engine, "the target's engine frame")
-    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "TOPLEFT"); assertEqual(p[4], -3); assertEqual(p[5], 4)
+    -- Container 1 fills columns growing right and down, so 2 continues below it (L-6).
+    -- red under: Place handing SetPoint the stored attach.point in container mode
+    assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "BOTTOMLEFT")
+    -- red under: the derived points dropping the stored offsets
+    assertEqual(p[4], -3); assertEqual(p[5], 4)
     local engine = CM.instances[1].engine
     CM.instances[1].engine = nil
     rec = recordAnchor(CM.instances[2])
@@ -814,4 +818,281 @@ test("handle: a left click on the strip opens nothing; a right click opens this 
     h:__fire("OnClick", "RightButton")
     assertEqual(opened, 1)
     assertEqual(NS.State.activeContainerId, 3)
+end)
+
+-- ── inherited flow (L-6) ──────────────────────────────────────────────────────────────────────
+
+-- Every parent axis and growth, and the points that continue it: a column parent stacks its child
+-- below (or above), a row parent beside it.
+local DERIVED = {
+    { axis = "vertical",   growH = "right", growV = "down", p = "TOPLEFT",     rp = "BOTTOMLEFT" },
+    { axis = "vertical",   growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "BOTTOMRIGHT" },
+    { axis = "vertical",   growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "TOPLEFT" },
+    { axis = "vertical",   growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "TOPRIGHT" },
+    { axis = "horizontal", growH = "right", growV = "down", p = "TOPLEFT",     rp = "TOPRIGHT" },
+    { axis = "horizontal", growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "BOTTOMRIGHT" },
+    { axis = "horizontal", growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "TOPLEFT" },
+    { axis = "horizontal", growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "BOTTOMLEFT" },
+}
+for _, c in ipairs(DERIVED) do
+    test(("anchors: derived points continue a %s/%s/%s parent"):format(c.axis, c.growH, c.growV), function()
+        local NS = fresh()
+        local p, rp = NS.Anchors.DerivedPoints({ axis = c.axis, growH = c.growH, growV = c.growV })
+        -- red under: a table that ignores the parent's axis (a row parent stacking its child below)
+        assertEqual(p, c.p)
+        assertEqual(rp, c.rp)
+    end)
+end
+
+--- Container 1 set to fill columns growing left and up: a flow no starter container has, so an
+--- inherited value can never be mistaken for a container's own.
+local function oddParent(NS)
+    local L = NS.Database.FindContainer(1).layout
+    L.axis, L.growH, L.growV = "vertical", "left", "up"
+    return L
+end
+
+local function attach(NS, id, to)
+    local c = NS.Database.FindContainer(id)
+    c.attach.mode, c.attach.container = "container", to
+    return c
+end
+
+test("anchors: an attached container flows as its parent does, and its own flow stays stored", function()
+    local NS = fresh()
+    local c1, c2 = NS.Database.FindContainer(1), NS.Database.FindContainer(2)
+    -- red under: EffectiveLayout copying the layout of a container that follows nothing
+    assertTrue(NS.Anchors.EffectiveLayout(c1) == c1.layout, "a screen container reads its own table, uncopied")
+    oddParent(NS)
+    c2.layout.perLine, c2.layout.spacing = 4, 7
+    attach(NS, 2, 1)
+    local L = NS.Anchors.EffectiveLayout(c2)
+    -- red under: EffectiveLayout answering the child's own layout in container mode
+    assertEqual(L.axis, "vertical"); assertEqual(L.growH, "left"); assertEqual(L.growV, "up")
+    -- red under: the copy taking the parent's per-line count and spacing (those stay the child's)
+    assertEqual(L.perLine, 4); assertEqual(L.spacing, 7)
+    -- red under: inheriting by writing the parent's values into the child's stored layout
+    assertTrue(L ~= c2.layout, "a copy")
+    assertEqual(c2.layout.axis, "horizontal"); assertEqual(c2.layout.growH, "left"); assertEqual(c2.layout.growV, "down")
+    assertTrue(NS.Anchors.FlowRoot(c2) == c1)
+    assertEqual(NS.Anchors.FlowRoot(c1), nil, "a screen container follows nothing")
+end)
+
+test("anchors: a chain inherits its root's flow; a broken or looping chain stops where it breaks", function()
+    local NS = fresh()
+    oddParent(NS)
+    local c2 = attach(NS, 2, 1)
+    local c3 = attach(NS, 3, 2)
+    local L = NS.Anchors.EffectiveLayout(c3)
+    -- red under: the walk stopping at the immediate parent (3 would take 2's rows growing left)
+    assertEqual(L.axis, "vertical"); assertEqual(L.growH, "left"); assertEqual(L.growV, "up")
+    assertTrue(NS.Anchors.FlowRoot(c3) == NS.Database.FindContainer(1), "the root names the flow's owner")
+    c2.attach.container = 99
+    L = NS.Anchors.EffectiveLayout(c3)
+    -- red under: following a link whose target does not exist (2 sits on the screen with its own flow)
+    assertEqual(L.axis, "horizontal"); assertEqual(L.growH, "left"); assertEqual(L.growV, "down")
+    c2.attach.container = 3
+    -- red under: FlowRoot without its WouldCycle guard (the capped walk inherits a flow from inside the loop)
+    assertTrue(NS.Anchors.EffectiveLayout(c3) == c3.layout, "3 → 2 → 3 falls back to its own flow")
+    c3.attach.container = 3
+    assertTrue(NS.Anchors.EffectiveLayout(c3) == c3.layout, "attached to itself")
+end)
+
+test("anchors: a container attached to another takes derived points from the parent's flow", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    oddParent(NS)
+    local c2 = attach(NS, 2, 1)
+    c2.attach.point, c2.attach.relativePoint, c2.attach.x, c2.attach.y = "CENTER", "CENTER", 6, -2
+    local rec = recordAnchor(CM.instances[2])
+    NS.Anchors.Place(CM.instances[2])
+    local p = rec.points[1]
+    -- red under: Place reading the stored attach points in container mode
+    assertEqual(p[1], "BOTTOMRIGHT"); assertEqual(p[3], "TOPRIGHT")
+    assertEqual(p[4], 6); assertEqual(p[5], -2)
+end)
+
+test("anchors: a frame-attached container keeps its stored points", function()
+    local NS, mocks = fresh()
+    oddParent(NS)
+    plant(mocks, "PlayerFrame")
+    local inst = NS.ContainerManager.instances[2]
+    NS.Database.FindContainer(2).attach = { mode = "frame", frame = "PlayerFrame", container = 1,
+        point = "CENTER", relativePoint = "LEFT", x = 1, y = 2 }
+    local rec = recordAnchor(inst)
+    NS.Anchors.Place(inst)
+    -- red under: deriving points in every attached mode (a frame target has no flow to continue)
+    assertEqual(rec.points[1][1], "CENTER"); assertEqual(rec.points[1][3], "LEFT")
+end)
+
+test("anchors: the engine's flow, the placeholders and the handle all read the inherited flow", function()
+    local NS, mocks = fresh()
+    oddParent(NS)
+    local c2 = attach(NS, 2, 1)
+    local flow = NS.Container.FlowSettings(c2)
+    -- red under: FlowSettings reading cfg.layout
+    assertEqual(flow.axis, "vertical"); assertEqual(flow.growH, "left"); assertEqual(flow.growV, "up")
+    assertEqual(flow.anchorPoint, "BOTTOMRIGHT")
+    -- red under: Preview.Offset reading cfg.layout (placeholders laid out in the child's own rows)
+    local point, x, y = NS.Preview.Offset(c2, 2)
+    local _, h = NS.Style.ElementSize(c2)
+    assertEqual(point, "BOTTOMRIGHT")
+    assertEqual(x, 0)
+    assertEqual(y, h + c2.layout.spacing, "the second placeholder stacks up the column")
+    local inst = NS.ContainerManager.instances[2]
+    local hdl = recordedHandle(mocks, NS, inst)
+    local top, bottom
+    rawset(inst.anchor, "SetClampRectInsets", function(_, _, _, t, b) top, bottom = t, b end)
+    NS.Anchors.UpdateHandle(inst, true)
+    local p = last(hdl, "SetPoint")
+    -- red under: placeHandle reading cfg.layout (2's own flow grows down: the strip would sit above)
+    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
+    -- red under: clampToHandle reading cfg.layout
+    assertEqual(top, 0); assertEqual(bottom, -20)
+end)
+
+--- The anchor point the engine was last told for container `id`.
+local function engineAnchorPoint(NS, id)
+    local calls = NS.ContainerManager.instances[id].engine.__calls
+    local n = #calls
+    for i = n, 1, -1 do
+        if calls[i][1] == "SetFlowLayoutAnchorPoint" then return calls[i][2] end
+    end
+    return nil
+end
+
+test("anchors: detaching a container restores its own stored flow at the next apply", function()
+    local NS, mocks = fresh()
+    oddParent(NS)
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    mocks.__fireTimers()
+    -- red under: the apply path reading 2's stored flow while it follows 1
+    assertEqual(engineAnchorPoint(NS, 2), "BOTTOMRIGHT", "attached: 1's columns growing left and up")
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    mocks.__fireTimers()
+    -- red under: inheriting by overwriting the stored flow (it could never come back)
+    assertEqual(engineAnchorPoint(NS, 2), "TOPRIGHT", "detached: 2's own rows growing left and down")
+end)
+
+test("anchors: a write that moves a container's flow re-applies every container following it", function()
+    local NS, mocks = fresh()
+    attach(NS, 2, 1)
+    attach(NS, 3, 2)
+    mocks.__fireTimers()
+    local CM = NS.ContainerManager
+    local asked = {}
+    local real = CM.RequestApply
+    CM.RequestApply = function(id, ...)
+        asked[#asked + 1] = tostring(id)
+        return real(id, ...)
+    end
+    local function run(path, value, id)
+        asked = {}
+        NS.SetByPath(path, value, id)
+        table.sort(asked)
+        return table.concat(asked, ",")
+    end
+    -- red under: the CONFIG_CHANGED handler re-applying only the written container
+    assertEqual(run("container.layout.growH", "left", 1), "1,2,3", "a parent's growth moves the whole chain")
+    assertEqual(run("container.layout", NS.Database.FindContainer(3).layout, 1), "1,2,3", "a whole-layout write too")
+    -- Before the detach below, while 2 and 3 still follow 1.
+    -- red under: MovesFollowers answering true for every path
+    assertEqual(run("container.layout.spacing", 5, 1), "1", "spacing moves no follower")
+    -- red under: FLOW_PATHS without the attach paths (a detach would leave 3 on 1's flow)
+    assertEqual(run("container.attach.mode", "screen", 2), "2,3", "3 now follows 2's own flow")
+    CM.RequestApply = real
+    mocks.__fireTimers()
+    assertEqual(engineAnchorPoint(NS, 3), "TOPRIGHT", "3 follows 2's rows growing left and down")
+end)
+
+-- ── an attached container while its parent previews (L-4) ────────────────────────────────────
+-- The cause, confirmed with a recorder: while container 1 previews, its engine is disabled and holds
+-- only its provisional 1x1 rect (Container:Build's SetSize(1, 1); no layout pass replaces it), and 2
+-- hung TOPLEFT → BOTTOMLEFT from that engine: on 1's first placeholder, 2's handle among them.
+
+--- Container 2 attached to container 1, unlocked and flushed: 1 previews, its engine off.
+local function previewPair()
+    local NS, mocks = fresh()
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers()
+    return NS, mocks, NS.ContainerManager
+end
+
+--- The frame a recorded anchor was last pointed at.
+local function lastTarget(rec)
+    local n = #rec.points
+    return rec.points[n] and rec.points[n][2]
+end
+
+test("anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)", function()
+    local NS, _, CM = previewPair()
+    local one, two = CM.instances[1], CM.instances[2]
+    assertFalse(one.engine.__enabled, "the parent's engine is off while it previews")
+    local at = NS.Database.FindContainer(2).attach
+    at.point, at.relativePoint = "CENTER", "CENTER"   -- stored points no derived pair has
+    local rec = recordAnchor(two)
+    NS.Anchors.Place(two)
+    -- red under: targetFor answering the target's engine while the target previews
+    assertTrue(one.previewExtent ~= nil and lastTarget(rec) == one.previewExtent, "the parent's preview extent")
+    -- red under: the extent path skipping the derived points (1 fills columns right and down)
+    assertEqual(rec.points[1][1], "TOPLEFT"); assertEqual(rec.points[1][3], "BOTTOMLEFT")
+    NS.SetByPath("container.attach.container", 2, 3)
+    NS.SetByPath("container.attach.mode", "container", 3)
+    local rec3 = recordAnchor(CM.instances[3])
+    NS.Anchors.Place(CM.instances[3])
+    -- red under: an extent built only for a container nothing else is attached to
+    assertTrue(two.previewExtent ~= nil and lastTarget(rec3) == two.previewExtent, "a chain: 3 hangs from 2's extent")
+end)
+
+test("anchors: locking re-anchors an attached container to its parent's engine, and unlocking back to the extent (L-4)", function()
+    local NS, mocks, CM = previewPair()
+    local one, two = CM.instances[1], CM.instances[2]
+    local rec = recordAnchor(two)
+    NS.SetByPath("locked", true)
+    mocks.__fireTimers()
+    -- red under: ApplyVisibility leaving the followers where the preview put them
+    assertTrue(lastTarget(rec) == one.engine, "locked: the engine, which lays out the real auras again")
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers()
+    assertTrue(lastTarget(rec) == one.previewExtent, "unlocked: the extent again")
+    local placed = #rec.points
+    CM.ApplyVisibility()
+    -- red under: re-placing the followers on every visibility pass (a pass that changes nothing moves nothing)
+    assertEqual(#rec.points, placed)
+end)
+
+test("anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)", function()
+    local NS, mocks, CM = previewPair()
+    local rec = recordAnchor(CM.instances[2])
+    mocks.__lockdown = true
+    NS.SetByPath("locked", true)
+    mocks.__fireTimers()
+    -- red under: re-placing a follower under lockdown (its anchor parents an aura engine:
+    -- events-frames-taint-§2)
+    assertEqual(#rec.points, 0, "the last placement stands")
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: recording the followers as placed when lockdown skipped them
+    assertTrue(lastTarget(rec) == CM.instances[1].engine, "combat over: onto the engine")
+end)
+
+test("handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)", function()
+    local NS, mocks, CM = previewPair()
+    NS.SetByPath("container.layout.level", 100, 1)
+    NS.SetByPath("container.layout.level", 1, 2)
+    mocks.__fireTimers()
+    local one, two = CM.instances[1], CM.instances[2]
+    -- red under: the strip's level set only in BuildHandle, before the first apply set its anchor's
+    assertEqual(one.handle:GetFrameLevel(), one.anchor:GetFrameLevel() + 50, "a screen container: fifty above its anchor")
+    -- Every placeholder of 1, inner frames included, stacks under 1's own strip (fifty above its
+    -- anchor), so 2's strip clears them by sitting above that.
+    -- red under: an attached strip at its own anchor + 50 (51, under 1's placeholders at 101 and up)
+    assertTrue(two.handle:GetFrameLevel() > one.anchor:GetFrameLevel() + 50, "above 1's placeholders")
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    mocks.__fireTimers()
+    -- red under: the raise kept after a detach
+    assertEqual(two.handle:GetFrameLevel(), two.anchor:GetFrameLevel() + 50, "detached: its own anchor's again")
 end)

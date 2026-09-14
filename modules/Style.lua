@@ -87,10 +87,19 @@ end
 local FLAG_MAP = { NONE = "", OUTLINE = "OUTLINE", THICKOUTLINE = "THICKOUTLINE",
     MONOCHROME = "MONOCHROME", MONOCHROMEOUTLINE = "MONOCHROME,OUTLINE" }
 
+--- A text's width inside a box `boxWidth` wide, less its X offset so it stays inside its host; never
+--- under one pixel. No box answers 0: the font string sizes to its own string.
+local function textWidth(boxWidth, x)
+    if not boxWidth then return 0 end
+    return math.max(1, boxWidth - math.abs(x))
+end
+
 --- Apply one text block (the six canonical font leaves plus point / x / y / justify / show) to a
 --- FontString parented under `anchorTo`. `tdef` is the template's block for the same element, which
---- the size, point and justify fall back to.
-function Style.ApplyText(fs, t, anchorTo, tdef)
+--- the size, point and justify fall back to. `boxWidth` is the width the text may take (its host's):
+--- a single-anchor font string sized to its own string has nothing to justify within, so a text given
+--- a box is as wide as the box less its offset. A second anchor, set after this, overrides the width.
+function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
     if not (fs and t) then return end
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
@@ -105,7 +114,9 @@ function Style.ApplyText(fs, t, anchorTo, tdef)
     end
     fs:ClearAllPoints()
     local point = t.point or tdef.point
-    fs:SetPoint(point, anchorTo, point, tonumber(t.x) or 0, tonumber(t.y) or 0)
+    local x = tonumber(t.x) or 0
+    fs:SetPoint(point, anchorTo, point, x, tonumber(t.y) or 0)
+    fs:SetWidth(textWidth(boxWidth, x))
     fs:SetJustifyH(t.justify or tdef.justify)
     fs:SetWordWrap(false)
 end
@@ -135,6 +146,16 @@ function Style.Bind(frame, method, ...)
     local ok, err = pcall(fn, frame, ...)
     if not ok and NS.Debug then NS.Debug("Style", "%s failed: %s", method, err) end
     return ok
+end
+
+--- Empty the engine's two ADDITIVE binding lists (AddDispelTypeTexture and AddPandemicRegion append,
+--- so a restyle that re-added them would stack a second tint and a second highlight). Called FIRST in
+--- a live dress, before any other binding: every Set* / Add* binding re-runs the engine's whole apply
+--- pass, which re-tints whatever dispel texture is still listed, while the Clear itself restores
+--- nothing (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q1, B-4).
+function Style.ClearAdditiveBindings(frame)
+    Style.Bind(frame, "ClearDispelTypeTextures")
+    Style.Bind(frame, "ClearPandemicRegions")
 end
 
 -- ---------------------------------------------------------------------------
@@ -194,6 +215,13 @@ local function dispelMapCurrent(entry, stored)
     return true
 end
 
+--- The profile's dispel palette (profile-wide since schema v2; bars colored by dispel type read it,
+--- icons keep Blizzard's own dispel colors), or nil before the database exists.
+function Style.ProfileDispelColors()
+    local p = NS.db and NS.db.profile
+    return p and p.dispelColors
+end
+
 --- A color map for AddDispelTypeTexture's `customDispelColorMap`, from a stored { Magic = {r,g,b,a} }.
 --- Built once per set of color leaves and shared by every button that shows it.
 function Style.DispelColorMap(stored)
@@ -222,6 +250,57 @@ function Style.ElementSize(cfg)
     return tonumber(b.width) or D.bars.width, tonumber(b.height) or D.bars.height
 end
 
+--- Hide `am`'s regions and remember which were shown, so a return to that style draws them as they
+--- were (the pandemic wash, say, stays hidden). Never the host itself: the harness's textures ARE the
+--- frame, and a region that was the host would hide the whole element.
+local function stashRegions(frame, am)
+    local was = {}
+    for _, v in pairs(am) do
+        if v ~= frame and type(v) == "table" and v.Hide then
+            was[v] = v:IsShown() and true or false
+            v:Hide()
+        end
+    end
+    frame.__amShown = frame.__amShown or {}
+    frame.__amShown[am] = was
+end
+
+--- Put back the visibility stashRegions recorded for `am`.
+local function restoreRegions(frame, am)
+    local was = frame.__amShown and frame.__amShown[am]
+    if not was then return end
+    for region, shown in pairs(was) do region:SetShown(shown) end
+    frame.__amShown[am] = nil
+end
+
+--- The regions `frame` carries for `style` ("bars" | "icons"), building them when absent or built
+--- for the other style (C-4: a button restyled from bars to icons must not be dressed with a bar's
+--- regions, which have no cooldown). The other style's regions are hidden, never destroyed: frames
+--- are never freed in WoW, so a switch back finds and re-shows them. Identity is `__amByStyle`, the
+--- per-frame map of the tables built so far; `am.style` is the tag each build sets.
+function Style.RegionsFor(frame, style, build)
+    local byStyle = frame.__amByStyle
+    if not byStyle then
+        byStyle = {}
+        frame.__amByStyle = byStyle
+    end
+    local am = frame.__am
+    if am and (byStyle[style] == am or am.style == style) then
+        byStyle[style] = am
+        return am
+    end
+    if am then stashRegions(frame, am) end
+    am = byStyle[style]
+    if am then
+        frame.__am = am
+        restoreRegions(frame, am)
+        return am
+    end
+    am = build(frame)
+    byStyle[style] = am
+    return am
+end
+
 -- The dress in progress, handed to runDress through upvalues: Lua 5.1's xpcall passes no arguments
 -- to the function it calls, and a closure per dress would allocate on every button.
 local dressStyler, dressFrame, dressCfg, dressEngine
@@ -239,6 +318,9 @@ local function withStack(err)
     if type(debugstack) ~= "function" or type(err) ~= "string" then return err end
     return tostring(err) .. "\n" .. debugstack(2)
 end
+--- The same handler for any other guarded call whose error goes on to an error handler: the apply
+--- pass (modules/ContainerManager.lua's applyDirty) reports a failing container through it.
+Style.WithStack = withStack
 
 --- Dress one element for `cfg` (a container's stored table). `engine` true binds the regions to the
 --- engine's aura data; false leaves them for the preview to fill. `classColor` is the container's
@@ -268,12 +350,21 @@ local function cancelEnabled(cfg, b)
     return cfg.unit == "player" and (cfg.auraType == "HELPFUL" or cfg.auraType == "ENCHANT")
 end
 
+--- Whether `cfg`'s elements hold the mouse's hover: yes unless the container is click-through or
+--- shows no tooltips. An element that holds it is the mouse focus, so the world unit under it is not
+--- moused over and its GameTooltip does not show beside the aura's own (L-3). The aura tooltip is the
+--- engine's separate AuraButtonTooltip, so strata cannot stop that bleed; only the hover can. One rule
+--- for the live buttons (Style.ApplyBehavior) and the placeholders (Preview.Show).
+function Style.TakesHover(cfg)
+    local b = cfg.behavior or {}
+    return not b.clickThrough and b.tooltips ~= false
+end
+
 --- The mouse behavior shared by both styles: tooltips, click-through and right-click cancel.
 function Style.ApplyBehavior(frame, cfg)
     local b = cfg.behavior or {}
-    local through = b.clickThrough and true or false
     local cancel = cancelEnabled(cfg, b)
-    if frame.SetMouseMotionEnabled then frame:SetMouseMotionEnabled(not through and b.tooltips ~= false) end
+    if frame.SetMouseMotionEnabled then frame:SetMouseMotionEnabled(Style.TakesHover(cfg)) end
     if frame.SetMouseClickEnabled then frame:SetMouseClickEnabled(cancel) end
     -- One click phase only — never both. A button reassigned to a different aura between the press
     -- and the release would cancel the wrong one.
@@ -292,4 +383,25 @@ function Style.BindDurationText(frame, fs, s, sdef)
             (s.time and s.time.fontColor) or NO_COLOR)
     end
     Style.Bind(frame, "SetDurationText", fs, opts)
+end
+
+--- A placeholder's time text, written as a live button's reads (B-5): the remaining seconds through
+--- the formatter the engine is handed for the same format (formatterFor). A placeholder's seconds
+--- are a plain number, so the formatter's own Format answers here (research notes Q7). A client
+--- without the formatter, or one that refuses, writes whole seconds; a timeless aura writes nothing.
+--- Below the running-out threshold the text takes the running-out color, as the engine's step curve
+--- (curveFor) paints a live one; above it, the font color the dress just set stands. `sdef` is the
+--- template's style block, which the threshold and the color fall back to.
+function Style.PreviewTime(fs, aura, s, sdef)
+    if aura.duration <= 0 then
+        fs:SetText("")
+        return
+    end
+    local f = formatterFor(s.timeFormat)
+    local ok, text = false, nil
+    if f and f.Format then ok, text = pcall(f.Format, f, aura.remaining) end
+    fs:SetText((ok and type(text) == "string") and text or ("%ds"):format(aura.remaining))
+    if s.expiringColorOn and aura.remaining < (tonumber(s.expiringThreshold) or sdef.expiringThreshold) then
+        fs:SetTextColor(Style.Color(s.expiringColor or sdef.expiringColor, false))
+    end
 end

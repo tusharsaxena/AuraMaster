@@ -28,7 +28,7 @@ local function container(c)
 end
 
 local function active(k)
-    local _, n = NS.Pool.Counts(k.previewPool)
+    local _, n = NS.Pool.Counts(k.previewPools.bars)
     return n
 end
 
@@ -39,7 +39,7 @@ test("preview: every placeholder aura is drawn, each where Preview.Offset puts i
     local count = #NS.Constants.PREVIEW_AURAS
     assertEqual(active(k), count)
     for i = 1, count do
-        local f = k.previewPool.active[i]
+        local f = k.previewPools.bars.active[i]
         local p = f:__last("SetPoint")
         local point, x, y = NS.Preview.Offset(c, i)
         -- red under: Preview.Show placing every element at the anchor's corner
@@ -89,11 +89,11 @@ test("preview: a lower cap hides the extra placeholders rather than leaving them
     c.filter.maxAuras = 2
     k.previewDirty = true
     NS.Preview.Show(k)
-    local free, used = NS.Pool.Counts(k.previewPool)
+    local free, used = NS.Pool.Counts(k.previewPools.bars)
     assertEqual(used, 2)
     assertEqual(free, #NS.Constants.PREVIEW_AURAS - 2)
     -- red under: Preview.Show acquiring without releasing the last dress's elements first
-    for _, f in ipairs(k.previewPool.free) do assertFalse(f:IsShown(), "a released placeholder still draws") end
+    for _, f in ipairs(k.previewPools.bars.free) do assertFalse(f:IsShown(), "a released placeholder still draws") end
 end)
 
 test("preview: Hide releases every placeholder, and the next Show dresses them again", function()
@@ -144,14 +144,14 @@ test("preview: /am test shows placeholders on a locked addon, with the engine of
     assertTrue(NS2.db.profile.locked, "locked by default")
     local inst = CM.instances[1]
     CM.SetPreview(true)
-    local _, n = NS2.Pool.Counts(inst.previewPool)
+    local _, n = NS2.Pool.Counts(inst.previewPools.bars)
     -- red under: ShouldShow reading only the lock for previewing
     assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
     assertFalse(inst.engine.__enabled, "real auras do not draw over the placeholders")
     -- red under: ApplyVisibility showing the handle for a preview on a locked addon
     assertFalse(inst.handle:IsShown(), "a locked addon has nothing to drag")
     CM.SetPreview(false)
-    _, n = NS2.Pool.Counts(inst.previewPool)
+    _, n = NS2.Pool.Counts(inst.previewPools.bars)
     assertEqual(n, 0)
     assertTrue(inst.engine.__enabled, "the engine is back")
 end)
@@ -177,4 +177,192 @@ test("preview: a missing layout block grows down and right from the top left wit
     -- red under: Offset indexing cfg.layout without its `or {}`
     assertEqual(point, "TOPLEFT")
     assertEqual(x, D.icons.width); assertEqual(y, 0)
+end)
+
+test("preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)", function()
+    local c = cfg({ style = "bars", bars = { colorMode = "dispel", useClassColorBar = false,
+        barColor = { r = 0.9, g = 0.5, b = 0.1, a = 1 } } })
+    local k = container(c)
+    NS.Preview.Show(k)
+    for _, f in ipairs(k.frames) do
+        for key in pairs(f.__am) do f.__am[key] = R() end
+    end
+    local function fills()
+        local out = {}
+        for i, f in ipairs(k.previewPools.bars.active) do out[i] = f.__am.fill:__joined("SetVertexColor") end
+        return out
+    end
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local m = NS.db.profile.dispelColors.Magic
+    local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
+    for i, got in ipairs(fills()) do assertEqual(got, magic, "dispel: placeholder " .. i .. " stands in with Magic") end
+    c.bars.colorMode = "static"
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local own = table.concat({ NS.Style.Color(c.bars.barColor, false) }, ",")
+    -- red under: the dress painting the Magic stand-in whatever the colorMode
+    for i, got in ipairs(fills()) do assertEqual(got, own, "static: placeholder " .. i .. " paints the bar color") end
+end)
+
+-- ── a style switch while previewing (C-4) ───────────────────────────────────────────────────────
+
+--- Switch container `id`'s style while unlocked and flush the apply, returning whether it raised.
+local function switchStyle(NS2, mocks, id, style)
+    NS2.SetByPath("container.style", style, id)
+    return pcall(mocks.__fireTimers)
+end
+
+test("preview: switching a previewed container from bars to icons re-dresses without error", function()
+    local NS2, mocks = fresh()
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local inst = NS2.ContainerManager.instances[1]       -- Player buffs, bars
+    assertTrue(inst.previewShown)
+    local ok, err = switchStyle(NS2, mocks, 1, "icons")
+    -- red under: reusing a bars-built __am for icons (Style_Icons.lua 'attempt to index cd')
+    assertTrue(ok, tostring(err))
+    assertTrue(inst.previewShown, "the preview re-drew as icons")
+    local _, n = NS2.Pool.Counts(inst.previewPools.icons)
+    assertEqual(n, #NS2.Constants.PREVIEW_AURAS, "every placeholder drawn as an icon")
+end)
+
+test("preview: switching a previewed container from icons to bars re-dresses without error", function()
+    local NS2, mocks = fresh()
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local inst = NS2.ContainerManager.instances[2]       -- Player debuffs, icons
+    assertTrue(inst.previewShown)
+    local ok, err = switchStyle(NS2, mocks, 2, "bars")
+    -- red under: reusing an icons-built __am for bars (no bar, fill or spark on it)
+    assertTrue(ok, tostring(err))
+    assertTrue(inst.previewShown, "the preview re-drew as bars")
+    local _, n = NS2.Pool.Counts(inst.previewPools.bars)
+    assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
+end)
+
+test("preview: a bar container duplicated while unlocked, then switched to icons, re-dresses (the owner's steps)", function()
+    local NS2, mocks = fresh()
+    local CM = NS2.ContainerManager
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    local id = CM.Duplicate(1)
+    mocks.__fireTimers()
+    local copy
+    for _, inst in ipairs(CM.instances) do
+        if inst.id == id then copy = inst end
+    end
+    assertTrue(copy ~= nil and copy.previewShown, "the copy previews as bars")
+    local ok, err = switchStyle(NS2, mocks, id, "icons")
+    -- red under: a pooled bar placeholder re-dressed as an icon with the bar's regions
+    assertTrue(ok, tostring(err))
+    assertTrue(copy.previewShown, "the copy re-drew as icons")
+end)
+
+test("preview: each style keeps its own pool, and a switch parks the other style's placeholders", function()
+    local c = cfg({ style = "bars" })
+    local k = container(c)
+    NS.Preview.Show(k)
+    local count = #NS.Constants.PREVIEW_AURAS
+    local bars = {}
+    for i, f in ipairs(k.previewPools.bars.active) do bars[i] = f end
+    c.style = "icons"
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local free, used = NS.Pool.Counts(k.previewPools.bars)
+    -- red under: one pool shared by both styles (a bar placeholder re-dressed as an icon)
+    assertEqual(used, 0, "no bar placeholder is still drawn")
+    assertEqual(free, count)
+    for i, f in ipairs(k.previewPools.icons.active) do
+        for _, b in ipairs(bars) do assertFalse(f == b, "icon " .. i .. " is not a bar's frame") end
+    end
+    assertEqual(k.built, 2 * count, "one set of frames per style")
+    NS.Preview.Hide(k)
+    local _, iconsUsed = NS.Pool.Counts(k.previewPools.icons)
+    -- red under: Preview.Hide releasing only the current style's pool
+    assertEqual(iconsUsed, 0)
+end)
+
+test("preview: a placeholder holds the mouse's hover as its container's buttons do, so no world tooltip shows through (L-3)", function()
+    --- The last hover and click settings the first placeholder was given, for container settings `over`.
+    local function mouseOf(over)
+        local k = container(cfg(over))
+        NS.Preview.Show(k)
+        local f = k.previewPools.bars.active[1]
+        return f:__joined("SetMouseMotionEnabled"), f:__joined("SetMouseClickEnabled")
+    end
+    local motion, click = mouseOf({ style = "bars" })
+    -- red under: a placeholder left transparent to the mouse (the world unit under it is moused
+    -- over and its GameTooltip shows beside the placeholder)
+    assertEqual(motion, "true", "hover stops at the placeholder")
+    -- red under: a placeholder that swallows clicks meant for the world under it
+    assertEqual(click, "false", "clicks pass through")
+    -- red under: a placeholder that ignores Click-through or Show tooltips (it must behave as the
+    -- container's real buttons do: Style.TakesHover)
+    assertEqual((mouseOf({ style = "bars", behavior = { clickThrough = true } })), "false", "click-through")
+    assertEqual((mouseOf({ style = "bars", behavior = { tooltips = false } })), "false", "tooltips off")
+end)
+
+-- ── the preview extent (L-4) ────────────────────────────────────────────────────────────────────
+-- A container attached to a previewing one hangs from this frame rather than the disabled engine,
+-- so it sits where it would beside real auras (tests/test_anchors.lua has the attach side).
+
+test("preview: the extent covers the placeholder block from the corner it starts at, sized by Preview.Offset (L-4)", function()
+    local c = cfg({ style = "bars", bars = { width = 100, height = 10 },
+        layout = { axis = "vertical", perLine = 2, spacing = 1, lineSpacing = 5, growH = "left", growV = "up" } })
+    local k = container(c)
+    k.previewExtent = R()
+    assertEqual(#NS.Constants.PREVIEW_AURAS, 5, "five placeholders")
+    NS.Preview.Show(k)
+    local p = k.previewExtent:__last("SetPoint")
+    -- red under: the extent hung from a corner other than the one the placeholders start from
+    assertEqual(p[1], "BOTTOMRIGHT"); assertTrue(p[2] == k.anchor); assertEqual(p[3], "BOTTOMRIGHT")
+    assertEqual(p[4], 0); assertEqual(p[5], 0)
+    local s = k.previewExtent:__last("SetSize")
+    -- Five in columns of two: three columns across, two elements up.
+    -- red under: an extent one element in size (a child would sit on the parent's second column)
+    assertEqual(s[1], 3 * 100 + 2 * 5); assertEqual(s[2], 2 * 10 + 1)
+    c.filter.maxAuras = 1
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    s = k.previewExtent:__last("SetSize")
+    -- red under: an extent sized once and never again (a lower cap would leave a gap before the child)
+    assertEqual(s[1], 100); assertEqual(s[2], 10)
+end)
+
+test("preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)", function()
+    local NS2 = fresh()
+    local inst = NS2.ContainerManager.instances[1]
+    NS2.SetByPath("locked", false)
+    local extent = inst.previewExtent
+    -- red under: Preview.Show without its Preview.Extent call
+    assertTrue(extent ~= nil, "built on the first preview")
+    assertEqual(extent.__frameType, "Frame"); assertTrue(extent.__parent == inst.anchor)
+    NS2.SetByPath("locked", true)
+    NS2.SetByPath("locked", false)
+    -- red under: a new extent per preview (WoW never frees a frame)
+    assertTrue(inst.previewExtent == extent, "the same frame")
+end)
+
+test("preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)", function()
+    local NS2, mocks = fresh()
+    local c = cfg({ style = "bars" }, NS2)
+    local k = container(c)
+    k.previewExtent = R()
+    mocks.__lockdown = true
+    NS2.Preview.Show(k)
+    -- red under: an extent first drawn in combat left without points (a container re-placed onto it
+    -- once combat ends would hang from nothing)
+    assertEqual(k.previewExtent:__count("SetPoint"), 1, "placed once: nothing hangs from it yet")
+    c.filter.maxAuras = 1
+    k.previewDirty = true
+    NS2.Preview.Show(k)
+    -- red under: re-sizing the extent under lockdown (an attached container's anchor, which parents an
+    -- aura engine, would move with it: events-frames-taint-§2)
+    assertEqual(k.previewExtent:__count("SetPoint"), 1)
+    assertEqual(k.previewExtent:__count("SetSize"), 1)
+    mocks.__lockdown = false
+    k.previewDirty = true
+    NS2.Preview.Show(k)
+    assertEqual(k.previewExtent:__count("SetSize"), 2, "out of combat it follows the block again")
 end)

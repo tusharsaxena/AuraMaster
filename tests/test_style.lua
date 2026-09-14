@@ -88,7 +88,7 @@ test("style: a stored-nil leaf falls back to the template's own value", function
     -- The value is READ from the template, not restated beside it: move the template and the
     -- fallback moves with it. The restore runs even when an assertion fails.
     local saved = { D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize }
-    D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = 221, 33, "HIGH", 13
+    D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = 221, 33, "DIALOG", 13
     local ok, err = pcall(expectTemplate)
     D.bars.width, D.icons.height, D.layout.strata, D.bars.name.fontSize = saved[1], saved[2], saved[3], saved[4]
     if not ok then error(err, 0) end
@@ -341,10 +341,6 @@ test("style: a dress that raises a non-string value hands that value on unchange
     assertTrue(err == raised, "the caller receives the very table the styler raised: " .. tostring(err))
 end)
 
-test("style: the Blizzard time format asks for no formatter of our own", function()
-    assertNil(NS.Compat.CreateSecondsFormatter("blizzard"))
-end)
-
 test("style: buttons of one look share one formatter and curve; a new color builds a new curve", function()
     -- Its own environment: the formatter, curve and color constructors are planted with counters
     -- there, never on the shared mock, so a failing case cannot leak them into later suites.
@@ -390,7 +386,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
         style = "bars", bars = { timeFormat = "short", expiringColorOn = true, colorMode = "dispel" } })
     local dispelLeaves = 0
     for _, name in ipairs(NS2.Constants.DISPEL_TYPES) do
-        if type(c.bars.dispelColors[name]) == "table" then dispelLeaves = dispelLeaves + 1 end
+        if type(NS2.db.profile.dispelColors[name]) == "table" then dispelLeaves = dispelLeaves + 1 end
     end
     local f0, c0, k0 = built.formatters, built.curves, built.colors
     local b1, b2 = button(), button()
@@ -411,7 +407,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     assertEqual(built.curves - c0, 2, "a new expiring color builds a new curve")
     assertEqual(built.formatters - f0, 1, "the format did not change, so neither did the formatter")
     -- A replaced dispel leaf invalidates the memoized map.
-    c.bars.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
+    NS2.db.profile.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
     local k1 = built.colors
     NS2.Style.Element(b1, c, true)
     assertEqual(built.colors - k1, dispelLeaves, "a new dispel color rebuilds the map")
@@ -531,6 +527,25 @@ test("style: a text's corner, offsets and justification come from its block, the
     assertEqual(fs:__last("SetPoint")[1], D.icons.time.point)
     assertEqual(fs:__last("SetJustifyH")[1], D.icons.time.justify)
     assertEqual(fs:__last("SetFont")[2], D.icons.time.fontSize)
+end)
+
+test("style: a text given a box is as wide as the box less its offset, so its justification has room to show", function()
+    local fs = R()
+    NS.Style.ApplyText(fs, { point = "RIGHT", x = -4, justify = "RIGHT" }, R(), D.bars.time, 200)
+    -- red under: a single-anchor FontString with no width (justify has nothing to align within)
+    assertEqual(fs:__last("SetWidth")[1], 196)
+    assertEqual(fs:__last("SetJustifyH")[1], "RIGHT")
+    fs = R()
+    NS.Style.ApplyText(fs, { x = 30 }, R(), D.bars.time, 20)
+    -- red under: a box narrower than the offset handing the font string a zero or negative width
+    assertEqual(fs:__last("SetWidth")[1], 1)
+    fs = R()
+    NS.Style.ApplyText(fs, { x = "junk" }, R(), D.bars.time, 50)
+    assertEqual(fs:__last("SetWidth")[1], 50, "an offset that is not a number takes nothing off")
+    fs = R()
+    NS.Style.ApplyText(fs, { x = -4 }, R(), D.bars.time)
+    -- red under: a box left over from an earlier dress (a text that lost its box keeps the old width)
+    assertEqual(fs:__last("SetWidth")[1], 0, "no box: the text sizes to its own string")
 end)
 
 test("style: a missing text block leaves its font string untouched", function()
@@ -715,12 +730,13 @@ test("style: the time text gets the engine's formatter for its format, and the e
         return f:__last("SetDurationText")[2], c
     end
     local opts = bound({ style = "bars", bars = { timeFormat = "blizzard" } })
-    -- red under: BindDurationText substituting a formatter of its own for Blizzard's
-    assertNil(opts.textFormatter, "the engine's own format")
+    -- red under: the Blizzard format left to the engine's default, which truncates (I-2)
+    assertTrue(opts.textFormatter ~= nil, "the Blizzard format is a round-up copy of the engine's own")
     assertNil(opts.textColor, "no expiring color unless turned on")
     local short = bound({ style = "bars", bars = { timeFormat = "short" } }).textFormatter
     local long = bound({ style = "bars", bars = { timeFormat = "long" } }).textFormatter
     assertTrue(short ~= nil and long ~= nil and short ~= long, "each format its own formatter")
+    assertTrue(opts.textFormatter ~= short and opts.textFormatter ~= long, "the Blizzard one is not the short one")
     local c
     opts, c = bound({ style = "icons", icons = { expiringColorOn = true, expiringThreshold = 8 } })
     assertTrue(opts.textColor ~= nil, "a color curve")
@@ -735,6 +751,87 @@ test("style: the time text gets the engine's formatter for its format, and the e
     NS2.Style.Element(f, c, true)
     n = #points
     assertEqual(points[n][1], NS2.CONTAINER_TEMPLATE.icons.expiringThreshold, "a missing threshold is the template's")
+end)
+
+test("style: a placeholder's time text is what its format's formatter writes, the one the engine is handed (B-5)", function()
+    local made = 0
+    local nop = function() end
+    local NS2 = fresh({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.SecondsFormatterAbbreviation = { OneLetter = 1 }
+        m.Enum.SecondsFormatterRounding = { RoundUp = 0, Truncate = 1 }
+        m.Enum.SecondsFormatterInterval = { Seconds = 1, Days = 4 }
+        m.C_StringUtil = { CreateSecondsFormatter = function()
+            made = made + 1
+            local id = made
+            return setmetatable({ Format = function(_, s) return ("F%d:%d"):format(id, s) end },
+                { __index = function() return nop end })
+        end }
+    end })
+    local timed = { name = "X", icon = 1, remaining = 75, duration = 90, stacks = 0 }
+    local timeless = { name = "Well Fed", icon = 1, remaining = 0, duration = 0, stacks = 0 }
+    for _, style in ipairs({ "bars", "icons" }) do
+        local fill = (style == "icons") and NS2.Style.Icons.FillPreview or NS2.Style.Bars.FillPreview
+        for _, fmt in ipairs(NS2.Constants.TIME_FORMATS) do
+            local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+                { style = style, [style] = { timeFormat = fmt } })
+            local live = R()
+            NS2.Style.Element(live, c, true)
+            local want = live:__last("SetDurationText")[2].textFormatter:Format(75)
+            local f = R()
+            NS2.Style.Element(f, c, false)
+            f.__am.time = R()
+            fill(f, timed, c)
+            -- red under: a placeholder's time written as plain seconds whatever the format
+            assertEqual(f.__am.time:__last("SetText")[1], want, style .. " " .. fmt)
+            fill(f, timeless, c)
+            assertEqual(f.__am.time:__last("SetText")[1], "", style .. " " .. fmt .. ": a timeless aura writes none")
+        end
+    end
+end)
+
+test("style: a placeholder running out takes the running-out color, as the engine's curve paints a live one (B-5)", function()
+    local red = { r = 0.9, g = 0.1, b = 0.2, a = 1 }
+    local function timeColor(style, over, aura)
+        local c = cfg({ style = style, [style] = over })
+        local f = R()
+        NS.Style.Element(f, c, false)
+        f.__am.time = R()
+        local fill = (style == "icons") and NS.Style.Icons.FillPreview or NS.Style.Bars.FillPreview
+        fill(f, aura, c)
+        return f.__am.time:__joined("SetTextColor")
+    end
+    local low = { name = "X", icon = 1, remaining = 3, duration = 8, stacks = 0 }
+    local high = { name = "X", icon = 1, remaining = 11, duration = 12, stacks = 0 }
+    local timeless = { name = "X", icon = 1, remaining = 0, duration = 0, stacks = 0 }
+    for _, style in ipairs({ "bars", "icons" }) do
+        local on = { expiringColorOn = true, expiringThreshold = 5, expiringColor = red }
+        -- red under: a placeholder's time text left in its font color below the threshold
+        assertEqual(timeColor(style, on, low), "0.9,0.1,0.2,1", style .. ": below the threshold")
+        assertNil(timeColor(style, on, high), style .. ": at or above it, the font color stands")
+        assertNil(timeColor(style, on, timeless), style .. ": a timeless aura never runs out")
+        assertNil(timeColor(style, { expiringColorOn = false, expiringColor = red }, low), style .. ": off")
+        local c = cfg()
+        c[style].expiringThreshold = nil
+        c[style].expiringColorOn, c[style].expiringColor = true, red
+        c.style = style
+        local f = R()
+        NS.Style.Element(f, c, false)
+        f.__am.time = R()
+        local fill = (style == "icons") and NS.Style.Icons.FillPreview or NS.Style.Bars.FillPreview
+        fill(f, { name = "X", icon = 1, remaining = D[style].expiringThreshold - 1, duration = 60, stacks = 0 }, c)
+        assertEqual(f.__am.time:__joined("SetTextColor"), "0.9,0.1,0.2,1", style .. ": a missing threshold is the template's")
+    end
+end)
+
+test("style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)", function()
+    local seen = 0
+    for _, a in ipairs(NS.Constants.PREVIEW_AURAS) do
+        if a.duration > 0 and a.remaining < D.bars.expiringThreshold then seen = seen + 1 end
+    end
+    -- red under: every placeholder above the default threshold (the setting would show no change)
+    assertTrue(seen >= 1, "a placeholder under the default running-out threshold")
+    assertEqual(D.icons.expiringThreshold, D.bars.expiringThreshold, "one default for both styles")
 end)
 
 test("style: a style leaf left nil draws the template's value, never a literal of its own", function()
@@ -762,4 +859,55 @@ test("style: a style leaf left nil draws the template's value, never a literal o
     -- red under: cancelEnabled reading a nil cancelOnRightClick as off
     assertEqual(frame:__last("SetCancelAuraButtons")[1], D.behavior.cancelOnRightClick and "RightButtonUp" or nil,
         "behavior: right-click cancel")
+end)
+
+-- ── one element, two styles (C-4) ───────────────────────────────────────────────────────────────
+
+test("style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's", function()
+    local frame = R()
+    local c = cfg()
+    c.style = "bars"
+    NS.Style.Element(frame, c, false)
+    local bars = frame.__am
+    assertEqual(bars.style, "bars", "tagged with the style that built it")
+    for k, v in pairs(bars) do if type(v) == "table" then bars[k] = R() end end
+    bars.icon:Show(); bars.pandemic:Hide()
+    -- bar and text: shown by build, never re-shown by Bars.Apply (only the icon is, in its layout)
+    bars.bar:Show(); bars.text:Show()
+    c.style = "icons"
+    local ok, err = pcall(NS.Style.Element, frame, c, false)
+    -- red under: Icons.Apply reusing the bar's __am (it has no cd)
+    assertTrue(ok, tostring(err))
+    local icons = frame.__am
+    assertTrue(icons ~= bars, "icon regions of its own")
+    assertEqual(icons.style, "icons")
+    assertTrue(icons.cd ~= nil)
+    -- red under: RegionsFor leaving the other style's regions drawn under the new ones
+    for k, v in pairs(bars) do
+        if type(v) == "table" then assertTrue(not v:IsShown(), "the bar's " .. k .. " is hidden") end
+    end
+    c.style = "bars"
+    NS.Style.Element(frame, c, false)
+    -- red under: RegionsFor building a second set of bar regions (a frame is never freed)
+    assertTrue(frame.__am == bars, "the bar's own regions again")
+    assertTrue(bars.icon:IsShown(), "shown again as it was")
+    -- red under: RegionsFor dropping restoreRegions (Bars.Apply never re-shows the bar or the text
+    -- frame, so a bars -> icons -> bars button would draw no fill, no name and no time)
+    assertTrue(bars.bar:IsShown(), "the bar is shown again")
+    assertTrue(bars.text:IsShown(), "the texts' frame is shown again")
+    -- red under: re-showing every region (the pandemic wash drawn on a bar that is not in its window)
+    assertTrue(not bars.pandemic:IsShown(), "the pandemic wash stays as it was: hidden")
+end)
+
+test("style: hiding the other style's regions never hides the element itself", function()
+    local frame = mocks.__stubFrame()
+    frame:Show()
+    local c = cfg()
+    c.style = "bars"
+    NS.Style.Element(frame, c, false)
+    c.style = "icons"
+    NS.Style.Element(frame, c, false)
+    -- red under: HideRegions hiding a region that is the host (the kit's textures ARE the frame;
+    -- a region handed the host in-game would hide the whole button)
+    assertTrue(frame:IsShown(), "the element still draws")
 end)

@@ -47,9 +47,9 @@ suite covers what only the client can show.
     **Screen edge.** `/am unlock`, drag a container that grows down flush against the top of the
     screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
     its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
-    **Attached container.** Attach one container to another (Layout page) and unlock → the attached
-    container's handle sits outside its own edge and may lie over the target's elements or handle.
-    This is expected (Known Limitations).
+    **Attached container.** Attach one container to another (Layout → Anchor) and unlock → the
+    attached container's placeholders start just past the target's last placeholder, and its handle
+    draws above the target's placeholders (check 41).
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
     the help mark moves it too. Right-click a handle → the settings open with that container selected.
 16. `/am lock` → handles and placeholders go; real auras return.
@@ -61,7 +61,8 @@ suite covers what only the client can show.
 
 19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
     Slash Commands list matching `/am help`, and no tab strip.
-20. **General** → the strip **[ Master controls ][ Display ]**. Master controls reads, two per line:
+20. **General** → the strip **[ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
+    above it. Master controls reads, two per line:
     Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
     then **Reset position** and **Reset all settings**.
 21. Untick **Enable Aura Master** → every container disappears; re-tick → back. Set **General
@@ -70,29 +71,53 @@ suite covers what only the client can show.
     they take effect immediately (visibility is legal in combat).
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
-23. **Containers** → the band holds the Container picker and **New container** on one row; the strip is
-    **[ General ][ Overview ]**. General shows Name, Enabled, Unit, Aura type, Style, then Duplicate and
-    Delete, then (with two or more containers) Copy settings from. Overview lists every container with a
-    Select button.
+23. **General → Containers** → the tab body's first line holds the Container picker and **New
+    container**, side by side and aligned. Below: Name, Enabled, Unit, Aura type, Style, then Duplicate
+    and Delete, then (with two or more containers) Copy settings from. Select a container and
+    **Delete** it → the picker and New container are still there, and the picker lists what is left.
+    Rename a container and change its Unit, then press the page's **Defaults** → Enabled, Unit, Aura
+    type and Style go back to their defaults and the name stays.
+    **Style switch with auras up.** Locked, with live auras in a container, switch its **Style** from
+    Bars to Icons, then back to Bars, then to Icons again → each time the elements redraw in the new
+    style only: no cooldown swipe or icon border left over a bar, no bar, bar text or background left
+    behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
+    each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
-    show ][ Categories ][ Sorting ][ Spell lists ][ Always / never ]**; switch the container's aura type
-    to Debuffs → **Spell lists** disappears and Categories offers the debuff categories; switch to
-    Weapon enchants → only **What to show** and **Sorting**, one row each.
-25. **Layout** → **[ Position ][ Growth ][ Frame ][ Mouse ]**; Position ends with **Pick a frame…** and
-    **Attach to the screen**.
-26. **Bars** → **[ Size ][ Bar ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Highlights ]**. On an icon container every tab carries the orange "drawn as icons" notice. On
+    show ][ Categories ][ Sorting ][ Overrides ]**, with no Spell lists tab on any aura type.
+    **Categories** on a buff container is two grids, **Blizzard Categories** then **Custom
+    Categories**, each headed once, with columns **Default · Whitelist · Blacklist** and the category
+    name (hover it for its description); click **Whitelist** on a line → that line's radio moves, and
+    `/am get container.filter.categories.<key>` prints `Whitelist`. Switch the container's aura type
+    to Debuffs → **Blizzard Categories**, **Dispel Types** and **Who Cast It**; switch to Weapon
+    enchants → only **What to show** and **Sorting**, one row each.
+25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
+    **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
+    and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
+    row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
+    the same frame; → *Another container* → Another container and Offset are live.
+26. **Bars** → **[ Size ][ Bar ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
+    Highlights ]**. On an icon container every tab carries the large orange "drawn as icons" notice
+    naming General → Containers, a gap below it, and every control dimmed and unclickable; the tabs
+    and the Container dropdown still work. On **Icon** tick **Show border**, set the thickness to 3 →
+    a border frames each bar's icon and the art shrinks inside it rather than under it. On **Bar**
+    untick **Show the spark on auras without a duration** → a permanent buff's full bar shows no
+    spark, and a timed buff's spark still rides its moving edge, sitting just inside it (the
+    in-game check docs/midnight-quirks.md names; if the permanent bar still shows a spark, or the
+    timed one loses it, report it). In the preview the "Well Fed" placeholder loses its spark. On
     **Background & border**, Background reads **Background texture** · **Background opacity** /
     **Background color** · **Use class color**; drag **Background opacity** down → the bars'
     background fades while the fill stays as it was.
-27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**.
+27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**. On
+    Cooldown tick **Blizzard countdown numbers** → on a timed aura the countdown and the time text
+    read the same whole second throughout, in each time format (both round a fraction up: 12.7 s
+    reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
 28. **The picker is shared.** On Bars → Bar, switch the Container dropdown → the page stays on **Bar**,
     now showing the other container; open Layout → the same container is selected there.
 29. Every media dropdown (bar texture, background, border, font) opens with entries in it.
 
 ## E. Create, duplicate, delete
 
-30. Containers → **New container** → a player-buff bar container named *Container N* appears, offset
+30. General → Containers → **New container** → a player-buff bar container named *Container N* appears, offset
     from the last new one, and is selected.
 31. **Duplicate** → a *… (copy)* container with every setting, nudged 20 px; **Delete** → a confirmation
     popup; **Yes** removes it and any container attached to it falls back to the screen. In combat,
@@ -102,41 +127,48 @@ suite covers what only the client can show.
     cannot be torn down until combat ends" line; nothing is created or removed.
 32. **Copy settings from** → pick a source and *Bar style* → the selected container takes only the
     source's bar look; its name and position are unchanged.
-33. Rename one on the General tab (Enter to apply) → the handle label, every picker and `/am containers`
+33. Rename one on General → Containers (Enter to apply) → the handle label, every picker and `/am containers`
     show the new name; a blank name is refused.
 
 ## F. Filters
 
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Defensives* to **Show** → only defensive cooldowns appear;
-    also set *Offensive cooldowns* to **Show** → both, each aura once. Set *Consumables* to **Hide** on
-    a neutral container → your flask disappears from it.
-36. **Spell lists.** Untick one starter spell in *Defensives*, cast it → it no longer shows in that
-    container. **Add spell ID** with a spell of yours → it counts as a defensive. **Restore this
-    category's starter list** → back to shipped.
-37. **Always / never.** Add a buff to *Never show* → gone; add a buff to *Always show* on a container
-    whose categories exclude it → it shows; the same id on both lists → hidden.
+35. **Categories.** On a buff container set *Defensives* to **Whitelist** → only defensive cooldowns
+    appear; also set *Offensive cooldowns* to **Whitelist** → both, each aura once. Set *Consumables*
+    to **Blacklist** on a container with every category at Default → your flask disappears from it.
+36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensives*, cast it
+    → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
+    a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
+    nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
+    **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
+    Magic dispel border keeps Blizzard's own blue art.
+37. **Overrides.** Add a buff to the *Blacklist* → gone; add a buff to the *Whitelist* by name on a
+    container whose categories exclude it → it is listed with its icon and id, and it shows; a name
+    the game does not know → nothing added, and the reason under the box; the same id on both lists
+    → hidden.
 38. **Max duration** `60` → hour-long buffs disappear, short ones stay, permanent ones go.
 39. **Duration → Only auras without a duration** on a player buff container → timed buffs disappear
     out of combat once learned; a brand-new timed buff cast in combat may show once. `/am forgettimed`
     → they reappear until relearned out of combat.
-40. **Warnings.** Set a spell list or always list on a *player debuffs* container → the Filters page
+40. **Warnings.** Add a spell to the Overrides *Whitelist* on a *player debuffs* container → the Filters page
     shows the orange "ignored for debuffs on your own character or pet" line. On a *target buffs*
     container → "only apply while the unit is friendly". Show a spell category with every spell
     unticked and nothing else → "These filters can never match anything."
 
 ## G. Attach
 
-41. **To a container.** Layout → Attach to → *Another container*, pick one → it follows that container
-    as it grows and shrinks. Try to attach A to B and B to A → the second is refused.
+41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
+    as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked, with
+    B attached to A → B's placeholders start just past A's last placeholder rather than on top of A,
+    and B's handle draws above A's placeholders; `/am lock` → B follows A's real auras again.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout
     reopens. `/am pick` does the same from chat. In combat, both are refused with the gray
     "cannot pick a frame during combat — attaching to a frame waits until combat ends" line.
 43. **Frame not there yet.** Attach to a frame name belonging to an addon that loads on demand →
-    the container sits at its screen position until that addon loads, then moves. **Attach to the
-    screen** detaches it.
+    the container sits at its screen position until that addon loads, then moves. Setting **Attach
+    to** back to *Screen* detaches it.
 
 ## H. Weapon enchants
 
@@ -181,6 +213,12 @@ suite covers what only the client can show.
 49. Hover an aura → its tooltip at the configured position; untick **Tooltips in combat** → none in
     combat. Right-click one of your own buffs in a player-buff container → it is canceled; untick
     **Right-click to cancel** → nothing happens. **Click-through** → no tooltip and clicks pass through.
+    **World tooltips (L-3).** Put a bar or icon container over a world unit (an NPC or a player).
+    Hover an element → only the aura's tooltip shows, never the unit's tooltip beside it. A unit
+    tooltip that was already up when the cursor entered the element fades rather than lingering.
+    Unlock and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
+    **Click-through** on, the hover reaches the world by design → the unit's tooltip shows. A new
+    container sits in the **High** strata (Layout → Frame → Strata).
 
 ## L. Profiles
 
@@ -226,3 +264,97 @@ page under the header.
     enabled` and every enabled container shows again. Repeat both **in combat** → the same lines, no
     gray refusal, no "will apply when combat ends" notice and no taint warning; containers hide and
     return at once.
+
+## P. Feedback batch 5 checks owed (2026-09-13)
+
+What the headless suite cannot settle from the 2026-09-13 feedback batch
+(`docs/superpowers/specs/2026-09-13-feedback-batch5-design.md`). Each item names its requirement
+and, where the client source left the answer open, its question in
+`docs/superpowers/research/2026-09-13-aura-engine-notes.md`. Some live in the sections above; they are
+listed here too, so the batch can be signed off in one pass.
+
+58. **Schema v2 migration (spec section 7).** Back up
+    `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` first: a profile loaded once on this build
+    cannot go back. On the previous build, in two profiles: untick a starter spell in *Core healing*
+    and add a spell to *Lesser healing* on the same container; add a spell to *Defensives* on a
+    second container; set a bar container's **Color by** to dispel type and change its Magic color;
+    leave a container's strata at Medium. Log in on this build → no Lua errors. General → Spell
+    Categories lists one *Healing* category (no Core or Lesser healing) holding the added spell, with
+    the starter unticked; *Defensives* holds the other added spell. Dispel Colors → Magic shows the
+    color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the other
+    profile → the same.
+59. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
+    dispel type, set Bars → Bar → **Color by** to dispel type → the fill takes the General → Dispel
+    Colors color; set it back to one color → the fill returns to the bar color at once. Enter combat
+    with the aura still up → the fill keeps the bar color. The open point is whether a color written
+    after the engine's dispel tint holds while auras are secret.
+60. **Icon border color (I-1, question Q3).** On an icon container showing a buff, set Icons →
+    Border's color to bright red and its thickness to 2 → every icon's border turns red at once. With
+    **Dispel border** on, a debuff with a dispel type shows Blizzard's colored border art over yours;
+    a debuff without one, and every buff, keeps yours. If a border does not change, `/fstack` over
+    that icon and report the frame it names.
+61. **Icons keep Blizzard's dispel art; bars take the colors (G-3, owner 2026-09-13).** On
+    General → Dispel Colors set Magic to pure red. An icon container with **Dispel border** on,
+    showing a Magic debuff → the border is Blizzard's stock blue Magic art, untinted. A bar container
+    with **Color by** set to dispel type, showing the same debuff → the fill is red. The tab's line
+    and each swatch's tooltip say the colors drive bars only.
+62. **Countdown and time text agree (I-2, question Q4).** Check 27. Also note the cooldown's own
+    number with 12.x s left: 13 means the countdown rounds up, as the time text now does. The notes'
+    stronger option, handing the cooldown frame our formatter (`SetCountdownFormatter`), was not
+    taken; if the two numbers still disagree by a second, that is the follow-up.
+63. **Spark on auras without a duration (B-3, question Q5).** Check 26, which settles three points:
+    on a permanent buff the bar's status-bar texture has no width (`/fstack`), so the clipped spark
+    is gone; the clip frame hides a spark placed wholly on the elapsed side; a timed bar's spark still
+    reads as riding its edge. If the permanent bar still shows its spark with the option off, stop
+    and report it to the owner (spec B-3, option 3).
+64. **World tooltips (L-3, question Q6).** Check 49's World tooltips paragraph: a live element with
+    tooltips on holds the hover, so no unit tooltip appears beside the aura's; a placeholder over a
+    unit shows no unit tooltip; a unit tooltip already up fades.
+65. **Placeholder time text (B-5, question Q7).** Unlock a bar container and switch Time text →
+    **Countdown** between Blizzard, short and detailed → the placeholders' time text changes with it
+    and reads as a live aura's does in the same format. Tick Highlights → **Running out** → the
+    *Shield Wall* placeholder (4 s left) takes the running-out color.
+66. **Text justify (B-5).** On Bars → Name text set **Justify** to Right → the name moves to the
+    right end of its box and stops short of the time text. On Bars → Time text, with the name shown,
+    set **Justify** to Left, then Right → the time moves across a box as wide as its format's longest
+    string ("59m"; "23h 59m" in the detailed format), and the name stops short of that box. On Icons →
+    Time text set it to Left, then Right → the time text moves across the icon's width.
+67. **Inherited flow (L-6).** Attach container B to A (Layout → Anchor → *Another container*) where A
+    fills in columns growing down → B continues below A's last element, and the line beside the
+    Container dropdown names the points. Set A's **Grow vertically** to up → B moves above A, with
+    none of B's own settings changed. On B's Growth tab, Fill, Grow horizontally and Grow vertically
+    are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
+    B's **Attach to** back to *Screen* → B's own flow returns.
+68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.
+69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections; check 26 for the Bars page on an icon
+    container, and the Icons page on a bar container the same way.
+70. **ID lists take a link (X-1).** On General → Spell Categories click into **Add a spell** and
+    shift-click a spell in your spellbook → its link lands in the box; press Enter → the spell is
+    added with its icon and name. Do the same on Filters → Overrides → Whitelist. If the shift-click
+    goes to the chat box instead, report it: the list reads spell links, but the client decides
+    which box a shift-click fills.
+71. **Dispel border sits on the icon's edge (owner report 2026-09-13).** On an icon container
+    showing debuffs with a dispel type (your own DoTs on a target), with Icons → Border →
+    **Color the border by dispel type** on → Blizzard's colored border art frames each icon at its
+    edge, with no second ring inside the icon's art. The art reaches a sixth of the icon past each
+    edge, as Blizzard's buff frame sizes it; if the ring lands a pixel in or out, report which.
+72. **Suggestions while typing (#31).** On General → Spell Categories type `rej` into **Add a
+    spell** → a dropdown opens under the box listing Rejuvenation with its icon and id, plus any
+    matching spell in your spellbook; a spell the client gives a rank shows it ("Rank 2") beside
+    the name. Press Down, then Enter → that spell is added once, with its icon and name, and the
+    dropdown closes. Type again and click a row instead → the same. Repeat on Filters → Overrides →
+    Whitelist.
+73. **A name the lists know resolves without the spellbook (#31).** Type the full name of a
+    category starter your character does not have (*Ironbark* on a non-druid) and press Enter → it
+    is added. Add a spell by id to Filters → Overrides → Blacklist, then type that spell's name on
+    General → Spell Categories → it resolves too.
+74. **A shared name is refused until picked (#31).** Add two spells that share a name by id to the
+    Overrides Whitelist (for example the *Blood Fury* racials 20572 and 33697), then on General →
+    Spell Categories type `Blood Fury` and press Enter without picking → nothing is added, the line
+    under the box reads "Several spells are named 'Blood Fury' — pick one from the list, or use the
+    id.", and the dropdown lists each of them. Pick one → only it is added.
+75. **An unknown name says where names come from (#31).** Type a name no list knows and your
+    spellbook lacks (`Zzz Spell`) and press Enter → nothing is added, and the line under the box
+    reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and
+    ones this list knows; otherwise use the id or shift-click a link." Hover the box → the tooltip
+    ends with the same hint, and promises nothing about names the game cannot find.

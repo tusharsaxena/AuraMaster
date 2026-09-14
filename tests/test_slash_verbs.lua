@@ -54,7 +54,7 @@ local function announcements(NS2)
     return n
 end
 
-local MISSING_ROW = "No container exists yet — create one on the Containers page."
+local MISSING_ROW = "No container exists yet — create one on General → Containers."
 
 -- ── the help surface ──────────────────────────────────────────────────────────────────────────
 
@@ -279,7 +279,7 @@ test("slash verbs: /am list prints every row once, grouped by page in page order
             rows[path] = l
         end
     end
-    assertEqual(table.concat(groups, ","), "general,containers,filters,layout,bars,icons")
+    assertEqual(table.concat(groups, ","), "general,filters,layout,bars,icons")
     -- red under: allRows answering fewer rows than NS.Schema
     for _, row in ipairs(NS2.Schema) do
         local l = rows[row.path]

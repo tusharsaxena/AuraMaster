@@ -15,7 +15,7 @@ local function icons(opts)
     return NS, m, P, P.show("Icons")
 end
 
-local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (Containers page)."
+local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (General → Containers)."
 
 test("icons: a bars container's tabs carry the orange notice; an icons container's carry none", function()
     local NS, _, P, ws = icons()
@@ -26,6 +26,52 @@ test("icons: a bars container's tabs carry the orange notice; an icons container
     -- red under: the intro testing the style the wrong way round, or not at all
     assertTrue(P.hasText(ws, notice))
     assertTrue(P.hasText(P.tab("icons", NS.L["Highlights"]), notice), "and on the last tab")
+end)
+
+test("icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)", function()
+    local NS, _, P = icons()
+    NS.Helpers.SelectContainer(1)
+    P.eachTab("Icons", "icons", function(key, ws)
+        local rows = P.rowWidgets(ws, "icons", key)
+        assertTrue(rows[1] ~= nil, key .. " drew its rows")
+        for _, w in ipairs(rows) do
+            -- red under: the Icons spec without disabledFor
+            assertTrue(w.disabled, key .. ": " .. w.labelText)
+        end
+    end)
+    NS.Helpers.SelectContainer(2)
+    P.eachTab("Icons", "icons", function(key, ws)
+        for _, w in ipairs(P.rowWidgets(ws, "icons", key)) do
+            -- red under: disabledFor testing the style the wrong way round
+            assertFalse(w.disabled, key .. ": " .. w.labelText)
+        end
+    end)
+end)
+
+test("icons: the wrong-style notice is drawn large, then a spacer before the first control (B-2)", function()
+    local NS, _, P = icons()
+    local H = NS.Helpers
+    local seen = {}
+    local textRow = H.TextRow
+    H.TextRow = function(ctx, text, opts)
+        seen[text] = opts or false
+        return textRow(ctx, text, opts)
+    end
+    H.SelectContainer(1)
+    P.show("Icons")
+    H.TextRow = textRow
+    local notice = "|cffffa040" .. NS.L[NOTICE] .. "|r"
+    assertTrue(seen[notice] ~= nil, "the notice is a TextRow, in the orange it had")
+    -- red under: the notice drawn in the default small font
+    assertEqual(seen[notice] and seen[notice].fontObject, "GameFontNormalLarge")
+    local kids = H.EnsureScroll(H.__pageCtx.icons).children
+    local at
+    for i, w in ipairs(kids) do
+        if w.type == "Label" and w.text == notice then at = i end
+    end
+    -- red under: the notice followed straight by the first control
+    assertEqual(kids[at + 1].type, "SimpleGroup")
+    assertEqual(kids[at + 1].height, 12)
 end)
 
 test("icons: the six tabs are drawn in order", function()

@@ -93,7 +93,7 @@ return function(NS, m)
 
     --- Click the tab `key` on a container page and answer what that render drew.
     function P.tab(pageKey, key)
-        local ctx = NS.Helpers.__containerCtx[pageKey]
+        local ctx = NS.Helpers.__pageCtx[pageKey]
         for i, t in ipairs(ctx.__tabs) do
             if t.key == key then
                 return P.during(function() ctx.__tabKids[i]:__fire("OnClick") end)
@@ -105,7 +105,32 @@ return function(NS, m)
     --- The tab keys a container page's last render drew, in order.
     function P.tabKeys(pageKey)
         local out = {}
-        for i, t in ipairs(NS.Helpers.__containerCtx[pageKey].__tabs or {}) do out[i] = t.key end
+        for i, t in ipairs(NS.Helpers.__pageCtx[pageKey].__tabs or {}) do out[i] = t.key end
+        return out
+    end
+
+    --- Visit every tab of a container page in strip order, calling `fn(key, widgets)` with what
+    --- that tab drew. The active tab is the show's own draw: a click on it draws nothing.
+    function P.eachTab(page, pageKey, fn)
+        local first = P.show(page)
+        local active = NS.Helpers.__pageCtx[pageKey].activeTab
+        for _, key in ipairs(P.tabKeys(pageKey)) do
+            fn(key, key == active and first or P.tab(pageKey, key))
+        end
+    end
+
+    --- The widgets among `widgets` drawn for a schema row of `group` on `pageKey`, by label.
+    function P.rowWidgets(widgets, pageKey, group)
+        local labels = {}
+        for _, row in ipairs(NS.SchemaForPage(pageKey)) do
+            if row.group == group and row.label then labels[row.label] = true end
+        end
+        local out = {}
+        for _, w in ipairs(widgets) do
+            if w.labelText and labels[w.labelText] then
+                out[#out + 1] = w
+            end
+        end
         return out
     end
 
@@ -141,6 +166,60 @@ return function(NS, m)
             return popup
         end
         return shown
+    end
+
+    --- The ID widgets' suggestion dropdown (LibKa0s-Options, issue #31). Call it BEFORE the first
+    --- keystroke: the library builds the dropdown once, the first time it shows one, through
+    --- CreateFrame, and it is a frame of the library's rather than an AceGUI widget, so the one
+    --- carrying `rows` is found among the frames recorded from here on. A row's `entry` (its id) and
+    --- `labelText` are the library's own record of what it shows; the kit's font strings keep none.
+    --- The environment needs the suggestions' sources: fresh({ before = ... }) installing
+    --- tests/_kit/mock_ids.lua and calling installIdSuggestions().
+    function P.suggestions()
+        local made, real = {}, m.CreateFrame
+        m.CreateFrame = function(...)
+            local f = real(...)
+            made[#made + 1] = f
+            return f
+        end
+        local S = {}
+        local function frame()
+            for _, f in ipairs(made) do
+                if type(f.rows) == "table" then return f end
+            end
+        end
+        --- Type `text` into the AceGUI EditBox `box` as the client reports it, then let the
+        --- debounce run.
+        function S.type(box, text)
+            box:SetText(text)
+            box:__fire("OnTextChanged", text)
+            m.__fireTimers()
+        end
+        --- The rows the dropdown shows, in its order; none while it is hidden.
+        function S.rows()
+            local f, out = frame(), {}
+            if not (f and f:IsShown()) then return out end
+            for _, row in ipairs(f.rows) do
+                if row:IsShown() and row.entry then
+                    out[#out + 1] = row
+                end
+            end
+            return out
+        end
+        --- The shown rows' ids joined by commas, in the dropdown's order or ascending when `sorted`.
+        function S.ids(sorted)
+            local out = {}
+            for i, row in ipairs(S.rows()) do out[i] = row.entry.id end
+            if sorted then table.sort(out) end
+            return table.concat(out, ",")
+        end
+        --- The shown row for id `id`, or nil.
+        function S.row(id)
+            for _, row in ipairs(S.rows()) do
+                if row.entry.id == id then return row end
+            end
+        end
+        return S
     end
 
     return P

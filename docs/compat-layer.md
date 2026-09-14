@@ -30,7 +30,7 @@ metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`) and the secret-safe str
 | 10 | `TimerDirection(which)` | `Enum.StatusBarTimerDirection` | `nil` | The elapsed-time status bar behind the full-bar fill | `modules/Style_Bars.lua` |
 | 11 | `Interpolation(smooth)` | `Enum.StatusBarInterpolation` | `nil` | The Smooth animation option | `modules/Style_Bars.lua` |
 | 12 | `DispelStyle(member)` | `Enum.CustomAuraButtonDispelTypeTextureStyle` | `nil` | Dispel-colored fill (`PreserveAsset`) and icon border (`Border`) | `modules/Style_Bars.lua`, `modules/Style_Icons.lua` |
-| 13 | `CreateSecondsFormatter(format)` | `C_StringUtil.CreateSecondsFormatter` plus its setup (pcall) | `nil` (the engine's own format) | The engine formats a secret duration the addon never sees | `modules/Style.lua` |
+| 13 | `CreateSecondsFormatter(format)` | `C_StringUtil.CreateSecondsFormatter` plus its setup (pcall); Blizzard's step curve from `C_CurveUtil.CreateCurve` | `nil` (the engine's own format); no curve → a `Days` maximum | The engine formats a secret duration the addon never sees | `modules/Style.lua` |
 | 14 | `ExpiringTextColor(threshold, expiring, normal)` | `C_CurveUtil.CreateColorCurve` step curve over `DurationTextBindingProperty.RemainingDuration` | `nil` (text keeps its font color) | Recolor the time text in the last seconds without comparing a secret | `modules/Style.lua` |
 | 15 | `GetMouseFocus()` | `GetMouseFoci()[1]`, then the pre-11.0 `GetMouseFocus` | `nil` | `GetMouseFocus` was removed in 11.0 | `modules/FramePicker.lua` |
 | 16 | `GetSpellInfo(id)` | `C_Spell.GetSpellInfo` → name, `iconID`; then the old global | `nil` | The spell list editor's labels | `settings/Filters.lua` |

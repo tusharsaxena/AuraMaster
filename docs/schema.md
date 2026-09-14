@@ -21,6 +21,8 @@ otherwise (`docs/profiles.md`).
 | `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and the preview |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
+| `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
+| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
@@ -36,7 +38,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:86`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:96`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -56,8 +58,7 @@ path, never to a number restated in `modules/`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral |
-| `categorySpells` | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over the starter lists |
+| `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral. The panel labels the three states Default, Whitelist and Blacklist. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
 | `whitelist` | `{}` | `[spellId] = true` — always shown |
 | `blacklist` | `{}` | `[spellId] = true` — never shown; beats the whitelist |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
@@ -93,7 +94,7 @@ path, never to a number restated in `modules/`.
 | `layout.perLine` | `0` (one line) | | | |
 | `layout.scale` | `1.0` | | | |
 | `layout.alpha` | `1.0` | | | |
-| `layout.strata` | `"MEDIUM"` | | | |
+| `layout.strata` | `"HIGH"` | | | |
 | `layout.level` | `5` | | | |
 
 ### `bars`
@@ -103,7 +104,7 @@ path, never to a number restated in `modules/`.
 | `width` | `220` | `height` | `18` |
 | `barTexture` | `"Blizzard"` | `barAlpha` | `1.0` |
 | `barColor` | `{ r=0.20, g=0.55, b=0.95, a=1 }` | `useClassColorBar` | `false` |
-| `colorMode` | `"static"` (`static`, `dispel`) | `dispelColors` | per dispel type, from `core/Constants.lua:143` |
+| `colorMode` | `"static"` (`static`, `dispel`: tinted by the profile's `dispelColors`) | | |
 | `drain` | `"left"` (`left`, `right`) | `smooth` | `false` |
 | `bgTexture` | `"Blizzard"` | `bgAlpha` | `1.0` |
 | `bgColor` | `{ 0, 0, 0, 0.5 }` | `useClassColorBg` | `false` |
@@ -111,15 +112,18 @@ path, never to a number restated in `modules/`.
 | `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
 | `useClassColorBorder` | `false` | `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) |
 | `iconSize` | `0` (= bar height) | `iconGap` | `1` |
-| `iconZoom` | `0.08` | `spark` | `true` |
-| `sparkWidth` | `8` | `sparkColor` | `{ 1, 1, 1, 0.9 }` |
-| `useClassColorSpark` | `false` | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
+| `iconZoom` | `0.08` | `iconBorderShow` | `false` |
+| `iconBorderStyle` | `"Solid"` | `iconBorderSize` | `1` |
+| `iconBorderColor` | `{ 0, 0, 0, 1 }` | `useClassColorIconBorder` | `false` |
+| `spark` | `true` | `sparkWidth` | `8` |
+| `sparkColor` | `{ 1, 1, 1, 0.9 }` | `useClassColorSpark` | `false` |
+| `sparkTimeless` | `true` (`false`: no spark on an aura without a duration) | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
 | `time` | text block: size 11, `RIGHT`, x −4, y 0, justify `RIGHT` | `stacks` | text block: size 10, `BOTTOMRIGHT`, x −1, y 1, justify `RIGHT` |
 | `timeFormat` | `"blizzard"` (`blizzard`, `short`, `long`) | `expiringColorOn` | `false` |
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-`dispelColors` defaults: Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`core/Constants.lua:143`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
 `{0.80, 0.00, 0.00}`, all alpha 1.
 
@@ -148,7 +152,7 @@ six canonical font leaves (options-ui-§16) and then its placement: `show` (`tru
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:188`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:198`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -194,6 +198,22 @@ up on `PLAYER_REGEN_ENABLED`, and the row's `onChange` prints the combat deferra
 the write re-applies its container, or every container for a global row. A `sessionOnly` row
 announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` runs in
 `Container:Apply`.
+
+A few row fields are this addon's own, beyond the library's row shape. Each has one named reader:
+
+- `noReset`, with `noResetReason`: the restore walk skips the row, and `NS.ApplyDefault` refuses it
+  and returns that reason (`container.name`; `/am reset container.name` prints it).
+- `printLabel`: `/am get` and `/am list` print the value's label before the stored value
+  (`formatValue` in `settings/Slash.lua`; the Filters category rows).
+- `grid`: the `ChoiceGrid` on Filters → Categories that draws the row (`blizzard`, `custom`, `dispel`
+  or `who`). Those rows also carry the library's `skipRender`, so the flow engine draws nothing for
+  them.
+- `panelGet`: the value the panel shows instead of the stored one (`panelRead` in
+  `settings/OptionsSetup.lua`). Fill and both growth rows use it to show the inherited flow of a
+  container attached to another. `/am get` and every module read the stored value.
+- `coverage = "engine-only" | "preview-only"`: exempts a Bars or Icons row from one half of
+  `tests/test_render_coverage.lua`'s walk. Each use carries a comment saying why: `bars.smooth`,
+  `bars.pandemic` and `icons.pandemic` act only through the engine.
 
 A row's `validate(value, id)` and its optional `normalize(value, id)` hook are both handed the id of
 the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`
@@ -244,12 +264,28 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:259`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:462`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
-- **Schema v1** is the shape the addon shipped with at 0.1.0. **The ladder is empty**, and
-  `Database.CurrentSchemaVersion()` answers `1`.
+- **Schema v1** is the shape the addon shipped with at 0.1.0.
+- **Schema v2** (`Database.MigrateV2`) runs over **every** stored profile: AceDB's raw
+  `sv.profiles`, the inactive ones included, or the no-AceDB fallback's one profile. It logs one
+  `[Migrate] v2 profile '<name>'` line each, and `Database.CurrentSchemaVersion()` answers `2`.
+  - The container key rules `PrepareProfile` applies (below) run first, so a string twin of a
+    numeric id and a non-numeric key are dropped before any merge and never supply a palette or an
+    editor.
+  - `profile.categorySpells` (new): the union of every container's added ids. A starter id stays
+    removed (`false`) only if every container that had an edit for that category removed it; a
+    container with no edit for the category has no say. `container.filter.categorySpells` is deleted.
+  - `coreHealing` + `lesserHealing` → `healing`: their spell edits merge by the rule above (a
+    container's two lists count as one editor). A container's state becomes `show` if either was
+    `show`, else `hide` if either was `hide`, else `""`. Both old keys leave `filter.categories`.
+  - `profile.dispelColors` (new): copied from the first container in `containerOrder` colored by
+    dispel type, else the first container that carries a palette, else the defaults, and completed
+    from the defaults. `bars.dispelColors` is deleted from every container.
+  - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
+  - Additive keys ride the ordinary backfill with no step.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
@@ -264,6 +300,6 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
   silently fixed.
   A new category key reaches every container the same way, through `NeutralStates()`.
-- **A rename, removal or type change needs a step** in the same change that makes it: bump to
-  `to = 2`, transform the stored value, and remember that containers live in every profile, not only
-  the active one (`docs/common-tasks.md` has the recipe).
+- **A rename, removal or type change needs a step** in the same change that makes it: append the
+  next rung (`to = 3`), transform the stored value, and remember that containers live in every
+  profile, not only the active one (`docs/common-tasks.md` has the recipe).

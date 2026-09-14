@@ -96,8 +96,12 @@ settings\Slash.lua
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.
 settings\About.lua
+# LOAD-BEARING: GeneralContainers and GeneralSpells before General, which registers their rows
+# after its own (so their tabs follow Display) and draws their tabs.
+settings\GeneralContainers.lua
+settings\GeneralSpells.lua
 settings\General.lua
-settings\Containers.lua
+# Conventional: the page files, each registering its rows and page at load.
 settings\Filters.lua
 settings\Layout.lua
 settings\Bars.lua
