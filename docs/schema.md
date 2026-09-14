@@ -60,8 +60,9 @@ path, never to a number restated in `modules/`.
 | Key | Default | Meaning |
 |---|---|---|
 | `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral. The panel labels the three states Default, Whitelist and Blacklist. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
-| `whitelist` | `{}` | `[spellId] = true` — always shown |
-| `blacklist` | `{}` | `[spellId] = true` — never shown; beats the whitelist |
+| `whitelist` | `{}` | `[spellId] = true` — always shown; beats the blacklist (owner's 2026-09-15 filter-priority revision, `modules/FilterCompiler.lua` rank 1) |
+| `blacklist` | `{}` | `[spellId] = true` — never shown, unless the whitelist also names it |
+| `onlyShown` | `false` | drop the catch-all group so only the whitelist and the categories set to Show are drawn ("only these categories", D8) |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
 | `durationMode` | `"any"` | `any`, `timed`, `timeless` |
 | `maxDuration` | `0` | seconds; `0` is no limit |
@@ -320,16 +321,16 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     of a container the player never touched. The exclusion holds whether `kind == "enchant"` exists in
     `def` or not, so it needs no revisiting when B3 lands.
   - Categories are not a partition of the aura space, so "hide everything not whitelisted" cannot
-    fully reproduce the old exclusive whitelist: an aura that also matched a category the sweep above
-    just turned to `"hide"` would stop being drawn, when the old whitelist group drew it regardless
-    (the widening the other direction — an aura in no category at all now drawing when the old
-    whitelist excluded it — is inherent to the new model and is not fixed). So when a container is
-    narrowed (had at least one filterable `"show"`), the ids of every `"show"` **spells** category
-    (`FC.CategorySpells(def, profile.categorySpells)`, so a player's own edits to those lists are
-    honored) are additionally copied onto that container's `filter.whitelist` — Overrides, rank 2 in
-    `modules/FilterCompiler.lua`, which beats a category Hide — merged into any existing whitelist. An
-    id already on `filter.blacklist` (rank 1, a player's explicit never) is left there alone; the
-    migration never overturns it.
+    fully reproduce the old exclusive whitelist purely by category state: an aura that also matched a
+    category the sweep above just turned to `"hide"` would need rescuing. Originally (schema v3's
+    first cut) that rescue was done here, by copying the ids of every `"show"` **spells** category
+    onto `filter.whitelist`. The owner's 2026-09-15 filter-priority revision made that unnecessary:
+    a Show now beats a Hide on the same aura for every category kind, not only `spells`
+    (`modules/FilterCompiler.lua` rank 3 — "in at least one Show category" rescues an aura even if it
+    is also in a Hide category), so the compiler itself does this rescue on every compile, and this
+    migration step copies no ids at all. (An aura in no category at all now drawing, when the old
+    exclusive whitelist excluded it, is still inherent to the new model and is not fixed by anything
+    here — see the "only these categories" toggle below for how a container gets that back.)
   - `filter.includeEnchants` (the old weapon-enchant boolean) becomes the `weaponEnchants` category
     row (`"show"` when the flag was true, `"hide"` otherwise, including when the key was never set),
     and the old key is deleted; `ENCHANT` containers never read the old flag and are left alone. Runs

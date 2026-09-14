@@ -135,6 +135,17 @@ test("filters: a weapon-enchant container is offered one row on each of two tabs
     assertNil(P.row(ws, "container.filter.maxAuras"))
 end)
 
+test("filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container", function()
+    -- red under: the description still claiming the cap draws "at most this many auras in this
+    -- container" — false the moment one category is Hidden, since modules/FilterCompiler.lua's
+    -- lookOf stamps maxFrameCount on EVERY group and the engine applies it per group, not once.
+    local NS = fresh()
+    local desc = NS.FindSchemaRow("container.filter.maxAuras").desc
+    assertTrue(desc:find("own group", 1, true) ~= nil, "says the cap is per-group: " .. tostring(desc))
+    assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
+        "says the cap applies to each group separately: " .. tostring(desc))
+end)
+
 -- ── the Categories grid (F-1) ─────────────────────────────────────────────────────────────────
 
 test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Custom Categories, each once", function()

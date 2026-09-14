@@ -195,18 +195,34 @@ test("filter: both compile sites hand the compiler the profile's spell lists", f
     end
 end)
 
-test("filter: showing a spell category with every id removed still contributes nothing", function()
-    -- was: "a shown spell category with every id removed can never match, and says so" (a
-    -- contradiction: an empty includeSpellIDs). That whole mechanism is deleted with the positive
-    -- path — Show never writes a candidate filter, empty or otherwise.
+test("filter: showing a spell category with every id removed, and nothing hidden, still contributes nothing (R-3)", function()
+    -- R-3: with nothing Hidden, `includeCategory` never even runs — the container stays at its one,
+    -- unfiltered group whatever a Show category's own spell edits say.
     local def = NS.Categories.Find("HELPFUL", "consumables")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
     local plan = compile({ filter = { categories = { consumables = "show" } } },
-        { categorySpells = { consumables = removed } })
+        { categorySpells = { consumables = removed }, categories = only("HELPFUL", { "consumables" }) })
     assertEqual(#plan.groups, 1)
     assertNil(plan.groups[1].candidateFilters)
     assertEqual(#plan.warnings, 0)
+end)
+
+test("filter: a shown spell category with every id removed can never match, and is dropped as a conflict (R-6)", function()
+    -- Unlike the R-3 case above, a Hide elsewhere forces the per-shown-category path to actually run
+    -- `includeCategory` for "consumables". red under: `includeCategory`'s spells branch writing an
+    -- EMPTY `includeSpellIDs` instead of `con.conflict = true` — an empty includeSpellIDs is what the
+    -- engine would honor, drawing nothing where dropping the group draws through the catch-all instead.
+    local def = NS.Categories.Find("HELPFUL", "consumables")
+    local removed = {}
+    for id in pairs(def.spells) do removed[id] = false end
+    local plan = compile({ filter = { categories = { consumables = "show", defensives = "hide" } } },
+        { categorySpells = { consumables = removed },
+          categories = only("HELPFUL", { "consumables", "defensives" }) })
+    local labels = {}
+    for _, g in ipairs(plan.groups) do labels[g.label] = true end
+    assertNil(labels["Consumables"], "the empty shown category's own group is dropped, not emitted empty")
+    assertTrue(labels["All"], "the catch-all still stands, excluding defensives")
 end)
 
 -- ── Show / Hide, rechecked against the catch-all (R-3 / R-5) ────────────────────────────────────
@@ -301,7 +317,7 @@ test("filter: on, one shown category and nothing hidden still gets its own group
     assertTrue(plan.groups[1].label ~= "All", "not the catch-all — there isn't one")
 end)
 
-test("filter: on, an aura in no category is not drawn — the catch-all is dropped (R-9)", function()
+test("filter: on, the catch-all is gone — the group carries a positive constraint instead of none (R-9)", function()
     -- Two categories in the fixture: one Shown, one left at its default Show too (still contributes
     -- its own group under the toggle), so the only way to prove the catch-all is gone is that a
     -- container narrowed to just one category draws through exactly one, whitelist-less group.
@@ -406,6 +422,63 @@ end)
 test("filter: max auras caps each group; 0 means no cap", function()
     assertEqual(compile({ filter = { maxAuras = 5 } }).groups[1].maxFrameCount, 5)
     assertEqual(compile({ filter = { maxAuras = 0 } }).groups[1].maxFrameCount, HUGE)
+end)
+
+test("filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container", function()
+    -- red under: lookOf only being applied to one group; this is the bug the maxAuras description
+    -- exists to warn about — 5 shown groups each capped at 5 is up to 25 frames, not 5.
+    local plan = compile({ filter = { maxAuras = 5, categories = { defensives = "show", consumables = "hide" } } },
+        { categories = only("HELPFUL", { "defensives", "consumables" }) })
+    assertTrue(#plan.groups > 1, "more than one group exists to check")
+    for i, g in ipairs(plan.groups) do
+        assertEqual(g.maxFrameCount, 5, "group " .. i)
+    end
+end)
+
+-- ── the headline rule (spec section 6, rank 3 over rank 4) ───────────────────────────────────────
+
+test("filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)", function()
+    -- red under: a shown group inheriting a hidden category's exclusion (rank 4 winning), which
+    -- would mean nothing but the catch-all can ever draw an aura
+    local plan = compile({ filter = { categories = { defensives = "show", consumables = "hide" } } },
+        { categories = only("HELPFUL", { "defensives", "consumables" }) })
+    local shownGroup
+    for _, g in ipairs(plan.groups) do
+        if g.label == "Defensives" then shownGroup = g end
+    end
+    assertTrue(shownGroup ~= nil, "the shown category gets its own group")
+    -- red under: includeCategory's spells branch swapping includeSpellIDs for excludeSpellIDs
+    assertTrue(shownGroup.candidateFilters.includeSpellIDs[642], "a defensives id is positively included")
+    assertNil(shownGroup.candidateFilters.excludeSpellIDs,
+        "nothing hidden narrows the SHOWN group itself — that is what lets rank 3 beat rank 4")
+end)
+
+test("filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)", function()
+    local plan = compile({ filter = { categories = { defensives = "show", consumables = "hide" } } },
+        { categories = only("HELPFUL", { "defensives", "consumables" }) })
+    assertEqual(#plan.groups, 2, "one shown group (defensives) plus the catch-all")
+    local shownGroup, catchAll
+    for _, g in ipairs(plan.groups) do
+        if g.label == "Defensives" then shownGroup = g
+        elseif g.label == "All" then catchAll = g end
+    end
+    assertTrue(shownGroup ~= nil and catchAll ~= nil, "both groups exist")
+    -- red under: the catch-all not excluding the shown category too, drawing a defensives id twice
+    assertTrue(catchAll.candidateFilters.excludeSpellIDs[642],
+        "the catch-all excludes the shown category's ids as well as the hidden one's")
+end)
+
+-- ── the cost is real: the REAL shipped category list, not `only` (documented in the plan ledger) ──
+
+test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 15 for HARMFUL today", function()
+    -- Not a bug — R-4's shape is inherent to "in ANY shown category" being a union over heterogeneous
+    -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1). This test exists so the
+    -- count is visible in the suite: if it moves, a category was added or removed and someone should
+    -- look, not silently absorb a costlier (or cheaper but wrong) container.
+    local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
+    assertEqual(#helpfulPlan.groups, 15, "HELPFUL: every other filterable category defaults to Show")
+    local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
+    assertEqual(#harmfulPlan.groups, 15, "HARMFUL: every other filterable category defaults to Show")
 end)
 
 test("filter: an unknown sort method falls back to Blizzard's default", function()

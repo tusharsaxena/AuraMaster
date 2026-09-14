@@ -713,6 +713,8 @@ test("v3: a narrowed container's filter.whitelist is left untouched — the comp
             categories = { defensives = "show", raidCDs = "" } } } } }
     NS.Database.MigrateV3(p)
     assertNil(p.containers[1].filter.whitelist)
+    -- the blacklist is untouched either — nothing here is the migration's to rewrite any more
+    assertEqual(p.containers[1].filter.blacklist[118038], true)
     local c = p.containers[1].filter.categories
     assertEqual(c.defensives, "show")
     assertEqual(c.raidCDs, "hide")
