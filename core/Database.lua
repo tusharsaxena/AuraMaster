@@ -438,6 +438,77 @@ function Database.MigrateV2(p)
     return walked
 end
 
+-- ---------------------------------------------------------------------------
+-- Schema v3: Show/Hide categories, weaponEnchants
+-- ---------------------------------------------------------------------------
+--
+-- B1 collapsed the three-state category model ("" no effect / "show" whitelist / "hide" exclude) to
+-- two: Show / Hide, where Show contributes nothing (defaults/Categories.lua). The old "show" state
+-- meant "draw ONLY the categories set to show" — a state that no longer exists. Mapping "" -> "show"
+-- verbatim would silently WIDEN what an already-stored container draws, so the old intent is written
+-- out longhand instead (liftCategoryWhitelist), before the unrelated enchant-flag lift runs.
+
+--- The whitelist lift: if a container had ANY category of its aura type at "show", it was an
+--- exclusive whitelist under the old three-state model — so every category of that type NOT "show"
+--- (an unset "" or an explicit "hide", the old model excluded both from the whitelist's one group)
+--- becomes "hide", the longhand of that exclusion. With no "show" present the container already drew
+--- everything except its explicit "hide" rows (the old model's default group), so only the unset ""
+--- rows need a decision at all, and they become "show" — an explicit "hide" is left exactly as it was.
+--- Runs before liftEnchantFlag and only ever touches `NS.Categories.For(c.auraType)`'s current keys:
+--- weaponEnchants is not one of them yet (B3 adds it), so a lift running here can never sweep it into
+--- "hide" as a category the container "did not whitelist" — today or after B3.
+local function liftCategoryWhitelist(c)
+    local def = NS.Categories and NS.Categories.For(c.auraType)
+    local cats = type(c.filter) == "table" and c.filter.categories
+    if type(def) ~= "table" or type(cats) ~= "table" then return end
+    local defCount = #def
+    if defCount == 0 then return end
+    local whitelisted = false
+    for _, cat in ipairs(def) do
+        if cats[cat.key] == "show" then
+            whitelisted = true
+            break
+        end
+    end
+    for _, cat in ipairs(def) do
+        local state = cats[cat.key]
+        if whitelisted then
+            if state ~= "show" then cats[cat.key] = "hide" end
+        elseif state ~= "hide" then
+            cats[cat.key] = "show"
+        end
+    end
+end
+
+--- The old `filter.includeEnchants` boolean becomes the `weaponEnchants` category row, and the old
+--- key is cleared. Runs AFTER liftCategoryWhitelist (see above): weaponEnchants is written only once
+--- the whitelist sweep for this container is done, so it is never caught by that sweep.
+--- ENCHANT containers never read the old flag and are left alone.
+local function liftEnchantFlag(c)
+    if c.auraType == "ENCHANT" then return end
+    local f = type(c.filter) == "table" and c.filter
+    if not f then return end
+    if type(f.categories) ~= "table" then f.categories = {} end
+    f.categories.weaponEnchants = f.includeEnchants and "show" or "hide"
+    f.includeEnchants = nil
+end
+
+--- Schema v3 over one profile table (docs/schema.md, Migration path). A test seam as well as the
+--- step's body: tests/test_database.lua runs it over raw profile tables.
+--- @return number  the containers it walked
+function Database.MigrateV3(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local walked = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            liftCategoryWhitelist(c)
+            liftEnchantFlag(c)
+            walked = walked + 1
+        end
+    end
+    return walked
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 local function eachProfile(db, fn)
@@ -465,6 +536,14 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV2(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v2 profile '%s': spell lists, dispel colors, healing and strata over %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 3, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV3(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v3 profile '%s': category whitelist lift and weaponEnchants over %s container(s)", name, n)
             end
         end)
     end },

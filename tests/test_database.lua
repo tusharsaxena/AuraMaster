@@ -339,12 +339,10 @@ end
 
 local function edits(t) return { filter = { categorySpells = t } } end
 
-test("database v2: the schema is at version 2", function()
-    local NS = fresh()
-    -- red under: the v2 step missing from SCHEMA_STEPS
-    assertEqual(NS.Database.CurrentSchemaVersion(), 2)
-    assertEqual(NS.db.global.schemaVersion, 2)
-end)
+-- "the schema is at version 2" (this test's original name) stopped being true the moment schema v3
+-- landed below it; the equivalent coverage for the ladder's current top is
+-- "v3: the current schema version is 3" further down, and "database: the migration runner stamps the
+-- schema..." above already checks a fresh profile against CurrentSchemaVersion() dynamically.
 
 test("database v2: spell additions from every container are united in the profile", function()
     local NS = fresh()
@@ -522,7 +520,9 @@ test("database v2: RunMigrations migrates every stored profile, the inactive one
         }
     end
     local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 1 } } })
-    assertEqual(NS.db.global.schemaVersion, 2)
+    -- schema v3 rides along from v1 too (the ladder does not stop at 2); its whitelist lift never
+    -- disturbs an already-"hide" category (see the v3 tests below), so the v2 assertions below hold.
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
     for _, name in ipairs({ "Default", "Raid" }) do
         local p = NS.db.sv.profiles[name]
         local c = p.containers[4]
@@ -551,8 +551,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile
-    assertEqual(perProfile, 2, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 2
+    -- steps a v1 profile now climbs (v2, v3).
+    assertEqual(perProfile, 4, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -570,7 +571,7 @@ test("database v2: without AceDB the step migrates the one profile there is", fu
     })
     -- red under: the step walking db.sv only (the no-AceDB fallback has none)
     assertEqual(NS.db.profile.containers[1].layout.strata, "HIGH")
-    assertEqual(NS.db.global.schemaVersion, 2)
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
 end)
 
 test("database v2: a fresh profile carries the profile-wide spell lists and dispel colors", function()
@@ -580,5 +581,109 @@ test("database v2: a fresh profile carries the profile-wide spell lists and disp
     assertEqual(type(p.categorySpells), "table")
     for name, w in pairs(NS.Constants.DEFAULT_DISPEL_COLORS) do
         assertEqual(p.dispelColors[name].r, w.r, name)
+    end
+end)
+
+-- ---------------------------------------------------------------------------
+-- Schema v3: Show/Hide categories, weaponEnchants
+-- ---------------------------------------------------------------------------
+
+test("v3: a container that whitelisted a category hides every other category of its type", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "", cancelable = "" } } } } }
+    -- red under: the old Whitelist intent being dropped, which would silently WIDEN what a container
+    -- draws — the one migration failure a player cannot see until an aura appears that should not.
+    NS.Database.MigrateV3(p)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.defensives, "show")
+    assertEqual(c.raidCDs, "hide")
+    assertEqual(c.cancelable, "hide")
+end)
+
+test("v3: a container with no whitelisted category gets every row at show", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "", raidCDs = "hide" } } } } }
+    -- red under: "" not being normalized, so a row lights no cell.
+    NS.Database.MigrateV3(p)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.defensives, "show")
+    assertEqual(c.raidCDs, "hide")
+end)
+
+test("v3: includeEnchants becomes the weaponEnchants row and the old key is cleared", function()
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HELPFUL", filter = { includeEnchants = true, categories = {} } },
+        { auraType = "HELPFUL", filter = { includeEnchants = false, categories = {} } },
+        { auraType = "HELPFUL", filter = { categories = {} } },
+    } }
+    -- red under: the enchant flag being read backwards, which would turn enchants on everywhere.
+    NS.Database.MigrateV3(p)
+    assertEqual(p.containers[1].filter.categories.weaponEnchants, "show")
+    assertEqual(p.containers[2].filter.categories.weaponEnchants, "hide")
+    assertEqual(p.containers[3].filter.categories.weaponEnchants, "hide")
+    assertNil(p.containers[1].filter.includeEnchants)
+end)
+
+test("v3: an ENCHANT container is left alone", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "ENCHANT", filter = { categories = {} } } } }
+    -- red under: an ENCHANT container being given a weaponEnchants row it never reads.
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.categories.weaponEnchants)
+end)
+
+test("v3: MigrateV3 returns the number of containers it walked", function()
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HELPFUL", filter = { categories = {} } },
+        { auraType = "HARMFUL", filter = { categories = {} } },
+    } }
+    assertEqual(NS.Database.MigrateV3(p), 2)
+end)
+
+test("v3: the whitelist lift never sweeps a category the aura type does not have", function()
+    local NS = fresh()
+    -- red under: liftCategoryWhitelist walking the wrong aura type's category list
+    local p = { containers = { { auraType = "HARMFUL",
+        filter = { categories = { crowdControl = "show", boss = "" } } } } }
+    NS.Database.MigrateV3(p)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.crowdControl, "show")
+    assertEqual(c.boss, "hide")
+    assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
+end)
+
+test("v3: the current schema version is 3", function()
+    local NS = fresh()
+    -- red under: the v3 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 3)
+    assertEqual(NS.db.global.schemaVersion, 3)
+end)
+
+test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
+    local function raw()
+        return {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = {
+                name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                filter = { includeEnchants = true, categories = { defensives = "show", raidCDs = "" } },
+            } },
+        }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 2 } } })
+    assertEqual(NS.db.global.schemaVersion, 3)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local c = NS.db.sv.profiles[name].containers[1]
+        -- red under: the step migrating NS.db.profile only (Raid would keep its v2 shape for ever)
+        assertEqual(c.filter.categories.defensives, "show", name)
+        assertEqual(c.filter.categories.raidCDs, "hide", name)
+        assertEqual(c.filter.categories.weaponEnchants, "show", name)
+        -- Not assertNil(c.filter.includeEnchants) here: the step clears it (see the direct MigrateV3
+        -- test above), but RunMigrations backfills the ACTIVE profile from CONTAINER_TEMPLATE right
+        -- after the ladder, and the template still declares includeEnchants until B3 retires it —
+        -- an expected artifact of B2 landing before B3, not a v3 step concern.
     end
 end)
