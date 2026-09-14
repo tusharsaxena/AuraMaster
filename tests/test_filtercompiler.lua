@@ -475,10 +475,26 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1). This test exists so the
     -- count is visible in the suite: if it moves, a category was added or removed and someone should
     -- look, not silently absorb a costlier (or cheaper but wrong) container.
+    --
+    -- The two 15s are made of different things, and that is itself worth knowing:
+    --   HELPFUL: 15 filterable categories minus 1 hidden (defensives) = 14 shown groups, PLUS the
+    --   catch-all (R-5) = 15 groups total.
+    --   HARMFUL: 16 filterable categories minus 1 hidden (crowdControl) = 15 shown groups, and NO
+    --   catch-all — it is silently dropped. `fromPlayers` and `fromNonPlayers` are both default-Show
+    --   HARMFUL categories that hide the SAME field (`isFromPlayerOrPlayerPet`) to opposite values;
+    --   the catch-all excludes every shown category (R-5), so it asks for that field to be both true
+    --   and false at once, `con.conflict` fires, and `addGroup` drops it (fix round 1's contradiction
+    --   tests cover this mechanism directly). This is correct, not a bug: the pair partitions the
+    --   debuff aura space (every debuff either was or was not cast by a player or their pet), so every
+    --   debuff is already in one of the two SHOWN groups and rank 3 draws it regardless — nothing is
+    --   lost by the catch-all's absence. It holds only on the assumption that a real aura's
+    --   `isFromPlayerOrPlayerPet` is never nil; if a future category pair ever left a gap in the aura
+    --   space the way this one does not, its catch-all would need to survive, and this count would
+    --   need to be revisited along with it.
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
-    assertEqual(#helpfulPlan.groups, 15, "HELPFUL: every other filterable category defaults to Show")
+    assertEqual(#helpfulPlan.groups, 15, "HELPFUL: 14 shown groups + the catch-all")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
-    assertEqual(#harmfulPlan.groups, 15, "HARMFUL: every other filterable category defaults to Show")
+    assertEqual(#harmfulPlan.groups, 15, "HARMFUL: 15 shown groups, no catch-all (it self-contradicts and is dropped)")
 end)
 
 test("filter: an unknown sort method falls back to Blizzard's default", function()

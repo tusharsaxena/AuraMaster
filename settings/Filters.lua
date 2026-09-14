@@ -130,7 +130,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "number", min = 0, max = 40, step = 1, label = L["Max auras per group (0 = no limit)"],
-        desc = L["This container is one group when nothing on Categories is Hidden, so the cap is the container's. Once something is Hidden, each category set to Show gets its own group, and the cap applies to EACH of those separately — not to the container as a whole."],
+        desc = L["The cap applies to each engine group, not the whole container. With 'Only these categories' off and nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden, or 'Only these categories' is on — each category set to Show gets its own group, and the cap applies to EACH of those separately."],
     },
 })
 

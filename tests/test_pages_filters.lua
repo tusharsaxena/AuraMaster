@@ -144,6 +144,11 @@ test("filters: the max-auras description tells the truth about a group being per
     assertTrue(desc:find("own group", 1, true) ~= nil, "says the cap is per-group: " .. tostring(desc))
     assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
         "says the cap applies to each group separately: " .. tostring(desc))
+    -- red under (fix round 2): the rewrite naming only "something is Hidden" as the multi-group case
+    -- and staying silent on `onlyShown` — which ALSO multiplies groups (one per shown category) even
+    -- with nothing Hidden, so the container-wide claim would be false for that combination too.
+    assertTrue(desc:find("Only these categories", 1, true) ~= nil,
+        "names the toggle as its own multi-group case: " .. tostring(desc))
 end)
 
 -- ── the Categories grid (F-1) ─────────────────────────────────────────────────────────────────
