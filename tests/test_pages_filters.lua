@@ -194,11 +194,12 @@ test("filters: every grid's columns are Show and Hide, then the category (schema
     assertEqual(headers, 2, "one header line per grid")
 end)
 
-test("filters: a grid radio stores show or hide for the selected container and re-syncs its line", function()
+test("filters: a grid checkbox stores show or hide for the selected container and re-syncs its line", function()
     local NS, m, _, ws = categories()
     m.__subcategories.Filters:Show()   -- on screen, so a write re-syncs the widgets in place
     local cells = gridLine(NS, ws, "defensives")
-    assertEqual(cells[1].checkType, "radio")
+    -- red under: LibKa0s v1.36.0 draws choice cells as CheckBox widgets (yellow fill), not radios
+    assertEqual(cells[1].type, "CheckBox")
     assertTrue(cells[1].value == true, "Show is lit for a fresh container")
     cells[2]:__fire("OnValueChanged", true)
     -- red under: the columns' values out of order (the Hide cell storing anything but "hide")
