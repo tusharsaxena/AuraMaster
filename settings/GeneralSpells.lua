@@ -4,11 +4,13 @@ local _, NS = ...
 -- every container shares (schema v2 made both the profile's).
 --
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
---     Spell Categories  [Category ▾]
+--     Spell Categories  [Category ▾]  -- one of the nine spell-list categories, or Weapon enchants
 --                       [Add a spell ____________________________][ Add ]
 --                       <icon> Ironbark (102342)                   [x]       <- a starter: ticked unless removed
 --                       <icon> A spell you added (424242)          [Remove]
 --                       [Restore this category's starter list]
+--                    -- OR, when the category is Weapon enchants --
+--                       [x] Main hand   [x] Off hand   [x] Ranged
 --     Dispel Colors     one swatch per dispel type, Magic … None
 --
 -- SPELL CATEGORIES is bespoke: the category dropdown, then the library's IdList over that category's
@@ -20,6 +22,18 @@ local _, NS = ...
 -- the page's Defaults leaves them alone, as the Filters page's leaves its Overrides lists; each
 -- category has its own restore.
 --
+-- The dropdown also offers Weapon enchants (kind "enchant"): the odd category with no spell list at
+-- all. Choosing it draws ENCHANT_ROWS instead — three real schema rows at `enchantSlots.<slot>`
+-- (schema v3, B3), so `/am get|set|list`, Defaults and the resets all see them — plus a line saying
+-- the per-container on/off switch lives on Filters → Categories (settings/Filters.lua, B5). The rows
+-- carry `skipRender = true`, exactly like the Filters page's category rows: this tab draws them
+-- itself rather than the flow engine drawing them a second time.
+--
+-- NS.GeneralSpells.Select(key) is the seam a per-row link on another page (Filters → Categories, B5)
+-- uses to land here on a specific category: it moves this tab's own selection AND the General page's
+-- active tab. A key this tab cannot draw (a token or flag category, say) is ignored, so a stale link
+-- can never leave the tab showing an empty list.
+--
 -- DISPEL COLORS are six plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
 -- no `effect`, so a write re-applies every container. Only bars read them, a bar colored by dispel
 -- type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua, owner
@@ -27,10 +41,11 @@ local _, NS = ...
 -- definitions, one color per dispel type, and carry no class-color companion: the one exemption
 -- options-ui-§17 makes.
 --
--- This file registers nothing. settings/General.lua registers DISPEL_ROWS after the Containers rows,
--- so the Dispel Colors tab follows Containers, and draws both tabs through TABS. It loads before
--- General.lua for that reason, and before settings/Filters.lua, whose Overrides lists read
--- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` from here.
+-- This file registers nothing. settings/General.lua registers ENCHANT_ROWS then DISPEL_ROWS after
+-- the Containers rows, so Spell Categories takes the fourth strip position and Dispel Colors the
+-- fifth, and draws both tabs through TABS. It loads before General.lua for that reason, and before
+-- settings/Filters.lua, whose Overrides lists read `candidates`, `ID_STRINGS` and `ID_TOOLTIP` from
+-- here.
 
 local L = NS.L
 local H = NS.Helpers
@@ -52,23 +67,24 @@ local function rerender()
     if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end
 end
 
---- The spell categories, in defaults/Categories.lua's order. Every one is a buff category: the
---- engine honors spell lists for buffs only.
+--- The categories this tab can edit: every spell list, plus the weapon-enchant row, whose entry
+--- shows its slots rather than a list. Both are buff categories — the engine honors spell lists for
+--- buffs only, and enchants are the player's own.
 local function spellCategories()
     local out = {}
     for _, def in ipairs(Cat.For("HELPFUL")) do
-        if def.kind == "spells" then
+        if def.kind == "spells" or def.kind == "enchant" then
             out[#out + 1] = def
         end
     end
     return out
 end
 
---- The category this render edits: the session's choice while it is still a spell category, else
---- the first.
+--- The category this render edits: the session's choice while it is still one this tab can draw
+--- (a spell list or the enchant row), else the first.
 local function currentCategory(defs)
     local def = Cat.Find("HELPFUL", spellCategory)
-    if not (def and def.kind == "spells") then def = defs[1] end
+    if not (def and (def.kind == "spells" or def.kind == "enchant")) then def = defs[1] end
     spellCategory = def.key
     return def
 end
@@ -195,11 +211,59 @@ local function categoryCell(defs, def)
     end }
 end
 
---- The Spell Categories tab: the category dropdown, its ID list, and its restore.
+-- ---------------------------------------------------------------------------
+-- Weapon enchants (the Spell Categories tab's non-list entry)
+-- ---------------------------------------------------------------------------
+
+-- The slots, in the order a player reads them off their character. Profile-wide, like the spell
+-- lists on this tab: one answer for every container that shows enchants.
+local ENCHANT_SLOTS = {
+    { key = "mainHand", label = "Main hand" },
+    { key = "offHand",  label = "Off hand" },
+    { key = "ranged",   label = "Ranged" },
+}
+
+-- Real schema rows (so /am get|set|list, Defaults and the resets see them), one per slot at
+-- `enchantSlots.<slot>`. `skipRender = true`, exactly as the Filters page's category rows: this
+-- tab's own renderEnchant draws them, not the flow engine.
+local ENCHANT_ROWS = {}
+for _, slot in ipairs(ENCHANT_SLOTS) do
+    local row = {
+        path = "enchantSlots." .. slot.key, page = PAGE, group = SPELLS, type = "bool",
+        skipRender = true, label = L[slot.label],
+        desc = L["Read temporary enchants from this weapon slot."],
+    }
+    ENCHANT_ROWS[#ENCHANT_ROWS + 1] = row
+end
+
+--- A shallow copy of `row` with `skipRender` lifted, so THIS render draws it (settings/Filters.lua's
+--- forRenderRows is the same idiom): the schema row itself keeps `skipRender = true` for everyone
+--- else — `/am get|set|list`, Defaults, the resets.
+local function forRender(row)
+    local copy = {}
+    for k, v in pairs(row) do copy[k] = v end
+    copy.skipRender = nil
+    return copy
+end
+
+--- The Weapon enchants entry: which slots count, and where the per-container switch lives.
+local function renderEnchant(ctx)
+    H.TextRow(ctx, L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."])
+    local rows = {}
+    for i, row in ipairs(ENCHANT_ROWS) do rows[i] = forRender(row) end
+    H.RenderRows(ctx, rows, nil, nil, { noHeadings = true })
+end
+
+--- The Spell Categories tab: the category dropdown, then either the ID list over the chosen
+--- category's spells, or (Weapon enchants) the slot toggles.
 local function renderSpells(ctx)
     local defs = spellCategories()
     local def = currentCategory(defs)
     local key = def.key
+    if def.kind == "enchant" then
+        H.RenderGrid(ctx, { categoryCell(defs, def) })
+        return renderEnchant(ctx)
+    end
     H.TextRow(ctx, L["The spells each category matches, shared by every container. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."])
     H.RenderGrid(ctx, { categoryCell(defs, def) })
     H.IdList(ctx, {
@@ -265,6 +329,19 @@ local TABS = {
 -- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` are shared with the Filters page's Overrides lists,
 -- which suggest and resolve a typed name the same way.
 NS.GeneralSpells = {
-    DISPEL_ROWS = DISPEL_ROWS, TABS = TABS,
+    DISPEL_ROWS = DISPEL_ROWS, ENCHANT_ROWS = ENCHANT_ROWS, TABS = TABS,
     candidates = candidates, ID_STRINGS = ID_STRINGS, ID_TOOLTIP = ID_TOOLTIP,
 }
+
+--- Point this tab at one category. For the Filters page's per-row link (settings/Filters.lua, B5).
+--- A key this tab cannot draw is ignored rather than stored: a stale link must never leave the tab
+--- on a category with no editor. Moves the General page's active tab to Spell Categories too, so the
+--- link actually lands the player where the category is shown.
+function NS.GeneralSpells.Select(key)
+    local def = Cat.Find("HELPFUL", key)
+    if not (def and (def.kind == "spells" or def.kind == "enchant")) then return end
+    spellCategory = key
+    local ctx = H.__pageCtx and H.__pageCtx.general
+    if ctx then ctx.activeTab = SPELLS end
+    rerender()
+end

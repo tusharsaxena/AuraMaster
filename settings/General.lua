@@ -110,9 +110,11 @@ NS.RegisterSchemaRows({
     },
 })
 
--- After the Display rows, so the Containers tab is the strip's third; the Dispel Colors rows after
--- those, so theirs is last (Spell Categories, bespoke, is placed ahead of it).
+-- After the Display rows, so the Containers tab is the strip's third; the enchant-slot rows next,
+-- so Spell Categories (their group) takes the fourth place; the Dispel Colors rows after those, so
+-- theirs is last.
 NS.RegisterSchemaRows(GC.rows)
+NS.RegisterSchemaRows(GS.ENCHANT_ROWS)
 NS.RegisterSchemaRows(GS.DISPEL_ROWS)
 
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →

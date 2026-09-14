@@ -333,7 +333,7 @@ test("options descriptor: an addon-wide tabbed page draws every tab with no cont
     local keys = {}
     for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
     -- red under: collectTabs returning no tabs without a container, or adding the bespoke tab twice
-    assertEqual(table.concat(keys, ","), "Master controls,Display,Containers,Dispel Colors")
+    assertEqual(table.concat(keys, ","), "Master controls,Display,Containers,Spell Categories,Dispel Colors")
     clickTab(ctx, "Containers")
     assertEqual(#drawn, 1, "the bespoke render replaced the group's rows")
     assertNil(drawn[1].cfg, "with no container")
@@ -354,10 +354,10 @@ test("options descriptor: a bespoke tab with `before` is drawn ahead of the tab 
         return table.concat(keys, ",")
     end
     -- red under: placeTab ignoring `before` (every bespoke tab appended after the schema groups)
-    assertEqual(strip("Display"), "Master controls,Extra,Display,Containers,Dispel Colors")
+    assertEqual(strip("Display"), "Master controls,Extra,Display,Containers,Spell Categories,Dispel Colors")
     -- red under: placeTab dropping a tab whose `before` names nothing this render draws
-    assertEqual(strip("No such tab"), "Master controls,Display,Containers,Dispel Colors,Extra")
-    assertEqual(strip(nil), "Master controls,Display,Containers,Dispel Colors,Extra")
+    assertEqual(strip("No such tab"), "Master controls,Display,Containers,Spell Categories,Dispel Colors,Extra")
+    assertEqual(strip(nil), "Master controls,Display,Containers,Spell Categories,Dispel Colors,Extra")
 end)
 
 test("options descriptor: RenderWarnings draws one orange line per thing the engine will not do", function()

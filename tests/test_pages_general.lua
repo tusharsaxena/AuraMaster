@@ -647,7 +647,7 @@ local function spyPaths(NS)
     return paths
 end
 
-test("general → spell categories: a dropdown of the nine spell categories, Healing among them, opening on the first", function()
+test("general → spell categories: a dropdown of the nine spell categories plus Weapon enchants, opening on the first", function()
     local NS, _, _, ws = spells()
     local dd
     for _, w in ipairs(ws) do
@@ -655,13 +655,16 @@ test("general → spell categories: a dropdown of the nine spell categories, Hea
     end
     assertTrue(dd ~= nil, "the category dropdown is drawn")
     assertTrue(inScroll(NS, dd), "in the tab body")
-    -- red under: the dropdown offering a flag or token category (only spell categories have lists)
-    assertEqual(#dd.order, 9)
+    -- red under: the dropdown offering a flag or token category (only spell categories and the
+    -- enchant row belong here)
+    assertEqual(#dd.order, 10)
     for _, k in ipairs(dd.order) do
-        assertTrue(NS.Categories.IsSpellCategory(k), "a spell category: " .. k)
+        assertTrue(NS.Categories.IsSpellCategory(k) or k == "weaponEnchants", "a spell category or the enchant row: " .. k)
     end
     assertEqual(dd.list.healing, NS.L["Healing"], "the merged Healing category is offered")
+    assertEqual(dd.list.weaponEnchants, NS.L["Weapon enchants"], "Weapon enchants is offered too")
     assertEqual(dd.order[1], "defensives")
+    assertEqual(dd.order[10], "weaponEnchants", "last, defaults/Categories.lua's order")
     assertEqual(dd.value, "defensives")
 end)
 
@@ -872,6 +875,50 @@ test("general → spell categories: Restore this category's starter list clears 
     -- red under: the restore writing an empty set for every category
     assertNil(edits.defensives)
     assertEqual(edits.raidCDs[99], true)
+end)
+
+-- ── the Weapon enchants entry, and the Select seam (B7) ──────────────────────────────────────
+
+test("general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list", function()
+    local NS, _, P, ws = spells()
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
+    ws = P.rerender("General")
+    -- red under: the enchant entry drawing an (empty) spell list instead of its own controls
+    assertTrue(P.row(ws, "enchantSlots.mainHand") ~= nil, "the Main hand toggle is drawn")
+    assertTrue(P.row(ws, "enchantSlots.offHand") ~= nil, "the Off hand toggle is drawn")
+    assertTrue(P.row(ws, "enchantSlots.ranged") ~= nil, "the Ranged toggle is drawn")
+    assertNil(P.find(ws, "EditBox", NS.L["Add a spell"]), "no add line for a category with no spell list")
+    assertTrue(P.hasText(ws, "Filters -> Categories"), "says where the per-container switch lives")
+end)
+
+test("general → spell categories: unticking a weapon slot writes the profile, one row at a time", function()
+    local NS, _, P, ws = spells()
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
+    ws = P.rerender("General")
+    local cb = P.row(ws, "enchantSlots.offHand")
+    -- red under: a slot toggle not reaching the profile, so unticking one changes nothing
+    cb:__fire("OnValueChanged", false)
+    assertEqual(NS.db.profile.enchantSlots.offHand, false)
+    assertEqual(NS.db.profile.enchantSlots.mainHand, true, "another slot is untouched")
+end)
+
+test("general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw", function()
+    local NS, _, P = general()
+    NS.GeneralSpells.Select("raidCDs")
+    local ws = P.rerender("General")
+    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "raidCDs", "landed on raidCDs")
+    -- red under: Select storing a key this tab cannot draw (cancelable is a token category, no list)
+    NS.GeneralSpells.Select("cancelable")
+    ws = P.rerender("General")
+    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "raidCDs", "the stale selection is kept")
+end)
+
+test("general: Select accepts the enchant key too, and lands the tab on it", function()
+    local NS, _, P = general()
+    NS.GeneralSpells.Select("weaponEnchants")
+    local ws = P.rerender("General")
+    assertEqual(P.find(ws, "Dropdown", NS.L["Category"]).value, "weaponEnchants")
+    assertTrue(P.row(ws, "enchantSlots.mainHand") ~= nil, "the tab moved and drew the slot toggles")
 end)
 
 test("general → spell categories: the tab and Dispel Colors are drawn with no container at all", function()

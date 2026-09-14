@@ -46,11 +46,10 @@ local function choices(row)
 end
 
 -- The spell sets are written whole through the seam (settings/Schema.lua's carve-outs), not by row.
--- enchantSlots (schema v3, B3) has no row yet either: B5 owns the tab that writes it.
+-- enchantSlots (schema v3, B3) got its rows in B7 (settings/GeneralSpells.lua's ENCHANT_ROWS), so it
+-- is no longer exempted here.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
-local PROFILE_CARVE_OUTS = set({
-    "categorySpells", "enchantSlots.mainHand", "enchantSlots.offHand", "enchantSlots.ranged",
-})
+local PROFILE_CARVE_OUTS = set({ "categorySpells" })
 
 test("defaults: every starter container is a valid container whose every override the template knows", function()
     local units, types, styles = set(C.UNITS), set(C.AURA_TYPES), set(C.STYLES)
