@@ -286,30 +286,45 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
-- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:588`) runs over **every** stored profile,
+- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:608`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
   `Database.CurrentSchemaVersion()` answers `3`. Only a container whose `auraType` is a known one
-  (`HELPFUL`/`HARMFUL`/`ENCHANT`) is touched; a missing or corrupt `auraType` is left completely
-  alone rather than half-converted.
+  (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
+  alone rather than half-converted, does not count toward the step's "over N container(s)" total,
+  and logs its own `[Migrate] v3 container '<id>' skipped: unrecognized auraType <value>` line — a
+  silently skipped container is the kind of thing only its player would ever notice.
   - The old three-state category model (`""` no effect / `"show"` whitelist / `"hide"` exclude)
     became two states, Show / Hide, where Show contributes nothing (defaults/Categories.lua). The
     old `"show"` state meant "draw ONLY the categories set to show" — a state the new model has no
     room for, so mapping `""` → `"show"` verbatim would silently WIDEN what an already-stored
     container draws. The old intent is written out longhand instead, per container, over
-    `NS.Categories.For(container.auraType)`'s keys: if ANY category of the container's aura type was
-    `"show"`, every category of that type NOT `"show"` (an unset `""` or an explicit `"hide"`)
-    becomes `"hide"` — the longhand of the old whitelist. With no `"show"` present, only the unset
-    `""` rows become `"show"`; an explicit `"hide"` is left exactly as it was, since the old model
-    already excluded it with no whitelist active. `ENCHANT` containers have no categories and are
-    skipped entirely. This runs only while at least one category of the container's type is still
-    unset (`""` or missing) — an already-fully-decided container (every key `"show"` or `"hide"`) is
-    the fixed point and is left untouched, which is what makes a second run a no-op.
+    `NS.Categories.For(container.auraType)`'s FILTERABLE keys (below): if ANY of them was `"show"`,
+    every one NOT `"show"` (an unset `""` or an explicit `"hide"`) becomes `"hide"` — the longhand of
+    the old whitelist. With no `"show"` present, only the unset `""` rows become `"show"`; an explicit
+    `"hide"` is left exactly as it was, since the old model already excluded it with no whitelist
+    active. `ENCHANT` containers have no categories and are skipped entirely. This runs only while at
+    least one filterable category of the container's type is still unset (`""` or missing) — an
+    already-fully-decided container (every filterable key `"show"` or `"hide"`) is the fixed point and
+    is left untouched, which is what makes a second run a no-op.
+  - **Filterable keys exclude `kind == "enchant"` categorically**, not merely because none exists in
+    `NS.Categories.For`'s lists yet. An enchant row (`weaponEnchants`, once task B3 adds it) is a
+    container capability — "does this container have weapon-enchant slots" — not a filter over auras:
+    it matches no aura and joins no aura group, the same reason `modules/FilterCompiler.lua`'s own
+    `splitCategories` skips that kind. So it never counts toward "was this container narrowed", is
+    never swept to `"hide"` by that decision, and contributes no ids (already true via the
+    `kind == "spells"` check below). Without this exclusion, a container with no `filter.categories`
+    table at all is the sharpest failure: the whitelist lift has nothing to act on yet, so
+    `filter.includeEnchants`'s lift (below) is the one that creates the table, holding only
+    `weaponEnchants` — and the next run over that container would see exactly one category at
+    `"show"`, read it as narrowed, and sweep every other category to `"hide"`, a near-total blackout
+    of a container the player never touched. The exclusion holds whether `kind == "enchant"` exists in
+    `def` or not, so it needs no revisiting when B3 lands.
   - Categories are not a partition of the aura space, so "hide everything not whitelisted" cannot
     fully reproduce the old exclusive whitelist: an aura that also matched a category the sweep above
     just turned to `"hide"` would stop being drawn, when the old whitelist group drew it regardless
     (the widening the other direction — an aura in no category at all now drawing when the old
     whitelist excluded it — is inherent to the new model and is not fixed). So when a container is
-    narrowed (had at least one `"show"`), the ids of every `"show"` **spells** category
+    narrowed (had at least one filterable `"show"`), the ids of every `"show"` **spells** category
     (`FC.CategorySpells(def, profile.categorySpells)`, so a player's own edits to those lists are
     honored) are additionally copied onto that container's `filter.whitelist` — Overrides, rank 2 in
     `modules/FilterCompiler.lua`, which beats a category Hide — merged into any existing whitelist. An
@@ -321,16 +336,11 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     AFTER the category-whitelist lift above, and only when `categories.weaponEnchants` is not already
     set (idempotency: `includeEnchants` is nil by the second run, so an unconditional write would
     re-stamp `"hide"` and silently drop a container already migrated to `"show"` on any re-run — a
-    restored backup, a copied profile, a re-applied step). **This ordering is required, not merely
-    convenient:** `weaponEnchants` is not yet one of `NS.Categories.For`'s keys (task B3 adds the
-    category definition and wires the compiler and UI to it; this step only writes the stored key
-    ahead of that), so today the whitelist lift above cannot see or touch it regardless of order — but
-    once B3 adds it as a real category, the whitelist lift WOULD walk and write it, and running the
-    enchant lift first would leave its `"show"`/`"hide"` sitting there as one more unset-or-decided row
-    for that lift to sweep, up to turning a container that whitelisted nothing into one with its
-    enchants hidden too. B3 must confirm how a `kind == "enchant"` category (mirroring
-    `modules/FilterCompiler.lua`'s own skip for that kind) interacts with the whitelist lift before
-    schema v3 can be considered settled for that case.
+    restored backup, a copied profile, a re-applied step). Today `weaponEnchants` is not yet one of
+    `NS.Categories.For`'s keys (task B3 adds the category definition and wires the compiler and UI to
+    it; this step only writes the stored key ahead of that); the categorical `kind == "enchant"`
+    exclusion above is what keeps this order safe once B3 does add it, rather than the lift merely
+    having nothing to see today.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

@@ -500,16 +500,35 @@ end
 --- needed" — and a second run would then read that as "some category is show" and misfire the
 --- WHITELISTED branch on a container that was never narrowed, sweeping it to near-nothing and copying
 --- every spell category's ids onto its whitelist.
---- Runs before liftEnchantFlag and only ever touches `NS.Categories.For(c.auraType)`'s current keys:
---- weaponEnchants is not one of them yet (B3 adds it), so THIS STEP as shipped today cannot reach it.
---- Do not read that as "safe in either order forever" — once B3 adds weaponEnchants as a real
---- category, this lift WOULD walk and write it, and running the enchant lift first would then have
---- its "show" already stamped here as one more unset row the lift is free to convert, sweeping a
---- container that whitelisted nothing to hide even its enchants. The order below stays required, and
---- B3 must confirm how a `kind == "enchant"` category (see modules/FilterCompiler.lua's own
---- `kind == "enchant"` skip) interacts with this sweep before schema v3 can be considered settled.
---- Whether every category of `def` already carries an explicit "show" or "hide" on `cats` — the
---- fixed point this whole lift converges to, and the idempotency guard.
+--- Runs before liftEnchantFlag and only ever touches `NS.Categories.For(c.auraType)`'s FILTERABLE keys
+--- (filterableCategories below) — a `kind == "enchant"` category, `weaponEnchants` once B3 adds it, is
+--- excluded categorically, not because it happens not to exist in `def` yet. That is what makes the
+--- order below safe both before and after B3: an enchant row is a container capability ("does this
+--- container have weapon-enchant slots"), not a filter over auras — it matches no aura and joins no
+--- aura group (modules/FilterCompiler.lua's own `splitCategories` skips it the same way), so it must
+--- never count toward "was this container narrowed", never be swept to "hide" by that decision, and
+--- (via the `kind == "spells"` check in liftWhitelistSpells) never contributes ids. Without the
+--- exclusion, a container with NO `filter.categories` table at all is the sharpest case: run 1 has
+--- nothing for this lift to do (no categories table yet), so liftEnchantFlag alone creates the table
+--- holding only `weaponEnchants`; run 2 would then see exactly one category at "show" once
+--- `weaponEnchants` is real, read that as narrowed, and sweep every other category of the container to
+--- "hide" — a near-total blackout of a container the player never touched.
+--- Whether every FILTERABLE category of `def` already carries an explicit "show" or "hide" on `cats`
+--- — the fixed point this whole lift converges to, and the idempotency guard.
+--- `def` minus any `kind == "enchant"` entry: the categories that actually filter auras. See
+--- liftCategoryWhitelist's doc comment for why an enchant row must take no part in the whitelist
+--- sweep, today (a no-op — the kind doesn't exist in `def` yet) or after B3 (excluded categorically).
+local function filterableCategories(def)
+    local out = {}
+    for _, cat in ipairs(def) do
+        if cat.kind ~= "enchant" then
+            local n = #out
+            out[n + 1] = cat
+        end
+    end
+    return out
+end
+
 local function categoriesDecided(def, cats)
     for _, cat in ipairs(def) do
         local state = cats[cat.key]
@@ -551,14 +570,15 @@ local function liftCategoryWhitelist(p, c)
     local def = NS.Categories and NS.Categories.For(c.auraType)
     local cats = type(c.filter) == "table" and c.filter.categories
     if type(def) ~= "table" or type(cats) ~= "table" then return end
-    local defCount = #def
-    if defCount == 0 or categoriesDecided(def, cats) then return end
-    local shown = shownCategories(def, cats)
+    local filterable = filterableCategories(def)
+    local filterableCount = #filterable
+    if filterableCount == 0 or categoriesDecided(filterable, cats) then return end
+    local shown = shownCategories(filterable, cats)
     local shownCount = #shown
     if shownCount == 0 then
-        liftUnwhitelisted(def, cats)
+        liftUnwhitelisted(filterable, cats)
     else
-        liftWhitelisted(p, c, def, cats, shown)
+        liftWhitelisted(p, c, filterable, cats, shown)
     end
 end
 
@@ -583,18 +603,23 @@ local function liftEnchantFlag(c)
 end
 
 --- Schema v3 over one profile table (docs/schema.md, Migration path). A test seam as well as the
---- step's body: tests/test_database.lua runs it over raw profile tables.
---- @return number  the containers it walked
+--- step's body: tests/test_database.lua runs it over raw profile tables. A container skipped for an
+--- unrecognized auraType does not count toward the return value — it was not converted, so the
+--- ladder's "over N container(s)" log line stays honest — and logs its own `[Migrate]` line naming it,
+--- since a silently skipped container is the kind of thing only its player would ever notice missing.
+--- @return number  the containers it walked (converted)
 function Database.MigrateV3(p)
     if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
     local walked = 0
-    for _, c in pairs(p.containers) do
+    for key, c in pairs(p.containers) do
         if type(c) == "table" then
             if KNOWN_AURA_TYPES[c.auraType] then
                 liftCategoryWhitelist(p, c)
                 liftEnchantFlag(c)
+                walked = walked + 1
+            elseif NS.Debug then
+                NS.Debug("Migrate", "v3 container '%s' skipped: unrecognized auraType %s", tostring(key), tostring(c.auraType))
             end
-            walked = walked + 1
         end
     end
     return walked

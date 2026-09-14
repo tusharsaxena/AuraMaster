@@ -670,6 +670,36 @@ test("v3: MigrateV3 is idempotent — a second run changes nothing a first run a
     assertEqual(twice.containers[1].filter.categories.weaponEnchants, "show", "run 1's decision survives run 2")
 end)
 
+test("v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind=\"enchant\" category", function()
+    local NS = fresh()
+    -- Simulates task B3 landing: weaponEnchants becomes a real category of kind "enchant". Run 1 has
+    -- no filter.categories table for liftCategoryWhitelist to act on (it runs BEFORE liftEnchantFlag,
+    -- which is the one that creates the table, holding only weaponEnchants) — so the real categories
+    -- get their first decision on run 2, the first run where the table liftEnchantFlag made on run 1
+    -- exists when liftCategoryWhitelist looks. Without the categorical kind == "enchant" exclusion,
+    -- run 2 sees exactly one category at "show" (weaponEnchants), reads the container as narrowed, and
+    -- sweeps every other HELPFUL category to "hide" — a near-total blackout of a container the player
+    -- never touched. Run 3 then checks the true fixed point: nothing changes once every category has
+    -- its first decision.
+    local HELPFUL = NS.Categories.HELPFUL
+    HELPFUL[#HELPFUL + 1] = { key = "weaponEnchants", kind = "enchant", label = "Weapon enchants", desc = "test stand-in for B3" }
+    local p = { containers = { { auraType = "HELPFUL", filter = { includeEnchants = true } } } }
+    NS.Database.MigrateV3(p)
+    -- red under: kind == "enchant" counting toward "was this container narrowed" once it is a real
+    -- category, sweeping every other category to "hide" here
+    NS.Database.MigrateV3(p)
+    local cats = p.containers[1].filter.categories
+    for _, cat in ipairs(NS.Categories.HELPFUL) do
+        if cat.kind ~= "enchant" then
+            assertEqual(cats[cat.key], "show", cat.key .. ": never swept to hide by an enchant row")
+        end
+    end
+    local converged = NS.Database.DeepCopy(p)
+    NS.Database.MigrateV3(p)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(p), Sig(converged), "run 3 is a true no-op at the fixed point")
+end)
+
 test("v3: a narrowed container copies its whitelisted spell categories' ids onto filter.whitelist", function()
     local NS = fresh()
     local Cat = NS.Categories.Find("HELPFUL", "defensives")
@@ -724,6 +754,29 @@ test("v3: MigrateV3 returns the number of containers it walked", function()
         { auraType = "HARMFUL", filter = { categories = {} } },
     } }
     assertEqual(NS.Database.MigrateV3(p), 2)
+end)
+
+test("v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line", function()
+    local NS = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Migrate" then
+            local n = #lines
+            lines[n + 1] = fmt:format(...)
+        end
+    end
+    local p = { containers = {
+        [1] = { auraType = "HELPFUL", filter = { categories = {} } },
+        [2] = { auraType = "BOGUS", filter = { categories = {} } },
+    } }
+    -- red under: counting the skipped container toward the return value, which the ladder logs as
+    -- "over N container(s)" — overstating how many were actually converted
+    assertEqual(NS.Database.MigrateV3(p), 1)
+    local named = false
+    for _, l in ipairs(lines) do
+        if l:find("skipped", 1, true) and l:find("2", 1, true) then named = true end
+    end
+    assertTrue(named, "a line names the skipped container: " .. table.concat(lines, " | "))
 end)
 
 test("v3: the whitelist lift never sweeps a category the aura type does not have", function()
