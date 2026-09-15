@@ -40,9 +40,10 @@ it against `git log`, trust git over the table, continue at the first row that i
 | P6 navigation fix + See spells + info icons | N-3 N-4 N-5 | AM | todo | | needs P5 |
 | P7 Categories tab readability | T-2 T-3 | AM | todo | | needs P2 |
 | P8 Bars/Icons tab restructure | S-1 | AM | todo | | |
+| P10 spark appearance in clip mode | SP-1 SP-2 | AM | todo | | owner report 2026-09-15 |
 | P9 docs + final battery | all | all | todo | | last |
 
-**Dependency order:** P1, P2, P3, P8 are independent. P4 needs P3. P6 needs P5. P7 needs P2.
+**Dependency order:** P1, P2, P3, P8, P10 are independent. P4 needs P3. P6 needs P5. P7 needs P2.
 P9 is last.
 
 ## File structure

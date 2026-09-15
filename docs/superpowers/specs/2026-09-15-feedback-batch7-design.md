@@ -74,6 +74,29 @@ rescuing them under rank 3. To actually hide cancelable buffs, set both `Cancela
 | `X-2` | The v3 migration and `DefaultStates()` must account for `uncategorized` so existing containers get it at Show |
 | `X-3` | `defaults/Profile.lua`'s container template strata becomes `MEDIUM` (`D5`), and `tests/test_defaults.lua:225` moves with it |
 
+## 7a. The spark's appearance in clip mode (`SP-1`, owner report 2026-09-15)
+
+**Diagnosis, established before any code.** The spark is Blizzard's casting-bar texture, which is
+gold, drawn with `SetBlendMode("ADD")` (`modules/Style_Bars.lua:54-55`). It is not changing color.
+What changes is WHERE it sits:
+
+- `sparkTimeless` **on** (default): the spark is centered on the fill's moving edge
+  (`wireSpark`'s else branch), so it lies mostly over the bright fill. ADD blending against a bright
+  backdrop washes it toward white.
+- `sparkTimeless` **off**: the spark is anchored by its own side to the elapsed region's side and
+  clipped to that region, so it sits over the DARK unfilled part. ADD blending against black leaves
+  the texture's own gold showing.
+
+The clip is not arbitrary: an addon cannot ask an aura whether it has a duration (secret), so the
+only available signal is that a permanent aura's elapsed region has zero width and therefore clips
+the spark away. That is why the geometry differs, and why padding the clip outward to re-center a
+timed spark would break the feature — the region would stop being zero-width for permanent auras.
+
+| ID | Requirement |
+|---|---|
+| `SP-1` | With `sparkTimeless` off, a TIMED aura's spark must read the same as it does with the option on. Keep the clip (it is load-bearing) and neutralize the appearance change — match the color in clip mode, or drop the ADD blend there so the backdrop stops deciding it. Whichever is chosen, say in the code comment WHY the two modes need different treatment, or the next reader will "simplify" it back |
+| `SP-2` | The owner must confirm it in-client: this is geometry and blending the headless harness cannot see. A smoke check compares a timed bar's spark with the option on and off, and separately confirms a permanent aura still has none with it off |
+
 ## 8. Out of scope
 
 - Implementing the aura cache (`X-1` files it only).
