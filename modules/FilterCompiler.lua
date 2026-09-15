@@ -431,14 +431,21 @@ local function finishWarnings(plan, unit, auraType, usesSpellIds, onlyShownEmpty
     end
 end
 
---- Appends the weapon-enchant block to a player buff container, in place. The weaponEnchants
---- category row, not a group: kind `enchant` matches no aura (splitCategories skips it), so Show is
---- simply "this container has enchant slots".
-local function appendEnchants(plan, cfg, filter, ctx, auraType)
-    local enchantState = (filter.categories or {}).weaponEnchants
-    if auraType == "HELPFUL" and cfg.unit == "player" and enchantState ~= "hide" then
-        plan.enchants = enchantBlock(filter, ctx.enchantSlots)
+--- Appends the weapon-enchant block to a player buff container, in place. Kind-driven, like
+--- `splitCategories`: whichever category (or categories) of this aura type carry kind `enchant`
+--- decide it, not the literal key `weaponEnchants` — so a second enchant-kind category could not be
+--- silently ignored here while `splitCategories` still skips it. Kind `enchant` matches no aura
+--- (splitCategories skips it), so Show is simply "this container has enchant slots"; any one of
+--- them set to Hide is enough to drop the block.
+local function appendEnchants(plan, cfg, filter, ctx, auraType, Categories)
+    if not (auraType == "HELPFUL" and cfg.unit == "player") then return end
+    local states = filter.categories or {}
+    for _, def in ipairs(Categories.For(auraType)) do
+        if def.kind == "enchant" and states[def.key] == "hide" then
+            return
+        end
     end
+    plan.enchants = enchantBlock(filter, ctx.enchantSlots)
 end
 
 --- The context both compile sites hand Compile: the learned timed spells (account-wide), the
@@ -487,12 +494,28 @@ function FC.Compile(cfg, ctx)
           onlyShown = onlyShown }, look)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
-    appendEnchants(plan, cfg, filter, ctx, auraType)
+    appendEnchants(plan, cfg, filter, ctx, auraType, Categories)
 
     local shownCount = #shown
     local onlyShownEmpty = onlyShown and shownCount == 0 and isEmpty(whitelist)
     finishWarnings(plan, cfg.unit, auraType, timedIds or blacklisted or categoryIds or whitelisted, onlyShownEmpty)
     return plan
+end
+
+--- The spells-kind categories of `auraType` that claim `id`, in declaration order, each `{ key,
+--- label, state }` — and whether any of them is a Show. Split out of `ExplainSpell` to keep both
+--- under the file's complexity ceiling.
+--- @return table claiming, boolean anyShow
+local function claimingCategories(Categories, auraType, filter, categorySpells, id)
+    local claiming, anyShow = {}, false
+    for _, def in ipairs(Categories.For(auraType)) do
+        if def.kind == "spells" and FC.CategorySpells(def, categorySpells)[id] then
+            local state = ((filter.categories or {})[def.key] == "hide") and "hide" or "show"
+            claiming[#claiming + 1] = { key = def.key, label = NS.L[def.label], state = state }
+            anyShow = anyShow or (state == "show")
+        end
+    end
+    return claiming, anyShow
 end
 
 --- Explain why one spell id will or will not be drawn by container `cfg`, under the same five-rank
@@ -512,22 +535,6 @@ end
 --- @param cfg table  the container's stored table (defaults/Profile.lua CONTAINER_TEMPLATE shape)
 --- @param id number  the spell id to explain
 --- @param ctx table|nil  as `Compile` takes: `{ categories, categorySpells }`
---- The spells-kind categories of `auraType` that claim `id`, in declaration order, each `{ key,
---- label, state }` — and whether any of them is a Show. Split out of `ExplainSpell` to keep both
---- under the file's complexity ceiling.
---- @return table claiming, boolean anyShow
-local function claimingCategories(Categories, auraType, filter, categorySpells, id)
-    local claiming, anyShow = {}, false
-    for _, def in ipairs(Categories.For(auraType)) do
-        if def.kind == "spells" and FC.CategorySpells(def, categorySpells)[id] then
-            local state = ((filter.categories or {})[def.key] == "hide") and "hide" or "show"
-            claiming[#claiming + 1] = { key = def.key, label = NS.L[def.label], state = state }
-            anyShow = anyShow or (state == "show")
-        end
-    end
-    return claiming, anyShow
-end
-
 --- @return table  { verdict = "shown"|"hidden", rank = 1..5, categories = { { key, label, state } } }
 function FC.ExplainSpell(cfg, id, ctx)
     ctx = ctx or {}

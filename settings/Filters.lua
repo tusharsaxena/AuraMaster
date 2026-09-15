@@ -167,12 +167,12 @@ NS.RegisterSchemaRows({
     {
         path = "container.filter.sortMethod", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.SORT_METHODS, C.SORT_METHOD_LABELS), label = L["Sort by"],
-        desc = L["The order auras are drawn in. 'Grouped' variants keep permanent auras together."],
+        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With 'Only these categories' off and nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden, or 'Only these categories' is on — each category set to Show gets its own group, and EACH is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
     },
     {
         path = "container.filter.sortDirection", page = PAGE, group = G_SORT,
         type = "string", values = NS.Choices(C.SORT_DIRECTIONS, C.SORT_DIRECTION_LABELS), label = L["Direction"],
-        desc = L["Reverse the order."],
+        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With 'Only these categories' off and nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden, or 'Only these categories' is on — each category set to Show gets its own group, and EACH is reversed separately; the groups' own layout order does not change."],
     },
     {
         path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
@@ -235,7 +235,7 @@ local CUSTOM_EXTRA = {
 -- Overrides tabs — two halves of one decision. Rank 1 is the whitelist, rank 2 the blacklist
 -- (revised 2026-09-15: the whitelist now beats the blacklist, and rank 3's Show is a positive claim
 -- that rescues an aura from a Hide elsewhere).
-local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown; nothing removed it."]
+local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown, nothing removed it; UNLESS 'Only these categories' is on, in which case it is not drawn at all."]
 
 -- R-10: while `onlyShown` is on, Hide no longer removes anything by itself — an aura is left out of
 -- rank 5 (there is no catch-all while this is on) simply by belonging to no category set to Show.

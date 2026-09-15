@@ -330,14 +330,13 @@ local function colorDecode(c)
 end
 
 --- A value as `/am get|set|list|reset` echo it. A row marked `printLabel` (the Filters categories)
---- prints the label the panel shows, Default / Whitelist / Blacklist, with the stored value that
---- `/am set` takes after it in gray; every other row prints as the library formats it. The hook
---- replaces the library's formatter outright, colorDecode included, so a color is decoded here.
+--- prints the label the panel shows, Show / Hide, with the stored value that `/am set` takes after
+--- it in gray; every other row prints as the library formats it. The hook replaces the library's
+--- formatter outright, colorDecode included, so a color is decoded here.
 local function formatValue(row, v)
     if type(row) == "table" and row.printLabel then
         for _, choice in ipairs(row.values or {}) do
             if choice.value == v then
-                if v == "" then return choice.text end
                 return ("%s |cff808080(%s)|r"):format(choice.text, tostring(v))
             end
         end

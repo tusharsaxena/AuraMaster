@@ -151,6 +151,23 @@ test("filters: the max-auras description tells the truth about a group being per
         "names the toggle as its own multi-group case: " .. tostring(desc))
 end)
 
+test("filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container", function()
+    -- red under: the descriptions still claiming the sort/direction order the whole container's
+    -- draw order — false the moment one category is Hidden (or 'Only these categories' is on),
+    -- since modules/FilterCompiler.lua's lookOf stamps sortMethod/sortDirection on EVERY group and
+    -- the engine sorts within each group, laying groups out by layoutIndex.
+    local NS = fresh()
+    for _, path in ipairs({ "container.filter.sortMethod", "container.filter.sortDirection" }) do
+        local desc = NS.FindSchemaRow(path).desc
+        assertTrue(desc:find("own group", 1, true) ~= nil,
+            path .. " says the sort is per-group: " .. tostring(desc))
+        assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
+            path .. " says it applies to each group separately: " .. tostring(desc))
+        assertTrue(desc:find("Only these categories", 1, true) ~= nil,
+            path .. " names the toggle as its own multi-group case: " .. tostring(desc))
+    end
+end)
+
 -- ── B8: Max duration presets ─────────────────────────────────────────────────────────────────
 
 test("filters: a max-duration preset writes the same path as the slider", function()

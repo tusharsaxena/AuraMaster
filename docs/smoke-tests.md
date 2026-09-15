@@ -407,7 +407,12 @@ one. None of this is reproducible headlessly; these checks are.
     category left at Show (one group): if the many-group container is dramatically slower per apply,
     or the client silently refuses some of the `AddAuraGroup` calls (a group's auras never draw even
     though its category has live spells), report it — that is the "what does it cost, does the client
-    cap groups" open question this batch could not settle offline.
+    cap groups" open question this batch could not settle offline. Then check the ORDER, not just
+    the presence: set Sort by to a method with an obvious visual order (e.g. Time Remaining) and
+    confirm the container is no longer sorted end to end — auras are ordered category-block by
+    category-block (each Show category's block internally sorted, blocks laid out one after another),
+    not as one sorted run across the whole container. This is the sort-row description's own claim
+    (Filters → Sorting), so it should read as expected once you know to look for it, not as a bug.
 78. **The Hide column reads as live, never dimmed (`K-1`, `R-10`).** On Filters → Categories, look at
     a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
     unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
@@ -451,3 +456,13 @@ one. None of this is reproducible headlessly; these checks are.
     you can find or produce ANY debuff that still shows with both Hidden, its `isFromPlayerOrPlayerPet`
     is neither true nor false as the engine reports it — report it, since that is exactly the case
     that would make dropping the catch-all here wrong.
+84. **The mouse blocker's reach is the whole container, not just the bars (owner report,
+    B-9 follow-up).** Anchor a bar container with **Show tooltips** on and Click-through off
+    directly over a unit frame, or over open ground you normally mouseover-target through, so its
+    padding — not just a bar — sits over the target. Bind a `/tar mouseover` (or similar mouseover)
+    macro, or just try to mouseover-target the unit/NPC through the container's padding → it fails
+    while the cursor is over the container, including its padding, not only over a bar; moving the
+    cursor off the container's rect entirely restores mouseover targeting. This is Layout ->
+    Mouse's own documented tradeoff, not a bug — confirm the tab's **Show tooltips** text names it
+    and that turning **Click-through** on restores mouseover targeting everywhere under the
+    container, padding included.

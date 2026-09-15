@@ -188,7 +188,7 @@ NS.RegisterSchemaRows({
 
     {
         path = "container.behavior.tooltips", page = PAGE, group = G_MOUSE, type = "bool",
-        label = L["Show tooltips"], desc = L["Show an aura's tooltip when hovering it. Off, the hover reaches what is behind the container, so a unit there shows its own tooltip."],
+        label = L["Show tooltips"], desc = L["Show an aura's tooltip when hovering it. On, the whole container's rect — padding included, not just the aura buttons — captures the mouse to make that possible, which also blocks mouseover targeting and mouseover macros anywhere under it; if this container overlaps a unit frame or sits over open ground you mouseover-target through, turn Click-through on there, or turn this off so the hover reaches what is behind the container instead."],
     },
     {
         path = "container.behavior.tooltipInCombat", page = PAGE, group = G_MOUSE, type = "bool",
@@ -205,7 +205,7 @@ NS.RegisterSchemaRows({
     },
     {
         path = "container.behavior.clickThrough", page = PAGE, group = G_MOUSE, type = "bool",
-        label = L["Click-through"], desc = L["Let the mouse pass through this container: no tooltips and no clicks."],
+        label = L["Click-through"], desc = L["Let the mouse pass through this container: no tooltips and no clicks. This is the escape hatch for tooltips' whole-rect mouse capture — turn it on if this container sits over a unit frame or open ground and mouseover targeting or a mouseover macro needs to reach through it."],
     },
 })
 

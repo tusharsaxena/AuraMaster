@@ -627,6 +627,18 @@ test("v3: includeEnchants becomes the weaponEnchants row and the old key is clea
     assertNil(p.containers[1].filter.includeEnchants)
 end)
 
+test("v3: a HARMFUL container is never given a weaponEnchants row — that category does not exist for debuffs", function()
+    -- red under: liftEnchantFlag writing categories.weaponEnchants on HARMFUL containers too, where
+    -- no such category exists (defaults/Categories.lua only lists it under HELPFUL) — inert garbage
+    -- that would sit in real saved variables forever.
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HARMFUL", filter = { includeEnchants = true, categories = { crowdControl = "hide" } } },
+    } }
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.categories.weaponEnchants)
+end)
+
 test("v3: an ENCHANT container is left alone", function()
     local NS = fresh()
     local p = { containers = { { auraType = "ENCHANT", filter = { categories = {} } } } }

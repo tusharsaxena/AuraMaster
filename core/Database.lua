@@ -564,9 +564,12 @@ end
 --- whose old key was never set at all (never touched includeEnchants, or a pre-B2 profile with no
 --- weaponEnchants row yet) still converts once, to "hide" — the old default.
 --- ENCHANT containers never read the old flag and are left alone (also gated by MigrateV3's
---- KNOWN_AURA_TYPES check, for a container whose auraType is missing or corrupt).
+--- KNOWN_AURA_TYPES check, for a container whose auraType is missing or corrupt). The
+--- `weaponEnchants` category only exists for HELPFUL containers (defaults/Categories.lua); a
+--- HARMFUL container has no such category, so writing `categories.weaponEnchants` there would be
+--- inert garbage stored forever in real saved variables — gated out here.
 local function liftEnchantFlag(c)
-    if c.auraType == "ENCHANT" then return end
+    if c.auraType ~= "HELPFUL" then return end
     local f = type(c.filter) == "table" and c.filter
     if not f then return end
     if type(f.categories) ~= "table" then f.categories = {} end
