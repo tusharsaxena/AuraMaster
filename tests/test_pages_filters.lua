@@ -151,6 +151,38 @@ test("filters: the max-auras description tells the truth about a group being per
         "names the toggle as its own multi-group case: " .. tostring(desc))
 end)
 
+-- ── B8: Max duration presets ─────────────────────────────────────────────────────────────────
+
+test("filters: a max-duration preset writes the same path as the slider", function()
+    -- red under: the preset not writing the slider's path, which would make it decorative.
+    local NS, _, P, ws = filters()
+    local dd = P.find(ws, "Dropdown", NS.L["Preset"])
+    assertTrue(dd ~= nil, "the What to show tab draws a preset dropdown")
+    dd:__fire("OnValueChanged", 300)
+    assertEqual(NS.Database.FindContainer(1).filter.maxDuration, 300)
+    -- the slider itself agrees, once the tab redraws from the new stored value
+    ws = P.rerender("Filters")
+    assertEqual(P.row(ws, "container.filter.maxDuration").value, 300)
+end)
+
+test("filters: a stored max-duration matching no preset leaves the preset dropdown blank", function()
+    -- red under: snapping the dropdown to the nearest preset instead of leaving it unset — silently
+    -- changing a player's stored number is worse than a blank dropdown.
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.maxDuration", 45, 1)
+    local ws = P.rerender("Filters")
+    local dd = P.find(ws, "Dropdown", NS.L["Preset"])
+    assertTrue(dd ~= nil)
+    assertNil(dd.value)
+end)
+
+test("filters: the max-duration description says there is no minimum", function()
+    -- red under: the description promising a lower bound the engine cannot honor.
+    local NS = fresh()
+    local desc = NS.FindSchemaRow("container.filter.maxDuration").desc
+    assertTrue(desc:find("no minimum", 1, true) ~= nil, "states plainly there is no minimum: " .. tostring(desc))
+end)
+
 -- ── the Categories grid (F-1) ─────────────────────────────────────────────────────────────────
 
 test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once", function()

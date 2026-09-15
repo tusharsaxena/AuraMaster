@@ -64,6 +64,9 @@ These are not declined; the game forbids them, and a request for one is answered
   require its absence. "Only auras without a duration" is built by learning which buff spells are
   timed while auras are readable (`modules/TimedSpells.lua`), so a timed buff not yet learned shows
   once. On a debuff container the mode narrows nothing, because only buffs are learned.
+- **A minimum duration.** The engine's candidate filters cap a duration (`maxDuration`) but cannot
+  require one to be at least N seconds, and an aura's duration is unreadable while auras are secret,
+  so it cannot be filtered after the fact either. Requested 2026-09-14; declined with the rule.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
   friendly units and debuffs on hostile units. The addon warns per container
   (`modules/FilterCompiler.lua:154`) rather than letting the filter look broken.

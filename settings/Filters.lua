@@ -58,10 +58,44 @@ NS.RegisterSchemaRows({
     },
     {
         path = "container.filter.maxDuration", page = PAGE, group = G_SHOW, auraTypes = BUFFS_DEBUFFS,
-        type = "number", min = 0, max = 3600, step = 5, label = L["Max duration (sec, 0 = no limit)"],
-        desc = L["Hide auras whose full duration is longer than this — a 60 keeps short cooldowns and drops hour-long buffs. Permanent auras are hidden while a limit is set."],
+        type = "number", min = 0, max = 3600, step = 5, label = L["Max duration"],
+        desc = L["Hide auras whose full duration is longer than this — a 60 keeps short cooldowns and drops hour-long buffs. 0 is no limit, and permanent auras are hidden while a limit is set. There is no minimum: the engine can cap a duration but cannot require one."],
     },
 })
+
+-- The preset dropdown beside Max duration (pairWith, below). Not a separate setting: it writes the
+-- SAME path the slider does, so there is one stored value and the two controls can never disagree.
+-- A stored value matching no preset leaves the dropdown blank rather than snapping the slider to
+-- the nearest one — silently changing a player's stored number is worse than a blank dropdown.
+local MAX_DURATION_PRESETS = { 0, 30, 60, 300, 600, 1800 }
+local MAX_DURATION_LABELS = {
+    [0] = L["No limit"], [30] = L["30 seconds"], [60] = L["1 minute"],
+    [300] = L["5 minutes"], [600] = L["10 minutes"], [1800] = L["30 minutes"],
+}
+
+--- Max duration's right half (pairWith): a dropdown over the same presets, writing the same path
+--- through NS.SetByPath so the slider and the dropdown share one stored value.
+local function maxDurationPresets(_, line)
+    local list, order = {}, {}
+    for i, seconds in ipairs(MAX_DURATION_PRESETS) do
+        list[seconds] = MAX_DURATION_LABELS[seconds]
+        order[i] = seconds
+    end
+    local cfg, id = NS.ActiveContainer()
+    local stored = cfg and cfg.filter and cfg.filter.maxDuration
+    local dd = NS.AceGUI:Create("Dropdown")
+    dd:SetLabel(L["Preset"])
+    dd:SetList(list, order)
+    -- A stored value with no matching preset stays unset (list[stored] == nil): the dropdown shows
+    -- blank rather than the library snapping it to the nearest entry.
+    dd:SetValue(list[stored] and stored or nil)
+    dd:SetRelativeWidth(0.5)
+    dd:SetCallback("OnValueChanged", function(_, _, v)
+        NS.SetByPath("container.filter.maxDuration", v, id)
+    end)
+    line:AddChild(dd)
+    return dd
+end
 
 -- ── Categories ────────────────────────────────────────────────────────────────────────────────
 
@@ -433,6 +467,9 @@ local CATS_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
 
 NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
+    pairWith = {
+        ["container.filter.maxDuration"] = maxDurationPresets,
+    },
     tabs = {
         -- Keyed by its group, so it takes the group's place and is handed the group's rows.
         { key = G_CATS, label = G_CATS, auraTypes = CATS_TYPES, render = renderCategories },
