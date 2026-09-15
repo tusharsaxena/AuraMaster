@@ -494,13 +494,29 @@ local KNOWN_AURA_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
 --- "hide" — a near-total blackout of a container the player never touched.
 --- Whether every FILTERABLE category of `def` already carries an explicit "show" or "hide" on `cats`
 --- — the fixed point this whole lift converges to, and the idempotency guard.
---- `def` minus any `kind == "enchant"` entry: the categories that actually filter auras. See
---- liftCategoryWhitelist's doc comment for why an enchant row must take no part in the whitelist
+--- `def` minus any `kind == "enchant"` or `kind == "uncategorized"` entry: the categories that
+--- actually filter auras AND existed under the old three-state whitelist model this lift converts.
+--- See liftCategoryWhitelist's doc comment for why an enchant row must take no part in the whitelist
 --- sweep, today (a no-op — the kind doesn't exist in `def` yet) or after B3 (excluded categorically).
+---
+--- `uncategorized` (batch 7, U-1..U-5) is excluded for a DIFFERENT reason, and it matters: unlike
+--- `enchant` it DOES match auras, but the old whitelist model it predates never had an opinion about
+--- it — no stored container has ever carried a `categories.uncategorized` key, "" or otherwise. If it
+--- were left in `filterableCategories`, a v2->v3 migration of an already-narrowed container (one with
+--- some category at "show") would hit `liftWhitelisted` and sweep the unset `uncategorized` key to
+--- "hide" right alongside the categories that really were excluded from the old whitelist — stamping
+--- the WRONG default (D3 says Show) onto a key MigrateV3 has no evidence about, permanently: once it
+--- is written "hide" here, `Database.Backfill`'s `== nil` guard (backfillContainers, run right after
+--- migrations) can no longer supply the correct "show" default, because the key is no longer nil.
+--- That reintroduces the exact defect this batch fixes — cancelable-but-unlisted buffs vanishing —
+--- for every profile that migrates through v3 from here on, which is the "migration bug this effort
+--- already fixed twice" the spec warns about. Leaving it out of this sweep keeps the key nil after
+--- MigrateV3 runs, so the ordinary backfill (defaults/Categories.lua's `DefaultStates`, via
+--- NS.CONTAINER_TEMPLATE) is what supplies "show" — the same path a brand-new key always takes.
 local function filterableCategories(def)
     local out = {}
     for _, cat in ipairs(def) do
-        if cat.kind ~= "enchant" then
+        if cat.kind ~= "enchant" and cat.kind ~= "uncategorized" then
             local n = #out
             out[n + 1] = cat
         end

@@ -705,10 +705,14 @@ test("v3: a container with no filter.categories table at all converges without a
     NS.Database.MigrateV3(p)
     local cats = p.containers[1].filter.categories
     for _, cat in ipairs(NS.Categories.HELPFUL) do
-        if cat.kind ~= "enchant" then
+        -- `uncategorized` is excluded from filterableCategories for its own reason (core/Database.lua's
+        -- comment above the function): MigrateV3 has no opinion about a key the old whitelist model
+        -- never had, so it is left nil here for the ordinary backfill to supply "show" afterward.
+        if cat.kind ~= "enchant" and cat.kind ~= "uncategorized" then
             assertEqual(cats[cat.key], "show", cat.key .. ": never swept to hide by an enchant row")
         end
     end
+    assertNil(cats.uncategorized, "left untouched by the migration, not stamped either way")
     local converged = NS.Database.DeepCopy(p)
     NS.Database.MigrateV3(p)
     local Sig = NS.FilterCompiler.Signature
@@ -730,6 +734,24 @@ test("v3: a narrowed container's filter.whitelist is left untouched — the comp
     local c = p.containers[1].filter.categories
     assertEqual(c.defensives, "show")
     assertEqual(c.raidCDs, "hide")
+end)
+
+test("v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself", function()
+    -- U-1..U-5/X-2: `Cat.DefaultStates()` stamps every category "show" by default, including
+    -- `uncategorized` (defaults/Categories.lua), and `NS.CONTAINER_TEMPLATE.filter.categories` is
+    -- built from that — so the ordinary per-container backfill (`Database.Backfill` against the
+    -- template, run by `backfillContainers`/`PrepareProfile` right after every migration) is what
+    -- actually stamps "show" onto an existing container's new key. `filterableCategories`'s comment
+    -- explains why MigrateV3 itself must NOT touch it: it predates the old whitelist model this lift
+    -- converts, so sweeping it here would risk stamping the wrong default on a narrowed container.
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "" } } } } }
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.categories.uncategorized, "MigrateV3 leaves it nil")
+    NS.Database.PrepareProfile(p)
+    assertEqual(p.containers[1].filter.categories.uncategorized, "show",
+        "the ordinary backfill supplies U-1's default")
 end)
 
 test("v3: MigrateV3 returns the number of containers it walked", function()
@@ -805,4 +827,11 @@ test("v3: RunMigrations migrates every stored profile, the inactive one included
         -- resurrects it on the active profile either: the v3 step's clear sticks for both.
         assertNil(c.filter.includeEnchants, name)
     end
+    -- X-2, end to end: the active profile (Default) runs the full pipeline through OnEnable's
+    -- PrepareProfile call (tests/fresh_env.lua), so its existing container gets `uncategorized`
+    -- stamped "show" by the ordinary backfill. Raid stays inactive here and is never backfilled
+    -- (only a profile switch would prepare it) — see the dedicated test above for that step in
+    -- isolation, direct on a plain profile table.
+    local active = NS.db.sv.profiles.Default.containers[1]
+    assertEqual(active.filter.categories.uncategorized, "show", "an existing container gets the new row at Show")
 end)

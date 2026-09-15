@@ -95,6 +95,9 @@ test("defaults: every category carries what its kind needs, and a label and desc
         -- The odd one out (defaults/Categories.lua's KINDS doc): it matches no aura, so it carries
         -- nothing beyond the label and description every kind needs.
         enchant = function() return true end,
+        -- U-1: the complement of every spells-kind category's union, not an id list of its own —
+        -- like enchant, nothing beyond the label and description.
+        uncategorized = function() return true end,
     }
     local bad = {}
     for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do

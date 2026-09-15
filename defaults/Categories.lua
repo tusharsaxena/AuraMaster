@@ -2,25 +2,34 @@ local _, NS = ...
 
 -- defaults/Categories.lua — the aura CATEGORIES a container's filter can show or hide.
 --
--- A category is one of four KINDS, and the kind decides how modules/FilterCompiler.lua turns it into
+-- A category is one of five KINDS, and the kind decides how modules/FilterCompiler.lua turns it into
 -- something Blizzard's aura container evaluates in its own secure code (we never see aura data in
 -- combat, so every filter has to be declared up front — see docs/data-flow.md):
 --
 -- Show is the absence of a decision (schema v3): it never adds anything to a group. Only Hide writes
 -- a constraint, an exclusion, on the container's one category group (modules/FilterCompiler.lua).
 --
---   token   an aura filter token (`BIG_DEFENSIVE`, `CROWD_CONTROL`, …). Hiding it adds the negation
---           `!TOKEN` to the group's filter string.
---   flag    a boolean candidate filter on the aura (`isBossAura`, `isRoleAura`, …). Hiding it asks
---           for `not value`.
---   dispel  a set of dispel types. Hiding it adds to `excludeDispelTypes`.
---   spells  a curated list of spell ids. Hiding it adds to `excludeSpellIDs`. Blizzard only honors
---           spell ids for BUFFS ON FRIENDLY UNITS and DEBUFFS ON HOSTILE ONES, so every spell
---           category here is a buff category; the Filters page says so where it matters
---           (docs/scope.md, "What the engine cannot do").
---   enchant the player's temporary weapon enchants. The odd one out: it matches no aura and joins no
---           aura group. Hide takes the container's enchant slots away, Show gives them back
---           (modules/FilterCompiler.lua's Compile, not its group builder).
+--   token          an aura filter token (`BIG_DEFENSIVE`, `CROWD_CONTROL`, …). Hiding it adds the
+--                  negation `!TOKEN` to the group's filter string.
+--   flag           a boolean candidate filter on the aura (`isBossAura`, `isRoleAura`, …). Hiding it
+--                  asks for `not value`.
+--   dispel         a set of dispel types. Hiding it adds to `excludeDispelTypes`.
+--   spells         a curated list of spell ids. Hiding it adds to `excludeSpellIDs`. Blizzard only
+--                  honors spell ids for BUFFS ON FRIENDLY UNITS and DEBUFFS ON HOSTILE ONES, so every
+--                  spell category here is a buff category; the Filters page says so where it matters
+--                  (docs/scope.md, "What the engine cannot do").
+--   enchant        the player's temporary weapon enchants. The odd one out: it matches no aura and
+--                  joins no aura group. Hide takes the container's enchant slots away, Show gives
+--                  them back (modules/FilterCompiler.lua's Compile, not its group builder).
+--   uncategorized  batch 7, `U-1`..`U-5` (docs/superpowers/specs/2026-09-15-feedback-batch7-design.md
+--                  section 4): "in none of the profile's SPELL-LIST (kind `spells`) categories" —
+--                  Blizzard token/flag/dispel categories do NOT count toward being categorized. It has
+--                  no id list of its own; it is the COMPLEMENT of every `spells`-kind category's
+--                  effective ids, so modules/FilterCompiler.lua handles it with dedicated logic rather
+--                  than the generic per-kind include/exclude every other kind shares. One entry per
+--                  aura type (buffs and debuffs each need their own key — every category key is
+--                  unique across both lists), drawn LAST in the grid, default Show. There is no
+--                  General -> Spell Categories entry for it: it has no list to edit.
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
@@ -202,6 +211,11 @@ Cat.HELPFUL = {
         key = "weaponEnchants", kind = "enchant", label = "Weapon enchants",
         desc = "Your temporary weapon enchants, drawn after the buffs. Only on a container showing your own buffs; which weapon slots count is set on General -> Spell Categories.",
     },
+    {
+        -- U-1: last in the grid, on purpose (renderCategories draws categoryRows() in Cat.For order).
+        key = "uncategorized", kind = "uncategorized", label = "Uncategorized",
+        desc = "Not in any of the Spell Categories lists above (Blizzard categories do not count). Show rescues an unlisted buff from a Hidden Blizzard category; Hide removes it along with everything else this container has no other reason to draw.",
+    },
 }
 
 -- ---------------------------------------------------------------------------
@@ -264,6 +278,16 @@ Cat.HARMFUL = {
     {
         key = "fromPlayers", kind = "flag", field = "isFromPlayerOrPlayerPet", value = true,
         label = "From any player", desc = "Debuffs applied by any player or their pet.",
+    },
+    {
+        -- U-1: buffs have no spell-list categories to speak of on the debuff side (comment above
+        -- Cat.HARMFUL), but "in no category's list" still means something for a container that
+        -- somehow narrows a debuff's spell ids some other way (Overrides), so debuffs get the row
+        -- too — a separate key from the buff one, since every category key is unique across both
+        -- lists. Its own key (not "uncategorized") because a container's `filter.categories` map has
+        -- no aura-type axis of its own.
+        key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized",
+        desc = "Not in any of this container's spell lists (Blizzard categories do not count). Show rescues an unlisted debuff from a Hidden Blizzard category; Hide removes it along with everything else this container has no other reason to draw.",
     },
 }
 

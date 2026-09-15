@@ -216,14 +216,18 @@ test("filters: a buff container's Categories tab is two grids, Blizzard Categori
     assertNil(gridLine(NS, ws, "crowdControl"), "no debuff category on a buff container")
 end)
 
-test("filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once", function()
+test("filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once", function()
     local NS, _, _, ws = categories(2)
     local L = NS.L
+    -- U-1: `uncategorizedDebuffs` (kind "uncategorized") is offered for debuffs too and shares the
+    -- Spell Categories grid, so it now draws for a debuff container as well — one row, the complement
+    -- of a union that happens to be empty (HARMFUL has no spells-kind category of its own).
     -- red under: a grid key mapping dispel or who-cast-it rows into the Blizzard grid
     assertEqual(table.concat(headings(ws), "|"),
-        L["Blizzard Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
+        L["Blizzard Categories"] .. "|" .. L["Spell Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
     assertTrue(gridLine(NS, ws, "magic") ~= nil)
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
+    assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: offered for debuffs too")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 
@@ -355,7 +359,7 @@ end)
 
 test("filters: every category row is skipRender and names its grid", function()
     local NS = filters()
-    local want = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom" }
+    local want = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom", uncategorized = "custom" }
     for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
         for _, def in ipairs(NS.Categories.For(auraType)) do
             local row = NS.FindSchemaRow("container.filter.categories." .. def.key)

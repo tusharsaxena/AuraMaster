@@ -103,8 +103,10 @@ local STATES = NS.Choices(C.CATEGORY_STATES, C.CATEGORY_STATE_LABELS)
 
 -- Which grid a category is drawn in, by its kind. Who cast it is a flag with a grid of its own.
 -- weaponEnchants (kind "enchant") shares "custom" with hidePermanentEnchants below, so B5's tab finds
--- both together.
-local GRID_BY_KIND = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom" }
+-- both together. `uncategorized` (U-1) shares it too and is drawn last (Cat.For's declaration order,
+-- which categoryRows preserves) — it is the Spell Categories grid's complement row, not a list of its
+-- own, but it belongs beside the lists it is defined against.
+local GRID_BY_KIND = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom", uncategorized = "custom" }
 
 local function gridOf(def)
     if def.field == "isFromPlayerOrPlayerPet" then return "who" end
@@ -237,6 +239,12 @@ local CUSTOM_EXTRA = {
 -- that rescues an aura from a Hide elsewhere).
 local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown, nothing removed it; UNLESS 'Only these categories' is on, in which case it is not drawn at all."]
 
+-- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
+-- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
+-- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell Categories grid, in
+-- the tab's own text rather than a tooltip only the row's own label would carry.
+local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
+
 -- R-10: while `onlyShown` is on, Hide no longer removes anything by itself — an aura is left out of
 -- rank 5 (there is no catch-all while this is on) simply by belonging to no category set to Show.
 -- The Hide column stays live and clickable regardless (it is still the only way to take a Show back
@@ -294,6 +302,7 @@ local function renderCategories(ctx, cfg, rows)
                 H.Section(ctx, g.heading)
                 H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
                 H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CUSTOM_EXTRA })
+                H.TextRow(ctx, UNCATEGORIZED_NOTE)
                 if hideRow then
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
                     hideDrawn = true
