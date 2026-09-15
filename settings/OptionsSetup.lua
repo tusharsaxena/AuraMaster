@@ -582,6 +582,9 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
         Helpers.__pageCtx[pageKey] = ctx
         -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
         -- whatever this builder returns (N-3) — no need to set it here too.
+        -- NS.SubPageLabel is applied unconditionally here, so EVERY container page nests under
+        -- Containers (true for all four callers today); a future container page that should NOT
+        -- nest would need its own registration path, not a call through this helper.
         return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
     end)
 end

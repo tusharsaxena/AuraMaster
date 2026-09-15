@@ -86,15 +86,18 @@ suite covers what only the client can show.
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
     show ][ Categories ][ Sorting ][ Overrides ]**, with no Spell lists tab on any aura type.
-    **Categories** opens with the five-rank priority sentence, then **Only these categories**, then
-    two grids, **Blizzard Categories** then **Spell Categories**, each headed once, with columns
-    **Show · Hide** and the category name (hover it for its description). Click **Hide** on a line →
-    that line's cell lights solid yellow and the other goes dark, and
-    `/am get container.filter.categories.<key>` prints `Hide`. On the **Spell Categories** grid,
-    click **See spells** on a row → the settings jump to General → Spell Categories with that
-    category already selected. Switch the container's aura type to Debuffs → **Blizzard
-    Categories**, **Dispel Types** and **Who Cast It** (no Spell Categories grid); switch to Weapon
-    enchants → the strip becomes **[ Categories ][ Sorting ]**, Categories holding only **Hide
+    **Categories** opens with the five-rank priority sentence, one rank per line, then two grids,
+    **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
+    once, with columns **Show · Hide** and the category name (hover it for its description). Click
+    **Hide** on a line → that line's cell shows a plain checkbox check and the other goes unlit, and
+    `/am get container.filter.categories.<key>` prints `Hide`. Right under the grid sits **Hide
+    enchants without a duration**, tied by name to the **Weapon enchants** row above it. On the
+    **Spell Categories** grid, click **See spells** on a row → the settings jump to General → Spell
+    Categories with that category already selected. Switch the container's aura type to Debuffs →
+    **Blizzard Categories**, **Dispel Types**, **Who Cast It** and a **Spell Categories** grid
+    holding only its own **Uncategorized** row (no starter list, no See spells link, no line above
+    it naming General → Spell Categories); switch to Weapon enchants → the strip becomes
+    **[ Categories ][ Sorting ]**, Categories holding only **Hide
     enchants without a duration** and Sorting only **Direction**.
 25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
     **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
@@ -140,13 +143,15 @@ suite covers what only the client can show.
 ## F. Filters
 
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category left at
-    Show → your flask disappears from it, nothing else changes. Now also set *Defensives* to
-    **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it still shows
-    (rank 3: a Show elsewhere rescues it). Turn on **Only these categories** with nothing set to
-    Show and the Overrides whitelist empty → the container goes empty and shows the "Only the
-    categories set to Show are drawn, and no category is set to Show." warning; set *Defensives*
-    back to Show → only defensive cooldowns appear, and only those.
+35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category (including
+    *Uncategorized*) left at Show → your flask disappears from it, nothing else changes. Now also set
+    *Defensives* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
+    still shows (rank 3: a Show elsewhere rescues it). Set every category to **Hide**, *Uncategorized*
+    included, with the Overrides whitelist empty → the container goes empty and shows "These filters
+    can never match anything."; set *Defensives* back to Show → only defensive cooldowns appear, and
+    only those. Now set every category back to Show except *Uncategorized*, which stays Hide → a
+    cancelable-but-unlisted buff (one in none of the profile's Spell Categories lists) disappears too,
+    even though nothing named it directly.
 36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensives*, cast it
     → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
     a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
@@ -168,11 +173,10 @@ suite covers what only the client can show.
     → they reappear until relearned out of combat.
 40. **Warnings.** Add a spell to the Overrides *Whitelist* on a *player debuffs* container → the Filters page
     shows the orange "ignored for debuffs on your own character or pet" line. On a *target buffs*
-    container → "only apply while the unit is friendly". Turn on **Only these categories**, leave
-    *Defensives* the only category set to Show, and on General → Spell Categories untick every
-    *Defensives* spell (Restore afterward) → "These filters can never match anything.", distinct from
-    check 35's "Only the categories set to Show are drawn, and no category is set to Show." (that one
-    fires when nothing at all is Shown; this one when what's Shown is an empty list).
+    container → "only apply while the unit is friendly". Set every category to **Hide**, *Defensives*
+    left at Show, and on General → Spell Categories untick every *Defensives* spell (Restore
+    afterward) → "These filters can never match anything." (the only group left, Defensives' Show
+    group, now matches no id at all).
 
 ## G. Attach
 
@@ -420,9 +424,9 @@ one. None of this is reproducible headlessly; these checks are.
     a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
     unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
     with a genuinely disabled row on Layout → Anchor (a mode's dimmed fields) to see the difference.
-    Turn **Only these categories** on → the Hide column still looks the same, still clickable, on
-    every row, including one already set to Show; click a lit Show cell's Hide → it moves there, live,
-    exactly as it did with the toggle off.
+    Set **Uncategorized** to **Hide** → every other row's Hide column still looks the same, still
+    clickable, on every row, including one already set to Show; click a lit Show cell's Hide → it
+    moves there, live, exactly as it did before Uncategorized was touched.
 79. **`See spells` lands on the row's own category, not the first one (`F-3`, `K-4`).** On Filters →
     Categories → Spell Categories, click **See spells** on a category that is NOT the first row
     (say *Support* or *Utility*) → General → Spell Categories opens with the tab selected AND that
@@ -431,18 +435,19 @@ one. None of this is reproducible headlessly; these checks are.
     container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
     row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
     slot toggles, not a spell list.
-80. **The priority blurb wraps readably (`F-4`, `P-1`).** At the top of both Filters → Categories and
-    Filters → Overrides, read the full five-clause priority sentence at the panel's normal width →
-    every clause is fully visible, wrapped onto as many lines as it needs with no word cut off
-    mid-character, no horizontal scrollbar appearing on the tab, and no overlap with the row or grid
-    drawn immediately below it. Resize the WoW window narrower (if your UI scale allows it) and
-    re-open the tab → it still wraps cleanly, just onto more lines.
-81. **The yellow fill matches its cell, on both columns (`K-1`).** On Filters → Categories, look
-    closely at a lit cell (Show or Hide) → the solid yellow fill sits inside the cell's own
-    checkbox-shaped border with no gap around its edges and no bleed into the neighboring column or
-    the category label. Click the other cell on the same row → the yellow fill moves there in full,
-    the previously-lit cell now shows its plain unlit checkbox shape, and at no point are both cells
-    lit or neither lit.
+80. **The priority blurb reads as one rank per line (`F-4`, `P-1`, `T-2`).** At the top of both
+    Filters → Categories and Filters → Overrides, read the lead-in line ("Highest priority first:")
+    then the five numbered rank lines below it → each rank is its own line, none sharing a line with
+    another, no word cut off mid-character on any of them, no horizontal scrollbar appearing on the
+    tab, and no overlap with the row or grid drawn immediately below — and on Categories, no leftover
+    gap where the retired **Only these categories** toggle used to sit; the last rank line runs
+    straight into the grid below it. Resize the WoW window narrower (if your UI scale allows it) and
+    re-open the tab → each line still wraps cleanly on its own, just onto more sub-lines.
+81. **The grid cell is a plain checkbox, on both columns (`G-1`, `G-2`).** On Filters → Categories,
+    look closely at a lit cell (Show or Hide) → it shows an ordinary checkbox check, the same shape
+    and color as every other checkbox in the panel, with no colored fill behind it. Click the other
+    cell on the same row → the check moves there in full, the previously-lit cell now shows its plain
+    unlit checkbox shape, and at no point are both cells lit or neither lit.
 82. **An Overrides entry's note wraps under it, not through it (`K-3`).** Add a spell to the
     Whitelist whose categories are ALL set to Hide, on a container with several categories so the
     note names more than one (a long note, e.g. "Shown here by the whitelist, overriding Defensives,
@@ -476,8 +481,16 @@ one. None of this is reproducible headlessly; these checks are.
     one bar's spark, then untick it and compare the same bar's spark again → the spark should look
     the same both times (same color, same brightness), not "a random yellow-golden spark" that
     only appears with the option off. This is the half of the check that FAILS if the fix regresses:
-    if the two sparks still visibly differ, report it and cite this check. Then, without changing
-    anything else, confirm the other half still holds — a permanent (no-duration) aura's bar still
+    if the two sparks still visibly differ, report it and cite this check. Repeat the on/off
+    comparison at a CUSTOM spark color, not the default gold: on Bars → General set **Spark color**
+    to something saturated (pure red or pure green) and, separately, something low-alpha (drop the
+    color's own alpha to roughly 25%) → the spark must still read the same with the option on and
+    off at BOTH custom colors. ADD and normal blending are genuinely different operations (ADD sums
+    channel values onto the backdrop, normal blending replaces them), so a saturated or low-alpha
+    custom color is the case most likely to still expose a leftover difference between the two modes
+    even if the default gold looks fixed; report it and cite this check if either custom color still
+    visibly differs between on and off. Then, without changing anything else, confirm the other half
+    still holds — a permanent (no-duration) aura's bar still
     shows NO spark with the option off (check 26/63): if unticking the option makes every spark
     uniform by also restoring the permanent aura's spark, that is a regression of B-3, not a fix of
     this defect, and must also be reported.

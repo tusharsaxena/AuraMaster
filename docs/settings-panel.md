@@ -208,8 +208,9 @@ Blizzard category alone does little while it stays Show, since it keeps rescuing
 rows need Hide to actually remove one. The rows carry `skipRender`, so the flow engine draws nothing
 for them; the tab is bespoke
 (keyed by the group's name) and draws one `ChoiceGrid` per row `grid`, each a header line
-`Show · Hide · Category` and then a line of two cells (a solid yellow fill for the lit one,
-LibKa0s v1.36.0's `O.ChoiceGrid`) and the category's label (hover it for its description). A grid
+`Show · Hide · Category` and then a line of two cells (an ordinary checkbox check on the lit one,
+LibKa0s v1.36.0's `O.ChoiceGrid`, the yellow fill withdrawn in v1.36.2) and the category's label
+(hover it for its description). A grid
 with no row for the aura type is not drawn.
 
 | Grid (`grid`) | Buff categories | Debuff categories |
@@ -356,6 +357,12 @@ texture, so it takes the whole bar block with its own tooltips. `bgAlpha` multip
 background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged.
 
 ### Icons (42 rows, `settings/Icons.lua`) — sub-page of Containers (`N-2`, `D6`)
+
+Bars folded its two-slider `Size` tab into a renamed `General` tab (`S-1`) because a whole tab for
+two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this page has no
+`Bar`-shaped tab to rename it into, and `Size` (width, height, zoom) is a coherent "the icon's box"
+group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
+deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
 When the selected container is drawn as bars, a large orange notice heads every tab and every
 control is drawn disabled, as on the Bars page.

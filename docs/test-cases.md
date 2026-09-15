@@ -531,7 +531,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (46)
+### test_style_bars.lua (50)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -544,6 +544,10 @@ badge and any count quoted in the docs must agree with it.
 - bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region
 - bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge
 - bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered
+- bars: with the timeless spark off, the live clipped spark blends normally, not additively
+- bars: with the timeless spark on, the live spark stays additive over the opaque fill
+- bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says
+- bars: the clip-mode blend switch leaves the player's own spark color alone
 - bars: a missing timeless-spark setting reads the template's
 - bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it
 - bars: the texts sit above the spark's clip frame, which sits above the bar
@@ -803,7 +807,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
 - general: Reset all settings asks first and resets nothing until the answer
-- general: the Reset-all tooltip names the equivalence with Profiles → Reset Profile
+- general: the Reset-all tooltip names the equivalence with Profiles -> Reset Profile
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
@@ -1071,7 +1075,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 63 |
 | test_style.lua | 43 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 46 |
+| test_style_bars.lua | 50 |
 | test_style_icons.lua | 25 |
 | test_preview.lua | 19 |
 | test_render_coverage.lua | 2 |
@@ -1101,4 +1105,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **907** |
+| **Total** | **911** |
