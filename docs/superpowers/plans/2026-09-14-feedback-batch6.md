@@ -92,9 +92,9 @@ in the task's own commit or the one immediately after.
 | B2 schema v3 migration | E-8 E-5 | AM | done | c4e3b6e 47e406a 180327a | 2 fix rounds: 3 idempotency bugs; narrowed containers also gain the whitelisted ids on filter.whitelist; kind=='enchant' excluded from the sweep |
 | B3 enchant category kind | E-1…E-4 E-7 | AM | done | d5af512 1606f7e | fix round 1: a bool row must not sit in the ChoiceGrid; Categories tab widened to ENCHANT |
 | B11 priority order + only-these toggle | R-1…R-11 | AM | done | d0669f8 3d90769 7673cf3 | supersedes part of C-2; reverts E-8's id copy; `only(auraType, keys)` test fixture added (a real category list defaults every row to Show, so R-4 explodes any un-narrowed Hide test) |
-| B4 re-vendor v1.36.0 | K-* | AM | todo | | needs A5 |
-| B5 Filters → Categories tab | F-1…F-7 | AM | todo | | needs B4 |
-| B6 ExplainSpell + Overrides notes | P-1 P-3 P-4 | AM | todo | | needs B4 |
+| B4 re-vendor v1.36.0 | K-* | AM | done | f4e09a4 | payload byte-identical to the tag, verified independently; vendor-sync ran for real |
+| B5 Filters → Categories tab | F-1…F-7 R-10 P-1 | AM | done | c7862c3 | blurb verified rank-by-rank against the compiler; F-7's original wording was false under rank 3 and the spec was corrected |
+| B6 ExplainSpell + Overrides notes | P-3 P-4 | AM | done | f4b408e 91dafb9 bbe87e4 f45fe89 | 3 fix rounds. Notes are COUNTERFACTUALS (an entry's own rank is uninformative) and describe only what the lists and categories decide |
 | B7 General → Spell Categories | E-6 F-3 | AM | todo | | needs B4 |
 | B8 max duration | D-1…D-4 | AM | todo | | |
 | B9 container mouse blocker | T-1…T-5 | AM | todo | | |
@@ -1118,151 +1118,29 @@ git commit -m "Re-vendor LibKa0s v1.36.0 (ChoiceGrid checkbox cells + extra colu
 - Test: `tests/test_pages_filters.lua`
 
 **Interfaces:**
-- Consumes: B3's category, B4's `extraColumn`, B7's `NS.GeneralSpells.Select` (write the call now;
-  B7 supplies the function — until then the link is a no-op, which the test asserts against a stub).
-- Produces: nothing other tasks read.
+- Consumes: `NS.GeneralSpells.Select(key)` (B7, exists); `H.ChoiceGrid`'s `extraColumn` and
+  `H.SelectTab` (B4's re-vendor); the `container.filter.onlyShown` schema row (B11, exists).
+- Produces: nothing a later task reads.
 
-- [ ] **Step 1: Write the failing tests**
+**This task's requirements were revised on 2026-09-15.** Spec sections 4, 6 and 6c are binding;
+where this plan's earlier wording disagrees, the spec wins. In particular the priority blurb is NOT
+"blacklist wins" any more.
 
-```lua
--- red under: the heading reverting to "Custom Categories", which names nothing the player can find.
-test("filters: the second grid is headed Spell Categories and says where the lists live", function()
-    local ctx = T.RenderTab("filters", "Categories")
-    assertTrue(T.AllText(ctx):find("Spell Categories", 1, true) ~= nil)
-    assertNil(T.AllText(ctx):find("Custom Categories", 1, true))
-end)
-
--- red under: the grid drawing three columns again, or a Default label coming back.
-test("filters: the category grid has two columns, Show and Hide", function()
-    local ctx = T.RenderTab("filters", "Categories")
-    local text = T.AllText(ctx)
-    assertTrue(text:find("Show", 1, true) ~= nil)
-    assertTrue(text:find("Hide", 1, true) ~= nil)
-    assertNil(text:find("Whitelist", 1, true))   -- that word belongs to Overrides only
-end)
-
--- red under: the link column absent, or offered on a category with no spell list to show.
-test("filters: a spell category links to its list; a token category does not", function()
-    local ctx = T.RenderTab("filters", "Categories")
-    local rows = T.ChoiceGridRows(ctx)
-    assertEqual(rows.defensives.extra, "See spells")
-    assertEqual(rows.cancelable.extra, "")
-end)
-
--- red under: the link not selecting the category, so the General tab opens on the wrong list.
-test("filters: the link selects the category and opens General -> Spell Categories", function()
-    local selected, opened, tab
-    NS.GeneralSpells.Select = function(k) selected = k end
-    NS.OpenOptionsPage = function(p) opened = p end
-    NS.Helpers.SelectTab = function(_, t) tab = t end
-    T.ClickChoiceGridExtra(T.RenderTab("filters", "Categories"), "defensives")
-    assertEqual(selected, "defensives")
-    assertEqual(opened, "general")
-    assertEqual(tab, "Spell Categories")
-end)
-
--- red under: the priority blurb missing from either tab.
-test("filters: both Categories and Overrides state the priority order", function()
-    for _, tabKey in ipairs({ "Categories", "overrides" }) do
-        assertTrue(T.AllText(T.RenderTab("filters", tabKey)):find("Blacklist wins", 1, true) ~= nil)
-    end
-end)
-```
-
-- [ ] **Step 2: Run them and confirm they fail**
-
-Run: `lua tests/run.lua 2>&1 | grep -E "^filters:"`
-Expected: FAIL on each of the five.
-
-- [ ] **Step 3: Implement**
-
-`GRIDS` renames the second grid and gains the enchant kind:
-
-```lua
-local GRIDS = {
-    { key = "blizzard", heading = L["Blizzard Categories"] },
-    { key = "custom",   heading = L["Spell Categories"],
-      blurb = L["These are the lists on General -> Spell Categories, shared by every container."] },
-    { key = "dispel",   heading = L["Dispel Types"] },
-    { key = "who",      heading = L["Who Cast It"] },
-}
-
-local GRID_BY_KIND = { spells = "custom", enchant = "custom", token = "blizzard",
-    flag = "blizzard", dispel = "dispel" }
-```
-
-The priority blurb, drawn at the top of both tabs:
-
-```lua
--- One sentence per rank, in rank order. The same text on both tabs, because the two tabs are the
--- two halves of the same decision and a player reading either needs the whole order.
-local PRIORITY_BLURB = L["Blacklist wins: a spell on the Overrides blacklist is never drawn. Then the Overrides whitelist, which is always drawn. Then a category set to Hide, which removes what it matches. A category set to Show adds nothing — it is simply not hidden."]
-```
-
-The extra column, offered only where there is a list to see:
-
-```lua
---- The "see spells" cell for a row, or nil. Offered for a category the General page can actually
---- open: the spell lists, and the weapon-enchant row, which has its own entry there.
-local function seeSpellsCell(row)
-    local key = row.path:match("([^.]+)$")
-    local def = Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key)
-    if not (def and (def.kind == "spells" or def.kind == "enchant")) then return nil end
-    return {
-        text    = L["See spells"],
-        tooltip = L["Open General -> Spell Categories on this category's list."],
-        onClick = function()
-            NS.GeneralSpells.Select(key)
-            NS.OpenOptionsPage("general")
-            if H.SelectTab then H.SelectTab("general", L["Spell Categories"]) end
-        end,
-    }
-end
-```
-
-`renderCategories` draws the blurb, then each grid with the extra column, then the enchant sub-row:
-
-```lua
-local function renderCategories(ctx, cfg, rows)
-    H.TextRow(ctx, PRIORITY_BLURB)
-    for _, g in ipairs(GRIDS) do
-        local mine = {}
-        for _, row in ipairs(rows or {}) do
-            if row.grid == g.key and row.path ~= ENCHANT_SUB then mine[#mine + 1] = row end
-        end
-        if mine[1] then
-            if g.blurb then H.TextRow(ctx, g.blurb) end
-            H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS,
-                labelHeader = L["Category"],
-                extraColumn = { header = L["Spell list"], cell = seeSpellsCell } })
-            if g.key == "custom" then renderEnchantSub(ctx, cfg, rows) end
-        end
-    end
-end
-```
-
-where `ENCHANT_SUB = "container.filter.hidePermanentEnchants"` and `renderEnchantSub` draws that one
-row through `H.RenderRows` with `noHeadings`, only when the container's `weaponEnchants` state is not
-`"hide"` — a sub-option of a category that is off has nothing to say.
-
-`renderOverrides` gains `H.TextRow(ctx, PRIORITY_BLURB)` as its first line, and its two list blurbs
-are reworded to point at the ranks rather than restating them.
-
-- [ ] **Step 4: Add every new key to `locales/enUS.lua`**
-
-Run `lua tests/run.lua` and let `tests/test_locale.lua` name any key that is missing.
-
-- [ ] **Step 5: Run the gate**
-
-Run: `lua tests/run.lua && luacheck .`
-Expected: all green.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add settings/Filters.lua locales/enUS.lua tests/test_pages_filters.lua
-git commit -m "Filters: Spell Categories heading, Show/Hide grid, per-row spell-list link, priority blurb (F-1..F-7)"
-```
+- [ ] **Step 1: Write the failing tests** — the heading reads `Spell Categories`, not
+      `Custom Categories`; the grid has exactly two columns labelled Show and Hide with no third
+      state reachable; a `spells`-kind row offers a `See spells` link and a token row does not;
+      clicking that link calls `NS.GeneralSpells.Select` with the row's key and lands the player on
+      General → Spell Categories; both the Categories and Overrides tabs state the priority order;
+      the `onlyShown` toggle is drawn at the top of the tab; `hidePermanentEnchants` renders as a
+      CheckBox under the enchant row and still writes a boolean.
+- [ ] **Step 2: Run them and confirm they fail.**
+- [ ] **Step 3: Implement** `F-1`, `F-2`, `F-3`, `F-5`, `F-6`, `F-7` and `R-10`.
+- [ ] **Step 4: The priority blurb** — the five ranks of spec section 6, in order, on both tabs.
+      Rank 1 is the Overrides whitelist, rank 2 the blacklist. Do not restate the superseded order.
+- [ ] **Step 5: `R-10`** — while `onlyShown` is on, the tab's text must explain that Hide means
+      "not shown" rather than "removed". Do NOT dim the Hide column: Hide is the only way to
+      un-Show a row.
+- [ ] **Step 6: Gate, commit, push, ledger.**
 
 ---
 
@@ -1273,249 +1151,28 @@ git commit -m "Filters: Spell Categories heading, Show/Hide grid, per-row spell-
 - Test: `tests/test_filtercompiler.lua`, `tests/test_pages_filters.lua`
 
 **Interfaces:**
-- Consumes: B1's model, B4's `IdList` `note`.
-- Produces:
-  `FC.ExplainSpell(cfg, id, ctx) -> { verdict = "shown"|"hidden", rank = 1|2|3|4, categories = { { key, label, state } } }`.
+- Consumes: the compiled priority (B11) and the `note` field on an `H.IdList` entry (B4's re-vendor).
+- Produces: `FC.ExplainSpell(cfg, id, ctx)`.
 
-- [ ] **Step 1: Write the failing tests**
+**Requirements revised 2026-09-15.** Spec sections 6 and 6c are binding — five ranks, not four, and
+the whitelist outranks the blacklist. Anything describing a different order is stale.
 
-```lua
--- red under: the ranks being reordered, which is the whole point of the function.
-test("explain: the blacklist beats the whitelist, and the whitelist beats a hidden category", function()
-    local both = FC.ExplainSpell(cfg({ filter = { whitelist = { [642] = true },
-        blacklist = { [642] = true } } }), 642)
-    assertEqual(both.verdict, "hidden")
-    assertEqual(both.rank, 1)
-
-    local wl = FC.ExplainSpell(cfg({ filter = { whitelist = { [642] = true },
-        categories = { defensives = "hide" } } }), 642)
-    assertEqual(wl.verdict, "shown")
-    assertEqual(wl.rank, 2)
-end)
-
--- red under: a hidden category not being reported, so the note never appears where it matters.
-test("explain: a spell in a hidden category is hidden at rank 3 and names the category", function()
-    local e = FC.ExplainSpell(cfg({ filter = { categories = { defensives = "hide" } } }), 642)
-    assertEqual(e.verdict, "hidden")
-    assertEqual(e.rank, 3)
-    assertEqual(e.categories[1].key, "defensives")
-    assertEqual(e.categories[1].state, "hide")
-end)
-
--- red under: a note appearing on an ordinary entry, which would make every list noisy.
-test("explain: a spell nothing claims is shown at rank 4 with no categories", function()
-    local e = FC.ExplainSpell(cfg({}), 999999)
-    assertEqual(e.verdict, "shown")
-    assertEqual(e.rank, 4)
-    assertEqual(#e.categories, 0)
-end)
-```
-
-- [ ] **Step 2: Run them and confirm they fail**
-
-Run: `lua tests/run.lua 2>&1 | grep -E "^explain:"`
-Expected: FAIL — `FC.ExplainSpell` is nil.
-
-- [ ] **Step 3: Implement**
-
-```lua
---- Why one spell id is or is not drawn in one container, by the priority in this file's header.
----
---- For the settings panel's Overrides lists, so a player who put a spell on a list can see what
---- actually decides it. Pure, like Compile: `cfg` and `ctx` in, a table out.
----
---- It reasons about `spells`-kind categories ONLY. A token, flag or dispel category matches auras
---- the addon cannot enumerate by id — that is the engine's job, in its own code — so naming one
---- here would be a guess, and a confident guess is worse than silence.
----
---- @param cfg table  the container's stored table
---- @param id number  a spell id
---- @param ctx table|nil  { categories = NS.Categories, categorySpells = the profile's edits }
---- @return table  { verdict = "shown" | "hidden", rank = 1..4, categories = { {key,label,state} } }
-function FC.ExplainSpell(cfg, id, ctx)
-    ctx = ctx or {}
-    local Categories = ctx.categories or NS.Categories
-    local filter = cfg.filter or {}
-    local auraType = (cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
-
-    local claims = {}
-    for _, def in ipairs(Categories.For(auraType)) do
-        if def.kind == "spells" and FC.CategorySpells(def, ctx.categorySpells)[id] then
-            claims[#claims + 1] = { key = def.key, label = def.label,
-                state = (filter.categories or {})[def.key] or "show" }
-        end
-    end
-
-    local function out(verdict, rank) return { verdict = verdict, rank = rank, categories = claims } end
-    if (filter.blacklist or {})[id] then return out("hidden", 1) end
-    if (filter.whitelist or {})[id] then return out("shown", 2) end
-    for _, c in ipairs(claims) do
-        if c.state == "hide" then return out("hidden", 3) end
-    end
-    return out("shown", 4)
-end
-```
-
-- [ ] **Step 4: Wire the note into the Overrides lists**
-
-In `settings/Filters.lua`'s `overrideList`, each entry gains its note:
-
-```lua
--- What the priority actually decides for this id, said where the player put it. Nothing is said
--- when no category claims the spell and nothing contradicts the list it is on: a note on every
--- line would be noise, and the lists are long.
-local function entryNote(cfg, id)
-    local e = NS.FilterCompiler.ExplainSpell(cfg, id, NS.FilterCompiler.ProfileContext())
-    if #e.categories == 0 and e.rank >= 2 then return nil end
-    local names = {}
-    for i, c in ipairs(e.categories) do
-        names[i] = ("%s (%s)"):format(L[c.label], L[C.CATEGORY_STATE_LABELS[c.state]])
-    end
-    local where = (#names > 0) and (L["also in "] .. table.concat(names, ", ")) or ""
-    return ("%s%s%s"):format(where, (#names > 0) and " — " or "",
-        (e.verdict == "hidden") and L["hidden"] or L["shown"]) .. (" (rule %d)"):format(e.rank)
-end
-```
-
-and `entries` returns `{ id = id, note = entryNote(cfg, id) }`.
-
-- [ ] **Step 5: Run the gate**
-
-Run: `lua tests/run.lua && luacheck .`
-Expected: all green.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add modules/FilterCompiler.lua settings/Filters.lua locales/enUS.lua tests/
-git commit -m "Filters: ExplainSpell, and the Overrides lists say what decides each spell (P-1, P-3, P-4)"
-```
-
----
-
-### Task B7: General → Spell Categories takes the enchant entry and a selector
-
-**Files:**
-- Modify: `settings/GeneralSpells.lua`, `locales/enUS.lua`
-- Test: `tests/test_pages_general.lua`
-
-**Interfaces:**
-- Consumes: B3's category, B4's library.
-- Produces: `NS.GeneralSpells.Select(key)`.
-
-- [ ] **Step 1: Write the failing tests**
-
-```lua
--- red under: Select accepting a key the tab cannot draw, which would render an empty list.
-test("general: Select moves the Spell Categories tab, and ignores a key it cannot draw", function()
-    NS.GeneralSpells.Select("raidCDs")
-    assertEqual(T.SelectedCategory(T.RenderTab("general", "Spell Categories")), "raidCDs")
-    NS.GeneralSpells.Select("cancelable")   -- a token category: no list to edit
-    assertEqual(T.SelectedCategory(T.RenderTab("general", "Spell Categories")), "raidCDs")
-end)
-
--- red under: the enchant entry drawing an (empty) spell list instead of its own controls.
-test("general: the Weapon enchants entry draws slot toggles, not a spell list", function()
-    NS.GeneralSpells.Select("weaponEnchants")
-    local ctx = T.RenderTab("general", "Spell Categories")
-    local text = T.AllText(ctx)
-    assertTrue(text:find("Main hand", 1, true) ~= nil)
-    assertNil(text:find("Add a spell", 1, true))
-end)
-
--- red under: a slot toggle not reaching the profile, so unticking one changes nothing.
-test("general: unticking a weapon slot writes the profile", function()
-    NS.GeneralSpells.Select("weaponEnchants")
-    T.ClickToggle(T.RenderTab("general", "Spell Categories"), "Off hand")
-    assertEqual(NS.db.profile.enchantSlots.offHand, false)
-end)
-```
-
-- [ ] **Step 2: Run them and confirm they fail**
-
-Run: `lua tests/run.lua 2>&1 | grep -E "^general: (Select|the Weapon|unticking)"`
-Expected: FAIL — `Select` is nil.
-
-- [ ] **Step 3: Implement**
-
-`spellCategories()` includes the enchant row so the dropdown offers it:
-
-```lua
---- The categories this tab can edit: every spell list, plus the weapon-enchant row, whose entry
---- shows its slots rather than a list. Both are buff categories — the engine honors spell lists for
---- buffs only, and enchants are the player's own.
-local function spellCategories()
-    local out = {}
-    for _, def in ipairs(Cat.For("HELPFUL")) do
-        if def.kind == "spells" or def.kind == "enchant" then out[#out + 1] = def end
-    end
-    return out
-end
-```
-
-`currentCategory` accepts either kind. `renderSpells` branches once:
-
-```lua
-    if def.kind == "enchant" then return renderEnchant(ctx) end
-```
-
-with:
-
-```lua
--- The slots, in the order a player reads them off their character. Profile-wide, like the spell
--- lists on this tab: one answer for every container that shows enchants.
-local ENCHANT_SLOTS = {
-    { key = "mainHand", label = "Main hand" },
-    { key = "offHand",  label = "Off hand" },
-    { key = "ranged",   label = "Ranged" },
-}
-
---- The Weapon enchants entry: which slots count, and where the per-container switch lives.
-local function renderEnchant(ctx)
-    H.TextRow(ctx, L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."])
-    local rows = {}
-    for i, slot in ipairs(ENCHANT_SLOTS) do
-        rows[i] = {
-            path = "enchantSlots." .. slot.key, page = PAGE, group = SPELLS, type = "bool",
-            label = L[slot.label], desc = L["Read temporary enchants from this weapon slot."],
-        }
-    end
-    H.RenderRows(ctx, rows, nil, nil, { noHeadings = true })
-end
-```
-
-The slot rows are registered as real schema rows (so `/am get|set|list`, Defaults and the resets see
-them) carrying `skipRender = true`, exactly as the category rows do; `renderEnchant` is handed them
-by the tab rather than building them inline. Register them next to `DISPEL_ROWS`.
-
-The selector:
-
-```lua
---- Point this tab at one category. For the Filters page's per-row link (settings/Filters.lua). A
---- key this tab cannot draw is ignored rather than stored: a stale link must never leave the tab on
---- a category with no editor.
-function NS.GeneralSpells.Select(key)
-    local def = Cat.Find("HELPFUL", key)
-    if not (def and (def.kind == "spells" or def.kind == "enchant")) then return end
-    spellCategory = key
-    rerender()
-end
-```
-
-Declared after the `NS.GeneralSpells = { ... }` table, or added to it — follow the file's existing
-export shape.
-
-- [ ] **Step 4: Run the gate**
-
-Run: `lua tests/run.lua && luacheck .`
-Expected: all green.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add settings/GeneralSpells.lua locales/enUS.lua tests/test_pages_general.lua
-git commit -m "General: Spell Categories takes the Weapon enchants entry and a Select seam (E-6, F-3)"
-```
+- [ ] **Step 1: Write the failing tests** — every rank is reachable and reported: whitelist (1,
+      shown) beats blacklist (2, hidden); a spell in one Show and one Hide category is shown at 3;
+      a spell whose categories all say Hide is hidden at 4; a spell nothing claims is shown at 5
+      with no categories listed. Plus: with `onlyShown` on, a spell that would be rank 5 is reported
+      HIDDEN, because the catch-all group is gone.
+- [ ] **Step 2: Run them and confirm they fail.**
+- [ ] **Step 3: Implement `FC.ExplainSpell(cfg, id, ctx)`** returning
+      `{ verdict = "shown" | "hidden", rank = 1..5, categories = { { key, label, state } } }`.
+      Pure, in the file's existing sense: no frames, no database, `cfg` and `ctx` in, a table out.
+      It reasons about `spells`-kind categories ONLY — a token, flag or dispel category matches
+      auras the addon cannot enumerate by id, and a confident guess there is worse than silence.
+      Say that in the doc comment.
+- [ ] **Step 4: The Overrides entry notes** — each entry carries its verdict as the `note` the
+      library draws under the name. A spell nothing claims and nothing contradicts gets NO note;
+      the lists are long and a note on every line is noise.
+- [ ] **Step 5: Gate, commit, push, ledger.**
 
 ---
 
