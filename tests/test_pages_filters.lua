@@ -118,6 +118,26 @@ test("filters: a weapon-enchant container's hide-permanent row is a checkbox too
     assertEqual(type(stored), "boolean")
 end)
 
+-- T-3 (batch 7): hidePermanentEnchants used to sit alone below the grid, below the Uncategorized
+-- note too. It now draws directly under the Spell Categories grid, ahead of that note, behind a
+-- line naming the row it is a sub-option of — so it reads as tied to Weapon enchants, not floating.
+test("filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)", function()
+    local _, _, P, ws = categories()
+    local texts = P.texts(ws)
+    local tieIndex, noteIndex
+    for i, t in ipairs(texts) do
+        if t:find("Weapon enchants", 1, true) then tieIndex = i end
+        if t:find("Uncategorized defaults to Show", 1, true) then noteIndex = i end
+    end
+    -- red under: the tie text missing (the row floating with nothing naming what it belongs to), or
+    -- the checkbox/tie landing after the Uncategorized note again (T-3's actual complaint)
+    assertTrue(tieIndex ~= nil, "the tie line names Weapon enchants")
+    assertTrue(noteIndex ~= nil, "the Uncategorized note still draws")
+    assertTrue(tieIndex < noteIndex, "the tie (and the checkbox right after it) comes before the note, directly under the grid")
+    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
+    assertEqual(cb.type, "CheckBox", "still a plain checkbox, not a grid cell (regression guard)")
+end)
+
 test("filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs", function()
     local NS, _, P = filters()
     NS.SetByPath("container.auraType", "ENCHANT", 1)
@@ -261,6 +281,21 @@ test("filters: the Spell Categories grid opens with a line naming where its list
     assertTrue(P.hasText(ws, "General -> Spell Categories"), "names where the lists live")
 end)
 
+-- T-2 fix round 4 (batch 7): the F-2 line claims the grid holds EDITABLE lists — true on a buff
+-- container, false on a debuff container, whose Spell Categories grid carries exactly one row
+-- (Uncategorized, a Show/Hide flag, not a spell list). The row stays (D6/U-1); only the claim about
+-- it is conditional now.
+test("filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)", function()
+    local NS, _, P, buffWs = categories(1)
+    assertTrue(P.hasText(buffWs, "General -> Spell Categories"), "a buff container has editable lists")
+    local _, _, P2, debuffWs = categories(2)
+    assertFalse(P2.hasText(debuffWs, "General -> Spell Categories"), "a debuff container's grid is Uncategorized-only, not an editable list")
+    -- and the grid itself is still drawn, with its one row, so the fix is conditional wording, not
+    -- a removed grid or a removed row
+    assertTrue(P2.find(debuffWs, "Heading", NS.L["Spell Categories"]) ~= nil, "the Spell Categories grid still draws")
+    assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its one Uncategorized row")
+end)
+
 --- The lines a widget's tooltip draws when hovered, via the mocked GameTooltip's :AddLine (the
 --- idiom this suite already uses below for the Overrides tooltip).
 local function tooltipLines(m, widget)
@@ -328,6 +363,33 @@ test("filters: the priority order (spec §6) appears on both the Categories and 
         assertTrue(P.hasText(ws, "blacklist"), "names the blacklist")
         assertTrue(P.hasText(ws, "set to Show"), "Show is its own rank, not the absence of Hide")
         assertTrue(P.hasText(ws, "all say Hide"), "only an aura hidden by every one of its categories is removed")
+    end
+end)
+
+-- T-2 (batch 7): the blurb used to be one dense paragraph carrying all five ranks. It now draws one
+-- line per rank (plus a lead-in), consistent on both tabs — two halves of one decision.
+test("filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)", function()
+    local NS, _, P = filters()
+    local cats = P.tab("filters", NS.L["Categories"])
+    local overrides = P.tab("filters", "overrides")
+    for _, ws in ipairs({ cats, overrides }) do
+        local texts = P.texts(ws)
+        local found = {}
+        for _, t in ipairs(texts) do
+            for rank = 1, 5 do
+                if t:find("^" .. rank .. "%.") then found[rank] = t end
+            end
+        end
+        for rank = 1, 5 do
+            -- red under: a rank folded back into a shared paragraph rather than its own Label line
+            assertTrue(found[rank] ~= nil, "rank " .. rank .. " is its own line")
+        end
+        assertTrue(found[1]:find("whitelist", 1, true) ~= nil, "rank 1 is the whitelist")
+        assertTrue(found[2]:find("blacklist", 1, true) ~= nil, "rank 2 is the blacklist")
+        assertTrue(found[3]:find("set to Show", 1, true) ~= nil, "rank 3 is the positive Show claim")
+        assertTrue(found[4]:find("all say Hide", 1, true) ~= nil, "rank 4 is the all-Hide case")
+        assertTrue(found[5]:find("no category at all", 1, true) ~= nil, "rank 5 is the uncategorized case")
+        assertTrue(P.hasText(ws, "Highest priority first"), "the lead-in line still introduces the order")
     end
 end)
 

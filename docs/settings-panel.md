@@ -183,8 +183,9 @@ come from the profile-wide `enchantSlots`. `Hide enchants without a duration` ke
 (`container.filter.hidePermanentEnchants`, bool, buffs and enchants) but moves in with the category
 group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` row.
 
-**Categories** (`F-1`…`F-7`) — every tab opens with the five-rank priority blurb (mirrored on
-Overrides too — see *Filter priority* below). The per-container **Only these categories** toggle
+**Categories** (`F-1`…`F-7`) — every tab opens with the five-rank priority blurb, one rank per line
+(batch 7, `T-2`: readability — it used to be one dense paragraph) and mirrored on Overrides too — see
+*Filter priority* below. The per-container **Only these categories** toggle
 (`container.filter.onlyShown`) that used to sit here is RETIRED (batch 7 fix round 2): once
 `Uncategorized = Hide` correctly suppresses the catch-all on its own, on EITHER aura type (fix round
 3 restored the debuff row fix round 1 had dropped), the toggle had nothing left to do, so the owner
@@ -219,14 +220,19 @@ with no row for the aura type is not drawn.
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 
 The **Spell Categories** grid (renamed from Custom Categories, `F-1`) carries one extra line above
-it, saying these are the lists on General → Spell Categories, shared by every container, and one
-extra column: a **See spells** link (`K-2`) on every `spells`- or `enchant`-kind row, which selects
-that category on General → Spell Categories, opens the General page and switches to its Spell
-Categories tab (`NS.GeneralSpells.Select`, `NS.OpenOptionsPage`, `H.SelectTab`). Right under that
-grid sits **Hide enchants without a duration** (`container.filter.hidePermanentEnchants`, bool,
-buffs and enchants) — a plain checkbox, not a Show/Hide category — under the `weaponEnchants` row it
-governs; an `ENCHANT`-type container, which draws no Spell Categories grid at all, still sees this
-one row on its own.
+it — saying these are the lists on General → Spell Categories, shared by every container — but only
+when the grid this container drew actually holds a `spells`- or `enchant`-kind row (batch 7, `T-2`
+fix round 4): true on a buff container, false on a debuff one, whose grid is `uncategorizedDebuffs`
+alone, a Show/Hide flag over the catch-all rather than a list of anything. It also carries one extra
+column: a **See spells** link (`K-2`) on every `spells`- or `enchant`-kind row, which selects that
+category on General → Spell Categories, opens the General page and switches to its Spell Categories
+tab (`NS.GeneralSpells.Select`, `NS.OpenOptionsPage`, `H.SelectTab`). Right under that grid — ahead
+of the Uncategorized cost note below — sits **Hide enchants without a duration**
+(`container.filter.hidePermanentEnchants`, bool, buffs and enchants), behind a one-line tie naming
+the `weaponEnchants` row it governs by name (batch 7, `T-3`: the grid draws its rows atomically and
+cannot host a plain bool inline, so the tie text is what keeps it from reading as floating); an
+`ENCHANT`-type container, which draws no Spell Categories grid at all, still sees the checkbox on its
+own, with no tie line (there is no row above to tie it to).
 
 **Sorting**
 

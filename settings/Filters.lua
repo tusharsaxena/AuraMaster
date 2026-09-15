@@ -275,13 +275,65 @@ local CATEGORY_EXTRA = {
 -- Fix round 2 (batch 7): rank 5's trailing "UNLESS 'Only these categories' is on" clause is gone —
 -- the toggle is retired (D8/R-8..R-11 superseded; `Uncategorized = Hide` says the same thing now, on
 -- buffs — see `UNCATEGORIZED_NOTE` below).
-local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown, nothing removed it."]
+--
+-- T-2 (batch 7, readability pass): this used to be ONE dense paragraph carrying all five ranks —
+-- the owner found it unreadable in-game. It is still the one place the whole order is stated and is
+-- still verified rank by rank against modules/FilterCompiler.lua's own header comment (same five
+-- ranks, same order), so the WORDING here stays exactly what it said; only the shape changes, one
+-- rank per line. The library offers nothing between a single-line H.TextRow and hand-rolling a list
+-- widget (checked: OptionsWidgets.lua has no bullet/list maker), so this is six H.TextRow calls
+-- (the lead-in plus one per rank) rather than one — see PRIORITY_LINES below.
+local PRIORITY_LINES = {
+    L["Highest priority first:"],
+    L["1. On the Overrides whitelist — always shown."],
+    L["2. On the Overrides blacklist — hidden, unless the whitelist already claimed it."],
+    L["3. In at least one category set to Show — shown, even if another of its categories says Hide."],
+    L["4. In categories that all say Hide — hidden."],
+    L["5. In no category at all — shown, nothing removed it."],
+}
+
+--- Draws PRIORITY_LINES, one H.TextRow per line, then a small gap before whatever follows.
+---
+--- T-2's second half ("reduce the blank space below where 'Only these categories' used to sit"):
+--- that checkbox (D8) is gone entirely now, not merely hidden, and removing its own RenderRows call
+--- removed the whole gap with it — this render, right now, drops straight from the last line here
+--- into the next Section's heading with NO gap at all (verified against the widget list a fresh
+--- render actually draws: no spacer widget sits between them). So the "reduce" half of T-2 was
+--- already done by that removal; what is left is a SINGLE small ROW_VSPACER so the text does not
+--- run flush into the heading below it — not the old toggle's much larger combined gap back.
+local function renderPriorityBlurb(ctx)
+    for _, line in ipairs(PRIORITY_LINES) do
+        H.TextRow(ctx, line)
+    end
+    local scroll = H.EnsureScroll(ctx)
+    if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
+end
 
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
 -- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
 -- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell Categories grid, in
 -- the tab's own text rather than a tooltip only the row's own label would carry.
 local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
+
+-- T-2 fix round 4 (batch 7, readability): "These are the lists on General -> Spell Categories..."
+-- claims the grid holds EDITABLE lists. True for a buff container (its Spell Categories grid carries
+-- `spells`-kind rows and the `weaponEnchants` row, both of which own a list on General -> Spell
+-- Categories). False for a debuff container: D6/U-1 gives it the SAME grid, but with exactly one row
+-- — `uncategorized`, kind "uncategorized" — which is a Show/Hide flag over the catch-all, not a list
+-- of spells; debuffs have no editable spell lists at all (Cat.For("HARMFUL") carries no `spells` or
+-- `enchant` kind entries). So the line is printed only when the grid this container drew actually
+-- carries a row whose list lives there — never removed, never reworded into something vague enough
+-- to be true on both sides.
+local function customGridHasEditableList(mine)
+    for _, row in ipairs(mine) do
+        local key = keyOfCategoryRow(row)
+        local def = key and (Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key))
+        if def and (def.kind == "spells" or def.kind == "enchant") then
+            return true
+        end
+    end
+    return false
+end
 
 --- A shallow copy of `row` with `skipRender` lifted, so the flow engine (which otherwise leaves
 --- every `skipRender` row untouched, on the assumption that a grid or another bespoke drawer owns
@@ -303,13 +355,26 @@ local function rowAt(rows, path)
     return nil
 end
 
+-- T-3 (batch 7): the spec's original instruction — move hidePermanentEnchants "beside 'Only these
+-- categories'" — cannot be followed literally; that toggle is retired (see T-2/D8 above), there is
+-- nothing left to sit beside. The owner's actual complaint was the row sitting alone in dead space
+-- BELOW the grid (previously below the grid, the Uncategorized note AND that dead space). It stays a
+-- typed row of its own for the same reason as before (a ChoiceGrid cell lights by comparing the
+-- stored value against a column's "show"/"hide" string, which a bool can never match) and the grid
+-- draws its rows atomically, so it still cannot be hosted INSIDE the grid next to the weaponEnchants
+-- row it governs. What moves: it now draws immediately under the grid, ahead of UNCATEGORIZED_NOTE
+-- (closing most of that dead space), behind a one-line tie naming the row it is a sub-option of —
+-- "Weapon enchants" by name, since the grid's own row order (spells, weaponEnchants, uncategorized)
+-- does not always put weaponEnchants directly above it.
+local WEAPON_ENCHANT_TIE = L["A sub-option of the Weapon enchants row above:"]
+
 --- The Categories tab: the priority blurb (F-4), then a grid each. The Spell Categories grid (kind
---- `custom`) carries F-2's blurb and F-3's `See spells` link, and F-5's hidePermanentEnchants — a
---- plain bool, not a Show/Hide choice; a ChoiceGrid cell lights by comparing the stored value
---- against a column's string, which a bool can never match — is drawn as an ordinary checkbox right
---- under that grid, where the weaponEnchants row it governs lives.
+--- `custom`) carries F-2's blurb (conditionally — T-2 fix round 4, only when the grid holds an
+--- editable list) and F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a
+--- Show/Hide choice — drawn right under that grid (T-3), tied by name to the weaponEnchants row it
+--- governs since ChoiceGrid draws its rows atomically and cannot host it inline.
 local function renderCategories(ctx, _, rows)
-    H.TextRow(ctx, PRIORITY_BLURB)
+    renderPriorityBlurb(ctx)
 
     local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
     local hideDrawn = false
@@ -323,13 +388,16 @@ local function renderCategories(ctx, _, rows)
         if mine[1] then
             if g.key == "custom" then
                 H.Section(ctx, g.heading)
-                H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
+                if customGridHasEditableList(mine) then
+                    H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
+                end
                 H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
-                H.TextRow(ctx, UNCATEGORIZED_NOTE)
                 if hideRow then
+                    H.TextRow(ctx, WEAPON_ENCHANT_TIE)
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
                     hideDrawn = true
                 end
+                H.TextRow(ctx, UNCATEGORIZED_NOTE)
             else
                 -- N-5: only the Blizzard Categories grid gets the extra column here — Dispel Types
                 -- and Who Cast It stay exactly as wide as before. A grid with no extraColumn at all
@@ -489,7 +557,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
 end
 
 local function renderOverrides(ctx, cfg)
-    H.TextRow(ctx, PRIORITY_BLURB)
+    renderPriorityBlurb(ctx)
     overrideList(ctx, cfg, "whitelist", L["Whitelist"],
         L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."])
     overrideList(ctx, cfg, "blacklist", L["Blacklist"],
