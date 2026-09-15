@@ -343,18 +343,20 @@ local function overrideNote(cfg, id, ctx, key)
         if (filter.whitelist or {})[id] == true then
             return L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]
         end
-        -- Rank 3 only, not "verdict shown" generally: a blacklisted id nothing else claims is
-        -- naturally rank 5 (shown) without the blacklist too — that is the ordinary, unsurprising
-        -- reason to blacklist something, not a conflict, and noting it would fire on most entries.
-        -- onlyShown changes nothing here either: a claimed-by-nothing id is rank 5 HIDDEN without
-        -- the blacklist under that toggle, same as with it, so there is no counterfactual case the
-        -- rank-3 check misses on this side (checked as the mirror of the whitelist fix above).
+        -- Fire on the counterfactual's VERDICT ("shown"), the mirror of the whitelist branch below —
+        -- not on rank 3 alone (fix round 2: rank 3 missed rank 5 with `onlyShown` off, where an
+        -- uncategorized blacklisted id would be drawn by the ordinary catch-all if the entry were
+        -- removed; that is as real a mismatch as a category disagreeing, and the player was not told
+        -- either way).
         local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
-        if cat.rank == 3 then
-            return L["Hidden here by the blacklist; %s would otherwise show it."]:format(
-                categoryLabelList(showCategories(cat.categories)))
+        if cat.verdict ~= "shown" then
+            return nil
         end
-        return nil
+        if cat.rank == 5 then
+            return L["Hidden here by the blacklist; without it, this container would draw it — nothing else here hides it."]
+        end
+        return L["Hidden here by the blacklist; %s would otherwise show it."]:format(
+            categoryLabelList(showCategories(cat.categories)))
     end
     if (filter.blacklist or {})[id] == true then
         return L["Also on the blacklist, but the whitelist outranks it — still shown here."]

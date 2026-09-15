@@ -455,14 +455,20 @@ end)
 
 -- ── Overrides entry notes (task B6, spec §6/§6c) ─────────────────────────────────────────────────
 
-test("filters: a plain Overrides entry, claimed by nothing and contradicted by nothing, has no note", function()
+-- A plain, uncategorized WHITELIST entry has no note: nothing claims it, so the container would
+-- draw it either way (rank 5, shown, with `onlyShown` off) — no mismatch. A plain, uncategorized
+-- BLACKLIST entry is different (fix round 2): the ordinary catch-all WOULD draw it if the entry
+-- were removed, which is exactly the mismatch task-B6's other tests exercise, so it is covered
+-- separately below rather than folded into a single "plain entry has no note" claim that is no
+-- longer true for the blacklist side.
+test("filters: a plain, uncategorized whitelist entry has no note", function()
     local NS, _, P = filters()
     NS.SetByPath("container.filter.whitelist", { [774] = true }, 1)
-    NS.SetByPath("container.filter.blacklist", { [12345] = true }, 1)
     local ws = P.tab("filters", "overrides")
     -- red under: a note drawn for every entry regardless of whether anything disagrees
     assertFalse(P.hasText(ws, "would otherwise"), "no category conflict to report")
     assertFalse(P.hasText(ws, "outranks"), "not on the other list either")
+    assertFalse(P.hasText(ws, "not be drawn at all"), "onlyShown is off; nothing else to warn about")
 end)
 
 -- red under: the blacklist entry not reporting that the whitelist already claimed the same id
@@ -524,4 +530,16 @@ test("filters: a whitelisted spell no category claims, under 'only these categor
     local ws = P.tab("filters", "overrides")
     assertTrue(P.hasText(ws, NS.L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."]),
         "an unclaimed whitelisted spell under onlyShown needs its own wording, not the category one")
+end)
+
+-- Fix round 2: an uncategorized blacklisted spell, with onlyShown OFF, would be drawn by the
+-- ordinary catch-all if the entry were removed (rank 5, shown) — a real mismatch a rank-3-only check
+-- misses, mirroring the whitelist bug fixed above.
+-- red under: overrideNote's blacklist branch checking `cat.rank == 3` instead of `cat.verdict == "shown"`
+test("filters: an uncategorized blacklisted spell warns it would otherwise be drawn here", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.blacklist", { [900005] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, NS.L["Hidden here by the blacklist; without it, this container would draw it — nothing else here hides it."]),
+        "no category claims it, but the ordinary catch-all would still draw it")
 end)
