@@ -495,6 +495,64 @@ function FC.Compile(cfg, ctx)
     return plan
 end
 
+--- Explain why one spell id will or will not be drawn by container `cfg`, under the same five-rank
+--- priority `Compile` follows (docs/superpowers/specs/2026-09-14-feedback-batch6-design.md section
+--- 6): the Overrides whitelist beats the blacklist, a category set to Show beats one set to Hide,
+--- and an aura in no category is drawn unless `onlyShown` says otherwise. Pure, like `Compile`: no
+--- frames, no database, `cfg`/`id`/`ctx` in, a table out — `FC.ProfileContext()` is the seam a
+--- caller hands it the profile's spell-list edits through.
+---
+--- Reasons about `spells`-kind categories ONLY. A `token`, `flag` or `dispel` category matches
+--- auras by a property the addon cannot look up from a bare spell id (an aura's own boss/role/
+--- dispel flags, decided by the engine in its own secure code once auras are unreadable) — naming
+--- one here would be a guess, and a confident guess is worse than silence. `categories` therefore
+--- always lists only the spells-kind categories of this aura type that carry `id`, in declaration
+--- order, each `{ key, label, state }` — `label` already routed through `NS.L`.
+---
+--- @param cfg table  the container's stored table (defaults/Profile.lua CONTAINER_TEMPLATE shape)
+--- @param id number  the spell id to explain
+--- @param ctx table|nil  as `Compile` takes: `{ categories, categorySpells }`
+--- The spells-kind categories of `auraType` that claim `id`, in declaration order, each `{ key,
+--- label, state }` — and whether any of them is a Show. Split out of `ExplainSpell` to keep both
+--- under the file's complexity ceiling.
+--- @return table claiming, boolean anyShow
+local function claimingCategories(Categories, auraType, filter, categorySpells, id)
+    local claiming, anyShow = {}, false
+    for _, def in ipairs(Categories.For(auraType)) do
+        if def.kind == "spells" and FC.CategorySpells(def, categorySpells)[id] then
+            local state = ((filter.categories or {})[def.key] == "hide") and "hide" or "show"
+            claiming[#claiming + 1] = { key = def.key, label = NS.L[def.label], state = state }
+            anyShow = anyShow or (state == "show")
+        end
+    end
+    return claiming, anyShow
+end
+
+--- @return table  { verdict = "shown"|"hidden", rank = 1..5, categories = { { key, label, state } } }
+function FC.ExplainSpell(cfg, id, ctx)
+    ctx = ctx or {}
+    local filter = cfg.filter or {}
+    if spellSet(filter.whitelist)[id] then
+        return { verdict = "shown", rank = 1, categories = {} }
+    end
+    if spellSet(filter.blacklist)[id] then
+        return { verdict = "hidden", rank = 2, categories = {} }
+    end
+
+    local Categories = ctx.categories or NS.Categories
+    local auraType = (cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+    local claiming, anyShow = claimingCategories(Categories, auraType, filter, ctx.categorySpells, id)
+
+    if isEmpty(claiming) then
+        local hiddenByToggle = filter.onlyShown == true
+        return { verdict = hiddenByToggle and "hidden" or "shown", rank = 5, categories = claiming }
+    end
+    if anyShow then
+        return { verdict = "shown", rank = 3, categories = claiming }
+    end
+    return { verdict = "hidden", rank = 4, categories = claiming }
+end
+
 --- A deterministic string for any plain value — tables serialized with sorted keys — so two candidate
 --- filter tables can be compared for equality. modules/Container.lua uses it to call the engine's
 --- SetAuraGroupCandidateFilters only when something actually changed, because that call clears and

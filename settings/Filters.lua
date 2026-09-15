@@ -38,6 +38,7 @@ local L = NS.L
 local H = NS.Helpers
 local C = NS.Constants
 local Cat = NS.Categories
+local FC = NS.FilterCompiler
 
 local PAGE = "filters"
 local BUFFS_DEBUFFS = { HELPFUL = true, HARMFUL = true }
@@ -286,6 +287,76 @@ local function sortedIds(set)
     return out
 end
 
+-- F-6/task B6: each Overrides entry's verdict note, drawn by the library under its name
+-- (libs/LibKa0s/OptionsWidgets.lua's `entry.note`). Built from FC.ExplainSpell, sparingly — a spell
+-- that no category claims, or whose categories only confirm what this very list already decided,
+-- gets none; the note fires only when a category genuinely disagrees, or the id sits on BOTH lists.
+
+--- `cfg` with `id` cleared from BOTH override lists, so `ExplainSpell` can be asked what the
+--- CATEGORIES alone would decide for it (rank 3/4/5), independent of whichever list holds the
+--- entry we are drawing a note for. Shallow beyond `filter`, which is all `ExplainSpell` reads.
+local function withoutOverrides(cfg, id)
+    local filter = cfg.filter or {}
+    local function without(list)
+        local out = {}
+        for k, v in pairs(list or {}) do out[k] = v end
+        out[id] = nil
+        return out
+    end
+    local copy = {}
+    for k, v in pairs(cfg) do copy[k] = v end
+    copy.filter = {}
+    for k, v in pairs(filter) do copy.filter[k] = v end
+    copy.filter.whitelist = without(filter.whitelist)
+    copy.filter.blacklist = without(filter.blacklist)
+    return copy
+end
+
+--- The labels of `list` (an `ExplainSpell` `categories` array, or a filtered copy of one), in
+--- order, comma-joined — the note's "which categories" fragment.
+local function categoryLabelList(list)
+    local names = {}
+    for i, c in ipairs(list) do names[i] = c.label end
+    return table.concat(names, ", ")
+end
+
+--- Only the Show categories among `list` — rank 3's positive claim. A blacklist note about "what
+--- would otherwise show it" names these, not the Hide categories a Show already outranks.
+local function showCategories(list)
+    local out = {}
+    for _, c in ipairs(list) do
+        if c.state == "show" then
+            out[#out + 1] = c
+        end
+    end
+    return out
+end
+
+--- The verdict note for spell `id` on override list `key` ("whitelist" or "blacklist"), or nil.
+local function overrideNote(cfg, id, ctx, key)
+    local filter = cfg.filter or {}
+    if key == "blacklist" then
+        if (filter.whitelist or {})[id] == true then
+            return L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]
+        end
+        local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
+        if cat.rank == 3 then
+            return L["Hidden here by the blacklist; %s would otherwise show it."]:format(
+                categoryLabelList(showCategories(cat.categories)))
+        end
+        return nil
+    end
+    if (filter.blacklist or {})[id] == true then
+        return L["Also on the blacklist, but the whitelist outranks it — still shown here."]
+    end
+    local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
+    if cat.rank == 4 then
+        return L["Shown here by the whitelist; %s would otherwise hide it."]:format(
+            categoryLabelList(cat.categories))
+    end
+    return nil
+end
+
 --- One override list: its heading and blurb, then the library's ID list over `filter[key]`.
 local function overrideList(ctx, cfg, key, heading, blurb)
     local path = "container.filter." .. key
@@ -304,8 +375,11 @@ local function overrideList(ctx, cfg, key, heading, blurb)
         strings    = NS.GeneralSpells.ID_STRINGS,
         candidates = NS.GeneralSpells.candidates,
         entries    = function()
+            local fcCtx = FC.ProfileContext()
             local out = {}
-            for i, id in ipairs(sortedIds(cfg.filter[key])) do out[i] = { id = id } end
+            for i, id in ipairs(sortedIds(cfg.filter[key])) do
+                out[i] = { id = id, note = overrideNote(cfg, id, fcCtx, key) }
+            end
             return out
         end,
         onAdd    = function(id) edit(function(set) set[id] = true end) end,

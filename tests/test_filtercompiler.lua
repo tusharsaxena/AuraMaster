@@ -723,3 +723,72 @@ test("filter: hiding two categories that contradict on the same flag leaves noth
     assertEqual(#plan.groups, 0, "isFromPlayerOrPlayerPet can't be both true and false")
     assertTrue(hasWarning(plan, "can never match"))
 end)
+
+-- ── FC.ExplainSpell (task B6, spec §6/§6c) ───────────────────────────────────────────────────────
+--
+-- The Overrides tab's per-entry note is built from this: given a container's settings and one spell
+-- id, which of the five ranks decides it, and what does it draw. Every case below narrows
+-- `ctx.categories` the same way the compiler tests above do (`only`), so a case testing one or two
+-- categories' interaction is not exploded by the whole shipped list.
+
+-- red under: the blacklist beating the whitelist (the superseded order)
+test("explain: the whitelist beats the blacklist — rank 1, shown", function()
+    local x = FC.ExplainSpell(cfg({ filter = { whitelist = { [500] = true }, blacklist = { [500] = true } } }),
+        500, {})
+    assertEqual(x.verdict, "shown")
+    assertEqual(x.rank, 1)
+    assertEqual(#x.categories, 0)
+end)
+
+test("explain: the blacklist alone hides — rank 2", function()
+    local x = FC.ExplainSpell(cfg({ filter = { blacklist = { [500] = true } } }), 500, {})
+    assertEqual(x.verdict, "hidden")
+    assertEqual(x.rank, 2)
+    assertEqual(#x.categories, 0)
+end)
+
+-- red under: a single Hide category removing an aura another category shows (the superseded order)
+test("explain: a Show category rescues an aura another category hides — rank 3, shown, both named", function()
+    local x = FC.ExplainSpell(cfg({ filter = { categories = { defensives = "hide" } } }), 900001,
+        { categorySpells = { defensives = { [900001] = true }, consumables = { [900001] = true } },
+          categories = only("HELPFUL", { "defensives", "consumables" }) })
+    assertEqual(x.verdict, "shown")
+    assertEqual(x.rank, 3)
+    local states = {}
+    for _, c in ipairs(x.categories) do states[c.key] = c.state end
+    assertEqual(states.defensives, "hide")
+    assertEqual(states.consumables, "show")
+end)
+
+test("explain: an aura whose every category says Hide is hidden — rank 4", function()
+    local x = FC.ExplainSpell(cfg({ filter = { categories = { defensives = "hide" } } }), 900002,
+        { categorySpells = { defensives = { [900002] = true } },
+          categories = only("HELPFUL", { "defensives" }) })
+    assertEqual(x.verdict, "hidden")
+    assertEqual(x.rank, 4)
+    assertEqual(x.categories[1].key, "defensives")
+end)
+
+test("explain: an aura in no category is shown, with no categories named — rank 5", function()
+    local x = FC.ExplainSpell(cfg({}), 999999, { categories = only("HELPFUL", { "defensives" }) })
+    assertEqual(x.verdict, "shown")
+    assertEqual(x.rank, 5)
+    assertEqual(#x.categories, 0)
+end)
+
+-- red under: rank 5 staying "shown" while onlyShown is on, contradicting the compiled plan (R-9)
+test("explain: with 'only these categories' on, an unclaimed aura is hidden instead — still rank 5", function()
+    local x = FC.ExplainSpell(cfg({ filter = { onlyShown = true } }), 999999,
+        { categories = only("HELPFUL", { "defensives" }) })
+    assertEqual(x.verdict, "hidden")
+    assertEqual(x.rank, 5)
+end)
+
+-- red under: a token/flag/dispel category being guessed at by id instead of left silent
+test("explain: a token category is never named — only spells-kind categories are reasoned about", function()
+    local x = FC.ExplainSpell(cfg({ filter = { categories = { cancelable = "hide" } } }), 999999,
+        { categories = only("HELPFUL", { "cancelable" }) })
+    assertEqual(#x.categories, 0)
+    assertEqual(x.verdict, "shown")
+    assertEqual(x.rank, 5)
+end)

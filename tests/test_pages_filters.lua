@@ -452,3 +452,63 @@ test("filters: every tab opens with what the engine will not honor here, in oran
     ws = P.tab("filters", NS.L["Sorting"])
     assertTrue(P.hasText(ws, warning), "and every other tab")
 end)
+
+-- ── Overrides entry notes (task B6, spec §6/§6c) ─────────────────────────────────────────────────
+
+test("filters: a plain Overrides entry, claimed by nothing and contradicted by nothing, has no note", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [774] = true }, 1)
+    NS.SetByPath("container.filter.blacklist", { [12345] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    -- red under: a note drawn for every entry regardless of whether anything disagrees
+    assertFalse(P.hasText(ws, "would otherwise"), "no category conflict to report")
+    assertFalse(P.hasText(ws, "outranks"), "not on the other list either")
+end)
+
+-- red under: the blacklist entry not reporting that the whitelist already claimed the same id
+test("filters: a spell on both lists gets a note on its blacklist entry saying the whitelist wins", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [500] = true }, 1)
+    NS.SetByPath("container.filter.blacklist", { [500] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, NS.L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]))
+end)
+
+-- red under: the whitelist entry not reporting that it is also blacklisted
+test("filters: a spell on both lists gets a note on its whitelist entry naming the blacklist too", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [500] = true }, 1)
+    NS.SetByPath("container.filter.blacklist", { [500] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, NS.L["Also on the blacklist, but the whitelist outranks it — still shown here."]))
+end)
+
+-- red under: a blacklisted spell that a Show category would rescue not reporting the conflict
+test("filters: a blacklisted spell a Show category would otherwise show names that category", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.blacklist", { [900001] = true }, 1)
+    NS.SetByPath("categorySpells", { defensives = { [900001] = true } })
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, ("Hidden here by the blacklist; %s would otherwise show it."):format(NS.L["Defensives"])))
+end)
+
+-- red under: a whitelisted spell whose categories all say Hide not reporting the conflict
+test("filters: a whitelisted spell every one of its categories would hide names them", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [900002] = true }, 1)
+    NS.SetByPath("categorySpells", { defensives = { [900002] = true } })
+    NS.SetByPath("container.filter.categories.defensives", "hide", 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, ("Shown here by the whitelist; %s would otherwise hide it."):format(NS.L["Defensives"])))
+end)
+
+-- red under: a blacklisted spell in a Hide-only category getting a spurious note (the blacklist and
+-- the category already agree, so there is nothing to explain)
+test("filters: a blacklisted spell a Hide category would also hide gets no note", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.blacklist", { [900003] = true }, 1)
+    NS.SetByPath("categorySpells", { defensives = { [900003] = true } })
+    NS.SetByPath("container.filter.categories.defensives", "hide", 1)
+    local ws = P.tab("filters", "overrides")
+    assertFalse(P.hasText(ws, "would otherwise"), "the blacklist and the category agree")
+end)
