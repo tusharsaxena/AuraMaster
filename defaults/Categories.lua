@@ -26,20 +26,28 @@ local _, NS = ...
 --                  Blizzard token/flag/dispel categories do NOT count toward being categorized. It has
 --                  no id list of its own; it is the COMPLEMENT of every `spells`-kind category's
 --                  effective ids, so modules/FilterCompiler.lua handles it with dedicated logic rather
---                  than the generic per-kind include/exclude every other kind shares. BUFFS ONLY (fix
---                  round 1 ruling, 2026-09-16): the spec's original "offered for buffs and debuffs"
---                  was the implementer's extrapolation of the owner's actual request — "the last item
---                  in the Filters -> Spell Categories list", a buff-side concept — and `Cat.HARMFUL`
---                  has no `spells`-kind category at all, so a debuff-side entry's union would always
---                  be empty: every debuff would read as "uncategorized", and a Show there would make
---                  every OTHER Hide on that tab a no-op — the owner's original complaint, inverted.
---                  Drawn LAST in the grid, default Show. There is no General -> Spell Categories entry
---                  for it: it has no list to edit. Its own group SUPERSEDES the catch-all rather than
---                  sitting beside it (fix round 1): a Show carries no hidden-category exclusion and a
---                  Hide's group is dropped outright, and either way the catch-all — a strict superset
---                  or subset of what Uncategorized already covers — would either double-draw an aura
---                  or ship a group that can never match anything, so `modules/FilterCompiler.lua`
---                  never emits it once this category exists for the aura type.
+--                  than the generic per-kind include/exclude every other kind shares. Drawn LAST in the
+--                  grid, default Show. There is no General -> Spell Categories entry for it: it has no
+--                  list to edit.
+--
+--                  ONE ROW PER AURA TYPE, ASYMMETRIC (fix round 3, 2026-09-16 — the owner restored the
+--                  debuff row round 1 dropped). `Cat.HELPFUL` has real `spells`-kind categories, so its
+--                  row's union is a genuine subset: Show excludes that union (rescuing an unlisted buff
+--                  from another category's Hide) and Hide contributes nothing of its own, but either
+--                  way the row SUPERSEDES the catch-all (a Show's group is a strict superset of what
+--                  the catch-all would draw; a Hide's only possible catch-all contribution would be a
+--                  dead group — see modules/FilterCompiler.lua's top-of-file comment). `Cat.HARMFUL`
+--                  has NO `spells`-kind category, so its union is always EMPTY — every debuff is
+--                  trivially "not on any spell list" and there is nothing to rescue. Concretely proven
+--                  (fix round 3): if the debuff row's Show contributed a group the way the buff row's
+--                  does, that group would carry no candidate filter at all and would draw EVERY debuff
+--                  regardless of any other category's Hide — neutering them all, the owner's original
+--                  complaint reborn. So on HARMFUL, Show contributes NOTHING (as if the row did not
+--                  exist — the ordinary catch-all runs normally) while Hide still suppresses the
+--                  catch-all outright, reproducing the retired "Only these categories" toggle exactly.
+--                  `modules/FilterCompiler.lua`'s `hasUnion` flag (already computed for the identity
+--                  warning) is what gates this: a Show-kind-`uncategorized` category contributes its
+--                  own group, and therefore supersedes the catch-all, only when `hasUnion` is true.
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
@@ -289,10 +297,17 @@ Cat.HARMFUL = {
         key = "fromPlayers", kind = "flag", field = "isFromPlayerOrPlayerPet", value = true,
         label = "From any player", desc = "Debuffs applied by any player or their pet.",
     },
-    -- No `uncategorized` row here (fix round 1 ruling, 2026-09-16): `Cat.HARMFUL` has no `spells`-kind
-    -- category at all, so its union would always be empty — every debuff would read as
-    -- "uncategorized", and a Show there would make every OTHER Hide on this tab a no-op, silently
-    -- undoing the owner's own Hide choices. See the KINDS doc above for the full reasoning.
+    {
+        -- Fix round 3 (2026-09-16): restored, asymmetric with the buff row — see the KINDS doc above.
+        -- Hide reproduces the retired "Only these categories" toggle exactly (drops the catch-all, so
+        -- only what is explicitly Shown is drawn). Show is a plain default: debuffs have no spell
+        -- lists to be outside of, so there is nothing for it to rescue, and it must NOT contribute a
+        -- group of its own — an unrestricted debuff group would draw everything and defeat every
+        -- other Hide on the tab. `modules/FilterCompiler.lua` gates that on `hasUnion` (always false
+        -- here), not on aura type, so this is a general rule, not a debuff-only special case.
+        key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized",
+        desc = "Hide draws only what you have explicitly set to Show on this tab (the retired 'Only these categories' toggle, exactly). Show is the default and changes nothing by itself: debuffs have no spell lists, so there is nothing here for it to rescue from another category's Hide.",
+    },
 }
 
 -- Weapon enchants have no categories: the engine draws them per slot.

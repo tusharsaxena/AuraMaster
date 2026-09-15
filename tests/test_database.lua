@@ -838,7 +838,7 @@ test("v3: RunMigrations migrates every stored profile, the inactive one included
 end)
 
 -- ---------------------------------------------------------------------------
--- Schema v4: "Only these categories" retired -> categories.uncategorized = "hide"
+-- Schema v4: "Only these categories" retired -> categories.<uncategorized key> = "hide"
 -- ---------------------------------------------------------------------------
 
 test("v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared", function()
@@ -855,6 +855,22 @@ test("v4: a HELPFUL container with the toggle on ends up with Uncategorized hidd
     assertEqual(c.filter.categories.defensives, "show")
 end)
 
+-- Fix round 3: the owner restored the debuff row, with Hide reproducing the retired toggle exactly
+-- (modules/FilterCompiler.lua's `hasUnion` gate — the compiler-side proof lives in
+-- tests/test_filtercompiler.lua). A HARMFUL container now converts too, the same as HELPFUL.
+test("v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HARMFUL",
+        filter = { onlyShown = true, categories = { crowdControl = "hide" } } } } }
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 1)
+    assertEqual(lost, 0)
+    local c = p.containers[1]
+    assertEqual(c.filter.categories.uncategorizedDebuffs, "hide", "the toggle's old effect, preserved")
+    assertNil(c.filter.onlyShown, "the dead key is cleared")
+    assertEqual(c.filter.categories.crowdControl, "hide")
+end)
+
 test("v4: a container with the toggle off or absent is untouched", function()
     local NS = fresh()
     local p = { containers = {
@@ -869,19 +885,34 @@ test("v4: a container with the toggle off or absent is untouched", function()
     assertEqual(Sig(p), Sig(before), "off or absent: not even the dead key is touched")
 end)
 
-test("v4: a HARMFUL container with the toggle on loses the capability plainly — no Uncategorized category to migrate onto", function()
-    -- The honest answer (not a silent one, and not an invented debuff-side Uncategorized row): such
-    -- a container cannot keep "only these categories" any more. It is counted as `lost`, logged (see
-    -- the SCHEMA_STEPS v4 step), and the dead key is still cleared — there is nothing left it can do.
+test("v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost", function()
+    -- red under: counting an ENCHANT container as `lost`, which docs/schema.md and the [Migrate]
+    -- line would then overstate — FC.Compile's compileEnchant never reads filter.onlyShown at all.
     local NS = fresh()
-    local p = { containers = { { auraType = "HARMFUL",
-        filter = { onlyShown = true, categories = { crowdControl = "hide" } } } } }
-    local converted, lost = NS.Database.MigrateV4(p)
+    local p = { containers = { { auraType = "ENCHANT",
+        filter = { onlyShown = true, categories = {} } } } }
+    local converted, lost, lostList = NS.Database.MigrateV4(p)
+    assertEqual(converted, 0)
+    assertEqual(lost, 0)
+    assertEqual(#lostList, 0)
+    assertNil(p.containers[1].filter.onlyShown, "the dead key is still cleared, just not counted")
+end)
+
+test("v4: an unrecognized auraType with the toggle on is genuinely lost, named in lostList, and its dead key still cleared", function()
+    -- The honest answer for a shape that carries no Uncategorized category and is not ENCHANT
+    -- either (a corrupt or future auraType this migration cannot predict): counted, named, and the
+    -- SCHEMA_STEPS v4 step turns this into a plain NS.Print notice — nothing invented, nothing silent.
+    local NS = fresh()
+    local p = { containers = { [7] = { auraType = "BOGUS", name = "Weird One",
+        filter = { onlyShown = true, categories = {} } } } }
+    local converted, lost, lostList = NS.Database.MigrateV4(p)
     assertEqual(converted, 0)
     assertEqual(lost, 1)
-    local c = p.containers[1]
-    assertNil(c.filter.onlyShown, "the dead key is cleared even though nothing could be preserved")
-    assertNil(c.filter.categories.uncategorized, "no such category exists for HARMFUL — none is invented")
+    assertEqual(#lostList, 1)
+    assertEqual(lostList[1].id, 7)
+    assertEqual(lostList[1].name, "Weird One")
+    assertEqual(lostList[1].auraType, "BOGUS")
+    assertNil(p.containers[7].filter.onlyShown, "the dead key is cleared even though nothing could be preserved")
 end)
 
 test("v4: MigrateV4 is idempotent", function()
@@ -890,16 +921,65 @@ test("v4: MigrateV4 is idempotent", function()
         return { containers = {
             { auraType = "HELPFUL", filter = { onlyShown = true, categories = { defensives = "show" } } },
             { auraType = "HARMFUL", filter = { onlyShown = true, categories = { crowdControl = "hide" } } },
+            { auraType = "ENCHANT", filter = { onlyShown = true, categories = {} } },
+            { auraType = "BOGUS", filter = { onlyShown = true, categories = {} } },
             { auraType = "HELPFUL", filter = { categories = { defensives = "show" } } },
         } }
     end
     local once = scenario()
     NS.Database.MigrateV4(once)
     local twice = NS.Database.DeepCopy(once)
-    local converted, lost = NS.Database.MigrateV4(twice)
+    local converted, lost, lostList = NS.Database.MigrateV4(twice)
     -- red under: a second run re-counting or re-touching a container the first run already decided
     assertEqual(converted, 0, "nothing left at onlyShown == true to convert again")
     assertEqual(lost, 0)
+    assertEqual(#lostList, 0)
     local Sig = NS.FilterCompiler.Signature
     assertEqual(Sig(twice), Sig(once), "a second run is a true no-op")
+end)
+
+-- Item 3, fix round 3: NS.Debug alone is not enough — it is gated on a flag off by default, so a
+-- player who never turned on debug logging would see NOTHING about a container that just silently
+-- lost a capability. NS.Print is ungated: it always reaches the chat frame.
+test("v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)", function()
+    local lines = {}
+    local NS = fresh({
+        savedVariables = { profiles = { Default = {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = { name = "Weird One", unit = "player", auraType = "BOGUS", style = "bars",
+                filter = { onlyShown = true, categories = {} } } },
+        } }, global = { schemaVersion = 3 } },
+        before = function(mocks)
+            rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+                lines[#lines + 1] = tostring(msg)
+            end)
+        end,
+    })
+    assertEqual(NS.db.global.schemaVersion, 4)
+    local found = false
+    for _, l in ipairs(lines) do
+        -- red under: the debug flag being off (the default) swallowing the only notice a player gets
+        if l:find("Weird One", 1, true) and l:find("could not be carried over", 1, true) then found = true end
+    end
+    assertTrue(found, "NS.Print names the lost container plainly: " .. table.concat(lines, " | "))
+end)
+
+test("v4: no notice is printed when nothing was lost", function()
+    local lines = {}
+    local NS = fresh({
+        savedVariables = { profiles = { Default = {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                filter = { onlyShown = true, categories = { defensives = "show" } } } },
+        } }, global = { schemaVersion = 3 } },
+        before = function(mocks)
+            rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+                lines[#lines + 1] = tostring(msg)
+            end)
+        end,
+    })
+    assertEqual(NS.db.global.schemaVersion, 4)
+    for _, l in ipairs(lines) do
+        assertTrue(l:find("could not be carried over", 1, true) == nil, "no lost-capability notice: " .. l)
+    end
 end)

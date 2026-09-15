@@ -219,18 +219,19 @@ test("filters: a buff container's Categories tab is two grids, Blizzard Categori
     assertNil(gridLine(NS, ws, "crowdControl"), "no debuff category on a buff container")
 end)
 
-test("filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once", function()
+test("filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once", function()
     local NS, _, _, ws = categories(2)
     local L = NS.L
-    -- U-1, fix round 1 (2026-09-16): Uncategorized is buffs-only — `Cat.HARMFUL` has no `spells`-kind
-    -- category, so its union would always be empty, making a debuff-side row's Show a no-op that
-    -- silently undoes every other Hide on this tab (see defaults/Categories.lua's KINDS doc). No
-    -- Spell Categories grid on a debuff container, same as before batch 7.
+    -- U-1, fix round 3 (2026-09-16): the owner restored the debuff row — `uncategorizedDebuffs`
+    -- shares the Spell Categories grid, so it draws for a debuff container again, one row, asymmetric
+    -- with the buff row (Hide reproduces the retired toggle; Show is inert — defaults/Categories.lua's
+    -- KINDS doc, modules/FilterCompiler.lua's `hasUnion` gate).
     -- red under: a grid key mapping dispel or who-cast-it rows into the Blizzard grid
     assertEqual(table.concat(headings(ws), "|"),
-        L["Blizzard Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
+        L["Blizzard Categories"] .. "|" .. L["Spell Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
     assertTrue(gridLine(NS, ws, "magic") ~= nil)
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
+    assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: restored for debuffs (fix round 3)")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 

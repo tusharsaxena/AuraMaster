@@ -100,7 +100,9 @@ These are not declined; the game forbids them, and a request for one is answered
   Filter priority). **The real limitation this costs:** Categories alone can no longer build "only
   Defensives" the way the old exclusive Whitelist did — hiding every other category is not the same
   thing, because an aura in no category at all still shows (nothing removed it). Getting that back
-  needs either the Overrides whitelist or the per-container **"only these categories"** toggle
-  (`container.filter.onlyShown`), which drops the catch-all group instead.
+  needs either the Overrides whitelist, or the **Uncategorized** category set to Hide (batch 7,
+  `U-1`..`U-5`; the retired per-container "only these categories" toggle meant exactly this and is
+  gone, fix round 2 of that effort) — `uncategorized` on a buff container, `uncategorizedDebuffs` on a
+  debuff one, both on the Categories tab's Spell Categories grid.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
   and the starter containers come back.

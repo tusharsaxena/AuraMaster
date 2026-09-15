@@ -131,18 +131,18 @@ test("defaults: spell categories are buff categories, and IsSpellCategory names 
     assertFalse(Cat.IsSpellCategory("no such category"))
 end)
 
-test("defaults: uncategorized is declared LAST in Cat.HELPFUL, and does not exist for HARMFUL (U-1, fix round 1)", function()
+test("defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)", function()
     -- Correctness depends on this: modules/FilterCompiler.lua's shown-group loop excludes every
-    -- EARLIER shown category from a later one, so `uncategorized`'s complement-exclude only correctly
-    -- dedups against every other shown category if nothing is declared after it.
-    local last = Cat.HELPFUL[#Cat.HELPFUL]
-    assertEqual(last.key, "uncategorized", "red under: another category added after it")
-    assertEqual(last.kind, "uncategorized")
-    for _, def in ipairs(Cat.HARMFUL) do
-        -- fix round 1 ruling: buffs only — Cat.HARMFUL has no spells-kind category, so a debuff-side
-        -- row's union would always be empty (defaults/Categories.lua's KINDS doc).
-        assertTrue(def.kind ~= "uncategorized", "HARMFUL carries no uncategorized category: " .. def.key)
-    end
+    -- EARLIER shown category from a later one, so `uncategorized`'s complement-exclude (buffs) or
+    -- no-op (debuffs) only correctly dedups against every other shown category if nothing is
+    -- declared after it, on EITHER list — restored to HARMFUL in fix round 3 with an asymmetric
+    -- meaning (Hide reproduces the retired toggle; Show is inert, defaults/Categories.lua's KINDS doc).
+    local lastHelpful = Cat.HELPFUL[#Cat.HELPFUL]
+    assertEqual(lastHelpful.key, "uncategorized", "red under: another category added after it")
+    assertEqual(lastHelpful.kind, "uncategorized")
+    local lastHarmful = Cat.HARMFUL[#Cat.HARMFUL]
+    assertEqual(lastHarmful.key, "uncategorizedDebuffs", "red under: another category added after it")
+    assertEqual(lastHarmful.kind, "uncategorized")
 end)
 
 test("defaults: every leaf of the container template is edited by a settings row or is a spell set", function()

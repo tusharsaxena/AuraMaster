@@ -186,21 +186,26 @@ group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` r
 **Categories** (`F-1`…`F-7`) — every tab opens with the five-rank priority blurb (mirrored on
 Overrides too — see *Filter priority* below). The per-container **Only these categories** toggle
 (`container.filter.onlyShown`) that used to sit here is RETIRED (batch 7 fix round 2): once
-`Uncategorized = Hide` (buffs only — see below) correctly suppresses the catch-all on its own, the
-toggle had nothing left to do, so the owner chose one control over two. A stored `onlyShown = true`
-is migrated to `categories.uncategorized = "hide"` (schema v4, `docs/schema.md`) and the key cleared;
-a HARMFUL container, which carries no `uncategorized` category, loses the narrowing outright rather
-than having one invented for it. Then 33 generated rows, one per `defaults/Categories.lua` entry, at
+`Uncategorized = Hide` correctly suppresses the catch-all on its own, on EITHER aura type (fix round
+3 restored the debuff row fix round 1 had dropped), the toggle had nothing left to do, so the owner
+chose one control over two. A stored `onlyShown = true` is migrated to `categories.uncategorized`
+(buffs) or `categories.uncategorizedDebuffs` (debuffs) `= "hide"` (schema v4, `docs/schema.md`) and
+the key cleared; only a container of some other, unrecognized shape has no category to migrate onto,
+and loses the narrowing — named and printed to the player directly (`NS.Print`), not left to the
+debug console. Then 34 generated rows, one per `defaults/Categories.lua` entry, at
 `container.filter.categories.<key>`, stored `"show"` / `"hide"` (schema v3) and labeled **Show** /
 **Hide** (`/am get` and `/am list` print the label, then the stored value in gray). Show is a
 positive claim: an aura in at least one Show category is drawn even if another of its categories says
 Hide; only an aura whose every category says Hide is removed by them (rank 3 of the priority order).
-Buff containers see the 17 buff rows (weapon enchants and the batch-7 `Uncategorized` row among
-them), debuff containers the 16 debuff rows — `Uncategorized` is buffs only (`Cat.HARMFUL` has no
-`spells`-kind category for it to be a complement of; batch 7 fix round 1). Under the Spell Categories
-grid, a line states the cost of Uncategorized's default (Show): hiding a Blizzard category alone does
-little while it stays Show, since it keeps rescuing unlisted auras; both rows need Hide to actually
-remove one. The rows carry `skipRender`, so the flow engine draws nothing for them; the tab is bespoke
+Buff containers see the 17 buff rows, debuff containers 17 debuff rows — each list's last row is its
+own `Uncategorized`, asymmetric between the two (`Cat.HARMFUL` has no `spells`-kind category for its
+row to be a complement of, batch 7 fix round 3): on a buff container Show rescues an unlisted aura
+from another category's Hide; on a debuff container Show changes nothing at all (there is no spell
+list for it to be outside of), and only Hide does anything — reproducing the retired toggle exactly.
+Under the Spell Categories grid, a line states the cost of the buff row's default (Show): hiding a
+Blizzard category alone does little while it stays Show, since it keeps rescuing unlisted auras; both
+rows need Hide to actually remove one. The rows carry `skipRender`, so the flow engine draws nothing
+for them; the tab is bespoke
 (keyed by the group's name) and draws one `ChoiceGrid` per row `grid`, each a header line
 `Show · Hide · Category` and then a line of two cells (a solid yellow fill for the lit one,
 LibKa0s v1.36.0's `O.ChoiceGrid`) and the category's label (hover it for its description). A grid
@@ -209,7 +214,7 @@ with no row for the aura type is not drawn.
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
 | Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, **weaponEnchants** | — |
+| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, **weaponEnchants**, **uncategorized** (last) | **uncategorizedDebuffs** (last, fix round 3) |
 | Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 

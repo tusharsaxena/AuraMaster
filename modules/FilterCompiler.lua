@@ -49,28 +49,39 @@ local _, NS = ...
 -- matches no aura.
 --
 -- `uncategorized` (batch 7, docs/superpowers/specs/2026-09-15-feedback-batch7-design.md section 4,
--- BUFFS ONLY as of fix round 1 — defaults/Categories.lua's KINDS doc has the full reasoning):
--- "in none of the profile's SPELL-LIST (kind `spells`) categories" — token/flag/dispel categories do
--- not count toward being categorized. Show compiles to its own group like any other shown category,
--- but as an EXCLUDE of the union of every spells-kind category's ids (there is no id list of "every
--- other spell" to include), and it carries no hidden-category exclusion of its own — that is what
--- rescues a cancelable-but-unlisted buff from a Hidden `Cancelable` (the defect this fixes).
+-- ONE ROW PER AURA TYPE, ASYMMETRIC as of fix round 3 — defaults/Categories.lua's KINDS doc has the
+-- full reasoning): "in none of the profile's SPELL-LIST (kind `spells`) categories" — token/flag/
+-- dispel categories do not count toward being categorized. `hasUnion` (the union of every spells-kind
+-- category's ids for the aura type is non-empty) is what the asymmetry turns on:
 --
--- Its group SUPERSEDES the catch-all rather than sitting beside it (fix round 1): while any category
--- is Hidden and an `uncategorized` category exists for the aura type, the catch-all is never emitted
--- at all, in EITHER of `uncategorized`'s own states —
---   * Show: `uncategorized`'s own group carries no hidden-category exclusion (that is the whole
---     point). The catch-all DOES carry one, on top of the exact same shown-category exclusions — so
---     the catch-all's constraints are a strict SUBSET of `uncategorized`'s group's, and every aura the
---     catch-all would match, `uncategorized`'s group already matches. Shipping both draws it twice.
---   * Hide: there is no negative way to express "not uncategorized" (no id list to subtract), so the
---     only available constraint is an INCLUDE restricted to the union of every spells-kind category's
---     ids. But the catch-all already EXCLUDES every one of those same ids (each spells-kind category
---     is in `shown` or `hidden`, both swept into the catch-all's exclusions) — `excludeSpellIDs`
---     there is already a superset of that union, so the group could never match anything. This file's
---     own rule is that such a group is dropped, not shipped.
--- Either way the catch-all is redundant or dead once `uncategorized` exists for the aura type, so it
--- is suppressed outright — the Uncategorized row IS the catch-all, made controllable.
+--   * `hasUnion` true (buffs): Show compiles to its own group like any other shown category, but as
+--     an EXCLUDE of that union (there is no id list of "every other spell" to include), carrying no
+--     hidden-category exclusion of its own — that is what rescues a cancelable-but-unlisted buff from
+--     a Hidden `Cancelable` (the defect this fixes). Hide has no negative way to express "not
+--     uncategorized" (no id list to subtract), so it contributes nothing of its own.
+--   * `hasUnion` false (debuffs — `Cat.HARMFUL` has no `spells`-kind category, so the union is always
+--     empty): Show contributes NO group at all — an unrestricted "every debuff not otherwise Shown"
+--     group would draw right through every other category's Hide, since every debuff is trivially
+--     "not on any spell list" (proven concretely, fix round 3: shipping it produced a single group
+--     with no candidate filter, matching everything). Hide still contributes nothing of its own
+--     either, for the same "no id list to subtract" reason as the buff side.
+--
+-- Either way `uncategorized`'s presence SUPERSEDES the catch-all rather than sitting beside it, but
+-- only in the states where it actually replaces what the catch-all would do:
+--   * Show with `hasUnion` true: `uncategorized`'s own group carries no hidden-category exclusion
+--     (the whole point), while the catch-all DOES, on top of the same shown-category exclusions — so
+--     the catch-all's constraints are a strict SUBSET of `uncategorized`'s group's, and shipping both
+--     would draw the same aura twice. Suppressed.
+--   * Show with `hasUnion` false: `uncategorized` contributes no group (above), so there is nothing
+--     to supersede the catch-all with — it must stay, unsuppressed, exactly as if this category did
+--     not exist. This is the fix round 3 correction: round 1 suppressed it unconditionally on Show,
+--     which is only safe when `hasUnion` is true.
+--   * Hide, either `hasUnion`: the only possible catch-all contribution would be an INCLUDE
+--     restricted to the union — but the catch-all already EXCLUDES every one of those same ids (each
+--     spells-kind category is in `shown` or `hidden`, both swept into its exclusions), so that INCLUDE
+--     could never match anything (`hasUnion` true), or is simply moot (`hasUnion` false, the union is
+--     empty already). Either way Hide suppresses the catch-all outright — on a debuff container this
+--     reproduces the retired "Only these categories" toggle exactly (fix round 2).
 --
 -- A group whose constraints contradict themselves (it would need both `X` and `!X`) is dropped rather
 -- than handed to the engine, because it could never match anything.
@@ -450,21 +461,28 @@ end
 --- One group per SHOWN category (R-4): the base plus that category's positive constraint
 --- (`includeCategory`), minus every earlier shown category (`excludeGuarded`, so an aura in two shown
 --- categories is drawn once, under the first) and the whitelist. `uncategorized` (U-3) rides this
---- loop like any other shown category — `includeCategory` gives it the complement exclude instead of
---- a positive include — and needs no special dedup of its own since it is always last (U-1).
+--- loop like any other shown category when `hasUnion` — `includeCategory` gives it the complement
+--- exclude instead of a positive include, and needs no special dedup of its own since it is always
+--- last (U-1) — but contributes NO group at all when `hasUnion` is false (fix round 3): with an empty
+--- union every aura trivially qualifies, so an unrestricted group would draw everything and defeat
+--- every other category's Hide (the top-of-file comment has the concrete proof). Skipping it here is
+--- what makes it behave as if the row did not exist in that case, catch-all included — see
+--- `addCategoryGroups`.
 --- @return boolean usesSpellIds
 local function addShownGroups(plan, base, cats, look, hasUnion)
     local edits, union = cats.spellEdits, cats.union or {}
     local usesSpellIds = false
     for i, def in ipairs(cats.shown) do
-        local con = cloneCon(base)
-        includeCategory(con, def, edits, union)
-        if def.kind == "spells" or (def.kind == "uncategorized" and hasUnion) then usesSpellIds = true end
-        for j = 1, i - 1 do
-            usesSpellIds = excludeGuarded(con, cats.shown[j], edits) or usesSpellIds
+        if not (def.kind == "uncategorized" and not hasUnion) then
+            local con = cloneCon(base)
+            includeCategory(con, def, edits, union)
+            if def.kind == "spells" or def.kind == "uncategorized" then usesSpellIds = true end
+            for j = 1, i - 1 do
+                usesSpellIds = excludeGuarded(con, cats.shown[j], edits) or usesSpellIds
+            end
+            if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
+            addGroup(plan, con, def.label, look)
         end
-        if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
-        addGroup(plan, con, def.label, look)
     end
     return usesSpellIds
 end
@@ -498,11 +516,13 @@ end
 ---   * No category Hidden (R-3): exactly ONE group, the base minus the whitelist. A Show cannot
 ---     rescue anything when nothing is hiding, so the per-shown-category groups below would be pure
 ---     cost — this is what keeps a default container at one group.
----   * Otherwise (R-4): `addShownGroups` plus `addCatchAllGroup` (R-5) — unless (fix round 1) an
----     `uncategorized` category exists for the aura type, in EITHER of its own states, which
----     supersedes the catch-all rather than joining it. Fix round 2 retired the per-container "Only
----     these categories" toggle (`D8`) that used to drop the catch-all on its own: once
----     `uncategorized` does that correctly, the toggle had nothing left to do.
+---   * Otherwise (R-4): `addShownGroups` plus `addCatchAllGroup` (R-5) — unless `uncategorized`
+---     actually supersedes the catch-all for this compile (fix round 1, corrected fix round 3): Hide
+---     always does (whatever `hasUnion` is); Show does only when `hasUnion` is true, since a Show
+---     with an empty union contributes no group of its own (`addShownGroups`) and so has nothing to
+---     supersede the catch-all WITH. Fix round 2 retired the per-container "Only these categories"
+---     toggle (`D8`) that used to drop the catch-all on its own: once `uncategorized` does that
+---     correctly, the toggle had nothing left to do.
 ---
 --- @return boolean usesSpellIds
 local function addCategoryGroups(plan, base, cats, look)
@@ -517,8 +537,9 @@ local function addCategoryGroups(plan, base, cats, look)
     local hasUnion = not isEmpty(cats.union or {})
     local usesSpellIds = addShownGroups(plan, base, cats, look, hasUnion)
 
-    local uncategorizedPresent = anyKind(cats.shown, "uncategorized") or anyKind(cats.hidden, "uncategorized")
-    if not uncategorizedPresent then
+    local supersedesCatchAll = anyKind(cats.hidden, "uncategorized")
+        or (hasUnion and anyKind(cats.shown, "uncategorized"))
+    if not supersedesCatchAll then
         usesSpellIds = addCatchAllGroup(plan, base, cats, look) or usesSpellIds
     end
 
@@ -624,11 +645,11 @@ local function claimingCategories(Categories, auraType, filter, categorySpells, 
     return claiming, anyShow
 end
 
---- `auraType`'s `uncategorized` category def, or nil — HARMFUL never has one (fix round 1: buffs
---- only, defaults/Categories.lua's KINDS doc). Unlike `token`/`flag`/`dispel`, this one needs no
---- guess: whether `id` is on any `spells`-kind list is exactly what `claimingCategories` (empty
---- `claiming`) already answers, so `ExplainSpell` can report it with the same confidence as a
---- spells-kind category.
+--- `auraType`'s `uncategorized` category def, or nil (a future aura type that never gets one). Both
+--- HELPFUL and HARMFUL carry one as of fix round 3 (defaults/Categories.lua's KINDS doc). Unlike
+--- `token`/`flag`/`dispel`, this one needs no guess: whether `id` is on any `spells`-kind list is
+--- exactly what `claimingCategories` (empty `claiming`) already answers, so `ExplainSpell` can report
+--- it with the same confidence as a spells-kind category.
 --- @return table|nil
 local function uncategorizedDef(Categories, auraType)
     for _, def in ipairs(Categories.For(auraType)) do
@@ -637,23 +658,31 @@ local function uncategorizedDef(Categories, auraType)
     return nil
 end
 
---- `ExplainSpell`'s rank-5 case: `id` is on no `spells`-kind list. With an `uncategorized` category
---- for this aura type, its own state decides `id`'s fate directly — Show is rank 3 (rescued, same as
---- any other Show), Hide is rank 4 (its one category says Hide) — because `addCategoryGroups` never
---- emits a catch-all once `uncategorized` exists for the aura type either way. With no such category
---- (HARMFUL — fix round 1: buffs only), nothing removed it (fix round 2 retired the "Only these
---- categories" toggle that once could), so it is unconditionally rank 5 shown, and no category is
---- named (a `token`/`flag`/`dispel` guess is never made — see `ExplainSpell`'s comment).
+--- `ExplainSpell`'s rank-5 case: `id` is on no `spells`-kind list. Mirrors `addCategoryGroups`'
+--- asymmetry (fix round 3) exactly, because the two must never disagree about what the compiled plan
+--- actually draws:
+---   * Hide, whatever `hasUnion` is: rank 4 — `addCategoryGroups` suppresses the catch-all outright
+---     on Hide regardless, so nothing is left to draw an aura that reaches here.
+---   * Show with `hasUnion` true (buffs): rank 3 — a real rescuing group, same as any other Show.
+---   * Show with `hasUnion` false (debuffs), or no `uncategorized` category at all (should not arise
+---     post round 3, but a future shape might): the row contributes NO group of its own
+---     (`addShownGroups`) and does not supersede the catch-all (`addCategoryGroups`), so it decides
+---     nothing — this falls through to the ordinary rank 5, exactly as if the row did not exist. No
+---     category is named in either rank-5 branch (a `token`/`flag`/`dispel` guess is never made —
+---     see `ExplainSpell`'s comment).
 --- @return table  { verdict, rank, categories }
-local function explainUncategorized(Categories, auraType, filter)
+local function explainUncategorized(Categories, auraType, filter, hasUnion)
     local def = uncategorizedDef(Categories, auraType)
     if def then
         local hidden = (filter.categories or {})[def.key] == "hide"
-        local entry = { { key = def.key, label = NS.L[def.label], state = hidden and "hide" or "show" } }
         if hidden then
+            local entry = { { key = def.key, label = NS.L[def.label], state = "hide" } }
             return { verdict = "hidden", rank = 4, categories = entry }
         end
-        return { verdict = "shown", rank = 3, categories = entry }
+        if hasUnion then
+            local entry = { { key = def.key, label = NS.L[def.label], state = "show" } }
+            return { verdict = "shown", rank = 3, categories = entry }
+        end
     end
     return { verdict = "shown", rank = 5, categories = {} }
 end
@@ -662,9 +691,11 @@ end
 --- priority `Compile` follows (docs/superpowers/specs/2026-09-14-feedback-batch6-design.md section
 --- 6): the Overrides whitelist beats the blacklist, a category set to Show beats one set to Hide, and
 --- an aura in no category is drawn — nothing removed it — unless the aura type carries its own
---- `uncategorized` category (buffs only, `explainUncategorized`), whose own state then decides it
---- instead. Pure, like `Compile`: no frames, no database, `cfg`/`id`/`ctx` in, a table out —
---- `FC.ProfileContext()` is the seam a caller hands it the profile's spell-list edits through.
+--- `uncategorized` category, whose own state then decides it instead (`explainUncategorized`) — a
+--- real rescue on Show only when the aura type's spells-kind union is non-empty (buffs), since an
+--- empty union has nothing to rescue and does not decide anything (fix round 3's asymmetry). Pure,
+--- like `Compile`: no frames, no database, `cfg`/`id`/`ctx` in, a table out — `FC.ProfileContext()`
+--- is the seam a caller hands it the profile's spell-list edits through.
 ---
 --- Reasons about `spells`-kind categories, and `uncategorized` (`explainUncategorized`), ONLY. A
 --- `token`, `flag` or `dispel` category matches auras by a property the addon cannot look up from a
@@ -693,7 +724,8 @@ function FC.ExplainSpell(cfg, id, ctx)
     local claiming, anyShow = claimingCategories(Categories, auraType, filter, ctx.categorySpells, id)
 
     if isEmpty(claiming) then
-        return explainUncategorized(Categories, auraType, filter)
+        local hasUnion = not isEmpty(categorizedUnion(Categories, auraType, ctx.categorySpells))
+        return explainUncategorized(Categories, auraType, filter, hasUnion)
     end
     if anyShow then
         return { verdict = "shown", rank = 3, categories = claiming }

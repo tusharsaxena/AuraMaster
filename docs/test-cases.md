@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (54)
+### test_database.lua (62)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -87,8 +87,16 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v3: the current schema version is 3
+- v4: the current schema version is 4
 - v3: RunMigrations migrates every stored profile, the inactive one included
+- v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
+- v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
+- v4: a container with the toggle off or absent is untouched
+- v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost
+- v4: an unrecognized auraType with the toggle on is genuinely lost, named in lostList, and its dead key still cleared
+- v4: MigrateV4 is idempotent
+- v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)
+- v4: no notice is printed when nothing was lost
 
 ### test_schema.lua (28)
 
@@ -188,19 +196,19 @@ badge and any count quoted in the docs must agree with it.
 - filter: the whitelist is its own first group and every other group excludes it
 - filter: the whitelist beats the blacklist — an id on both lists is shown (R-2)
 - filter: the blacklist still reaches the catch-all, but never the whitelist group (R-7)
-- filter: off, the toggle changes nothing — a default container still stays at one group (R-3)
-- filter: on, one shown category and nothing hidden still gets its own group — R-3 does not apply (R-9)
-- filter: on, the catch-all is gone — the group carries a positive constraint instead of none (R-9)
-- filter: on, nothing shown and nothing whitelisted draws nothing, with its own warning (R-11)
-- filter: on, nothing shown but the whitelist still draws — no ONLY_SHOWN_NONE warning
+- filter: a stray filter.onlyShown key, however it got there, is inert — the compiler never reads it (D8 retired)
 - filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case
 - filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)
 - filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)
 - filter: a listed aura's own category group is unaffected by Uncategorized either way
-- filter: 'only these categories' changes nothing once Uncategorized exists — there was never a catch-all to drop (coordinator ruling, left as-is this round)
+- filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide
+- filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
+- filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
-- explain: with no Uncategorized category for the aura type (HARMFUL), an unclaimed id is still rank 5
+- explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
+- explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue
+- explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
@@ -234,7 +242,7 @@ badge and any count quoted in the docs must agree with it.
 - explain: a Show category rescues an aura another category hides — rank 3, shown, both named
 - explain: an aura whose every category says Hide is hidden — rank 4
 - explain: an aura in no category is shown, with no categories named — rank 5
-- explain: with 'only these categories' on, an unclaimed aura is hidden instead — still rank 5
+- explain: a stray filter.onlyShown key does not affect rank 5 — the toggle is retired
 - explain: a token category is never named — only spells-kind categories are reasoned about
 
 ### test_container.lua (41)
@@ -847,7 +855,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (35)
+### test_pages_filters.lua (34)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -859,12 +867,12 @@ badge and any count quoted in the docs must agree with it.
 - filters: a stored max-duration matching no preset leaves the preset dropdown blank
 - filters: the max-duration description says there is no minimum
 - filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
-- filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once
+- filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets no link (F-3)
 - filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first
-- filters: 'Only these categories' is drawn at the top of the Categories tab, above the grids, and its text explains Hide differently while it is on (R-8/R-10)
+- filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
 - filters: every category row is skipRender and names its grid
@@ -875,13 +883,12 @@ badge and any count quoted in the docs must agree with it.
 - filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once
 - filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from
 - filters: every tab opens with what the engine will not honor here, in orange
-- filters: a plain, uncategorized whitelist entry has no note
+- filters: a plain whitelist entry with nothing to disagree has no note
 - filters: a spell on both lists gets a note on its blacklist entry saying the whitelist wins
 - filters: a spell on both lists gets a note on its whitelist entry naming the blacklist too
 - filters: a blacklisted spell in a Show category names that category as overridden
 - filters: a whitelisted spell every one of its categories would hide names them as overridden
 - filters: a blacklisted spell a Hide category would also hide gets no note
-- filters: a whitelisted spell no category claims, under 'only these categories', warns it would vanish
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
 
@@ -964,7 +971,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
 - defaults: spell categories are buff categories, and IsSpellCategory names exactly them
-- defaults: uncategorized is declared LAST in Cat.HELPFUL, and does not exist for HARMFUL (U-1, fix round 1)
+- defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)
 - defaults: every leaf of the container template is edited by a settings row or is a spell set
 - defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
 - defaults: every dropdown's default is one of its choices
@@ -1046,7 +1053,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 54 |
+| test_database.lua | 62 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
@@ -1073,7 +1080,7 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 36 |
 | test_pages_containers.lua | 22 |
-| test_pages_filters.lua | 35 |
+| test_pages_filters.lua | 34 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 10 |
 | test_pages_icons.lua | 7 |
@@ -1090,4 +1097,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **896** |
+| **Total** | **903** |

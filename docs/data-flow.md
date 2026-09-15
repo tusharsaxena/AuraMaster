@@ -90,24 +90,30 @@ priority states (`FC.ExplainSpell` answers the same question for one spell, for 
   `includeSpellIDs`, with no blacklist applied to it.
 - **Categories** (ranks 3–5): `splitCategories` partitions every category of the container's aura
   type into `shown` and `hidden` (kind `enchant` is excluded — it matches no aura). With nothing
-  Hidden and "Only these categories" off, exactly **one** group ("All") is emitted, the base minus
-  the whitelist — a Show cannot rescue anything when nothing is hiding, so a group per category would
-  be pure cost. Otherwise, one group is emitted **per category set to Show** — the base plus that
-  category's own positive constraint, minus every earlier Shown category (so an aura in two Shown
-  categories is drawn once, under the first) and minus the whitelist — followed by the **catch-all**:
-  the base minus every Hidden and every Shown category and the whitelist, which is what draws an aura
-  in no category at all (rank 5). "Only these categories" (`onlyShown`) drops that catch-all, so only
-  the whitelist group and the Shown groups remain — a container with anything Hidden this way
-  compiles to roughly 15 groups, not one, and the "Max auras" cap (`maxFrameCount`) applies to each
-  group separately.
+  Hidden, exactly **one** group ("All") is emitted, the base minus the whitelist — a Show cannot
+  rescue anything when nothing is hiding, so a group per category would be pure cost. Otherwise, one
+  group is emitted **per category set to Show** — the base plus that category's own positive
+  constraint, minus every earlier Shown category (so an aura in two Shown categories is drawn once,
+  under the first) and minus the whitelist — followed by the **catch-all**: the base minus every
+  Hidden and every Shown category and the whitelist, which is what draws an aura in no category at
+  all (rank 5). The per-container "Only these categories" toggle that used to drop the catch-all is
+  RETIRED (batch 7 fix round 2); a Blizzard `uncategorized` category (batch 7, `U-1`..`U-5`) does
+  that instead — Hide always suppresses the catch-all (on either aura type, reproducing the retired
+  toggle exactly, fix round 3); Show suppresses it too, but only for a buff container, where the
+  category's own group is a real rescue that already covers everything the catch-all would (a strict
+  superset relationship); on a debuff container Show contributes no group of its own at all and
+  changes nothing (`hasUnion` is always false there — no `spells`-kind category exists for debuffs to
+  be a complement of), so the catch-all is left exactly as it would be without the category. A
+  container with anything Hidden this way compiles to roughly 15 groups, not one, and the "Max auras"
+  cap (`maxFrameCount`) applies to each group separately.
 - **A category applies by kind**: a token adds `TOKEN` or `!TOKEN`; a flag sets a boolean candidate
   filter (`isBossAura`, `isRoleAura`, `isPriorityAura`, `isStealable`, `isFromPlayerOrPlayerPet`); a
   dispel category adds `includeDispelTypes` or `excludeDispelTypes`; a spell category adds
-  `includeSpellIDs` or `excludeSpellIDs` from its starter list with the container's edits layered on.
+  `includeSpellIDs` or `excludeSpellIDs` from its starter list with the container's edits layered on;
+  `uncategorized` (above) is its own case, gated on `hasUnion` rather than the generic per-kind rule.
 - **A group that contradicts itself** (it would need `X` and `!X`, or a Shown spell category with no
-  ids left) is dropped; if every group drops, the plan warns that nothing can match — or, with
-  "Only these categories" on and nothing Shown or whitelisted, the dedicated
-  `FC.WARN.ONLY_SHOWN_NONE` line instead of the generic one.
+  ids left) is dropped; if every group drops, the plan warns that nothing can match
+  (`FC.WARN.NEVER_MATCHES`).
 - **Warnings** record what the engine will silently not do: spell ids on a friendly unit's debuffs or
   a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit.
 - A player buff container appends the enchant slots after its groups, unless its `weaponEnchants`

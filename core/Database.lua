@@ -638,25 +638,51 @@ end
 --- problem it would be trying to solve). Logged once per such container rather than converted quietly.
 --- @return number converted, number lost  containers moved to `uncategorized = "hide"`, and
 ---                 containers whose narrowing could not be preserved (no such category exists)
+--- Which stored `filter.categories` key preserves "Only these categories" for `auraType`, or nil.
+--- Fix round 3: both HELPFUL and HARMFUL now carry an `uncategorized` category (asymmetric —
+--- defaults/Categories.lua's KINDS doc — but Hide reproduces the retired toggle on either type, which
+--- is all this migration ever needed). `ENCHANT` is deliberately excluded, not merely absent: an
+--- ENCHANT container compiles to no aura groups at all (`FC.Compile`'s `compileEnchant`), so its
+--- `onlyShown` — however it got set — never did anything, and clearing it loses nothing worth
+--- counting. Any other or unrecognized `auraType` returns nil, the "lost" case.
+local function uncategorizedKeyFor(auraType)
+    if auraType == "HELPFUL" then return "uncategorized" end
+    if auraType == "HARMFUL" then return "uncategorizedDebuffs" end
+    return nil
+end
+
+--- Schema v4 over one profile table: the retired "Only these categories" toggle
+--- (`container.filter.onlyShown`) becomes `categories.<uncategorized key> = "hide"` for the container's
+--- aura type, or is simply lost with the key cleared for a shape that has no such category
+--- (`uncategorizedKeyFor`). `lostList` names every lost container (`{ id, name, auraType }`, in
+--- container-key order) so the caller can tell the player, not just the debug console — see the v4
+--- step in `SCHEMA_STEPS`, which is what actually calls `NS.Print`; this function stays a pure test
+--- seam, like `MigrateV2`/`MigrateV3`.
+--- @return number converted, number lost, table lostList
 function Database.MigrateV4(p)
-    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
-    local converted, lost = 0, 0
-    for key, c in pairs(p.containers) do
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0, {} end
+    local converted, lost, lostList = 0, 0, {}
+    local keys = {}
+    for key in pairs(p.containers) do
+        keys[#keys + 1] = key
+    end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    for _, key in ipairs(keys) do
+        local c = p.containers[key]
         if type(c) == "table" and type(c.filter) == "table" and c.filter.onlyShown == true then
-            if c.auraType == "HELPFUL" then
+            local catKey = uncategorizedKeyFor(c.auraType)
+            if catKey then
                 c.filter.categories = c.filter.categories or {}
-                c.filter.categories.uncategorized = "hide"
+                c.filter.categories[catKey] = "hide"
                 converted = converted + 1
-            else
+            elseif c.auraType ~= "ENCHANT" then
                 lost = lost + 1
-                if NS.Debug then
-                    NS.Debug("Migrate", "v4 container '%s' (%s): 'Only these categories' could not be preserved — no Uncategorized category exists for this aura type; it draws its ordinary catch-all again", tostring(key), tostring(c.auraType))
-                end
+                lostList[#lostList + 1] = { id = key, name = c.name, auraType = c.auraType }
             end
             c.filter.onlyShown = nil
         end
     end
-    return converted, lost
+    return converted, lost, lostList
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -698,12 +724,26 @@ local SCHEMA_STEPS = {
         end)
     end },
     { to = 4, apply = function(db)
+        -- R-8..R-11 retired; NS.Print (not just NS.Debug, which a player may never have enabled) is
+        -- the one place a lost container is actually told about — one consolidated line for the whole
+        -- migration pass, not one per profile, so a player with several affected containers sees a
+        -- single, plain notice rather than a burst of chat spam. Structurally one-shot already: the
+        -- schema-version gate below never re-runs this step once `schemaVersion` reaches 4.
+        local allLost = {}
         eachProfile(db, function(p, name)
-            local converted, lost = Database.MigrateV4(p)
+            local converted, lost, lostList = Database.MigrateV4(p)
             if NS.Debug then
-                NS.Debug("Migrate", "v4 profile '%s': 'Only these categories' retired -- %s container(s) moved to Uncategorized = Hide, %s lost the capability (no Uncategorized category for their aura type)", name, converted, lost)
+                NS.Debug("Migrate", "v4 profile '%s': 'Only these categories' retired -- %s container(s) moved to Uncategorized = Hide, %s lost the capability", name, converted, lost)
+            end
+            for _, entry in ipairs(lostList) do
+                allLost[#allLost + 1] = ("%s (%s, profile '%s')"):format(
+                    tostring(entry.name or entry.id), tostring(entry.auraType), tostring(name))
             end
         end)
+        local lostCount = #allLost
+        if lostCount > 0 and NS.Print then
+            NS.Print(NS.L["The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."]:format(table.concat(allLost, ", ")))
+        end
     end },
 }
 

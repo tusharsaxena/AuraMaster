@@ -342,23 +342,29 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     it; this step only writes the stored key ahead of that); the categorical `kind == "enchant"`
     exclusion above is what keeps this order safe once B3 does add it, rather than the lift merely
     having nothing to see today.
-- **Schema v4** (`Database.MigrateV4`, `core/Database.lua`, batch 7 fix round 2) runs over **every**
-  stored profile, same reach as v2/v3. It logs one `[Migrate] v4 profile '<name>'` line each naming
-  how many containers converted and how many lost the capability, and
+- **Schema v4** (`Database.MigrateV4`, `core/Database.lua`, batch 7 fix rounds 2 and 3) runs over
+  **every** stored profile, same reach as v2/v3. It logs one `[Migrate] v4 profile '<name>'` line
+  each naming how many containers converted and how many lost the capability, and
   `Database.CurrentSchemaVersion()` answers `4`. The owner retired the per-container "Only these
-  categories" toggle (`filter.onlyShown`) entirely: `categories.uncategorized = "hide"` (batch 7,
-  `docs/ARCHITECTURE.md` → Filter priority) means what the toggle used to mean, on a HELPFUL
-  container — the one aura type that carries an `uncategorized` category (buffs only; `Cat.HARMFUL`
-  has no `spells`-kind category, so a debuff-side row's union would always be empty, silently
-  no-op-ing every other Hide on the tab). For a container with `filter.onlyShown == true`:
-  - **HELPFUL**: `categories.uncategorized` is set `"hide"`, preserving the toggle's old effect —
-    the container keeps drawing only what it categorized rather than silently widening the moment the
-    toggle's own catch-all suppression disappears with the key.
-  - **Any other aura type (HARMFUL, in practice)**: there is no `uncategorized` category to migrate
-    onto, so nothing can be invented to stand in for it. The container LOSES the "only these
-    categories" narrowing — an unclaimed debuff reaches the ordinary catch-all again, same as any
-    container that never had the toggle on. This is a real, user-visible loss of capability, not
-    fixed by this step; it is logged rather than done silently.
+  categories" toggle (`filter.onlyShown`) entirely: `categories.uncategorized = "hide"` (buffs) or
+  `categories.uncategorizedDebuffs = "hide"` (debuffs, batch 7 `U-1`..`U-5`, restored fix round 3;
+  `docs/ARCHITECTURE.md` → Filter priority) means what the toggle used to mean, on either aura type —
+  Hide always reproduces it exactly, whether or not the category's union is empty (fix round 3's
+  `hasUnion` gate only changes what SHOW does, not what Hide does). For a container with
+  `filter.onlyShown == true`:
+  - **HELPFUL or HARMFUL**: the matching `categories.<key>` is set `"hide"`, preserving the toggle's
+    old effect — the container keeps drawing only what it categorized rather than silently widening
+    the moment the toggle's own catch-all suppression disappears with the key.
+  - **ENCHANT**: neither converted nor counted as lost. An ENCHANT container compiles to no aura
+    groups at all (`FC.Compile`'s `compileEnchant`), so its `onlyShown` — however it got set — never
+    did anything; the dead key is still cleared, just not narrated as a loss.
+  - **Any other, unrecognized `auraType`**: there is no `uncategorized` category to migrate onto for
+    a shape this migration does not know, so nothing can be invented to stand in for it. The
+    container LOSES the "only these categories" narrowing — an unclaimed aura reaches the ordinary
+    catch-all again, same as any container that never had the toggle on. This is counted (`lost`),
+    named (`{ id, name, auraType }`), and told to the player directly with an ungated `NS.Print` line
+    naming every such container — not left to `NS.Debug`, which a player may never have enabled, and
+    not done silently.
   Either way `filter.onlyShown` is cleared — the key means nothing any more and
   `NS.CONTAINER_TEMPLATE` no longer carries it. A container where the toggle was already off or
   absent is untouched entirely, not even the dead-key clear (idempotent: nothing at `true` to act on

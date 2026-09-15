@@ -391,6 +391,43 @@ test("filter: a listed aura's own category group is unaffected by Uncategorized 
     assertEqual(FC.Signature(shownDef), FC.Signature(hiddenDef), "Uncategorized never touches a listed category's own group")
 end)
 
+-- ── uncategorized: the debuff row's asymmetry (fix round 3, restored) ────────────────────────────
+--
+-- The fixture narrows `ctx.categories` to JUST `crowdControl` and `uncategorizedDebuffs`, isolating
+-- the row from the real shipped list's `fromPlayers`/`fromNonPlayers` contradiction — that pair
+-- already drops the catch-all for its own, unrelated reason (the "real shipped category list" test
+-- above), which would otherwise mask a real bug here. `Cat.HARMFUL` has no `spells`-kind category,
+-- so `hasUnion` is always false for HARMFUL: this is the whole reason the two aura types compile
+-- differently, not a coincidence of which categories happen to be in the fixture.
+
+test("filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide", function()
+    -- red under: an unrestricted debuff-side Show group (fix round 1's original mistake) that would
+    -- draw every debuff regardless of crowdControl's Hide — the owner's complaint, reborn on debuffs.
+    local plan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } },
+        { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
+    assertEqual(#plan.groups, 1, "only the ordinary catch-all — Uncategorized contributes nothing")
+    assertEqual(plan.groups[1].label, "All")
+    assertEqual(plan.groups[1].filter, "HARMFUL|!CROWD_CONTROL",
+        "the catch-all still excludes crowdControl, exactly as if Uncategorized did not exist")
+end)
+
+test("filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly", function()
+    local plan = compile({ auraType = "HARMFUL",
+        filter = { categories = { crowdControl = "show", uncategorizedDebuffs = "hide" } } },
+        { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
+    assertEqual(#plan.groups, 1, "only the explicitly shown category — no catch-all")
+    assertEqual(plan.groups[1].label, "Crowd control")
+    assertEqual(plan.groups[1].filter, "HARMFUL|CROWD_CONTROL")
+end)
+
+test("filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)", function()
+    local plan = compile({ auraType = "HARMFUL", filter = {} },
+        { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
+    assertEqual(#plan.groups, 1)
+    assertEqual(plan.groups[1].label, "All")
+    assertNil(plan.groups[1].candidateFilters)
+end)
+
 -- ── uncategorized: ExplainSpell (fix round 1) ─────────────────────────────────────────────────
 
 test("explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5", function()
@@ -411,12 +448,34 @@ test("explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide", fu
     assertEqual(r.categories[1].state, "hide")
 end)
 
-test("explain: with no Uncategorized category for the aura type (HARMFUL), an unclaimed id is still rank 5", function()
+test("explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5", function()
+    -- The `only` stub deliberately excludes `uncategorizedDebuffs` here, to cover the general
+    -- fallback path for an aura type that carries no such category at all — real HARMFUL has one as
+    -- of fix round 3, covered by its own `explain: HARMFUL, Uncategorized Show...` cases below.
     local r = FC.ExplainSpell(cfg({ auraType = "HARMFUL", filter = {} }), 999999,
         { categories = only("HARMFUL", { "crowdControl" }) })
     assertEqual(r.verdict, "shown")
     assertEqual(r.rank, 5)
     assertEqual(#r.categories, 0)
+end)
+
+test("explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue", function()
+    -- red under: explainUncategorized reporting rank 3 for a Show row that contributes no group
+    -- (fix round 3) — ExplainSpell must never claim a rescue the compiler does not actually perform.
+    local r = FC.ExplainSpell(cfg({ auraType = "HARMFUL", filter = {} }), 999999,
+        { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
+    assertEqual(r.verdict, "shown")
+    assertEqual(r.rank, 5)
+    assertEqual(#r.categories, 0, "no category is named — Uncategorized decided nothing here")
+end)
+
+test("explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized", function()
+    local r = FC.ExplainSpell(cfg({ auraType = "HARMFUL", filter = { categories = { uncategorizedDebuffs = "hide" } } }), 999999,
+        { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
+    assertEqual(r.verdict, "hidden")
+    assertEqual(r.rank, 4)
+    assertEqual(r.categories[1].key, "uncategorizedDebuffs")
+    assertEqual(r.categories[1].state, "hide")
 end)
 
 -- ── what the engine will not do ───────────────────────────────────────────────────────────────
@@ -554,9 +613,14 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- subset of `uncategorized`'s own group's, or a group that could never match — see
     -- modules/FilterCompiler.lua's top-of-file comment). 15 groups total.
     --
-    -- HARMFUL: unchanged from before batch 7 — `Cat.HARMFUL` carries no `uncategorized` category
-    -- (fix round 1 ruling: buffs only, defaults/Categories.lua's KINDS doc has the reasoning). 16
-    -- filterable categories minus 1 hidden (crowdControl) = 15 shown groups, and NO catch-all —
+    -- HARMFUL: 17 filterable categories (16 pre-batch-7 plus `uncategorizedDebuffs`, restored fix
+    -- round 3 with an asymmetric meaning — defaults/Categories.lua's KINDS doc) minus 1 hidden
+    -- (crowdControl) = 16 shown categories, but only 15 actually become groups: `uncategorizedDebuffs`
+    -- contributes NO group of its own on Show (fix round 3 — its union is always empty for HARMFUL,
+    -- `hasUnion` is false, and `addShownGroups` skips it outright rather than emit an unrestricted
+    -- group that would draw every debuff and defeat every other category's Hide). The catch-all is
+    -- NOT suppressed by its presence either (Show-with-no-union supersedes nothing), so it is
+    -- attempted — and dropped anyway, for the same pre-existing reason as before round 3:
     -- `fromPlayers` and `fromNonPlayers` are both default-Show HARMFUL categories that hide the SAME
     -- field (`isFromPlayerOrPlayerPet`) to opposite values; the catch-all excludes every shown
     -- category (R-5), so it asks for that field to be both true and false at once, `con.conflict`
@@ -566,7 +630,9 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- catch-all's absence. This holds only on the assumption that a real aura's
     -- `isFromPlayerOrPlayerPet` is never nil; if a future category pair ever left a gap in the aura
     -- space the way this one does not, its catch-all would need to survive, and this count would need
-    -- to be revisited along with it.
+    -- to be revisited along with it. The final count (15) is the same number as before round 3, but
+    -- for a different reason — see the dedicated test below that isolates `uncategorizedDebuffs` from
+    -- this pair, which the real shipped list otherwise masks.
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
     assertEqual(#helpfulPlan.groups, 15, "HELPFUL: 15 shown groups, no catch-all (Uncategorized supersedes it)")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
