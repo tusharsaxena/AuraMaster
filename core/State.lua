@@ -8,15 +8,14 @@ local _, NS = ...
 --                      (settings/Schema.lua). The settings banner moves it; nil means "the
 --                      first container in display order", which is what the CLI gets on a fresh
 --                      login where nothing has ever selected one.
---   preview            ContainerManager.SetPreview's flag (preview-mode): placeholder auras fed through
---                      the real render path. No control sets it now: unlocking previews by itself,
---                      and that unlocked view is this addon's test mode (standard v2.49.0).
+--
+-- There is no preview flag: the placeholders show while the addon is unlocked, and only then
+-- (ContainerClass:ShouldShow reads the lock).
 NS.State = NS.State or {}
 local State = NS.State
 
 State.debug = false
 State.activeContainerId = nil
-State.preview = false
 
 --- Point every container-relative settings path at `id` (or nil for "the first container").
 --- The ONE writer of the pointer: the settings banner, Containers' create/duplicate/delete

@@ -384,7 +384,7 @@ badge and any count quoted in the docs must agree with it.
 ### test_state.lua (2)
 
 - state: the session flags start off, are never saved, and a reload starts them clean
-- state: preview's toggle stores a strict boolean and hides or restores the engines at once
+- state: there is no preview flag and no preview toggle; unlocking is the preview
 
 ### test_lifecycle.lua (10)
 
@@ -614,7 +614,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_preview.lua (19)
+### test_preview.lua (18)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders, and an enchant container shows at most two
@@ -623,7 +623,6 @@ badge and any count quoted in the docs must agree with it.
 - preview: Hide releases every placeholder, and the next Show dresses them again
 - preview: a container whose settings are gone draws nothing and raises nothing
 - preview: placeholders paint with the container's class snapshot, as its real buttons do
-- preview: CM.SetPreview shows placeholders on a locked addon, with the engine off and no drag handle
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
@@ -718,7 +717,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am resetall resets the profile once, with no popup, and says so
 - slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
 - slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
-- slash verbs: /am lock ends preview mode through the seam; /am unlock says how to drag
+- slash verbs: /am lock and /am unlock go through the seam, so the placeholders follow; /am unlock says how to drag
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
 - slash verbs: /am set on a free-text row stores every word typed after the path
@@ -798,12 +797,11 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (36)
+### test_pages_general.lua (35)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
 - general: the visibility dropdown offers the four states in order and stores the one chosen
-- general: locking ends preview mode; unlocking leaves it alone
 - general: the Debug console checkbox shows the window and writes nothing to the profile
 - general: Master controls has no Test mode row; Lock frame is the preview's switch
 - general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
@@ -1082,7 +1080,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 50 |
 | test_style_icons.lua | 25 |
-| test_preview.lua | 19 |
+| test_preview.lua | 18 |
 | test_render_coverage.lua | 2 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
@@ -1091,7 +1089,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 36 |
+| test_pages_general.lua | 35 |
 | test_pages_containers.lua | 22 |
 | test_pages_filters.lua | 38 |
 | test_pages_layout.lua | 22 |
@@ -1110,4 +1108,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **916** |
+| **Total** | **914** |

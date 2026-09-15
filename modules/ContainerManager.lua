@@ -315,12 +315,6 @@ function CM.ReapplyStaleClass()
     end
 end
 
---- Turn preview mode on or off (preview-mode). Session-only; unlocking previews without it.
-function CM.SetPreview(on)
-    if NS.State then NS.State.preview = on and true or false end
-    CM.ApplyVisibility()
-end
-
 -- ---------------------------------------------------------------------------
 -- The registry, write side
 -- ---------------------------------------------------------------------------

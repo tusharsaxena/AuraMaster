@@ -1,6 +1,5 @@
--- tests/test_preview.lua — modules/Preview.lua: the placeholder auras shown while unlocked (or while
--- `CM.SetPreview` holds them). How many are drawn and where, the pool that keeps them, and when they
--- are dressed again.
+-- tests/test_preview.lua — modules/Preview.lua: the placeholder auras shown while unlocked. How many
+-- are drawn and where, the pool that keeps them, and when they are dressed again.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -139,23 +138,6 @@ test("preview: placeholders paint with the container's class snapshot, as its re
     for i, cc in ipairs(seen) do assertTrue(cc == k.classColor, "element " .. i) end
 end)
 
-test("preview: CM.SetPreview shows placeholders on a locked addon, with the engine off and no drag handle", function()
-    local NS2 = fresh()
-    local CM = NS2.ContainerManager
-    assertTrue(NS2.db.profile.locked, "locked by default")
-    local inst = CM.instances[1]
-    CM.SetPreview(true)
-    local _, n = NS2.Pool.Counts(inst.previewPools.bars)
-    -- red under: ShouldShow reading only the lock for previewing
-    assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
-    assertFalse(inst.engine.__enabled, "real auras do not draw over the placeholders")
-    -- red under: ApplyVisibility showing the handle for a preview on a locked addon
-    assertFalse(inst.handle:IsShown(), "a locked addon has nothing to drag")
-    CM.SetPreview(false)
-    _, n = NS2.Pool.Counts(inst.previewPools.bars)
-    assertEqual(n, 0)
-    assertTrue(inst.engine.__enabled, "the engine is back")
-end)
 
 test("preview: a vertical layout wraps into a new column one element's width plus the line spacing across", function()
     local c = cfg({ style = "bars", bars = { width = 100, height = 10 },

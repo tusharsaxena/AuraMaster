@@ -399,7 +399,7 @@ function ContainerClass:ShouldShow()
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
     if not (p and cfg and p.enabled and cfg.enabled) then return false, false end
-    local previewing = (not p.locked) or (NS.State and NS.State.preview) or false
+    local previewing = not p.locked
     return visibilityAllows(p.visibility), previewing
 end
 

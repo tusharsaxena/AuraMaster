@@ -1,10 +1,9 @@
 -- tests/test_state.lua — core/State.lua: session-only runtime state. Nothing in it may reach
--- SavedVariables, a reload starts it clean, and CM.SetPreview (preview's one toggle) stores a strict
--- boolean and runs the visibility pass at once.
+-- SavedVariables, a reload starts it clean, and there is no preview flag: unlocking is the preview.
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse, assertNil =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+local test, assertTrue, assertFalse, assertNil =
+    T.test, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
 --- Every key stored anywhere under `t`, so a case can ask whether a name was ever written.
@@ -21,30 +20,27 @@ end
 
 test("state: the session flags start off, are never saved, and a reload starts them clean", function()
     local NS = fresh()
-    assertEqual(NS.State.preview, false)
     assertNil(NS.State.activeContainerId)
-    NS.ContainerManager.SetPreview(true)
     NS.State.SetActiveContainer(2)
     local sv = _G.AuraMasterDB
     local stored = keysUnder(sv)
     -- red under: a session field moved into the profile (it would come back after a reload)
-    assertNil(stored.preview, "preview is session-only")
     assertNil(stored.activeContainerId, "the selection is session-only")
     local NS2 = fresh({ savedVariables = sv })
-    assertEqual(NS2.State.preview, false, "a reload starts preview off")
-    assertNil(NS2.State.activeContainerId, "and selects nothing")
+    assertNil(NS2.State.activeContainerId, "a reload selects nothing")
 end)
 
-test("state: preview's toggle stores a strict boolean and hides or restores the engines at once", function()
+test("state: there is no preview flag and no preview toggle; unlocking is the preview", function()
+    -- The user removed test mode outright: nothing but the lock shows the placeholders.
     local NS = fresh()
+    -- red under: core/State.lua still declaring `preview`
+    assertNil(NS.State.preview, "no preview flag")
+    -- red under: modules/ContainerManager.lua still defining SetPreview
+    assertNil(NS.ContainerManager.SetPreview, "no preview toggle")
     local e = NS.ContainerManager.instances[1].engine
-    assertTrue(e.__enabled)
-    NS.ContainerManager.SetPreview(1)
-    -- red under: SetPreview storing the caller's value as it came
-    assertEqual(NS.State.preview, true)
-    -- red under: SetPreview without its visibility pass
-    assertFalse(e.__enabled, "real auras do not draw under the placeholders")
-    NS.ContainerManager.SetPreview(nil)
-    assertEqual(NS.State.preview, false)
-    assertTrue(e.__enabled)
+    assertTrue(e.__enabled, "locked by default: real auras draw")
+    assertTrue(NS.SetByPath("locked", false))
+    assertFalse(e.__enabled, "unlocked: the placeholders take the engine's place")
+    assertTrue(NS.SetByPath("locked", true))
+    assertTrue(e.__enabled, "locked again: real auras are back")
 end)

@@ -45,15 +45,9 @@ local masterRows, masterTail = H.MasterControls({
 })
 
 -- The composer emits DATA; the host attaches behavior, keyed by PATH so an upstream reorder cannot
--- move a handler onto the wrong row.
-local masterOnChange = {
-    -- Locking ends preview mode (preview-mode). Unlocking previews by itself: ContainerClass:ShouldShow
-    -- reads the lock, so only a preview held on through ContainerManager.SetPreview needs ending here.
-    ["locked"] = function(v)
-        if v and NS.State and NS.State.preview then NS.ContainerManager.SetPreview(false) end
-    end,
-}
-
+-- move a handler onto the wrong row. Lock frame needs no onChange of its own: ContainerClass:ShouldShow
+-- reads the lock, so its visibility pass alone shows or drops the placeholders.
+--
 -- What each master row changes, read by modules/ContainerManager.lua off CONFIG_CHANGED's `path`.
 -- These four change only whether and how brightly containers show, which is a visibility pass: legal
 -- in combat, and no apply is queued. Master scale is NOT here: SetScale runs in Container:Apply.
@@ -73,8 +67,6 @@ end
 local console = NS.DebugLog:ConsoleCheckbox()
 
 for _, row in ipairs(masterRows) do
-    local fn = masterOnChange[row.path]
-    if fn then row.onChange = fn end
     row.effect = masterEffect[row.path]
     if row.path == DEBUG_CONSOLE_PATH then
         row.get, row.set = console.get, console.set

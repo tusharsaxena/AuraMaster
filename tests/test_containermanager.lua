@@ -178,7 +178,6 @@ end
 test("manager: /am lock and a rename under lockdown print no deferral notice", function()
     local NS, mocks = fresh()
     local lines = chat(mocks)
-    NS.ContainerManager.SetPreview(true)
     mocks.__lockdown = true
     assertTrue(NS.SetByPath("locked", true))
     assertTrue(NS.SetByPath("container.name", "Renamed", 1))
@@ -187,7 +186,6 @@ test("manager: /am lock and a rename under lockdown print no deferral notice", f
     -- red under: the container.name row without effect = "none"
     assertEqual(countLines(lines, "will apply"), 0, "nothing was held, so nothing is announced")
     assertEqual(NS.Database.FindContainer(1).name, "Renamed")
-    assertFalse(NS.State.preview, "locking ended preview")
 end)
 
 test("manager: a master visibility row hides containers at once, with no apply pass", function()

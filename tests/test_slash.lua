@@ -98,7 +98,7 @@ test("slash: /am test and /am preview are unknown verbs; each prints the help in
         local lines = capture(mocks)
         NS2.Slash:OnSlash(verb .. " on")
         -- red under: NS.COMMANDS keeping a {"test", ...} entry
-        assertFalse(NS2.State.preview, "/am " .. verb .. " reaches no preview")
+        assertTrue(NS2.db.profile.locked, "/am " .. verb .. " unlocks nothing")
         assertTrue(said(lines, "command '" .. verb .. "'"), lastLine(lines))
         assertTrue(said(lines, "slash commands"), "the help index follows the unknown-command line")
     end

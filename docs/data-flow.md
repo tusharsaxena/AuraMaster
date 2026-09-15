@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:520
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:514
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
@@ -134,7 +134,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
 `Container:ShouldShow` (`modules/Container.lua:397`) answers, in order — perf suspend, profile and
-container `enabled`, preview (unlocked, or `State.preview`), then General visibility against
+container `enabled`, preview (unlocked), then General visibility against
 `UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
 clears the preview, and shows the drag handle while unlocked. `ApplyVisibility` runs after every

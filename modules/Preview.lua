@@ -9,7 +9,7 @@ local _, NS = ...
 -- the engine uses, with invented values filled in. Everything a player changes on the Bars or Icons
 -- page therefore shows up here exactly as it will on a real aura.
 --
--- Preview is on whenever the addon is UNLOCKED (or while CM.SetPreview holds it on); while it is, each
+-- Preview is on whenever the addon is UNLOCKED, and only then; while it is, each
 -- container's engine is disabled so real auras do not draw on top of the placeholders.
 
 NS.Preview = NS.Preview or {}

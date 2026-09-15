@@ -364,17 +364,17 @@ end)
 
 -- ── lock, unlock, pick ────────────────────────────────────────────────────────────────────────
 
-test("slash verbs: /am lock ends preview mode through the seam; /am unlock says how to drag", function()
+test("slash verbs: /am lock and /am unlock go through the seam, so the placeholders follow; /am unlock says how to drag", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
+    local inst = NS2.ContainerManager.instances[1]
     assertEqual(dump(slash(NS2, lines, "unlock")), "{Containers unlocked — drag a container by its handle}")
     assertFalse(NS2.db.profile.locked)
-    NS2.ContainerManager.SetPreview(true)
-    assertTrue(NS2.State.preview)
+    assertTrue(inst.previewShown, "unlocked: the placeholders show")
     assertEqual(dump(slash(NS2, lines, "lock")), "{Containers locked}")
     assertTrue(NS2.db.profile.locked)
-    -- red under: runLock writing profile.locked around the seam (the locked row's onChange never runs)
-    assertFalse(NS2.State.preview)
+    -- red under: runLock writing profile.locked around the seam (no CONFIG_CHANGED, no visibility pass)
+    assertFalse(inst.previewShown, "locked: they go")
 end)
 
 --- Drive the frame picker's overlay the way the client would.

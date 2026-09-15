@@ -88,22 +88,6 @@ test("general: the visibility dropdown offers the four states in order and store
     assertEqual(NS.db.profile.visibility, "inCombat")
 end)
 
-test("general: locking ends preview mode; unlocking leaves it alone", function()
-    local NS, _, P, ws = general()
-    NS.SetByPath("locked", false)
-    NS.ContainerManager.SetPreview(true)
-    assertTrue(NS.State.preview)
-    P.row(ws, "locked"):__fire("OnValueChanged", true)
-    -- red under: dropping the `locked` onChange in settings/General.lua
-    assertTrue(NS.db.profile.locked)
-    assertFalse(NS.State.preview, "locking ended the preview")
-    NS.ContainerManager.SetPreview(true)
-    P.row(ws, "locked"):__fire("OnValueChanged", false)
-    -- red under: the onChange ending the preview whatever the new value is
-    assertFalse(NS.db.profile.locked)
-    assertTrue(NS.State.preview, "unlocking did not touch the preview")
-end)
-
 test("general: the Debug console checkbox shows the window and writes nothing to the profile", function()
     local NS, _, P, ws = general()
     local msgs = P.messages()

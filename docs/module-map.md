@@ -45,7 +45,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/Compat.lua` | The 17 client-API shims (aura engine enums, secrecy, formatter, color curve, mouse focus, spell info) — `docs/compat-layer.md` | Conventional: reached at call time |
 | `core/MediaSetup.lua` | `LibKa0s-Media-1.0` seam: `NS.Icon`, `NS.MediaFont`, `Media.RegisterLSM` at file load | **Load-bearing**: before `Constants.lua`, which resolves `FONT_MONO` from `NS.MediaFont` |
 | `core/Constants.lua` | Enum-like tables and labels (units, aura types, styles, sort methods, points, dispel colors, preview auras), fallback media, `LOGO_PATH` | Read by everything after it |
-| `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `preview`; `State.SetActiveContainer` | Conventional |
+| `core/State.lua` | Session-only state: `debug`, `activeContainerId`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
 | `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin` (the skin seam, published for a future standalone window; nothing consumes it today), the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
 | `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
@@ -126,7 +126,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
 | `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue` |
 | `test_bus.lua` | `core/Bus.lua`: the message catalog, a target per receiver, one sender per message |
-| `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; `CM.SetPreview` stores a strict boolean |
+| `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; there is no preview flag or toggle, only the lock |
 | `test_lifecycle.lua` | `core/AuraMaster.lua`: the lifecycle events and the three AceDB profile handlers, fired through AceEvent |
 | `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, the derived points and inherited flow, the preview extent, pending and forbidden frames, the drag handle |
 | `test_style.lua` | `modules/Style*.lua` and `modules/Preview.lua`: element sizes, preview layout, engine bindings |

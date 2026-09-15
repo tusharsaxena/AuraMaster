@@ -163,9 +163,9 @@ over the template:
 
 ## Session state (not persisted)
 
-`NS.State` (`core/State.lua`): `debug` (the console's logging flag), `activeContainerId` (which
-container every `container.` path resolves against) and `preview` (`ContainerManager.SetPreview`'s
-flag; no control sets it now, since unlocking previews by itself). All three reset at every `/reload`.
+`NS.State` (`core/State.lua`): `debug` (the console's logging flag) and `activeContainerId` (which
+container every `container.` path resolves against). Both reset at every `/reload`. There is no
+preview flag: the placeholders show while the addon is unlocked, and only then.
 The schema reaches the session state through one `sessionOnly` row, `state.debugConsole`, which
 writes nothing to the database.
 

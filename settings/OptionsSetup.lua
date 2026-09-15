@@ -216,21 +216,14 @@ if not lib then
         local omit = {}
         for k in pairs(spec.omit or {}) do omit[k] = true end
         if spec.frameless then omit.scale, omit.alpha, omit.locked = true, true, true end
-        local leaves = {
+        -- No Test mode leaf: this addon passes no `testModePath` (its unlocked view is the preview).
+        local rows = composeBlock({
             { leaf = "enabled", type = "bool" }, { leaf = "visibility", type = "string" },
             { leaf = "scale", type = "number" }, { leaf = "alpha", type = "number" },
             { leaf = "locked", type = "bool" },
             { leaf = "debugConsole", type = "bool", sessionOnly = true,
               path = spec.debugConsolePath or "state.debugConsole" },
-        }
-        -- The Test mode row, mirroring the library's since compose minor 6 (options-ui-§15): only
-        -- when the host names `testModePath`, taken verbatim like the console path.
-        if spec.testModePath then
-            local slot = #leaves + 1
-            leaves[slot] = { leaf = "testMode", type = "bool", sessionOnly = true,
-                             startsLine = true, path = spec.testModePath }
-        end
-        local rows = composeBlock(leaves, { prefix = spec.prefix, page = spec.page, group = spec.group or Helpers.MASTER_GROUP,
+        }, { prefix = spec.prefix, page = spec.page, group = spec.group or Helpers.MASTER_GROUP,
              subgroup = spec.subgroup, omit = omit, extra = spec.extra })
         return rows, function() end
     end
