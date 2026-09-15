@@ -98,7 +98,7 @@ in the task's own commit or the one immediately after.
 | B7 General → Spell Categories | E-6 F-3 | AM | todo | | needs B4 |
 | B8 max duration | D-1…D-4 | AM | done | 2f7c083 | issue #5 filed; preset uses the existing pairWith seam; 0-as-falsy verified safe |
 | B9 container mouse blocker | T-1…T-5 | AM | done | 42d610b ef63966 fc86d14 | 2 fix rounds, 3 Criticals: a raw engine frame-level write made to satisfy the MOCK, a missing anchor template that would have made the fix a no-op, and a live blocker on hidden containers |
-| B10 docs | P-2 D-3 | AM | done | (pending) | **CP-C** reached; scope grew to 8 steps (spec §6b/6c revision) — Filter priority section, schema/common-tasks tri-state prose, migration side-effect note, `onlyShown` docs, 7 falsifiable smoke checks, counts 813→880, issue #6 filed on the citation gate's blind spot |
+| B10 docs | P-2 D-3 | AM | done | c0bf45d | **CP-C** reached; scope grew to 8 steps (spec §6b/6c revision) — Filter priority section, schema/common-tasks tri-state prose, migration side-effect note, `onlyShown` docs, 7 falsifiable smoke checks, counts 813→880, issue #6 filed on the citation gate's blind spot |
 | C1 re-vendor the other nine | K-* | 9 repos | todo | | roster confirmed 2026-09-15 |
 | C2 final battery + report | all | all | todo | | **CP-D** |
 
