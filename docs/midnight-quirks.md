@@ -95,7 +95,7 @@ new shape disables, hides and retires the old engine and builds a new one (`Cont
 
 **What this addon does.** The filters still compile, because a target or focus can be either, but
 `FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
-(`modules/FilterCompiler.lua:154`): ignored outright for debuffs on the player or pet, conditional on
+(`modules/FilterCompiler.lua:243`): ignored outright for debuffs on the player or pet, conditional on
 hostility or friendliness for target and focus. The Filters page prints them in orange. The starter
 spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
 

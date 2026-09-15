@@ -131,6 +131,20 @@ test("defaults: spell categories are buff categories, and IsSpellCategory names 
     assertFalse(Cat.IsSpellCategory("no such category"))
 end)
 
+test("defaults: uncategorized is declared LAST in Cat.HELPFUL, and does not exist for HARMFUL (U-1, fix round 1)", function()
+    -- Correctness depends on this: modules/FilterCompiler.lua's shown-group loop excludes every
+    -- EARLIER shown category from a later one, so `uncategorized`'s complement-exclude only correctly
+    -- dedups against every other shown category if nothing is declared after it.
+    local last = Cat.HELPFUL[#Cat.HELPFUL]
+    assertEqual(last.key, "uncategorized", "red under: another category added after it")
+    assertEqual(last.kind, "uncategorized")
+    for _, def in ipairs(Cat.HARMFUL) do
+        -- fix round 1 ruling: buffs only — Cat.HARMFUL has no spells-kind category, so a debuff-side
+        -- row's union would always be empty (defaults/Categories.lua's KINDS doc).
+        assertTrue(def.kind ~= "uncategorized", "HARMFUL carries no uncategorized category: " .. def.key)
+    end
+end)
+
 test("defaults: every leaf of the container template is edited by a settings row or is a spell set", function()
     local orphans = {}
     for _, leaf in ipairs(leaves(NS.CONTAINER_TEMPLATE, "")) do

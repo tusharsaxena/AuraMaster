@@ -348,7 +348,8 @@ test("filter: on, nothing shown but the whitelist still draws — no ONLY_SHOWN_
     assertTrue(not hasWarning(plan, "no category is set to Show"), "the whitelist is drawing something")
 end)
 
--- ── uncategorized (U-1..U-5, docs/superpowers/specs/2026-09-15-feedback-batch7-design.md §4) ────
+-- ── uncategorized (U-1..U-5, fix round 1, docs/superpowers/specs/2026-09-15-feedback-batch7-design.md
+-- §4, buffs only as of fix round 1 — see defaults/Categories.lua's KINDS doc) ────────────────────
 --
 -- The fixture always narrows `ctx.categories` to `cancelable` (the owner's own Blizzard token
 -- category), `defensives` (the one spells-kind category standing in for "the lists"), and
@@ -358,8 +359,13 @@ end)
 test("filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case", function()
     local plan = compile({ filter = { categories = { cancelable = "hide" } } },
         { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    -- fix round 1: the catch-all is SUPERSEDED, not joined — its constraints were a strict subset of
+    -- Uncategorized's own group's, so shipping both would draw a rank-5 aura twice. Exactly two
+    -- groups here: Defensives, Uncategorized. No "All".
+    assertEqual(#plan.groups, 2)
     local uncat
     for _, g in ipairs(plan.groups) do
+        assertTrue(g.label ~= "All", "the catch-all is never emitted once Uncategorized exists")
         if g.label == "Uncategorized" then uncat = g end
     end
     assertTrue(uncat ~= nil, "Show compiles to its own group")
@@ -372,21 +378,33 @@ test("filter: Uncategorized Show draws an unlisted aura even when a Blizzard tok
     assertEqual(setOf(uncat.candidateFilters.excludeSpellIDs), defIds)
 end)
 
-test("filter: Uncategorized Hide stops an unlisted aura from reaching the catch-all", function()
+test("filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)", function()
+    -- Concretely, not just by construction: Defensives requires the id to be IN the defensives set
+    -- (includeSpellIDs); Uncategorized requires it to be OUT of that exact set (excludeSpellIDs) —
+    -- complementary constraints on the SAME set, so no spell id can ever satisfy both at once.
+    local plan = compile({ filter = { categories = { cancelable = "hide" } } },
+        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    assertEqual(#plan.groups, 2)
+    local def, uncat
+    for _, g in ipairs(plan.groups) do
+        if g.label == "Defensives" then def = g end
+        if g.label == "Uncategorized" then uncat = g end
+    end
+    assertTrue(def ~= nil and uncat ~= nil)
+    assertTrue(def.candidateFilters.includeSpellIDs ~= nil, "Defensives: an id must be IN this set")
+    assertTrue(uncat.candidateFilters.excludeSpellIDs ~= nil, "Uncategorized: an id must be OUT of it")
+    assertEqual(setOf(def.candidateFilters.includeSpellIDs), setOf(uncat.candidateFilters.excludeSpellIDs),
+        "the very same set, included by one group and excluded by the other — no overlap is possible")
+end)
+
+test("filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)", function()
     local plan = compile({ filter = { categories = { cancelable = "hide", uncategorized = "hide" } } },
         { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
-    local uncat, catchAll
-    for _, g in ipairs(plan.groups) do
-        if g.label == "Uncategorized" then uncat = g end
-        if g.label == "All" then catchAll = g end
-    end
-    assertNil(uncat, "Hidden: no group of its own — U-4's 'survives iff Show'")
-    assertTrue(catchAll ~= nil)
-    assertEqual(catchAll.filter, "HELPFUL|!CANCELABLE")
-    -- U-5: an INCLUDE, not an exclude — there is no id list for "not uncategorized" to subtract, so
-    -- the catch-all is restricted to auras that ARE on some spell list instead.
-    local defIds = setOf(FC.CategorySpells(NS.Categories.Find("HELPFUL", "defensives")))
-    assertEqual(setOf(catchAll.candidateFilters.includeSpellIDs), defIds)
+    -- U-5's original shape (an include on a surviving catch-all) was a provable no-op: the catch-all
+    -- already excludes every spells-kind category's ids, so restricting it to that same union could
+    -- never match anything. Fix round 1: no catch-all at all, in either state.
+    assertEqual(#plan.groups, 1, "only Defensives — no group of Uncategorized's own, no catch-all")
+    assertEqual(plan.groups[1].label, "Defensives")
 end)
 
 test("filter: a listed aura's own category group is unaffected by Uncategorized either way", function()
@@ -405,24 +423,42 @@ test("filter: a listed aura's own category group is unaffected by Uncategorized 
     assertEqual(FC.Signature(shownDef), FC.Signature(hiddenDef), "Uncategorized never touches a listed category's own group")
 end)
 
-test("filter: 'only these categories' on, Uncategorized Show still draws unlisted auras (U-4)", function()
-    local plan = compile({ filter = { onlyShown = true, categories = { cancelable = "hide" } } },
+test("filter: 'only these categories' changes nothing once Uncategorized exists — there was never a catch-all to drop (coordinator ruling, left as-is this round)", function()
+    -- The toggle's own logic (`not cats.onlyShown`) is untouched this round; it is redundant here only
+    -- because fix round 1 already removes the catch-all whenever Uncategorized exists, on or off.
+    local on = compile({ filter = { onlyShown = true, categories = { cancelable = "hide" } } },
         { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
-    local uncat, catchAll
-    for _, g in ipairs(plan.groups) do
-        if g.label == "Uncategorized" then uncat = g end
-        if g.label == "All" then catchAll = g end
-    end
-    assertNil(catchAll, "the toggle drops the catch-all regardless (R-9)")
-    assertTrue(uncat ~= nil, "but the Uncategorized group survives — it is Show")
-    assertEqual(uncat.filter, "HELPFUL")
+    local off = compile({ filter = { onlyShown = false, categories = { cancelable = "hide" } } },
+        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    assertEqual(FC.Signature(on), FC.Signature(off), "identical either way")
 end)
 
-test("filter: 'only these categories' on, Uncategorized Hide draws only listed, shown categories (U-4)", function()
-    local plan = compile({ filter = { onlyShown = true, categories = { cancelable = "hide", uncategorized = "hide" } } },
+-- ── uncategorized: ExplainSpell (fix round 1) ─────────────────────────────────────────────────
+
+test("explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5", function()
+    local r = FC.ExplainSpell(cfg({ filter = { categories = { cancelable = "hide" } } }), 999999,
         { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
-    assertEqual(#plan.groups, 1, "only the shown category — no catch-all, no Uncategorized group")
-    assertEqual(plan.groups[1].label, "Defensives")
+    assertEqual(r.verdict, "shown")
+    assertEqual(r.rank, 3)
+    assertEqual(#r.categories, 1)
+    assertEqual(r.categories[1].key, "uncategorized")
+    assertEqual(r.categories[1].state, "show")
+end)
+
+test("explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide", function()
+    local r = FC.ExplainSpell(cfg({ filter = { categories = { cancelable = "hide", uncategorized = "hide" } } }), 999999,
+        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    assertEqual(r.verdict, "hidden")
+    assertEqual(r.rank, 4)
+    assertEqual(r.categories[1].state, "hide")
+end)
+
+test("explain: with no Uncategorized category for the aura type (HARMFUL), an unclaimed id is still rank 5", function()
+    local r = FC.ExplainSpell(cfg({ auraType = "HARMFUL", filter = {} }), 999999,
+        { categories = only("HARMFUL", { "crowdControl" }) })
+    assertEqual(r.verdict, "shown")
+    assertEqual(r.rank, 5)
+    assertEqual(#r.categories, 0)
 end)
 
 -- ── what the engine will not do ───────────────────────────────────────────────────────────────
@@ -547,40 +583,36 @@ end)
 
 -- ── the cost is real: the REAL shipped category list, not `only` (documented in the plan ledger) ──
 
-test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 16 for HELPFUL, 15 for HARMFUL today", function()
+test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 15 for HARMFUL today", function()
     -- Not a bug — R-4's shape is inherent to "in ANY shown category" being a union over heterogeneous
-    -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1). This test exists so the
-    -- count is visible in the suite: if it moves, a category was added or removed and someone should
-    -- look, not silently absorb a costlier (or cheaper but wrong) container.
+    -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1 of batch 6). This test
+    -- exists so the count is visible in the suite: if it moves, a category was added or removed and
+    -- someone should look, not silently absorb a costlier (or cheaper but wrong) container.
     --
     -- HELPFUL: 16 filterable categories (15 pre-batch-7 plus `uncategorized`, U-1) minus 1 hidden
-    -- (defensives) = 15 shown groups, PLUS the catch-all (R-5) = 16 groups total. `Cat.HELPFUL` has
-    -- spells-kind categories, so `uncategorized`'s own group (an exclude of their union) is a real,
-    -- non-contradicting constraint and survives like any other shown group.
+    -- (defensives) = 15 shown groups (`uncategorized` included, own its group like any other shown
+    -- category), and NO catch-all: batch 7's fix round 1 suppresses it outright once an
+    -- `uncategorized` category exists for the aura type (its constraints were always either a strict
+    -- subset of `uncategorized`'s own group's, or a group that could never match — see
+    -- modules/FilterCompiler.lua's top-of-file comment). 15 groups total.
     --
-    -- HARMFUL: 17 filterable categories (16 pre-batch-7 plus `uncategorizedDebuffs`) minus 1 hidden
-    -- (crowdControl) = 16 shown categories, but only 15 groups actually land. `fromPlayers` and
-    -- `fromNonPlayers` are both default-Show HARMFUL categories that hide the SAME field
-    -- (`isFromPlayerOrPlayerPet`) to opposite values. That is why the catch-all (R-5) is already
-    -- absent here — excluding every shown category asks for that field to be both true and false at
-    -- once, `con.conflict` fires, and `addGroup` drops it (fix round 1's contradiction tests cover
-    -- this mechanism directly) — and it is ALSO why `uncategorizedDebuffs`'s own shown group is
-    -- dropped the same way: it is declared last (U-1), so its group excludes every EARLIER shown
-    -- category too (the shown-group loop's own dedup, same as the catch-all's), which inherits the
-    -- same fromPlayers/fromNonPlayers contradiction. `Cat.HARMFUL` has no spells-kind category, so its
-    -- own positive constraint (the union-exclude) is empty and contributes nothing to save it — there
-    -- is nothing but that inherited contradiction to decide its fate here. This is a property of
-    -- THESE shipped debuff categories (the same pair that already costs the catch-all), not of
-    -- `uncategorized` in general: a container whose shown categories do not partition a field this way
-    -- keeps its `uncategorized` group. This holds only on the assumption that a real aura's
+    -- HARMFUL: unchanged from before batch 7 — `Cat.HARMFUL` carries no `uncategorized` category
+    -- (fix round 1 ruling: buffs only, defaults/Categories.lua's KINDS doc has the reasoning). 16
+    -- filterable categories minus 1 hidden (crowdControl) = 15 shown groups, and NO catch-all —
+    -- `fromPlayers` and `fromNonPlayers` are both default-Show HARMFUL categories that hide the SAME
+    -- field (`isFromPlayerOrPlayerPet`) to opposite values; the catch-all excludes every shown
+    -- category (R-5), so it asks for that field to be both true and false at once, `con.conflict`
+    -- fires, and `addGroup` drops it. This is correct, not a bug: the pair partitions the debuff aura
+    -- space (every debuff either was or was not cast by a player or their pet), so every debuff is
+    -- already in one of the two SHOWN groups and rank 3 draws it regardless — nothing is lost by the
+    -- catch-all's absence. This holds only on the assumption that a real aura's
     -- `isFromPlayerOrPlayerPet` is never nil; if a future category pair ever left a gap in the aura
-    -- space the way this one does not, both the catch-all and `uncategorizedDebuffs`'s own group would
-    -- need to survive, and these counts would need to be revisited along with it.
+    -- space the way this one does not, its catch-all would need to survive, and this count would need
+    -- to be revisited along with it.
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
-    assertEqual(#helpfulPlan.groups, 16, "HELPFUL: 15 shown groups + the catch-all")
+    assertEqual(#helpfulPlan.groups, 15, "HELPFUL: 15 shown groups, no catch-all (Uncategorized supersedes it)")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
-    assertEqual(#harmfulPlan.groups, 15,
-        "HARMFUL: 16 shown categories, but uncategorizedDebuffs' own group self-contradicts too, same as the missing catch-all")
+    assertEqual(#harmfulPlan.groups, 15, "HARMFUL: 15 shown groups, no catch-all (it self-contradicts and is dropped)")
 end)
 
 test("filter: an unknown sort method falls back to Blizzard's default", function()

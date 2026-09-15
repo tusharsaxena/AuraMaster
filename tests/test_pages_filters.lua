@@ -216,18 +216,18 @@ test("filters: a buff container's Categories tab is two grids, Blizzard Categori
     assertNil(gridLine(NS, ws, "crowdControl"), "no debuff category on a buff container")
 end)
 
-test("filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once", function()
+test("filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once", function()
     local NS, _, _, ws = categories(2)
     local L = NS.L
-    -- U-1: `uncategorizedDebuffs` (kind "uncategorized") is offered for debuffs too and shares the
-    -- Spell Categories grid, so it now draws for a debuff container as well — one row, the complement
-    -- of a union that happens to be empty (HARMFUL has no spells-kind category of its own).
+    -- U-1, fix round 1 (2026-09-16): Uncategorized is buffs-only — `Cat.HARMFUL` has no `spells`-kind
+    -- category, so its union would always be empty, making a debuff-side row's Show a no-op that
+    -- silently undoes every other Hide on this tab (see defaults/Categories.lua's KINDS doc). No
+    -- Spell Categories grid on a debuff container, same as before batch 7.
     -- red under: a grid key mapping dispel or who-cast-it rows into the Blizzard grid
     assertEqual(table.concat(headings(ws), "|"),
-        L["Blizzard Categories"] .. "|" .. L["Spell Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
+        L["Blizzard Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
     assertTrue(gridLine(NS, ws, "magic") ~= nil)
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
-    assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: offered for debuffs too")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 
@@ -317,8 +317,8 @@ test("filters: 'Only these categories' is drawn at the top of the Categories tab
 end)
 
 test("filters: a grid checkbox stores show or hide for the selected container and re-syncs its line", function()
-    local NS, m, _, ws = categories()
-    m.__subcategories.Filters:Show()   -- on screen, so a write re-syncs the widgets in place
+    local NS, _, _, ws = categories()
+    NS.Helpers.__pageCtx.filters.panel:Show()   -- on screen, so a write re-syncs the widgets in place
     local cells = gridLine(NS, ws, "defensives")
     -- red under: LibKa0s v1.36.0 draws choice cells as CheckBox widgets (yellow fill), not radios
     assertEqual(cells[1].type, "CheckBox")
@@ -576,10 +576,18 @@ end)
 -- from the container entirely if it were not whitelisted (R-9's catch-all is gone) — the case the
 -- rank-4-only check missed, because the counterfactual is rank 5 hidden, not rank 4.
 -- red under: overrideNote checking `cat.rank == 4` instead of `cat.verdict == "hidden"`
+--
+-- batch 7 fix round 1 moved this to container 2 (HARMFUL): `Cat.HELPFUL` now always carries an
+-- `uncategorized` category (U-1), so on a buff container an unclaimed id's counterfactual runs
+-- through `explainUncategorized` (rank 3 or 4), never rank 5 — this scenario (nothing at all decides
+-- an unclaimed id, so it falls to rank 5) only still arises where no `uncategorized` category exists,
+-- which is buffs-only by design (defaults/Categories.lua's KINDS doc). HARMFUL keeps the original case.
 test("filters: a whitelisted spell no category claims, under 'only these categories', warns it would vanish", function()
     local NS, _, P = filters()
-    NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
-    NS.SetByPath("container.filter.onlyShown", true, 1)
+    NS.Helpers.SelectContainer(2)
+    P.show("Filters")
+    NS.SetByPath("container.filter.whitelist", { [900004] = true }, 2)
+    NS.SetByPath("container.filter.onlyShown", true, 2)
     local ws = P.tab("filters", "overrides")
     assertTrue(P.hasText(ws, "not be drawn at all"),
         "an unclaimed whitelisted spell under onlyShown needs its own wording, not the category one")
@@ -589,10 +597,29 @@ end)
 -- ordinary catch-all if the entry were removed (rank 5, shown) — a real mismatch a rank-3-only check
 -- misses, mirroring the whitelist bug fixed above.
 -- red under: overrideNote's blacklist branch checking `cat.rank == 3` instead of `cat.verdict == "shown"`
+--
+-- batch 7 fix round 1: moved to container 2 (HARMFUL) for the same reason as the test above — on a
+-- buff container this id's counterfactual now goes through `explainUncategorized` (rank 3, the
+-- default Show), not the plain rank-5 catch-all this note's wording describes.
 test("filters: an uncategorized blacklisted spell warns that no category hides it", function()
     local NS, _, P = filters()
-    NS.SetByPath("container.filter.blacklist", { [900005] = true }, 1)
+    NS.Helpers.SelectContainer(2)
+    P.show("Filters")
+    NS.SetByPath("container.filter.blacklist", { [900005] = true }, 2)
     local ws = P.tab("filters", "overrides")
     assertTrue(P.hasText(ws, "no category here hides it"),
         "no category claims it, but the ordinary catch-all would still draw it")
+end)
+
+-- The buff-side mirror of the two tests above (batch 7, U-1..U-5): with `uncategorized` present, an
+-- unclaimed id's fate is always decided by ITS state, never left to the generic rank-5 wording.
+test("filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
+    NS.SetByPath("container.filter.onlyShown", true, 1)
+    NS.SetByPath("container.filter.categories.uncategorized", "hide", 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, "overriding Uncategorized (set to Hide)"),
+        "the counterfactual is rank 4 (Uncategorized itself says Hide), not the generic rank-5 case")
+    assertFalse(P.hasText(ws, "not be drawn at all"), "that wording is reserved for when no category decides it at all")
 end)

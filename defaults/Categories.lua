@@ -26,10 +26,20 @@ local _, NS = ...
 --                  Blizzard token/flag/dispel categories do NOT count toward being categorized. It has
 --                  no id list of its own; it is the COMPLEMENT of every `spells`-kind category's
 --                  effective ids, so modules/FilterCompiler.lua handles it with dedicated logic rather
---                  than the generic per-kind include/exclude every other kind shares. One entry per
---                  aura type (buffs and debuffs each need their own key — every category key is
---                  unique across both lists), drawn LAST in the grid, default Show. There is no
---                  General -> Spell Categories entry for it: it has no list to edit.
+--                  than the generic per-kind include/exclude every other kind shares. BUFFS ONLY (fix
+--                  round 1 ruling, 2026-09-16): the spec's original "offered for buffs and debuffs"
+--                  was the implementer's extrapolation of the owner's actual request — "the last item
+--                  in the Filters -> Spell Categories list", a buff-side concept — and `Cat.HARMFUL`
+--                  has no `spells`-kind category at all, so a debuff-side entry's union would always
+--                  be empty: every debuff would read as "uncategorized", and a Show there would make
+--                  every OTHER Hide on that tab a no-op — the owner's original complaint, inverted.
+--                  Drawn LAST in the grid, default Show. There is no General -> Spell Categories entry
+--                  for it: it has no list to edit. Its own group SUPERSEDES the catch-all rather than
+--                  sitting beside it (fix round 1): a Show carries no hidden-category exclusion and a
+--                  Hide's group is dropped outright, and either way the catch-all — a strict superset
+--                  or subset of what Uncategorized already covers — would either double-draw an aura
+--                  or ship a group that can never match anything, so `modules/FilterCompiler.lua`
+--                  never emits it once this category exists for the aura type.
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
@@ -279,16 +289,10 @@ Cat.HARMFUL = {
         key = "fromPlayers", kind = "flag", field = "isFromPlayerOrPlayerPet", value = true,
         label = "From any player", desc = "Debuffs applied by any player or their pet.",
     },
-    {
-        -- U-1: buffs have no spell-list categories to speak of on the debuff side (comment above
-        -- Cat.HARMFUL), but "in no category's list" still means something for a container that
-        -- somehow narrows a debuff's spell ids some other way (Overrides), so debuffs get the row
-        -- too — a separate key from the buff one, since every category key is unique across both
-        -- lists. Its own key (not "uncategorized") because a container's `filter.categories` map has
-        -- no aura-type axis of its own.
-        key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized",
-        desc = "Not in any of this container's spell lists (Blizzard categories do not count). Show rescues an unlisted debuff from a Hidden Blizzard category; Hide removes it along with everything else this container has no other reason to draw.",
-    },
+    -- No `uncategorized` row here (fix round 1 ruling, 2026-09-16): `Cat.HARMFUL` has no `spells`-kind
+    -- category at all, so its union would always be empty — every debuff would read as
+    -- "uncategorized", and a Show there would make every OTHER Hide on this tab a no-op, silently
+    -- undoing the owner's own Hide choices. See the KINDS doc above for the full reasoning.
 }
 
 -- Weapon enchants have no categories: the engine draws them per slot.
