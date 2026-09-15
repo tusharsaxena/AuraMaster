@@ -16,11 +16,13 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
-  anyone but me), timed-only or permanent-only, a maximum full duration, 31 categories set to
-  Default, Whitelist or Blacklist (defined in `defaults/Categories.lua`: spell lists, Blizzard aura
-  flags and filter tokens, dispel types, player-or-creature source), the spell categories' lists
-  (editable, and shared by every container in the profile), a per-container whitelist and
-  blacklist of spells, sort method and direction, and a per-group cap.
+  anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
+  below), 32 categories set to Show or Hide, schema v3 (defined in `defaults/Categories.lua`: spell
+  lists, Blizzard aura flags and filter tokens, dispel types, player-or-creature source, and the
+  weapon-enchant capability), a per-container Overrides whitelist and blacklist of spells (the
+  whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists
+  (editable, and shared by every container in the profile), sort method and direction, and a
+  per-group cap.
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked or via
@@ -91,8 +93,14 @@ These are not declined; the game forbids them, and a request for one is answered
   (options-ui-§17; audit 2026-09-11 AM-03).
 - **Container settings share one relative path model** (`container.…`) so one schema, one write seam
   and one CLI serve every container (`settings/Schema.lua` header).
-- **Categories have three states**, labeled Default, Whitelist and Blacklist and stored `""` / `show`
-  / `hide`. Whitelisting any category narrows the container to the union of the whitelisted ones;
-  blacklisting one excludes it; Default leaves it alone.
+- **Categories have two states** (schema v3, owner's 2026-09-15 revision), labeled Show and Hide and
+  stored `"show"` / `"hide"`; Show is the default and is a *positive claim*, not merely "not
+  excluded" — an aura in even one Show category is drawn even if another of its categories says Hide,
+  and only an aura whose every category says Hide is removed by them (`docs/ARCHITECTURE.md` →
+  Filter priority). **The real limitation this costs:** Categories alone can no longer build "only
+  Defensives" the way the old exclusive Whitelist did — hiding every other category is not the same
+  thing, because an aura in no category at all still shows (nothing removed it). Getting that back
+  needs either the Overrides whitelist or the per-container **"only these categories"** toggle
+  (`container.filter.onlyShown`), which drops the catch-all group instead.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
   and the starter containers come back.

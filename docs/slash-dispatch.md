@@ -77,10 +77,10 @@ same thing on the CLI as the Width slider does in the panel. Every `container.` 
 `settings/Slash.lua:389`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
-A Filters category row (`printLabel`) prints the label the Categories grid shows, Default /
-Whitelist / Blacklist, with the stored value `/am set` takes after it in gray: `Whitelist (show)`.
-The descriptor's `format` hook (`formatValue`, `settings/Slash.lua:336`) does it; every other row
-prints as the library formats it.
+A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
+(schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
+`format` hook (`formatValue`, `settings/Slash.lua:336`) does it; every other row prints as the
+library formats it.
 
 Examples:
 

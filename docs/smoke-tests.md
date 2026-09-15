@@ -189,8 +189,10 @@ suite covers what only the client can show.
 ## H. Weapon enchants
 
 44. Apply a temporary weapon enchant (an oil, a stone, a poison). The *Player buffs* starter shows it
-    after the buffs (**Also show weapon enchants** is on there). A container with aura type *Weapon
-    enchants* shows it too. **Hide enchants without a duration** hides a permanent one.
+    after the buffs, because its **Weapon enchants** row on Filters → Categories is Show (the
+    default, schema v3). Set that row to **Hide** → the enchant drops out of that container; set it
+    back to **Show** → it returns. A container with aura type *Weapon enchants* shows it too, always
+    (that row has no bearing on it). **Hide enchants without a duration** hides a permanent one.
 45. Set a weapon-enchant container's unit to *target* → the Filters page warns that enchants are always
     the player's, and it still shows yours.
 
