@@ -33,7 +33,7 @@ marked as such rather than listed as a requirement.
 - **No optional integration.** Nothing in the addon checks whether another addon is loaded before
   using it. The only add-on-loaded check is `Compat.EnsureAuraContainer`'s own
   (`core/Compat.lua:28`), and it asks only about Blizzard's `Blizzard_AuraContainer`. The frame
-  anchor re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:105`) whatever the addon is.
+  anchor re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:118`) whatever the addon is.
 
 ## Development — the contributor toolchain
 

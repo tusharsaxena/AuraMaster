@@ -37,7 +37,7 @@ eight-or-more trigger (documentation-§3).
 | 13 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
 | 14 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
 | 15 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders |
-| 16 | `test [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles |
+| 16 | `test [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles; combat start turns it off (`OnCombatChanged`) |
 | 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
 | 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
 | 19 | `forgettimed` | host | `TimedSpells.Forget()` |

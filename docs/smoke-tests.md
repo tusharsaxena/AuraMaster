@@ -55,6 +55,11 @@ suite covers what only the client can show.
 16. `/am lock` → handles and placeholders go; real auras return.
 17. `/am test` → placeholders without handles; `/am test off` → gone. `/am test on` then
     `/reload` → preview is off again. `/am preview` → an unknown-command line and the help index.
+    **Combat ends it.** Open General → Master controls, tick **Test mode**, then attack a training
+    dummy → chat prints `[AM] Test mode off — combat started` once, the placeholders go, real auras
+    draw, and the Test mode box is unticked. Repeat after `/am unlock`: the same line prints and the
+    box unticks, but the placeholders and handles stay until `/am lock`. With Test mode off, a pull
+    prints nothing.
 18. **Combat drag.** Unlock, enter combat, try to drag → the container does not move.
 
 ## D. Settings panel — every page and tab

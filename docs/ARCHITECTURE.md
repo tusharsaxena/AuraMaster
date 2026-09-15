@@ -270,7 +270,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | Event | Registered by | Handler → effect |
 |---|---|---|
 | `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:44` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
-| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:45` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
+| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:45` | `OnCombatChanged` → ends test mode first when it is on (`NS.SetByPath("state.preview", false)`, one chat line, `RefreshOptionsPanel` so the Test mode box unticks; an unlock's placeholders stay), then `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:46` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:47-48` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
 | `UNIT_PET` | `core/AuraMaster.lua:49` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |

@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-915%2F915_passing-green)
+![Tests](https://img.shields.io/badge/Tests-918%2F918_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -31,9 +31,11 @@ fills with sample auras. It also gets a gold-edged handle with its name, placed 
 first bar or icon so it never covers one. Drag the handles where you want them and type
 `/am lock`. Right-clicking a handle opens the settings with that container already selected.
 
-Those sample auras are the preview, and `/am test` shows them without unlocking anything. It's the
-quickest way to try textures, fonts and sizes before a real buff turns up. Real auras stay hidden
-while the preview is on, and locking or a `/reload` turns it off.
+Those sample auras are the preview. `/am test`, or the Test mode box under General → Master
+controls, shows them without unlocking anything. It's the quickest way to try textures, fonts and
+sizes before a real buff turns up. Real auras stay hidden while the preview is on. Locking, a
+`/reload` or pulling something turns it off, and chat says so when a fight did it. Unlocked
+containers keep their sample auras through a fight until you lock them.
 
 Containers is where you create, rename, duplicate and delete containers, change a
 container's unit, aura type or style, or copy another container's settings onto it. Its own Container

@@ -111,6 +111,70 @@ test("lifecycle: combat starting runs no held apply; combat ending does", functi
     assertTrue(layouts(e) > before)
 end)
 
+-- ── test mode ends as a fight begins ─────────────────────────────────────────────────────────
+
+--- A fresh environment with the General page drawn once, chat captured and panel refreshes counted.
+local function testModeEnv()
+    local NS, mocks = fresh()
+    local P = dofile("tests/page_helpers.lua")(NS, mocks)
+    local cb = P.row(P.show("General"), "state.preview")
+    local renders, refresh = { 0 }, NS.RefreshOptionsPanel
+    NS.RefreshOptionsPanel = function(...)
+        renders[1] = renders[1] + 1
+        return refresh(...)
+    end
+    return NS, mocks, P, cb, renders
+end
+
+test("lifecycle: combat starting ends test mode, prints one line and unticks the Test mode box", function()
+    -- preview-mode / options-ui-§15 (standard v2.47.0): a test mode ends at PLAYER_REGEN_DISABLED,
+    -- while secure writes are still allowed, and the checkbox follows the stop.
+    local NS, mocks, P, cb, renders = testModeEnv()
+    cb:__fire("OnValueChanged", true)
+    assertTrue(NS.State.preview)
+    local lines = P.chat()
+    mocks.__fireEvent("PLAYER_REGEN_DISABLED")
+    -- red under: OnCombatChanged leaving state.preview alone as a fight begins
+    assertFalse(NS.State.preview, "combat ended test mode")
+    assertEqual(#lines, 1, "one line says so")
+    assertTrue(lines[1]:find(NS.L["Test mode off — combat started"], 1, true) ~= nil, lines[1])
+    for id, inst in pairs(NS.ContainerManager.instances) do
+        assertTrue(inst.engine.__enabled, "container " .. id .. " draws real auras again")
+        assertFalse(inst.previewShown, "container " .. id .. " dropped its placeholders")
+    end
+    -- red under: ending test mode without RefreshOptionsPanel
+    assertEqual(renders[1], 1, "the panel is refreshed once")
+    local again = P.row(P.show("General"), "state.preview")
+    assertTrue(again ~= nil, "the refresh re-drew the page")
+    assertFalse(again.value, "the Test mode box is unticked")
+end)
+
+test("lifecycle: combat starting with test mode off prints nothing and refreshes no panel", function()
+    local NS, mocks, P, _, renders = testModeEnv()
+    local lines = P.chat()
+    mocks.__fireEvent("PLAYER_REGEN_DISABLED")
+    -- red under: the combat stop printing or refreshing whether or not test mode was on
+    assertFalse(NS.State.preview)
+    assertEqual(#lines, 0)
+    assertEqual(renders[1], 0)
+end)
+
+test("lifecycle: combat starting unlocked ends test mode but keeps the unlocked placeholders", function()
+    -- Unlocking is its own mode (preview-mode MAY): the fight ends only the test mode, as before.
+    local NS, mocks, P = testModeEnv()
+    assertTrue(NS.SetByPath("locked", false))
+    assertTrue(NS.SetByPath("state.preview", true))
+    local lines = P.chat()
+    mocks.__fireEvent("PLAYER_REGEN_DISABLED")
+    assertFalse(NS.State.preview, "test mode ended")
+    assertEqual(#lines, 1)
+    assertFalse(NS.db.profile.locked, "the lock is not touched")
+    -- red under: the combat stop re-locking, or hiding the placeholders an unlock shows
+    for id, inst in pairs(NS.ContainerManager.instances) do
+        assertTrue(inst.previewShown, "container " .. id .. " still shows its placeholders")
+    end
+end)
+
 -- ── the profile handlers ─────────────────────────────────────────────────────────────────────
 
 test("lifecycle: a profile switch out of combat rebuilds every container for the new profile at once", function()

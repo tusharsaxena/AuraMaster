@@ -386,13 +386,16 @@ badge and any count quoted in the docs must agree with it.
 - state: the session flags start off, are never saved, and a reload starts them clean
 - state: preview's toggle stores a strict boolean and hides or restores the engines at once
 
-### test_lifecycle.lua (10)
+### test_lifecycle.lua (13)
 
 - lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
 - lifecycle: combat starting runs no held apply; combat ending does
+- lifecycle: combat starting ends test mode, prints one line and unticks the Test mode box
+- lifecycle: combat starting with test mode off prints nothing and refreshes no panel
+- lifecycle: combat starting unlocked ends test mode but keeps the unlocked placeholders
 - lifecycle: a profile switch out of combat rebuilds every container for the new profile at once
 - lifecycle: every profile event clears the container selection and re-renders the panel once
 - lifecycle: a copied profile is prepared before its containers are built
@@ -1075,7 +1078,7 @@ badge and any count quoted in the docs must agree with it.
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
-| test_lifecycle.lua | 10 |
+| test_lifecycle.lua | 13 |
 | test_anchors.lua | 63 |
 | test_style.lua | 43 |
 | test_timedspells.lua | 19 |
@@ -1109,4 +1112,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **915** |
+| **Total** | **918** |

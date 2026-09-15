@@ -101,7 +101,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every handle and the preview; locking ends preview mode |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
-| Test mode | `state.preview` | bool, session | The composed Test mode row (options-ui-§15, `testModePath`): `ContainerManager.SetPreview`, placeholder auras in every container; off at `/reload`; `/am test` and unlocking reach the same preview |
+| Test mode | `state.preview` | bool, session | The composed Test mode row (options-ui-§15, `testModePath`): `ContainerManager.SetPreview`, placeholder auras in every container; off at `/reload`; ends when combat starts (`PLAYER_REGEN_DISABLED`: one chat line, and the box unticks); `/am test` and unlocking reach the same preview |
 
 Then the composed button pair: **Reset position** (`ContainerManager.ResetPositions` — every
 container back to the screen, staggered) and **Reset all settings** (the `AURAMASTER_RESET_ALL`
