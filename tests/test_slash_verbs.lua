@@ -74,7 +74,6 @@ test("slash verbs: /am help prints the alias header, then one row per NS.COMMAND
     for i, e in ipairs(NS2.COMMANDS) do
         assertEqual(p[i + 1], "  /am " .. e[1] .. " — " .. e[2])
     end
-    assertEqual(dump(slash(NS2, lines, "   ")), dump(p), "a bare /am is the same block")
 end)
 
 test("slash verbs: the landing page's rows are /am help's rows without the chat indent", function()
@@ -110,6 +109,32 @@ test("slash verbs: /am options is an alias of /am config, and both open the sett
     NS2.Slash:OnSlash("OPTIONS")
     -- red under: the descriptor's `aliases = { options = "config" }` dropped
     assertEqual(opened[1], 2)
+end)
+
+test("slash verbs: a bare or whitespace-only /am opens the settings panel through config; /am help prints the list", function()
+    -- slash-commands-§4 (standard v2.50.0; LibKa0s Slash minor 11): bare /am runs the `config` verb.
+    local NS2, mocks = fresh()
+    local opened = { 0 }
+    NS2.OpenOptionsPanel = function() opened[1] = opened[1] + 1 end
+    local lines = capture(mocks)
+    -- red under: the dispatcher's bare branch printing help instead of running `config`
+    assertEqual(dump(slash(NS2, lines, "")), "{}", "a bare /am prints nothing of its own")
+    assertEqual(opened[1], 1, "and opens the panel")
+    assertEqual(dump(slash(NS2, lines, "   ")), "{}")
+    assertEqual(opened[1], 2, "whitespace alone is bare too")
+    local p = slash(NS2, lines, "help")
+    assertEqual(#p, 1 + #NS2.COMMANDS, "help is the list: " .. dump(p))
+    assertEqual(opened[1], 2, "and opens nothing")
+end)
+
+test("slash verbs: in combat a bare /am prints the same refusal /am config does", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    local viaConfig = dump(slash(NS2, lines, "config"))
+    assertTrue(viaConfig ~= "{}", "config is refused with a line")
+    -- red under: a bare /am reaching anything but the config verb's own open
+    assertEqual(dump(slash(NS2, lines, "")), viaConfig)
 end)
 
 test("slash verbs: /am version prints the version on its own line", function()
@@ -551,13 +576,16 @@ test("slash verbs: without the library each schema verb names what is missing, a
     assertEqual(NS2.db.profile.alpha, 1)
 end)
 
-test("slash verbs: without the library /am still prints its help, aliases still route, and an unknown verb says so", function()
+test("slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so", function()
     local NS2, mocks = degraded()
     local opened = { 0 }
     NS2.OpenOptionsPanel = function() opened[1] = opened[1] + 1 end
     local lines = capture(mocks)
-    NS2.Slash:OnSlash("")
-    local p = plain(lines)
+    -- red under: the stub's bare branch printing help rather than running `config` (slash-commands-§4)
+    assertEqual(dump(slash(NS2, lines, "")), "{}", "a bare /am prints nothing of its own")
+    assertEqual(dump(slash(NS2, lines, "  ")), "{}")
+    assertEqual(opened[1], 2, "a bare and a whitespace-only /am both reach config")
+    local p = slash(NS2, lines, "help")
     local head = 0
     for i, l in ipairs(p) do if l == "v" .. NS2.Version() .. " — slash commands" then head = i end end
     assertTrue(head > 0, "the stub's header: " .. dump(p))
@@ -565,7 +593,7 @@ test("slash verbs: without the library /am still prints its help, aliases still 
     assertEqual(p[head + 1], "  /am help — List available commands")
     -- red under: the stub ignoring the descriptor's aliases
     NS2.Slash:OnSlash("options")
-    assertEqual(opened[1], 1)
+    assertEqual(opened[1], 3)
     p = slash(NS2, lines, "frob")
     assertEqual(p[1], "Unknown command 'frob'")
     assertEqual(#p, 1 + 1 + #NS2.COMMANDS, "then the help")

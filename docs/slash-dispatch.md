@@ -6,12 +6,14 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:391`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:401`), called from `OnInitialize`. There is no `SLASH_*` global.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
-  calls its handler with the rest of the line. A bare `/am` prints help; an unknown verb prints the
-  library's unknown-command line and then help.
+  calls its handler with the rest of the line. A bare `/am` (empty, or only spaces) runs the
+  `config` verb with an empty rest, so it opens the settings panel on its landing page, or prints the
+  same combat refusal `config` does (slash-commands-§4, LibKa0s Slash minor 11). `/am help` prints
+  the list. An unknown verb prints the library's unknown-command line and then help.
 - **Aliases:** `options` → `config`.
 - **`NS.COMMANDS` is the addon's own**, an ordered array of positional triples `{name, desc, fn}`,
   passed *into* the library. The landing page renders the same table through `Slash.LandingRows`
@@ -23,7 +25,7 @@ eight-or-more trigger (documentation-§3).
 | # | Verb | Kind | Handler |
 |---|---|---|---|
 | 1 | `help` | library | `cli:PrintHelp()` — version line plus one row per command |
-| 2 | `config` | host | `NS.OpenOptionsPanel()`; refused in combat with a gray notice (options-ui-§2) |
+| 2 | `config` | host | `NS.OpenOptionsPanel()`, which opens the top-level landing category; refused in combat with a gray notice (options-ui-§2). A bare `/am` runs it too |
 | 3 | `enable` | host | `NS.SetByPath("enabled", true)`, the path the General → Master controls "Enable Aura Master" checkbox takes; not refused in combat, and a seam error is printed |
 | 4 | `disable` | host | `NS.SetByPath("enabled", false)`; the visibility pass disables every engine through its own `SetEnabled`, combat included |
 | 5 | `list` | library | `cli:CliList()` over `NS.Schema`, grouped by page |
@@ -73,12 +75,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:102`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:375`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:385`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:322`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:332`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -99,7 +101,8 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 ## Degraded path
 
 With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:271` builds a stub dispatcher: the host verbs
-keep working (they never went to the library), `help` prints a plain command list, and `list`, `get`,
+keep working (they never went to the library), a bare `/am` runs `config` as the library's does (the
+panel's own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's
 formatting or parsing. `tests/degraded_env.lua` loads the addon that way.
 

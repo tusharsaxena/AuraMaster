@@ -694,12 +694,14 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (35)
+### test_slash_verbs.lua (37)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
 - slash verbs: /am and /auramaster both reach the one dispatcher
 - slash verbs: /am options is an alias of /am config, and both open the settings panel
+- slash verbs: a bare or whitespace-only /am opens the settings panel through config; /am help prints the list
+- slash verbs: in combat a bare /am prints the same refusal /am config does
 - slash verbs: /am version prints the version on its own line
 - slash verbs: get, set and reset with no path print a usage line naming /am
 - slash verbs: an unknown path, or one in the wrong case, is not found and nothing is written
@@ -729,7 +731,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
 - slash verbs: /am resetposition and /am forgettimed do their act and say so
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
-- slash verbs: without the library /am still prints its help, aliases still route, and an unknown verb says so
+- slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
 
 ### test_bulklog.lua (20)
@@ -1085,7 +1087,7 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
-| test_slash_verbs.lua | 35 |
+| test_slash_verbs.lua | 37 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -1108,4 +1110,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **914** |
+| **Total** | **916** |

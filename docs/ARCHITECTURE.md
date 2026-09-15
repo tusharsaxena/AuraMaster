@@ -43,12 +43,12 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:394-395`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:404-405`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:233`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
-| LibKa0s v1.37.0 | Eight modules wired, one setup file each — table below |
+| LibKa0s v1.38.0 | Eight modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -237,13 +237,15 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
 ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-one verbs; `options` is an alias of `config`.
+A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
+help` prints the list.
 There is no `test` verb: unlocking already shows the placeholder preview, so the unlocked view is the
 test mode and `/am lock` / `/am unlock` its switch (preview-mode's exception, standard v2.49.0).
 
 | Command | What it does |
 |---|---|
 | `/am help` | List available commands |
-| `/am config` | Open the settings panel |
+| `/am config` | Open the settings panel (a bare `/am` does the same) |
 | `/am enable` | Turn Aura Master on (every enabled container shows again) |
 | `/am disable` | Turn Aura Master off (hides every container) |
 | `/am list` | List every setting and its current value (container settings read the selected container) |

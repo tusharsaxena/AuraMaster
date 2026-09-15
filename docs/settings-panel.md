@@ -9,7 +9,7 @@ is a defect in this doc (documentation-§3).
 
 | Page | Tabs | Covers |
 |---|---|---|
-| Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
+| Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the placeholder preview), debug console, the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
