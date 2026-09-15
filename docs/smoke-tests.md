@@ -236,7 +236,7 @@ suite covers what only the client can show.
     tooltip that was already up when the cursor entered the element fades rather than lingering.
     Unlock and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
     **Click-through** on, the hover reaches the world by design → the unit's tooltip shows. A new
-    container sits in the **High** strata (Layout → Frame → Strata).
+    container sits in the **Medium** strata (Layout → Frame → Strata).
 
 ## L. Profiles
 

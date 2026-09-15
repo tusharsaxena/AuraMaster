@@ -45,7 +45,7 @@ NS.RegisterSchemaRows(H.BarGroup({
     prefix = P, page = PAGE, group = G_BAR, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General → Dispel Colors)."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors)."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
@@ -178,5 +178,5 @@ NS.RegisterSchemaRows(HI)
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "bars" end,
-    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."],
+    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (General -> Containers)."],
 })

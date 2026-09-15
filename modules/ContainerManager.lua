@@ -471,7 +471,7 @@ function CM.CopyFrom(srcId, dstId, section)
     local src, dst = NS.Database.FindContainer(srcId), NS.Database.FindContainer(dstId)
     if not (src and dst) then return false, L["No such container."] end
     if srcId == dstId then return false, L["A container cannot copy itself."] end
-    local scope = ("container %s→%s (%s)"):format(srcId, dstId, section or "all")
+    local scope = ("container %s->%s (%s)"):format(srcId, dstId, section or "all")
     local ok, err = copyThrough(src, dstId, section and { section } or COPY_ALL, scope)
     if not ok then return false, err end
     return true

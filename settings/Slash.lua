@@ -116,7 +116,7 @@ end
 -- The fields are one localized string per state (localization-§1), so a translator can reorder
 -- them and the status tag; only the name and the gray markup around the fields stay outside.
 local function describe(c)
-    local fields = c.enabled and L["#%s · %s · %s · %s"] or L["#%s · %s · %s · %s · disabled"]
+    local fields = c.enabled and L["#%s - %s - %s - %s"] or L["#%s - %s - %s - %s - disabled"]
     return ("%s  |cff888888%s|r"):format(NS.SafeToString(c.name or "?"), fields:format(tostring(c.id),
         L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
         L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],

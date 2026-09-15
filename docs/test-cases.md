@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (52)
+### test_database.lua (53)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -77,6 +77,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: a container that whitelisted a category hides every other category of its type
 - v3: a container with no whitelisted category gets every row at show
 - v3: includeEnchants becomes the weaponEnchants row and the old key is cleared
+- v3: a HARMFUL container is never given a weaponEnchants row — that category does not exist for debuffs
 - v3: an ENCHANT container is left alone
 - v3: a container with a missing or unrecognized auraType is left completely untouched
 - v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided
@@ -832,13 +833,14 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (33)
+### test_pages_filters.lua (34)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
 - filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean
 - filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
 - filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
+- filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
 - filters: a max-duration preset writes the same path as the slider
 - filters: a stored max-duration matching no preset leaves the preset dropdown blank
 - filters: the max-duration description says there is no minimum
@@ -903,7 +905,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: the eight tabs are drawn in order, whatever the container shows
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
-- bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)
+- bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
 ### test_pages_icons.lua (7)
@@ -954,7 +956,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: the dispel palette covers every dispel type, and the profile holds its own copy
 - defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)
 - defaults: one Healing category holds both retired healing lists, where Core healing was
-- defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)
+- defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
 - defaults: the global schema stamp defaults to 1, never the current version
 
 ### test_perf.lua (8)
@@ -979,13 +981,14 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (5)
+### test_locale.lua (6)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
 - locale: no key is defined twice in enUS.lua
 - locale: every enUS value is its own key, so the English build shows the source string
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
+- locale: every value is ASCII, the em dash excepted (T-1)
 
 ### test_docs.lua (6)
 
@@ -1027,7 +1030,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 52 |
+| test_database.lua | 53 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 66 |
@@ -1053,7 +1056,7 @@ badge and any count quoted in the docs must agree with it.
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 56 |
-| test_pages_filters.lua | 33 |
+| test_pages_filters.lua | 34 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 10 |
 | test_pages_icons.lua | 7 |
@@ -1064,10 +1067,10 @@ badge and any count quoted in the docs must agree with it.
 | test_defaults.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
-| test_locale.lua | 5 |
+| test_locale.lua | 6 |
 | test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **880** |
+| **Total** | **883** |

@@ -47,7 +47,7 @@ NS.Schema = NS.Schema or {}
 
 local CONTAINER = "container"
 local L = NS.L
-local NO_CONTAINER = L["No container exists yet — create one on General → Containers."]
+local NO_CONTAINER = L["No container exists yet — create one on General -> Containers."]
 
 -- ---------------------------------------------------------------------------
 -- Path plumbing
@@ -433,7 +433,7 @@ local function fireSectionChanges(section, old, v, depth, id)
     end
 end
 
---- `{k=v, sub={…}}` with sorted keys: what a section write's [Set] line shows.
+--- `{k=v, sub={...}}` with sorted keys: what a section write's [Set] line shows.
 local function renderSection(v)
     local keys = {}
     for k in pairs(v) do
@@ -442,7 +442,7 @@ local function renderSection(v)
     table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
     for i, k in ipairs(keys) do
         local x = v[k]
-        keys[i] = tostring(k) .. "=" .. (type(x) == "table" and "{…}" or tostring(x))
+        keys[i] = tostring(k) .. "=" .. (type(x) == "table" and "{...}" or tostring(x))
     end
     return "{" .. table.concat(keys, ", ") .. "}"
 end

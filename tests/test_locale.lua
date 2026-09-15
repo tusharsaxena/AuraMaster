@@ -135,3 +135,23 @@ test("locale: every string routed by value has its key — Constants labels, cat
     -- (the literal-subscript scan above cannot see a key routed through a variable)
     assertEqual(#missing, 0, "routed but not defined: " .. table.concat(missing, "; "))
 end)
+
+test("locale: every value is ASCII, the em dash excepted (T-1)", function()
+    -- red under: a non-ASCII byte (an arrow, an ellipsis, a middot, a section mark, ...) reappearing
+    -- in a locale VALUE. The owner's font draws most such glyphs as a box (screenshot, batch 7 T-1):
+    -- "General -> Spell Categories" rendered as "General [box] Spell Categories". The em dash (U+2014,
+    -- UTF-8 bytes 0xE2 0x80 0x94) is the ONE exemption — it renders correctly in the owner's own
+    -- screenshots, so it is intentionally excluded rather than silently allowed: every other
+    -- multi-byte (>= 0x80) sequence in a value fails this test.
+    local EM_DASH = "\226\128\148"
+    local bad = {}
+    for _, d in ipairs(definitions()) do
+        if d.value then
+            local scrubbed = d.value:gsub(EM_DASH, "")
+            if scrubbed:find("[\128-\255]") then
+                bad[#bad + 1] = ("line %d: %s"):format(d.line, d.key)
+            end
+        end
+    end
+    assertEqual(#bad, 0, "non-ASCII byte outside the em dash: " .. table.concat(bad, "; "))
+end)

@@ -145,7 +145,7 @@ test("schema paths: an explicit container id that does not exist is refused, nev
     NS2.State.SetActiveContainer(1)
     local ok, err = NS2.SetByPath("container.bars.width", 300, 42)
     assertFalse(ok)
-    assertEqual(err, "No container exists yet — create one on General → Containers.")
+    assertEqual(err, "No container exists yet — create one on General -> Containers.")
     -- red under: resolveRoot falling back to NS.ActiveContainer when FindContainer(id) misses
     assertEqual(NS2.Database.FindContainer(1).bars.width, NS2.CONTAINER_TEMPLATE.bars.width)
     assertNil(NS2.GetSetting("container.bars.width", 42))
@@ -371,7 +371,7 @@ test("schema paths: a spell set or a section with no container to land in is ref
     local function refused(path, value, id)
         local ok, err = NS2.SetByPath(path, value, id)
         assertFalse(ok, path)
-        assertEqual(err, "No container exists yet — create one on General → Containers.", path)
+        assertEqual(err, "No container exists yet — create one on General -> Containers.", path)
     end
     refused("container.filter.blacklist", { [1] = true }, 42)
     refused("container.position", { x = 1 }, 42)
@@ -477,7 +477,7 @@ test("schema paths: a section's [Set] line renders the stored table with sorted 
     -- red under: renderSection unsorted, or rendering the caller's table instead of the backfilled copy
     assertEqual(lines[1], "container.position = {point=TOP, relativePoint=CENTER, x=5, y=0}")
     assertTrue(NS2.SetByPath("container.bars", {}, 1))
-    assertTrue(lines[2]:find("name={…}", 1, true) ~= nil, lines[2])
+    assertTrue(lines[2]:find("name={...}", 1, true) ~= nil, lines[2])
     assertEqual(#lines, 2, "one line per section write")
 end)
 
@@ -503,7 +503,7 @@ test("schema paths: with no containers CheckWrite refuses a container row and pa
     -- red under: checkRow skipping its resolveRoot check
     local ok, err = NS2.CheckWrite("container.bars.width", 300)
     assertFalse(ok)
-    assertEqual(err, "No container exists yet — create one on General → Containers.")
+    assertEqual(err, "No container exists yet — create one on General -> Containers.")
     assertTrue(NS2.CheckWrite("alpha", 0.5), "a global row needs none")
 end)
 

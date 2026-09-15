@@ -7,7 +7,7 @@ local _, NS = ...
 --     Anchor  [Attach to]
 --             -- Screen --            [Point] [Relative point] / [X] [Y]
 --             -- Another container -- [Container]
---             -- Named frame --       [Frame name] [Pick a frame…]   <- pairWith / [Point] [Relative point]
+--             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
 --
 -- A container attaches to the screen, to another container (following it as it grows) or to any
@@ -127,10 +127,10 @@ NS.RegisterSchemaRows({
         end,
     },
     {
-        -- Half width, so Pick a frame… (pairWith, below) can take the line's right half.
+        -- Half width, so Pick a frame... (pairWith, below) can take the line's right half.
         path = "container.attach.frame", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, disabledIf = FRAME_ONLY,
         type = "string", dialogControl = "EditBox", maxLetters = 120, label = L["Frame name"],
-        desc = L["The global name of the frame to attach to when 'Named frame' is chosen — or use Pick a frame… beside it. /fstack shows frame names."],
+        desc = L["The global name of the frame to attach to when 'Named frame' is chosen — or use Pick a frame... beside it. /fstack shows frame names."],
     },
     {
         path = "container.attach.point", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, disabledIf = FRAME_ONLY,
@@ -230,14 +230,14 @@ local function pickFrame()
     end)
 end
 
---- Pick a frame…, as Frame name's right half (the flow engine's pairWith seam, options-ui-§6). It
+--- Pick a frame..., as Frame name's right half (the flow engine's pairWith seam, options-ui-§6). It
 --- is a cell-filling button, so it takes the library's inset width rather than a flush half.
 local function pickButton(_, line)
     local btn = NS.AceGUI:Create("Button")
-    btn:SetText(L["Pick a frame…"])
+    btn:SetText(L["Pick a frame..."])
     btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
     btn:SetCallback("OnClick", pickFrame)
-    H.AttachTooltip(btn, L["Pick a frame…"],
+    H.AttachTooltip(btn, L["Pick a frame..."],
         L["Close the settings, then left-click any frame on screen to attach this container to it. Right-click or Escape cancels."])
     line:AddChild(btn)
     return btn

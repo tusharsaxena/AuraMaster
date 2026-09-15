@@ -292,7 +292,7 @@ local function renderCategories(ctx, cfg, rows)
         if mine[1] then
             if g.key == "custom" then
                 H.Section(ctx, g.heading)
-                H.TextRow(ctx, L["These are the lists on General → Spell Categories, shared by every container."])
+                H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
                 H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CUSTOM_EXTRA })
                 if hideRow then
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })

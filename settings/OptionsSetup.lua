@@ -440,7 +440,7 @@ end
 --- every control disabled (B-2: the Bars page on an icons container, and the reverse).
 local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
     if not (cfg or spec.addonWide) then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on General → Containers, or type /am new."])
+        Helpers.TextRow(ctx, L["No containers yet. Create one on General -> Containers, or type /am new."])
         return
     end
     local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false

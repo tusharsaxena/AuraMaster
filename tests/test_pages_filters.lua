@@ -250,7 +250,7 @@ end)
 test("filters: the Spell Categories grid opens with a line naming where its lists live (F-2)", function()
     local _, _, P, ws = categories()
     -- red under: F-2's line missing, or attached under the wrong grid
-    assertTrue(P.hasText(ws, "General → Spell Categories"), "names where the lists live")
+    assertTrue(P.hasText(ws, "General -> Spell Categories"), "names where the lists live")
 end)
 
 test("filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets no link (F-3)", function()

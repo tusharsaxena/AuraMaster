@@ -277,7 +277,7 @@ test("options descriptor: with no containers a page draws the one empty-registry
     NS2.Helpers.RenderContainerPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end })
     -- red under: renderActiveTab calling spec.intro with a nil cfg
     assertEqual(introduced[1], 0)
-    assertEqual(table.concat(rows, "|"), "No containers yet. Create one on General → Containers, or type /am new.")
+    assertEqual(table.concat(rows, "|"), "No containers yet. Create one on General -> Containers, or type /am new.")
     assertEqual(ctx.__tabs[1].label, "Container", "the placeholder tab")
 end)
 

@@ -181,7 +181,7 @@ local ID_STRINGS = {
     notFound  = L["No spell named '{text}' in your spellbook. {hint}"],
     ambiguous = L["Several spells are named '{text}' — pick one from the list, or use the id."],
     unknown   = L["Unknown spell {id}"],
-    looking   = L["Looking up spells…"],
+    looking   = L["Looking up spells..."],
     nameHint  = NAME_HINT,
     more      = L["+{count} more"],
 }

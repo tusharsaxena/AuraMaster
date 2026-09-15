@@ -156,6 +156,6 @@ end
 --- OnProfileCopied: profile `source` copied into the active one.
 function NS.OnProfileCopied(source)
     prepareProfile()
-    NS.Debug("Set", "copied profile '%s' → '%s'", tostring(source), currentProfile())
+    NS.Debug("Set", "copied profile '%s' -> '%s'", tostring(source), currentProfile())
     rebuildProfile()
 end

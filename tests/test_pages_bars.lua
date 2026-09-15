@@ -14,7 +14,7 @@ local function bars(opts)
     return NS, m, P, P.show("Bars")
 end
 
-local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."
+local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (General -> Containers)."
 
 test("bars: every tab of an icons container carries the orange notice; a bars container's carry none", function()
     local NS, _, P, ws = bars()
@@ -158,7 +158,7 @@ test("bars: a confirmed fill color is stored on the selected container, as a tab
     assertEqual(NS.Database.FindContainer(2).bars.barColor.r, NS.CONTAINER_TEMPLATE.bars.barColor.r)
 end)
 
-test("bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)", function()
+test("bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)", function()
     local NS, _, P = bars()
     P.show("Bars")
     local ws = P.tab("bars", NS.L["Highlights"])
@@ -169,7 +169,7 @@ test("bars: Highlights carries no dispel swatches, and Color by points at Genera
     assertEqual(#P.all(ws, "ColorPicker"), 2, "the running-out and refresh-window colors only")
     -- red under: the tooltip still sending the player to the Highlights tab
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
-    assertTrue(desc:find("General → Dispel Colors", 1, true) ~= nil, desc)
+    assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()

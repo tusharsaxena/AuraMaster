@@ -220,9 +220,11 @@ test("defaults: one Healing category holds both retired healing lists, where Cor
     assertTrue(Cat.HELPFUL[7] == def, "after Offensive cooldowns, where Core healing buffs sat")
 end)
 
-test("defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)", function()
-    -- red under: the template's strata left at MEDIUM
-    assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "HIGH")
+test("defaults: a container draws in the Medium strata, the default UI's own layer (X-3)", function()
+    -- red under: the template's strata left at HIGH. Batch 5's L-3 deliberately raised this to HIGH
+    -- so a container drew above the default UI's Medium layer; batch 7's X-3 reverses that choice,
+    -- so MEDIUM is once again what a new container gets.
+    assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "MEDIUM")
 end)
 
 test("defaults: the global schema stamp defaults to 1, never the current version", function()

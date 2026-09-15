@@ -54,7 +54,7 @@ local function announcements(NS2)
     return n
 end
 
-local MISSING_ROW = "No container exists yet — create one on General → Containers."
+local MISSING_ROW = "No container exists yet — create one on General -> Containers."
 
 -- ── the help surface ──────────────────────────────────────────────────────────────────────────
 
@@ -477,10 +477,10 @@ test("slash verbs: /am containers marks the selection and a disabled container, 
     NS2.Slash:OnSlash("select 3")
     local p = slash(NS2, lines, "containers")
     assertEqual(p[1], "Containers")
-    assertEqual(p[2], "    Player buffs  #1 · Player · Buffs · Bars")
+    assertEqual(p[2], "    Player buffs  #1 - Player - Buffs - Bars")
     -- red under: describe ignoring `enabled`
-    assertEqual(p[3], "    Player debuffs  #2 · Player · Debuffs · Icons · disabled")
-    assertEqual(p[4], "  > Target debuffs (mine)  #3 · Target · Debuffs · Icons")
+    assertEqual(p[3], "    Player debuffs  #2 - Player - Debuffs - Icons - disabled")
+    assertEqual(p[4], "  > Target debuffs (mine)  #3 - Target - Debuffs - Icons")
     deleteAll(NS2)
     assertEqual(dump(slash(NS2, lines, "containers")), "{No containers yet — /am new creates one}")
 end)
@@ -490,7 +490,7 @@ test("slash verbs: /am select matches a name in any case, and a miss moves nothi
     local lines = capture(mocks)
     NS2.State.SetActiveContainer(1)
     -- red under: findContainer comparing names case-sensitively
-    assertEqual(dump(slash(NS2, lines, "select  PLAYER DEBUFFS ")), "{Selected Player debuffs  #2 · Player · Debuffs · Icons}")
+    assertEqual(dump(slash(NS2, lines, "select  PLAYER DEBUFFS ")), "{Selected Player debuffs  #2 - Player - Debuffs - Icons}")
     assertEqual(NS2.State.activeContainerId, 2)
     for _, miss in ipairs({ "select nope", "select 99", "select" }) do
         assertEqual(dump(slash(NS2, lines, miss)), "{No such container — /am containers lists them}", miss)

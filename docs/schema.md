@@ -95,7 +95,7 @@ path, never to a number restated in `modules/`.
 | `layout.perLine` | `0` (one line) | | | |
 | `layout.scale` | `1.0` | | | |
 | `layout.alpha` | `1.0` | | | |
-| `layout.strata` | `"HIGH"` | | | |
+| `layout.strata` | `"MEDIUM"` | | | |
 | `layout.level` | `5` | | | |
 
 ### `bars`

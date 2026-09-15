@@ -112,8 +112,8 @@ test("layout: Pick a frame sits beside Frame name in Named frame, and there is n
     assertTrue(line ~= nil, "Frame name is on a line of its own group")
     local pick = line.children[2]
     -- red under: Pick drawn by an afterGroup (its own line after Offset) instead of paired with Frame name
-    assertTrue(pick ~= nil and pick.type == "Button" and pick.text == NS.L["Pick a frame…"],
-        "Pick a frame… is Frame name's right half")
+    assertTrue(pick ~= nil and pick.type == "Button" and pick.text == NS.L["Pick a frame..."],
+        "Pick a frame... is Frame name's right half")
     -- red under: the redundant Attach to the screen button still drawn (the dropdown does the same)
     assertEqual(P.find(ws, "Button", "Attach to the screen"), nil)
 end)
@@ -126,7 +126,7 @@ for _, mode in ipairs({ "screen", "container", "frame" }) do
         -- red under: a subsection's rows without their disabledIf, or onlyIn naming the wrong mode
         assertDimming(anchorWidgets(NS, ws), mode, ON[mode])
         -- A pick switches the mode to frame itself, so the button is a way into Named frame from any mode.
-        assertTrue(not P.find(ws, "Button", NS.L["Pick a frame…"]).disabled, "Pick a frame… stays live")
+        assertTrue(not P.find(ws, "Button", NS.L["Pick a frame..."]).disabled, "Pick a frame... stays live")
     end)
 end
 
@@ -199,7 +199,7 @@ test("layout: Pick a frame in combat refuses in gray and starts nothing", functi
     NS.FramePicker.Start = function() started = started + 1 end
     local lines = P.chat()
     m.__lockdown = true
-    P.find(ws, "Button", NS.L["Pick a frame…"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Pick a frame..."]):__fire("OnClick")
     -- red under: pickFrame without its InCombatLockdown gate
     assertEqual(started, 0)
     assertEqual(m.__settingsClosed, 0, "the settings stay open")
@@ -215,7 +215,7 @@ test("layout: a pick attaches the container selected when it began, and reopens 
     NS.OpenOptionsPage = function(page)
         opened[#opened + 1] = page
     end
-    P.find(ws, "Button", NS.L["Pick a frame…"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Pick a frame..."]):__fire("OnClick")
     assertEqual(m.__settingsClosed, 1, "the settings window got out of the way")
     assertTrue(onPick ~= nil, "the picker started")
     NS.State.SetActiveContainer(2)   -- the selection moves while the player is picking
@@ -256,7 +256,7 @@ test("layout: Strata offers the five layers in order and stores the one chosen",
     local ws = P.tab("layout", NS.L["Frame"])
     local dd = P.row(ws, "container.layout.strata")
     assertEqual(table.concat(dd.order, ","), table.concat(NS.Constants.STRATA, ","))
-    assertEqual(dd.value, "HIGH")
+    assertEqual(dd.value, "MEDIUM")
     dd:__fire("OnValueChanged", "DIALOG")
     -- red under: the strata row writing any path but layout.strata
     assertEqual(NS.Database.FindContainer(1).layout.strata, "DIALOG")
