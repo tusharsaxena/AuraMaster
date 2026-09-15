@@ -782,6 +782,13 @@ end)
 -- The concrete proof the coordinator asked for: compile the migrated container and confirm an
 -- arbitrary id on no spell list — the exact shape of aura that used to flood back in — is NOT drawn.
 test("v3: a narrowed container does not gain unlisted auras after migrating — compiled, not just stored", function()
+    -- Coordinator review: a label check alone is a proxy, not proof — a Shown token/flag category
+    -- (no `includeSpellIDs` at all) would also sail past a "label ~= Uncategorized/All" assertion
+    -- while still admitting any aura, listed or not. This is sound for `defensives` specifically only
+    -- because it is `spells`-kind, so its lone surviving group MUST be id-restricted to be correct at
+    -- all. Assert that directly: exactly one group, and it carries a non-empty `includeSpellIDs` — an
+    -- id-agnostic group (no `includeSpellIDs`, e.g. a bare token/flag/dispel group or the catch-all)
+    -- would fail this even if it happened to be labeled something other than Uncategorized or All.
     local NS = fresh()
     local p = { containers = { { auraType = "HELPFUL",
         filter = { categories = { defensives = "show", raidCDs = "" } } } } }
@@ -789,12 +796,10 @@ test("v3: a narrowed container does not gain unlisted auras after migrating — 
     NS.Database.PrepareProfile(p)
     local cfg = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), p.containers[1])
     local plan = NS.FilterCompiler.Compile(cfg, {})
-    for _, g in ipairs(plan.groups) do
-        -- red under: an Uncategorized (or catch-all) group surviving the migration and admitting an
-        -- aura that was never on any spell list — the near-everything container the bug produced
-        assertTrue(g.label ~= "Uncategorized" and g.label ~= "All",
-            "no group draws an unlisted aura: got " .. g.label)
-    end
+    assertEqual(#plan.groups, 1, "narrowed to Defensives alone: exactly one group")
+    local ids = plan.groups[1].candidateFilters and plan.groups[1].candidateFilters.includeSpellIDs
+    assertTrue(type(ids) == "table" and next(ids) ~= nil,
+        "the one surviving group is id-restricted, not an unlisted-admitting Uncategorized/catch-all/token/flag group")
 end)
 
 test("v3: MigrateV3 returns the number of containers it walked", function()

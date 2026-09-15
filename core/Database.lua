@@ -592,6 +592,14 @@ local function liftCategoryWhitelist(c)
         -- The bug this correction closes (see filterableCategories's doc comment): only the
         -- WHITELISTED branch stamps this, and only "hide" — Show is exactly the case the ordinary
         -- backfill already handles correctly, for a key the sweep above deliberately never reaches.
+        -- UNCONDITIONAL overwrite, on the assumption `cats[uncatKey]` is nil here: true today (a v2
+        -- profile cannot carry the key at all, and an already-migrated post-v3 profile early-returns
+        -- above on `categoriesDecided`, since `uncategorized` is excluded from the check but every
+        -- OTHER filterable key is already decided by then). Unreachable now, but worth naming: if a
+        -- future batch adds another filterable category, a profile narrowed AND still at
+        -- schemaVersion <= 2 AND already carrying a deliberate `uncategorized = "show"` from some
+        -- other path would have that Show silently overwritten to Hide here. Nothing in this shape
+        -- can construct that combination today.
         local uncatKey = uncategorizedKeyOf(def)
         if uncatKey then cats[uncatKey] = "hide" end
     else
