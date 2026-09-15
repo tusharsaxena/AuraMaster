@@ -146,6 +146,19 @@ end
 --- (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q5, whose in-game checks this rests
 --- on). The clip frame reaches half the bar's height past each edge, so the double-height spark is
 --- not cut. A preview has no timer driving that region; FillPreview hides a timeless spark itself.
+---
+--- The two modes also paint the spark differently, and must (feedback batch 7, SP-1). Centered mode
+--- sits on the FILL — an opaque texture, painted from the profile's own bar color, that always backs
+--- it the same way — so ADD blending there is a deliberate highlight: it washes toward the fill's own
+--- color and reads as "the spark," which is the look the owner already signed off on. Clipped mode
+--- sits on the ELAPSED side instead, whose background texture defaults to only half-opaque
+--- (defaults/Profile.lua bgColor alpha 0.5) and lets whatever sits behind the frame show through. ADD
+--- there sums the spark's texture on top of THAT — unpredictable, and reported as "a random
+--- yellow-golden spark" once the fill's steadying backdrop was gone. Swapping to normal alpha
+--- blending in clip mode stops the backdrop from having a vote: the spark renders as its own
+--- authored (and player-colorable, via `sparkColor`) translucent texture, the same every time,
+--- instead of summing with whatever is behind it. Do not "simplify" this back to one blend mode for
+--- both — the two backdrops are not alike, so the blending cannot be either.
 local function wireSpark(am, b, edge, engine, h)
     local clip = am.sparkClip
     local right = b.drain == "right"
@@ -157,10 +170,12 @@ local function wireSpark(am, b, edge, engine, h)
         clip:SetClipsChildren(true)
         local side = right and "RIGHT" or "LEFT"
         am.spark:SetPoint(side, edge, side, 0, 0)
+        am.spark:SetBlendMode("BLEND")
     else
         clip:SetAllPoints(am.bar)
         clip:SetClipsChildren(false)
         am.spark:SetPoint("CENTER", am.fill, right and "LEFT" or "RIGHT", 0, 0)
+        am.spark:SetBlendMode("ADD")
     end
 end
 

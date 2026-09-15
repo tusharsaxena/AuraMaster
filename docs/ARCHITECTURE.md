@@ -9,13 +9,13 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:33`), one aura type (`HELPFUL`, `HARMFUL`, or
 `ENCHANT` for the player's temporary weapon enchants — `:39`) and one style (`bars` or `icons` —
 `:43`), plus its filters, placement and look. A profile holds any number of them; a fresh profile is
-seeded with three (`defaults/Profile.lua:198`).
+seeded with three (`defaults/Profile.lua:200`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:183`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:215`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -74,8 +74,10 @@ modules and 12 settings. The load-bearing positions are annotated at their TOC l
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
-`settings/GeneralContainers.lua` and `settings/GeneralSpells.lua` before `settings/General.lua`, which
-registers their rows after its own.
+`settings/GeneralSpells.lua` before `settings/General.lua`, which registers its rows after its own.
+The Settings tree's order is the TOC's own registration order (`N-2`): General, then Containers,
+then its four sub-pages — Filters, Layout, Bars, Icons, each marked with `NS.SubPageLabel`'s indent
+(`D6`, `settings/OptionsSetup.lua`) — then Profiles.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
 profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one
@@ -91,8 +93,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **198** rows across five pages: General 20 (its Containers tab's five and its
-Dispel Colors tab's six among them), Filters 39, Layout 26, Bars 71 and Icons 42. The
+`NS.Schema` holds **202** rows across six pages: General 18 (its Dispel Colors tab's six and its
+Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
+out of General's own tab), Filters 40, Layout 26, Bars 71 and Icons 42. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:552`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
@@ -169,6 +172,51 @@ capture ring. No control sets it and no row addresses it.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
+## Filter priority
+
+`modules/FilterCompiler.lua` decides whether one container draws a given aura by one order, highest
+rank first (revised by the owner 2026-09-15). `FC.ExplainSpell` answers the same question for a
+single spell id, under the same order, and is what the settings panel reads it from — the per-entry
+notes under Filters → Overrides' Whitelist and Blacklist (K-3), and the warnings `FilterCompiler.Compile`
+attaches to the container.
+
+| Rank | Rule | Outcome |
+|---|---|---|
+| 1 | On the Overrides **whitelist** | **Shown.** Always, whatever anything else says |
+| 2 | On the Overrides **blacklist** | **Hidden**, unless rank 1 already claimed it |
+| 3 | In **at least one** category set to Show | **Shown**, even if it is also in a category set to Hide |
+| 4 | In one or more categories, **all** of them set to Hide | **Hidden** |
+| 5 | In **no** category at all | **Shown** — nothing removed it |
+
+Stated as one sentence: an aura is hidden when the blacklist names it, or when every category it
+belongs to says Hide; everything else is drawn, and the whitelist overrides both. A category set to
+Show is a positive claim, not merely the absence of a Hide, so rank 3 rescues an aura from a Hide
+elsewhere — a Defensive that is also Cancelable is not dropped just because Cancelable says Hide.
+
+**How that compiles.** The engine ANDs the constraints inside one group and ORs the groups, so "in
+ANY shown category" is a union and needs a group per Shown category. With nothing Hidden, exactly
+one group is emitted (the base minus the whitelist) — a Show cannot rescue anything when nothing is
+hiding, so the extra groups would be pure cost. Once anything is Hidden, one group per Shown category
+is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
+container with anything Hidden therefore compiles to roughly 15 groups, not one, and the "Max auras"
+cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
+`docs/schema.md`). The catch-all is skipped instead of joined whenever an `uncategorized` category
+exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
+and its state actually supersedes the catch-all: Hide always does, on either aura type — that row's
+Hide IS the catch-all, made controllable, reproducing the retired **"only these categories"** toggle
+exactly. Show does too, but only on a buff container, where the row's own group is a real rescue that
+is already a strict superset of what the catch-all would draw; on a debuff container Show
+contributes NO group of its own (`Cat.HARMFUL` has no `spells`-kind category, so the row's union is
+always empty — an unrestricted group would draw every debuff and defeat every other category's
+Hide), so it changes nothing and the catch-all runs normally. The per-container **"only these
+categories"** toggle that used to drop the catch-all a different way (`container.filter.onlyShown`)
+is RETIRED (batch 7 fix round 2): once `uncategorized`'s Hide correctly reproduces it on both aura
+types (fix round 3 restored the debuff row after fix round 1 dropped it), the toggle had nothing left
+to do. A schema v4 migration (`docs/schema.md` → Migration path) converts a stored
+`onlyShown = true` accordingly on either aura type; only a container of some other, unrecognized
+shape has no category to migrate onto and loses the narrowing, logged and told to the player
+directly (`NS.Print`), not silently. Full detail: `docs/data-flow.md` → Step 4.
+
 ## Message Bus
 
 A closed bus on AceEvent messages (`core/Bus.lua`, architecture-§4). Every receiver subscribes on its
@@ -178,7 +226,7 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:288` — a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:332` — a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:345` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:520` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:153` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:530` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
@@ -232,7 +280,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:236-240` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:226`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:258`) and
 is not addon code. The eight `core/AuraMaster.lua` registrations live in one function,
 `RegisterLifecycleEvents`, so the perf probe's suspend and resume remove and restore the same list.
 
@@ -258,7 +306,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
   it draws. The next visibility pass after combat catches both up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:187-191`).
+  anchor it (`modules/Container.lua:219-223`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:155`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
@@ -267,7 +315,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:261`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:306`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **Teardown under lockdown is parked, never hidden.** A container that leaves the registry while
   `MustDefer` is true is parked (`Container:Park`): its engine is disabled through `SetEnabled`, its
@@ -282,7 +330,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   profile change parks because the new profile lacks its id is marked `staleData`, so a later Create
   or Duplicate that reuses the id (a reset rewinds the counter) revives it still parked too.
 - **Registry verbs that create or destroy frames are refused in combat** with a gray line
-  (options-ui-§2): `/am new`, `/am delete`, and General → Containers' New container, Duplicate and
+  (options-ui-§2): `/am new`, `/am delete`, and Containers' New container, Duplicate and
   Delete popup. `ContainerManager.Create` refuses itself, so every creating caller is covered.
 - **Reset all is Profiles → Reset Profile, in combat as well (options-ui-§12).** `/am resetall` and
   the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
@@ -306,7 +354,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   issue; so is a text-only container style.
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
-  (`modules/FilterCompiler.lua:154`), rendered in orange on the Filters page.
+  (`modules/FilterCompiler.lua:243`), rendered in orange on the Filters page.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;
@@ -335,6 +383,18 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   new container's name, and the deferred apply rebuilds it. The same goes for a container a Create
   or Duplicate adds under an id the profile change just retired: while aura information is withheld
   out of combat it draws nothing until that ends.
+- **The schema v3 migration can widen what an already-narrowed container draws.** A container that
+  used the old three-state model's exclusive Whitelist (only Defensives shown, say) keeps drawing
+  only Defensives after migration — every other category of its aura type becomes Hide (`E-8`,
+  `docs/schema.md` → Migration path). But an aura in **no category at all** now shows too (rank 5),
+  where the old exclusive Whitelist excluded it, because the two-state model has no way to express
+  "only the categories I named" on its own. The fix is `Uncategorized = Hide` (batch 7, `U-1`..`U-5`,
+  restored to debuffs in fix round 3) — a player who notices new, uncategorized auras appear in a
+  container that used to be narrow should look at Filters → Categories and set that row to Hide. On a
+  debuff container this row means only that: since `Cat.HARMFUL` has no `spells`-kind category, its
+  Show side has nothing to rescue and does not contribute a group of its own (batch 7 fix round 3's
+  `hasUnion` gate) — it is Hide-only in practice, exactly reproducing the retired per-container **"only
+  these categories"** toggle it replaced (batch 7 fix round 2).
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
   one; WoW never frees a frame, so
@@ -375,7 +435,13 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   leaves empty (`docs/midnight-quirks.md`). The spark must sit wholly on the elapsed side to be
   clipped, so it moves half its width off center. With the option on (the default) the spark is
   centered, as before. That a zero-duration bar leaves the region empty is still an in-game check
-  (`docs/smoke-tests.md`, checks 26 and 63).
+  (`docs/smoke-tests.md`, checks 26 and 63). Moving the spark off the fill onto the elapsed
+  background also moves it onto a different backdrop — the elapsed side's background defaults to
+  half-opaque and lets whatever sits behind the frame bleed through — so `wireSpark`
+  (`modules/Style_Bars.lua`) blends the spark normally there instead of additively, or that bleed-
+  through reads as "a random yellow-golden spark" (owner report 2026-09-14, `SP-1`); centered mode
+  keeps the additive blend, since its backdrop is the opaque fill. Verified in-game only
+  (`docs/smoke-tests.md`, check 85).
 
 ## Documentation map
 
@@ -428,4 +494,4 @@ None.
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
 | `documentation-§1` | README's `## Screenshots` section (item 5) is a placeholder with no captioned images | Screenshots can only be captured in a live client and none exist yet, so the section says so in one line and shows nothing; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20; the capture is tracked as issue tusharsaxena/AuraMaster#3. Ratified by the owner 2026-09-12. | 2026-09-12 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when captioned images land in the section |
-| `options-ui-§14` | The General page's `Containers` tab edits one selected container, but carries its Container picker and New container inside the tab body rather than in a band above the strip. The General page draws no banner, and its first tab stays `Master controls` (options-ui-§15). Filters, Layout, Bars and Icons keep the banner picker | The owner keeps a container's identity (create, name, enable, unit, aura type, style, duplicate, delete, copy) with the addon-wide settings on General instead of on a page of its own. Ratified by the owner 2026-09-13 | 2026-09-13 | The standard gains a registry-tab form for a General page, or a Containers page returns; the row is retired then |
+| `options-ui-§14` | The `Containers` page's one tab edits one selected container, but carries its Container picker and New container inside the tab body rather than in a band above the strip. Filters, Layout, Bars and Icons keep the banner picker | The owner keeps a container's identity (create, name, enable, unit, aura type, style, duplicate, delete, copy) in the tab body rather than switching to the banner-picker pattern the other four pages use. Ratified by the owner 2026-09-13, on General's own `Containers` tab; carried unchanged onto the Containers page's own home when the owner moved it out of General to a top-level page (`N-1`, batch 7, 2026-09-15) | 2026-09-13 | The standard gains a registry-tab form the Containers page could adopt in place of the tab-body picker; the row is retired then |

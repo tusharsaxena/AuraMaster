@@ -122,12 +122,27 @@ return function()
         local f = baseCreate(frameType, name, parent, template)
         if M.__armGeometry then armGeometry(f) end
         -- Frame level is arithmetic in production (the drag handle sits 50 above its anchor), so it
-        -- answers a real number (fidelity rule 2) and records what was set.
-        f.__level = 0
+        -- answers a real number (fidelity rule 2) and records what was set. The default below — a
+        -- frame with no explicit level sits one above its parent's CURRENT level at creation — is
+        -- this mock's ASSUMPTION about the client, not a verified fact (review round 2, B-9): nothing
+        -- in this repo establishes it, and it replaced an earlier flat 0 that made a production write
+        -- look load-bearing when it was not. It is also NOT re-derived when a parent's level changes
+        -- later — real or assumed, the client does not re-base existing descendants either — so no
+        -- test may rely on a child's level tracking a parent's level past the moment it was created.
+        -- Anything that must hold across a later re-level (Container.lua's ApplyBlocker) reads the
+        -- other frame's CURRENT level itself rather than trusting this default to still apply.
+        f.__level = (parent and parent.__level or 0) + 1
         function f:SetFrameLevel(v) self.__level = v; return self end
         function f:GetFrameLevel() return self.__level end
         -- The client's layout cache: recorded so a test can see an anchor opt out of it.
         function f:SetDontSavePosition(v) self.__dontSavePosition = v; return self end
+        -- The container's mouse blocker (modules/Container.lua's ApplyBlocker) covers whatever engine
+        -- currently exists with SetAllPoints and is gated with SetMouseMotionEnabled /
+        -- SetMouseClickEnabled, exactly like a live button (Style.ApplyBehavior). All three branch
+        -- production behavior, so they are recorded rather than no-opped (fidelity rule 3).
+        function f:SetAllPoints(target) self.__allPointsTo = target; return self end
+        function f:SetMouseMotionEnabled(v) self.__mouseMotionOn = not not v; return self end
+        function f:SetMouseClickEnabled(v) self.__mouseClickOn = not not v; return self end
         if frameType == "AuraContainer" then makeEngine(f) end
         if type(name) == "string" then M.__globals[name] = f end
         return f

@@ -803,7 +803,9 @@ test("handle: the strip sits fifty levels above its anchor, over the container's
     local h = recordedHandle(mocks, NS, inst)
     -- red under: BuildHandle leaving the strip at the anchor's level (the first element draws over it)
     assertEqual(h:GetFrameLevel(), inst.anchor:GetFrameLevel() + 50)
-    assertTrue(inst.anchor:GetFrameLevel() > 0, "the anchor's level was applied first")
+    -- red under: Apply never reaching anchor:SetFrameLevel (the mock's own default would still be
+    -- above 0 and pass a bare ">0" check)
+    assertEqual(inst.anchor:GetFrameLevel(), NS.CONTAINER_TEMPLATE.layout.level, "the anchor's level was applied first")
 end)
 
 test("handle: a left click on the strip opens nothing; a right click opens this container's settings", function()

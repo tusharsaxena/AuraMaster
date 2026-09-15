@@ -23,6 +23,7 @@ otherwise (`docs/profiles.md`).
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
 | `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
 | `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
+| `enchantSlots` | map | `{ mainHand = true, offHand = true, ranged = true }` | Which weapon slots the `weaponEnchants` category draws (schema v3, B3); shared by every container, like `categorySpells`. A container showing enchants with every slot off falls back to all three |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
@@ -38,7 +39,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:96`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:99`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -58,14 +59,13 @@ path, never to a number restated in `modules/`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral. The panel labels the three states Default, Whitelist and Blacklist. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
-| `whitelist` | `{}` | `[spellId] = true` — always shown |
-| `blacklist` | `{}` | `[spellId] = true` — never shown; beats the whitelist |
+| `categories` | every category key → `"show"` | `[categoryKey] = "show" \| "hide"` (schema v3); built from `NS.Categories.DefaultStates()`, so a key added later backfills as Show. Show is a positive claim, not merely "not excluded" — see `docs/ARCHITECTURE.md` → Filter priority. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
+| `whitelist` | `{}` | `[spellId] = true` — always shown; beats the blacklist (owner's 2026-09-15 filter-priority revision, `modules/FilterCompiler.lua` rank 1) |
+| `blacklist` | `{}` | `[spellId] = true` — never shown, unless the whitelist also names it |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
 | `durationMode` | `"any"` | `any`, `timed`, `timeless` |
 | `maxDuration` | `0` | seconds; `0` is no limit |
-| `includeEnchants` | `false` | a player buff container also shows weapon enchants |
-| `hidePermanentEnchants` | `true` | skip enchants that never expire |
+| `hidePermanentEnchants` | `true` | skip enchants that never expire; lives on the Categories group since schema v3 (B3) |
 | `sortMethod` | `"expirationOnly"` | `default`, `expiration`, `expirationOnly`, `name`, `nameOnly`, `bigDefensive`, `important`, `unitFrameDebuff`, `applied` |
 | `sortDirection` | `"normal"` | `normal`, `reverse` |
 | `maxAuras` | `0` | per group; `0` is no limit |
@@ -94,7 +94,7 @@ path, never to a number restated in `modules/`.
 | `layout.perLine` | `0` (one line) | | | |
 | `layout.scale` | `1.0` | | | |
 | `layout.alpha` | `1.0` | | | |
-| `layout.strata` | `"HIGH"` | | | |
+| `layout.strata` | `"MEDIUM"` | | | |
 | `layout.level` | `5` | | | |
 
 ### `bars`
@@ -152,12 +152,12 @@ six canonical font leaves (options-ui-§16) and then its placement: `show` (`tru
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:198`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:200`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
 |---|---|---|---|---|
-| Player buffs | player | HELPFUL | bars | `includeEnchants = true`; `TOPRIGHT` −240, −220 |
+| Player buffs | player | HELPFUL | bars | `TOPRIGHT` −240, −220; enchants draw by the `weaponEnchants` category's default (Show) |
 | Player debuffs | player | HARMFUL | icons | `TOPRIGHT` −240, −160; horizontal, grows left |
 | Target debuffs (mine) | target | HARMFUL | icons | `castBy = "mine"`; `CENTER` 0, −160; horizontal, grows right |
 
@@ -264,7 +264,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:462`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:683`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -286,6 +286,89 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
+- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:603`) runs over **every** stored profile,
+  same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
+  `Database.CurrentSchemaVersion()` answers `3`. Only a container whose `auraType` is a known one
+  (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
+  alone rather than half-converted, does not count toward the step's "over N container(s)" total,
+  and logs its own `[Migrate] v3 container '<id>' skipped: unrecognized auraType <value>` line — a
+  silently skipped container is the kind of thing only its player would ever notice.
+  - The old three-state category model (`""` no effect / `"show"` whitelist / `"hide"` exclude)
+    became two states, Show / Hide, where Show contributes nothing (defaults/Categories.lua). The
+    old `"show"` state meant "draw ONLY the categories set to show" — a state the new model has no
+    room for, so mapping `""` → `"show"` verbatim would silently WIDEN what an already-stored
+    container draws. The old intent is written out longhand instead, per container, over
+    `NS.Categories.For(container.auraType)`'s FILTERABLE keys (below): if ANY of them was `"show"`,
+    every one NOT `"show"` (an unset `""` or an explicit `"hide"`) becomes `"hide"` — the longhand of
+    the old whitelist. With no `"show"` present, only the unset `""` rows become `"show"`; an explicit
+    `"hide"` is left exactly as it was, since the old model already excluded it with no whitelist
+    active. `ENCHANT` containers have no categories and are skipped entirely. This runs only while at
+    least one filterable category of the container's type is still unset (`""` or missing) — an
+    already-fully-decided container (every filterable key `"show"` or `"hide"`) is the fixed point and
+    is left untouched, which is what makes a second run a no-op.
+  - **Filterable keys exclude `kind == "enchant"` categorically**, not merely because none exists in
+    `NS.Categories.For`'s lists yet. An enchant row (`weaponEnchants`, once task B3 adds it) is a
+    container capability — "does this container have weapon-enchant slots" — not a filter over auras:
+    it matches no aura and joins no aura group, the same reason `modules/FilterCompiler.lua`'s own
+    `splitCategories` skips that kind. So it never counts toward "was this container narrowed", is
+    never swept to `"hide"` by that decision, and contributes no ids (already true via the
+    `kind == "spells"` check below). Without this exclusion, a container with no `filter.categories`
+    table at all is the sharpest failure: the whitelist lift has nothing to act on yet, so
+    `filter.includeEnchants`'s lift (below) is the one that creates the table, holding only
+    `weaponEnchants` — and the next run over that container would see exactly one category at
+    `"show"`, read it as narrowed, and sweep every other category to `"hide"`, a near-total blackout
+    of a container the player never touched. The exclusion holds whether `kind == "enchant"` exists in
+    `def` or not, so it needs no revisiting when B3 lands.
+  - Categories are not a partition of the aura space, so "hide everything not whitelisted" cannot
+    fully reproduce the old exclusive whitelist purely by category state: an aura that also matched a
+    category the sweep above just turned to `"hide"` would need rescuing. Originally (schema v3's
+    first cut) that rescue was done here, by copying the ids of every `"show"` **spells** category
+    onto `filter.whitelist`. The owner's 2026-09-15 filter-priority revision made that unnecessary:
+    a Show now beats a Hide on the same aura for every category kind, not only `spells`
+    (`modules/FilterCompiler.lua` rank 3 — "in at least one Show category" rescues an aura even if it
+    is also in a Hide category), so the compiler itself does this rescue on every compile, and this
+    migration step copies no ids at all. (An aura in no category at all now drawing, when the old
+    exclusive whitelist excluded it, is still inherent to the new model and is not fixed by anything
+    here. Schema v3 shipped a per-container "only these categories" toggle for that — RETIRED by
+    schema v4, below, in favor of `categories.uncategorized`.)
+  - `filter.includeEnchants` (the old weapon-enchant boolean) becomes the `weaponEnchants` category
+    row (`"show"` when the flag was true, `"hide"` otherwise, including when the key was never set),
+    and the old key is deleted; `ENCHANT` containers never read the old flag and are left alone. Runs
+    AFTER the category-whitelist lift above, and only when `categories.weaponEnchants` is not already
+    set (idempotency: `includeEnchants` is nil by the second run, so an unconditional write would
+    re-stamp `"hide"` and silently drop a container already migrated to `"show"` on any re-run — a
+    restored backup, a copied profile, a re-applied step). Today `weaponEnchants` is not yet one of
+    `NS.Categories.For`'s keys (task B3 adds the category definition and wires the compiler and UI to
+    it; this step only writes the stored key ahead of that); the categorical `kind == "enchant"`
+    exclusion above is what keeps this order safe once B3 does add it, rather than the lift merely
+    having nothing to see today.
+- **Schema v4** (`Database.MigrateV4`, `core/Database.lua`, batch 7 fix rounds 2 and 3) runs over
+  **every** stored profile, same reach as v2/v3. It logs one `[Migrate] v4 profile '<name>'` line
+  each naming how many containers converted and how many lost the capability, and
+  `Database.CurrentSchemaVersion()` answers `4`. The owner retired the per-container "Only these
+  categories" toggle (`filter.onlyShown`) entirely: `categories.uncategorized = "hide"` (buffs) or
+  `categories.uncategorizedDebuffs = "hide"` (debuffs, batch 7 `U-1`..`U-5`, restored fix round 3;
+  `docs/ARCHITECTURE.md` → Filter priority) means what the toggle used to mean, on either aura type —
+  Hide always reproduces it exactly, whether or not the category's union is empty (fix round 3's
+  `hasUnion` gate only changes what SHOW does, not what Hide does). For a container with
+  `filter.onlyShown == true`:
+  - **HELPFUL or HARMFUL**: the matching `categories.<key>` is set `"hide"`, preserving the toggle's
+    old effect — the container keeps drawing only what it categorized rather than silently widening
+    the moment the toggle's own catch-all suppression disappears with the key.
+  - **ENCHANT**: neither converted nor counted as lost. An ENCHANT container compiles to no aura
+    groups at all (`FC.Compile`'s `compileEnchant`), so its `onlyShown` — however it got set — never
+    did anything; the dead key is still cleared, just not narrated as a loss.
+  - **Any other, unrecognized `auraType`**: there is no `uncategorized` category to migrate onto for
+    a shape this migration does not know, so nothing can be invented to stand in for it. The
+    container LOSES the "only these categories" narrowing — an unclaimed aura reaches the ordinary
+    catch-all again, same as any container that never had the toggle on. This is counted (`lost`),
+    named (`{ id, name, auraType }`), and told to the player directly with an ungated `NS.Print` line
+    naming every such container — not left to `NS.Debug`, which a player may never have enabled, and
+    not done silently.
+  Either way `filter.onlyShown` is cleared — the key means nothing any more and
+  `NS.CONTAINER_TEMPLATE` no longer carries it. A container where the toggle was already off or
+  absent is untouched entirely, not even the dead-key clear (idempotent: nothing at `true` to act on
+  on a second run either).
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
@@ -299,7 +382,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   hand-edited `position = "junk"`) is replaced by the template's section. A whole-section write
   through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
   silently fixed.
-  A new category key reaches every container the same way, through `NeutralStates()`.
+  A new category key reaches every container the same way, through `DefaultStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: append the
   next rung (`to = 3`), transform the stored value, and remember that containers live in every
   profile, not only the active one (`docs/common-tasks.md` has the recipe).

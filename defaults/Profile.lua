@@ -52,6 +52,9 @@ NS.defaults.profile = {
     categorySpells = {},
     -- One color per dispel type, for a bar colored by dispel type.
     dispelColors   = dispelColors(),
+    -- Which weapon slots the weaponEnchants category draws (settings/Filters.lua). Profile-wide, like
+    -- categorySpells: one set of slots every container's enchant block shares.
+    enchantSlots   = { mainHand = true, offHand = true, ranged = true },
 
     -- The container registry. `containers` is keyed by id; `containerOrder` is display order (the
     -- settings picker, the CLI, and the order containers are built in). Both are written at runtime by
@@ -102,17 +105,16 @@ NS.CONTAINER_TEMPLATE = {
 
     -- What the container shows. See modules/FilterCompiler.lua for how each field reaches the engine.
     filter = {
-        -- [categoryKey] = "" (neutral) | "show" | "hide". Every key of both lists, so each resolves
-        -- as a schema row (settings/Filters.lua) and a key added later backfills as neutral.
-        -- defaults/Categories.lua loads first for exactly this line.
-        categories      = NS.Categories.NeutralStates(),
+        -- [categoryKey] = "show" | "hide". Every key of both lists, so each resolves as a schema
+        -- row (settings/Filters.lua) and a key added later backfills as Show (the default: it
+        -- excludes nothing). defaults/Categories.lua loads first for exactly this line.
+        categories      = NS.Categories.DefaultStates(),
         -- The spell-list edits are the profile's since schema v2 (`profile.categorySpells`).
         whitelist       = {},   -- [spellId] = true — always shown, whatever the categories say
         blacklist       = {},   -- [spellId] = true — never shown
         castBy          = "any",
         durationMode    = "any",
         maxDuration     = 0,    -- seconds; 0 = no limit
-        includeEnchants = false,-- a player buff container may also show weapon enchants
         hidePermanentEnchants = true,
         sortMethod      = "expirationOnly",
         sortDirection   = "normal",
@@ -133,7 +135,7 @@ NS.CONTAINER_TEMPLATE = {
     layout = {
         axis = "vertical", growH = "right", growV = "down",
         spacing = 2, lineSpacing = 2, perLine = 0,
-        scale = 1.0, alpha = 1.0, strata = "HIGH", level = 5,
+        scale = 1.0, alpha = 1.0, strata = "MEDIUM", level = 5,
     },
 
     -- Mouse behavior shared by both styles.
@@ -198,7 +200,7 @@ NS.CONTAINER_TEMPLATE = {
 NS.STARTER_CONTAINERS = {
     {
         name = "Player buffs", unit = "player", auraType = "HELPFUL", style = "bars",
-        filter = { castBy = "any", includeEnchants = true },
+        filter = { castBy = "any" },
         position = { point = "TOPRIGHT", relativePoint = "TOPRIGHT", x = -240, y = -220 },
     },
     {

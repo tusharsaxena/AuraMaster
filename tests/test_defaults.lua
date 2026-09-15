@@ -46,6 +46,8 @@ local function choices(row)
 end
 
 -- The spell sets are written whole through the seam (settings/Schema.lua's carve-outs), not by row.
+-- enchantSlots (schema v3, B3) got its rows in B7 (settings/GeneralSpells.lua's ENCHANT_ROWS), so it
+-- is no longer exempted here.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
 local PROFILE_CARVE_OUTS = set({ "categorySpells" })
 
@@ -90,6 +92,12 @@ test("defaults: every category carries what its kind needs, and a label and desc
             end
             return true
         end,
+        -- The odd one out (defaults/Categories.lua's KINDS doc): it matches no aura, so it carries
+        -- nothing beyond the label and description every kind needs.
+        enchant = function() return true end,
+        -- U-1: the complement of every spells-kind category's union, not an id list of its own —
+        -- like enchant, nothing beyond the label and description.
+        uncategorized = function() return true end,
     }
     local bad = {}
     for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do
@@ -121,6 +129,20 @@ test("defaults: spell categories are buff categories, and IsSpellCategory names 
     end
     assertTrue(spellCats > 0, "the editor has something to edit")
     assertFalse(Cat.IsSpellCategory("no such category"))
+end)
+
+test("defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)", function()
+    -- Correctness depends on this: modules/FilterCompiler.lua's shown-group loop excludes every
+    -- EARLIER shown category from a later one, so `uncategorized`'s complement-exclude (buffs) or
+    -- no-op (debuffs) only correctly dedups against every other shown category if nothing is
+    -- declared after it, on EITHER list — restored to HARMFUL in fix round 3 with an asymmetric
+    -- meaning (Hide reproduces the retired toggle; Show is inert, defaults/Categories.lua's KINDS doc).
+    local lastHelpful = Cat.HELPFUL[#Cat.HELPFUL]
+    assertEqual(lastHelpful.key, "uncategorized", "red under: another category added after it")
+    assertEqual(lastHelpful.kind, "uncategorized")
+    local lastHarmful = Cat.HARMFUL[#Cat.HARMFUL]
+    assertEqual(lastHarmful.key, "uncategorizedDebuffs", "red under: another category added after it")
+    assertEqual(lastHarmful.kind, "uncategorized")
 end)
 
 test("defaults: every leaf of the container template is edited by a settings row or is a spell set", function()
@@ -215,9 +237,11 @@ test("defaults: one Healing category holds both retired healing lists, where Cor
     assertTrue(Cat.HELPFUL[7] == def, "after Offensive cooldowns, where Core healing buffs sat")
 end)
 
-test("defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)", function()
-    -- red under: the template's strata left at MEDIUM
-    assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "HIGH")
+test("defaults: a container draws in the Medium strata, the default UI's own layer (X-3)", function()
+    -- red under: the template's strata left at HIGH. Batch 5's L-3 deliberately raised this to HIGH
+    -- so a container drew above the default UI's Medium layer; batch 7's X-3 reverses that choice,
+    -- so MEDIUM is once again what a new container gets.
+    assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "MEDIUM")
 end)
 
 test("defaults: the global schema stamp defaults to 1, never the current version", function()

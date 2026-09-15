@@ -37,12 +37,12 @@ local function headings(ws)
     return out
 end
 
---- The grid line for category `key`: the Default, Whitelist and Blacklist cells, then the label.
+--- The grid line for category `key`: the Show and Hide cells, then the label (schema v3).
 local function gridLine(NS, ws, key)
     local label = NS.FindSchemaRow("container.filter.categories." .. key).label
     for _, w in ipairs(ws) do
         local kids = w.children
-        local last = kids and kids[4]
+        local last = kids and kids[3]
         if last and last.type == "InteractiveLabel" and last.text == label then
             return kids
         end
@@ -80,17 +80,62 @@ test("filters: Cast by writes the selected container's filter and no other", fun
     assertEqual(NS.Database.FindContainer(2).filter.castBy, "any")
 end)
 
-test("filters: a buff container is offered the weapon-enchant rows; a debuff container is not", function()
-    local NS, _, P, ws = filters()
-    assertTrue(P.row(ws, "container.filter.includeEnchants") ~= nil, "a buff container offers enchants")
-    P.row(ws, "container.filter.includeEnchants"):__fire("OnValueChanged", false)
-    assertFalse(NS.Database.FindContainer(1).filter.includeEnchants)
+test("filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not", function()
+    local NS, _, P = filters()
+    local ws = P.tab("filters", NS.L["Categories"])
+    assertTrue(gridLine(NS, ws, "weaponEnchants") ~= nil, "a buff container offers the enchant category")
+    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
+    assertTrue(cb ~= nil, "and the hide-permanent row")
+    -- red under: hidePermanentEnchants back on a `grid` — a ChoiceGrid radio lights by comparing
+    -- the stored value against a column's "show"/"hide" string, which a bool can never match, so it
+    -- would draw as an always-unlit pair of radios rather than the checkbox this row actually is
+    assertEqual(cb.type, "CheckBox", "a plain bool row, not a grid cell")
+    cb:__fire("OnValueChanged", false)
+    local stored = NS.Database.FindContainer(1).filter.hidePermanentEnchants
+    -- red under: the same mutation — a grid cell's click would write the STRING "hide" here
+    assertEqual(stored, false)
+    assertEqual(type(stored), "boolean", "a boolean, not a grid cell's stored string")
     NS.Helpers.SelectContainer(2)
-    ws = P.show("Filters")
+    ws = P.rerender("Filters")
     -- red under: the enchant rows losing their `auraTypes` (a debuff container can show no enchant)
-    assertNil(P.row(ws, "container.filter.includeEnchants"))
+    assertNil(gridLine(NS, ws, "weaponEnchants"))
     assertNil(P.row(ws, "container.filter.hidePermanentEnchants"))
-    assertTrue(P.row(ws, "container.filter.castBy") ~= nil, "the debuff container keeps Cast by")
+    assertTrue(gridLine(NS, ws, "defensives") == nil, "no buff category either")
+    assertTrue(gridLine(NS, ws, "magic") ~= nil, "the debuff container keeps its own categories")
+end)
+
+test("filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.auraType", "ENCHANT", 1)
+    local ws = P.rerender("Filters")
+    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
+    -- red under: hidePermanentEnchants back on a `grid` — a weapon-enchant container reaches the
+    -- Categories tab too (its own auraTypes now includes ENCHANT), so the same bug would hit it
+    assertEqual(cb.type, "CheckBox")
+    cb:__fire("OnValueChanged", true)
+    local stored = NS.Database.FindContainer(1).filter.hidePermanentEnchants
+    assertEqual(stored, true)
+    assertEqual(type(stored), "boolean")
+end)
+
+-- T-3 (batch 7): hidePermanentEnchants used to sit alone below the grid, below the Uncategorized
+-- note too. It now draws directly under the Spell Categories grid, ahead of that note, behind a
+-- line naming the row it is a sub-option of — so it reads as tied to Weapon enchants, not floating.
+test("filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)", function()
+    local _, _, P, ws = categories()
+    local texts = P.texts(ws)
+    local tieIndex, noteIndex
+    for i, t in ipairs(texts) do
+        if t:find("Weapon enchants", 1, true) then tieIndex = i end
+        if t:find("Uncategorized defaults to Show", 1, true) then noteIndex = i end
+    end
+    -- red under: the tie text missing (the row floating with nothing naming what it belongs to), or
+    -- the checkbox/tie landing after the Uncategorized note again (T-3's actual complaint)
+    assertTrue(tieIndex ~= nil, "the tie line names Weapon enchants")
+    assertTrue(noteIndex ~= nil, "the Uncategorized note still draws")
+    assertTrue(tieIndex < noteIndex, "the tie (and the checkbox right after it) comes before the note, directly under the grid")
+    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
+    assertEqual(cb.type, "CheckBox", "still a plain checkbox, not a grid cell (regression guard)")
 end)
 
 test("filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs", function()
@@ -98,8 +143,10 @@ test("filters: a weapon-enchant container is offered one row on each of two tabs
     NS.SetByPath("container.auraType", "ENCHANT", 1)
     local ws = P.rerender("Filters")
     -- red under: a Filters row that means nothing for enchants dropping its `auraTypes`, or the
-    -- bespoke Categories tab losing its `auraTypes` (it would stand alone with no rows to draw)
-    assertEqual(table.concat(P.tabKeys("filters"), ","), NS.L["What to show"] .. "," .. NS.L["Sorting"])
+    -- bespoke Categories tab losing its `auraTypes` (it would stand alone with no rows to draw).
+    -- "What to show" has none of its own rows for an enchant container now that hidePermanentEnchants
+    -- lives in Categories, so it drops out and Categories takes its place.
+    assertEqual(table.concat(P.tabKeys("filters"), ","), NS.L["Categories"] .. "," .. NS.L["Sorting"])
     assertTrue(P.row(ws, "container.filter.hidePermanentEnchants") ~= nil)
     assertNil(P.row(ws, "container.filter.castBy"))
     ws = P.tab("filters", NS.L["Sorting"])
@@ -108,14 +155,83 @@ test("filters: a weapon-enchant container is offered one row on each of two tabs
     assertNil(P.row(ws, "container.filter.maxAuras"))
 end)
 
+test("filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container", function()
+    -- red under: the description still claiming the cap draws "at most this many auras in this
+    -- container" — false the moment one category is Hidden, since modules/FilterCompiler.lua's
+    -- lookOf stamps maxFrameCount on EVERY group and the engine applies it per group, not once.
+    local NS = fresh()
+    local desc = NS.FindSchemaRow("container.filter.maxAuras").desc
+    assertTrue(desc:find("own group", 1, true) ~= nil, "says the cap is per-group: " .. tostring(desc))
+    assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
+        "says the cap applies to each group separately: " .. tostring(desc))
+    -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): "something is Hidden"
+    -- is once again the ONLY multi-group condition (as it was before the toggle existed), so the
+    -- description no longer needs to name it, and must not — a dangling mention of a control that no
+    -- longer exists would be its own bug.
+    assertTrue(desc:find("Only these categories", 1, true) == nil,
+        "does not name a retired toggle: " .. tostring(desc))
+end)
+
+test("filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container", function()
+    -- red under: the descriptions still claiming the sort/direction order the whole container's
+    -- draw order — false the moment one category is Hidden, since modules/FilterCompiler.lua's
+    -- lookOf stamps sortMethod/sortDirection on EVERY group and the engine sorts within each group,
+    -- laying groups out by layoutIndex.
+    local NS = fresh()
+    for _, path in ipairs({ "container.filter.sortMethod", "container.filter.sortDirection" }) do
+        local desc = NS.FindSchemaRow(path).desc
+        assertTrue(desc:find("own group", 1, true) ~= nil,
+            path .. " says the sort is per-group: " .. tostring(desc))
+        assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
+            path .. " says it applies to each group separately: " .. tostring(desc))
+        -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): a dangling mention
+        -- of a control that no longer exists would be its own bug.
+        assertTrue(desc:find("Only these categories", 1, true) == nil,
+            path .. " does not name a retired toggle: " .. tostring(desc))
+    end
+end)
+
+-- ── B8: Max duration presets ─────────────────────────────────────────────────────────────────
+
+test("filters: a max-duration preset writes the same path as the slider", function()
+    -- red under: the preset not writing the slider's path, which would make it decorative.
+    local NS, _, P, ws = filters()
+    local dd = P.find(ws, "Dropdown", NS.L["Preset"])
+    assertTrue(dd ~= nil, "the What to show tab draws a preset dropdown")
+    dd:__fire("OnValueChanged", 300)
+    assertEqual(NS.Database.FindContainer(1).filter.maxDuration, 300)
+    -- the slider itself agrees, once the tab redraws from the new stored value
+    ws = P.rerender("Filters")
+    assertEqual(P.row(ws, "container.filter.maxDuration").value, 300)
+end)
+
+test("filters: a stored max-duration matching no preset leaves the preset dropdown blank", function()
+    -- red under: snapping the dropdown to the nearest preset instead of leaving it unset — silently
+    -- changing a player's stored number is worse than a blank dropdown.
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.maxDuration", 45, 1)
+    local ws = P.rerender("Filters")
+    local dd = P.find(ws, "Dropdown", NS.L["Preset"])
+    assertTrue(dd ~= nil)
+    assertNil(dd.value)
+end)
+
+test("filters: the max-duration description says there is no minimum", function()
+    -- red under: the description promising a lower bound the engine cannot honor.
+    local NS = fresh()
+    local desc = NS.FindSchemaRow("container.filter.maxDuration").desc
+    assertTrue(desc:find("no minimum", 1, true) ~= nil, "states plainly there is no minimum: " .. tostring(desc))
+end)
+
 -- ── the Categories grid (F-1) ─────────────────────────────────────────────────────────────────
 
-test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Custom Categories, each once", function()
+test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once", function()
     local NS, _, P, ws = categories()
     local L = NS.L
     -- red under: the rows drawn by the flow engine (each subgroup heading repeats as the kinds
-    -- interleave), or the grids drawn in the wrong order
-    assertEqual(table.concat(headings(ws), "|"), L["Blizzard Categories"] .. "|" .. L["Custom Categories"])
+    -- interleave), or the grids drawn in the wrong order. F-1: the heading reads Spell Categories,
+    -- not Custom Categories.
+    assertEqual(table.concat(headings(ws), "|"), L["Blizzard Categories"] .. "|" .. L["Spell Categories"])
     assertNil(P.find(ws, "Dropdown", NS.FindSchemaRow("container.filter.categories.defensives").label),
         "a category is a grid line, not a dropdown")
     assertTrue(gridLine(NS, ws, "defensives") ~= nil, "a custom category has a grid line")
@@ -123,72 +239,219 @@ test("filters: a buff container's Categories tab is two grids, Blizzard Categori
     assertNil(gridLine(NS, ws, "crowdControl"), "no debuff category on a buff container")
 end)
 
-test("filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once", function()
+test("filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once", function()
     local NS, _, _, ws = categories(2)
     local L = NS.L
+    -- U-1, fix round 3 (2026-09-16): the owner restored the debuff row — `uncategorizedDebuffs`
+    -- shares the Spell Categories grid, so it draws for a debuff container again, one row, asymmetric
+    -- with the buff row (Hide reproduces the retired toggle; Show is inert — defaults/Categories.lua's
+    -- KINDS doc, modules/FilterCompiler.lua's `hasUnion` gate).
     -- red under: a grid key mapping dispel or who-cast-it rows into the Blizzard grid
     assertEqual(table.concat(headings(ws), "|"),
-        L["Blizzard Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
+        L["Blizzard Categories"] .. "|" .. L["Spell Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
     assertTrue(gridLine(NS, ws, "magic") ~= nil)
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
+    assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: restored for debuffs (fix round 3)")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 
-test("filters: every grid's columns are Default, Whitelist and Blacklist, then the category", function()
+test("filters: every grid's columns are Show and Hide, then the category (schema v3)", function()
     local NS, _, _, ws = categories()
     local L = NS.L
     local headers = 0
     for _, w in ipairs(ws) do
         local kids = w.children
-        if kids and kids[1] and kids[1].type == "Label" and kids[1].text == L["Default"] then
+        if kids and kids[1] and kids[1].type == "Label" and kids[1].text == L["Show"] then
             headers = headers + 1
-            local got = {}
-            for i, k in ipairs(kids) do got[i] = k.text end
-            -- red under: CATEGORY_STATE_LABELS keeping — / Show / Hide
-            assertEqual(table.concat(got, "|"),
-                L["Default"] .. "|" .. L["Whitelist"] .. "|" .. L["Blacklist"] .. "|" .. L["Category"])
+            -- Only the first three: the Spell Categories grid's header carries a fourth, blank cell
+            -- for F-3's `See spells` link column, checked on its own below.
+            local got = { kids[1].text, kids[2].text, kids[3].text }
+            -- red under: CATEGORY_STATE_LABELS keeping a third, Default column
+            assertEqual(table.concat(got, "|"), L["Show"] .. "|" .. L["Hide"] .. "|" .. L["Category"])
         end
     end
     assertEqual(headers, 2, "one header line per grid")
 end)
 
-test("filters: a grid radio stores show, hide or \"\" for the selected container and re-syncs its line", function()
-    local NS, m, _, ws = categories()
-    m.__subcategories.Filters:Show()   -- on screen, so a write re-syncs the widgets in place
-    local cells = gridLine(NS, ws, "defensives")
-    assertEqual(cells[1].checkType, "radio")
-    assertTrue(cells[1].value == true, "Default is lit for a fresh container")
-    cells[2]:__fire("OnValueChanged", true)
-    -- red under: the columns' values out of order (the Whitelist cell storing anything but "show")
-    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "show")
-    assertEqual(NS.Database.FindContainer(2).filter.categories.defensives, "", "no other container")
-    cells[3]:__fire("OnValueChanged", true)
-    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "hide")
-    -- red under: a cell's refresher not re-reading the row (the Whitelist cell would stay lit)
-    assertTrue(cells[3].value == true and cells[2].value == false, "the line re-syncs to Blacklist")
-    cells[1]:__fire("OnValueChanged", true)
-    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "")
+-- ── F-2/F-3: the Spell Categories grid's blurb and its `See spells` link ─────────────────────────
+
+test("filters: the Spell Categories grid opens with a line naming where its lists live (F-2)", function()
+    local _, _, P, ws = categories()
+    -- red under: F-2's line missing, or attached under the wrong grid
+    assertTrue(P.hasText(ws, "General -> Spell Categories"), "names where the lists live")
 end)
 
-test("filters: /am get and /am list print a category's state as Default, Whitelist or Blacklist", function()
+-- T-2 fix round 4 (batch 7): the F-2 line claims the grid holds EDITABLE lists — true on a buff
+-- container, false on a debuff container, whose Spell Categories grid carries exactly one row
+-- (Uncategorized, a Show/Hide flag, not a spell list). The row stays (D6/U-1); only the claim about
+-- it is conditional now.
+test("filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)", function()
+    local NS, _, P, buffWs = categories(1)
+    assertTrue(P.hasText(buffWs, "General -> Spell Categories"), "a buff container has editable lists")
+    local _, _, P2, debuffWs = categories(2)
+    assertFalse(P2.hasText(debuffWs, "General -> Spell Categories"), "a debuff container's grid is Uncategorized-only, not an editable list")
+    -- and the grid itself is still drawn, with its one row, so the fix is conditional wording, not
+    -- a removed grid or a removed row
+    assertTrue(P2.find(debuffWs, "Heading", NS.L["Spell Categories"]) ~= nil, "the Spell Categories grid still draws")
+    assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its one Uncategorized row")
+end)
+
+-- Review fix wave, item 2: UNCATEGORIZED_NOTE ("Uncategorized defaults to Show, which rescues...")
+-- claims a buff-only truth — on a debuff container Show rescues nothing at all (there is no spell
+-- list for it to be outside of), and the sentence would flatly contradict that row's own tooltip
+-- ("Show ... changes nothing by itself") in the same glance. Gated the same way as F-2's blurb above.
+test("filters: the Uncategorized cost note draws on a buff container and not on a debuff one (review fix wave, item 2)", function()
+    local _, _, P, buffWs = categories(1)
+    assertTrue(P.hasText(buffWs, "rescues any aura not on the lists above"), "true on a buff container")
+    local _, _, P2, debuffWs = categories(2)
+    assertFalse(P2.hasText(debuffWs, "rescues any aura not on the lists above"),
+        "false on a debuff container — nothing there for Show to rescue")
+end)
+
+--- The lines a widget's tooltip draws when hovered, via the mocked GameTooltip's :AddLine (the
+--- idiom this suite already uses below for the Overrides tooltip).
+local function tooltipLines(m, widget)
+    local lines = {}
+    rawset(m.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    widget:__fire("OnEnter")
+    return table.concat(lines, "\n")
+end
+
+test("filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)", function()
+    local NS, m, P = filters()
+    P.show("General") -- render once, so H.SelectTab (K-4) has a rendered ctx to land the click on
+    local ws = P.tab("filters", NS.L["Categories"])
+    local kids = gridLine(NS, ws, "healing")
+    local link = kids[4]
+    -- N-4: the link is an interactive control, not plain text — it carries a tooltip saying where
+    -- it goes, and its text is colored (the color code is ASCII, never baked into the locale value).
+    assertTrue(link ~= nil and link.type == "InteractiveLabel", "a spells-kind row carries the link")
+    assertTrue(link.text:find(NS.L["See spells"], 1, true) ~= nil, "carries the See spells text")
+    assertTrue(tooltipLines(m, link):find("General", 1, true) ~= nil, "the tooltip says where it goes")
+    -- red under: onClick reaching the wrong seam, or reaching none at all
+    link:__fire("OnClick")
+    -- N-3: this used to land on the addon's main panel (categories["general"] was never recorded
+    -- because General registers through the plain NS.RegisterOptionsPage). Landing on General ->
+    -- Spell Categories, not the main panel, is exactly what N-3 fixed.
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, NS.L["Spell Categories"], "lands on General -> Spell Categories")
+    local gws = P.rerender("General")
+    local dd = P.find(gws, "Dropdown", NS.L["Category"])
+    assertEqual(dd.value, "healing", "and selects the row's own category there")
+    -- N-5: a Blizzard token row gets an info icon in the same column instead of a link — never
+    -- both, and never the See spells text.
+    local bigDef = gridLine(NS, ws, "bigDefensive")
+    local icon = bigDef and bigDef[4]
+    assertTrue(icon ~= nil and icon.type == "InteractiveLabel", "a token row's grid line carries the info icon")
+    assertTrue(icon.text:find(NS.L["See spells"], 1, true) == nil, "never the See spells text")
+    local iconTip = tooltipLines(m, icon)
+    assertTrue(iconTip:find("illustrative", 1, true) ~= nil,
+        "N-5: the tooltip says the examples are illustrative, not authoritative")
+    assertTrue(iconTip:find("secure", 1, true) ~= nil or iconTip:find("cannot list", 1, true) ~= nil,
+        "N-5: the tooltip says the addon cannot enumerate the category")
+    -- Decision #3: the enchant row gets the link too, since that tab can also draw it
+    local enchantKids = gridLine(NS, ws, "weaponEnchants")
+    assertTrue(enchantKids[4].text:find(NS.L["See spells"], 1, true) ~= nil, "the enchant row's link too")
+    -- A "who cast it" flag row (fromPlayers) is the addon's own computation, not a Blizzard secret
+    -- (it lives in its own "Who Cast It" grid) — it carries no extra cell either. Categories is
+    -- already the active tab, so switching container and rerendering redraws it directly — a
+    -- second click on the tab that is already active draws nothing new (page_helpers.lua's P.tab).
+    NS.Helpers.SelectContainer(2)
+    local ws2 = P.rerender("Filters")
+    local whoRow = gridLine(NS, ws2, "fromPlayers")
+    assertTrue(whoRow ~= nil and whoRow[4] == nil, "a caster-identity flag row carries no extra cell")
+end)
+
+-- ── the priority blurb (F-4) ──────────────────────────────────────────────────────────────────
+
+test("filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first", function()
     local NS, _, P = filters()
-    NS.SetByPath("container.filter.categories.defensives", "show", 1)
+    local cats = P.tab("filters", NS.L["Categories"])
+    local overrides = P.tab("filters", "overrides")
+    -- red under: the blurb missing from either tab, or restating the superseded blacklist-first order
+    for _, ws in ipairs({ cats, overrides }) do
+        assertTrue(P.hasText(ws, "whitelist"), "names the whitelist")
+        assertTrue(P.hasText(ws, "blacklist"), "names the blacklist")
+        assertTrue(P.hasText(ws, "set to Show"), "Show is its own rank, not the absence of Hide")
+        assertTrue(P.hasText(ws, "all say Hide"), "only an aura hidden by every one of its categories is removed")
+    end
+end)
+
+-- T-2 (batch 7): the blurb used to be one dense paragraph carrying all five ranks. It now draws one
+-- line per rank (plus a lead-in), consistent on both tabs — two halves of one decision.
+test("filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)", function()
+    local NS, _, P = filters()
+    local cats = P.tab("filters", NS.L["Categories"])
+    local overrides = P.tab("filters", "overrides")
+    for _, ws in ipairs({ cats, overrides }) do
+        local texts = P.texts(ws)
+        local found = {}
+        for _, t in ipairs(texts) do
+            for rank = 1, 5 do
+                if t:find("^" .. rank .. "%.") then found[rank] = t end
+            end
+        end
+        for rank = 1, 5 do
+            -- red under: a rank folded back into a shared paragraph rather than its own Label line
+            assertTrue(found[rank] ~= nil, "rank " .. rank .. " is its own line")
+        end
+        assertTrue(found[1]:find("whitelist", 1, true) ~= nil, "rank 1 is the whitelist")
+        assertTrue(found[2]:find("blacklist", 1, true) ~= nil, "rank 2 is the blacklist")
+        assertTrue(found[3]:find("set to Show", 1, true) ~= nil, "rank 3 is the positive Show claim")
+        assertTrue(found[4]:find("all say Hide", 1, true) ~= nil, "rank 4 is the all-Hide case")
+        assertTrue(found[5]:find("no category at all", 1, true) ~= nil, "rank 5 is the uncategorized case")
+        assertTrue(P.hasText(ws, "Highest priority first"), "the lead-in line still introduces the order")
+    end
+end)
+
+-- Fix round 2 (batch 7): "Only these categories" (D8/R-8..R-11) is retired — the owner chose one
+-- concept (`Uncategorized = Hide`) over two controls that needed explaining against each other. No
+-- row, no checkbox, no "not shown" note. Its removal is covered as absence, not a positive test of
+-- its own — there is no control left to assert anything about.
+test("filters: the retired 'Only these categories' row is gone — no such control on the Categories tab", function()
+    local NS = filters()
+    -- red under: the schema row surviving removal (P.row asserts a row exists, so it cannot be used
+    -- to prove absence — it is the schema lookup itself that must answer nil).
+    assertNil(NS.FindSchemaRow("container.filter.onlyShown"), "no such schema row any more")
+end)
+
+test("filters: a grid checkbox stores show or hide for the selected container and re-syncs its line", function()
+    local NS, _, _, ws = categories()
+    NS.Helpers.__pageCtx.filters.panel:Show()   -- on screen, so a write re-syncs the widgets in place
+    local cells = gridLine(NS, ws, "defensives")
+    -- red under: LibKa0s v1.36.0 draws choice cells as CheckBox widgets (yellow fill), not radios
+    assertEqual(cells[1].type, "CheckBox")
+    assertTrue(cells[1].value == true, "Show is lit for a fresh container")
+    cells[2]:__fire("OnValueChanged", true)
+    -- red under: the columns' values out of order (the Hide cell storing anything but "hide")
+    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "hide")
+    assertEqual(NS.Database.FindContainer(2).filter.categories.defensives, "show", "no other container")
+    -- red under: a cell's refresher not re-reading the row (the Show cell would stay lit)
+    assertTrue(cells[2].value == true and cells[1].value == false, "the line re-syncs to Hide")
+    cells[1]:__fire("OnValueChanged", true)
+    assertEqual(NS.Database.FindContainer(1).filter.categories.defensives, "show")
+end)
+
+test("filters: /am get and /am list print a category's state as Show or Hide", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local lines = P.chat()
     NS.Slash:OnSlash("get container.filter.categories.defensives")
     local got = lastLine(lines)
-    -- red under: the Slash descriptor printing the stored value ("show") rather than its label
-    assertTrue(got:find(NS.L["Whitelist"], 1, true) ~= nil, got)
-    NS.SetByPath("container.filter.categories.defensives", "", 1)
+    -- red under: the Slash descriptor printing the stored value ("hide") rather than its label
+    assertTrue(got:find(NS.L["Hide"], 1, true) ~= nil, got)
+    NS.SetByPath("container.filter.categories.defensives", "show", 1)
     NS.Slash:OnSlash("get container.filter.categories.defensives")
     got = lastLine(lines)
-    assertTrue(got:find(NS.L["Default"], 1, true) ~= nil, got)
+    assertTrue(got:find(NS.L["Show"], 1, true) ~= nil, got)
     NS.Slash:OnSlash("list")
     local listed
     for _, l in ipairs(lines) do
         if l:find("container.filter.categories.stealable", 1, true) then listed = l end
     end
     assertTrue(listed ~= nil, "the category rows stay in /am list")
-    assertTrue(listed:find(NS.L["Default"], 1, true) ~= nil, listed)
+    assertTrue(listed:find(NS.L["Show"], 1, true) ~= nil, listed)
     NS.Slash:OnSlash("get container.filter.castBy")
     got = lastLine(lines)
     assertTrue(got:find("any", 1, true) ~= nil, "every other row prints as it always has: " .. got)
@@ -196,7 +459,7 @@ end)
 
 test("filters: every category row is skipRender and names its grid", function()
     local NS = filters()
-    local want = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel" }
+    local want = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom", uncategorized = "custom" }
     for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
         for _, def in ipairs(NS.Categories.For(auraType)) do
             local row = NS.FindSchemaRow("container.filter.categories." .. def.key)
@@ -341,4 +604,105 @@ test("filters: every tab opens with what the engine will not honor here, in oran
     assertTrue(P.hasText(ws, warning), "What to show")
     ws = P.tab("filters", NS.L["Sorting"])
     assertTrue(P.hasText(ws, warning), "and every other tab")
+end)
+
+-- ── Overrides entry notes (task B6, spec §6/§6c) ─────────────────────────────────────────────────
+
+-- A plain WHITELIST entry with nothing to disagree with it has no note: the categories already
+-- agree it is shown (774 is in the real, unnarrowed "healing" list, at its default Show), so the
+-- whitelist entry is not overriding anything. A plain, uncategorized BLACKLIST entry is different
+-- (fix round 2): the ordinary catch-all WOULD draw it if the entry were removed, which is exactly
+-- the mismatch task-B6's other tests exercise, so it is covered separately below rather than folded
+-- into a single "plain entry has no note" claim that is no longer true for the blacklist side.
+test("filters: a plain whitelist entry with nothing to disagree has no note", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [774] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    -- red under: a note drawn for every entry regardless of whether anything disagrees
+    assertFalse(P.hasText(ws, "overriding"), "no category conflict to report")
+    assertFalse(P.hasText(ws, "outranks"), "not on the other list either")
+end)
+
+-- red under: the blacklist entry not reporting that the whitelist already claimed the same id
+test("filters: a spell on both lists gets a note on its blacklist entry saying the whitelist wins", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [500] = true }, 1)
+    NS.SetByPath("container.filter.blacklist", { [500] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, NS.L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]))
+end)
+
+-- red under: the whitelist entry not reporting that it is also blacklisted
+test("filters: a spell on both lists gets a note on its whitelist entry naming the blacklist too", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [500] = true }, 1)
+    NS.SetByPath("container.filter.blacklist", { [500] = true }, 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, NS.L["Also on the blacklist, but the whitelist outranks it — still shown here."]))
+end)
+
+-- red under: a blacklisted spell that a Show category would rescue not reporting the conflict
+test("filters: a blacklisted spell in a Show category names that category as overridden", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.blacklist", { [900001] = true }, 1)
+    NS.SetByPath("categorySpells", { defensives = { [900001] = true } })
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, ("overriding %s (set to Show)"):format(NS.L["Defensives"])))
+end)
+
+-- red under: a whitelisted spell whose categories all say Hide not reporting the conflict
+test("filters: a whitelisted spell every one of its categories would hide names them as overridden", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [900002] = true }, 1)
+    NS.SetByPath("categorySpells", { defensives = { [900002] = true } })
+    NS.SetByPath("container.filter.categories.defensives", "hide", 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, ("overriding %s (set to Hide)"):format(NS.L["Defensives"])))
+end)
+
+-- red under: a blacklisted spell in a Hide-only category getting a spurious note (the blacklist and
+-- the category already agree, so there is nothing to explain)
+test("filters: a blacklisted spell a Hide category would also hide gets no note", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.blacklist", { [900003] = true }, 1)
+    NS.SetByPath("categorySpells", { defensives = { [900003] = true } })
+    NS.SetByPath("container.filter.categories.defensives", "hide", 1)
+    local ws = P.tab("filters", "overrides")
+    assertFalse(P.hasText(ws, "overriding"), "the blacklist and the category agree")
+end)
+
+-- Fix round 2 of batch 7 retired "Only these categories" (D8) entirely, and with it went the one
+-- scenario where a whitelisted, wholly unclaimed id's counterfactual was "hidden" at rank 5: rank 5
+-- is now unconditionally "shown" wherever no `uncategorized` category exists for the aura type
+-- (HARMFUL — buffs only, fix round 1). A plain whitelisted debuff with nothing else deciding it is
+-- therefore never rescuing anything any more, so it earns no note; the test this comment used to
+-- introduce ("...warns it would vanish") tested exactly that now-impossible case and is gone with it.
+
+-- Fix round 2: an uncategorized blacklisted spell would be drawn by the ordinary catch-all if the
+-- entry were removed (rank 5, shown) — a real mismatch a rank-3-only check misses, mirroring the
+-- whitelist case above (batch 6 fix round 2).
+-- red under: overrideNote's blacklist branch checking `cat.rank == 3` instead of `cat.verdict == "shown"`
+--
+-- batch 7 fix round 1: moved to container 2 (HARMFUL) for the reason above — on a buff container
+-- this id's counterfactual now goes through `explainUncategorized` (rank 3, the default Show), not
+-- the plain rank-5 catch-all this note's wording describes.
+test("filters: an uncategorized blacklisted spell warns that no category hides it", function()
+    local NS, _, P = filters()
+    NS.Helpers.SelectContainer(2)
+    P.show("Filters")
+    NS.SetByPath("container.filter.blacklist", { [900005] = true }, 2)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, "no category here hides it"),
+        "no category claims it, but the ordinary catch-all would still draw it")
+end)
+
+-- The buff-side mirror of the test above (batch 7, U-1..U-5): with `uncategorized` present, an
+-- unclaimed id's fate is always decided by ITS state, never left to the generic rank-5 wording.
+test("filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
+    NS.SetByPath("container.filter.categories.uncategorized", "hide", 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, "overriding Uncategorized (set to Hide)"),
+        "the counterfactual is rank 4 (Uncategorized itself says Hide), not the generic rank-5 case")
 end)

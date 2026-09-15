@@ -172,9 +172,41 @@ function ContainerClass:Retire()
     -- Hidden, never re-anchored: once a group exists the engine forbids untrusted layout work on
     -- itself, and a disabled, hidden engine draws nothing wherever it is anchored.
     engine:Hide()
+    -- The blocker is anchored to THIS engine (SetAllPoints); hidden with it rather than left covering
+    -- a retired frame until Build re-anchors it to the replacement.
+    if self.blocker then self.blocker:Hide() end
     self.retired[#self.retired + 1] = engine
     self.engine, self.structure, self.plan, self.enchantDir = nil, nil, nil, nil
     self.enchantFrames = {}
+end
+
+--- Create or refresh the container-wide mouse blocker (Style.ApplyBlockerBehavior, L-3 continued):
+--- one frame, made once and kept for the container's life, re-anchored to cover WHATEVER engine
+--- currently exists and re-gated on the current settings every apply — the same behavior block a
+--- live button re-applies. DisableUntrustedLayoutScriptsTemplate, like the anchor itself (New,
+--- above) and the frame picker's outline: a frame anchored TO an aura container must carry it or the
+--- engine refuses the point (docs/midnight-quirks.md).
+---
+--- Its level is read from the engine's ACTUAL, current level and set one below that (floored at 0)
+--- EVERY apply, never assumed or computed from the anchor: the anchor's own level can be raised by a
+--- later apply (layout.level) without the engine's level following it, so deriving the blocker from
+--- anything but the engine itself would only hold by coincidence (review round 2). GetFrameLevel is
+--- a read, not a protected mutation, so this never goes through callEngine; ApplyBlocker still never
+--- WRITES to the engine, which forbids untrusted work once a group exists (Retire's comment,
+--- callEngine) and might refuse a level change reached through the Update path on a live engine.
+function ContainerClass:ApplyBlocker(cfg)
+    local engine, anchor = self.engine, self.anchor
+    if not engine then return end
+    local blocker = self.blocker
+    if not blocker then
+        blocker = CreateFrame("Frame", nil, anchor, "DisableUntrustedLayoutScriptsTemplate")
+        self.blocker = blocker
+    end
+    local ok, engineLevel = pcall(engine.GetFrameLevel, engine)
+    blocker:SetFrameLevel(math.max(0, (ok and engineLevel or 0) - 1))
+    blocker:ClearAllPoints()
+    blocker:SetAllPoints(engine)
+    NS.Style.ApplyBlockerBehavior(blocker, cfg)
 end
 
 function ContainerClass:Build(cfg, plan, structure)
@@ -331,6 +363,7 @@ function ContainerClass:Apply()
             self:Retire()
             self:Build(cfg, plan, structure)
         end
+        self:ApplyBlocker(cfg)
     end
 
     -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
@@ -372,12 +405,17 @@ end
 
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
 --- SetEnabled rather than hiding the anchor, because this runs on every combat transition, when an
---- aura button's ancestry must not be shown or hidden.
+--- aura button's ancestry must not be shown or hidden. The blocker is OUR OWN frame, not the engine's
+--- ancestry, so it is hidden outright rather than disabled — gated the same as the engine's enable,
+--- or a disabled-but-still-drawn engine (out-of-combat visibility, the master switch, perf suspend, a
+--- parked container) would leave an invisible mouse-blocking rect over the world where nothing shows
+--- (review round 1, B-9: the inverse of the reported bug).
 function ContainerClass:ApplyVisibility()
     local show, previewing = self:ShouldShow()
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
     if self.engine then callEngine(self.engine, "SetEnabled", show and not previewing) end
+    if self.blocker then self.blocker:SetShown(show and not previewing) end
     local L = cfg and cfg.layout or {}
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
     if previewing and cfg then
@@ -403,6 +441,7 @@ end
 --- id comes back first.
 function ContainerClass:Park()
     if self.engine then callEngine(self.engine, "SetEnabled", false) end
+    if self.blocker then self.blocker:Hide() end
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
     self.parked = true

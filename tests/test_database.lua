@@ -54,13 +54,13 @@ test("database: the backfill fills a missing leaf and keeps a stored false", fun
     assertTrue(type(c.icons) == "table" and c.icons.width == NS.CONTAINER_TEMPLATE.icons.width)
 end)
 
-test("database: every category key is present on a stored container, neutral", function()
+test("database: every category key is present on a stored container, at Show (schema v3)", function()
     local NS = fresh()
     local cats = NS.Database.FindContainer(1).filter.categories
     for _, list in ipairs({ NS.Categories.HELPFUL, NS.Categories.HARMFUL }) do
         for _, def in ipairs(list) do assertTrue(cats[def.key] ~= nil, "category " .. def.key) end
     end
-    assertEqual(cats.defensives, "")
+    assertEqual(cats.defensives, "show")
 end)
 
 test("database: category keys are unique across the buff and debuff lists", function()
@@ -339,12 +339,10 @@ end
 
 local function edits(t) return { filter = { categorySpells = t } } end
 
-test("database v2: the schema is at version 2", function()
-    local NS = fresh()
-    -- red under: the v2 step missing from SCHEMA_STEPS
-    assertEqual(NS.Database.CurrentSchemaVersion(), 2)
-    assertEqual(NS.db.global.schemaVersion, 2)
-end)
+-- "the schema is at version 2" (this test's original name) stopped being true the moment schema v3
+-- landed below it; the equivalent coverage for the ladder's current top is
+-- "v3: the current schema version is 3" further down, and "database: the migration runner stamps the
+-- schema..." above already checks a fresh profile against CurrentSchemaVersion() dynamically.
 
 test("database v2: spell additions from every container are united in the profile", function()
     local NS = fresh()
@@ -522,7 +520,9 @@ test("database v2: RunMigrations migrates every stored profile, the inactive one
         }
     end
     local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 1 } } })
-    assertEqual(NS.db.global.schemaVersion, 2)
+    -- schema v3 rides along from v1 too (the ladder does not stop at 2); its whitelist lift never
+    -- disturbs an already-"hide" category (see the v3 tests below), so the v2 assertions below hold.
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
     for _, name in ipairs({ "Default", "Raid" }) do
         local p = NS.db.sv.profiles[name]
         local c = p.containers[4]
@@ -551,8 +551,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile
-    assertEqual(perProfile, 2, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 3
+    -- steps a v1 profile now climbs (v2, v3, v4).
+    assertEqual(perProfile, 6, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -570,7 +571,7 @@ test("database v2: without AceDB the step migrates the one profile there is", fu
     })
     -- red under: the step walking db.sv only (the no-AceDB fallback has none)
     assertEqual(NS.db.profile.containers[1].layout.strata, "HIGH")
-    assertEqual(NS.db.global.schemaVersion, 2)
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
 end)
 
 test("database v2: a fresh profile carries the profile-wide spell lists and dispel colors", function()
@@ -580,5 +581,457 @@ test("database v2: a fresh profile carries the profile-wide spell lists and disp
     assertEqual(type(p.categorySpells), "table")
     for name, w in pairs(NS.Constants.DEFAULT_DISPEL_COLORS) do
         assertEqual(p.dispelColors[name].r, w.r, name)
+    end
+end)
+
+-- ---------------------------------------------------------------------------
+-- Schema v3: Show/Hide categories, weaponEnchants
+-- ---------------------------------------------------------------------------
+
+test("v3: a container that whitelisted a category hides every other category of its type", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "", cancelable = "" } } } } }
+    -- red under: the old Whitelist intent being dropped, which would silently WIDEN what a container
+    -- draws — the one migration failure a player cannot see until an aura appears that should not.
+    NS.Database.MigrateV3(p)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.defensives, "show")
+    assertEqual(c.raidCDs, "hide")
+    assertEqual(c.cancelable, "hide")
+    -- Critical review fix: `uncategorized` is the longhand of "only these categories" too — a narrowed
+    -- container that left it nil (the pre-fix bug) would have every unlisted buff flood back in the
+    -- moment the ordinary backfill supplied Show for it.
+    assertEqual(c.uncategorized, "hide", "the narrowing covers unlisted auras too, not just the named categories")
+end)
+
+test("v3: a container with no whitelisted category gets every row at show", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "", raidCDs = "hide" } } } } }
+    -- red under: "" not being normalized, so a row lights no cell.
+    NS.Database.MigrateV3(p)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.defensives, "show")
+    assertEqual(c.raidCDs, "hide")
+end)
+
+test("v3: includeEnchants becomes the weaponEnchants row and the old key is cleared", function()
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HELPFUL", filter = { includeEnchants = true, categories = {} } },
+        { auraType = "HELPFUL", filter = { includeEnchants = false, categories = {} } },
+        { auraType = "HELPFUL", filter = { categories = {} } },
+    } }
+    -- red under: the enchant flag being read backwards, which would turn enchants on everywhere.
+    NS.Database.MigrateV3(p)
+    assertEqual(p.containers[1].filter.categories.weaponEnchants, "show")
+    assertEqual(p.containers[2].filter.categories.weaponEnchants, "hide")
+    assertEqual(p.containers[3].filter.categories.weaponEnchants, "hide")
+    assertNil(p.containers[1].filter.includeEnchants)
+end)
+
+test("v3: a HARMFUL container is never given a weaponEnchants row — that category does not exist for debuffs", function()
+    -- red under: liftEnchantFlag writing categories.weaponEnchants on HARMFUL containers too, where
+    -- no such category exists (defaults/Categories.lua only lists it under HELPFUL) — inert garbage
+    -- that would sit in real saved variables forever.
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HARMFUL", filter = { includeEnchants = true, categories = { crowdControl = "hide" } } },
+    } }
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.categories.weaponEnchants)
+end)
+
+test("v3: an ENCHANT container is left alone", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "ENCHANT", filter = { categories = {} } } } }
+    -- red under: an ENCHANT container being given a weaponEnchants row it never reads.
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.categories.weaponEnchants)
+end)
+
+test("v3: a container with a missing or unrecognized auraType is left completely untouched", function()
+    local NS = fresh()
+    local p = { containers = {
+        { filter = { includeEnchants = true, categories = { defensives = "show", raidCDs = "" } } },
+        { auraType = "BOGUS", filter = { includeEnchants = true, categories = { defensives = "show" } } },
+    } }
+    local before = NS.Database.DeepCopy(p)
+    -- red under: liftEnchantFlag's own "auraType == ENCHANT" check letting a nil or garbage auraType
+    -- through, half-converting a container MigrateV3 never had a category list for.
+    NS.Database.MigrateV3(p)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(p), Sig(before))
+end)
+
+test("v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided", function()
+    local NS = fresh()
+    local function scenario()
+        return { containers = {
+            { auraType = "HELPFUL", filter = { includeEnchants = true,
+                categories = { defensives = "show", raidCDs = "" } } },
+            { auraType = "HELPFUL", filter = { includeEnchants = false, categories = { defensives = "" } } },
+            { auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } },
+        } }
+    end
+    local once = scenario()
+    NS.Database.MigrateV3(once)
+    local twice = NS.Database.DeepCopy(once)
+    -- red under: liftEnchantFlag reading filter.includeEnchants (already nil after run 1) instead of
+    -- checking whether categories.weaponEnchants is already decided, and re-stamping "hide"
+    NS.Database.MigrateV3(twice)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(twice), Sig(once))
+    assertEqual(twice.containers[1].filter.categories.weaponEnchants, "show", "run 1's decision survives run 2")
+end)
+
+test("v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind=\"enchant\" category", function()
+    local NS = fresh()
+    -- weaponEnchants (defaults/Categories.lua) is a real kind=="enchant" category now, so this
+    -- appends a SECOND, differently-keyed one alongside it, to prove the exclusion in
+    -- filterableCategories is categorical on `kind`, not special-cased to the one key "weaponEnchants"
+    -- — it holds however many enchant-kind rows a container's category list carries. Run 1 has no
+    -- filter.categories table for liftCategoryWhitelist to act on (it runs BEFORE liftEnchantFlag,
+    -- which is the one that creates the table, holding only weaponEnchants) — so the real categories
+    -- get their first decision on run 2, the first run where the table liftEnchantFlag made on run 1
+    -- exists when liftCategoryWhitelist looks. Without the categorical kind == "enchant" exclusion,
+    -- run 2 would see two categories at "show" (both enchant rows), read the container as narrowed,
+    -- and sweep every other HELPFUL category to "hide" — a near-total blackout of a container the
+    -- player never touched. Run 3 then checks the true fixed point: nothing changes once every
+    -- category has its first decision.
+    local HELPFUL = NS.Categories.HELPFUL
+    HELPFUL[#HELPFUL + 1] = { key = "secondEnchantRow", kind = "enchant", label = "Second enchant row", desc = "test stand-in: a second enchant-kind category" }
+    local p = { containers = { { auraType = "HELPFUL", filter = { includeEnchants = true } } } }
+    NS.Database.MigrateV3(p)
+    -- red under: kind == "enchant" counting toward "was this container narrowed" once it is a real
+    -- category, sweeping every other category to "hide" here
+    NS.Database.MigrateV3(p)
+    local cats = p.containers[1].filter.categories
+    for _, cat in ipairs(NS.Categories.HELPFUL) do
+        -- `uncategorized` is excluded from filterableCategories for its own reason (core/Database.lua's
+        -- comment above the function): MigrateV3 has no opinion about a key the old whitelist model
+        -- never had, so it is left nil here for the ordinary backfill to supply "show" afterward.
+        if cat.kind ~= "enchant" and cat.kind ~= "uncategorized" then
+            assertEqual(cats[cat.key], "show", cat.key .. ": never swept to hide by an enchant row")
+        end
+    end
+    assertNil(cats.uncategorized, "left untouched by the migration, not stamped either way")
+    local converged = NS.Database.DeepCopy(p)
+    NS.Database.MigrateV3(p)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(p), Sig(converged), "run 3 is a true no-op at the fixed point")
+end)
+
+test("v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now", function()
+    -- red under: the id-copying half of the old whitelist lift (liftWhitelistSpells) coming back —
+    -- the 2026-09-15 filter-priority revision made rank 3 (a Show beats a Hide on the same aura) the
+    -- compiler's own job, for every category kind, so migration must not write filter.whitelist at all.
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { blacklist = { [118038] = true },
+            categories = { defensives = "show", raidCDs = "" } } } } }
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.whitelist)
+    -- the blacklist is untouched either — nothing here is the migration's to rewrite any more
+    assertEqual(p.containers[1].filter.blacklist[118038], true)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.defensives, "show")
+    assertEqual(c.raidCDs, "hide")
+end)
+
+test("v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself — UNWHITELISTED branch only", function()
+    -- U-1..U-5/X-2: `Cat.DefaultStates()` stamps every category "show" by default, including
+    -- `uncategorized` (defaults/Categories.lua), and `NS.CONTAINER_TEMPLATE.filter.categories` is
+    -- built from that — so the ordinary per-container backfill (`Database.Backfill` against the
+    -- template, run by `backfillContainers`/`PrepareProfile` right after every migration) is what
+    -- actually stamps "show" onto an existing container's new key, for a container that was never
+    -- narrowed. UNWHITELISTED fixture on purpose — no category here is "show" — because this is only
+    -- true in that branch; the WHITELISTED branch stamps "hide" directly, see the test below (review
+    -- fix: this test used a WHITELISTED fixture and asserted the widening bug as correct until then).
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "", raidCDs = "hide" } } } } }
+    NS.Database.MigrateV3(p)
+    assertNil(p.containers[1].filter.categories.uncategorized, "MigrateV3 leaves it nil")
+    NS.Database.PrepareProfile(p)
+    assertEqual(p.containers[1].filter.categories.uncategorized, "show",
+        "the ordinary backfill supplies U-1's default")
+end)
+
+-- Critical review fix: the WHITELISTED branch. `filterableCategories`'s exclusion of `uncategorized`
+-- was correct for the UNWHITELISTED branch above and WRONG, on its own, here — leaving the key nil
+-- for a narrowed container lets the ordinary backfill hand it "show", which
+-- `addCategoryGroups` (modules/FilterCompiler.lua) then reads as a real, catch-all-superseding Show
+-- category: the container ends up drawing every buff not on any spell list, the exact "silently
+-- WIDEN what an already-stored container draws" failure this whole lift exists to prevent.
+test("v3: a WHITELISTED (narrowed) container gets uncategorized stamped hide directly from MigrateV3, never left for the backfill", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "" } } } } }
+    NS.Database.MigrateV3(p)
+    -- red under: the pre-fix bug — MigrateV3 leaving this nil for a narrowed container
+    assertEqual(p.containers[1].filter.categories.uncategorized, "hide",
+        "the longhand of the old exclusive whitelist's 'only these categories'")
+    -- The backfill must not be needed, and must not disagree, either
+    NS.Database.PrepareProfile(p)
+    assertEqual(p.containers[1].filter.categories.uncategorized, "hide",
+        "the backfill only fills a NIL key (== nil, savedvariables-§5) — it never overwrites this")
+end)
+
+-- The concrete proof the coordinator asked for: compile the migrated container and confirm an
+-- arbitrary id on no spell list — the exact shape of aura that used to flood back in — is NOT drawn.
+test("v3: a narrowed container does not gain unlisted auras after migrating — compiled, not just stored", function()
+    -- Coordinator review: a label check alone is a proxy, not proof — a Shown token/flag category
+    -- (no `includeSpellIDs` at all) would also sail past a "label ~= Uncategorized/All" assertion
+    -- while still admitting any aura, listed or not. This is sound for `defensives` specifically only
+    -- because it is `spells`-kind, so its lone surviving group MUST be id-restricted to be correct at
+    -- all. Assert that directly: exactly one group, and it carries a non-empty `includeSpellIDs` — an
+    -- id-agnostic group (no `includeSpellIDs`, e.g. a bare token/flag/dispel group or the catch-all)
+    -- would fail this even if it happened to be labeled something other than Uncategorized or All.
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "" } } } } }
+    NS.Database.MigrateV3(p)
+    NS.Database.PrepareProfile(p)
+    local cfg = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), p.containers[1])
+    local plan = NS.FilterCompiler.Compile(cfg, {})
+    assertEqual(#plan.groups, 1, "narrowed to Defensives alone: exactly one group")
+    local ids = plan.groups[1].candidateFilters and plan.groups[1].candidateFilters.includeSpellIDs
+    assertTrue(type(ids) == "table" and next(ids) ~= nil,
+        "the one surviving group is id-restricted, not an unlisted-admitting Uncategorized/catch-all/token/flag group")
+end)
+
+test("v3: MigrateV3 returns the number of containers it walked", function()
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HELPFUL", filter = { categories = {} } },
+        { auraType = "HARMFUL", filter = { categories = {} } },
+    } }
+    assertEqual(NS.Database.MigrateV3(p), 2)
+end)
+
+test("v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line", function()
+    local NS = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Migrate" then
+            local n = #lines
+            lines[n + 1] = fmt:format(...)
+        end
+    end
+    local p = { containers = {
+        [1] = { auraType = "HELPFUL", filter = { categories = {} } },
+        [2] = { auraType = "BOGUS", filter = { categories = {} } },
+    } }
+    -- red under: counting the skipped container toward the return value, which the ladder logs as
+    -- "over N container(s)" — overstating how many were actually converted
+    assertEqual(NS.Database.MigrateV3(p), 1)
+    local named = false
+    for _, l in ipairs(lines) do
+        if l:find("skipped", 1, true) and l:find("2", 1, true) then named = true end
+    end
+    assertTrue(named, "a line names the skipped container: " .. table.concat(lines, " | "))
+end)
+
+test("v3: the whitelist lift never sweeps a category the aura type does not have", function()
+    local NS = fresh()
+    -- red under: liftCategoryWhitelist walking the wrong aura type's category list
+    local p = { containers = { { auraType = "HARMFUL",
+        filter = { categories = { crowdControl = "show", boss = "" } } } } }
+    NS.Database.MigrateV3(p)
+    local c = p.containers[1].filter.categories
+    assertEqual(c.crowdControl, "show")
+    assertEqual(c.boss, "hide")
+    assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
+end)
+
+test("v4: the current schema version is 4", function()
+    local NS = fresh()
+    -- red under: the v4 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 4)
+    assertEqual(NS.db.global.schemaVersion, 4)
+end)
+
+test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
+    -- UNWHITELISTED fixture on purpose (no category at "show"): this test's own point is the
+    -- ordinary-backfill path end to end, which only applies in that branch — see the dedicated
+    -- WHITELISTED-branch tests below (and in modules/FilterCompiler.lua's) for the narrowed case,
+    -- where `uncategorized` must come out "hide" from MigrateV3 itself, not from the backfill.
+    local function raw()
+        return {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = {
+                name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                filter = { includeEnchants = true, categories = { defensives = "", raidCDs = "hide" } },
+            } },
+        }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 2 } } })
+    -- red under: a later step (v4) failing to run too, or running for one profile but not the other
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local c = NS.db.sv.profiles[name].containers[1]
+        -- red under: the step migrating NS.db.profile only (Raid would keep its v2 shape for ever)
+        assertEqual(c.filter.categories.defensives, "show", name)
+        assertEqual(c.filter.categories.raidCDs, "hide", name)
+        assertEqual(c.filter.categories.weaponEnchants, "show", name)
+        -- B3 retired `includeEnchants` from CONTAINER_TEMPLATE, so the ordinary backfill no longer
+        -- resurrects it on the active profile either: the v3 step's clear sticks for both.
+        assertNil(c.filter.includeEnchants, name)
+    end
+    -- X-2, end to end: the active profile (Default) runs the full pipeline through OnEnable's
+    -- PrepareProfile call (tests/fresh_env.lua), so its existing container gets `uncategorized`
+    -- stamped "show" by the ordinary backfill (this container was never narrowed — see above). Raid
+    -- stays inactive here and is never backfilled (only a profile switch would prepare it) — see the
+    -- dedicated test above for that step in isolation, direct on a plain profile table.
+    local active = NS.db.sv.profiles.Default.containers[1]
+    assertEqual(active.filter.categories.uncategorized, "show", "an existing container gets the new row at Show")
+end)
+
+-- ---------------------------------------------------------------------------
+-- Schema v4: "Only these categories" retired -> categories.<uncategorized key> = "hide"
+-- ---------------------------------------------------------------------------
+
+test("v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { onlyShown = true, categories = { defensives = "show" } } } } }
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 1)
+    assertEqual(lost, 0)
+    local c = p.containers[1]
+    assertEqual(c.filter.categories.uncategorized, "hide", "the toggle's old effect, preserved")
+    assertNil(c.filter.onlyShown, "the dead key is cleared")
+    -- untouched otherwise — the migration does not narrate a decision about defensives
+    assertEqual(c.filter.categories.defensives, "show")
+end)
+
+-- Fix round 3: the owner restored the debuff row, with Hide reproducing the retired toggle exactly
+-- (modules/FilterCompiler.lua's `hasUnion` gate — the compiler-side proof lives in
+-- tests/test_filtercompiler.lua). A HARMFUL container now converts too, the same as HELPFUL.
+test("v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HARMFUL",
+        filter = { onlyShown = true, categories = { crowdControl = "hide" } } } } }
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 1)
+    assertEqual(lost, 0)
+    local c = p.containers[1]
+    assertEqual(c.filter.categories.uncategorizedDebuffs, "hide", "the toggle's old effect, preserved")
+    assertNil(c.filter.onlyShown, "the dead key is cleared")
+    assertEqual(c.filter.categories.crowdControl, "hide")
+end)
+
+test("v4: a container with the toggle off or absent is untouched", function()
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HELPFUL", filter = { onlyShown = false, categories = { defensives = "show" } } },
+        { auraType = "HELPFUL", filter = { categories = { defensives = "show" } } },
+    } }
+    local before = NS.Database.DeepCopy(p)
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 0)
+    assertEqual(lost, 0)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(p), Sig(before), "off or absent: not even the dead key is touched")
+end)
+
+test("v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost", function()
+    -- red under: counting an ENCHANT container as `lost`, which docs/schema.md and the [Migrate]
+    -- line would then overstate — FC.Compile's compileEnchant never reads filter.onlyShown at all.
+    local NS = fresh()
+    local p = { containers = { { auraType = "ENCHANT",
+        filter = { onlyShown = true, categories = {} } } } }
+    local converted, lost, lostList = NS.Database.MigrateV4(p)
+    assertEqual(converted, 0)
+    assertEqual(lost, 0)
+    assertEqual(#lostList, 0)
+    assertNil(p.containers[1].filter.onlyShown, "the dead key is still cleared, just not counted")
+end)
+
+test("v4: an unrecognized auraType with the toggle on is genuinely lost, named in lostList, and its dead key still cleared", function()
+    -- The honest answer for a shape that carries no Uncategorized category and is not ENCHANT
+    -- either (a corrupt or future auraType this migration cannot predict): counted, named, and the
+    -- SCHEMA_STEPS v4 step turns this into a plain NS.Print notice — nothing invented, nothing silent.
+    local NS = fresh()
+    local p = { containers = { [7] = { auraType = "BOGUS", name = "Weird One",
+        filter = { onlyShown = true, categories = {} } } } }
+    local converted, lost, lostList = NS.Database.MigrateV4(p)
+    assertEqual(converted, 0)
+    assertEqual(lost, 1)
+    assertEqual(#lostList, 1)
+    assertEqual(lostList[1].id, 7)
+    assertEqual(lostList[1].name, "Weird One")
+    assertEqual(lostList[1].auraType, "BOGUS")
+    assertNil(p.containers[7].filter.onlyShown, "the dead key is cleared even though nothing could be preserved")
+end)
+
+test("v4: MigrateV4 is idempotent", function()
+    local NS = fresh()
+    local function scenario()
+        return { containers = {
+            { auraType = "HELPFUL", filter = { onlyShown = true, categories = { defensives = "show" } } },
+            { auraType = "HARMFUL", filter = { onlyShown = true, categories = { crowdControl = "hide" } } },
+            { auraType = "ENCHANT", filter = { onlyShown = true, categories = {} } },
+            { auraType = "BOGUS", filter = { onlyShown = true, categories = {} } },
+            { auraType = "HELPFUL", filter = { categories = { defensives = "show" } } },
+        } }
+    end
+    local once = scenario()
+    NS.Database.MigrateV4(once)
+    local twice = NS.Database.DeepCopy(once)
+    local converted, lost, lostList = NS.Database.MigrateV4(twice)
+    -- red under: a second run re-counting or re-touching a container the first run already decided
+    assertEqual(converted, 0, "nothing left at onlyShown == true to convert again")
+    assertEqual(lost, 0)
+    assertEqual(#lostList, 0)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(twice), Sig(once), "a second run is a true no-op")
+end)
+
+-- Item 3, fix round 3: NS.Debug alone is not enough — it is gated on a flag off by default, so a
+-- player who never turned on debug logging would see NOTHING about a container that just silently
+-- lost a capability. NS.Print is ungated: it always reaches the chat frame.
+test("v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)", function()
+    local lines = {}
+    local NS = fresh({
+        savedVariables = { profiles = { Default = {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = { name = "Weird One", unit = "player", auraType = "BOGUS", style = "bars",
+                filter = { onlyShown = true, categories = {} } } },
+        } }, global = { schemaVersion = 3 } },
+        before = function(mocks)
+            rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+                lines[#lines + 1] = tostring(msg)
+            end)
+        end,
+    })
+    assertEqual(NS.db.global.schemaVersion, 4)
+    local found = false
+    for _, l in ipairs(lines) do
+        -- red under: the debug flag being off (the default) swallowing the only notice a player gets
+        if l:find("Weird One", 1, true) and l:find("could not be carried over", 1, true) then found = true end
+    end
+    assertTrue(found, "NS.Print names the lost container plainly: " .. table.concat(lines, " | "))
+end)
+
+test("v4: no notice is printed when nothing was lost", function()
+    local lines = {}
+    local NS = fresh({
+        savedVariables = { profiles = { Default = {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                filter = { onlyShown = true, categories = { defensives = "show" } } } },
+        } }, global = { schemaVersion = 3 } },
+        before = function(mocks)
+            rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+                lines[#lines + 1] = tostring(msg)
+            end)
+        end,
+    })
+    assertEqual(NS.db.global.schemaVersion, 4)
+    for _, l in ipairs(lines) do
+        assertTrue(l:find("could not be carried over", 1, true) == nil, "no lost-capability notice: " .. l)
     end
 end)

@@ -3,7 +3,7 @@ local _, NS = ...
 -- settings/Bars.lua — how a container drawn as BARS looks (modules/Style_Bars.lua draws it).
 --
 --     band   [Container ▾]
---     [ Size ][ Bar ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
+--     [ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
 --
 -- A container drawn as icons sees every row here disabled, under a notice naming where its style is
 -- changed (B-2; settings/OptionsSetup.lua's renderActiveTab).
@@ -24,28 +24,29 @@ local PAGE = "bars"
 local P = "container.bars."
 local UNIT = { source = "unit" }
 
-local G_SIZE, G_BAR, G_ICON, G_BG = L["Size"], L["Bar"], L["Icon"], L["Background & border"]
+local G_GENERAL, G_ICON, G_BG = L["General"], L["Icon"], L["Background & border"]
 local G_NAME, G_TIME, G_STACK, G_HI = L["Name text"], L["Time text"], L["Stack text"], L["Highlights"]
 
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 local JUSTIFY = NS.Choices(C.JUSTIFY, C.JUSTIFY_LABELS)
 
--- ── Size ──────────────────────────────────────────────────────────────────────────────────────
+-- ── General ───────────────────────────────────────────────────────────────────────────────────
+-- S-1: a whole tab for two sliders did not earn its place, so Size is this tab's first subsection
+-- rather than a tab of its own; the old Bar tab (Fill, Spark) follows it, and the tab itself is
+-- renamed General to cover both.
 
 NS.RegisterSchemaRows({
-    { path = P .. "width", page = PAGE, group = G_SIZE, type = "number", min = 40, max = 600, step = 1,
+    { path = P .. "width", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 40, max = 600, step = 1,
       label = L["Width (px)"], desc = L["The width of one bar, icon included."] },
-    { path = P .. "height", page = PAGE, group = G_SIZE, type = "number", min = 6, max = 80, step = 1,
+    { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 6, max = 80, step = 1,
       label = L["Height (px)"], desc = L["The height of one bar."] },
 })
 
--- ── Bar ───────────────────────────────────────────────────────────────────────────────────────
-
 NS.RegisterSchemaRows(H.BarGroup({
-    prefix = P, page = PAGE, group = G_BAR, subgroup = L["Fill"], classColor = UNIT,
+    prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General → Dispel Colors)."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors)."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
@@ -56,19 +57,19 @@ NS.RegisterSchemaRows(H.BarGroup({
 }))
 
 NS.RegisterSchemaRows({
-    { path = P .. "spark", page = PAGE, group = G_BAR, subgroup = L["Spark"], type = "bool",
+    { path = P .. "spark", page = PAGE, group = G_GENERAL, subgroup = L["Spark"], type = "bool",
       label = L["Show spark"], desc = L["A bright line at the bar's moving edge."] },
-    { path = P .. "sparkWidth", page = PAGE, group = G_BAR, subgroup = L["Spark"], type = "number", min = 1, max = 32, step = 1,
+    { path = P .. "sparkWidth", page = PAGE, group = G_GENERAL, subgroup = L["Spark"], type = "number", min = 1, max = 32, step = 1,
       label = L["Spark width (px)"], desc = L["How wide the spark is."] },
 })
 NS.RegisterSchemaRows(H.ColorPair({
-    prefix = P, page = PAGE, group = G_BAR, subgroup = L["Spark"], key = "sparkColor",
+    prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Spark"], key = "sparkColor",
     companionKey = "useClassColorSpark", label = L["Spark color"], classColor = UNIT,
 }))
 -- Off: a live bar's spark rides a clip frame bounded by the elapsed region, which a timeless aura
 -- leaves empty (modules/Style_Bars.lua's wireSpark).
 NS.RegisterSchemaRows({
-    { path = P .. "sparkTimeless", page = PAGE, group = G_BAR, subgroup = L["Spark"], type = "bool", startsLine = true,
+    { path = P .. "sparkTimeless", page = PAGE, group = G_GENERAL, subgroup = L["Spark"], type = "bool", startsLine = true,
       label = L["Show the spark on auras without a duration"],
       desc = L["A permanent aura's bar is full and never moves. Turn this off to hide its spark; a timed bar's spark then sits just inside its moving edge."] },
 })
@@ -178,5 +179,5 @@ NS.RegisterSchemaRows(HI)
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "bars" end,
-    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."],
+    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (Containers)."],
 })

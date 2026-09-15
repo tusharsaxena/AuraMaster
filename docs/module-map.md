@@ -24,11 +24,12 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 6. **`settings/`** — last. `Schema.lua` first (every page registers into it), `Slash.lua`, then
    `OptionsSetup.lua` before every page file, because the pages call the composers
    (`NS.Helpers.ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`, `MasterControls`) inside
-   `NS.RegisterSchemaRows` at file load. The page files are in the order
-   their Blizzard subcategories appear. `GeneralContainers.lua` and `GeneralSpells.lua` load before
-   `General.lua` (**load-bearing**): they publish their rows and tab renderers, and `General.lua`
-   registers those rows after its own, so the Containers, Spell Categories and Dispel Colors tabs
-   follow Display.
+   `NS.RegisterSchemaRows` at file load. The page files are in the order their Blizzard subcategories
+   appear (**load-bearing** for the tree order, N-2): `General.lua`, then `Containers.lua`, then its
+   four sub-pages `Filters.lua`, `Layout.lua`, `Bars.lua`, `Icons.lua` (each marked with
+   `NS.SubPageLabel`'s indent, D6), then `Profiles.lua`. `GeneralSpells.lua` loads before
+   `General.lua` (**load-bearing**): it publishes its rows and tab renderers, and `General.lua`
+   registers those rows after its own, so the Spell Categories and Dispel Colors tabs follow Display.
 
 ## `locales/`
 
@@ -53,13 +54,14 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `IsSafeKey` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
-| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the `SCHEMA_STEPS` ladder (v2: `MigrateV2`, over every stored profile), `PrepareProfile` (the registry's load pass: repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps directly, as architecture-§5 allows a named load pass), `NewContainerData` (the id mint, called only by the registry writer), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
+| `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the `SCHEMA_STEPS` ladder (v2: `MigrateV2`; v3: `MigrateV3`, the Show/Hide
+category collapse and the `weaponEnchants` category row — both over every stored profile), `PrepareProfile` (the registry's load pass: repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps directly, as architecture-§5 allows a named load pass), `NewContainerData` (the id mint, called only by the registry writer), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
 
 ## `defaults/`
 
 | File | Responsibility |
 |---|---|
-| `defaults/Categories.lua` | The 15 buff and 16 debuff categories (kinds `token`, `flag`, `dispel`, `spells`), the starter spell lists, `For`/`Find`/`IsSpellCategory`/`NeutralStates` |
+| `defaults/Categories.lua` | The 16 buff and 16 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, and `enchant` for `weaponEnchants`), the starter spell lists, `For`/`Find`/`IsSpellCategory`/`DefaultStates` |
 | `defaults/Profile.lua` | `NS.defaults` (profile and global), `NS.CONTAINER_TEMPLATE`, `NS.STARTER_CONTAINERS` — the one place a default is hardcoded |
 
 ## `modules/` (TOC order)
@@ -86,13 +88,13 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `settings/Slash.lua` | `NS.COMMANDS` (22 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
 | `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor (its `get` shows a row's `panelGet`) and its load-completing stub; the container banner and the body picker cell; `RenderTabbedPage` (schema-group tabs, then bespoke tabs, each optionally `before` another; a page-wide disable with its notice, `disabledFor` and `disabledNotice`; `pairWith`) and `RenderContainerPage`; `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
-| `settings/GeneralContainers.lua` | General → Containers: the picker and New container in the tab body, the name, enable, unit, aura type and style rows (registered by `settings/General.lua`), Duplicate / Delete / Copy settings from |
-| `settings/GeneralSpells.lua` | General → Spell Categories (one spell category's ID list over the profile's `categorySpells`, and its restore) and General → Dispel Colors (the six profile-wide `dispelColors.<type>` rows); registers nothing itself, `settings/General.lua` registers its rows and draws its tabs |
-| `settings/General.lua` | The General page: the composed Master controls tab and the Display tab; registers the Containers and Dispel Colors rows after its own and draws the Containers, Spell Categories and Dispel Colors tabs; the Reset all popup |
-| `settings/Filters.lua` | The Filters page: what to show, the generated category rows (drawn as Default / Whitelist / Blacklist grids by a bespoke Categories tab), sorting, and the bespoke Overrides tab (two ID lists) |
-| `settings/Layout.lua` | The Layout page: frame, anchor (Screen / Another container / Named frame / Offset, dimmed by attach mode), growth, mouse; Pick a frame |
-| `settings/Bars.lua` | The Bars page: size, the composed bar, border and font blocks, spark, the icon and its composed border, background, text placement, highlights; disabled for an icons container |
-| `settings/Icons.lua` | The Icons page: size, the composed border and font blocks, cooldown, text placement, highlights; disabled for a bars container |
+| `settings/GeneralSpells.lua` | General → Spell Categories (one spell category's ID list over the profile's `categorySpells` and its restore, or — for the Weapon enchants entry — the profile-wide `enchantSlots` toggles) and General → Dispel Colors (the six profile-wide `dispelColors.<type>` rows); registers nothing itself, `settings/General.lua` registers its rows and draws its tabs |
+| `settings/General.lua` | The General page: the composed Master controls tab and the Display tab; registers the Dispel Colors rows after its own and draws the Spell Categories and Dispel Colors tabs; the Reset all popup |
+| `settings/Containers.lua` | The top-level Containers page (`N-1`, batch 7), one tab: the picker and New container in the tab body, the name, enable, unit, aura type and style rows, Duplicate / Delete / Copy settings from |
+| `settings/Filters.lua` | The Filters page, a sub-page of Containers (`N-2`, D6): what to show, the generated Show/Hide category rows (drawn as grids with a `See spells` link and the five-rank priority blurb by a bespoke Categories tab), sorting, and the bespoke Overrides tab (two ID lists, each entry's verdict note from `FC.ExplainSpell`) |
+| `settings/Layout.lua` | The Layout page, a sub-page of Containers (`N-2`, D6): frame, anchor (Screen / Another container / Named frame / Offset, dimmed by attach mode), growth, mouse; Pick a frame |
+| `settings/Bars.lua` | The Bars page, a sub-page of Containers (`N-2`, D6): size, the composed bar, border and font blocks, spark, the icon and its composed border, background, text placement, highlights; disabled for an icons container |
+| `settings/Icons.lua` | The Icons page, a sub-page of Containers (`N-2`, D6): size, the composed border and font blocks, cooldown, text placement, highlights; disabled for a bars container |
 | `settings/Profiles.lua` | The Profiles sub-page: AceDBOptions drawn by AceConfigDialog inside the canvas |
 
 ## `tests/`
@@ -139,7 +141,8 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_bulklog.lua` | debug-logging-§10's bulk rule, act by act: one `[Set]` line per bulk act counting the rows it changed; one line per profile reset or copy |
 | `test_optionssetup.lua` | The panel: pages, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
 | `test_options_descriptor.lua` | `settings/OptionsSetup.lua`'s descriptor seams through real widgets and resets: the Profiles veto, the banner and picker, `RenderTabbedPage` and `RenderContainerPage`, the coalesced refresh, `OpenOptionsPage`, the stub's composers |
-| `test_pages_general.lua` | `settings/General.lua`, `settings/GeneralContainers.lua` and `settings/GeneralSpells.lua` through their widgets: the Spell Categories ID list and its restore, the Dispel Colors rows; each Master control and Display row, the composer's two buttons, Defaults (the name kept); the Containers tab's picker and New in the tab body, its identity rows, Duplicate / Delete / Copy settings from, and a Delete that keeps the picker |
+| `test_pages_general.lua` | `settings/General.lua` and `settings/GeneralSpells.lua` through their widgets: the Spell Categories ID list and its restore, the Dispel Colors rows; each Master control and Display row, the composer's two buttons, Defaults; the tab strip with Containers gone from it and no page keyed `containers` to `general`'s rows |
+| `test_pages_containers.lua` | `settings/Containers.lua` through its widgets: the picker and New in the tab body, its identity rows, Duplicate / Delete / Copy settings from, a Delete that keeps the picker, Defaults (the name kept), and that the page registers on its own (N-1) |
 | `test_pages_filters.lua` | `settings/Filters.lua` through its widgets: the rows each aura type is offered, the category grids, the Overrides ID lists, the warnings |
 | `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the tab order, the attach rows, their dimming per mode and their cycle guard, Pick a frame, the inherited Growth rows, what a Growth or Frame row re-applies, Defaults |
 | `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs (the Icon tab among them), the not-drawn-as-bars notice with every control disabled, sliders and swatches, Defaults |

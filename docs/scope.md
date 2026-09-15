@@ -7,19 +7,22 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:96`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:99`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:33`).
 - **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
-  enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container may
-  also append the weapon enchants after its buffs (`container.filter.includeEnchants`).
+  enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container also
+  appends the weapon enchants after its buffs, unless the `weaponEnchants` category
+  (`container.filter.categories.weaponEnchants`) is set to Hide.
 - **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
-  anyone but me), timed-only or permanent-only, a maximum full duration, 31 categories set to
-  Default, Whitelist or Blacklist (defined in `defaults/Categories.lua`: spell lists, Blizzard aura
-  flags and filter tokens, dispel types, player-or-creature source), the spell categories' lists
-  (editable, and shared by every container in the profile), a per-container whitelist and
-  blacklist of spells, sort method and direction, and a per-group cap.
+  anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
+  below), 32 categories set to Show or Hide, schema v3 (defined in `defaults/Categories.lua`: spell
+  lists, Blizzard aura flags and filter tokens, dispel types, player-or-creature source, and the
+  weapon-enchant capability), a per-container Overrides whitelist and blacklist of spells (the
+  whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists
+  (editable, and shared by every container in the profile), sort method and direction, and a
+  per-group cap.
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked or via
@@ -63,9 +66,12 @@ These are not declined; the game forbids them, and a request for one is answered
   require its absence. "Only auras without a duration" is built by learning which buff spells are
   timed while auras are readable (`modules/TimedSpells.lua`), so a timed buff not yet learned shows
   once. On a debuff container the mode narrows nothing, because only buffs are learned.
+- **A minimum duration.** The engine's candidate filters cap a duration (`maxDuration`) but cannot
+  require one to be at least N seconds, and an aura's duration is unreadable while auras are secret,
+  so it cannot be filtered after the fact either. Requested 2026-09-14; declined with the rule.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
   friendly units and debuffs on hostile units. The addon warns per container
-  (`modules/FilterCompiler.lua:154`) rather than letting the filter look broken.
+  (`modules/FilterCompiler.lua:243`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
   (`modules/ContainerManager.lua:155`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
@@ -87,8 +93,16 @@ These are not declined; the game forbids them, and a request for one is answered
   (options-ui-§17; audit 2026-09-11 AM-03).
 - **Container settings share one relative path model** (`container.…`) so one schema, one write seam
   and one CLI serve every container (`settings/Schema.lua` header).
-- **Categories have three states**, labeled Default, Whitelist and Blacklist and stored `""` / `show`
-  / `hide`. Whitelisting any category narrows the container to the union of the whitelisted ones;
-  blacklisting one excludes it; Default leaves it alone.
+- **Categories have two states** (schema v3, owner's 2026-09-15 revision), labeled Show and Hide and
+  stored `"show"` / `"hide"`; Show is the default and is a *positive claim*, not merely "not
+  excluded" — an aura in even one Show category is drawn even if another of its categories says Hide,
+  and only an aura whose every category says Hide is removed by them (`docs/ARCHITECTURE.md` →
+  Filter priority). **The real limitation this costs:** Categories alone can no longer build "only
+  Defensives" the way the old exclusive Whitelist did — hiding every other category is not the same
+  thing, because an aura in no category at all still shows (nothing removed it). Getting that back
+  needs either the Overrides whitelist, or the **Uncategorized** category set to Hide (batch 7,
+  `U-1`..`U-5`; the retired per-container "only these categories" toggle meant exactly this and is
+  gone, fix round 2 of that effort) — `uncategorized` on a buff container, `uncategorizedDebuffs` on a
+  debuff one, both on the Categories tab's Spell Categories grid.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
   and the starter containers come back.

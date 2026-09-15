@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-813%2F813_passing-green)
+![Tests](https://img.shields.io/badge/Tests-911%2F911_passing-green)
 
 ![Ka0s Aura Master](media/logos/auramaster.logo.png)
 
@@ -37,15 +37,16 @@ Those sample auras are the preview, and `/am test` shows them without unlocking 
 quickest way to try textures, fonts and sizes before a real buff turns up. Real auras stay hidden
 while the preview is on, and locking or a `/reload` turns it off.
 
-General → Containers is where you create, rename, duplicate and delete containers, change a
+Containers is where you create, rename, duplicate and delete containers, change a
 container's unit, aura type or style, or copy another container's settings onto it. Its own Container
 dropdown picks which one you're editing. The Filters, Layout, Bars and Icons pages also edit one
 container at a time, each with a Container dropdown at the top, and the choice follows you from page
 to page. Filters decides what gets shown: who cast it, timed or permanent auras, a maximum duration,
-and categories like defensives, crowd control or boss debuffs, each set to Default, Whitelist or
-Blacklist in a grid. Its Overrides tab holds a whitelist and a blacklist you add spells to by name,
-by id or by shift-clicking a link. When a filter can't work where you've put it, an orange line at
-the top of the page tells you why. General → Spell Categories edits which spells each spell category
+and categories like defensives, crowd control or boss debuffs, each set to Show or Hide in a grid —
+Show wins over Hide, so an aura in even one Show category is drawn, and only one hidden in every
+category it belongs to is dropped. Its Overrides tab holds a whitelist and a blacklist you add spells
+to by name, by id or by shift-clicking a link; the whitelist always wins. When a filter can't work
+where you've put it, an orange line at the top of the page tells you why. General → Spell Categories edits which spells each spell category
 holds, for every container at once, and General → Dispel Colors picks the color for each dispel type.
 Bars and Icons hold the look for each style. On the page for the style a container doesn't use, a
 notice says so and the controls are dimmed.
@@ -97,7 +98,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on friendly units and debuffs on hostile ones. Categories, dispel types and the other filters work on any unit. |
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |
-| Can I hide Blizzard's buff frame? | Yes, on General → Display. Your weapon enchants live in that same Blizzard frame and go with it, so add them to a container with **Also show weapon enchants** on the Filters page. |
+| Can I hide Blizzard's buff frame? | Yes, on General → Display. Your weapon enchants live in that same Blizzard frame and go with it, so make sure a player buff container's **Weapon enchants** row on Filters → Categories is set to Show (the default) if you still want to see them. |
 | Can different characters have different setups? | Yes, through the Profiles page. A profile holds every container, so switching profiles swaps the whole set. |
 | Why won't the settings open in combat? | The game protects its settings window during combat, so `/am config` prints a gray line instead of opening it. Try again once combat ends. |
 
@@ -105,14 +106,14 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 | Symptom | Fix |
 |---------|-----|
-| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on General → Containers. |
+| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on Containers. |
 | I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am test off`. |
-| A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category with every spell unticked. Loosen one of them, for example by setting a category back to Default. |
+| A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |
 | I can't drag a container | Only containers attached to the screen can be dragged, and not during combat. An attached container follows its target; move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
-| My weapon enchants don't show | Enchants appear in a container showing your own buffs with **Also show weapon enchants** ticked, or in one whose aura type is *Weapon enchants*. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
+| My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default), or in one whose aura type is *Weapon enchants*. Which weapon slots count is General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
 
 ## Issues and feature requests

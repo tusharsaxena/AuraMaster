@@ -51,8 +51,9 @@ test("container: a change of shape retires the engine and builds a new one", fun
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local old = inst.engine
-    NS.SetByPath("container.filter.categories.defensives", "show", 1)
-    NS.SetByPath("container.filter.categories.bigDefensive", "show", 1)
+    -- A whitelist draws its own group ahead of the one category group — schema v3 (Show/Hide) no
+    -- longer grows a group per shown category, so a whitelist is the shape change left to exercise.
+    NS.SetByPath("container.filter.whitelist", { [642] = true }, 1)
     mocks.__fireTimers()
     assertTrue(inst.engine ~= old)
     assertFalse(old.__enabled, "the old engine is disabled, not left drawing")
@@ -559,6 +560,107 @@ test("container: a button the engine creates is dressed with the container's cla
     NS.Style.Element = element
     -- red under: InitFrame dressing without the snapshot (a button made mid-combat would show the swatch)
     assertTrue(got ~= nil and got == inst.classColor and got.r == 1, "the priest's color")
+end)
+
+-- ── the mouse blocker (owner's 2026-09-14 double-tooltip report, L-3 continued) ─────────────────
+
+-- red under: no blocker at all — the gaps between bars and the container's own padding leave the
+-- world unit behind them moused over, drawing its GameTooltip beside the aura's own
+-- AuraButtonTooltip.
+test("container: a live container has a mouse blocker covering its engine, below its buttons", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    assertTrue(inst.blocker ~= nil)
+    -- red under: the blocker covering only the small anchor frame (one element's size) rather than
+    -- the engine's real, grown extent
+    assertTrue(inst.blocker.__allPointsTo == inst.engine, "it covers the engine's whole extent")
+    -- red under: the blocker's frame level left equal to (or above) the engine's, which would put it
+    -- between the mouse and a button instead of beneath every one of them
+    assertTrue(inst.blocker:GetFrameLevel() < inst.engine:GetFrameLevel())
+end)
+
+-- red under: a rebuild (a shape change) leaving the blocker covering the retired engine instead of
+-- the replacement.
+test("container: a shape change re-anchors the blocker to the new engine", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local oldEngine = inst.engine
+    NS.SetByPath("container.filter.whitelist", { [642] = true }, 1)
+    mocks.__fireTimers()
+    assertTrue(inst.engine ~= oldEngine)
+    assertTrue(inst.blocker.__allPointsTo == inst.engine)
+    assertTrue(inst.blocker:GetFrameLevel() < inst.engine:GetFrameLevel())
+end)
+
+-- red under: deriving the blocker's level from the anchor (or from anything read once, at creation)
+-- instead of the engine's own CURRENT level every apply — a later apply can raise layout.level
+-- without the already-built engine following it (the mock does not re-base descendants, and neither
+-- does the client), which would put the blocker at or above the engine and eat the buttons' own
+-- tooltips: the inverse of the reported bug (review round 2).
+test("container: raising the anchor's level after the engine exists leaves the blocker strictly below it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local engine = inst.engine
+    local raised = inst.anchor:GetFrameLevel() + 10
+    assertTrue(NS.SetByPath("container.layout.level", raised, 1))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == engine, "a live-editable change: no rebuild")
+    assertEqual(inst.anchor:GetFrameLevel(), raised, "the anchor's level did rise")
+    assertTrue(inst.blocker:GetFrameLevel() < inst.engine:GetFrameLevel())
+end)
+
+-- red under: the blocker ignoring TakesHover and taking the mouse (or clicks) whatever the
+-- container's own settings say — a click-through container exists to pass its clicks AND its hover
+-- to whatever is behind it, gaps included.
+test("container: the blocker follows TakesHover and never takes clicks, matching the live buttons", function()
+    local NS, mocks = fresh()
+    local function blockerFor(behaviorOver)
+        local id = NS.ContainerManager.Create({ behavior = behaviorOver })
+        mocks.__fireTimers()
+        return NS.ContainerManager.instances[id].blocker
+    end
+    local on = blockerFor({ tooltips = true, clickThrough = false })
+    assertEqual(on.__mouseMotionOn, true)
+    assertEqual(on.__mouseClickOn, false)
+
+    local through = blockerFor({ clickThrough = true })
+    assertEqual(through.__mouseMotionOn, false)
+    assertEqual(through.__mouseClickOn, false)
+
+    local quiet = blockerFor({ tooltips = false })
+    assertEqual(quiet.__mouseMotionOn, false)
+    assertEqual(quiet.__mouseClickOn, false)
+end)
+
+-- red under: a live setting flip (no rebuild) never reaching the blocker, so a container switched to
+-- click-through in place keeps blocking the gaps until its next shape change.
+test("container: a live click-through flip re-gates the blocker without a rebuild", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local engine = inst.engine
+    assertEqual(inst.blocker.__mouseMotionOn, true)
+    NS.SetByPath("container.behavior.clickThrough", true, 1)
+    mocks.__fireTimers()
+    assertTrue(inst.engine == engine, "a live-editable change: no rebuild")
+    assertEqual(inst.blocker.__mouseMotionOn, false)
+end)
+
+-- red under: ApplyVisibility disabling the engine but leaving the blocker shown — an invisible
+-- mouse-blocking rect sitting over the world where nothing is drawn (the inverse of the reported
+-- bug, review round 1, B-9).
+test("container: a hidden container hides its blocker along with its engine, and Park hides it too", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    assertTrue(inst.blocker:IsShown(), "shown to start")
+    NS.db.profile.visibility = "never"
+    inst:ApplyVisibility()
+    assertFalse(inst.blocker:IsShown(), "hidden along with the engine")
+    NS.db.profile.visibility = "always"
+    inst:ApplyVisibility()
+    assertTrue(inst.blocker:IsShown(), "shown again once visible")
+    -- red under: Park leaving the blocker up under combat lockdown
+    inst:Park()
+    assertFalse(inst.blocker:IsShown())
 end)
 
 test("container: on a client without the aura engine a container is deleted without error", function()

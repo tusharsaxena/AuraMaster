@@ -8,6 +8,11 @@ local _, NS = ...
 -- Same rules as settings/Bars.lua: composed font and border blocks, a class-color companion on every
 -- color, resolved to the class of the container's unit and snapshotted per apply, and palette
 -- swatches (running out, refresh window) exempt.
+--
+-- S-1: Bars folded its Size tab (two sliders) into a renamed General tab. This page's tab set has no
+-- Bar-shaped tab to rename, and its Size tab (width, height, zoom) is a coherent "the icon's box"
+-- group that would land arbitrarily inside Border or Cooldown if folded anywhere -- so Size stays a
+-- tab of its own here; the two pages are deliberately not made to match shape-for-shape.
 
 local L = NS.L
 local H = NS.Helpers
@@ -105,5 +110,5 @@ NS.RegisterSchemaRows({
 -- changed (B-2; settings/OptionsSetup.lua's renderActiveTab).
 NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "icons" end,
-    disabledNotice = L["This container is drawn as bars; these settings apply once its style is Icons (General → Containers)."],
+    disabledNotice = L["This container is drawn as bars; these settings apply once its style is Icons (Containers)."],
 })

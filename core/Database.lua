@@ -438,6 +438,271 @@ function Database.MigrateV2(p)
     return walked
 end
 
+-- ---------------------------------------------------------------------------
+-- Schema v3: Show/Hide categories, weaponEnchants
+-- ---------------------------------------------------------------------------
+--
+-- B1 collapsed the three-state category model ("" no effect / "show" whitelist / "hide" exclude) to
+-- two: Show / Hide, where Show contributes nothing (defaults/Categories.lua). The old "show" state
+-- meant "draw ONLY the categories set to show" — a state that no longer exists. Mapping "" -> "show"
+-- verbatim would silently WIDEN what an already-stored container draws, so the old intent is written
+-- out longhand instead (liftCategoryWhitelist), before the unrelated enchant-flag lift runs.
+--
+-- The owner's 2026-09-15 filter-priority revision (spec section 6, E-8) made a Show a positive claim
+-- that beats a Hide on the same aura (modules/FilterCompiler.lua's rank 3), for every category kind
+-- rather than only `spells`. That is what the old "show" rows needed protecting for in the first
+-- place, so the id-copying half of this lift (once `liftWhitelistSpells`, onto `filter.whitelist`) is
+-- gone: the compiler now does that job itself, on every run, not just at migration time.
+--
+-- Only recognized aura types are touched. `Cat.For(nil)` and `Cat.For("garbage")` both fall back to
+-- the (empty) ENCHANT list, so liftCategoryWhitelist is already a no-op for them — but the string
+-- compare `auraType == "ENCHANT"` that used to gate liftEnchantFlag does NOT catch nil or garbage, so
+-- a container with a missing or corrupt auraType could still get a weaponEnchants row written with no
+-- corresponding category list. `Database.MigrateV3` itself gates both lifts on a known aura type, so
+-- neither runs for such a container: it is left untouched rather than half-converted.
+local KNOWN_AURA_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
+
+--- The whitelist lift: if a container had ANY category of its aura type at "show", it was an
+--- exclusive whitelist under the old three-state model — so every category of that type NOT "show"
+--- (an unset "" or an explicit "hide", the old model excluded both from the whitelist's one group)
+--- becomes "hide", the longhand of that exclusion. With no "show" present the container already drew
+--- everything except its explicit "hide" rows (the old model's default group), so only the unset ""
+--- rows need a decision at all, and they become "show" — an explicit "hide" is left exactly as it was.
+--- Under the current filter priority (docs/superpowers/specs/2026-09-14-feedback-batch6-design.md
+--- section 6, rank 3) a Show beats a Hide on the same aura, for every category kind, so a container
+--- narrowed this way keeps drawing exactly what it drew before without any id needing to be copied
+--- onto `filter.whitelist` — the compiler's own category groups do that job now.
+--- Idempotent: an already-migrated container has every category of its type explicitly "show" or
+--- "hide" — no unset "" left, and no key still missing — which is exactly the pre-v3 shape this lift
+--- exists to close. So it runs only while that gap remains; once every key already carries a decision
+--- there is nothing left to convert, and it returns without touching state again. This is
+--- load-bearing, not a nicety: without it, a container that started with NO "show" (the no-whitelist
+--- branch) ends its first run with EVERY key at "show" — because Show is the new model's "no decision
+--- needed" — and a second run would then read that as "some category is show" and misfire the
+--- WHITELISTED branch on a container that was never narrowed, sweeping it to near-nothing.
+--- Runs before liftEnchantFlag and only ever touches `NS.Categories.For(c.auraType)`'s FILTERABLE keys
+--- (filterableCategories below) — a `kind == "enchant"` category, `weaponEnchants` once B3 adds it, is
+--- excluded categorically, not because it happens not to exist in `def` yet. That is what makes the
+--- order below safe both before and after B3: an enchant row is a container capability ("does this
+--- container have weapon-enchant slots"), not a filter over auras — it matches no aura and joins no
+--- aura group (modules/FilterCompiler.lua's own `splitCategories` skips it the same way), so it must
+--- never count toward "was this container narrowed", and never be swept to "hide" by that decision.
+--- Without the exclusion, a container with NO `filter.categories` table at all is the sharpest case:
+--- run 1 has nothing for this lift to do (no categories table yet), so liftEnchantFlag alone creates
+--- the table holding only `weaponEnchants`; run 2 would then see exactly one category at "show" once
+--- `weaponEnchants` is real, read that as narrowed, and sweep every other category of the container to
+--- "hide" — a near-total blackout of a container the player never touched.
+--- Whether every FILTERABLE category of `def` already carries an explicit "show" or "hide" on `cats`
+--- — the fixed point this whole lift converges to, and the idempotency guard.
+--- `def` minus any `kind == "enchant"` or `kind == "uncategorized"` entry: the categories that
+--- actually filter auras AND existed under the old three-state whitelist model this lift converts.
+--- See liftCategoryWhitelist's doc comment for why an enchant row must take no part in the whitelist
+--- sweep, today (a no-op — the kind doesn't exist in `def` yet) or after B3 (excluded categorically).
+---
+--- `uncategorized` (batch 7, U-1..U-5) is excluded for a DIFFERENT reason, and it matters: unlike
+--- `enchant` it DOES match auras, but the old whitelist model it predates never had an opinion about
+--- it — no stored container has ever carried a `categories.uncategorized` key, "" or otherwise, so
+--- neither the generic sweep NOR the `categoriesDecided` fixed-point check may treat it as an
+--- ordinary filterable category.
+---
+--- CORRECTION (review, after this shipped once already wrong): excluding it from `filterableCategories`
+--- is right for the UNWHITELISTED branch (`liftUnwhitelisted`) — leaving the key nil there is what
+--- lets the ordinary backfill (defaults/Categories.lua's `DefaultStates`, via `NS.CONTAINER_TEMPLATE`)
+--- supply its D3 default, Show. It is WRONG, on its own, for the WHITELISTED branch
+--- (`liftWhitelisted`): the old exclusive whitelist meant "only these categories", and the longhand
+--- of that is `uncategorized = "hide"` — leaving it nil there does not defer to a neutral default, it
+--- silently WIDENS an already-narrowed container. The gap is real and was shipped once: a v2 profile
+--- narrowed to "Defensives only" migrates through v3 with every OTHER category explicitly `"hide"`
+--- but `uncategorized` still nil; the ordinary backfill then supplies `"show"`; `addCategoryGroups`
+--- (modules/FilterCompiler.lua) sees a Show `uncategorized` category, emits its own group (the base
+--- plus `excludeSpellIDs(union)`, carrying NO hidden-category exclusion) AND suppresses the catch-all
+--- — so the container ends up drawing every buff not on any spell list, in place, irreversibly. That
+--- is exactly the "silently WIDEN what an already-stored container draws" failure this whole lift
+--- exists to prevent (the header comment above `KNOWN_AURA_TYPES`). The fix: `liftCategoryWhitelist`
+--- stamps the aura type's `uncategorized` key `"hide"` itself, in the WHITELISTED branch ONLY, using
+--- the un-filtered `def` (`uncategorizedKeyOf`) since `filterableCategories` has already stripped it
+--- out of `filterable`. The UNWHITELISTED branch is untouched — the key stays nil there, exactly as
+--- documented above.
+local function filterableCategories(def)
+    local out = {}
+    for _, cat in ipairs(def) do
+        if cat.kind ~= "enchant" and cat.kind ~= "uncategorized" then
+            local n = #out
+            out[n + 1] = cat
+        end
+    end
+    return out
+end
+
+local function categoriesDecided(def, cats)
+    for _, cat in ipairs(def) do
+        local state = cats[cat.key]
+        if state ~= "show" and state ~= "hide" then return false end
+    end
+    return true
+end
+
+--- Whether any category def in `def` is currently at "show".
+local function anyShown(def, cats)
+    for _, cat in ipairs(def) do
+        if cats[cat.key] == "show" then return true end
+    end
+    return false
+end
+
+--- No category was whitelisted: only the unset "" (or missing) rows need a decision, and they become
+--- "show". An explicit "hide" is left exactly as it was (see liftCategoryWhitelist's doc comment).
+local function liftUnwhitelisted(def, cats)
+    for _, cat in ipairs(def) do
+        if cats[cat.key] ~= "hide" then cats[cat.key] = "show" end
+    end
+end
+
+--- At least one category was whitelisted: every category NOT "show" becomes "hide" — the longhand of
+--- the old exclusive whitelist (see the doc comment above `anyShown`'s callers for why no id copy is
+--- needed any more).
+local function liftWhitelisted(def, cats)
+    for _, cat in ipairs(def) do
+        if cats[cat.key] ~= "show" then cats[cat.key] = "hide" end
+    end
+end
+
+--- The `uncategorized`-kind category's key in `def` (the UN-filtered `NS.Categories.For(auraType)`
+--- list, before `filterableCategories` strips it out), or nil if this aura type carries none. What
+--- `liftCategoryWhitelist` uses to give the WHITELISTED branch the one thing `filterableCategories`'s
+--- categorical exclusion cannot: the longhand of "only these categories" for a key the generic sweep
+--- must never touch.
+--- @return string|nil
+local function uncategorizedKeyOf(def)
+    for _, cat in ipairs(def) do
+        if cat.kind == "uncategorized" then return cat.key end
+    end
+    return nil
+end
+
+local function liftCategoryWhitelist(c)
+    local def = NS.Categories and NS.Categories.For(c.auraType)
+    local cats = type(c.filter) == "table" and c.filter.categories
+    if type(def) ~= "table" or type(cats) ~= "table" then return end
+    local filterable = filterableCategories(def)
+    local filterableCount = #filterable
+    if filterableCount == 0 or categoriesDecided(filterable, cats) then return end
+    if anyShown(filterable, cats) then
+        liftWhitelisted(filterable, cats)
+        -- The bug this correction closes (see filterableCategories's doc comment): only the
+        -- WHITELISTED branch stamps this, and only "hide" — Show is exactly the case the ordinary
+        -- backfill already handles correctly, for a key the sweep above deliberately never reaches.
+        -- UNCONDITIONAL overwrite, on the assumption `cats[uncatKey]` is nil here: true today (a v2
+        -- profile cannot carry the key at all, and an already-migrated post-v3 profile early-returns
+        -- above on `categoriesDecided`, since `uncategorized` is excluded from the check but every
+        -- OTHER filterable key is already decided by then). Unreachable now, but worth naming: if a
+        -- future batch adds another filterable category, a profile narrowed AND still at
+        -- schemaVersion <= 2 AND already carrying a deliberate `uncategorized = "show"` from some
+        -- other path would have that Show silently overwritten to Hide here. Nothing in this shape
+        -- can construct that combination today.
+        local uncatKey = uncategorizedKeyOf(def)
+        if uncatKey then cats[uncatKey] = "hide" end
+    else
+        liftUnwhitelisted(filterable, cats)
+    end
+end
+
+--- The old `filter.includeEnchants` boolean becomes the `weaponEnchants` category row, and the old
+--- key is cleared. Runs AFTER liftCategoryWhitelist (see its comment above for the ordering risk).
+--- Idempotent: a second run finds `categories.weaponEnchants` already set (not nil, whichever way the
+--- first run decided it) and does nothing — a guard against `filter.includeEnchants` already being
+--- nil by then, which would otherwise unconditionally re-stamp "hide" and silently drop a container
+--- that had migrated to "show" (a restored backup, a profile copy, a re-applied step). A container
+--- whose old key was never set at all (never touched includeEnchants, or a pre-B2 profile with no
+--- weaponEnchants row yet) still converts once, to "hide" — the old default.
+--- ENCHANT containers never read the old flag and are left alone (also gated by MigrateV3's
+--- KNOWN_AURA_TYPES check, for a container whose auraType is missing or corrupt). The
+--- `weaponEnchants` category only exists for HELPFUL containers (defaults/Categories.lua); a
+--- HARMFUL container has no such category, so writing `categories.weaponEnchants` there would be
+--- inert garbage stored forever in real saved variables — gated out here.
+local function liftEnchantFlag(c)
+    if c.auraType ~= "HELPFUL" then return end
+    local f = type(c.filter) == "table" and c.filter
+    if not f then return end
+    if type(f.categories) ~= "table" then f.categories = {} end
+    if f.categories.weaponEnchants ~= nil then return end
+    f.categories.weaponEnchants = f.includeEnchants and "show" or "hide"
+    f.includeEnchants = nil
+end
+
+--- Schema v3 over one profile table (docs/schema.md, Migration path). A test seam as well as the
+--- step's body: tests/test_database.lua runs it over raw profile tables. A container skipped for an
+--- unrecognized auraType does not count toward the return value — it was not converted, so the
+--- ladder's "over N container(s)" log line stays honest — and logs its own `[Migrate]` line naming it,
+--- since a silently skipped container is the kind of thing only its player would ever notice missing.
+--- @return number  the containers it walked (converted)
+function Database.MigrateV3(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local walked = 0
+    for key, c in pairs(p.containers) do
+        if type(c) == "table" then
+            if KNOWN_AURA_TYPES[c.auraType] then
+                liftCategoryWhitelist(c)
+                liftEnchantFlag(c)
+                walked = walked + 1
+            elseif NS.Debug then
+                NS.Debug("Migrate", "v3 container '%s' skipped: unrecognized auraType %s", tostring(key), tostring(c.auraType))
+            end
+        end
+    end
+    return walked
+end
+
+--- Which stored `filter.categories` key preserves "Only these categories" for `auraType`, or nil.
+--- Fix round 3: both HELPFUL and HARMFUL now carry an `uncategorized` category (asymmetric —
+--- defaults/Categories.lua's KINDS doc — but Hide reproduces the retired toggle on either type, which
+--- is all this migration ever needed). `ENCHANT` is deliberately excluded, not merely absent: an
+--- ENCHANT container compiles to no aura groups at all (`FC.Compile`'s `compileEnchant`), so its
+--- `onlyShown` — however it got set — never did anything, and clearing it loses nothing worth
+--- counting. Any other or unrecognized `auraType` returns nil, the "lost" case — reachable in
+--- practice only for a corrupt or future `auraType` (`Database.MigrateV3`'s `KNOWN_AURA_TYPES` names
+--- the same three this migration actually expects), not a common one: every real HELPFUL or HARMFUL
+--- container converts.
+local function uncategorizedKeyFor(auraType)
+    if auraType == "HELPFUL" then return "uncategorized" end
+    if auraType == "HARMFUL" then return "uncategorizedDebuffs" end
+    return nil
+end
+
+--- Schema v4 over one profile table: the retired "Only these categories" toggle
+--- (`container.filter.onlyShown`) becomes `categories.<uncategorized key> = "hide"` for the container's
+--- aura type, or is simply lost with the key cleared for a shape that has no such category
+--- (`uncategorizedKeyFor`). `lostList` names every lost container (`{ id, name, auraType }`, in
+--- container-key order) so the caller can tell the player, not just the debug console — see the v4
+--- step in `SCHEMA_STEPS`, which is what actually calls `NS.Print`; this function stays a pure test
+--- seam, like `MigrateV2`/`MigrateV3`.
+--- @return number converted, number lost, table lostList
+function Database.MigrateV4(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0, {} end
+    local converted, lost, lostList = 0, 0, {}
+    local keys = {}
+    for key in pairs(p.containers) do
+        keys[#keys + 1] = key
+    end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    for _, key in ipairs(keys) do
+        local c = p.containers[key]
+        if type(c) == "table" and type(c.filter) == "table" and c.filter.onlyShown == true then
+            local catKey = uncategorizedKeyFor(c.auraType)
+            if catKey then
+                c.filter.categories = c.filter.categories or {}
+                c.filter.categories[catKey] = "hide"
+                converted = converted + 1
+            elseif c.auraType ~= "ENCHANT" then
+                lost = lost + 1
+                lostList[#lostList + 1] = { id = key, name = c.name, auraType = c.auraType }
+            end
+            c.filter.onlyShown = nil
+        end
+    end
+    return converted, lost, lostList
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 local function eachProfile(db, fn)
@@ -467,6 +732,36 @@ local SCHEMA_STEPS = {
                 NS.Debug("Migrate", "v2 profile '%s': spell lists, dispel colors, healing and strata over %s container(s)", name, n)
             end
         end)
+    end },
+    { to = 3, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV3(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v3 profile '%s': category whitelist lift and weaponEnchants over %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 4, apply = function(db)
+        -- R-8..R-11 retired; NS.Print (not just NS.Debug, which a player may never have enabled) is
+        -- the one place a lost container is actually told about — one consolidated line for the whole
+        -- migration pass, not one per profile, so a player with several affected containers sees a
+        -- single, plain notice rather than a burst of chat spam. Structurally one-shot already: the
+        -- schema-version gate below never re-runs this step once `schemaVersion` reaches 4.
+        local allLost = {}
+        eachProfile(db, function(p, name)
+            local converted, lost, lostList = Database.MigrateV4(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v4 profile '%s': 'Only these categories' retired -- %s container(s) moved to Uncategorized = Hide, %s lost the capability", name, converted, lost)
+            end
+            for _, entry in ipairs(lostList) do
+                allLost[#allLost + 1] = ("%s (%s, profile '%s')"):format(
+                    tostring(entry.name or entry.id), tostring(entry.auraType), tostring(name))
+            end
+        end)
+        local lostCount = #allLost
+        if lostCount > 0 and NS.Print then
+            NS.Print(NS.L["The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."]:format(table.concat(allLost, ", ")))
+        end
     end },
 }
 

@@ -60,8 +60,10 @@ suite covers what only the client can show.
 ## D. Settings panel — every page and tab
 
 19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
-    Slash Commands list matching `/am help`, and no tab strip.
-20. **General** → the strip **[ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
+    Slash Commands list matching `/am help`, and no tab strip. The tree reads **General ·
+    Containers · - Filters · - Layout · - Bars · - Icons · Profiles** — the four container pages
+    indented under Containers with a `-` mark, General, Containers and Profiles flush with it (N-2).
+20. **General** → the strip **[ Master controls ][ Display ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
     above it. Master controls reads, two per line:
     Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
     then **Reset position** and **Reset all settings**.
@@ -71,7 +73,7 @@ suite covers what only the client can show.
     they take effect immediately (visibility is legal in combat).
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
-23. **General → Containers** → the tab body's first line holds the Container picker and **New
+23. **Containers** (its own top-level page, one tab) → the tab body's first line holds the Container picker and **New
     container**, side by side and aligned. Below: Name, Enabled, Unit, Aura type, Style, then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
     **Delete** it → the picker and New container are still there, and the picker lists what is left.
@@ -84,22 +86,30 @@ suite covers what only the client can show.
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
     show ][ Categories ][ Sorting ][ Overrides ]**, with no Spell lists tab on any aura type.
-    **Categories** on a buff container is two grids, **Blizzard Categories** then **Custom
-    Categories**, each headed once, with columns **Default · Whitelist · Blacklist** and the category
-    name (hover it for its description); click **Whitelist** on a line → that line's radio moves, and
-    `/am get container.filter.categories.<key>` prints `Whitelist`. Switch the container's aura type
-    to Debuffs → **Blizzard Categories**, **Dispel Types** and **Who Cast It**; switch to Weapon
-    enchants → only **What to show** and **Sorting**, one row each.
+    **Categories** opens with the five-rank priority sentence, one rank per line, then two grids,
+    **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
+    once, with columns **Show · Hide** and the category name (hover it for its description). Click
+    **Hide** on a line → that line's cell shows a plain checkbox check and the other goes unlit, and
+    `/am get container.filter.categories.<key>` prints `Hide`. Right under the grid sits **Hide
+    enchants without a duration**, tied by name to the **Weapon enchants** row above it. On the
+    **Spell Categories** grid, click **See spells** on a row → the settings jump to General → Spell
+    Categories with that category already selected. Switch the container's aura type to Debuffs →
+    **Blizzard Categories**, **Dispel Types**, **Who Cast It** and a **Spell Categories** grid
+    holding only its own **Uncategorized** row (no starter list, no See spells link, no line above
+    it naming General → Spell Categories); switch to Weapon enchants → the strip becomes
+    **[ Categories ][ Sorting ]**, Categories holding only **Hide
+    enchants without a duration** and Sorting only **Direction**.
 25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
     **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
     and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
     row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
     the same frame; → *Another container* → Another container and Offset are live.
-26. **Bars** → **[ Size ][ Bar ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
+26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
     Highlights ]**. On an icon container every tab carries the large orange "drawn as icons" notice
-    naming General → Containers, a gap below it, and every control dimmed and unclickable; the tabs
-    and the Container dropdown still work. On **Icon** tick **Show border**, set the thickness to 3 →
-    a border frames each bar's icon and the art shrinks inside it rather than under it. On **Bar**
+    naming Containers, a gap below it, and every control dimmed and unclickable; the tabs
+    and the Container dropdown still work. **General** opens on its Size subsection (**Width**,
+    **Height**) before Fill and Spark. On **Icon** tick **Show border**, set the thickness to 3 →
+    a border frames each bar's icon and the art shrinks inside it rather than under it. On **General**
     untick **Show the spark on auras without a duration** → a permanent buff's full bar shows no
     spark, and a timed buff's spark still rides its moving edge, sitting just inside it (the
     in-game check docs/midnight-quirks.md names; if the permanent bar still shows a spark, or the
@@ -117,7 +127,7 @@ suite covers what only the client can show.
 
 ## E. Create, duplicate, delete
 
-30. General → Containers → **New container** → a player-buff bar container named *Container N* appears, offset
+30. Containers → **New container** → a player-buff bar container named *Container N* appears, offset
     from the last new one, and is selected.
 31. **Duplicate** → a *… (copy)* container with every setting, nudged 20 px; **Delete** → a confirmation
     popup; **Yes** removes it and any container attached to it falls back to the screen. In combat,
@@ -127,33 +137,46 @@ suite covers what only the client can show.
     cannot be torn down until combat ends" line; nothing is created or removed.
 32. **Copy settings from** → pick a source and *Bar style* → the selected container takes only the
     source's bar look; its name and position are unchanged.
-33. Rename one on General → Containers (Enter to apply) → the handle label, every picker and `/am containers`
+33. Rename one on Containers (Enter to apply) → the handle label, every picker and `/am containers`
     show the new name; a blank name is refused.
 
 ## F. Filters
 
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Defensives* to **Whitelist** → only defensive cooldowns
-    appear; also set *Offensive cooldowns* to **Whitelist** → both, each aura once. Set *Consumables*
-    to **Blacklist** on a container with every category at Default → your flask disappears from it.
+35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category (including
+    *Uncategorized*) left at Show → your flask disappears from it, nothing else changes. Now also set
+    *Defensives* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
+    still shows (rank 3: a Show elsewhere rescues it). Set every category to **Hide**, *Uncategorized*
+    included, with the Overrides whitelist empty → the container goes empty and shows "These filters
+    can never match anything."; set *Defensives* back to Show → only defensive cooldowns appear, and
+    only those. Now set every category back to Show except *Uncategorized*, which stays Hide → a
+    cancelable-but-unlisted buff (one in none of the profile's Spell Categories lists) disappears too,
+    even though nothing named it directly.
 36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensives*, cast it
     → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
     a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
     nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
     **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
     Magic dispel border keeps Blizzard's own blue art.
-37. **Overrides.** Add a buff to the *Blacklist* → gone; add a buff to the *Whitelist* by name on a
-    container whose categories exclude it → it is listed with its icon and id, and it shows; a name
-    the game does not know → nothing added, and the reason under the box; the same id on both lists
-    → hidden.
+37. **Overrides.** Opens with the same five-rank priority sentence as Categories. Add a buff to the
+    *Blacklist* → gone; add a buff to the *Whitelist* by name on a container whose categories exclude
+    it → it is listed with its icon and id, and it shows; a name the game does not know → nothing
+    added, and the reason under the box. Add the SAME spell id to both lists → the entry on the
+    *Blacklist* stays there but the aura shows anyway (the whitelist wins), and a gray note appears
+    under the *Blacklist* entry saying so; remove it from the *Whitelist* only → the *Blacklist*
+    note disappears and the aura is hidden again. Add to the *Whitelist* a spell every category of
+    the container already sets to Hide → a gray note appears under that *Whitelist* entry naming
+    the category (or categories) it is overriding.
 38. **Max duration** `60` → hour-long buffs disappear, short ones stay, permanent ones go.
 39. **Duration → Only auras without a duration** on a player buff container → timed buffs disappear
     out of combat once learned; a brand-new timed buff cast in combat may show once. `/am forgettimed`
     → they reappear until relearned out of combat.
 40. **Warnings.** Add a spell to the Overrides *Whitelist* on a *player debuffs* container → the Filters page
     shows the orange "ignored for debuffs on your own character or pet" line. On a *target buffs*
-    container → "only apply while the unit is friendly". Show a spell category with every spell
-    unticked and nothing else → "These filters can never match anything."
+    container → "only apply while the unit is friendly". Set every category to **Hide**, *Defensives*
+    left at Show, and on General → Spell Categories untick every *Defensives* spell (Restore
+    afterward) → "These filters can never match anything." (the only group left, Defensives' Show
+    group, now matches no id at all).
 
 ## G. Attach
 
@@ -173,8 +196,10 @@ suite covers what only the client can show.
 ## H. Weapon enchants
 
 44. Apply a temporary weapon enchant (an oil, a stone, a poison). The *Player buffs* starter shows it
-    after the buffs (**Also show weapon enchants** is on there). A container with aura type *Weapon
-    enchants* shows it too. **Hide enchants without a duration** hides a permanent one.
+    after the buffs, because its **Weapon enchants** row on Filters → Categories is Show (the
+    default, schema v3). Set that row to **Hide** → the enchant drops out of that container; set it
+    back to **Show** → it returns. A container with aura type *Weapon enchants* shows it too, always
+    (that row has no bearing on it). **Hide enchants without a duration** hides a permanent one.
 45. Set a weapon-enchant container's unit to *target* → the Filters page warns that enchants are always
     the player's, and it still shows yours.
 
@@ -218,7 +243,7 @@ suite covers what only the client can show.
     tooltip that was already up when the cursor entered the element fades rather than lingering.
     Unlock and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
     **Click-through** on, the hover reaches the world by design → the unit's tooltip shows. A new
-    container sits in the **High** strata (Layout → Frame → Strata).
+    container sits in the **Medium** strata (Layout → Frame → Strata).
 
 ## L. Profiles
 
@@ -358,3 +383,114 @@ listed here too, so the batch can be signed off in one pass.
     reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and
     ones this list knows; otherwise use the id or shift-click a link." Hover the box → the tooltip
     ends with the same hint, and promises nothing about names the game cannot find.
+76. **Gaps between bars no longer leak the world tooltip (L-3, owner report 2026-09-14, B-9).** Put a
+    bar container with at least two auras over a world unit (an NPC or a player), with default
+    settings (Show tooltips on, Click-through off). Hover a bar → only the aura's tooltip. Hover the
+    narrow **gap between two bars**, and separately the container's own **padding** past the last bar
+    → in both spots, still only the aura tooltip nearest the cursor (or none, past every bar) — never
+    the unit's tooltip drawn alongside it. This is the failure the report's screenshot showed: two
+    tooltips side by side. Now turn **Click-through** on for that container and hover the same gap
+    again → the unit's tooltip comes back, proving the blocker that closes the gap is gated off, not
+    unconditional. Turn Click-through back off, then turn **Show tooltips** off instead and hover the
+    gap once more → the unit's tooltip shows there too, for the same reason.
+    **Preview is exempt by design.** `/am unlock` (or `/am test`) and hover a gap between placeholders
+    → the unit's tooltip shows there, same as Click-through. Expected: the blocker is hidden whenever
+    the engine is (real auras are hidden while previewing too), so this is not a regression to report.
+
+## Q. Feedback batch 6 checks owed (2026-09-14/15)
+
+Categories became Show/Hide, the priority order was revised mid-batch (rank 3's Show now rescues an
+aura from a Hide elsewhere), and a container with anything Hidden compiles to many groups instead of
+one. None of this is reproducible headlessly; these checks are.
+
+77. **Group explosion has a real cost, and nothing silently vanishes (spec §6b, `R-4`).** On a
+    *player debuffs* container, set exactly one debuff category — say *Dispellable* — to **Hide**
+    and leave the other 15 at **Show** → the container now compiles to roughly 15 groups plus a
+    catch-all (spec §6b), not one. Cast or apply enough different debuffs to populate several
+    categories at once and confirm **every** one you expect still appears — a debuff in *Dispellable*
+    and nothing else disappears, but one in *Dispellable* and also, say, *Boss* still shows (rank 3).
+    Nothing is missing, garbled or duplicated. Then `/am perf` a capture over a few seconds with the
+    container populated → compare its container-apply bucket against the same container with every
+    category left at Show (one group): if the many-group container is dramatically slower per apply,
+    or the client silently refuses some of the `AddAuraGroup` calls (a group's auras never draw even
+    though its category has live spells), report it — that is the "what does it cost, does the client
+    cap groups" open question this batch could not settle offline. Then check the ORDER, not just
+    the presence: set Sort by to a method with an obvious visual order (e.g. Time Remaining) and
+    confirm the container is no longer sorted end to end — auras are ordered category-block by
+    category-block (each Show category's block internally sorted, blocks laid out one after another),
+    not as one sorted run across the whole container. This is the sort-row description's own claim
+    (Filters → Sorting), so it should read as expected once you know to look for it, not as a bug.
+78. **The Hide column reads as live, never dimmed (`K-1`, `R-10`).** On Filters → Categories, look at
+    a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
+    unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
+    with a genuinely disabled row on Layout → Anchor (a mode's dimmed fields) to see the difference.
+    Set **Uncategorized** to **Hide** → every other row's Hide column still looks the same, still
+    clickable, on every row, including one already set to Show; click a lit Show cell's Hide → it
+    moves there, live, exactly as it did before Uncategorized was touched.
+79. **`See spells` lands on the row's own category, not the first one (`F-3`, `K-4`).** On Filters →
+    Categories → Spell Categories, click **See spells** on a category that is NOT the first row
+    (say *Support* or *Utility*) → General → Spell Categories opens with the tab selected AND that
+    same category already chosen in the **Category** dropdown, not defensives or whatever was last
+    selected there. Do it again from a DIFFERENT category (say *Consumables*) on a different
+    container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
+    row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
+    slot toggles, not a spell list.
+80. **The priority blurb reads as one rank per line (`F-4`, `P-1`, `T-2`).** At the top of both
+    Filters → Categories and Filters → Overrides, read the lead-in line ("Highest priority first:")
+    then the five numbered rank lines below it → each rank is its own line, none sharing a line with
+    another, no word cut off mid-character on any of them, no horizontal scrollbar appearing on the
+    tab, and no overlap with the row or grid drawn immediately below — and on Categories, no leftover
+    gap where the retired **Only these categories** toggle used to sit; the last rank line runs
+    straight into the grid below it. Resize the WoW window narrower (if your UI scale allows it) and
+    re-open the tab → each line still wraps cleanly on its own, just onto more sub-lines.
+81. **The grid cell is a plain checkbox, on both columns (`G-1`, `G-2`).** On Filters → Categories,
+    look closely at a lit cell (Show or Hide) → it shows an ordinary checkbox check, the same shape
+    and color as every other checkbox in the panel, with no colored fill behind it. Click the other
+    cell on the same row → the check moves there in full, the previously-lit cell now shows its plain
+    unlit checkbox shape, and at no point are both cells lit or neither lit.
+82. **An Overrides entry's note wraps under it, not through it (`K-3`).** Add a spell to the
+    Whitelist whose categories are ALL set to Hide, on a container with several categories so the
+    note names more than one (a long note, e.g. "Shown here by the whitelist, overriding Defensives,
+    Cancelable (set to Hide)."). Confirm the note text wraps onto as many lines as it needs directly
+    under the entry's name/id, in the existing gray, without overlapping the entry's icon, id, or its
+    **Remove** button, and without pushing the NEXT entry's row on top of it.
+83. **Every debuff carries `isFromPlayerOrPlayerPet` one way or the other (`docs/schema.md`'s Who
+    Cast It grid; the assumption `R-4`'s dropped catch-all depends on).** On a debuff container, set
+    BOTH *From players* (`fromPlayers`) and *From non-players* (`fromNonPlayers`) to **Hide** — under
+    the current model this drops the debuff catch-all group as a contradiction, since the two
+    together are assumed to cover every debuff. Apply a debuff you cast on a training dummy → it
+    disappears (claimed by `fromPlayers`'s Hide). Have a pet, NPC, or another player's spell apply a
+    DIFFERENT debuff to you or the dummy → it disappears too (claimed by `fromNonPlayers`'s Hide). If
+    you can find or produce ANY debuff that still shows with both Hidden, its `isFromPlayerOrPlayerPet`
+    is neither true nor false as the engine reports it — report it, since that is exactly the case
+    that would make dropping the catch-all here wrong.
+84. **The mouse blocker's reach is the whole container, not just the bars (owner report,
+    B-9 follow-up).** Anchor a bar container with **Show tooltips** on and Click-through off
+    directly over a unit frame, or over open ground you normally mouseover-target through, so its
+    padding — not just a bar — sits over the target. Bind a `/tar mouseover` (or similar mouseover)
+    macro, or just try to mouseover-target the unit/NPC through the container's padding → it fails
+    while the cursor is over the container, including its padding, not only over a bar; moving the
+    cursor off the container's rect entirely restores mouseover targeting. This is Layout ->
+    Mouse's own documented tradeoff, not a bug — confirm the tab's **Show tooltips** text names it
+    and that turning **Click-through** on restores mouseover targeting everywhere under the
+    container, padding included.
+85. **A timed bar's spark reads the same with the timeless option on or off (owner report
+    2026-09-14, `SP-1`).** Put two live, timed auras of the same kind side by side on one bar
+    container — say, two casts of the same buff so their sparks share a color and position along the
+    bar. On **General** tick **Show the spark on auras without a duration**, screenshot or eyeball
+    one bar's spark, then untick it and compare the same bar's spark again → the spark should look
+    the same both times (same color, same brightness), not "a random yellow-golden spark" that
+    only appears with the option off. This is the half of the check that FAILS if the fix regresses:
+    if the two sparks still visibly differ, report it and cite this check. Repeat the on/off
+    comparison at a CUSTOM spark color, not the default gold: on Bars → General set **Spark color**
+    to something saturated (pure red or pure green) and, separately, something low-alpha (drop the
+    color's own alpha to roughly 25%) → the spark must still read the same with the option on and
+    off at BOTH custom colors. ADD and normal blending are genuinely different operations (ADD sums
+    channel values onto the backdrop, normal blending replaces them), so a saturated or low-alpha
+    custom color is the case most likely to still expose a leftover difference between the two modes
+    even if the default gold looks fixed; report it and cite this check if either custom color still
+    visibly differs between on and off. Then, without changing anything else, confirm the other half
+    still holds — a permanent (no-duration) aura's bar still
+    shows NO spark with the option off (check 26/63): if unticking the option makes every spark
+    uniform by also restoring the permanent aura's spark, that is a regression of B-3, not a fix of
+    this defect, and must also be reported.

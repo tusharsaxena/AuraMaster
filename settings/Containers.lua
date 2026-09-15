@@ -1,23 +1,26 @@
 local _, NS = ...
 
--- settings/GeneralContainers.lua — General → Containers: which containers exist, and what each is.
+-- settings/Containers.lua — the Containers page: which containers exist, and what each is.
 --
---     [ Master controls ][ Display ][ Containers ]
---     Containers  [Container ▾ picker ][ New container ]            <- the tab body's first line
+--     [ Containers ]
+--     Containers  [Container v picker ][ New container ]            <- the tab body's first line
 --                 [Name] [Enabled] / [Unit] [Aura type] / [Style]
 --                 [Duplicate] [Delete]                             <- acts on the selected container
---                 -- Copy settings from --  [Source ▾] [What ▾] [Copy]
+--                 -- Copy settings from --  [Source v] [What v] [Copy]
+--
+-- A TOP-LEVEL PAGE (N-1, batch 7) whose single tab is Containers. It used to be General's third
+-- tab (docs/superpowers/specs/2026-09-15-feedback-batch7-design.md, N-1); the owner moved it out to
+-- its own page, mirroring MultiMeters' Windows, and Filters, Layout, Bars and Icons became its
+-- sub-pages (N-2, marked by NS.SubPageLabel — settings/OptionsSetup.lua's D6 section).
 --
 -- THE PICKER AND NEW CONTAINER SIT IN THE TAB BODY, not in a band above the strip. That is this
--- addon's accepted deviation from options-ui-§14 (docs/ARCHITECTURE.md → Documented deviations): the
--- owner keeps a container's identity with the addon-wide settings on General, which draws no banner
--- and whose first tab stays Master controls (options-ui-§15). Filters, Layout, Bars and Icons keep
--- the banner picker. Drawn in the body, the picker and New are released and redrawn with the scroll
--- like every other widget, so a Delete's two refreshes cannot lose them.
+-- addon's accepted deviation from options-ui-§14 (docs/ARCHITECTURE.md -> Documented deviations),
+-- carried over unchanged by the move: the page draws no banner, and its one tab is Containers itself.
+-- Filters, Layout, Bars and Icons keep the banner picker. Drawn in the body, the picker and New are
+-- released and redrawn with the scroll like every other widget, so a Delete's two refreshes cannot
+-- lose them.
 --
--- This file registers nothing. settings/General.lua registers ROWS after its own rows, so the
--- Containers tab follows Master controls and Display in the strip (a tab's place is its group's
--- first-seen order), and draws the tab through RENDER. It loads before General.lua for that reason.
+-- This file registers its own rows and its own page, at the bottom, like every other page file.
 
 local L = NS.L
 local H = NS.Helpers
@@ -26,7 +29,7 @@ local CM = NS.ContainerManager
 local print = NS.Print
 local printf = NS.Printf
 
-local PAGE = "general"
+local PAGE = "containers"
 local GROUP = L["Containers"]
 
 -- Changing what a container IS changes which rows other pages offer (buff categories are not
@@ -45,7 +48,7 @@ local ROWS = {
         -- NotifyRenamed is the whole effect (handles and pickers); Container:Apply never reads the
         -- name, so a rename queues no apply and, in combat, announces no deferral.
         onChange = function() CM.NotifyRenamed() end, effect = "none",
-        -- A name has no meaningful default (owner, 2026-09-13): neither General's Defaults nor
+        -- A name has no meaningful default (owner, 2026-09-13): neither this page's Defaults nor
         -- `/am reset` restores it, and `/am reset` says why. The template's name still backfills.
         noReset = true, noResetReason = L["A container's name has no default."],
     },
@@ -72,6 +75,8 @@ local ROWS = {
         onChange = structural,
     },
 }
+
+NS.RegisterSchemaRows(ROWS)
 
 -- ---------------------------------------------------------------------------
 -- Acts on the selected container
@@ -213,4 +218,31 @@ local function render(ctx, cfg, rows)
     H.RenderRows(ctx, rows or {}, { [GROUP] = afterRows }, nil, { noHeadings = true })
 end
 
-NS.GeneralContainers = { GROUP = GROUP, rows = ROWS, render = render }
+NS.Containers = { GROUP = GROUP, rows = ROWS, render = render }
+
+-- ---------------------------------------------------------------------------
+-- The page
+-- ---------------------------------------------------------------------------
+
+local PAGE_SPEC = {
+    -- Every tab draws whether or not a container exists (the render above handles the empty case
+    -- itself, same as General).
+    addonWide = true,
+    tabs      = { { key = GROUP, label = GROUP, render = render } },
+}
+
+local function build(mainCategory)
+    if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
+    local ctx = H.CreatePanel("AuraMasterContainersPanel", L["Containers"], {
+        pageKey         = PAGE,
+        defaultsButton  = true,
+        defaultsTooltip = L["Restore the selected container's Enabled, Unit, Aura type and Style to its addon default. Its name is kept."],
+    })
+    ctx.panel.defaultsOnClick = function() H.RestoreDefaults(PAGE, ctx) end
+    H.__pageCtx[PAGE] = ctx
+    -- Through SetRenderer, which owns WHEN the page draws and refuses under combat (options-ui-§11).
+    H.SetRenderer(ctx, function(c) H.RenderTabbedPage(c, PAGE, PAGE_SPEC) end)
+    return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, L["Containers"])
+end
+
+NS.RegisterOptionsPage(PAGE, L["Containers"], build)

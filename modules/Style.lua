@@ -360,6 +360,19 @@ function Style.TakesHover(cfg)
     return not b.clickThrough and b.tooltips ~= false
 end
 
+--- The container-wide mouse blocker's behavior. A container's BUTTONS hold the hover
+--- (ApplyBehavior), but the gaps between them and the container's own padding hold nothing, so the
+--- world unit behind is moused over there and draws its GameTooltip beside the aura's separate
+--- AuraButtonTooltip (the owner's 2026-09-14 report). One frame under the buttons, covering the
+--- container, closes those gaps. Gated on the SAME rule the live buttons and the preview
+--- placeholders use (TakesHover), so a click-through or tooltips-off container is unaffected — and
+--- it never takes clicks itself: a click-through container's gaps must still pass a click through to
+--- whatever is behind it (modules/Container.lua's ApplyBlocker).
+function Style.ApplyBlockerBehavior(frame, cfg)
+    frame:SetMouseMotionEnabled(Style.TakesHover(cfg))
+    frame:SetMouseClickEnabled(false)
+end
+
 --- The mouse behavior shared by both styles: tooltips, click-through and right-click cancel.
 function Style.ApplyBehavior(frame, cfg)
     local b = cfg.behavior or {}

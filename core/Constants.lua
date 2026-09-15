@@ -53,9 +53,10 @@ C.DURATION_MODES = { "any", "timed", "timeless" }
 C.DURATION_MODE_LABELS = { any = "Any duration", timed = "Only auras with a duration",
     timeless = "Only auras without a duration" }
 
--- Tri-state category selection.
-C.CATEGORY_STATES = { "", "show", "hide" }
-C.CATEGORY_STATE_LABELS = { [""] = "Default", show = "Whitelist", hide = "Blacklist" }
+--- Category selection (schema v3): Show is the absence of a decision (it excludes nothing);
+--- Hide removes the category's auras from the container.
+C.CATEGORY_STATES = { "show", "hide" }
+C.CATEGORY_STATE_LABELS = { show = "Show", hide = "Hide" }
 
 -- Sort methods: our key → the engine's AuraContainerSortMethod member name.
 C.SORT_METHODS = { "default", "expiration", "expirationOnly", "name", "nameOnly",
@@ -135,7 +136,7 @@ C.TOOLTIP_ANCHOR_LABELS = {
 
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
-C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s → 1 m)", short = "Short (1 unit)",
+C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "Short (1 unit)",
     long = "Detailed (2 units, 1h 15m)" }
 -- The width a Bars time text is boxed to beside the name, in ems of its font size: the widest string
 -- each format writes ("59m" in one unit, "23h 59m" in two). The engine writes the text secret, so

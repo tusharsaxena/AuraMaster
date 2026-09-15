@@ -14,7 +14,7 @@ local function bars(opts)
     return NS, m, P, P.show("Bars")
 end
 
-local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (General → Containers)."
+local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (Containers)."
 
 test("bars: every tab of an icons container carries the orange notice; a bars container's carry none", function()
     local NS, _, P, ws = bars()
@@ -103,29 +103,48 @@ test("bars: the Icon tab holds the icon's four rows, then the composed icon-bord
     assertEqual(b.borderSize, NS.CONTAINER_TEMPLATE.bars.borderSize)
 end)
 
-test("bars: the Bar tab's Spark subsection turns the spark off on auras without a duration (B-3)", function()
-    local NS, _, P = bars()
+test("bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)", function()
+    local NS, _, P, ws = bars()
     local row = NS.FindSchemaRow("container.bars.sparkTimeless")
     -- red under: the row missing, or declared on another tab
     assertTrue(row ~= nil, "the row exists")
-    assertEqual(row.group, NS.L["Bar"])
+    assertEqual(row.group, NS.L["General"])
     assertEqual(row.subgroup, NS.L["Spark"])
     assertTrue(NS.CONTAINER_TEMPLATE.bars.sparkTimeless == true, "on by default: today's look")
-    P.row(P.tab("bars", NS.L["Bar"]), "container.bars.sparkTimeless"):__fire("OnValueChanged", false)
+    -- General is the first (and default-active) tab, so it is drawn by bars()'s own show.
+    P.row(ws, "container.bars.sparkTimeless"):__fire("OnValueChanged", false)
     assertFalse(NS.Database.FindContainer(1).bars.sparkTimeless)
 end)
 
-test("bars: the eight tabs are drawn in order, whatever the container shows", function()
+test("bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)", function()
     local NS, _, P = bars()
     local L = NS.L
-    -- red under: the icon rows left on Size, or registered after Background & border
-    local want = table.concat({ L["Size"], L["Bar"], L["Icon"], L["Background & border"], L["Name text"],
+    -- red under: Size still a tab of its own, or the icon rows registered after Background & border
+    local want = table.concat({ L["General"], L["Icon"], L["Background & border"], L["Name text"],
         L["Time text"], L["Stack text"], L["Highlights"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
     NS.SetByPath("container.auraType", "ENCHANT", 1)
     P.rerender("Bars")
     -- red under: a Bars row declaring `auraTypes` (an enchant container drawn as bars loses it)
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
+end)
+
+test("bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)", function()
+    local NS, _, P, ws = bars()
+    local L = NS.L
+    local pre = "container.bars."
+    -- General is the first (and default-active) tab, so it is drawn by bars()'s own show.
+    local rows = P.rowWidgets(ws, "bars", L["General"])
+    assertTrue(rows[1] ~= nil, "the General tab drew rows")
+    -- Width and Height render first, ahead of Fill's first control.
+    assertEqual(rows[1].labelText, NS.FindSchemaRow(pre .. "width").label)
+    assertEqual(rows[2].labelText, NS.FindSchemaRow(pre .. "height").label)
+    -- red under: the row moved and its stored path changed with it
+    assertEqual(NS.FindSchemaRow(pre .. "width").subgroup, L["Size"])
+    assertEqual(NS.FindSchemaRow(pre .. "height").subgroup, L["Size"])
+    local slider = P.row(ws, pre .. "width")
+    slider:__fire("OnMouseUp", 250)
+    assertEqual(NS.Database.FindContainer(1).bars.width, 250)
 end)
 
 test("bars: Width writes the selected container, and the page re-reads after the banner moves", function()
@@ -142,9 +161,8 @@ test("bars: Width writes the selected container, and the page re-reads after the
 end)
 
 test("bars: a confirmed fill color is stored on the selected container, as a table of its own", function()
-    local NS, _, P = bars()
-    P.show("Bars")
-    local ws = P.tab("bars", NS.L["Bar"])
+    -- General is the first (and default-active) tab, so it is drawn by bars()'s own show.
+    local NS, _, P, ws = bars()
     local cp = P.row(ws, "container.bars.barColor")
     assertEqual(cp.type, "ColorPicker")
     cp:__fire("OnValueConfirmed", 0.1, 0.2, 0.3, 0.4)
@@ -158,7 +176,7 @@ test("bars: a confirmed fill color is stored on the selected container, as a tab
     assertEqual(NS.Database.FindContainer(2).bars.barColor.r, NS.CONTAINER_TEMPLATE.bars.barColor.r)
 end)
 
-test("bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)", function()
+test("bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)", function()
     local NS, _, P = bars()
     P.show("Bars")
     local ws = P.tab("bars", NS.L["Highlights"])
@@ -169,15 +187,15 @@ test("bars: Highlights carries no dispel swatches, and Color by points at Genera
     assertEqual(#P.all(ws, "ColorPicker"), 2, "the running-out and refresh-window colors only")
     -- red under: the tooltip still sending the player to the Highlights tab
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
-    assertTrue(desc:find("General → Dispel Colors", 1, true) ~= nil, desc)
+    assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()
-    local NS, m = bars()
+    local NS, _ = bars()
     NS.SetByPath("container.bars.width", 300, 1)
     NS.SetByPath("container.bars.name.fontSize", 20, 1)
     NS.SetByPath("container.icons.width", 50, 1)
-    m.__subcategories.Bars.defaultsOnClick()
+    NS.Helpers.__pageCtx.bars.panel.defaultsOnClick()
     local c1 = NS.Database.FindContainer(1)
     -- red under: the Bars Defaults reaching the Icons page's rows (or missing its own nested ones)
     assertEqual(c1.bars.width, NS.CONTAINER_TEMPLATE.bars.width)

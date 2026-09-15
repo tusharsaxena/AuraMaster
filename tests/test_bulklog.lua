@@ -145,13 +145,13 @@ test("bulklog: a profile reset and a profile copy are one [Set] line each; a swi
     lines = capture(NS2)
     NS2.db:CopyProfile("Raid")
     assertEqual(#lines, 1, dump(lines))
-    assertTrue(lines[1]:find("^%[Set%] copied profile '.-' → 'Default'$") ~= nil, lines[1])
+    assertTrue(lines[1]:find("^%[Set%] copied profile '.-' %-> 'Default'$") ~= nil, lines[1])
     -- Since kit revision 18 the kit's AceDB passes OnProfileCopied the SOURCE, as AceDB proper
-    -- does, so the line above reads 'Raid' → 'Default'; the pattern above does not pin the source.
+    -- does, so the line above reads 'Raid' -> 'Default'; the pattern above does not pin the source.
     -- The handler's own contract, called directly with a source:
     lines = capture(NS2)
     NS2.OnProfileCopied("Raid")
-    assertEqual(lines[1], "[Set] copied profile 'Raid' → 'Default'")
+    assertEqual(lines[1], "[Set] copied profile 'Raid' -> 'Default'")
 end)
 
 -- ── the host's own bulk acts ───────────────────────────────────────────────────────────────────
@@ -166,13 +166,13 @@ test("bulklog: CopyFrom is one [Set] line counting the rows it changed, and no [
     assertTrue(CM.CopyFrom(2, 1, "bars"))
     -- red under: one [Set] per section write plus the [Containers] copied summary
     assertEqual(#lines, 1, dump(lines))
-    assertEqual(lines[1], "[Set] copy container 2→1 (bars): 2 rows")
+    assertEqual(lines[1], "[Set] copy container 2->1 (bars): 2 rows")
 
     src.bars.width, src.icons.width = 334, 55
     lines = capture(NS2)
     assertTrue(CM.CopyFrom(2, 1))
     assertEqual(#lines, 1, dump(lines))
-    assertEqual(lines[1], "[Set] copy container 2→1 (all): 2 rows")
+    assertEqual(lines[1], "[Set] copy container 2->1 (all): 2 rows")
     assertEqual(NS2.Database.FindContainer(1).icons.width, 55, "the rows are still written")
 end)
 

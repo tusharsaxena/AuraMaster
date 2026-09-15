@@ -33,13 +33,13 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (40)
+### test_database.lua (62)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
 - database: string ids, dangling order entries and orphans are repaired
 - database: the backfill fills a missing leaf and keeps a stored false
-- database: every category key is present on a stored container, neutral
+- database: every category key is present on a stored container, at Show (schema v3)
 - database: category keys are unique across the buff and debuff lists
 - database: a new container's data is a deep copy of the template with a fresh id
 - database: the migration runner stamps the schema and creates the timed-spell store
@@ -59,7 +59,6 @@ badge and any count quoted in the docs must agree with it.
 - database: NewContainerData takes an id from the counter without registering the container
 - database: seeded starters share no table with each other or with the template
 - database: a file from before the seeded flag, the id counter and the order keeps its containers
-- database v2: the schema is at version 2
 - database v2: spell additions from every container are united in the profile
 - database v2: a starter is removed profile-wide only when every container that edited it removed it
 - database v2: an addition beats another container's removal of the same spell
@@ -75,6 +74,29 @@ badge and any count quoted in the docs must agree with it.
 - database v2: RunMigrations logs one [Migrate] line per profile, and a second run is a no-op
 - database v2: without AceDB the step migrates the one profile there is
 - database v2: a fresh profile carries the profile-wide spell lists and dispel colors
+- v3: a container that whitelisted a category hides every other category of its type
+- v3: a container with no whitelisted category gets every row at show
+- v3: includeEnchants becomes the weaponEnchants row and the old key is cleared
+- v3: a HARMFUL container is never given a weaponEnchants row — that category does not exist for debuffs
+- v3: an ENCHANT container is left alone
+- v3: a container with a missing or unrecognized auraType is left completely untouched
+- v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided
+- v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind="enchant" category
+- v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now
+- v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself
+- v3: MigrateV3 returns the number of containers it walked
+- v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
+- v3: the whitelist lift never sweeps a category the aura type does not have
+- v4: the current schema version is 4
+- v3: RunMigrations migrates every stored profile, the inactive one included
+- v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
+- v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
+- v4: a container with the toggle off or absent is untouched
+- v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost
+- v4: an unrecognized auraType with the toggle on is genuinely lost, named in lostList, and its dead key still cleared
+- v4: MigrateV4 is idempotent
+- v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)
+- v4: no notice is printed when nothing was lost
 
 ### test_schema.lua (28)
 
@@ -146,7 +168,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (39)
+### test_filtercompiler.lua (74)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -155,25 +177,52 @@ badge and any count quoted in the docs must agree with it.
 - filter: 'only timed' is maxDuration = huge, which drops permanent auras
 - filter: 'only timeless' excludes every learned timed spell and ignores a max duration
 - filter: 'only timeless' on a debuff container is reported and treated as any duration
-- filter: showing a token category adds the token
-- filter: hiding a token category adds its negation to every group
+- filter: showing a token category adds nothing when nothing is hidden — there is always exactly one group (R-3)
+- filter: hiding a token category negates its token in the catch-all (R-5)
 - filter: hiding a flag category asks for the opposite value
-- filter: a dispel category shown includes, hidden excludes
-- filter: two shown categories are a union, and the second excludes the first
-- filter: a token shown after a token excludes it by negation
-- filter: a category's spell edits add and remove ids
+- filter: a dispel category shown includes nothing when nothing is hidden, hidden excludes
+- filter: two shown categories with nothing hidden still compile to the one, unfiltered group (R-3)
+- filter: two hidden token categories both negate, in the catch-all (R-5)
+- filter: a hidden category's spell edits add and remove ids from the catch-all's exclusion
 - filter: spell edits are the profile's, handed in ctx; a container's own old copy is ignored (schema v2)
 - filter: both compile sites hand the compiler the profile's spell lists
-- filter: a shown spell category with every id removed can never match, and says so
+- filter: showing a spell category with every id removed, and nothing hidden, still contributes nothing (R-3)
+- filter: a shown spell category with every id removed can never match, and is dropped as a conflict (R-6)
+- filter: categories set to show add no group when nothing is hidden — there is always exactly one
+- filter: a category set to hide excludes its spells from the catch-all
+- filter: a token category set to hide negates its token
+- filter: show and hide are not symmetric — show excludes nothing
+- filter: a hidden spell category with no ids left contributes no exclusion
 - filter: the whitelist is its own first group and every other group excludes it
-- filter: the blacklist is excluded everywhere and beats the whitelist
+- filter: the whitelist beats the blacklist — an id on both lists is shown (R-2)
+- filter: the blacklist still reaches the catch-all, but never the whitelist group (R-7)
+- filter: a stray filter.onlyShown key, however it got there, is inert — the compiler never reads it (D8 retired)
+- filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case
+- filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)
+- filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)
+- filter: a listed aura's own category group is unaffected by Uncategorized either way
+- filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide
+- filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
+- filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
+- explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
+- explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
+- explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
+- explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue
+- explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
 - filter: a weapon-enchant container has three slots and no aura groups
 - filter: an enchant container on another unit still shows the player's, and says so
-- filter: a player buff container may append weapon enchants; a target's may not
+- filter: the weaponEnchants row decides the enchant slots, and adds no group
+- filter: the enchant row does nothing on a debuff or a non-player container
+- filter: the enchant slots the container draws are exactly the profile's, in a fixed order
+- filter: an enchant container's slots also come from the profile, falling back to all three
 - filter: max auras caps each group; 0 means no cap
+- filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
+- filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
+- filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
+- filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 15 for HARMFUL today
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
@@ -186,9 +235,17 @@ badge and any count quoted in the docs must agree with it.
 - filter: the spell-list warning follows the unit and the aura type
 - filter: 'only timeless' with nothing learned yet filters no ids and warns about none
 - filter: a hidden spell category with every id removed excludes nothing
-- filter: group keys stay consecutive when a contradiction drops a group
+- filter: a contradiction drops the catch-all without disturbing the whitelist group's key
+- filter: hiding two categories that contradict on the same flag leaves nothing, and says so
+- explain: the whitelist beats the blacklist — rank 1, shown
+- explain: the blacklist alone hides — rank 2
+- explain: a Show category rescues an aura another category hides — rank 3, shown, both named
+- explain: an aura whose every category says Hide is hidden — rank 4
+- explain: an aura in no category is shown, with no categories named — rank 5
+- explain: a stray filter.onlyShown key does not affect rank 5 — the toggle is retired
+- explain: a token category is never named — only spells-kind categories are reasoned about
 
-### test_container.lua (35)
+### test_container.lua (41)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -224,6 +281,12 @@ badge and any count quoted in the docs must agree with it.
 - container: the class snapshot is the tracked unit's, and nothing for the player or for enchants
 - container: a class the client withholds resolves to no class instead of raising
 - container: a button the engine creates is dressed with the container's class snapshot
+- container: a live container has a mouse blocker covering its engine, below its buttons
+- container: a shape change re-anchors the blocker to the new engine
+- container: raising the anchor's level after the engine exists leaves the blocker strictly below it
+- container: the blocker follows TakesHover and never takes clicks, matching the live buttons
+- container: a live click-through flip re-gates the blocker without a rebuild
+- container: a hidden container hides its blocker along with its engine, and Park hides it too
 - container: on a client without the aura engine a container is deleted without error
 
 ### test_containermanager.lua (51)
@@ -468,7 +531,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (46)
+### test_style_bars.lua (50)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -481,6 +544,10 @@ badge and any count quoted in the docs must agree with it.
 - bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region
 - bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge
 - bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered
+- bars: with the timeless spark off, the live clipped spark blends normally, not additively
+- bars: with the timeless spark on, the live spark stays additive over the opaque fill
+- bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says
+- bars: the clip-mode blend switch leaves the player's own spark color alone
 - bars: a missing timeless-spark setting reads the template's
 - bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it
 - bars: the texts sit above the spark's clip frame, which sits above the bar
@@ -698,7 +765,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
-- options: General → Containers' New button creates and selects a container
+- options: the Containers page's New button creates and selects a container
 - options: a page's Defaults button restores only the selected container
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
 - options: opening a page in combat refuses with the canonical gray line
@@ -716,7 +783,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Reset all never writes a Profiles-page row, live or degraded
 - options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
 - options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
-- options descriptor: General → Containers' picker is a plain dropdown in the tab body that selects
+- options descriptor: Containers' picker is a plain dropdown in the tab body that selects
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
@@ -728,7 +795,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (51)
+### test_pages_general.lua (36)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -740,32 +807,12 @@ badge and any count quoted in the docs must agree with it.
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
 - general: Reset all settings asks first and resets nothing until the answer
-- general: the Reset-all tooltip names the equivalence with Profiles → Reset Profile
+- general: the Reset-all tooltip names the equivalence with Profiles -> Reset Profile
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
-- general: Defaults restores the General rows of the profile and no container setting outside the Containers tab
-- general: Defaults restores the selected container's Enabled, Unit, Aura type and Style, and never its name
-- general: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
-- general: /am reset container.name says a name has no default and changes nothing
-- general: the tab strip reads Master controls, Display, Containers, Spell Categories, Dispel Colors, and no page is keyed containers
-- general: NS.OpenOptionsPage('containers') opens no page, where 'layout' still opens its own
-- general → containers: the tab body opens with the Container picker and New container on one line
-- general → containers: the picker retargets the tab and every page
-- general → containers: New container creates a container and selects it
-- general → containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
-- general → containers: with no containers the tab draws the picker, New container and one line instead of the rows
-- general → containers: the Name box renames the selected container, trimmed, and no other
-- general → containers: a blank name is refused and the container keeps its name
-- general → containers: a rename re-lists every picker and re-applies no container
-- general → containers: the Unit dropdown offers the four units in order and writes the selected container
-- general → containers: changing the aura type redraws an open Filters page for the new type, on the next frame
-- general → containers: the Style dropdown offers bars and icons and writes the selected container
-- general → containers: New and Duplicate in combat refuse in gray and create nothing
-- general → containers: Duplicate copies the selected container and selects the copy
-- general → containers: Delete asks first, naming the container, and deletes it only on Yes
-- general → containers: the copy block offers every other container and copies only the chosen section
-- general → containers: copying Everything takes what the source is, never its name or position
-- general → containers: with one container the tab offers Duplicate and Delete but no copy block
-- general → spell categories: a dropdown of the nine spell categories, Healing among them, opening on the first
+- general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
+- general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
+- general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
+- general → spell categories: a dropdown of the nine spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet
 - general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
@@ -777,21 +824,64 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore this category's starter list clears that category's edits and no other's
+- general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
+- general → spell categories: the Weapon enchants entry explains the all-slots fallback
+- general → spell categories: unticking a weapon slot writes the profile, one row at a time
+- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
+- general: Select accepts the enchant key too, and lands the tab on it
 - general → spell categories: the tab and Dispel Colors are drawn with no container at all
 - general → dispel colors: six profile-wide swatches with no class-color companion, under a line saying they drive bars only
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (16)
+### test_pages_containers.lua (22)
+
+- containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
+- containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
+- containers: the tab body opens with the Container picker and New container on one line
+- containers: the picker retargets the tab and every page
+- containers: New container creates a container and selects it
+- containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
+- containers: with no containers the page draws the picker, New container and one line instead of the rows
+- containers: the Name box renames the selected container, trimmed, and no other
+- containers: /am reset container.name says a name has no default and changes nothing
+- containers: a blank name is refused and the container keeps its name
+- containers: a rename re-lists every picker and re-applies no container
+- containers: the Unit dropdown offers the four units in order and writes the selected container
+- containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+- containers: the Style dropdown offers bars and icons and writes the selected container
+- containers: New and Duplicate in combat refuse in gray and create nothing
+- containers: Duplicate copies the selected container and selects the copy
+- containers: Delete asks first, naming the container, and deletes it only on Yes
+- containers: the copy block offers every other container and copies only the chosen section
+- containers: copying Everything takes what the source is, never its name or position
+- containers: with one container the page offers Duplicate and Delete but no copy block
+- containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
+- containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
+
+### test_pages_filters.lua (37)
 
 - filters: Cast by writes the selected container's filter and no other
-- filters: a buff container is offered the weapon-enchant rows; a debuff container is not
+- filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
+- filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean
+- filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
 - filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
-- filters: a buff container's Categories tab is two grids, Blizzard Categories then Custom Categories, each once
-- filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once
-- filters: every grid's columns are Default, Whitelist and Blacklist, then the category
-- filters: a grid radio stores show, hide or "" for the selected container and re-syncs its line
-- filters: /am get and /am list print a category's state as Default, Whitelist or Blacklist
+- filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
+- filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
+- filters: a max-duration preset writes the same path as the slider
+- filters: a stored max-duration matching no preset leaves the preset dropdown blank
+- filters: the max-duration description says there is no minimum
+- filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
+- filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
+- filters: every grid's columns are Show and Hide, then the category (schema v3)
+- filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
+- filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)
+- filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
+- filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first
+- filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)
+- filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
+- filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
+- filters: /am get and /am list print a category's state as Show or Hide
 - filters: every category row is skipRender and names its grid
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
@@ -800,6 +890,14 @@ badge and any count quoted in the docs must agree with it.
 - filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once
 - filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from
 - filters: every tab opens with what the engine will not honor here, in orange
+- filters: a plain whitelist entry with nothing to disagree has no note
+- filters: a spell on both lists gets a note on its blacklist entry saying the whitelist wins
+- filters: a spell on both lists gets a note on its whitelist entry naming the blacklist too
+- filters: a blacklisted spell in a Show category names that category as overridden
+- filters: a whitelisted spell every one of its categories would hide names them as overridden
+- filters: a blacklisted spell a Hide category would also hide gets no note
+- filters: an uncategorized blacklisted spell warns that no category hides it
+- filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
 
 ### test_pages_layout.lua (22)
 
@@ -826,17 +924,18 @@ badge and any count quoted in the docs must agree with it.
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
 
-### test_pages_bars.lua (10)
+### test_pages_bars.lua (11)
 
 - bars: every tab of an icons container carries the orange notice; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
 - bars: the wrong-style notice is drawn large, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
-- bars: the Bar tab's Spark subsection turns the spark off on auras without a duration (B-3)
-- bars: the eight tabs are drawn in order, whatever the container shows
+- bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
+- bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)
+- bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
-- bars: Highlights carries no dispel swatches, and Color by points at General → Dispel Colors (B-6)
+- bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
 ### test_pages_icons.lua (7)
@@ -875,11 +974,12 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (12)
+### test_defaults.lua (13)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
 - defaults: spell categories are buff categories, and IsSpellCategory names exactly them
+- defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)
 - defaults: every leaf of the container template is edited by a settings row or is a spell set
 - defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
 - defaults: every dropdown's default is one of its choices
@@ -887,7 +987,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: the dispel palette covers every dispel type, and the profile holds its own copy
 - defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)
 - defaults: one Healing category holds both retired healing lists, where Core healing was
-- defaults: a container draws in the High strata, above the default UI's Medium layer (L-3)
+- defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
 - defaults: the global schema stamp defaults to 1, never the current version
 
 ### test_perf.lua (8)
@@ -912,13 +1012,14 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (5)
+### test_locale.lua (6)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
 - locale: no key is defined twice in enUS.lua
 - locale: every enUS value is its own key, so the English build shows the source string
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
+- locale: every value is ASCII, the em dash excepted (T-1)
 
 ### test_docs.lua (6)
 
@@ -960,11 +1061,11 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 40 |
+| test_database.lua | 62 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 39 |
-| test_container.lua | 35 |
+| test_filtercompiler.lua | 74 |
+| test_container.lua | 41 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 19 |
 | test_secrets.lua | 3 |
@@ -974,7 +1075,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 63 |
 | test_style.lua | 43 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 46 |
+| test_style_bars.lua | 50 |
 | test_style_icons.lua | 25 |
 | test_preview.lua | 19 |
 | test_render_coverage.lua | 2 |
@@ -985,22 +1086,23 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 51 |
-| test_pages_filters.lua | 16 |
+| test_pages_general.lua | 36 |
+| test_pages_containers.lua | 22 |
+| test_pages_filters.lua | 37 |
 | test_pages_layout.lua | 22 |
-| test_pages_bars.lua | 10 |
+| test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 7 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 12 |
+| test_defaults.lua | 13 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
-| test_locale.lua | 5 |
+| test_locale.lua | 6 |
 | test_docs.lua | 6 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **813** |
+| **Total** | **911** |

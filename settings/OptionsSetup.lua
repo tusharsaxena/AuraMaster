@@ -25,6 +25,51 @@ local function vetoedFromResetAll(row)
     return not row.sessionOnly
 end
 
+-- ---------------------------------------------------------------------
+-- The nesting mark
+-- ---------------------------------------------------------------------
+--
+-- Blizzard's Settings tree draws every canvas subcategory of one addon at the SAME depth, and this
+-- addon's pages are not one flat set: Filters, Layout, Bars and Icons all edit the container that
+-- Containers has selected, while General, Containers and Profiles edit the addon (or, for
+-- Containers, the registry of containers itself) and never retarget when the picker moves.
+-- Four pages presented as peers of the three that never retarget is the tree lying about what a
+-- click will change (N-2).
+--
+-- There is no API for a third level, so the mark is TYPOGRAPHY, copied from the established pattern
+-- in MultiMeters (D6, `MultiMeters/settings/OptionsSetup.lua:91`) rather than invented fresh here:
+-- two spaces, a hyphen and a space, prefixed to the tree label ONLY. It is deliberately not part of
+-- the page's own title -- the canvas heading and the breadcrumb keep the plain name, because a page
+-- heading that starts indented reads as a layout bug.
+--
+-- THE INDENT DOES THE NESTING; THE HYPHEN MARKS THE ITEM. MultiMeters recorded two earlier spellings
+-- that got one of those and not the other, and both failed in their own way (a hollow box where the
+-- font had no glyph for a rightward arrow, and a bare "|- " that read as a bulleted list rather than
+-- as nesting) -- reasons enough to keep copying the working spelling rather than choosing a new one.
+--
+-- Whitespace was confirmed in MultiMeters's own client to survive -- leading whitespace is the kind
+-- of thing a UI toolkit trims, and this one does not -- which is what makes the hyphen safe to add:
+-- it is decoration on an indent that is already doing the work, rather than the only thing standing
+-- in for it.
+--
+-- Not a locale string. It is furniture rather than text, and a translator handed two spaces and a
+-- hyphen has nothing to translate and one more chance to drop a space.
+local SUBPAGE_MARK = "  - "
+
+--- The tree label for a page nested under Containers.
+---
+--- Used by the four container pages (Filters, Layout, Bars, Icons) at the
+--- RegisterCanvasLayoutSubcategory call and nowhere else. General, Containers and Profiles do NOT
+--- call it: none of them is about one container, and marking them would make the mark mean nothing.
+--- A helper rather than the literal at each call site so every caller stays exactly one string away
+--- from the decision, and a future page that becomes (or stops being) a sub-page changes one call.
+---
+--- @param name string  the page's own display name
+--- @return string
+function NS.SubPageLabel(name)
+    return SUBPAGE_MARK .. tostring(name)
+end
+
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
 
 --- What the PANEL shows for `path`. A row may carry `panelGet()`, answering the value to show in
@@ -212,7 +257,7 @@ if not lib then
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
-        "IdList", "UnnamedCandidates",
+        "IdList", "UnnamedCandidates", "SelectTab",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderWarnings",
         "RenderTabbedPage", "RenderContainerPage",
@@ -247,14 +292,23 @@ lib.__PatchLSM30Border()
 NS.Helpers = lib:New(descriptor)
 local Helpers = NS.Helpers
 
-NS.RegisterOptionsPage = function(key, name, builder) Helpers.RegisterOptionsPage(key, name, builder) end
+-- Every Blizzard subcategory a page registered, by page key, so NS.OpenOptionsPage can jump there
+-- and the frame picker can bring the player back to the page it started from. Filled by EVERY
+-- registered page, not only container pages (N-3): a builder that returns nothing (the
+-- library-less stub path, or a build that bails before Settings.RegisterCanvasLayoutSubcategory
+-- exists) simply leaves that key unset, and NS.OpenOptionsPage falls back to the main panel.
+local categories = {}
+
+NS.RegisterOptionsPage = function(key, name, builder)
+    Helpers.RegisterOptionsPage(key, name, function(mainCategory)
+        local cat = builder(mainCategory)
+        if cat then categories[key] = cat end
+        return cat
+    end)
+end
 NS.CreateOptionsPanel  = function() Helpers.CreateOptionsPanel() end
 NS.OpenOptionsPanel    = function() Helpers.OpenOptionsPanel() end
 NS.RefreshOptionsPanel = function() Helpers.RefreshAllPanels() end
-
--- Every Blizzard subcategory a page registered, by page key, so the frame picker can bring the
--- player back to the Layout page it started from.
-local categories = {}
 
 --- Open the settings window at one page. Refuses under combat lockdown exactly as the library's
 --- own open does (options-ui-§2) — a category switch is protected, so it is refused, never deferred.
@@ -340,7 +394,7 @@ function Helpers.ContainerBanner(ctx)
 end
 
 --- The picker as a plain AceGUI Dropdown in a page's BODY: a `make` for Helpers.RenderGrid, so it
---- is released with the scroll like every other body widget. General → Containers draws it on the
+--- is released with the scroll like every other body widget. The Containers page draws it on the
 --- tab's first line beside New container (the options-ui-§14 deviation, docs/ARCHITECTURE.md).
 function Helpers.ContainerPickerCell(_, parent, rel)
     local list, order = containerList()
@@ -440,7 +494,7 @@ end
 --- every control disabled (B-2: the Bars page on an icons container, and the reverse).
 local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
     if not (cfg or spec.addonWide) then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on General → Containers, or type /am new."])
+        Helpers.TextRow(ctx, L["No containers yet. Create one on Containers, or type /am new."])
         return
     end
     local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false
@@ -510,6 +564,11 @@ Helpers.__pageCtx = {}
 
 --- Register a per-container settings page: the Blizzard subcategory, the lazily-drawn body, and a
 --- page-wide Defaults button that restores the SELECTED container's rows on this page.
+---
+--- Every caller of this helper (Filters, Layout, Bars, Icons) is a sub-page of Containers (N-2), so
+--- the tree label it registers under always carries NS.SubPageLabel's mark. `title` itself stays
+--- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
+--- tree entry only, never the page's own name.
 function NS.RegisterContainerPage(pageKey, title, frameName, spec)
     NS.RegisterOptionsPage(pageKey, title, function(mainCategory)
         if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
@@ -521,8 +580,11 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
         ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
         Helpers.SetRenderer(ctx, function(c) Helpers.RenderContainerPage(c, pageKey, spec) end)
         Helpers.__pageCtx[pageKey] = ctx
-        local cat = Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, title)
-        categories[pageKey] = cat
-        return cat
+        -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
+        -- whatever this builder returns (N-3) — no need to set it here too.
+        -- NS.SubPageLabel is applied unconditionally here, so EVERY container page nests under
+        -- Containers (true for all four callers today); a future container page that should NOT
+        -- nest would need its own registration path, not a call through this helper.
+        return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
     end)
 end
