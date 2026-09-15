@@ -26,9 +26,16 @@ return function(NS, m)
     end
 
     --- Fire a page's OnShow and answer the widgets that render drew.
+    ---
+    --- `page` is the page's plain display name. A sub-page of Containers (Filters, Layout, Bars,
+    --- Icons — N-2) registers its Blizzard subcategory under a MARKED tree label (D6,
+    --- NS.SubPageLabel), so the plain name is tried first and the marked one second: callers keep
+    --- writing `P.show("Filters")` whether or not the page they are showing happens to be nested.
     function P.show(page)
         local mark = #ace.__created
-        m.__subcategories[page]:__fire("OnShow")
+        local sub = m.__subcategories[page]
+        if not sub and NS.SubPageLabel then sub = m.__subcategories[NS.SubPageLabel(page)] end
+        sub:__fire("OnShow")
         return since(mark)
     end
 

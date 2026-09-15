@@ -14,7 +14,7 @@ local function bars(opts)
     return NS, m, P, P.show("Bars")
 end
 
-local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (General -> Containers)."
+local NOTICE = "This container is drawn as icons; these settings apply once its style is Bars (Containers)."
 
 test("bars: every tab of an icons container carries the orange notice; a bars container's carry none", function()
     local NS, _, P, ws = bars()
@@ -173,11 +173,11 @@ test("bars: Highlights carries no dispel swatches, and Color by points at Genera
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()
-    local NS, m = bars()
+    local NS, _ = bars()
     NS.SetByPath("container.bars.width", 300, 1)
     NS.SetByPath("container.bars.name.fontSize", 20, 1)
     NS.SetByPath("container.icons.width", 50, 1)
-    m.__subcategories.Bars.defaultsOnClick()
+    NS.Helpers.__pageCtx.bars.panel.defaultsOnClick()
     local c1 = NS.Database.FindContainer(1)
     -- red under: the Bars Defaults reaching the Icons page's rows (or missing its own nested ones)
     assertEqual(c1.bars.width, NS.CONTAINER_TEMPLATE.bars.width)

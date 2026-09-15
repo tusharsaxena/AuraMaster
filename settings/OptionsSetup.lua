@@ -25,6 +25,51 @@ local function vetoedFromResetAll(row)
     return not row.sessionOnly
 end
 
+-- ---------------------------------------------------------------------
+-- The nesting mark
+-- ---------------------------------------------------------------------
+--
+-- Blizzard's Settings tree draws every canvas subcategory of one addon at the SAME depth, and this
+-- addon's pages are not one flat set: Filters, Layout, Bars and Icons all edit the container that
+-- Containers has selected, while General, Containers and Profiles edit the addon (or, for
+-- Containers, the registry of containers itself) and never retarget when the picker moves.
+-- Four pages presented as peers of the three that never retarget is the tree lying about what a
+-- click will change (N-2).
+--
+-- There is no API for a third level, so the mark is TYPOGRAPHY, copied from the established pattern
+-- in MultiMeters (D6, `MultiMeters/settings/OptionsSetup.lua:91`) rather than invented fresh here:
+-- two spaces, a hyphen and a space, prefixed to the tree label ONLY. It is deliberately not part of
+-- the page's own title -- the canvas heading and the breadcrumb keep the plain name, because a page
+-- heading that starts indented reads as a layout bug.
+--
+-- THE INDENT DOES THE NESTING; THE HYPHEN MARKS THE ITEM. MultiMeters recorded two earlier spellings
+-- that got one of those and not the other, and both failed in their own way (a hollow box where the
+-- font had no glyph for a rightward arrow, and a bare "|- " that read as a bulleted list rather than
+-- as nesting) -- reasons enough to keep copying the working spelling rather than choosing a new one.
+--
+-- Whitespace was confirmed in MultiMeters's own client to survive -- leading whitespace is the kind
+-- of thing a UI toolkit trims, and this one does not -- which is what makes the hyphen safe to add:
+-- it is decoration on an indent that is already doing the work, rather than the only thing standing
+-- in for it.
+--
+-- Not a locale string. It is furniture rather than text, and a translator handed two spaces and a
+-- hyphen has nothing to translate and one more chance to drop a space.
+local SUBPAGE_MARK = "  - "
+
+--- The tree label for a page nested under Containers.
+---
+--- Used by the four container pages (Filters, Layout, Bars, Icons) at the
+--- RegisterCanvasLayoutSubcategory call and nowhere else. General, Containers and Profiles do NOT
+--- call it: none of them is about one container, and marking them would make the mark mean nothing.
+--- A helper rather than the literal at each call site so every caller stays exactly one string away
+--- from the decision, and a future page that becomes (or stops being) a sub-page changes one call.
+---
+--- @param name string  the page's own display name
+--- @return string
+function NS.SubPageLabel(name)
+    return SUBPAGE_MARK .. tostring(name)
+end
+
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
 
 --- What the PANEL shows for `path`. A row may carry `panelGet()`, answering the value to show in
@@ -340,7 +385,7 @@ function Helpers.ContainerBanner(ctx)
 end
 
 --- The picker as a plain AceGUI Dropdown in a page's BODY: a `make` for Helpers.RenderGrid, so it
---- is released with the scroll like every other body widget. General → Containers draws it on the
+--- is released with the scroll like every other body widget. The Containers page draws it on the
 --- tab's first line beside New container (the options-ui-§14 deviation, docs/ARCHITECTURE.md).
 function Helpers.ContainerPickerCell(_, parent, rel)
     local list, order = containerList()
@@ -440,7 +485,7 @@ end
 --- every control disabled (B-2: the Bars page on an icons container, and the reverse).
 local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
     if not (cfg or spec.addonWide) then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on General -> Containers, or type /am new."])
+        Helpers.TextRow(ctx, L["No containers yet. Create one on Containers, or type /am new."])
         return
     end
     local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false
@@ -510,6 +555,11 @@ Helpers.__pageCtx = {}
 
 --- Register a per-container settings page: the Blizzard subcategory, the lazily-drawn body, and a
 --- page-wide Defaults button that restores the SELECTED container's rows on this page.
+---
+--- Every caller of this helper (Filters, Layout, Bars, Icons) is a sub-page of Containers (N-2), so
+--- the tree label it registers under always carries NS.SubPageLabel's mark. `title` itself stays
+--- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
+--- tree entry only, never the page's own name.
 function NS.RegisterContainerPage(pageKey, title, frameName, spec)
     NS.RegisterOptionsPage(pageKey, title, function(mainCategory)
         if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
@@ -521,7 +571,7 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
         ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
         Helpers.SetRenderer(ctx, function(c) Helpers.RenderContainerPage(c, pageKey, spec) end)
         Helpers.__pageCtx[pageKey] = ctx
-        local cat = Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, title)
+        local cat = Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
         categories[pageKey] = cat
         return cat
     end)

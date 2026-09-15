@@ -178,5 +178,5 @@ NS.RegisterSchemaRows(HI)
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "bars" end,
-    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (General -> Containers)."],
+    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (Containers)."],
 })

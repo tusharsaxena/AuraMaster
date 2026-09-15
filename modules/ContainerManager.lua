@@ -358,7 +358,7 @@ end
 --- Create a container from the template plus `overrides`. Returns its id, or nil, a message and — for
 --- a refusal the caller should print gray — true. Refused under combat lockdown (options-ui-§2): its
 --- apply, which places the anchor and builds the engine, waits for combat to end (CM.MustDefer), so
---- it would not draw until then. That covers `/am new`, General → Containers' New and Duplicate, and
+--- it would not draw until then. That covers `/am new`, Containers' New and Duplicate, and
 --- any later caller.
 function CM.Create(overrides)
     if InCombatLockdown() then
@@ -395,7 +395,7 @@ function CM.Delete(id)
 end
 
 --- Rename container `id`, through the write seam so the change is logged and announced like any
---- other setting. The name row (settings/GeneralContainers.lua) makes the name unique in its normalize and
+--- other setting. The name row (settings/Containers.lua) makes the name unique in its normalize and
 --- calls CM.NotifyRenamed in its onChange, so a rename typed into the panel or `/am set
 --- container.name` lands the same way. The two checks here only give a caller a specific refusal.
 --- A test seam: tests/test_containermanager.lua calls it; no production path does.

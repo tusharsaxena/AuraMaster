@@ -15,7 +15,7 @@ local function icons(opts)
     return NS, m, P, P.show("Icons")
 end
 
-local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (General -> Containers)."
+local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (Containers)."
 
 test("icons: a bars container's tabs carry the orange notice; an icons container's carry none", function()
     local NS, _, P, ws = icons()
@@ -106,11 +106,11 @@ test("icons: the Cooldown rows write the selected container's swipe", function()
 end)
 
 test("icons: Defaults restores the selected container's icon look and leaves its bar look alone", function()
-    local NS, m = icons()
+    local NS, _ = icons()
     NS.SetByPath("container.icons.width", 50, 2)
     NS.SetByPath("container.icons.time.fontSize", 20, 2)
     NS.SetByPath("container.bars.width", 300, 2)
-    m.__subcategories.Icons.defaultsOnClick()
+    NS.Helpers.__pageCtx.icons.panel.defaultsOnClick()
     local c2 = NS.Database.FindContainer(2)
     -- red under: the Icons Defaults reaching the Bars page's rows
     assertEqual(c2.icons.width, NS.CONTAINER_TEMPLATE.icons.width)

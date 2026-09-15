@@ -145,7 +145,7 @@ test("schema paths: an explicit container id that does not exist is refused, nev
     NS2.State.SetActiveContainer(1)
     local ok, err = NS2.SetByPath("container.bars.width", 300, 42)
     assertFalse(ok)
-    assertEqual(err, "No container exists yet — create one on General -> Containers.")
+    assertEqual(err, "No container exists yet — create one on Containers.")
     -- red under: resolveRoot falling back to NS.ActiveContainer when FindContainer(id) misses
     assertEqual(NS2.Database.FindContainer(1).bars.width, NS2.CONTAINER_TEMPLATE.bars.width)
     assertNil(NS2.GetSetting("container.bars.width", 42))
@@ -371,7 +371,7 @@ test("schema paths: a spell set or a section with no container to land in is ref
     local function refused(path, value, id)
         local ok, err = NS2.SetByPath(path, value, id)
         assertFalse(ok, path)
-        assertEqual(err, "No container exists yet — create one on General -> Containers.", path)
+        assertEqual(err, "No container exists yet — create one on Containers.", path)
     end
     refused("container.filter.blacklist", { [1] = true }, 42)
     refused("container.position", { x = 1 }, 42)
@@ -503,7 +503,7 @@ test("schema paths: with no containers CheckWrite refuses a container row and pa
     -- red under: checkRow skipping its resolveRoot check
     local ok, err = NS2.CheckWrite("container.bars.width", 300)
     assertFalse(ok)
-    assertEqual(err, "No container exists yet — create one on General -> Containers.")
+    assertEqual(err, "No container exists yet — create one on Containers.")
     assertTrue(NS2.CheckWrite("alpha", 0.5), "a global row needs none")
 end)
 

@@ -49,8 +49,15 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
-        { "settings/GeneralContainers.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },
+        -- The Settings tree order is the TOC's own order (N-2): General, then Containers, then its
+        -- four sub-pages (D6), then Profiles.
+        { "settings/General.lua", "settings/Containers.lua" },
+        { "settings/Containers.lua", "settings/Filters.lua" },
+        { "settings/Filters.lua", "settings/Layout.lua" },
+        { "settings/Layout.lua", "settings/Bars.lua" },
+        { "settings/Bars.lua", "settings/Icons.lua" },
+        { "settings/Icons.lua", "settings/Profiles.lua" },
     }
     for _, pr in ipairs(pairs_) do
         assertTrue(index[pr[1]] and index[pr[2]] and index[pr[1]] < index[pr[2]],

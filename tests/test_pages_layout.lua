@@ -131,8 +131,8 @@ for _, mode in ipairs({ "screen", "container", "frame" }) do
 end
 
 test("layout: changing Attach to re-dims the same widgets before any redraw", function()
-    local NS, m, _, ws = layout()
-    m.__subcategories.Layout:Show()
+    local NS, _, _, ws = layout()
+    NS.Helpers.__pageCtx.layout.panel:Show()
     local widgets = anchorWidgets(NS, ws)
     assertDimming(widgets, "screen", ON.screen)
     widgets["container.attach.mode"]:__fire("OnValueChanged", "frame")
@@ -144,7 +144,7 @@ end)
 
 test("layout: Attach to writes the mode and redraws an open page on the next frame", function()
     local NS, m, P, ws = layout()
-    m.__subcategories.Layout:Show()
+    NS.Helpers.__pageCtx.layout.panel:Show()
     local dd = P.row(ws, "container.attach.mode")
     assertEqual(table.concat(dd.order, ","), "screen,container,frame")
     dd:__fire("OnValueChanged", "container")
@@ -276,13 +276,13 @@ test("layout: the Mouse tab's rows write the selected container's behavior", fun
 end)
 
 test("layout: Defaults restores the selected container's placement and arrangement, and not its look", function()
-    local NS, m = layout()
+    local NS, _ = layout()
     NS.SetByPath("container.layout.spacing", 9, 1)
     NS.SetByPath("container.attach.mode", "frame", 1)
     NS.SetByPath("container.bars.width", 300, 1)
     NS.SetByPath("container.layout.spacing", 9, 2)
     NS.State.SetActiveContainer(1)
-    m.__subcategories.Layout.defaultsOnClick()
+    NS.Helpers.__pageCtx.layout.panel.defaultsOnClick()
     local c1 = NS.Database.FindContainer(1)
     -- red under: the Defaults button resetting another page's rows, or another container
     assertEqual(c1.layout.spacing, NS.CONTAINER_TEMPLATE.layout.spacing)
@@ -379,7 +379,7 @@ test("layout: Another container names the derived points and the container it is
     -- 1 fills columns growing right and up: 2 sits on top of it.
     -- red under: the Container dropdown without its pairWith line
     assertTrue(P.hasText(ws, want:format(PL.BOTTOMLEFT, PL.TOPLEFT, "Player buffs")), "the derived line")
-    m.__subcategories.Layout:Show()   -- a hidden kit panel only marks itself dirty
+    NS.Helpers.__pageCtx.layout.panel:Show()   -- a hidden kit panel only marks itself dirty
     -- Run any refresh the setup queued now, so the only one left to run is the target row's own.
     local settled = P.during(function() m.__fireTimers() end)
     local settledCount = #settled

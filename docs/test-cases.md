@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (53)
+### test_database.lua (54)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -83,6 +83,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided
 - v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind="enchant" category
 - v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now
+- v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
@@ -159,7 +160,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (66)
+### test_filtercompiler.lua (74)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -192,6 +193,14 @@ badge and any count quoted in the docs must agree with it.
 - filter: on, the catch-all is gone — the group carries a positive constraint instead of none (R-9)
 - filter: on, nothing shown and nothing whitelisted draws nothing, with its own warning (R-11)
 - filter: on, nothing shown but the whitelist still draws — no ONLY_SHOWN_NONE warning
+- filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case
+- filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)
+- filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)
+- filter: a listed aura's own category group is unaffected by Uncategorized either way
+- filter: 'only these categories' changes nothing once Uncategorized exists — there was never a catch-all to drop (coordinator ruling, left as-is this round)
+- explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
+- explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
+- explain: with no Uncategorized category for the aura type (HARMFUL), an unclaimed id is still rank 5
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
@@ -744,7 +753,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
-- options: General → Containers' New button creates and selects a container
+- options: the Containers page's New button creates and selects a container
 - options: a page's Defaults button restores only the selected container
 - options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
 - options: opening a page in combat refuses with the canonical gray line
@@ -762,7 +771,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Reset all never writes a Profiles-page row, live or degraded
 - options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
 - options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
-- options descriptor: General → Containers' picker is a plain dropdown in the tab body that selects
+- options descriptor: Containers' picker is a plain dropdown in the tab body that selects
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
@@ -774,7 +783,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (56)
+### test_pages_general.lua (36)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -788,29 +797,9 @@ badge and any count quoted in the docs must agree with it.
 - general: Reset all settings asks first and resets nothing until the answer
 - general: the Reset-all tooltip names the equivalence with Profiles → Reset Profile
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
-- general: Defaults restores the General rows of the profile and no container setting outside the Containers tab
-- general: Defaults restores the selected container's Enabled, Unit, Aura type and Style, and never its name
-- general: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
-- general: /am reset container.name says a name has no default and changes nothing
-- general: the tab strip reads Master controls, Display, Containers, Spell Categories, Dispel Colors, and no page is keyed containers
-- general: NS.OpenOptionsPage('containers') opens no page, where 'layout' still opens its own
-- general → containers: the tab body opens with the Container picker and New container on one line
-- general → containers: the picker retargets the tab and every page
-- general → containers: New container creates a container and selects it
-- general → containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
-- general → containers: with no containers the tab draws the picker, New container and one line instead of the rows
-- general → containers: the Name box renames the selected container, trimmed, and no other
-- general → containers: a blank name is refused and the container keeps its name
-- general → containers: a rename re-lists every picker and re-applies no container
-- general → containers: the Unit dropdown offers the four units in order and writes the selected container
-- general → containers: changing the aura type redraws an open Filters page for the new type, on the next frame
-- general → containers: the Style dropdown offers bars and icons and writes the selected container
-- general → containers: New and Duplicate in combat refuse in gray and create nothing
-- general → containers: Duplicate copies the selected container and selects the copy
-- general → containers: Delete asks first, naming the container, and deletes it only on Yes
-- general → containers: the copy block offers every other container and copies only the chosen section
-- general → containers: copying Everything takes what the source is, never its name or position
-- general → containers: with one container the tab offers Duplicate and Delete but no copy block
+- general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
+- general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
+- general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
 - general → spell categories: a dropdown of the nine spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet
 - general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off
@@ -833,7 +822,32 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (34)
+### test_pages_containers.lua (22)
+
+- containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
+- containers: NS.OpenOptionsPage('containers') falls back to the main category, like 'general' would (N-3 pending)
+- containers: the tab body opens with the Container picker and New container on one line
+- containers: the picker retargets the tab and every page
+- containers: New container creates a container and selects it
+- containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
+- containers: with no containers the page draws the picker, New container and one line instead of the rows
+- containers: the Name box renames the selected container, trimmed, and no other
+- containers: /am reset container.name says a name has no default and changes nothing
+- containers: a blank name is refused and the container keeps its name
+- containers: a rename re-lists every picker and re-applies no container
+- containers: the Unit dropdown offers the four units in order and writes the selected container
+- containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+- containers: the Style dropdown offers bars and icons and writes the selected container
+- containers: New and Duplicate in combat refuse in gray and create nothing
+- containers: Duplicate copies the selected container and selects the copy
+- containers: Delete asks first, naming the container, and deletes it only on Yes
+- containers: the copy block offers every other container and copies only the chosen section
+- containers: copying Everything takes what the source is, never its name or position
+- containers: with one container the page offers Duplicate and Delete but no copy block
+- containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
+- containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
+
+### test_pages_filters.lua (35)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -869,6 +883,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: a blacklisted spell a Hide category would also hide gets no note
 - filters: a whitelisted spell no category claims, under 'only these categories', warns it would vanish
 - filters: an uncategorized blacklisted spell warns that no category hides it
+- filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
 
 ### test_pages_layout.lua (22)
 
@@ -944,11 +959,12 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (12)
+### test_defaults.lua (13)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
 - defaults: spell categories are buff categories, and IsSpellCategory names exactly them
+- defaults: uncategorized is declared LAST in Cat.HELPFUL, and does not exist for HARMFUL (U-1, fix round 1)
 - defaults: every leaf of the container template is edited by a settings row or is a spell set
 - defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
 - defaults: every dropdown's default is one of its choices
@@ -1030,10 +1046,10 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 53 |
+| test_database.lua | 54 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 66 |
+| test_filtercompiler.lua | 74 |
 | test_container.lua | 41 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 19 |
@@ -1055,8 +1071,9 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 56 |
-| test_pages_filters.lua | 34 |
+| test_pages_general.lua | 36 |
+| test_pages_containers.lua | 22 |
+| test_pages_filters.lua | 35 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 10 |
 | test_pages_icons.lua | 7 |
@@ -1064,7 +1081,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 12 |
+| test_defaults.lua | 13 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
@@ -1073,4 +1090,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **883** |
+| **Total** | **896** |

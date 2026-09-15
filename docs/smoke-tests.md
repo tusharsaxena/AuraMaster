@@ -60,8 +60,10 @@ suite covers what only the client can show.
 ## D. Settings panel — every page and tab
 
 19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
-    Slash Commands list matching `/am help`, and no tab strip.
-20. **General** → the strip **[ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
+    Slash Commands list matching `/am help`, and no tab strip. The tree reads **General ·
+    Containers · - Filters · - Layout · - Bars · - Icons · Profiles** — the four container pages
+    indented under Containers with a `-` mark, General, Containers and Profiles flush with it (N-2).
+20. **General** → the strip **[ Master controls ][ Display ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
     above it. Master controls reads, two per line:
     Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
     then **Reset position** and **Reset all settings**.
@@ -71,7 +73,7 @@ suite covers what only the client can show.
     they take effect immediately (visibility is legal in combat).
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
-23. **General → Containers** → the tab body's first line holds the Container picker and **New
+23. **Containers** (its own top-level page, one tab) → the tab body's first line holds the Container picker and **New
     container**, side by side and aligned. Below: Name, Enabled, Unit, Aura type, Style, then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
     **Delete** it → the picker and New container are still there, and the picker lists what is left.
@@ -101,7 +103,7 @@ suite covers what only the client can show.
     the same frame; → *Another container* → Another container and Offset are live.
 26. **Bars** → **[ Size ][ Bar ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
     Highlights ]**. On an icon container every tab carries the large orange "drawn as icons" notice
-    naming General → Containers, a gap below it, and every control dimmed and unclickable; the tabs
+    naming Containers, a gap below it, and every control dimmed and unclickable; the tabs
     and the Container dropdown still work. On **Icon** tick **Show border**, set the thickness to 3 →
     a border frames each bar's icon and the art shrinks inside it rather than under it. On **Bar**
     untick **Show the spark on auras without a duration** → a permanent buff's full bar shows no
@@ -121,7 +123,7 @@ suite covers what only the client can show.
 
 ## E. Create, duplicate, delete
 
-30. General → Containers → **New container** → a player-buff bar container named *Container N* appears, offset
+30. Containers → **New container** → a player-buff bar container named *Container N* appears, offset
     from the last new one, and is selected.
 31. **Duplicate** → a *… (copy)* container with every setting, nudged 20 px; **Delete** → a confirmation
     popup; **Yes** removes it and any container attached to it falls back to the screen. In combat,
@@ -131,7 +133,7 @@ suite covers what only the client can show.
     cannot be torn down until combat ends" line; nothing is created or removed.
 32. **Copy settings from** → pick a source and *Bar style* → the selected container takes only the
     source's bar look; its name and position are unchanged.
-33. Rename one on General → Containers (Enter to apply) → the handle label, every picker and `/am containers`
+33. Rename one on Containers (Enter to apply) → the handle label, every picker and `/am containers`
     show the new name; a blank name is refused.
 
 ## F. Filters

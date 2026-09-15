@@ -47,7 +47,7 @@ NS.Schema = NS.Schema or {}
 
 local CONTAINER = "container"
 local L = NS.L
-local NO_CONTAINER = L["No container exists yet — create one on General -> Containers."]
+local NO_CONTAINER = L["No container exists yet — create one on Containers."]
 
 -- ---------------------------------------------------------------------------
 -- Path plumbing
@@ -636,7 +636,7 @@ end
 -- ---------------------------------------------------------------------------
 
 local VALID_PAGES = {
-    general = true, filters = true, layout = true, bars = true, icons = true,
+    general = true, containers = true, filters = true, layout = true, bars = true, icons = true,
     profiles = true,
 }
 local VALID_TYPES = { bool = true, number = true, string = true, color = true }

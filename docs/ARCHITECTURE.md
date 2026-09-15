@@ -74,8 +74,10 @@ modules and 12 settings. The load-bearing positions are annotated at their TOC l
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
-`settings/GeneralContainers.lua` and `settings/GeneralSpells.lua` before `settings/General.lua`, which
-registers their rows after its own.
+`settings/GeneralSpells.lua` before `settings/General.lua`, which registers its rows after its own.
+The Settings tree's order is the TOC's own registration order (`N-2`): General, then Containers,
+then its four sub-pages — Filters, Layout, Bars, Icons, each marked with `NS.SubPageLabel`'s indent
+(`D6`, `settings/OptionsSetup.lua`) — then Profiles.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
 profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one
@@ -91,9 +93,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **202** rows across five pages: General 23 (its Containers tab's five, its
-Dispel Colors tab's six, and its Spell Categories tab's three `enchantSlots` rows among them),
-Filters 40, Layout 26, Bars 71 and Icons 42. The
+`NS.Schema` holds **202** rows across six pages: General 18 (its Dispel Colors tab's six and its
+Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
+out of General's own tab), Filters 40, Layout 26, Bars 71 and Icons 42. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:552`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
@@ -212,7 +214,7 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:288` — a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:332` — a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:345` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:520` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:153` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:530` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
@@ -301,7 +303,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:261`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:306`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **Teardown under lockdown is parked, never hidden.** A container that leaves the registry while
   `MustDefer` is true is parked (`Container:Park`): its engine is disabled through `SetEnabled`, its
@@ -316,7 +318,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   profile change parks because the new profile lacks its id is marked `staleData`, so a later Create
   or Duplicate that reuses the id (a reset rewinds the counter) revives it still parked too.
 - **Registry verbs that create or destroy frames are refused in combat** with a gray line
-  (options-ui-§2): `/am new`, `/am delete`, and General → Containers' New container, Duplicate and
+  (options-ui-§2): `/am new`, `/am delete`, and Containers' New container, Duplicate and
   Delete popup. `ContainerManager.Create` refuses itself, so every creating caller is covered.
 - **Reset all is Profiles → Reset Profile, in combat as well (options-ui-§12).** `/am resetall` and
   the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
@@ -340,7 +342,7 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   issue; so is a text-only container style.
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
-  (`modules/FilterCompiler.lua:154`), rendered in orange on the Filters page.
+  (`modules/FilterCompiler.lua:243`), rendered in orange on the Filters page.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;
@@ -470,4 +472,4 @@ None.
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
 | `documentation-§1` | README's `## Screenshots` section (item 5) is a placeholder with no captioned images | Screenshots can only be captured in a live client and none exist yet, so the section says so in one line and shows nothing; the addon is unpublished (no CurseForge id, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20; the capture is tracked as issue tusharsaxena/AuraMaster#3. Ratified by the owner 2026-09-12. | 2026-09-12 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when captioned images land in the section |
-| `options-ui-§14` | The General page's `Containers` tab edits one selected container, but carries its Container picker and New container inside the tab body rather than in a band above the strip. The General page draws no banner, and its first tab stays `Master controls` (options-ui-§15). Filters, Layout, Bars and Icons keep the banner picker | The owner keeps a container's identity (create, name, enable, unit, aura type, style, duplicate, delete, copy) with the addon-wide settings on General instead of on a page of its own. Ratified by the owner 2026-09-13 | 2026-09-13 | The standard gains a registry-tab form for a General page, or a Containers page returns; the row is retired then |
+| `options-ui-§14` | The `Containers` page's one tab edits one selected container, but carries its Container picker and New container inside the tab body rather than in a band above the strip. Filters, Layout, Bars and Icons keep the banner picker | The owner keeps a container's identity (create, name, enable, unit, aura type, style, duplicate, delete, copy) in the tab body rather than switching to the banner-picker pattern the other four pages use. Ratified by the owner 2026-09-13, on General's own `Containers` tab; carried unchanged onto the Containers page's own home when the owner moved it out of General to a top-level page (`N-1`, batch 7, 2026-09-15) | 2026-09-13 | The standard gains a registry-tab form the Containers page could adopt in place of the tab-body picker; the row is retired then |

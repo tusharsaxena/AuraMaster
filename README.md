@@ -37,7 +37,7 @@ Those sample auras are the preview, and `/am test` shows them without unlocking 
 quickest way to try textures, fonts and sizes before a real buff turns up. Real auras stay hidden
 while the preview is on, and locking or a `/reload` turns it off.
 
-General → Containers is where you create, rename, duplicate and delete containers, change a
+Containers is where you create, rename, duplicate and delete containers, change a
 container's unit, aura type or style, or copy another container's settings onto it. Its own Container
 dropdown picks which one you're editing. The Filters, Layout, Bars and Icons pages also edit one
 container at a time, each with a Container dropdown at the top, and the choice follows you from page
@@ -106,7 +106,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 | Symptom | Fix |
 |---------|-----|
-| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on General → Containers. |
+| Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on Containers. |
 | I only see the sample auras | You're unlocked or in preview. Type `/am lock`, or `/am test off`. |
 | A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |

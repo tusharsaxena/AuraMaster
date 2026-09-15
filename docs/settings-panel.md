@@ -10,12 +10,18 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
-| General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
-| Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
-| Layout | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
-| Bars | Size · Bar · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
-| Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
+| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
+| - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
+| - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
+| - Bars (sub-page of Containers, `N-2`) | Size · Bar · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
+| - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
+
+The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
+registered under the Containers picker and their tree label carries `NS.SubPageLabel`'s two-space,
+hyphen indent (`settings/OptionsSetup.lua`); their page KEY and their own page heading stay plain —
+only the tree entry is marked.
 
 ## How the panel is built
 
@@ -31,9 +37,11 @@ is a defect in this doc (documentation-§3).
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`, which is the container
   banner plus `Helpers.RenderTabbedPage` (`settings/OptionsSetup.lua`): the page's schema groups
   become tabs, the page's bespoke tabs follow (one may name the tab it is drawn ahead of, as
-  General's Spell Categories does), and every row resolves against the selected container.
-  General is addon-wide and renders through `Helpers.RenderTabbedPage` with no banner; its
-  Containers tab edits the selected container.
+  General's Spell Categories does), and every row resolves against the selected container. These
+  four are also sub-pages of Containers in the tree (`N-2`, `D6`) — their Blizzard subcategory
+  registers under a marked label, but their page key, heading and everything above is unaffected.
+  General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
+  banner; Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
   weapon-enchant container sees only the rows that mean something for it.
@@ -51,21 +59,20 @@ band holds **the picker itself** (options-ui-§14):
 - **Filters, Layout, Bars, Icons** draw `Helpers.ContainerBanner` — a Container dropdown built through
   the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
   page's only picker.
-- **General → Containers** is the one exception, an accepted deviation from options-ui-§14
-  (`docs/ARCHITECTURE.md` → Documented deviations). The tab edits the selected container, but its
+- **Containers** is the one exception, an accepted deviation from options-ui-§14
+  (`docs/ARCHITECTURE.md` → Documented deviations). Its one tab edits the selected container, but its
   Container picker and **New container** sit on the first line of the tab body
-  (`settings/GeneralContainers.lua`), and every act on the selected container (Duplicate, Delete,
-  Copy settings from) follows its rows. The General page draws no banner, and its first tab stays
-  Master controls (options-ui-§15). Drawn in the body, the picker and New are redrawn with the scroll,
-  so a Delete's two refreshes cannot lose them.
+  (`settings/Containers.lua`), and every act on the selected container (Duplicate, Delete,
+  Copy settings from) follows its rows. The Containers page draws no banner. Drawn in the body, the
+  picker and New are redrawn with the scroll, so a Delete's two refreshes cannot lose them.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
 - **The Defaults button stays page-wide**: on a container page it restores every row of that page, for
-  the selected container. On General it restores the General rows of the profile, and the selected
-  container's Enabled, Unit, Aura type and Style; a container's name is never reset (its row carries
-  `noReset`), and `/am reset container.name` says so and changes nothing. Either press logs
-  one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
+  the selected container. On General it restores the General rows of the profile only. On Containers
+  it restores the selected container's Enabled, Unit, Aura type and Style; a container's name is
+  never reset (its row carries `noReset`), and `/am reset container.name` says so and changes nothing.
+  Either press logs one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
 - **`noReset` does not reach Reset all settings, on purpose.** Reset all is a whole-profile reset
   (options-ui-§12, `db:ResetProfile`), not a row walk: it removes your own containers rather than
   renaming them, and brings the starter containers back under their shipped names. No name is
@@ -81,7 +88,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (23 rows, `settings/General.lua`, `settings/GeneralContainers.lua`, `settings/GeneralSpells.lua`)
+### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -108,22 +115,6 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 | Preview | Show placeholder auras | `state.preview` | bool, session | `ContainerManager.SetPreview`; off at `/reload` |
 | Blizzard frames | Hide Blizzard buffs | `hideBlizzardBuffs` | bool | Reparents `BuffFrame` (and the weapon enchants in it); out of combat |
 | Blizzard frames | Hide Blizzard debuffs | `hideBlizzardDebuffs` | bool | Reparents `DebuffFrame`; out of combat |
-
-**Containers** — the tab body opens with the Container picker and **New container** (a player-buff
-bar container, then selected) on one line. With no container, that line and one sentence are all
-the tab draws.
-
-| Row | Path | Type | Behavior |
-|---|---|---|---|
-| Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
-| Enabled | `container.enabled` | bool | A disabled container keeps its settings |
-| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
-| Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
-| Style | `container.style` | string | Bars / Icons; structural (rebuilds the engine) |
-
-Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
-from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
-Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
 dropdown of the nine spell categories (defensives, activeMitigation, raidCDs, offensiveCDs, healing,
@@ -155,7 +146,25 @@ one switch for that; the tab says so.
 drive bars only; an icon's dispel border keeps Blizzard's own colored art (owner, 2026-09-13), and
 the tab line and each row's tooltip say so. Profile-wide, so a write re-applies every container.
 
-### Filters (40 rows, `settings/Filters.lua`)
+### Containers (5 rows, `settings/Containers.lua`)
+
+A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **Containers**. The tab
+body opens with the Container picker and **New container** (a player-buff bar container, then
+selected) on one line. With no container, that line and one sentence are all the tab draws.
+
+| Row | Path | Type | Behavior |
+|---|---|---|---|
+| Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
+| Enabled | `container.enabled` | bool | A disabled container keeps its settings |
+| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
+| Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
+| Style | `container.style` | string | Bars / Icons; structural (rebuilds the engine) |
+
+Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
+from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
+Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
+
+### Filters (40 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
@@ -244,7 +253,7 @@ means anything for it) and sees only **Categories** — just **Hide enchants wit
 since it draws no Spell Categories grid (`Cat.For("ENCHANT")` is empty) — and **Sorting**, just
 **Direction**.
 
-### Layout (26 rows, `settings/Layout.lua`)
+### Layout (26 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -297,10 +306,10 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (71 rows, `settings/Bars.lua`)
+### Bars (71 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 When the selected container is drawn as icons, a large orange notice heads every tab, naming
-General → Containers, and every control below it is drawn disabled (the spec's `disabledFor`,
+Containers, and every control below it is drawn disabled (the spec's `disabledFor`,
 `settings/OptionsSetup.lua`'s renderActiveTab). The tabs and the container picker stay live.
 
 | Tab | Rows (all under `container.bars.`) |
@@ -330,7 +339,7 @@ surface with no texture a swatch and its companion and nothing else, and this ba
 texture, so it takes the whole bar block with its own tooltips. `bgAlpha` multiplies onto the
 background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged.
 
-### Icons (42 rows, `settings/Icons.lua`)
+### Icons (42 rows, `settings/Icons.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 When the selected container is drawn as bars, a large orange notice heads every tab and every
 control is drawn disabled, as on the Bars page.
