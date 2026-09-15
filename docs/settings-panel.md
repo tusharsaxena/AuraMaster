@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 198 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 203 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -164,7 +164,7 @@ Then **Duplicate** and **Delete** (asks first), and — with more than one conta
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (40 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Filters (41 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
