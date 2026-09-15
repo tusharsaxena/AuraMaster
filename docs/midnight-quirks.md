@@ -85,7 +85,7 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:260-262`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:289-290`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters are honored only on one side of the friend/foe line

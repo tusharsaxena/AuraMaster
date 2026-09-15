@@ -104,7 +104,7 @@ only when the direction moved), cap and layout can change on a live engine; hide
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
 `FilterCompiler.Signature` (`modules/FilterCompiler.lua:389`) and re-sent only when the two
-signatures differ (`modules/Container.lua:260-262`), because the engine clears and re-gathers a
+signatures differ (`modules/Container.lua:289-290`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then

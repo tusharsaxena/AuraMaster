@@ -172,9 +172,36 @@ function ContainerClass:Retire()
     -- Hidden, never re-anchored: once a group exists the engine forbids untrusted layout work on
     -- itself, and a disabled, hidden engine draws nothing wherever it is anchored.
     engine:Hide()
+    -- The blocker is anchored to THIS engine (SetAllPoints); hidden with it rather than left covering
+    -- a retired frame until Build re-anchors it to the replacement.
+    if self.blocker then self.blocker:Hide() end
     self.retired[#self.retired + 1] = engine
     self.engine, self.structure, self.plan, self.enchantDir = nil, nil, nil, nil
     self.enchantFrames = {}
+end
+
+--- Create or refresh the container-wide mouse blocker (Style.ApplyBlockerBehavior, L-3 continued):
+--- one frame, made once and kept for the container's life, re-anchored to cover WHATEVER engine
+--- currently exists and re-gated on the current settings every apply — the same behavior block a
+--- live button re-applies. Its frame level sits strictly between the anchor's and the engine's, so it
+--- never gets between the mouse and a button: both levels are computed from the anchor's current one
+--- (rather than copied from the engine, which the mock — and possibly the client — otherwise answers
+--- as an unset 0), so the ordering holds regardless of what either frame's level defaulted to.
+function ContainerClass:ApplyBlocker(cfg)
+    local engine, anchor = self.engine, self.anchor
+    if not engine then return end
+    local blocker = self.blocker
+    if not blocker then
+        blocker = CreateFrame("Frame", nil, anchor)
+        self.blocker = blocker
+    end
+    local level = anchor:GetFrameLevel()
+    engine:SetFrameLevel(level + 2)
+    blocker:SetFrameLevel(level + 1)
+    blocker:ClearAllPoints()
+    blocker:SetAllPoints(engine)
+    blocker:Show()
+    NS.Style.ApplyBlockerBehavior(blocker, cfg)
 end
 
 function ContainerClass:Build(cfg, plan, structure)
@@ -331,6 +358,7 @@ function ContainerClass:Apply()
             self:Retire()
             self:Build(cfg, plan, structure)
         end
+        self:ApplyBlocker(cfg)
     end
 
     -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).

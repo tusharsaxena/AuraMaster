@@ -358,3 +358,13 @@ listed here too, so the batch can be signed off in one pass.
     reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and
     ones this list knows; otherwise use the id or shift-click a link." Hover the box → the tooltip
     ends with the same hint, and promises nothing about names the game cannot find.
+76. **Gaps between bars no longer leak the world tooltip (L-3, owner report 2026-09-14, B-9).** Put a
+    bar container with at least two auras over a world unit (an NPC or a player), with default
+    settings (Show tooltips on, Click-through off). Hover a bar → only the aura's tooltip. Hover the
+    narrow **gap between two bars**, and separately the container's own **padding** past the last bar
+    → in both spots, still only the aura tooltip nearest the cursor (or none, past every bar) — never
+    the unit's tooltip drawn alongside it. This is the failure the report's screenshot showed: two
+    tooltips side by side. Now turn **Click-through** on for that container and hover the same gap
+    again → the unit's tooltip comes back, proving the blocker that closes the gap is gated off, not
+    unconditional. Turn Click-through back off, then turn **Show tooltips** off instead and hover the
+    gap once more → the unit's tooltip shows there too, for the same reason.

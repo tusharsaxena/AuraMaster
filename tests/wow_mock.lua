@@ -128,6 +128,13 @@ return function()
         function f:GetFrameLevel() return self.__level end
         -- The client's layout cache: recorded so a test can see an anchor opt out of it.
         function f:SetDontSavePosition(v) self.__dontSavePosition = v; return self end
+        -- The container's mouse blocker (modules/Container.lua's ApplyBlocker) covers whatever engine
+        -- currently exists with SetAllPoints and is gated with SetMouseMotionEnabled /
+        -- SetMouseClickEnabled, exactly like a live button (Style.ApplyBehavior). All three branch
+        -- production behavior, so they are recorded rather than no-opped (fidelity rule 3).
+        function f:SetAllPoints(target) self.__allPointsTo = target; return self end
+        function f:SetMouseMotionEnabled(v) self.__mouseMotionOn = not not v; return self end
+        function f:SetMouseClickEnabled(v) self.__mouseClickOn = not not v; return self end
         if frameType == "AuraContainer" then makeEngine(f) end
         if type(name) == "string" then M.__globals[name] = f end
         return f
