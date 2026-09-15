@@ -39,7 +39,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:96`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:99`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -62,7 +62,6 @@ path, never to a number restated in `modules/`.
 | `categories` | every category key → `"show"` | `[categoryKey] = "show" \| "hide"` (schema v3); built from `NS.Categories.DefaultStates()`, so a key added later backfills as Show. Show is a positive claim, not merely "not excluded" — see `docs/ARCHITECTURE.md` → Filter priority. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
 | `whitelist` | `{}` | `[spellId] = true` — always shown; beats the blacklist (owner's 2026-09-15 filter-priority revision, `modules/FilterCompiler.lua` rank 1) |
 | `blacklist` | `{}` | `[spellId] = true` — never shown, unless the whitelist also names it |
-| `onlyShown` | `false` | drop the catch-all group so only the whitelist and the categories set to Show are drawn ("only these categories", D8) |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
 | `durationMode` | `"any"` | `any`, `timed`, `timeless` |
 | `maxDuration` | `0` | seconds; `0` is no limit |
@@ -153,7 +152,7 @@ six canonical font leaves (options-ui-§16) and then its placement: `show` (`tru
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:198`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:200`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -265,7 +264,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:533`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:683`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -287,7 +286,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
-- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:608`) runs over **every** stored profile,
+- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:603`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
   `Database.CurrentSchemaVersion()` answers `3`. Only a container whose `auraType` is a known one
   (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
@@ -330,7 +329,8 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     is also in a Hide category), so the compiler itself does this rescue on every compile, and this
     migration step copies no ids at all. (An aura in no category at all now drawing, when the old
     exclusive whitelist excluded it, is still inherent to the new model and is not fixed by anything
-    here — see the "only these categories" toggle below for how a container gets that back.)
+    here. Schema v3 shipped a per-container "only these categories" toggle for that — RETIRED by
+    schema v4, below, in favor of `categories.uncategorized`.)
   - `filter.includeEnchants` (the old weapon-enchant boolean) becomes the `weaponEnchants` category
     row (`"show"` when the flag was true, `"hide"` otherwise, including when the key was never set),
     and the old key is deleted; `ENCHANT` containers never read the old flag and are left alone. Runs
@@ -342,6 +342,27 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     it; this step only writes the stored key ahead of that); the categorical `kind == "enchant"`
     exclusion above is what keeps this order safe once B3 does add it, rather than the lift merely
     having nothing to see today.
+- **Schema v4** (`Database.MigrateV4`, `core/Database.lua`, batch 7 fix round 2) runs over **every**
+  stored profile, same reach as v2/v3. It logs one `[Migrate] v4 profile '<name>'` line each naming
+  how many containers converted and how many lost the capability, and
+  `Database.CurrentSchemaVersion()` answers `4`. The owner retired the per-container "Only these
+  categories" toggle (`filter.onlyShown`) entirely: `categories.uncategorized = "hide"` (batch 7,
+  `docs/ARCHITECTURE.md` → Filter priority) means what the toggle used to mean, on a HELPFUL
+  container — the one aura type that carries an `uncategorized` category (buffs only; `Cat.HARMFUL`
+  has no `spells`-kind category, so a debuff-side row's union would always be empty, silently
+  no-op-ing every other Hide on the tab). For a container with `filter.onlyShown == true`:
+  - **HELPFUL**: `categories.uncategorized` is set `"hide"`, preserving the toggle's old effect —
+    the container keeps drawing only what it categorized rather than silently widening the moment the
+    toggle's own catch-all suppression disappears with the key.
+  - **Any other aura type (HARMFUL, in practice)**: there is no `uncategorized` category to migrate
+    onto, so nothing can be invented to stand in for it. The container LOSES the "only these
+    categories" narrowing — an unclaimed debuff reaches the ordinary catch-all again, same as any
+    container that never had the toggle on. This is a real, user-visible loss of capability, not
+    fixed by this step; it is logged rather than done silently.
+  Either way `filter.onlyShown` is cleared — the key means nothing any more and
+  `NS.CONTAINER_TEMPLATE` no longer carries it. A container where the toggle was already off or
+  absent is untouched entirely, not even the dead-key clear (idempotent: nothing at `true` to act on
+  on a second run either).
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:33`), one aura type (`HELPFUL`, `HARMFUL`, or
 `ENCHANT` for the player's temporary weapon enchants — `:39`) and one style (`bars` or `icons` —
 `:43`), plus its filters, placement and look. A profile holds any number of them; a fresh profile is
-seeded with three (`defaults/Profile.lua:198`).
+seeded with three (`defaults/Profile.lua:200`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -200,10 +200,16 @@ hiding, so the extra groups would be pure cost. Once anything is Hidden, one gro
 is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
 container with anything Hidden therefore compiles to roughly 15 groups, not one, and the "Max auras"
 cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
-`docs/schema.md`). The per-container **"only these categories"** toggle
-(`container.filter.onlyShown`) drops the catch-all group, so only the whitelist and the Shown
-categories are drawn — the one way left to reproduce the old exclusive Whitelist's "only these
-categories" behavior. Full detail: `docs/data-flow.md` → Step 4.
+`docs/schema.md`). The catch-all is skipped instead of joined whenever the aura type carries an
+`uncategorized` category (buffs only, batch 7 `U-1`..`U-5`) — that row IS the catch-all, made
+controllable, in EITHER of its own states (batch 7 fix round 1). The per-container **"only these
+categories"** toggle that used to drop the catch-all a different way (`container.filter.onlyShown`)
+is RETIRED (batch 7 fix round 2): once `uncategorized`'s own group correctly supersedes the catch-all
+both ways, the toggle had nothing left to do, and `Uncategorized = Hide` on a buff container now says
+what the toggle used to say. A schema v4 migration (`docs/schema.md` → Migration path) converts a
+stored `onlyShown = true` accordingly; a HARMFUL container, which carries no `uncategorized`
+category, has no way to preserve that narrowing and loses it. Full detail: `docs/data-flow.md` →
+Step 4.
 
 ## Message Bus
 
@@ -376,9 +382,13 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   only Defensives after migration — every other category of its aura type becomes Hide (`E-8`,
   `docs/schema.md` → Migration path). But an aura in **no category at all** now shows too (rank 5),
   where the old exclusive Whitelist excluded it, because the two-state model has no way to express
-  "only the categories I named" short of the new **"only these categories"** toggle
-  (`container.filter.onlyShown`). A player who notices new, uncategorized auras appear in a container
-  that used to be narrow should look at Filters → Categories and turn that toggle on.
+  "only the categories I named" on its own. On a buff container the fix is `Uncategorized = Hide`
+  (batch 7, `U-1`..`U-5`) — a player who notices new, uncategorized buffs appear in a container that
+  used to be narrow should look at Filters → Categories and set that row to Hide. A debuff container
+  has no such row (`Cat.HARMFUL` carries no `spells`-kind category for one to be a complement of) and
+  has no way to reproduce the old exclusive Whitelist's narrowing at all — this is a real, accepted
+  gap for debuffs, not fixed by anything in this addon (batch 7 fix round 2 retired the
+  per-container **"only these categories"** toggle that once covered both aura types the same way).
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
   one; WoW never frees a frame, so

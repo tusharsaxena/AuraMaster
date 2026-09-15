@@ -184,18 +184,23 @@ come from the profile-wide `enchantSlots`. `Hide enchants without a duration` ke
 group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` row.
 
 **Categories** (`F-1`…`F-7`) — every tab opens with the five-rank priority blurb (mirrored on
-Overrides too — see *Filter priority* below), then the per-container **Only these categories**
-toggle (`container.filter.onlyShown`, bool, off by default): while on, a note explains that Hide no
-longer removes an aura by itself — an aura is shown only through the whitelist or a category set to
-Show, so here Hide means "not shown" rather than "removed"; the Hide column stays live and clickable
-regardless, since it is still the only way to undo a Show on a row that belongs to more than one
-category. Then 32 generated rows, one per `defaults/Categories.lua` entry, at
+Overrides too — see *Filter priority* below). The per-container **Only these categories** toggle
+(`container.filter.onlyShown`) that used to sit here is RETIRED (batch 7 fix round 2): once
+`Uncategorized = Hide` (buffs only — see below) correctly suppresses the catch-all on its own, the
+toggle had nothing left to do, so the owner chose one control over two. A stored `onlyShown = true`
+is migrated to `categories.uncategorized = "hide"` (schema v4, `docs/schema.md`) and the key cleared;
+a HARMFUL container, which carries no `uncategorized` category, loses the narrowing outright rather
+than having one invented for it. Then 33 generated rows, one per `defaults/Categories.lua` entry, at
 `container.filter.categories.<key>`, stored `"show"` / `"hide"` (schema v3) and labeled **Show** /
 **Hide** (`/am get` and `/am list` print the label, then the stored value in gray). Show is a
 positive claim: an aura in at least one Show category is drawn even if another of its categories says
 Hide; only an aura whose every category says Hide is removed by them (rank 3 of the priority order).
-Buff containers see the 16 buff rows (weapon enchants among them), debuff containers the 16 debuff
-rows. The rows carry `skipRender`, so the flow engine draws nothing for them; the tab is bespoke
+Buff containers see the 17 buff rows (weapon enchants and the batch-7 `Uncategorized` row among
+them), debuff containers the 16 debuff rows — `Uncategorized` is buffs only (`Cat.HARMFUL` has no
+`spells`-kind category for it to be a complement of; batch 7 fix round 1). Under the Spell Categories
+grid, a line states the cost of Uncategorized's default (Show): hiding a Blizzard category alone does
+little while it stays Show, since it keeps rescuing unlisted auras; both rows need Hide to actually
+remove one. The rows carry `skipRender`, so the flow engine draws nothing for them; the tab is bespoke
 (keyed by the group's name) and draws one `ChoiceGrid` per row `grid`, each a header line
 `Show · Hide · Category` and then a line of two cells (a solid yellow fill for the lit one,
 LibKa0s v1.36.0's `O.ChoiceGrid`) and the category's label (hover it for its description). A grid
@@ -235,10 +240,11 @@ words, `NS.GeneralSpells`), each entry with **Remove**. Each set is written whol
 the lists are not schema rows, so the page's Defaults leaves them alone. Each entry also carries a
 trailing **note** under its name (LibKa0s v1.36.0's `O.IdList` `note`, `K-3`), built from
 `FC.ExplainSpell` sparingly: it fires only when a category genuinely disagrees with the list's
-verdict, or the id sits on both lists, and never claims what the aura will finally do (a duration cap
-or Cast by can still keep it off screen even where the lists and categories alone would draw it) — the
-one exception being an "only these categories" container with nothing else Shown, where the whitelist
-is the only thing keeping the aura on screen at all.
+verdict, or the id sits on both lists, and never claims what the aura will finally do — a duration cap
+or Cast by can still keep it off screen even where the lists and categories alone would draw it. Batch
+7 fix round 2 retired the one exception this used to carry (an "only these categories" container with
+nothing else Shown, whose whitelist entry really was the only thing keeping an aura on screen): rank 5
+can no longer be "hidden" at all once the toggle is gone, so every note stays non-definite now.
 
 **Filter priority.** The same five ranks, highest first, are restated verbatim at the top of both the Categories and the
 Overrides tabs (`P-1`, `P-4`) — two halves of one decision — and drive `FC.ExplainSpell`, the

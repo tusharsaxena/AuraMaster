@@ -551,9 +551,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 2
-    -- steps a v1 profile now climbs (v2, v3).
-    assertEqual(perProfile, 4, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 3
+    -- steps a v1 profile now climbs (v2, v3, v4).
+    assertEqual(perProfile, 6, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -798,11 +798,11 @@ test("v3: the whitelist lift never sweeps a category the aura type does not have
     assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
 end)
 
-test("v3: the current schema version is 3", function()
+test("v4: the current schema version is 4", function()
     local NS = fresh()
-    -- red under: the v3 step missing from SCHEMA_STEPS
-    assertEqual(NS.Database.CurrentSchemaVersion(), 3)
-    assertEqual(NS.db.global.schemaVersion, 3)
+    -- red under: the v4 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 4)
+    assertEqual(NS.db.global.schemaVersion, 4)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
@@ -816,7 +816,8 @@ test("v3: RunMigrations migrates every stored profile, the inactive one included
         }
     end
     local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 2 } } })
-    assertEqual(NS.db.global.schemaVersion, 3)
+    -- red under: a later step (v4) failing to run too, or running for one profile but not the other
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
     for _, name in ipairs({ "Default", "Raid" }) do
         local c = NS.db.sv.profiles[name].containers[1]
         -- red under: the step migrating NS.db.profile only (Raid would keep its v2 shape for ever)
@@ -834,4 +835,71 @@ test("v3: RunMigrations migrates every stored profile, the inactive one included
     -- isolation, direct on a plain profile table.
     local active = NS.db.sv.profiles.Default.containers[1]
     assertEqual(active.filter.categories.uncategorized, "show", "an existing container gets the new row at Show")
+end)
+
+-- ---------------------------------------------------------------------------
+-- Schema v4: "Only these categories" retired -> categories.uncategorized = "hide"
+-- ---------------------------------------------------------------------------
+
+test("v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { onlyShown = true, categories = { defensives = "show" } } } } }
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 1)
+    assertEqual(lost, 0)
+    local c = p.containers[1]
+    assertEqual(c.filter.categories.uncategorized, "hide", "the toggle's old effect, preserved")
+    assertNil(c.filter.onlyShown, "the dead key is cleared")
+    -- untouched otherwise — the migration does not narrate a decision about defensives
+    assertEqual(c.filter.categories.defensives, "show")
+end)
+
+test("v4: a container with the toggle off or absent is untouched", function()
+    local NS = fresh()
+    local p = { containers = {
+        { auraType = "HELPFUL", filter = { onlyShown = false, categories = { defensives = "show" } } },
+        { auraType = "HELPFUL", filter = { categories = { defensives = "show" } } },
+    } }
+    local before = NS.Database.DeepCopy(p)
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 0)
+    assertEqual(lost, 0)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(p), Sig(before), "off or absent: not even the dead key is touched")
+end)
+
+test("v4: a HARMFUL container with the toggle on loses the capability plainly — no Uncategorized category to migrate onto", function()
+    -- The honest answer (not a silent one, and not an invented debuff-side Uncategorized row): such
+    -- a container cannot keep "only these categories" any more. It is counted as `lost`, logged (see
+    -- the SCHEMA_STEPS v4 step), and the dead key is still cleared — there is nothing left it can do.
+    local NS = fresh()
+    local p = { containers = { { auraType = "HARMFUL",
+        filter = { onlyShown = true, categories = { crowdControl = "hide" } } } } }
+    local converted, lost = NS.Database.MigrateV4(p)
+    assertEqual(converted, 0)
+    assertEqual(lost, 1)
+    local c = p.containers[1]
+    assertNil(c.filter.onlyShown, "the dead key is cleared even though nothing could be preserved")
+    assertNil(c.filter.categories.uncategorized, "no such category exists for HARMFUL — none is invented")
+end)
+
+test("v4: MigrateV4 is idempotent", function()
+    local NS = fresh()
+    local function scenario()
+        return { containers = {
+            { auraType = "HELPFUL", filter = { onlyShown = true, categories = { defensives = "show" } } },
+            { auraType = "HARMFUL", filter = { onlyShown = true, categories = { crowdControl = "hide" } } },
+            { auraType = "HELPFUL", filter = { categories = { defensives = "show" } } },
+        } }
+    end
+    local once = scenario()
+    NS.Database.MigrateV4(once)
+    local twice = NS.Database.DeepCopy(once)
+    local converted, lost = NS.Database.MigrateV4(twice)
+    -- red under: a second run re-counting or re-touching a container the first run already decided
+    assertEqual(converted, 0, "nothing left at onlyShown == true to convert again")
+    assertEqual(lost, 0)
+    local Sig = NS.FilterCompiler.Signature
+    assertEqual(Sig(twice), Sig(once), "a second run is a true no-op")
 end)

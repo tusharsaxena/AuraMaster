@@ -144,18 +144,19 @@ test("filters: the max-auras description tells the truth about a group being per
     assertTrue(desc:find("own group", 1, true) ~= nil, "says the cap is per-group: " .. tostring(desc))
     assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
         "says the cap applies to each group separately: " .. tostring(desc))
-    -- red under (fix round 2): the rewrite naming only "something is Hidden" as the multi-group case
-    -- and staying silent on `onlyShown` — which ALSO multiplies groups (one per shown category) even
-    -- with nothing Hidden, so the container-wide claim would be false for that combination too.
-    assertTrue(desc:find("Only these categories", 1, true) ~= nil,
-        "names the toggle as its own multi-group case: " .. tostring(desc))
+    -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): "something is Hidden"
+    -- is once again the ONLY multi-group condition (as it was before the toggle existed), so the
+    -- description no longer needs to name it, and must not — a dangling mention of a control that no
+    -- longer exists would be its own bug.
+    assertTrue(desc:find("Only these categories", 1, true) == nil,
+        "does not name a retired toggle: " .. tostring(desc))
 end)
 
 test("filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container", function()
     -- red under: the descriptions still claiming the sort/direction order the whole container's
-    -- draw order — false the moment one category is Hidden (or 'Only these categories' is on),
-    -- since modules/FilterCompiler.lua's lookOf stamps sortMethod/sortDirection on EVERY group and
-    -- the engine sorts within each group, laying groups out by layoutIndex.
+    -- draw order — false the moment one category is Hidden, since modules/FilterCompiler.lua's
+    -- lookOf stamps sortMethod/sortDirection on EVERY group and the engine sorts within each group,
+    -- laying groups out by layoutIndex.
     local NS = fresh()
     for _, path in ipairs({ "container.filter.sortMethod", "container.filter.sortDirection" }) do
         local desc = NS.FindSchemaRow(path).desc
@@ -163,8 +164,10 @@ test("filters: the sort-by and direction descriptions tell the truth about a gro
             path .. " says the sort is per-group: " .. tostring(desc))
         assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
             path .. " says it applies to each group separately: " .. tostring(desc))
-        assertTrue(desc:find("Only these categories", 1, true) ~= nil,
-            path .. " names the toggle as its own multi-group case: " .. tostring(desc))
+        -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): a dangling mention
+        -- of a control that no longer exists would be its own bug.
+        assertTrue(desc:find("Only these categories", 1, true) == nil,
+            path .. " does not name a retired toggle: " .. tostring(desc))
     end
 end)
 
@@ -279,7 +282,7 @@ test("filters: a spells-kind row's See spells link selects that category on Gene
     assertEqual(enchantKids[4].text, NS.L["See spells"], "the enchant row's link too")
 end)
 
--- ── the priority blurb (F-4) and 'Only these categories' (R-8/R-10) ─────────────────────────────
+-- ── the priority blurb (F-4) ──────────────────────────────────────────────────────────────────
 
 test("filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first", function()
     local NS, _, P = filters()
@@ -294,26 +297,15 @@ test("filters: the priority order (spec §6) appears on both the Categories and 
     end
 end)
 
-test("filters: 'Only these categories' is drawn at the top of the Categories tab, above the grids, and its text explains Hide differently while it is on (R-8/R-10)", function()
-    local NS, _, P = filters()
-    local ws = P.tab("filters", NS.L["Categories"])
-    local cb = P.row(ws, "container.filter.onlyShown")
-    assertTrue(cb ~= nil and cb.type == "CheckBox", "a plain toggle, not a grid cell")
-    local idxCb, idxHeading
-    for i, w in ipairs(ws) do
-        if w == cb and not idxCb then idxCb = i end
-        if w.type == "Heading" and not idxHeading then idxHeading = i end
-    end
-    -- red under: the toggle drawn after the grids rather than above them
-    assertTrue(idxCb ~= nil and idxHeading ~= nil and idxCb < idxHeading, "sits above the first grid heading")
-    assertFalse(P.hasText(ws, "not shown"), "off: nothing to explain differently yet")
-    cb:__fire("OnValueChanged", true)
-    ws = P.rerender("Filters")
-    -- red under: R-10 — the tab dimming or disabling the Hide column while this is on
-    local cells = gridLine(NS, ws, "defensives")
-    assertFalse(cells[2].disabled == true, "Hide stays live: it is still the only way to un-Show a row")
-    -- red under: the note missing, so a player reads Hide as "removed" while it means "not shown"
-    assertTrue(P.hasText(ws, "not shown"), "on: explains Hide means not shown, not removed")
+-- Fix round 2 (batch 7): "Only these categories" (D8/R-8..R-11) is retired — the owner chose one
+-- concept (`Uncategorized = Hide`) over two controls that needed explaining against each other. No
+-- row, no checkbox, no "not shown" note. Its removal is covered as absence, not a positive test of
+-- its own — there is no control left to assert anything about.
+test("filters: the retired 'Only these categories' row is gone — no such control on the Categories tab", function()
+    local NS = filters()
+    -- red under: the schema row surviving removal (P.row asserts a row exists, so it cannot be used
+    -- to prove absence — it is the schema lookup itself that must answer nil).
+    assertNil(NS.FindSchemaRow("container.filter.onlyShown"), "no such schema row any more")
 end)
 
 test("filters: a grid checkbox stores show or hide for the selected container and re-syncs its line", function()
@@ -508,20 +500,19 @@ end)
 
 -- ── Overrides entry notes (task B6, spec §6/§6c) ─────────────────────────────────────────────────
 
--- A plain, uncategorized WHITELIST entry has no note: nothing claims it, so the container would
--- draw it either way (rank 5, shown, with `onlyShown` off) — no mismatch. A plain, uncategorized
--- BLACKLIST entry is different (fix round 2): the ordinary catch-all WOULD draw it if the entry
--- were removed, which is exactly the mismatch task-B6's other tests exercise, so it is covered
--- separately below rather than folded into a single "plain entry has no note" claim that is no
--- longer true for the blacklist side.
-test("filters: a plain, uncategorized whitelist entry has no note", function()
+-- A plain WHITELIST entry with nothing to disagree with it has no note: the categories already
+-- agree it is shown (774 is in the real, unnarrowed "healing" list, at its default Show), so the
+-- whitelist entry is not overriding anything. A plain, uncategorized BLACKLIST entry is different
+-- (fix round 2): the ordinary catch-all WOULD draw it if the entry were removed, which is exactly
+-- the mismatch task-B6's other tests exercise, so it is covered separately below rather than folded
+-- into a single "plain entry has no note" claim that is no longer true for the blacklist side.
+test("filters: a plain whitelist entry with nothing to disagree has no note", function()
     local NS, _, P = filters()
     NS.SetByPath("container.filter.whitelist", { [774] = true }, 1)
     local ws = P.tab("filters", "overrides")
     -- red under: a note drawn for every entry regardless of whether anything disagrees
     assertFalse(P.hasText(ws, "overriding"), "no category conflict to report")
     assertFalse(P.hasText(ws, "outranks"), "not on the other list either")
-    assertFalse(P.hasText(ws, "not be drawn at all"), "onlyShown is off; nothing else to warn about")
 end)
 
 -- red under: the blacklist entry not reporting that the whitelist already claimed the same id
@@ -572,35 +563,21 @@ test("filters: a blacklisted spell a Hide category would also hide gets no note"
     assertFalse(P.hasText(ws, "overriding"), "the blacklist and the category agree")
 end)
 
--- Fix round 1: a whitelisted spell no category claims, under "only these categories", would vanish
--- from the container entirely if it were not whitelisted (R-9's catch-all is gone) — the case the
--- rank-4-only check missed, because the counterfactual is rank 5 hidden, not rank 4.
--- red under: overrideNote checking `cat.rank == 4` instead of `cat.verdict == "hidden"`
---
--- batch 7 fix round 1 moved this to container 2 (HARMFUL): `Cat.HELPFUL` now always carries an
--- `uncategorized` category (U-1), so on a buff container an unclaimed id's counterfactual runs
--- through `explainUncategorized` (rank 3 or 4), never rank 5 — this scenario (nothing at all decides
--- an unclaimed id, so it falls to rank 5) only still arises where no `uncategorized` category exists,
--- which is buffs-only by design (defaults/Categories.lua's KINDS doc). HARMFUL keeps the original case.
-test("filters: a whitelisted spell no category claims, under 'only these categories', warns it would vanish", function()
-    local NS, _, P = filters()
-    NS.Helpers.SelectContainer(2)
-    P.show("Filters")
-    NS.SetByPath("container.filter.whitelist", { [900004] = true }, 2)
-    NS.SetByPath("container.filter.onlyShown", true, 2)
-    local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, "not be drawn at all"),
-        "an unclaimed whitelisted spell under onlyShown needs its own wording, not the category one")
-end)
+-- Fix round 2 of batch 7 retired "Only these categories" (D8) entirely, and with it went the one
+-- scenario where a whitelisted, wholly unclaimed id's counterfactual was "hidden" at rank 5: rank 5
+-- is now unconditionally "shown" wherever no `uncategorized` category exists for the aura type
+-- (HARMFUL — buffs only, fix round 1). A plain whitelisted debuff with nothing else deciding it is
+-- therefore never rescuing anything any more, so it earns no note; the test this comment used to
+-- introduce ("...warns it would vanish") tested exactly that now-impossible case and is gone with it.
 
--- Fix round 2: an uncategorized blacklisted spell, with onlyShown OFF, would be drawn by the
--- ordinary catch-all if the entry were removed (rank 5, shown) — a real mismatch a rank-3-only check
--- misses, mirroring the whitelist bug fixed above.
+-- Fix round 2: an uncategorized blacklisted spell would be drawn by the ordinary catch-all if the
+-- entry were removed (rank 5, shown) — a real mismatch a rank-3-only check misses, mirroring the
+-- whitelist case above (batch 6 fix round 2).
 -- red under: overrideNote's blacklist branch checking `cat.rank == 3` instead of `cat.verdict == "shown"`
 --
--- batch 7 fix round 1: moved to container 2 (HARMFUL) for the same reason as the test above — on a
--- buff container this id's counterfactual now goes through `explainUncategorized` (rank 3, the
--- default Show), not the plain rank-5 catch-all this note's wording describes.
+-- batch 7 fix round 1: moved to container 2 (HARMFUL) for the reason above — on a buff container
+-- this id's counterfactual now goes through `explainUncategorized` (rank 3, the default Show), not
+-- the plain rank-5 catch-all this note's wording describes.
 test("filters: an uncategorized blacklisted spell warns that no category hides it", function()
     local NS, _, P = filters()
     NS.Helpers.SelectContainer(2)
@@ -611,15 +588,13 @@ test("filters: an uncategorized blacklisted spell warns that no category hides i
         "no category claims it, but the ordinary catch-all would still draw it")
 end)
 
--- The buff-side mirror of the two tests above (batch 7, U-1..U-5): with `uncategorized` present, an
+-- The buff-side mirror of the test above (batch 7, U-1..U-5): with `uncategorized` present, an
 -- unclaimed id's fate is always decided by ITS state, never left to the generic rank-5 wording.
 test("filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording", function()
     local NS, _, P = filters()
     NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
-    NS.SetByPath("container.filter.onlyShown", true, 1)
     NS.SetByPath("container.filter.categories.uncategorized", "hide", 1)
     local ws = P.tab("filters", "overrides")
     assertTrue(P.hasText(ws, "overriding Uncategorized (set to Hide)"),
         "the counterfactual is rank 4 (Uncategorized itself says Hide), not the generic rank-5 case")
-    assertFalse(P.hasText(ws, "not be drawn at all"), "that wording is reserved for when no category decides it at all")
 end)

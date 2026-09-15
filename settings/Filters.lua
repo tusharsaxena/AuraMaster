@@ -4,7 +4,7 @@ local _, NS = ...
 --
 --     band          [Container ▾]
 --     [ What to show ][ Categories ][ Sorting ][ Overrides ]
---     Categories    priority blurb (spec §6), then 'Only these categories'
+--     Categories    priority blurb (spec §6)
 --                   Blizzard Categories   Show · Hide · Category, a line each
 --                   Spell Categories      (buffs)        the same grid, plus a `See spells` link
 --                                                         and hidePermanentEnchants beneath it
@@ -151,35 +151,23 @@ NS.RegisterSchemaRows({
     },
 })
 
--- D8: "only these categories" drops the catch-all group (modules/FilterCompiler.lua, R-9), so a
--- container draws only the Overrides whitelist and whatever is set to Show. `skipRender`: B5's tab
--- draws it at the top, above the grids, rather than the flow engine's ordinary checkbox row.
-NS.RegisterSchemaRows({
-    {
-        path = "container.filter.onlyShown", page = PAGE, group = G_CATS,
-        skipRender = true, auraTypes = BUFFS_DEBUFFS, type = "bool",
-        label = L["Only these categories"],
-        desc = L["Draw only the Overrides whitelist and the categories set to Show; drop everything else, including auras in no category at all."],
-    },
-})
-
 -- ── Sorting ───────────────────────────────────────────────────────────────────────────────────
 
 NS.RegisterSchemaRows({
     {
         path = "container.filter.sortMethod", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.SORT_METHODS, C.SORT_METHOD_LABELS), label = L["Sort by"],
-        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With 'Only these categories' off and nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden, or 'Only these categories' is on — each category set to Show gets its own group, and EACH is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
+        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden — each category set to Show gets its own group, and EACH is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
     },
     {
         path = "container.filter.sortDirection", page = PAGE, group = G_SORT,
         type = "string", values = NS.Choices(C.SORT_DIRECTIONS, C.SORT_DIRECTION_LABELS), label = L["Direction"],
-        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With 'Only these categories' off and nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden, or 'Only these categories' is on — each category set to Show gets its own group, and EACH is reversed separately; the groups' own layout order does not change."],
+        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden — each category set to Show gets its own group, and EACH is reversed separately; the groups' own layout order does not change."],
     },
     {
         path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "number", min = 0, max = 40, step = 1, label = L["Max auras per group (0 = no limit)"],
-        desc = L["The cap applies to each engine group, not the whole container. With 'Only these categories' off and nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden, or 'Only these categories' is on — each category set to Show gets its own group, and the cap applies to EACH of those separately."],
+        desc = L["The cap applies to each engine group, not the whole container. With nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden — each category set to Show gets its own group, and the cap applies to EACH of those separately."],
     },
 })
 
@@ -237,19 +225,16 @@ local CUSTOM_EXTRA = {
 -- Overrides tabs — two halves of one decision. Rank 1 is the whitelist, rank 2 the blacklist
 -- (revised 2026-09-15: the whitelist now beats the blacklist, and rank 3's Show is a positive claim
 -- that rescues an aura from a Hide elsewhere).
-local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown, nothing removed it; UNLESS 'Only these categories' is on, in which case it is not drawn at all."]
+-- Fix round 2 (batch 7): rank 5's trailing "UNLESS 'Only these categories' is on" clause is gone —
+-- the toggle is retired (D8/R-8..R-11 superseded; `Uncategorized = Hide` says the same thing now, on
+-- buffs — see `UNCATEGORIZED_NOTE` below).
+local PRIORITY_BLURB = L["Highest priority first: (1) on the Overrides whitelist — always shown. (2) on the Overrides blacklist — hidden, unless the whitelist already claimed it. (3) in at least one category set to Show — shown, even if another of its categories says Hide. (4) in categories that all say Hide — hidden. (5) in no category at all — shown, nothing removed it."]
 
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
 -- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
 -- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell Categories grid, in
 -- the tab's own text rather than a tooltip only the row's own label would carry.
 local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
-
--- R-10: while `onlyShown` is on, Hide no longer removes anything by itself — an aura is left out of
--- rank 5 (there is no catch-all while this is on) simply by belonging to no category set to Show.
--- The Hide column stays live and clickable regardless (it is still the only way to take a Show back
--- off a row that belongs to more than one category) — do NOT dim it.
-local ONLY_SHOWN_NOTE = L["While this is on, Hide does not remove an aura by itself: an aura is shown only through the whitelist or a category set to Show, so here Hide means 'not shown' rather than 'removed'. It is still the only way to undo a Show on a row that belongs to more than one category."]
 
 --- A shallow copy of `row` with `skipRender` lifted, so the flow engine (which otherwise leaves
 --- every `skipRender` row untouched, on the assumption that a grid or another bespoke drawer owns
@@ -271,22 +256,13 @@ local function rowAt(rows, path)
     return nil
 end
 
---- The Categories tab: the priority blurb (F-4), `onlyShown` above the grids (R-8) with R-10's note
---- while it is on, then a grid each. The Spell Categories grid (kind `custom`) carries F-2's blurb
---- and F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide
---- choice; a ChoiceGrid cell lights by comparing the stored value against a column's string, which a
---- bool can never match — is drawn as an ordinary checkbox right under that grid, where the
---- weaponEnchants row it governs lives.
-local function renderCategories(ctx, cfg, rows)
+--- The Categories tab: the priority blurb (F-4), then a grid each. The Spell Categories grid (kind
+--- `custom`) carries F-2's blurb and F-3's `See spells` link, and F-5's hidePermanentEnchants — a
+--- plain bool, not a Show/Hide choice; a ChoiceGrid cell lights by comparing the stored value
+--- against a column's string, which a bool can never match — is drawn as an ordinary checkbox right
+--- under that grid, where the weaponEnchants row it governs lives.
+local function renderCategories(ctx, _, rows)
     H.TextRow(ctx, PRIORITY_BLURB)
-
-    local onlyRow = rowAt(rows, "container.filter.onlyShown")
-    if onlyRow then
-        H.RenderRows(ctx, { forRenderRows(onlyRow) }, nil, nil, { noHeadings = true })
-        if cfg and cfg.filter and cfg.filter.onlyShown then
-            H.TextRow(ctx, ONLY_SHOWN_NOTE)
-        end
-    end
 
     local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
     local hideDrawn = false
@@ -340,8 +316,10 @@ end
 -- or `maxDuration` — the catch-all group this spell would fall into inherits those from the
 -- container's base, so a duration cap or a cast-by restriction can still keep it off screen even
 -- when the lists and categories alone would draw it. Say "the categories say Show" / "no category
--- hides it", never "it would show" / "it would be drawn" — the one exception is the `onlyShown`
--- rank-5 case below, which really can be definite, and says why right there.
+-- hides it", never "it would show" / "it would be drawn". (Fix round 2 retired the one exception
+-- this used to carry — the "Only these categories" toggle's rank-5 case, whose definite wording came
+-- from the toggle dropping the catch-all outright; the toggle is gone, and rank 5 can no longer be
+-- "hidden" at all, so that branch is gone too.)
 
 --- `cfg` with `id` cleared from BOTH override lists, so `ExplainSpell` can be asked what the
 --- CATEGORIES alone would decide for it (rank 3/4/5), independent of whichever list holds the
@@ -395,10 +373,9 @@ local function overrideNote(cfg, id, ctx, key)
             return L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]
         end
         -- Fire on the counterfactual's VERDICT ("shown"), the mirror of the whitelist branch below —
-        -- not on rank 3 alone (fix round 2: rank 3 missed rank 5 with `onlyShown` off, where an
-        -- uncategorized blacklisted id would be drawn by the ordinary catch-all if the entry were
-        -- removed; that is as real a mismatch as a category disagreeing, and the player was not told
-        -- either way).
+        -- not on rank 3 alone (fix round 2 of batch 6: rank 3 missed rank 5, where an uncategorized
+        -- blacklisted id would be drawn by the ordinary catch-all if the entry were removed; that is
+        -- as real a mismatch as a category disagreeing, and the player was not told either way).
         local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
         if cat.verdict ~= "shown" then
             return nil
@@ -412,19 +389,15 @@ local function overrideNote(cfg, id, ctx, key)
     if (filter.blacklist or {})[id] == true then
         return L["Also on the blacklist, but the whitelist outranks it — still shown here."]
     end
-    -- Fire on the counterfactual's VERDICT ("hidden"), not on rank 4 alone: rank 5 hides too, under
-    -- onlyShown (R-9's catch-all is gone), and that is the one case most worth a note — without the
-    -- whitelist this id would vanish from the container entirely, not merely lose a category fight.
+    -- Fire on the counterfactual's VERDICT ("hidden"), not on rank 4 alone: `uncategorized = "hide"`
+    -- (rank 4, on buffs) hides an unlisted id exactly as rank 4 does, and this is the one case most
+    -- worth a note — without the whitelist this id would vanish from the container entirely, not
+    -- merely lose a category fight. Rank 5 can never be "hidden" (fix round 2: the "Only these
+    -- categories" toggle that once made it so is retired — see the WORDING RULE comment above), so
+    -- there is no rank-5 branch here any more; every reachable "hidden" verdict now names a category.
     local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
     if cat.verdict ~= "hidden" then
         return nil
-    end
-    if cat.rank == 5 then
-        -- The one wording allowed to stay definite (fix round 3): with `onlyShown` on and no
-        -- category claiming the spell, NO group would carry it at all (R-9 drops the catch-all) — so
-        -- unlike the other three, there is no downstream duration/castBy filter that could still
-        -- keep it off screen. Nothing to falsify, so the stronger claim is honest.
-        return L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."]
     end
     return L["Shown here by the whitelist, overriding %s (set to Hide)."]:format(
         categoryLabelList(cat.categories))

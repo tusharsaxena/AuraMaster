@@ -298,54 +298,22 @@ test("filter: the blacklist still reaches the catch-all, but never the whitelist
     assertTrue(plan.groups[2].candidateFilters.excludeSpellIDs[700], "the catch-all still honors the blacklist")
 end)
 
--- ── "only these categories" (D8, R-8..R-11) ──────────────────────────────────────────────────────
+-- ── "only these categories" (D8, R-8..R-11) — RETIRED, fix round 2 ──────────────────────────────
+--
+-- The owner removed the toggle entirely: `Uncategorized = Hide` (buffs) now means exactly what it
+-- used to mean, and fix round 1 already proved the two are the same shape once the catch-all is
+-- correctly dropped in both of Uncategorized's states, leaving the toggle nothing left to do. The
+-- migration that replaces a stored `onlyShown = true` with `categories.uncategorized = "hide"` lives
+-- in core/Database.lua (tests/test_database.lua's schema step 4); this file only needs to prove the
+-- compiler never reads the dead key at all any more — belt-and-braces, in case one somehow survives
+-- migration (a restored backup, a profile copy from before this version).
 
-test("filter: off, the toggle changes nothing — a default container still stays at one group (R-3)", function()
-    local plan = compile({ filter = { onlyShown = false } },
+test("filter: a stray filter.onlyShown key, however it got there, is inert — the compiler never reads it (D8 retired)", function()
+    local withKey = compile({ filter = { onlyShown = true, categories = { bigDefensive = "hide" } } },
         { categories = only("HELPFUL", { "bigDefensive" }) })
-    assertEqual(#plan.groups, 1)
-    assertEqual(plan.groups[1].label, "All")
-    assertNil(plan.groups[1].candidateFilters)
-end)
-
-test("filter: on, one shown category and nothing hidden still gets its own group — R-3 does not apply (R-9)", function()
-    -- red under: the toggle reusing R-3's single-group optimization when nothing is Hidden
-    local plan = compile({ filter = { onlyShown = true, categories = { bigDefensive = "show" } } },
+    local withoutKey = compile({ filter = { categories = { bigDefensive = "hide" } } },
         { categories = only("HELPFUL", { "bigDefensive" }) })
-    assertEqual(#plan.groups, 1, "the shown group IS the container; no catch-all beside it")
-    assertEqual(plan.groups[1].filter, "HELPFUL|BIG_DEFENSIVE")
-    assertTrue(plan.groups[1].label ~= "All", "not the catch-all — there isn't one")
-end)
-
-test("filter: on, the catch-all is gone — the group carries a positive constraint instead of none (R-9)", function()
-    -- Two categories in the fixture: one Shown, one left at its default Show too (still contributes
-    -- its own group under the toggle), so the only way to prove the catch-all is gone is that a
-    -- container narrowed to just one category draws through exactly one, whitelist-less group.
-    local on = compile({ filter = { onlyShown = true, categories = { bigDefensive = "show" } } },
-        { categories = only("HELPFUL", { "bigDefensive" }) })
-    local off = compile({ filter = { onlyShown = false, categories = { bigDefensive = "show" } } },
-        { categories = only("HELPFUL", { "bigDefensive" }) })
-    assertEqual(#on.groups, 1, "on: only the shown group")
-    assertEqual(#off.groups, 1, "off: R-3's single unfiltered group, since nothing is hidden")
-    assertEqual(off.groups[1].filter, "HELPFUL", "off draws everything — no positive constraint")
-    assertEqual(on.groups[1].filter, "HELPFUL|BIG_DEFENSIVE", "on draws only the shown category")
-end)
-
-test("filter: on, nothing shown and nothing whitelisted draws nothing, with its own warning (R-11)", function()
-    local plan = compile({ filter = { onlyShown = true, categories = { bigDefensive = "hide" } } },
-        { categories = only("HELPFUL", { "bigDefensive" }) })
-    assertEqual(#plan.groups, 0)
-    -- red under: the generic NEVER_MATCHES firing instead of the toggle's own, more specific warning
-    assertTrue(hasWarning(plan, "no category is set to Show"))
-    assertTrue(not hasWarning(plan, "These filters can never match anything."))
-end)
-
-test("filter: on, nothing shown but the whitelist still draws — no ONLY_SHOWN_NONE warning", function()
-    local plan = compile({ filter = { onlyShown = true, whitelist = { [500] = true },
-        categories = { bigDefensive = "hide" } } }, { categories = only("HELPFUL", { "bigDefensive" }) })
-    assertEqual(#plan.groups, 1, "the whitelist group alone")
-    assertEqual(plan.groups[1].label, "Always shown")
-    assertTrue(not hasWarning(plan, "no category is set to Show"), "the whitelist is drawing something")
+    assertEqual(FC.Signature(withKey), FC.Signature(withoutKey))
 end)
 
 -- ── uncategorized (U-1..U-5, fix round 1, docs/superpowers/specs/2026-09-15-feedback-batch7-design.md
@@ -421,16 +389,6 @@ test("filter: a listed aura's own category group is unaffected by Uncategorized 
     local shownDef, hiddenDef = defensivesGroup(shownPlan), defensivesGroup(hiddenPlan)
     assertTrue(shownDef ~= nil and hiddenDef ~= nil)
     assertEqual(FC.Signature(shownDef), FC.Signature(hiddenDef), "Uncategorized never touches a listed category's own group")
-end)
-
-test("filter: 'only these categories' changes nothing once Uncategorized exists — there was never a catch-all to drop (coordinator ruling, left as-is this round)", function()
-    -- The toggle's own logic (`not cats.onlyShown`) is untouched this round; it is redundant here only
-    -- because fix round 1 already removes the catch-all whenever Uncategorized exists, on or off.
-    local on = compile({ filter = { onlyShown = true, categories = { cancelable = "hide" } } },
-        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
-    local off = compile({ filter = { onlyShown = false, categories = { cancelable = "hide" } } },
-        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
-    assertEqual(FC.Signature(on), FC.Signature(off), "identical either way")
 end)
 
 -- ── uncategorized: ExplainSpell (fix round 1) ─────────────────────────────────────────────────
@@ -894,11 +852,14 @@ test("explain: an aura in no category is shown, with no categories named — ran
     assertEqual(#x.categories, 0)
 end)
 
--- red under: rank 5 staying "shown" while onlyShown is on, contradicting the compiled plan (R-9)
-test("explain: with 'only these categories' on, an unclaimed aura is hidden instead — still rank 5", function()
+-- D8 retired (fix round 2): a stray `filter.onlyShown` key, however it got there, changes nothing —
+-- rank 5 is unconditionally shown with no `uncategorized` category for the aura type (here, the
+-- `only` stub offers none), matching the compiled plan (the toggle no longer exists for the compiler
+-- to read either).
+test("explain: a stray filter.onlyShown key does not affect rank 5 — the toggle is retired", function()
     local x = FC.ExplainSpell(cfg({ filter = { onlyShown = true } }), 999999,
         { categories = only("HELPFUL", { "defensives" }) })
-    assertEqual(x.verdict, "hidden")
+    assertEqual(x.verdict, "shown")
     assertEqual(x.rank, 5)
 end)
 

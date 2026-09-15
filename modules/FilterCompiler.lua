@@ -32,10 +32,17 @@ local _, NS = ...
 --   * At least one Hidden -> one group PER SHOWN category (the base plus that category's positive
 --     constraint, minus every earlier shown category and the whitelist, so no aura is drawn twice),
 --     followed by a catch-all: the base, minus every hidden AND every shown category, minus the
---     whitelist (rule 5 — an aura in no category).
---   * "Only these categories" (a per-container toggle) drops the catch-all: the container then draws
---     only the whitelist plus its shown categories, and the one-group optimization above does not
---     apply even when nothing is Hidden — the shown groups ARE the container.
+--     whitelist (rule 5 — an aura in no category). The catch-all is skipped instead whenever an
+--     `uncategorized` category exists for the aura type (below) — it supersedes it, not joins it.
+--
+-- Fix round 2 (batch 7): the per-container "Only these categories" toggle (`D8`/`R-8`..`R-11`) is
+-- RETIRED. It once dropped the catch-all so a container drew only its whitelist plus its shown
+-- categories; once `uncategorized`'s own group correctly supersedes the catch-all in both of its
+-- states (fix round 1), the toggle had nothing left to drop — `uncategorized = "hide"` IS what it
+-- used to mean, on buffs. The owner chose one concept over two controls that needed explaining
+-- against each other. `core/Database.lua`'s schema step 4 migrates a stored `onlyShown = true` to
+-- `categories.uncategorized = "hide"` so an existing container keeps drawing only what it
+-- categorized rather than silently widening.
 --
 -- The blacklist applies to the base, so it reaches the shown groups and the catch-all, but never the
 -- whitelist group. Kind `enchant` takes part in neither the shown groups nor the exclusions — it
@@ -78,7 +85,6 @@ FC.WARN = {
     ENCHANT_UNIT     = "Weapon enchants only exist on your own character; this container shows the player's enchants whatever its unit is set to.",
     MAX_WITH_TIMELESS = "Max duration is ignored while showing only auras without a duration.",
     NEVER_MATCHES    = "These filters can never match anything.",
-    ONLY_SHOWN_NONE  = "Only the categories set to Show are drawn, and no category is set to Show.",
     TIMELESS_BUFFS_ONLY = "Only auras without a duration works for buffs only; this container shows every duration.",
     IDS_OWN_DEBUFFS  = "Spell lists are ignored for debuffs on your own character or pet: Blizzard does not allow spell-id filtering there.",
     IDS_HOSTILE_ONLY = "Spell lists only apply while the unit is hostile.",
@@ -441,7 +447,7 @@ local function excludeGuarded(con, def, edits)
     return def.kind == "spells"
 end
 
---- One group per SHOWN category (R-4, R-9): the base plus that category's positive constraint
+--- One group per SHOWN category (R-4): the base plus that category's positive constraint
 --- (`includeCategory`), minus every earlier shown category (`excludeGuarded`, so an aura in two shown
 --- categories is drawn once, under the first) and the whitelist. `uncategorized` (U-3) rides this
 --- loop like any other shown category — `includeCategory` gives it the complement exclude instead of
@@ -485,21 +491,23 @@ local function addCatchAllGroup(plan, base, cats, look)
     return usesSpellIds
 end
 
---- The category groups (R-3, R-4, R-5, R-9). `cats` = { shown, hidden, whitelist, spellEdits,
---- onlyShown, union }. Every group excludes the whitelist (it has its own group and must not be drawn
---- twice); the whitelist itself is never touched by the blacklist (R-7 — it lives on `base`).
+--- The category groups (R-3, R-4, R-5). `cats` = { shown, hidden, whitelist, spellEdits, union }.
+--- Every group excludes the whitelist (it has its own group and must not be drawn twice); the
+--- whitelist itself is never touched by the blacklist (R-7 — it lives on `base`).
 ---
----   * No category Hidden and the toggle off (R-3): exactly ONE group, the base minus the whitelist.
----     A Show cannot rescue anything when nothing is hiding, so the per-shown-category groups below
----     would be pure cost — this is what keeps a default container at one group.
----   * Otherwise (R-4, R-9): `addShownGroups` plus `addCatchAllGroup` (R-5), unless the toggle is on
----     (R-9) — or (fix round 1) unless an `uncategorized` category exists for the aura type, in
----     EITHER of its own states, which supersedes the catch-all rather than joining it.
+---   * No category Hidden (R-3): exactly ONE group, the base minus the whitelist. A Show cannot
+---     rescue anything when nothing is hiding, so the per-shown-category groups below would be pure
+---     cost — this is what keeps a default container at one group.
+---   * Otherwise (R-4): `addShownGroups` plus `addCatchAllGroup` (R-5) — unless (fix round 1) an
+---     `uncategorized` category exists for the aura type, in EITHER of its own states, which
+---     supersedes the catch-all rather than joining it. Fix round 2 retired the per-container "Only
+---     these categories" toggle (`D8`) that used to drop the catch-all on its own: once
+---     `uncategorized` does that correctly, the toggle had nothing left to do.
 ---
 --- @return boolean usesSpellIds
 local function addCategoryGroups(plan, base, cats, look)
     local hiddenCount = #cats.hidden
-    if hiddenCount == 0 and not cats.onlyShown then
+    if hiddenCount == 0 then
         local con = cloneCon(base)
         if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
         addGroup(plan, con, "All", look)
@@ -510,17 +518,15 @@ local function addCategoryGroups(plan, base, cats, look)
     local usesSpellIds = addShownGroups(plan, base, cats, look, hasUnion)
 
     local uncategorizedPresent = anyKind(cats.shown, "uncategorized") or anyKind(cats.hidden, "uncategorized")
-    if not cats.onlyShown and not uncategorizedPresent then
+    if not uncategorizedPresent then
         usesSpellIds = addCatchAllGroup(plan, base, cats, look) or usesSpellIds
     end
 
     return usesSpellIds
 end
 
---- The warnings that depend on the finished plan. R-11: an empty container under "only these
---- categories" with nothing shown and nothing whitelisted is a legitimate configuration to arrive at
---- by accident, so it carries its own warning rather than the generic NEVER_MATCHES.
-local function finishWarnings(plan, unit, auraType, usesSpellIds, onlyShownEmpty)
+--- The warnings that depend on the finished plan.
+local function finishWarnings(plan, unit, auraType, usesSpellIds)
     if usesSpellIds then
         local w = identityWarning(unit, auraType)
         if w then
@@ -529,7 +535,7 @@ local function finishWarnings(plan, unit, auraType, usesSpellIds, onlyShownEmpty
     end
     local groupCount = #plan.groups
     if groupCount == 0 then
-        warn(plan, onlyShownEmpty and FC.WARN.ONLY_SHOWN_NONE or FC.WARN.NEVER_MATCHES)
+        warn(plan, FC.WARN.NEVER_MATCHES)
     end
 end
 
@@ -590,18 +596,15 @@ function FC.Compile(cfg, ctx)
     -- ── Categories: the whitelist group, then one per shown category, then the catch-all ────
     local shown, hidden = splitCategories(Categories, auraType, filter.categories or {})
     local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
-    local onlyShown = filter.onlyShown == true
     local union = categorizedUnion(Categories, auraType, ctx.categorySpells)
     local categoryIds = addCategoryGroups(plan, base,
         { shown = shown, hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells,
-          onlyShown = onlyShown, union = union }, look)
+          union = union }, look)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     appendEnchants(plan, cfg, filter, ctx, auraType, Categories)
 
-    local shownCount = #shown
-    local onlyShownEmpty = onlyShown and shownCount == 0 and isEmpty(whitelist)
-    finishWarnings(plan, cfg.unit, auraType, timedIds or blacklisted or categoryIds or whitelisted, onlyShownEmpty)
+    finishWarnings(plan, cfg.unit, auraType, timedIds or blacklisted or categoryIds or whitelisted)
     return plan
 end
 
@@ -634,13 +637,13 @@ local function uncategorizedDef(Categories, auraType)
     return nil
 end
 
---- `ExplainSpell`'s rank-5 case (fix round 1): `id` is on no `spells`-kind list. With an
---- `uncategorized` category for this aura type, its own state decides `id`'s fate directly — Show is
---- rank 3 (rescued, same as any other Show), Hide is rank 4 (its one category says Hide) — and this
---- holds regardless of `onlyShown`, because `addCategoryGroups` never emits a catch-all once
---- `uncategorized` exists for the aura type either way (the toggle has nothing left to change here).
---- With no such category (HARMFUL), the old behavior stands: `onlyShown` alone decides it, and no
---- category is named (a `token`/`flag`/`dispel` guess is never made — see `ExplainSpell`'s comment).
+--- `ExplainSpell`'s rank-5 case: `id` is on no `spells`-kind list. With an `uncategorized` category
+--- for this aura type, its own state decides `id`'s fate directly — Show is rank 3 (rescued, same as
+--- any other Show), Hide is rank 4 (its one category says Hide) — because `addCategoryGroups` never
+--- emits a catch-all once `uncategorized` exists for the aura type either way. With no such category
+--- (HARMFUL — fix round 1: buffs only), nothing removed it (fix round 2 retired the "Only these
+--- categories" toggle that once could), so it is unconditionally rank 5 shown, and no category is
+--- named (a `token`/`flag`/`dispel` guess is never made — see `ExplainSpell`'s comment).
 --- @return table  { verdict, rank, categories }
 local function explainUncategorized(Categories, auraType, filter)
     local def = uncategorizedDef(Categories, auraType)
@@ -652,16 +655,16 @@ local function explainUncategorized(Categories, auraType, filter)
         end
         return { verdict = "shown", rank = 3, categories = entry }
     end
-    local hiddenByToggle = filter.onlyShown == true
-    return { verdict = hiddenByToggle and "hidden" or "shown", rank = 5, categories = {} }
+    return { verdict = "shown", rank = 5, categories = {} }
 end
 
 --- Explain why one spell id will or will not be drawn by container `cfg`, under the same five-rank
 --- priority `Compile` follows (docs/superpowers/specs/2026-09-14-feedback-batch6-design.md section
---- 6): the Overrides whitelist beats the blacklist, a category set to Show beats one set to Hide,
---- and an aura in no category is drawn unless `onlyShown` says otherwise. Pure, like `Compile`: no
---- frames, no database, `cfg`/`id`/`ctx` in, a table out — `FC.ProfileContext()` is the seam a
---- caller hands it the profile's spell-list edits through.
+--- 6): the Overrides whitelist beats the blacklist, a category set to Show beats one set to Hide, and
+--- an aura in no category is drawn — nothing removed it — unless the aura type carries its own
+--- `uncategorized` category (buffs only, `explainUncategorized`), whose own state then decides it
+--- instead. Pure, like `Compile`: no frames, no database, `cfg`/`id`/`ctx` in, a table out —
+--- `FC.ProfileContext()` is the seam a caller hands it the profile's spell-list edits through.
 ---
 --- Reasons about `spells`-kind categories, and `uncategorized` (`explainUncategorized`), ONLY. A
 --- `token`, `flag` or `dispel` category matches auras by a property the addon cannot look up from a

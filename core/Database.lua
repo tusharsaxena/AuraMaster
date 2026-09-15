@@ -617,6 +617,48 @@ function Database.MigrateV3(p)
     return walked
 end
 
+--- Schema v4 (fix round 2, batch 7): the retired per-container "Only these categories" toggle (D8,
+--- superseded R-8..R-11) becomes `categories.uncategorized = "hide"` on a HELPFUL container — the
+--- one aura type that carries an `uncategorized` category (buffs only, fix round 1's ruling) — so a
+--- container that had the toggle on keeps drawing only what it categorized, rather than silently
+--- widening the moment the toggle's own catch-all suppression disappears with it (fix round 1 already
+--- proved the two are the same shape: once `uncategorized`'s own group correctly supersedes the
+--- catch-all in both its states, the toggle has nothing left to do). `filter.onlyShown` is cleared
+--- whenever it was `true`, converted or not — the key means nothing any more and
+--- `NS.CONTAINER_TEMPLATE` no longer carries it, so nothing would ever supply it a default again.
+---
+--- A HARMFUL (or any other aura type) container with the toggle on has nothing to migrate onto:
+--- `Cat.HARMFUL` carries no `uncategorized` category (fix round 1 — a debuff-side row's union would
+--- always be empty, making its Show silently no-op every Hide on the tab, the owner's original
+--- complaint inverted), so there is no category whose Hide can stand in for what the toggle used to
+--- do. The honest answer, not a silent one: such a container LOSES the capability — an unclaimed
+--- debuff reaches the ordinary catch-all again, same as any container that never had the toggle on.
+--- This is a real, user-visible narrowing lost, not something this migration can invent its way
+--- around (a debuff-side Uncategorized row was explicitly not asked for and would reopen the same
+--- problem it would be trying to solve). Logged once per such container rather than converted quietly.
+--- @return number converted, number lost  containers moved to `uncategorized = "hide"`, and
+---                 containers whose narrowing could not be preserved (no such category exists)
+function Database.MigrateV4(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    local converted, lost = 0, 0
+    for key, c in pairs(p.containers) do
+        if type(c) == "table" and type(c.filter) == "table" and c.filter.onlyShown == true then
+            if c.auraType == "HELPFUL" then
+                c.filter.categories = c.filter.categories or {}
+                c.filter.categories.uncategorized = "hide"
+                converted = converted + 1
+            else
+                lost = lost + 1
+                if NS.Debug then
+                    NS.Debug("Migrate", "v4 container '%s' (%s): 'Only these categories' could not be preserved — no Uncategorized category exists for this aura type; it draws its ordinary catch-all again", tostring(key), tostring(c.auraType))
+                end
+            end
+            c.filter.onlyShown = nil
+        end
+    end
+    return converted, lost
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 local function eachProfile(db, fn)
@@ -652,6 +694,14 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV3(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v3 profile '%s': category whitelist lift and weaponEnchants over %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 4, apply = function(db)
+        eachProfile(db, function(p, name)
+            local converted, lost = Database.MigrateV4(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v4 profile '%s': 'Only these categories' retired -- %s container(s) moved to Uncategorized = Hide, %s lost the capability (no Uncategorized category for their aura type)", name, converted, lost)
             end
         end)
     end },
