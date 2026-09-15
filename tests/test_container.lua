@@ -628,6 +628,24 @@ test("container: a live click-through flip re-gates the blocker without a rebuil
     assertEqual(inst.blocker.__mouseMotionOn, false)
 end)
 
+-- red under: ApplyVisibility disabling the engine but leaving the blocker shown — an invisible
+-- mouse-blocking rect sitting over the world where nothing is drawn (the inverse of the reported
+-- bug, review round 1, B-9).
+test("container: a hidden container hides its blocker along with its engine, and Park hides it too", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    assertTrue(inst.blocker:IsShown(), "shown to start")
+    NS.db.profile.visibility = "never"
+    inst:ApplyVisibility()
+    assertFalse(inst.blocker:IsShown(), "hidden along with the engine")
+    NS.db.profile.visibility = "always"
+    inst:ApplyVisibility()
+    assertTrue(inst.blocker:IsShown(), "shown again once visible")
+    -- red under: Park leaving the blocker up under combat lockdown
+    inst:Park()
+    assertFalse(inst.blocker:IsShown())
+end)
+
 test("container: on a client without the aura engine a container is deleted without error", function()
     local NS, mocks = fresh({ before = function(m) m.AuraContainerSortMethod = nil end })
     local inst = NS.ContainerManager.instances[3]

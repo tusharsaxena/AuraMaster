@@ -121,9 +121,12 @@ return function()
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreate(frameType, name, parent, template)
         if M.__armGeometry then armGeometry(f) end
-        -- Frame level is arithmetic in production (the drag handle sits 50 above its anchor), so it
-        -- answers a real number (fidelity rule 2) and records what was set.
-        f.__level = 0
+        -- Frame level is arithmetic in production (the drag handle sits 50 above its anchor, and the
+        -- container's mouse blocker relies on an untouched engine defaulting to one above its own
+        -- anchor — review round 1, B-9), so it answers a real number (fidelity rule 2), inherits the
+        -- client's own default (a frame with no explicit level sits one above its parent's current
+        -- one) rather than flattening every frame to 0, and records what was set.
+        f.__level = (parent and parent.__level or 0) + 1
         function f:SetFrameLevel(v) self.__level = v; return self end
         function f:GetFrameLevel() return self.__level end
         -- The client's layout cache: recorded so a test can see an anchor opt out of it.

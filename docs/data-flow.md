@@ -30,7 +30,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:306
+ 4  Container:Apply                                            modules/Container.lua:337
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style
@@ -108,12 +108,12 @@ signatures differ (`modules/Container.lua:289-290`), because the engine clears a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:228`).
+`SetUnit` last (`modules/Container.lua:257`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:364`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:394`) answers, in order — perf suspend, profile and
 container `enabled`, preview (unlocked or `/am test`), then General visibility against
 `UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or

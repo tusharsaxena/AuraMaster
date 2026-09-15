@@ -183,24 +183,26 @@ end
 --- Create or refresh the container-wide mouse blocker (Style.ApplyBlockerBehavior, L-3 continued):
 --- one frame, made once and kept for the container's life, re-anchored to cover WHATEVER engine
 --- currently exists and re-gated on the current settings every apply — the same behavior block a
---- live button re-applies. Its frame level sits strictly between the anchor's and the engine's, so it
---- never gets between the mouse and a button: both levels are computed from the anchor's current one
---- (rather than copied from the engine, which the mock — and possibly the client — otherwise answers
---- as an unset 0), so the ordering holds regardless of what either frame's level defaulted to.
+--- live button re-applies. DisableUntrustedLayoutScriptsTemplate, like the anchor itself (New,
+--- above) and the frame picker's outline: a frame anchored TO an aura container must carry it or the
+--- engine refuses the point (docs/midnight-quirks.md). Left at the anchor's OWN frame level, never
+--- the engine's: the engine's buttons are its children, so they already default to one above it,
+--- which already puts them one above the anchor's own level too — this needs no write of ours, and
+--- ApplyBlocker never touches the engine, which forbids untrusted work once a group exists
+--- (Retire's comment, callEngine) and might refuse a level change reached through the Update path on
+--- a live engine. (Review round 1: a mock that answered every unset level as a flat 0 had made that
+--- write look load-bearing; it was not — the mock inherits the client's own default now.)
 function ContainerClass:ApplyBlocker(cfg)
     local engine, anchor = self.engine, self.anchor
     if not engine then return end
     local blocker = self.blocker
     if not blocker then
-        blocker = CreateFrame("Frame", nil, anchor)
+        blocker = CreateFrame("Frame", nil, anchor, "DisableUntrustedLayoutScriptsTemplate")
         self.blocker = blocker
     end
-    local level = anchor:GetFrameLevel()
-    engine:SetFrameLevel(level + 2)
-    blocker:SetFrameLevel(level + 1)
+    blocker:SetFrameLevel(anchor:GetFrameLevel())
     blocker:ClearAllPoints()
     blocker:SetAllPoints(engine)
-    blocker:Show()
     NS.Style.ApplyBlockerBehavior(blocker, cfg)
 end
 
@@ -400,12 +402,17 @@ end
 
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
 --- SetEnabled rather than hiding the anchor, because this runs on every combat transition, when an
---- aura button's ancestry must not be shown or hidden.
+--- aura button's ancestry must not be shown or hidden. The blocker is OUR OWN frame, not the engine's
+--- ancestry, so it is hidden outright rather than disabled — gated the same as the engine's enable,
+--- or a disabled-but-still-drawn engine (out-of-combat visibility, the master switch, perf suspend, a
+--- parked container) would leave an invisible mouse-blocking rect over the world where nothing shows
+--- (review round 1, B-9: the inverse of the reported bug).
 function ContainerClass:ApplyVisibility()
     local show, previewing = self:ShouldShow()
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
     if self.engine then callEngine(self.engine, "SetEnabled", show and not previewing) end
+    if self.blocker then self.blocker:SetShown(show and not previewing) end
     local L = cfg and cfg.layout or {}
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
     if previewing and cfg then
@@ -431,6 +438,7 @@ end
 --- id comes back first.
 function ContainerClass:Park()
     if self.engine then callEngine(self.engine, "SetEnabled", false) end
+    if self.blocker then self.blocker:Hide() end
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
     self.parked = true
