@@ -39,7 +39,6 @@ L["Left-click to attach, right-click to cancel"] = "Left-click to attach, right-
 L["Point at a named frame. Right-click to cancel."] = "Point at a named frame. Right-click to cancel."
 L["Slash Commands"] = "Slash Commands"
 L["Size"] = "Size"
-L["Bar"] = "Bar"
 L["Background & border"] = "Background & border"
 L["Name text"] = "Name text"
 L["Time text"] = "Time text"

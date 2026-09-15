@@ -833,7 +833,7 @@ badge and any count quoted in the docs must agree with it.
 ### test_pages_containers.lua (22)
 
 - containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
-- containers: NS.OpenOptionsPage('containers') falls back to the main category, like 'general' would (N-3 pending)
+- containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
 - containers: the tab body opens with the Container picker and New container on one line
 - containers: the picker retargets the tab and every page
 - containers: New container creates a container and selects it
@@ -855,11 +855,12 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (34)
+### test_pages_filters.lua (37)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
 - filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean
+- filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
 - filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
 - filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
 - filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
@@ -870,8 +871,10 @@ badge and any count quoted in the docs must agree with it.
 - filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
-- filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets no link (F-3)
+- filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)
+- filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
 - filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first
+- filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)
 - filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
@@ -917,14 +920,15 @@ badge and any count quoted in the docs must agree with it.
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
 
-### test_pages_bars.lua (10)
+### test_pages_bars.lua (11)
 
 - bars: every tab of an icons container carries the orange notice; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
 - bars: the wrong-style notice is drawn large, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
-- bars: the Bar tab's Spark subsection turns the spark off on auras without a duration (B-3)
-- bars: the eight tabs are drawn in order, whatever the container shows
+- bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
+- bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)
+- bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
 - bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
@@ -1080,9 +1084,9 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 36 |
 | test_pages_containers.lua | 22 |
-| test_pages_filters.lua | 34 |
+| test_pages_filters.lua | 37 |
 | test_pages_layout.lua | 22 |
-| test_pages_bars.lua | 10 |
+| test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 7 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
@@ -1097,4 +1101,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **903** |
+| **Total** | **907** |
