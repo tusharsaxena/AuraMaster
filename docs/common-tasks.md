@@ -26,7 +26,7 @@ Example: a bar option.
    with a comment saying why.
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
-   the structure key in `Container:Apply` (`modules/Container.lua:356`).
+   the structure key in `Container:Apply` (`modules/Container.lua:359`).
 6. `NS.ValidateSchema` fails the load if the path does not resolve against the template. Update the
    row lists in `docs/settings-panel.md` and the defaults in `docs/schema.md`.
 

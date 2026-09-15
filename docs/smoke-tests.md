@@ -368,3 +368,6 @@ listed here too, so the batch can be signed off in one pass.
     again → the unit's tooltip comes back, proving the blocker that closes the gap is gated off, not
     unconditional. Turn Click-through back off, then turn **Show tooltips** off instead and hover the
     gap once more → the unit's tooltip shows there too, for the same reason.
+    **Preview is exempt by design.** `/am unlock` (or `/am test`) and hover a gap between placeholders
+    → the unit's tooltip shows there, same as Click-through. Expected: the blocker is hidden whenever
+    the engine is (real auras are hidden while previewing too), so this is not a regression to report.

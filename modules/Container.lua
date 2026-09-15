@@ -185,13 +185,15 @@ end
 --- currently exists and re-gated on the current settings every apply — the same behavior block a
 --- live button re-applies. DisableUntrustedLayoutScriptsTemplate, like the anchor itself (New,
 --- above) and the frame picker's outline: a frame anchored TO an aura container must carry it or the
---- engine refuses the point (docs/midnight-quirks.md). Left at the anchor's OWN frame level, never
---- the engine's: the engine's buttons are its children, so they already default to one above it,
---- which already puts them one above the anchor's own level too — this needs no write of ours, and
---- ApplyBlocker never touches the engine, which forbids untrusted work once a group exists
---- (Retire's comment, callEngine) and might refuse a level change reached through the Update path on
---- a live engine. (Review round 1: a mock that answered every unset level as a flat 0 had made that
---- write look load-bearing; it was not — the mock inherits the client's own default now.)
+--- engine refuses the point (docs/midnight-quirks.md).
+---
+--- Its level is read from the engine's ACTUAL, current level and set one below that (floored at 0)
+--- EVERY apply, never assumed or computed from the anchor: the anchor's own level can be raised by a
+--- later apply (layout.level) without the engine's level following it, so deriving the blocker from
+--- anything but the engine itself would only hold by coincidence (review round 2). GetFrameLevel is
+--- a read, not a protected mutation, so this never goes through callEngine; ApplyBlocker still never
+--- WRITES to the engine, which forbids untrusted work once a group exists (Retire's comment,
+--- callEngine) and might refuse a level change reached through the Update path on a live engine.
 function ContainerClass:ApplyBlocker(cfg)
     local engine, anchor = self.engine, self.anchor
     if not engine then return end
@@ -200,7 +202,8 @@ function ContainerClass:ApplyBlocker(cfg)
         blocker = CreateFrame("Frame", nil, anchor, "DisableUntrustedLayoutScriptsTemplate")
         self.blocker = blocker
     end
-    blocker:SetFrameLevel(anchor:GetFrameLevel())
+    local ok, engineLevel = pcall(engine.GetFrameLevel, engine)
+    blocker:SetFrameLevel(math.max(0, (ok and engineLevel or 0) - 1))
     blocker:ClearAllPoints()
     blocker:SetAllPoints(engine)
     NS.Style.ApplyBlockerBehavior(blocker, cfg)

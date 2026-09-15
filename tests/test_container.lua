@@ -592,6 +592,23 @@ test("container: a shape change re-anchors the blocker to the new engine", funct
     assertTrue(inst.blocker:GetFrameLevel() < inst.engine:GetFrameLevel())
 end)
 
+-- red under: deriving the blocker's level from the anchor (or from anything read once, at creation)
+-- instead of the engine's own CURRENT level every apply — a later apply can raise layout.level
+-- without the already-built engine following it (the mock does not re-base descendants, and neither
+-- does the client), which would put the blocker at or above the engine and eat the buttons' own
+-- tooltips: the inverse of the reported bug (review round 2).
+test("container: raising the anchor's level after the engine exists leaves the blocker strictly below it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local engine = inst.engine
+    local raised = inst.anchor:GetFrameLevel() + 10
+    assertTrue(NS.SetByPath("container.layout.level", raised, 1))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == engine, "a live-editable change: no rebuild")
+    assertEqual(inst.anchor:GetFrameLevel(), raised, "the anchor's level did rise")
+    assertTrue(inst.blocker:GetFrameLevel() < inst.engine:GetFrameLevel())
+end)
+
 -- red under: the blocker ignoring TakesHover and taking the mouse (or clicks) whatever the
 -- container's own settings say — a click-through container exists to pass its clicks AND its hover
 -- to whatever is behind it, gaps included.
