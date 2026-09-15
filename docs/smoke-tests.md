@@ -121,7 +121,7 @@ suite covers what only the client can show.
     Cooldown tick **Blizzard countdown numbers** → on a timed aura the countdown and the time text
     read the same whole second throughout, in each time format (both round a fraction up: 12.7 s
     reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
-28. **The picker is shared.** On Bars → Bar, switch the Container dropdown → the page stays on **Bar**,
+28. **The picker is shared.** On Bars → Icon, switch the Container dropdown → the page stays on **Icon**,
     now showing the other container; open Layout → the same container is selected there.
 29. Every media dropdown (bar texture, background, border, font) opens with entries in it.
 
@@ -309,7 +309,7 @@ listed here too, so the batch can be signed off in one pass.
     color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the other
     profile → the same.
 59. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
-    dispel type, set Bars → Bar → **Color by** to dispel type → the fill takes the General → Dispel
+    dispel type, set Bars → General → **Color by** to dispel type → the fill takes the General → Dispel
     Colors color; set it back to one color → the fill returns to the bar color at once. Enter combat
     with the aura still up → the fill keeps the bar color. The open point is whether a color written
     after the engine's dispel tint holds while auras are secret.
@@ -405,7 +405,7 @@ one. None of this is reproducible headlessly; these checks are.
 
 77. **Group explosion has a real cost, and nothing silently vanishes (spec §6b, `R-4`).** On a
     *player debuffs* container, set exactly one debuff category — say *Dispellable* — to **Hide**
-    and leave the other 15 at **Show** → the container now compiles to roughly 15 groups plus a
+    and leave the other 16 at **Show** → the container now compiles to roughly 15 groups plus a
     catch-all (spec §6b), not one. Cast or apply enough different debuffs to populate several
     categories at once and confirm **every** one you expect still appears — a debuff in *Dispellable*
     and nothing else disappears, but one in *Dispellable* and also, say, *Boss* still shows (rank 3).

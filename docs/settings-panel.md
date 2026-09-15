@@ -29,7 +29,7 @@ only the tree entry is marked.
   descriptor (`get`/`set`/`applyDefault` over the write seam, `rowsForPage` over
   `NS.SchemaForPage`, `skipRestoreAll`, `resetProfile`, `scheduleTimer`, the color codec) and the
   library draws the canvas, header, tab strip, two-column flow and widgets. The parent category
-  registers eagerly at `PLAYER_LOGIN` (`core/AuraMaster.lua:38`) and every body is built on its first
+  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:38`) and every body is built on its first
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
@@ -341,14 +341,14 @@ Containers, and every control below it is drawn disabled (the spec's `disabledFo
 | Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:168`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:186`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
 as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
-(`core/Compat.lua:174`); the running-out color is a step color curve over
-remaining time (`core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
+(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the running-out color is a step color curve over
+remaining time (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
 shows only while the aura can be refreshed without loss.
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a

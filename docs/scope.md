@@ -17,7 +17,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
   anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
-  below), 32 categories set to Show or Hide, schema v3 (defined in `defaults/Categories.lua`: spell
+  below), 34 categories set to Show or Hide, schema v4 (defined in `defaults/Categories.lua`: spell
   lists, Blizzard aura flags and filter tokens, dispel types, player-or-creature source, and the
   weapon-enchant capability), a per-container Overrides whitelist and blacklist of spells (the
   whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists
@@ -71,9 +71,9 @@ These are not declined; the game forbids them, and a request for one is answered
   so it cannot be filtered after the fact either. Requested 2026-09-14; declined with the rule.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
   friendly units and debuffs on hostile units. The addon warns per container
-  (`modules/FilterCompiler.lua:243`) rather than letting the filter look broken.
+  (`identityWarning`, `modules/FilterCompiler.lua:558`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
-  (`modules/ContainerManager.lua:155`).
+  (`CM.MustDefer`, `modules/ContainerManager.lua:155`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
 

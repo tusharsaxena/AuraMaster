@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (62)
+### test_database.lua (64)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -83,7 +83,9 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided
 - v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind="enchant" category
 - v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now
-- v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself
+- v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself — UNWHITELISTED branch only
+- v3: a WHITELISTED (narrowed) container gets uncategorized stamped hide directly from MigrateV3, never left for the backfill
+- v3: a narrowed container does not gain unlisted auras after migrating — compiled, not just stored
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
@@ -859,7 +861,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (37)
+### test_pages_filters.lua (38)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -876,6 +878,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
 - filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)
+- filters: the Uncategorized cost note draws on a buff container and not on a debuff one (review fix wave, item 2)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
 - filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first
 - filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)
@@ -1021,7 +1024,7 @@ badge and any count quoted in the docs must agree with it.
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
 - locale: every value is ASCII, the em dash excepted (T-1)
 
-### test_docs.lua (6)
+### test_docs.lua (7)
 
 - README.md carries no angle-bracket argument placeholders
 - the addon's own files use US spellings (localization-§5's canonical lists)
@@ -1029,6 +1032,7 @@ badge and any count quoted in the docs must agree with it.
 - every Tier 2 documentation-map row agrees with docs/
 - every .md under docs/ appears in the documentation map
 - docs: every file:line citation names an existing file and a non-blank line inside it
+- docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
 
 ### test_surface_parity.lua (4)
 
@@ -1061,7 +1065,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 62 |
+| test_database.lua | 64 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
@@ -1088,7 +1092,7 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 36 |
 | test_pages_containers.lua | 22 |
-| test_pages_filters.lua | 37 |
+| test_pages_filters.lua | 38 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 7 |
@@ -1100,9 +1104,9 @@ badge and any count quoted in the docs must agree with it.
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
-| test_docs.lua | 6 |
+| test_docs.lua | 7 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **911** |
+| **Total** | **915** |

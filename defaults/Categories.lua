@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- defaults/Categories.lua — the aura CATEGORIES a container's filter can show or hide.
 --
--- A category is one of five KINDS, and the kind decides how modules/FilterCompiler.lua turns it into
+-- A category is one of six KINDS, and the kind decides how modules/FilterCompiler.lua turns it into
 -- something Blizzard's aura container evaluates in its own secure code (we never see aura data in
 -- combat, so every filter has to be declared up front — see docs/data-flow.md):
 --

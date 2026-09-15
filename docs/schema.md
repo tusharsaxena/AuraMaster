@@ -123,7 +123,7 @@ path, never to a number restated in `modules/`.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`core/Constants.lua:143`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:148`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
 `{0.80, 0.00, 0.00}`, all alpha 1.
 
@@ -264,7 +264,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:683`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:727`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -286,7 +286,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
-- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:603`) runs over **every** stored profile,
+- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:639`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
   `Database.CurrentSchemaVersion()` answers `3`. Only a container whose `auraType` is a known one
   (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
@@ -294,7 +294,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   and logs its own `[Migrate] v3 container '<id>' skipped: unrecognized auraType <value>` line — a
   silently skipped container is the kind of thing only its player would ever notice.
   - The old three-state category model (`""` no effect / `"show"` whitelist / `"hide"` exclude)
-    became two states, Show / Hide, where Show contributes nothing (defaults/Categories.lua). The
+    became two states, Show / Hide (defaults/Categories.lua documents what each does today). The
     old `"show"` state meant "draw ONLY the categories set to show" — a state the new model has no
     room for, so mapping `""` → `"show"` verbatim would silently WIDEN what an already-stored
     container draws. The old intent is written out longhand instead, per container, over
@@ -306,8 +306,8 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     least one filterable category of the container's type is still unset (`""` or missing) — an
     already-fully-decided container (every filterable key `"show"` or `"hide"`) is the fixed point and
     is left untouched, which is what makes a second run a no-op.
-  - **Filterable keys exclude `kind == "enchant"` categorically**, not merely because none exists in
-    `NS.Categories.For`'s lists yet. An enchant row (`weaponEnchants`, once task B3 adds it) is a
+  - **Filterable keys exclude `kind == "enchant"` categorically**, not merely because none existed in
+    `NS.Categories.For`'s lists when the step was written. An enchant row (`weaponEnchants`, added by task B3) is a
     container capability — "does this container have weapon-enchant slots" — not a filter over auras:
     it matches no aura and joins no aura group, the same reason `modules/FilterCompiler.lua`'s own
     `splitCategories` skips that kind. So it never counts toward "was this container narrowed", is
@@ -318,7 +318,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     `weaponEnchants` — and the next run over that container would see exactly one category at
     `"show"`, read it as narrowed, and sweep every other category to `"hide"`, a near-total blackout
     of a container the player never touched. The exclusion holds whether `kind == "enchant"` exists in
-    `def` or not, so it needs no revisiting when B3 lands.
+    `def` or not, so it needed no revisiting when B3 landed.
   - Categories are not a partition of the aura space, so "hide everything not whitelisted" cannot
     fully reproduce the old exclusive whitelist purely by category state: an aura that also matched a
     category the sweep above just turned to `"hide"` would need rescuing. Originally (schema v3's
@@ -337,11 +337,10 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     AFTER the category-whitelist lift above, and only when `categories.weaponEnchants` is not already
     set (idempotency: `includeEnchants` is nil by the second run, so an unconditional write would
     re-stamp `"hide"` and silently drop a container already migrated to `"show"` on any re-run — a
-    restored backup, a copied profile, a re-applied step). Today `weaponEnchants` is not yet one of
-    `NS.Categories.For`'s keys (task B3 adds the category definition and wires the compiler and UI to
-    it; this step only writes the stored key ahead of that); the categorical `kind == "enchant"`
-    exclusion above is what keeps this order safe once B3 does add it, rather than the lift merely
-    having nothing to see today.
+    restored backup, a copied profile, a re-applied step). When this step was written, `weaponEnchants` was not yet
+    one of `NS.Categories.For`'s keys (task B3 then added the category definition and wired the
+    compiler and UI to it; this step only wrote the stored key ahead of that); the categorical
+    `kind == "enchant"` exclusion above is what keeps this order safe now that B3 has added it.
 - **Schema v4** (`Database.MigrateV4`, `core/Database.lua`, batch 7 fix rounds 2 and 3) runs over
   **every** stored profile, same reach as v2/v3. It logs one `[Migrate] v4 profile '<name>'` line
   each naming how many containers converted and how many lost the capability, and
@@ -384,5 +383,5 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   silently fixed.
   A new category key reaches every container the same way, through `DefaultStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: append the
-  next rung (`to = 3`), transform the stored value, and remember that containers live in every
+  next rung (`to = 5`), transform the stored value, and remember that containers live in every
   profile, not only the active one (`docs/common-tasks.md` has the recipe).

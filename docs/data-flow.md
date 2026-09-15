@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (listener)                                modules/ContainerManager.lua:520
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:520
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
@@ -97,7 +97,7 @@ priority states (`FC.ExplainSpell` answers the same question for one spell, for 
   under the first) and minus the whitelist — followed by the **catch-all**: the base minus every
   Hidden and every Shown category and the whitelist, which is what draws an aura in no category at
   all (rank 5). The per-container "Only these categories" toggle that used to drop the catch-all is
-  RETIRED (batch 7 fix round 2); a Blizzard `uncategorized` category (batch 7, `U-1`..`U-5`) does
+  RETIRED (batch 7 fix round 2); an addon-defined `uncategorized` category in the Spell Categories grid (batch 7, `U-1`..`U-5`) does
   that instead — Hide always suppresses the catch-all (on either aura type, reproducing the retired
   toggle exactly, fix round 3); Show suppresses it too, but only for a buff container, where the
   category's own group is a real rescue that already covers everything the catch-all would (a strict
@@ -123,7 +123,7 @@ priority states (`FC.ExplainSpell` answers the same question for one spell, for 
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:709`) and re-sent only when the two
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:758`) and re-sent only when the two
 signatures differ (`modules/Container.lua:289-290`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
