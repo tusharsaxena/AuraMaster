@@ -30,6 +30,9 @@ local print = NS.Print
 local GS = NS.GeneralSpells
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
+-- Preview mode is this addon's test mode (`/am test`), so its switch is Master controls' Test mode row
+-- (options-ui-§15, standard v2.46.0), composed from `testModePath` (LibKa0s v1.37.0).
+local TEST_MODE_PATH = "state.preview"
 
 local masterRows, masterTail = H.MasterControls({
     prefix           = "",
@@ -37,6 +40,7 @@ local masterRows, masterTail = H.MasterControls({
     addonName        = "Aura Master",
     frameless        = false,
     debugConsolePath = DEBUG_CONSOLE_PATH,
+    testModePath     = TEST_MODE_PATH,
     onResetPosition  = function() NS.ContainerManager.ResetPositions() end,
     onResetAll       = function() StaticPopup_Show("AURAMASTER_RESET_ALL") end,
 })
@@ -81,19 +85,19 @@ for _, row in ipairs(masterRows) do
         -- Explicitly nothing: toggling a window re-applies no container.
         row.onChange = function() end
     end
+    if row.path == TEST_MODE_PATH then
+        -- Session state bound to preview mode, as the console row is bound to the console window.
+        -- The composer gives the row a generic tooltip; this addon's says what the placeholders are.
+        row.get = function() return NS.State and NS.State.preview or false end
+        row.set = function(v) NS.ContainerManager.SetPreview(v) end
+        row.default = false
+        row.tooltip = L["Fill every container with sample auras so you can see and style it without waiting for a real buff. Turns off at /reload. Unlocking shows them too."]
+    end
 end
 
 NS.RegisterSchemaRows(masterRows)
 
 NS.RegisterSchemaRows({
-    {
-        path = "state.preview", page = "general", group = L["Display"], subgroup = L["Preview"],
-        type = "bool", sessionOnly = true, default = false,
-        label = L["Show placeholder auras"],
-        desc  = L["Fill every container with sample auras so you can see and style it without waiting for a real buff. Turns off at /reload. Unlocking shows them too."],
-        get = function() return NS.State and NS.State.preview or false end,
-        set = function(v) NS.ContainerManager.SetPreview(v) end,
-    },
     {
         path = "hideBlizzardBuffs", page = "general", group = L["Display"], subgroup = L["Blizzard frames"],
         type = "bool", startsLine = true,

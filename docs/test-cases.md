@@ -804,7 +804,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the visibility dropdown offers the four states in order and stores the one chosen
 - general: locking ends preview mode; unlocking leaves it alone
 - general: the Debug console checkbox shows the window and writes nothing to the profile
-- general: the Display tab's preview checkbox turns preview mode on for the session only
+- general: Master controls' Test mode checkbox turns preview mode on for the session only
 - general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen

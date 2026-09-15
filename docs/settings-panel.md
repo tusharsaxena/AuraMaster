@@ -10,7 +10,7 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
-| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, test mode (the placeholder preview), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
@@ -101,6 +101,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every handle and the preview; locking ends preview mode |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
+| Test mode | `state.preview` | bool, session | The composed Test mode row (options-ui-§15, `testModePath`): `ContainerManager.SetPreview`, placeholder auras in every container; off at `/reload`; `/am test` and unlocking reach the same preview |
 
 Then the composed button pair: **Reset position** (`ContainerManager.ResetPositions` — every
 container back to the screen, staggered) and **Reset all settings** (the `AURAMASTER_RESET_ALL`
@@ -112,7 +113,6 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 
 | Subgroup | Row | Path | Type | Behavior |
 |---|---|---|---|---|
-| Preview | Show placeholder auras | `state.preview` | bool, session | `ContainerManager.SetPreview`; off at `/reload` |
 | Blizzard frames | Hide Blizzard buffs | `hideBlizzardBuffs` | bool | Reparents `BuffFrame` (and the weapon enchants in it); out of combat |
 | Blizzard frames | Hide Blizzard debuffs | `hideBlizzardDebuffs` | bool | Reparents `DebuffFrame`; out of combat |
 

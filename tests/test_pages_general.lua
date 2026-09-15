@@ -121,11 +121,14 @@ test("general: the Debug console checkbox shows the window and writes nothing to
     assertFalse(NS.DebugLog:IsShown(), "and closed again")
 end)
 
-test("general: the Display tab's preview checkbox turns preview mode on for the session only", function()
-    local NS, _, P, _, tab = general()
-    local ws = tab(NS.L["Display"])
+test("general: Master controls' Test mode checkbox turns preview mode on for the session only", function()
+    -- options-ui-§15 (standard v2.46.0): preview mode is this addon's test mode, so its switch is the
+    -- composed Test mode row below Lock frame / Debug console, not a Display-tab row.
+    -- red under: the row still hand-written on the Display tab.
+    local NS, _, P, ws, tab = general()
     local cb = P.row(ws, "state.preview")
-    assertTrue(cb ~= nil, "Show placeholder auras is on the Display tab")
+    assertTrue(cb ~= nil, "Test mode is on the Master controls tab")
+    assertTrue(P.row(tab(NS.L["Display"]), "state.preview") == nil, "and no longer on the Display tab")
     local msgs = P.messages()
     cb:__fire("OnValueChanged", true)
     -- red under: the row's set not reaching ContainerManager.SetPreview
