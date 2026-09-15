@@ -59,7 +59,7 @@ path, never to a number restated in `modules/`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `categories` | every category key → `""` | `[categoryKey] = "" \| "show" \| "hide"`; built from `NS.Categories.NeutralStates()`, so a key added later backfills as neutral. The panel labels the three states Default, Whitelist and Blacklist. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
+| `categories` | every category key → `"show"` | `[categoryKey] = "show" \| "hide"` (schema v3); built from `NS.Categories.DefaultStates()`, so a key added later backfills as Show. Show is a positive claim, not merely "not excluded" — see `docs/ARCHITECTURE.md` → Filter priority. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
 | `whitelist` | `{}` | `[spellId] = true` — always shown; beats the blacklist (owner's 2026-09-15 filter-priority revision, `modules/FilterCompiler.lua` rank 1) |
 | `blacklist` | `{}` | `[spellId] = true` — never shown, unless the whitelist also names it |
 | `onlyShown` | `false` | drop the catch-all group so only the whitelist and the categories set to Show are drawn ("only these categories", D8) |
@@ -355,7 +355,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   hand-edited `position = "junk"`) is replaced by the template's section. A whole-section write
   through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
   silently fixed.
-  A new category key reaches every container the same way, through `NeutralStates()`.
+  A new category key reaches every container the same way, through `DefaultStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: append the
   next rung (`to = 3`), transform the stored value, and remember that containers live in every
   profile, not only the active one (`docs/common-tasks.md` has the recipe).

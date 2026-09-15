@@ -33,13 +33,13 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_database.lua (40)
+### test_database.lua (52)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
 - database: string ids, dangling order entries and orphans are repaired
 - database: the backfill fills a missing leaf and keeps a stored false
-- database: every category key is present on a stored container, neutral
+- database: every category key is present on a stored container, at Show (schema v3)
 - database: category keys are unique across the buff and debuff lists
 - database: a new container's data is a deep copy of the template with a fresh id
 - database: the migration runner stamps the schema and creates the timed-spell store
@@ -59,7 +59,6 @@ badge and any count quoted in the docs must agree with it.
 - database: NewContainerData takes an id from the counter without registering the container
 - database: seeded starters share no table with each other or with the template
 - database: a file from before the seeded flag, the id counter and the order keeps its containers
-- database v2: the schema is at version 2
 - database v2: spell additions from every container are united in the profile
 - database v2: a starter is removed profile-wide only when every container that edited it removed it
 - database v2: an addition beats another container's removal of the same spell
@@ -75,6 +74,19 @@ badge and any count quoted in the docs must agree with it.
 - database v2: RunMigrations logs one [Migrate] line per profile, and a second run is a no-op
 - database v2: without AceDB the step migrates the one profile there is
 - database v2: a fresh profile carries the profile-wide spell lists and dispel colors
+- v3: a container that whitelisted a category hides every other category of its type
+- v3: a container with no whitelisted category gets every row at show
+- v3: includeEnchants becomes the weaponEnchants row and the old key is cleared
+- v3: an ENCHANT container is left alone
+- v3: a container with a missing or unrecognized auraType is left completely untouched
+- v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided
+- v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind="enchant" category
+- v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now
+- v3: MigrateV3 returns the number of containers it walked
+- v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
+- v3: the whitelist lift never sweeps a category the aura type does not have
+- v3: the current schema version is 3
+- v3: RunMigrations migrates every stored profile, the inactive one included
 
 ### test_schema.lua (28)
 
@@ -146,7 +158,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (39)
+### test_filtercompiler.lua (66)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -155,25 +167,44 @@ badge and any count quoted in the docs must agree with it.
 - filter: 'only timed' is maxDuration = huge, which drops permanent auras
 - filter: 'only timeless' excludes every learned timed spell and ignores a max duration
 - filter: 'only timeless' on a debuff container is reported and treated as any duration
-- filter: showing a token category adds the token
-- filter: hiding a token category adds its negation to every group
+- filter: showing a token category adds nothing when nothing is hidden — there is always exactly one group (R-3)
+- filter: hiding a token category negates its token in the catch-all (R-5)
 - filter: hiding a flag category asks for the opposite value
-- filter: a dispel category shown includes, hidden excludes
-- filter: two shown categories are a union, and the second excludes the first
-- filter: a token shown after a token excludes it by negation
-- filter: a category's spell edits add and remove ids
+- filter: a dispel category shown includes nothing when nothing is hidden, hidden excludes
+- filter: two shown categories with nothing hidden still compile to the one, unfiltered group (R-3)
+- filter: two hidden token categories both negate, in the catch-all (R-5)
+- filter: a hidden category's spell edits add and remove ids from the catch-all's exclusion
 - filter: spell edits are the profile's, handed in ctx; a container's own old copy is ignored (schema v2)
 - filter: both compile sites hand the compiler the profile's spell lists
-- filter: a shown spell category with every id removed can never match, and says so
+- filter: showing a spell category with every id removed, and nothing hidden, still contributes nothing (R-3)
+- filter: a shown spell category with every id removed can never match, and is dropped as a conflict (R-6)
+- filter: categories set to show add no group when nothing is hidden — there is always exactly one
+- filter: a category set to hide excludes its spells from the catch-all
+- filter: a token category set to hide negates its token
+- filter: show and hide are not symmetric — show excludes nothing
+- filter: a hidden spell category with no ids left contributes no exclusion
 - filter: the whitelist is its own first group and every other group excludes it
-- filter: the blacklist is excluded everywhere and beats the whitelist
+- filter: the whitelist beats the blacklist — an id on both lists is shown (R-2)
+- filter: the blacklist still reaches the catch-all, but never the whitelist group (R-7)
+- filter: off, the toggle changes nothing — a default container still stays at one group (R-3)
+- filter: on, one shown category and nothing hidden still gets its own group — R-3 does not apply (R-9)
+- filter: on, the catch-all is gone — the group carries a positive constraint instead of none (R-9)
+- filter: on, nothing shown and nothing whitelisted draws nothing, with its own warning (R-11)
+- filter: on, nothing shown but the whitelist still draws — no ONLY_SHOWN_NONE warning
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
 - filter: a weapon-enchant container has three slots and no aura groups
 - filter: an enchant container on another unit still shows the player's, and says so
-- filter: a player buff container may append weapon enchants; a target's may not
+- filter: the weaponEnchants row decides the enchant slots, and adds no group
+- filter: the enchant row does nothing on a debuff or a non-player container
+- filter: the enchant slots the container draws are exactly the profile's, in a fixed order
+- filter: an enchant container's slots also come from the profile, falling back to all three
 - filter: max auras caps each group; 0 means no cap
+- filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
+- filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
+- filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
+- filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 15 for HARMFUL today
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
@@ -186,9 +217,17 @@ badge and any count quoted in the docs must agree with it.
 - filter: the spell-list warning follows the unit and the aura type
 - filter: 'only timeless' with nothing learned yet filters no ids and warns about none
 - filter: a hidden spell category with every id removed excludes nothing
-- filter: group keys stay consecutive when a contradiction drops a group
+- filter: a contradiction drops the catch-all without disturbing the whitelist group's key
+- filter: hiding two categories that contradict on the same flag leaves nothing, and says so
+- explain: the whitelist beats the blacklist — rank 1, shown
+- explain: the blacklist alone hides — rank 2
+- explain: a Show category rescues an aura another category hides — rank 3, shown, both named
+- explain: an aura whose every category says Hide is hidden — rank 4
+- explain: an aura in no category is shown, with no categories named — rank 5
+- explain: with 'only these categories' on, an unclaimed aura is hidden instead — still rank 5
+- explain: a token category is never named — only spells-kind categories are reasoned about
 
-### test_container.lua (35)
+### test_container.lua (41)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -224,6 +263,12 @@ badge and any count quoted in the docs must agree with it.
 - container: the class snapshot is the tracked unit's, and nothing for the player or for enchants
 - container: a class the client withholds resolves to no class instead of raising
 - container: a button the engine creates is dressed with the container's class snapshot
+- container: a live container has a mouse blocker covering its engine, below its buttons
+- container: a shape change re-anchors the blocker to the new engine
+- container: raising the anchor's level after the engine exists leaves the blocker strictly below it
+- container: the blocker follows TakesHover and never takes clicks, matching the live buttons
+- container: a live click-through flip re-gates the blocker without a rebuild
+- container: a hidden container hides its blocker along with its engine, and Park hides it too
 - container: on a client without the aura engine a container is deleted without error
 
 ### test_containermanager.lua (51)
@@ -728,7 +773,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (51)
+### test_pages_general.lua (56)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -765,7 +810,7 @@ badge and any count quoted in the docs must agree with it.
 - general → containers: the copy block offers every other container and copies only the chosen section
 - general → containers: copying Everything takes what the source is, never its name or position
 - general → containers: with one container the tab offers Duplicate and Delete but no copy block
-- general → spell categories: a dropdown of the nine spell categories, Healing among them, opening on the first
+- general → spell categories: a dropdown of the nine spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet
 - general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
@@ -777,21 +822,35 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore this category's starter list clears that category's edits and no other's
+- general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
+- general → spell categories: the Weapon enchants entry explains the all-slots fallback
+- general → spell categories: unticking a weapon slot writes the profile, one row at a time
+- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
+- general: Select accepts the enchant key too, and lands the tab on it
 - general → spell categories: the tab and Dispel Colors are drawn with no container at all
 - general → dispel colors: six profile-wide swatches with no class-color companion, under a line saying they drive bars only
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_filters.lua (16)
+### test_pages_filters.lua (33)
 
 - filters: Cast by writes the selected container's filter and no other
-- filters: a buff container is offered the weapon-enchant rows; a debuff container is not
+- filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
+- filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean
 - filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
-- filters: a buff container's Categories tab is two grids, Blizzard Categories then Custom Categories, each once
+- filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
+- filters: a max-duration preset writes the same path as the slider
+- filters: a stored max-duration matching no preset leaves the preset dropdown blank
+- filters: the max-duration description says there is no minimum
+- filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
 - filters: a debuff container's Categories tab is Blizzard Categories, Dispel Types and Who Cast It, each once
-- filters: every grid's columns are Default, Whitelist and Blacklist, then the category
-- filters: a grid radio stores show, hide or "" for the selected container and re-syncs its line
-- filters: /am get and /am list print a category's state as Default, Whitelist or Blacklist
+- filters: every grid's columns are Show and Hide, then the category (schema v3)
+- filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
+- filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets no link (F-3)
+- filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first
+- filters: 'Only these categories' is drawn at the top of the Categories tab, above the grids, and its text explains Hide differently while it is on (R-8/R-10)
+- filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
+- filters: /am get and /am list print a category's state as Show or Hide
 - filters: every category row is skipRender and names its grid
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
@@ -800,6 +859,14 @@ badge and any count quoted in the docs must agree with it.
 - filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once
 - filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from
 - filters: every tab opens with what the engine will not honor here, in orange
+- filters: a plain, uncategorized whitelist entry has no note
+- filters: a spell on both lists gets a note on its blacklist entry saying the whitelist wins
+- filters: a spell on both lists gets a note on its whitelist entry naming the blacklist too
+- filters: a blacklisted spell in a Show category names that category as overridden
+- filters: a whitelisted spell every one of its categories would hide names them as overridden
+- filters: a blacklisted spell a Hide category would also hide gets no note
+- filters: a whitelisted spell no category claims, under 'only these categories', warns it would vanish
+- filters: an uncategorized blacklisted spell warns that no category hides it
 
 ### test_pages_layout.lua (22)
 
@@ -960,11 +1027,11 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_database.lua | 40 |
+| test_database.lua | 52 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 39 |
-| test_container.lua | 35 |
+| test_filtercompiler.lua | 66 |
+| test_container.lua | 41 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 19 |
 | test_secrets.lua | 3 |
@@ -985,8 +1052,8 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 51 |
-| test_pages_filters.lua | 16 |
+| test_pages_general.lua | 56 |
+| test_pages_filters.lua | 33 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 10 |
 | test_pages_icons.lua | 7 |
@@ -1003,4 +1070,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **813** |
+| **Total** | **880** |

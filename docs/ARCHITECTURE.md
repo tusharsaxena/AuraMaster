@@ -91,8 +91,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **198** rows across five pages: General 20 (its Containers tab's five and its
-Dispel Colors tab's six among them), Filters 39, Layout 26, Bars 71 and Icons 42. The
+`NS.Schema` holds **202** rows across five pages: General 23 (its Containers tab's five, its
+Dispel Colors tab's six, and its Spell Categories tab's three `enchantSlots` rows among them),
+Filters 40, Layout 26, Bars 71 and Icons 42. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:552`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
@@ -168,6 +169,39 @@ capture ring. No control sets it and no row addresses it.
   schema. No addon code writes it, and no verb clears it.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
+
+## Filter priority
+
+`modules/FilterCompiler.lua` decides whether one container draws a given aura by one order, highest
+rank first (revised by the owner 2026-09-15). `FC.ExplainSpell` answers the same question for a
+single spell id, under the same order, and is what the settings panel reads it from — the per-entry
+notes under Filters → Overrides' Whitelist and Blacklist (K-3), and the warnings `FilterCompiler.Compile`
+attaches to the container.
+
+| Rank | Rule | Outcome |
+|---|---|---|
+| 1 | On the Overrides **whitelist** | **Shown.** Always, whatever anything else says |
+| 2 | On the Overrides **blacklist** | **Hidden**, unless rank 1 already claimed it |
+| 3 | In **at least one** category set to Show | **Shown**, even if it is also in a category set to Hide |
+| 4 | In one or more categories, **all** of them set to Hide | **Hidden** |
+| 5 | In **no** category at all | **Shown** — nothing removed it |
+
+Stated as one sentence: an aura is hidden when the blacklist names it, or when every category it
+belongs to says Hide; everything else is drawn, and the whitelist overrides both. A category set to
+Show is a positive claim, not merely the absence of a Hide, so rank 3 rescues an aura from a Hide
+elsewhere — a Defensive that is also Cancelable is not dropped just because Cancelable says Hide.
+
+**How that compiles.** The engine ANDs the constraints inside one group and ORs the groups, so "in
+ANY shown category" is a union and needs a group per Shown category. With nothing Hidden, exactly
+one group is emitted (the base minus the whitelist) — a Show cannot rescue anything when nothing is
+hiding, so the extra groups would be pure cost. Once anything is Hidden, one group per Shown category
+is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
+container with anything Hidden therefore compiles to roughly 15 groups, not one, and the "Max auras"
+cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
+`docs/schema.md`). The per-container **"only these categories"** toggle
+(`container.filter.onlyShown`) drops the catch-all group, so only the whitelist and the Shown
+categories are drawn — the one way left to reproduce the old exclusive Whitelist's "only these
+categories" behavior. Full detail: `docs/data-flow.md` → Step 4.
 
 ## Message Bus
 
@@ -335,6 +369,14 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   new container's name, and the deferred apply rebuilds it. The same goes for a container a Create
   or Duplicate adds under an id the profile change just retired: while aura information is withheld
   out of combat it draws nothing until that ends.
+- **The schema v3 migration can widen what an already-narrowed container draws.** A container that
+  used the old three-state model's exclusive Whitelist (only Defensives shown, say) keeps drawing
+  only Defensives after migration — every other category of its aura type becomes Hide (`E-8`,
+  `docs/schema.md` → Migration path). But an aura in **no category at all** now shows too (rank 5),
+  where the old exclusive Whitelist excluded it, because the two-state model has no way to express
+  "only the categories I named" short of the new **"only these categories"** toggle
+  (`container.filter.onlyShown`). A player who notices new, uncategorized auras appear in a container
+  that used to be narrow should look at Filters → Categories and turn that toggle on.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
   one; WoW never frees a frame, so

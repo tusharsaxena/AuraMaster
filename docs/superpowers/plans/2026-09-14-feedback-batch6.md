@@ -96,9 +96,9 @@ in the task's own commit or the one immediately after.
 | B5 Filters → Categories tab | F-1…F-7 R-10 P-1 | AM | done | c7862c3 | blurb verified rank-by-rank against the compiler; F-7's original wording was false under rank 3 and the spec was corrected |
 | B6 ExplainSpell + Overrides notes | P-3 P-4 | AM | done | f4b408e 91dafb9 bbe87e4 f45fe89 | 3 fix rounds. Notes are COUNTERFACTUALS (an entry's own rank is uninformative) and describe only what the lists and categories decide |
 | B7 General → Spell Categories | E-6 F-3 | AM | todo | | needs B4 |
-| B8 max duration | D-1…D-4 | AM | todo | | |
-| B9 container mouse blocker | T-1…T-5 | AM | todo | | |
-| B10 docs | P-2 D-3 | AM | todo | | **CP-C** |
+| B8 max duration | D-1…D-4 | AM | done | 2f7c083 | issue #5 filed; preset uses the existing pairWith seam; 0-as-falsy verified safe |
+| B9 container mouse blocker | T-1…T-5 | AM | done | 42d610b ef63966 fc86d14 | 2 fix rounds, 3 Criticals: a raw engine frame-level write made to satisfy the MOCK, a missing anchor template that would have made the fix a no-op, and a live blocker on hidden containers |
+| B10 docs | P-2 D-3 | AM | done | (pending) | **CP-C** reached; scope grew to 8 steps (spec §6b/6c revision) — Filter priority section, schema/common-tasks tri-state prose, migration side-effect note, `onlyShown` docs, 7 falsifiable smoke checks, counts 813→880, issue #6 filed on the citation gate's blind spot |
 | C1 re-vendor the other nine | K-* | 9 repos | todo | | roster confirmed 2026-09-15 |
 | C2 final battery + report | all | all | todo | | **CP-D** |
 
@@ -1361,34 +1361,44 @@ git commit -m "Containers: a mouse blocker closes the gaps that leaked the world
 ### Task B10: Docs — **CP-C**
 
 **Files:**
-- Modify: `docs/ARCHITECTURE.md`, `docs/settings-panel.md`, `docs/data-flow.md`,
-  `docs/module-map.md`, `docs/test-cases.md`, `README.md`
-- Test: `tests/test_docs.lua`
+- Modify: `docs/ARCHITECTURE.md`, `docs/settings-panel.md`, `docs/schema.md`, `docs/common-tasks.md`,
+  `docs/data-flow.md`, `docs/module-map.md`, `docs/test-cases.md`, `docs/smoke-tests.md`, `README.md`
+- Test: `tests/test_docs.lua` (existing gates must stay green)
 
-- [ ] **Step 1: Add the priority section to `docs/ARCHITECTURE.md`**
+This task's scope GREW during the batch. Everything below is owed.
 
-Paste the spec's section 6 table verbatim under a new `## Filter priority` heading, followed by one
-paragraph naming `FC.ExplainSpell` as the thing the panel reads it from.
-
-- [ ] **Step 2: Update `docs/settings-panel.md`**
-
-The Filters rows: `container.filter.includeEnchants` is gone; `maxDuration` is relabelled; the
-category rows are Show / Hide; the new `enchantSlots.*` rows are listed under General → Spell
-Categories.
-
-- [ ] **Step 3: Update the counts**
-
-Regenerate `docs/test-cases.md` and the README `[tests]` badge from the live suite:
-`lua tests/run.lua --list`. Every count claim in `README.md` and `docs/*` must match what the tree
-actually has — `tests/test_docs.lua` checks several of them.
-
-- [ ] **Step 4: Run the gate and commit** — **CP-C**
-
-```bash
-lua tests/run.lua && luacheck . && lizard -l lua -x "./libs/*" -x "./tests/_kit/*" .
-git add docs README.md
-git commit -m "Docs: filter priority, the Show/Hide model, the v3 shape and the new counts (P-2)"
-```
+- [x] **Step 1: The filter priority** (`P-2`). Add a *Filter priority* section to
+      `docs/ARCHITECTURE.md` carrying spec section 6's five-rank table verbatim, and name
+      `FC.ExplainSpell` as what the panel reads it from. Mirror the order in
+      `docs/settings-panel.md`.
+- [x] **Step 2: The ownerless tri-state prose** (`P-5`, ruled 2026-09-15). `docs/schema.md` and
+      `docs/common-tasks.md` still describe the three-state model and tell a future author to add a
+      branch to `applyCategory`, which no longer exists. No other task owned these two files.
+- [x] **Step 3: The migration's visible side effect.** Document that a container which used the old
+      Whitelist gains that category's spell ids on its Overrides whitelist — a player will see them
+      appear and should find the reason where they look.
+- [x] **Step 4: `onlyShown`** appears in no doc. Add it to `docs/settings-panel.md` and
+      `docs/schema.md`, including that the max-aura cap is per group and what that means.
+- [x] **Step 5: The smoke-test checks this batch could not settle headlessly.** Add each, phrased so
+      the owner can falsify it, not merely confirm it:
+      - the ~15 aura groups a container compiles to once anything is Hidden — what that costs in
+        frame time, and whether the client caps groups per container;
+      - the Hide column reading as live rather than dimmed in the real Ace3 skin;
+      - the *See spells* link landing on the right category;
+      - the five-clause priority blurb wrapping readably at panel width;
+      - the yellow fill's size and placement on a grid cell;
+      - an Overrides entry's note wrapping readably under the entry;
+      - that a debuff aura always carries `isFromPlayerOrPlayerPet` — the debuff catch-all group is
+        dropped as a contradiction whenever anything is hidden, which is only correct while that
+        flag pair partitions every aura.
+- [x] **Step 6: Counts and citations.** Regenerate `docs/test-cases.md` and the README `[tests]`
+      badge from `lua tests/run.lua --list`. Every count claim must match the tree.
+- [x] **Step 7: File an issue on the docs gate's blind spot.** `tests/test_docs.lua` checks only
+      that a cited line EXISTS and is non-blank, so a citation that has drifted onto unrelated code
+      passes. Nine rotted in this batch and were caught by a human reading, not by the gate. File it
+      with `gh` (`state:untriaged`, `severity:low`); if `gh` fails, do not retry with credentials —
+      report it.
+- [x] **Step 8: Gate, commit, push, ledger.**
 
 ---
 

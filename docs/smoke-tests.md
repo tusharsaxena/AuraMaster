@@ -84,12 +84,16 @@ suite covers what only the client can show.
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
     show ][ Categories ][ Sorting ][ Overrides ]**, with no Spell lists tab on any aura type.
-    **Categories** on a buff container is two grids, **Blizzard Categories** then **Custom
-    Categories**, each headed once, with columns **Default · Whitelist · Blacklist** and the category
-    name (hover it for its description); click **Whitelist** on a line → that line's radio moves, and
-    `/am get container.filter.categories.<key>` prints `Whitelist`. Switch the container's aura type
-    to Debuffs → **Blizzard Categories**, **Dispel Types** and **Who Cast It**; switch to Weapon
-    enchants → only **What to show** and **Sorting**, one row each.
+    **Categories** opens with the five-rank priority sentence, then **Only these categories**, then
+    two grids, **Blizzard Categories** then **Spell Categories**, each headed once, with columns
+    **Show · Hide** and the category name (hover it for its description). Click **Hide** on a line →
+    that line's cell lights solid yellow and the other goes dark, and
+    `/am get container.filter.categories.<key>` prints `Hide`. On the **Spell Categories** grid,
+    click **See spells** on a row → the settings jump to General → Spell Categories with that
+    category already selected. Switch the container's aura type to Debuffs → **Blizzard
+    Categories**, **Dispel Types** and **Who Cast It** (no Spell Categories grid); switch to Weapon
+    enchants → the strip becomes **[ Categories ][ Sorting ]**, Categories holding only **Hide
+    enchants without a duration** and Sorting only **Direction**.
 25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
     **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
     and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
@@ -133,27 +137,39 @@ suite covers what only the client can show.
 ## F. Filters
 
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Defensives* to **Whitelist** → only defensive cooldowns
-    appear; also set *Offensive cooldowns* to **Whitelist** → both, each aura once. Set *Consumables*
-    to **Blacklist** on a container with every category at Default → your flask disappears from it.
+35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category left at
+    Show → your flask disappears from it, nothing else changes. Now also set *Defensives* to
+    **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it still shows
+    (rank 3: a Show elsewhere rescues it). Turn on **Only these categories** with nothing set to
+    Show and the Overrides whitelist empty → the container goes empty and shows the "Only the
+    categories set to Show are drawn, and no category is set to Show." warning; set *Defensives*
+    back to Show → only defensive cooldowns appear, and only those.
 36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensives*, cast it
     → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
     a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
     nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
     **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
     Magic dispel border keeps Blizzard's own blue art.
-37. **Overrides.** Add a buff to the *Blacklist* → gone; add a buff to the *Whitelist* by name on a
-    container whose categories exclude it → it is listed with its icon and id, and it shows; a name
-    the game does not know → nothing added, and the reason under the box; the same id on both lists
-    → hidden.
+37. **Overrides.** Opens with the same five-rank priority sentence as Categories. Add a buff to the
+    *Blacklist* → gone; add a buff to the *Whitelist* by name on a container whose categories exclude
+    it → it is listed with its icon and id, and it shows; a name the game does not know → nothing
+    added, and the reason under the box. Add the SAME spell id to both lists → the entry on the
+    *Blacklist* stays there but the aura shows anyway (the whitelist wins), and a gray note appears
+    under the *Blacklist* entry saying so; remove it from the *Whitelist* only → the *Blacklist*
+    note disappears and the aura is hidden again. Add to the *Whitelist* a spell every category of
+    the container already sets to Hide → a gray note appears under that *Whitelist* entry naming
+    the category (or categories) it is overriding.
 38. **Max duration** `60` → hour-long buffs disappear, short ones stay, permanent ones go.
 39. **Duration → Only auras without a duration** on a player buff container → timed buffs disappear
     out of combat once learned; a brand-new timed buff cast in combat may show once. `/am forgettimed`
     → they reappear until relearned out of combat.
 40. **Warnings.** Add a spell to the Overrides *Whitelist* on a *player debuffs* container → the Filters page
     shows the orange "ignored for debuffs on your own character or pet" line. On a *target buffs*
-    container → "only apply while the unit is friendly". Show a spell category with every spell
-    unticked and nothing else → "These filters can never match anything."
+    container → "only apply while the unit is friendly". Turn on **Only these categories**, leave
+    *Defensives* the only category set to Show, and on General → Spell Categories untick every
+    *Defensives* spell (Restore afterward) → "These filters can never match anything.", distinct from
+    check 35's "Only the categories set to Show are drawn, and no category is set to Show." (that one
+    fires when nothing at all is Shown; this one when what's Shown is an empty list).
 
 ## G. Attach
 
@@ -371,3 +387,65 @@ listed here too, so the batch can be signed off in one pass.
     **Preview is exempt by design.** `/am unlock` (or `/am test`) and hover a gap between placeholders
     → the unit's tooltip shows there, same as Click-through. Expected: the blocker is hidden whenever
     the engine is (real auras are hidden while previewing too), so this is not a regression to report.
+
+## Q. Feedback batch 6 checks owed (2026-09-14/15)
+
+Categories became Show/Hide, the priority order was revised mid-batch (rank 3's Show now rescues an
+aura from a Hide elsewhere), and a container with anything Hidden compiles to many groups instead of
+one. None of this is reproducible headlessly; these checks are.
+
+77. **Group explosion has a real cost, and nothing silently vanishes (spec §6b, `R-4`).** On a
+    *player debuffs* container, set exactly one debuff category — say *Dispellable* — to **Hide**
+    and leave the other 15 at **Show** → the container now compiles to roughly 15 groups plus a
+    catch-all (spec §6b), not one. Cast or apply enough different debuffs to populate several
+    categories at once and confirm **every** one you expect still appears — a debuff in *Dispellable*
+    and nothing else disappears, but one in *Dispellable* and also, say, *Boss* still shows (rank 3).
+    Nothing is missing, garbled or duplicated. Then `/am perf` a capture over a few seconds with the
+    container populated → compare its container-apply bucket against the same container with every
+    category left at Show (one group): if the many-group container is dramatically slower per apply,
+    or the client silently refuses some of the `AddAuraGroup` calls (a group's auras never draw even
+    though its category has live spells), report it — that is the "what does it cost, does the client
+    cap groups" open question this batch could not settle offline.
+78. **The Hide column reads as live, never dimmed (`K-1`, `R-10`).** On Filters → Categories, look at
+    a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
+    unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
+    with a genuinely disabled row on Layout → Anchor (a mode's dimmed fields) to see the difference.
+    Turn **Only these categories** on → the Hide column still looks the same, still clickable, on
+    every row, including one already set to Show; click a lit Show cell's Hide → it moves there, live,
+    exactly as it did with the toggle off.
+79. **`See spells` lands on the row's own category, not the first one (`F-3`, `K-4`).** On Filters →
+    Categories → Spell Categories, click **See spells** on a category that is NOT the first row
+    (say *Support* or *Utility*) → General → Spell Categories opens with the tab selected AND that
+    same category already chosen in the **Category** dropdown, not defensives or whatever was last
+    selected there. Do it again from a DIFFERENT category (say *Consumables*) on a different
+    container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
+    row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
+    slot toggles, not a spell list.
+80. **The priority blurb wraps readably (`F-4`, `P-1`).** At the top of both Filters → Categories and
+    Filters → Overrides, read the full five-clause priority sentence at the panel's normal width →
+    every clause is fully visible, wrapped onto as many lines as it needs with no word cut off
+    mid-character, no horizontal scrollbar appearing on the tab, and no overlap with the row or grid
+    drawn immediately below it. Resize the WoW window narrower (if your UI scale allows it) and
+    re-open the tab → it still wraps cleanly, just onto more lines.
+81. **The yellow fill matches its cell, on both columns (`K-1`).** On Filters → Categories, look
+    closely at a lit cell (Show or Hide) → the solid yellow fill sits inside the cell's own
+    checkbox-shaped border with no gap around its edges and no bleed into the neighboring column or
+    the category label. Click the other cell on the same row → the yellow fill moves there in full,
+    the previously-lit cell now shows its plain unlit checkbox shape, and at no point are both cells
+    lit or neither lit.
+82. **An Overrides entry's note wraps under it, not through it (`K-3`).** Add a spell to the
+    Whitelist whose categories are ALL set to Hide, on a container with several categories so the
+    note names more than one (a long note, e.g. "Shown here by the whitelist, overriding Defensives,
+    Cancelable (set to Hide)."). Confirm the note text wraps onto as many lines as it needs directly
+    under the entry's name/id, in the existing gray, without overlapping the entry's icon, id, or its
+    **Remove** button, and without pushing the NEXT entry's row on top of it.
+83. **Every debuff carries `isFromPlayerOrPlayerPet` one way or the other (`docs/schema.md`'s Who
+    Cast It grid; the assumption `R-4`'s dropped catch-all depends on).** On a debuff container, set
+    BOTH *From players* (`fromPlayers`) and *From non-players* (`fromNonPlayers`) to **Hide** — under
+    the current model this drops the debuff catch-all group as a contradiction, since the two
+    together are assumed to cover every debuff. Apply a debuff you cast on a training dummy → it
+    disappears (claimed by `fromPlayers`'s Hide). Have a pet, NPC, or another player's spell apply a
+    DIFFERENT debuff to you or the dummy → it disappears too (claimed by `fromNonPlayers`'s Hide). If
+    you can find or produce ANY debuff that still shows with both Hidden, its `isFromPlayerOrPlayerPet`
+    is neither true nor false as the engine reports it — report it, since that is exactly the case
+    that would make dropping the catch-all here wrong.

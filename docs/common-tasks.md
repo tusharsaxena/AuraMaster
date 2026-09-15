@@ -44,14 +44,21 @@ Example: a bar option.
 
 1. Add an entry to `NS.Categories.HELPFUL` or `.HARMFUL` in `defaults/Categories.lua` with a `key`
    unique across **both** lists (a container's category states are one map), a `kind` — `token`
-   (with `token`), `flag` (with `field` and `value`), `dispel` (with `types`) or `spells` (with
-   `spells = spells({ CLASS = { ids } })`) — and `label`/`desc`.
-2. That is the whole wiring: `NeutralStates()` backfills the key as neutral into every stored
-   container, `settings/Filters.lua` generates its row and draws it in its kind's grid on Filters →
-   Categories, and `modules/FilterCompiler.lua` applies it by kind. A buff `spells` category also
-   joins General → Spell Categories' dropdown, and its profile-wide edits reach the compiler through
-   `FC.ProfileContext`. A new `kind` needs a branch in `applyCategory` and a grid in
-   `GRID_BY_KIND` (`settings/Filters.lua`), plus an entry in `GRIDS` when the grid is new.
+   (with `token`), `flag` (with `field` and `value`), `dispel` (with `types`), `spells` (with
+   `spells = spells({ CLASS = { ids } })`) or `enchant` (matches no aura; a container capability, not
+   a filter — `splitCategories` and `excludeCategory`/`includeCategory` skip it categorically) — and
+   `label`/`desc`.
+2. That is the whole wiring: `DefaultStates()` backfills the key as `"show"` into every stored
+   container (schema v3 — Show is a positive claim, not merely "not excluded";
+   `docs/ARCHITECTURE.md` → Filter priority), `settings/Filters.lua` generates its row and draws it
+   in its kind's grid on Filters → Categories, and `modules/FilterCompiler.lua` applies it by kind: a
+   Hide excludes (`excludeCategory`), and a Show's own positive constraint
+   (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
+   something else is Hidden). A buff `spells` or `enchant` category also joins General → Spell
+   Categories' dropdown (and gets a `See spells` link on the Categories grid), and its profile-wide
+   edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
+   `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
+   plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list will not work on friendly units — the engine's identity gate
    (`docs/midnight-quirks.md`). Keep spell lists on buffs.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.

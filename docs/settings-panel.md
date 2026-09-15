@@ -11,7 +11,7 @@ is a defect in this doc (documentation-§3).
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
 | General | Master controls · Display · Containers · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, the two resets; preview mode and hiding Blizzard's buff and debuff frames; create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers; which spells each spell category matches, and one color per dispel type, both shared by every container |
-| Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration, weapon enchants; the Default / Whitelist / Blacklist category grids; sort order and cap; the whitelist and blacklist spell lists. Tabs vary with the aura type |
+| Filters | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
 | Layout | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | Bars | Size · Bar · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | Icons | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
@@ -81,7 +81,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (20 rows, `settings/General.lua`, `settings/GeneralContainers.lua`, `settings/GeneralSpells.lua`)
+### General (23 rows, `settings/General.lua`, `settings/GeneralContainers.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -127,7 +127,8 @@ Bar style, Icon style) and **Copy onto this container**. Name and position are n
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
 dropdown of the nine spell categories (defensives, activeMitigation, raidCDs, offensiveCDs, healing,
-support, movement, utility, consumables), then that category's ID list (the library's `IdList`):
+support, movement, utility, consumables) **plus Weapon enchants** (schema v3). Every entry but Weapon
+enchants draws that category's ID list (the library's `IdList`):
 **Add a spell** takes a spell id, a shift-clicked link or a name. While you type, a dropdown lists
 the matching spells (the library's suggestions, LibKa0s issue #31), each with its rank where the
 client gives one; a click, or Up/Down then Enter, picks one. The client finds a spell by name only
@@ -142,12 +143,19 @@ per starter spell with a checkbox
 starter list**. Writes the whole set to `categorySpells` (a carve-out, so every container re-applies).
 The page's Defaults does not touch these lists; each category's restore does.
 
+Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
+(Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
+a line saying that whether a container shows enchants at all is that container's own Filters →
+Categories row, with a link back. Unticking every slot here does not turn enchants off anywhere — a
+container reads all three anyway — because the container-level Hide on Filters → Categories is the
+one switch for that; the tab says so.
+
 **Dispel Colors** — one line saying who reads the colors, then six swatches, `dispelColors.Magic`,
 `.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type. They
 drive bars only; an icon's dispel border keeps Blizzard's own colored art (owner, 2026-09-13), and
 the tab line and each row's tooltip say so. Profile-wide, so a write re-applies every container.
 
-### Filters (39 rows, `settings/Filters.lua`)
+### Filters (40 rows, `settings/Filters.lua`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
@@ -158,7 +166,7 @@ here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
 |---|---|---|---|---|
 | Cast by | `container.filter.castBy` | string | buffs, debuffs | Anyone / Me (and my pet) → `PLAYER` / Anyone but me → `!PLAYER` |
 | Duration | `container.filter.durationMode` | string | buffs, debuffs | Any / only with a duration (`maxDuration = huge`) / only without (learned exclusions) |
-| Max duration (sec, 0 = no limit) | `container.filter.maxDuration` | number 0–3600 | buffs, debuffs | Engine `maxDuration`; also hides permanent auras; ignored in "without" mode |
+| Max duration | `container.filter.maxDuration` | number 0–3600, seconds; 0 = no limit | buffs, debuffs | An upper bound only — there is no minimum (`docs/scope.md`). Engine `maxDuration`; also hides permanent auras; ignored in "without" mode. A **Preset** dropdown beside it (`30s · 1m · 5m · 10m · 30m · No limit`, `D-2`) writes the same path; a stored value matching no preset leaves the dropdown blank rather than snapping the slider |
 
 Weapon enchants are the `weaponEnchants` row on the Categories grid (schema v3, B3): Show (the
 default) appends the enchant slots to a player buff container, Hide takes them away. The slots drawn
@@ -166,21 +174,40 @@ come from the profile-wide `enchantSlots`. `Hide enchants without a duration` ke
 (`container.filter.hidePermanentEnchants`, bool, buffs and enchants) but moves in with the category
 group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` row.
 
-**Categories** — 31 generated rows, one per `defaults/Categories.lua` entry, at
-`container.filter.categories.<key>`, stored `""` / `"show"` / `"hide"` and labeled Default /
-Whitelist / Blacklist (`/am get` and `/am list` print the label, then the stored value in gray).
-Buff containers see the 15 buff rows, debuff containers the 16 debuff rows. The rows carry
-`skipRender`, so the flow engine draws nothing for them; the tab is bespoke (keyed by the group's
-name) and draws one `ChoiceGrid` per row `grid`, each a header line
-`Default · Whitelist · Blacklist · Category` and then a line of three radios and the label per
-category. A grid with no row for the aura type is not drawn.
+**Categories** (`F-1`…`F-7`) — every tab opens with the five-rank priority blurb (mirrored on
+Overrides too — see *Filter priority* below), then the per-container **Only these categories**
+toggle (`container.filter.onlyShown`, bool, off by default): while on, a note explains that Hide no
+longer removes an aura by itself — an aura is shown only through the whitelist or a category set to
+Show, so here Hide means "not shown" rather than "removed"; the Hide column stays live and clickable
+regardless, since it is still the only way to undo a Show on a row that belongs to more than one
+category. Then 32 generated rows, one per `defaults/Categories.lua` entry, at
+`container.filter.categories.<key>`, stored `"show"` / `"hide"` (schema v3) and labeled **Show** /
+**Hide** (`/am get` and `/am list` print the label, then the stored value in gray). Show is a
+positive claim: an aura in at least one Show category is drawn even if another of its categories says
+Hide; only an aura whose every category says Hide is removed by them (rank 3 of the priority order).
+Buff containers see the 16 buff rows (weapon enchants among them), debuff containers the 16 debuff
+rows. The rows carry `skipRender`, so the flow engine draws nothing for them; the tab is bespoke
+(keyed by the group's name) and draws one `ChoiceGrid` per row `grid`, each a header line
+`Show · Hide · Category` and then a line of two cells (a solid yellow fill for the lit one,
+LibKa0s v1.36.0's `O.ChoiceGrid`) and the category's label (hover it for its description). A grid
+with no row for the aura type is not drawn.
 
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
 | Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Custom Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables | — |
+| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, **weaponEnchants** | — |
 | Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
+
+The **Spell Categories** grid (renamed from Custom Categories, `F-1`) carries one extra line above
+it, saying these are the lists on General → Spell Categories, shared by every container, and one
+extra column: a **See spells** link (`K-2`) on every `spells`- or `enchant`-kind row, which selects
+that category on General → Spell Categories, opens the General page and switches to its Spell
+Categories tab (`NS.GeneralSpells.Select`, `NS.OpenOptionsPage`, `H.SelectTab`). Right under that
+grid sits **Hide enchants without a duration** (`container.filter.hidePermanentEnchants`, bool,
+buffs and enchants) — a plain checkbox, not a Show/Hide category — under the `weaponEnchants` row it
+governs; an `ENCHANT`-type container, which draws no Spell Categories grid at all, still sees this
+one row on its own.
 
 **Sorting**
 
@@ -190,14 +217,32 @@ category. A grid with no row for the aura type is not drawn.
 | Direction | `container.filter.sortDirection` | string | every type (also orders weapon enchants) |
 | Max auras (0 = no limit) | `container.filter.maxAuras` | number 0–40 | buffs, debuffs; per group |
 
-**Overrides** (buff and debuff containers) — bespoke: a **Whitelist** and a **Blacklist** section,
-each the library's `IdList` in spell mode over `container.filter.whitelist` /
+**Overrides** (buff and debuff containers) — opens with the same five-rank priority blurb as
+Categories (`F-4`; see *Filter priority* below), then bespoke: a **Whitelist** and a **Blacklist**
+section, each the library's `IdList` in spell mode over `container.filter.whitelist` /
 `container.filter.blacklist`, adding by spell id, link or name with the same suggestions,
 candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
 words, `NS.GeneralSpells`), each entry with **Remove**. Each set is written whole through the seam's carve-out;
-the lists are not schema rows, so the page's Defaults leaves them alone.
+the lists are not schema rows, so the page's Defaults leaves them alone. Each entry also carries a
+trailing **note** under its name (LibKa0s v1.36.0's `O.IdList` `note`, `K-3`), built from
+`FC.ExplainSpell` sparingly: it fires only when a category genuinely disagrees with the list's
+verdict, or the id sits on both lists, and never claims what the aura will finally do (a duration cap
+or Cast by can still keep it off screen even where the lists and categories alone would draw it) — the
+one exception being an "only these categories" container with nothing else Shown, where the whitelist
+is the only thing keeping the aura on screen at all.
 
-A weapon-enchant container sees only **What to show** (one row) and **Sorting** (one row).
+**Filter priority.** The same five ranks, highest first, are restated verbatim at the top of both the Categories and the
+Overrides tabs (`P-1`, `P-4`) — two halves of one decision — and drive `FC.ExplainSpell`, the
+per-entry notes above: (1) on the Overrides whitelist — always shown; (2) on the Overrides blacklist
+— hidden, unless the whitelist already claimed it; (3) in at least one category set to Show — shown,
+even if another of its categories says Hide; (4) in categories that all say Hide — hidden; (5) in no
+category at all — shown, nothing removed it. Full detail and how it compiles: `docs/ARCHITECTURE.md`
+→ Filter priority.
+
+A weapon-enchant container drops **What to show** and **Overrides** entirely (neither has a row that
+means anything for it) and sees only **Categories** — just **Hide enchants without a duration**,
+since it draws no Spell Categories grid (`Cat.For("ENCHANT")` is empty) — and **Sorting**, just
+**Direction**.
 
 ### Layout (26 rows, `settings/Layout.lua`)
 
