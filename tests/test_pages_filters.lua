@@ -466,7 +466,7 @@ test("filters: a plain, uncategorized whitelist entry has no note", function()
     NS.SetByPath("container.filter.whitelist", { [774] = true }, 1)
     local ws = P.tab("filters", "overrides")
     -- red under: a note drawn for every entry regardless of whether anything disagrees
-    assertFalse(P.hasText(ws, "would otherwise"), "no category conflict to report")
+    assertFalse(P.hasText(ws, "overriding"), "no category conflict to report")
     assertFalse(P.hasText(ws, "outranks"), "not on the other list either")
     assertFalse(P.hasText(ws, "not be drawn at all"), "onlyShown is off; nothing else to warn about")
 end)
@@ -490,22 +490,22 @@ test("filters: a spell on both lists gets a note on its whitelist entry naming t
 end)
 
 -- red under: a blacklisted spell that a Show category would rescue not reporting the conflict
-test("filters: a blacklisted spell a Show category would otherwise show names that category", function()
+test("filters: a blacklisted spell in a Show category names that category as overridden", function()
     local NS, _, P = filters()
     NS.SetByPath("container.filter.blacklist", { [900001] = true }, 1)
     NS.SetByPath("categorySpells", { defensives = { [900001] = true } })
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, ("Hidden here by the blacklist; %s would otherwise show it."):format(NS.L["Defensives"])))
+    assertTrue(P.hasText(ws, ("overriding %s (set to Show)"):format(NS.L["Defensives"])))
 end)
 
 -- red under: a whitelisted spell whose categories all say Hide not reporting the conflict
-test("filters: a whitelisted spell every one of its categories would hide names them", function()
+test("filters: a whitelisted spell every one of its categories would hide names them as overridden", function()
     local NS, _, P = filters()
     NS.SetByPath("container.filter.whitelist", { [900002] = true }, 1)
     NS.SetByPath("categorySpells", { defensives = { [900002] = true } })
     NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, ("Shown here by the whitelist; %s would otherwise hide it."):format(NS.L["Defensives"])))
+    assertTrue(P.hasText(ws, ("overriding %s (set to Hide)"):format(NS.L["Defensives"])))
 end)
 
 -- red under: a blacklisted spell in a Hide-only category getting a spurious note (the blacklist and
@@ -516,7 +516,7 @@ test("filters: a blacklisted spell a Hide category would also hide gets no note"
     NS.SetByPath("categorySpells", { defensives = { [900003] = true } })
     NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local ws = P.tab("filters", "overrides")
-    assertFalse(P.hasText(ws, "would otherwise"), "the blacklist and the category agree")
+    assertFalse(P.hasText(ws, "overriding"), "the blacklist and the category agree")
 end)
 
 -- Fix round 1: a whitelisted spell no category claims, under "only these categories", would vanish
@@ -528,7 +528,7 @@ test("filters: a whitelisted spell no category claims, under 'only these categor
     NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
     NS.SetByPath("container.filter.onlyShown", true, 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, NS.L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."]),
+    assertTrue(P.hasText(ws, "not be drawn at all"),
         "an unclaimed whitelisted spell under onlyShown needs its own wording, not the category one")
 end)
 
@@ -536,10 +536,10 @@ end)
 -- ordinary catch-all if the entry were removed (rank 5, shown) — a real mismatch a rank-3-only check
 -- misses, mirroring the whitelist bug fixed above.
 -- red under: overrideNote's blacklist branch checking `cat.rank == 3` instead of `cat.verdict == "shown"`
-test("filters: an uncategorized blacklisted spell warns it would otherwise be drawn here", function()
+test("filters: an uncategorized blacklisted spell warns that no category hides it", function()
     local NS, _, P = filters()
     NS.SetByPath("container.filter.blacklist", { [900005] = true }, 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, NS.L["Hidden here by the blacklist; without it, this container would draw it — nothing else here hides it."]),
+    assertTrue(P.hasText(ws, "no category here hides it"),
         "no category claims it, but the ordinary catch-all would still draw it")
 end)

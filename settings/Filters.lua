@@ -291,6 +291,14 @@ end
 -- (libs/LibKa0s/OptionsWidgets.lua's `entry.note`). Built from FC.ExplainSpell, sparingly — a spell
 -- that no category claims, or whose categories only confirm what this very list already decided,
 -- gets none; the note fires only when a category genuinely disagrees, or the id sits on BOTH lists.
+--
+-- WORDING RULE (fix round 3): a note describes what the LISTS and the CATEGORIES decide. It never
+-- claims what the aura will finally do, because `ExplainSpell` never reads `castBy`, `durationMode`
+-- or `maxDuration` — the catch-all group this spell would fall into inherits those from the
+-- container's base, so a duration cap or a cast-by restriction can still keep it off screen even
+-- when the lists and categories alone would draw it. Say "the categories say Show" / "no category
+-- hides it", never "it would show" / "it would be drawn" — the one exception is the `onlyShown`
+-- rank-5 case below, which really can be definite, and says why right there.
 
 --- `cfg` with `id` cleared from BOTH override lists, so `ExplainSpell` can be asked what the
 --- CATEGORIES alone would decide for it (rank 3/4/5), independent of whichever list holds the
@@ -324,8 +332,8 @@ local function categoryLabelList(list)
     return table.concat(names, ", ")
 end
 
---- Only the Show categories among `list` — rank 3's positive claim. A blacklist note about "what
---- would otherwise show it" names these, not the Hide categories a Show already outranks.
+--- Only the Show categories among `list` — rank 3's positive claim. A blacklist note naming what the
+--- blacklist overrides names these, not the Hide categories a Show already outranks.
 local function showCategories(list)
     local out = {}
     for _, c in ipairs(list) do
@@ -353,9 +361,9 @@ local function overrideNote(cfg, id, ctx, key)
             return nil
         end
         if cat.rank == 5 then
-            return L["Hidden here by the blacklist; without it, this container would draw it — nothing else here hides it."]
+            return L["Hidden here by the blacklist; no category here hides it."]
         end
-        return L["Hidden here by the blacklist; %s would otherwise show it."]:format(
+        return L["Hidden here by the blacklist, overriding %s (set to Show)."]:format(
             categoryLabelList(showCategories(cat.categories)))
     end
     if (filter.blacklist or {})[id] == true then
@@ -369,9 +377,13 @@ local function overrideNote(cfg, id, ctx, key)
         return nil
     end
     if cat.rank == 5 then
+        -- The one wording allowed to stay definite (fix round 3): with `onlyShown` on and no
+        -- category claiming the spell, NO group would carry it at all (R-9 drops the catch-all) — so
+        -- unlike the other three, there is no downstream duration/castBy filter that could still
+        -- keep it off screen. Nothing to falsify, so the stronger claim is honest.
         return L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."]
     end
-    return L["Shown here by the whitelist; %s would otherwise hide it."]:format(
+    return L["Shown here by the whitelist, overriding %s (set to Hide)."]:format(
         categoryLabelList(cat.categories))
 end
 
