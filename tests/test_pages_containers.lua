@@ -52,12 +52,14 @@ test("containers: registers its own top-level Blizzard category, with one tab, C
     end
 end)
 
-test("containers: NS.OpenOptionsPage('containers') falls back to the main category, like 'general' would (N-3 pending)", function()
+test("containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)", function()
     -- Subcategory ids start at 101: the kit's main category answers GetID() == 1. Registering its
-    -- own category (the test above) is not the same thing as OpenOptionsPage knowing about it: that
-    -- seam only records a category for pages built through NS.RegisterContainerPage
-    -- (settings/OptionsSetup.lua:525), and Containers, like General, builds through the plain
-    -- NS.RegisterOptionsPage — spec N-3 (out of scope here) is what closes that gap.
+    -- own category (the test above) used to not be enough for OpenOptionsPage to find it: that seam
+    -- only recorded a category for pages built through NS.RegisterContainerPage
+    -- (settings/OptionsSetup.lua), while Containers, like General, builds through the plain
+    -- NS.RegisterOptionsPage. N-3 closed that gap: NS.RegisterOptionsPage's own wrapper now records
+    -- whatever category its builder returns, so every registered page (not only container pages)
+    -- is reachable by key.
     local names, byId, opened = {}, {}, {}
     local NS = fresh({ before = function(mk)
         local register = mk.Settings.RegisterCanvasLayoutSubcategory
@@ -86,9 +88,9 @@ test("containers: NS.OpenOptionsPage('containers') falls back to the main catego
     end
     assertTrue(sawContainers, "the Containers page's own category was registered")
     NS.OpenOptionsPage("containers")
-    -- red under: OpenOptionsPage opening nothing (or a stale page) for a key `categories` does not
-    -- carry, instead of falling back to the addon's main category
-    assertEqual(opened[2], "main", "N-3 not yet fixed: an unrecorded key opens the main category")
+    -- red under: OpenOptionsPage still falling back to the main category for "containers" instead
+    -- of the category that page registered for itself
+    assertEqual(opened[2], NS.L["Containers"], "N-3: Containers opens its own category, not the main panel")
 end)
 
 test("containers: the tab body opens with the Container picker and New container on one line", function()

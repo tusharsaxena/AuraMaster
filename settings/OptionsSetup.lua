@@ -292,14 +292,23 @@ lib.__PatchLSM30Border()
 NS.Helpers = lib:New(descriptor)
 local Helpers = NS.Helpers
 
-NS.RegisterOptionsPage = function(key, name, builder) Helpers.RegisterOptionsPage(key, name, builder) end
+-- Every Blizzard subcategory a page registered, by page key, so NS.OpenOptionsPage can jump there
+-- and the frame picker can bring the player back to the page it started from. Filled by EVERY
+-- registered page, not only container pages (N-3): a builder that returns nothing (the
+-- library-less stub path, or a build that bails before Settings.RegisterCanvasLayoutSubcategory
+-- exists) simply leaves that key unset, and NS.OpenOptionsPage falls back to the main panel.
+local categories = {}
+
+NS.RegisterOptionsPage = function(key, name, builder)
+    Helpers.RegisterOptionsPage(key, name, function(mainCategory)
+        local cat = builder(mainCategory)
+        if cat then categories[key] = cat end
+        return cat
+    end)
+end
 NS.CreateOptionsPanel  = function() Helpers.CreateOptionsPanel() end
 NS.OpenOptionsPanel    = function() Helpers.OpenOptionsPanel() end
 NS.RefreshOptionsPanel = function() Helpers.RefreshAllPanels() end
-
--- Every Blizzard subcategory a page registered, by page key, so the frame picker can bring the
--- player back to the Layout page it started from.
-local categories = {}
 
 --- Open the settings window at one page. Refuses under combat lockdown exactly as the library's
 --- own open does (options-ui-§2) — a category switch is protected, so it is refused, never deferred.
@@ -571,8 +580,8 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
         ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
         Helpers.SetRenderer(ctx, function(c) Helpers.RenderContainerPage(c, pageKey, spec) end)
         Helpers.__pageCtx[pageKey] = ctx
-        local cat = Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
-        categories[pageKey] = cat
-        return cat
+        -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
+        -- whatever this builder returns (N-3) — no need to set it here too.
+        return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
     end)
 end

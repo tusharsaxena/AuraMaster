@@ -5,7 +5,7 @@ local _, NS = ...
 --     band          [Container ▾]
 --     [ What to show ][ Categories ][ Sorting ][ Overrides ]
 --     Categories    priority blurb (spec §6)
---                   Blizzard Categories   Show · Hide · Category, a line each
+--                   Blizzard Categories   Show · Hide · Category, plus an info icon (N-5)
 --                   Spell Categories      (buffs)        the same grid, plus a `See spells` link
 --                                                         and hidePermanentEnchants beneath it
 --                   Dispel Types · Who Cast It  (debuffs)
@@ -198,26 +198,73 @@ local function keyOfCategoryRow(row)
     return row.path and row.path:match("^container%.filter%.categories%.(.+)$")
 end
 
--- F-3: the Spell Categories grid's extra column — a link to that row's list on General → Spell
--- Categories, offered for a `spells`-kind row and the `enchant` row (weaponEnchants), because that
--- tab can draw both (NS.GeneralSpells.Select). `Cat.Find` rather than `Cat.IsSpellCategory`, which
--- only recognizes kind "spells" and would silently drop the enchant row's link. Every other kind
--- (token, flag, dispel) never reaches this grid (GRID_BY_KIND), so `def` is never one of them here,
--- but the guard stays honest about what earns the link rather than assuming the grid's shape.
-local CUSTOM_EXTRA = {
+-- N-4: colors the `See spells` link a WoW-hyperlink blue and the info icon a muted gray, so the
+-- extra column reads as controls rather than as more label text. Applied at the call site, never
+-- baked into the locale value (localization-§2 keeps a locale VALUE equal to its key; an escape
+-- sequence in the string a translator copies would be a second thing to get wrong).
+local LINK_COLOR = "|cff6699ff"
+local ICON_COLOR = "|cffbbbbbb"
+local COLOR_END  = "|r"
+
+-- N-5: a Blizzard category (kind "token" or "flag") is decided by the engine's own secure code —
+-- the addon never sees which auras are in it, only whether a given aura currently matches (F-4's
+-- filter compile). The tooltip must say so, every time, which is why it is ONE shared disclaimer
+-- (below) rather than repeated per category. The per-category text under it names a FEW plausible
+-- auras — illustrative, never a claim of completeness — keyed by `def.key`, the category's own
+-- schema key, so a category with no entry here simply draws no icon (safer than a placeholder).
+local BLIZZARD_DISCLAIMER = L["This is Blizzard's own category, decided by its secure combat code; the addon cannot list every aura it applies to. The examples below are illustrative, not a complete or verified list."]
+
+local BLIZZARD_INFO = {
+    bigDefensive = L["Blizzard flags this aura as a major defensive cooldown. Illustrative examples: Ice Block, Divine Shield, Guardian Spirit."],
+    externals = L["Blizzard flags this as a defensive effect cast on you by someone else. Illustrative examples: Pain Suppression, Guardian Spirit, Life Cocoon."],
+    important = L["Blizzard flags this as important enough to show on enemy nameplates. Illustrative examples: Polymorph, Fear, Hex."],
+    castable = L["Blizzard flags this as a buff you are able to cast on yourself or another raid member. Illustrative examples: Power Word: Fortitude, Mark of the Wild, Arcane Intellect."],
+    cancelable = L["Blizzard flags this buff as one the player can cancel by right-clicking it off. Illustrative examples: Path of Frost, Aspect of the Cheetah, Levitate."],
+    stealable = L["Blizzard flags this buff as one that can be stolen (Spellsteal) or purged (Purge, Devour Magic). Illustrative examples: Ice Barrier, Power Word: Shield, Riptide."],
+    crowdControl = L["Blizzard flags this debuff as crowd control. Illustrative examples: Polymorph, Fear, Cyclone."],
+    boss = L["Blizzard flags this debuff as applied by a boss encounter. Illustrative examples: a boss's stacking damage-over-time effect, a boss's tank-swap debuff, a boss's enrage-adjacent mechanic."],
+    role = L["Blizzard flags this debuff as relevant to your assigned raid role. Illustrative examples: a tank-targeted mechanic, a healer-targeted mechanic, a damage-dealer-targeted mechanic."],
+    priority = L["Blizzard flags this debuff as high priority to notice. Illustrative examples: a stacking raid-wide damage-over-time effect, an add's enrage buff, a mechanic that needs an immediate response."],
+    raid = L["Blizzard flags this debuff as one your class is able to dispel. Illustrative examples: a Magic effect a Mage can dispel, a Curse a Druid can dispel, a Disease a Priest can dispel."],
+    raidInCombat = L["Blizzard flags this debuff as one shown on raid frames during combat. Illustrative examples: a raid-wide damage-over-time effect, a debuff healers are expected to track."],
+    groupDispellable = L["Blizzard flags this debuff as dispellable by someone in your group. Illustrative examples: a Poison a Rogue's group can cleanse, a Disease a Death Knight's group can cleanse."],
+    dispellable = L["Blizzard flags this debuff as dispellable by any class. Illustrative examples: a common Magic effect, a widespread Curse effect."],
+}
+
+-- F-3/N-4/N-5: the Spell Categories AND Blizzard Categories grids' shared extra column — a `See
+-- spells` link to that row's list on General → Spell Categories for a `spells`-kind row and the
+-- `enchant` row (weaponEnchants), because that tab can draw both (NS.GeneralSpells.Select); an
+-- info icon for a `token`- or `flag`-kind row (N-5); blank for every other kind (dispel, the "who
+-- cast it" flag rows, uncategorized — the caster-identity flag rows draw in their own "who" grid
+-- and are the addon's own computation, not a Blizzard secret, so they earn no disclaimer). `Cat.Find`
+-- rather than `Cat.IsSpellCategory`, which only recognizes kind "spells" and would silently drop the
+-- enchant row's link.
+local CATEGORY_EXTRA = {
     header = "",
     cell = function(row)
         local key = keyOfCategoryRow(row)
         local def = key and (Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key))
-        if not (def and (def.kind == "spells" or def.kind == "enchant")) then return nil end
-        return {
-            text = L["See spells"],
-            onClick = function()
-                NS.GeneralSpells.Select(key)
-                NS.OpenOptionsPage("general")
-                H.SelectTab("general", L["Spell Categories"])
-            end,
-        }
+        if not def then return nil end
+        if def.kind == "spells" or def.kind == "enchant" then
+            return {
+                text = LINK_COLOR .. L["See spells"] .. COLOR_END,
+                tooltip = L["Opens General -> Spell Categories with this category's list selected."],
+                onClick = function()
+                    NS.GeneralSpells.Select(key)
+                    NS.OpenOptionsPage("general")
+                    H.SelectTab("general", L["Spell Categories"])
+                end,
+            }
+        end
+        if def.kind == "token" or def.kind == "flag" then
+            local info = BLIZZARD_INFO[def.key]
+            if not info then return nil end
+            return {
+                text = ICON_COLOR .. L["(info)"] .. COLOR_END,
+                tooltip = ("%s\n\n%s"):format(BLIZZARD_DISCLAIMER, info),
+            }
+        end
+        return nil
     end,
 }
 
@@ -277,14 +324,22 @@ local function renderCategories(ctx, _, rows)
             if g.key == "custom" then
                 H.Section(ctx, g.heading)
                 H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
-                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CUSTOM_EXTRA })
+                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
                 H.TextRow(ctx, UNCATEGORIZED_NOTE)
                 if hideRow then
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
                     hideDrawn = true
                 end
             else
-                H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
+                -- N-5: only the Blizzard Categories grid gets the extra column here — Dispel Types
+                -- and Who Cast It stay exactly as wide as before. A grid with no extraColumn at all
+                -- draws no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
+                -- every cell() call answer nil), which is what keeps those two grids' rows the
+                -- width they always were.
+                H.ChoiceGrid(ctx, {
+                    heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"],
+                    extraColumn = (g.key == "blizzard") and CATEGORY_EXTRA or nil,
+                })
             end
         end
     end

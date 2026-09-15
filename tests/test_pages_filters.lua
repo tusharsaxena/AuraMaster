@@ -261,26 +261,59 @@ test("filters: the Spell Categories grid opens with a line naming where its list
     assertTrue(P.hasText(ws, "General -> Spell Categories"), "names where the lists live")
 end)
 
-test("filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets no link (F-3)", function()
-    local NS, _, P = filters()
+--- The lines a widget's tooltip draws when hovered, via the mocked GameTooltip's :AddLine (the
+--- idiom this suite already uses below for the Overrides tooltip).
+local function tooltipLines(m, widget)
+    local lines = {}
+    rawset(m.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    widget:__fire("OnEnter")
+    return table.concat(lines, "\n")
+end
+
+test("filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)", function()
+    local NS, m, P = filters()
     P.show("General") -- render once, so H.SelectTab (K-4) has a rendered ctx to land the click on
     local ws = P.tab("filters", NS.L["Categories"])
     local kids = gridLine(NS, ws, "healing")
     local link = kids[4]
+    -- N-4: the link is an interactive control, not plain text — it carries a tooltip saying where
+    -- it goes, and its text is colored (the color code is ASCII, never baked into the locale value).
     assertTrue(link ~= nil and link.type == "InteractiveLabel", "a spells-kind row carries the link")
-    assertEqual(link.text, NS.L["See spells"])
+    assertTrue(link.text:find(NS.L["See spells"], 1, true) ~= nil, "carries the See spells text")
+    assertTrue(tooltipLines(m, link):find("General", 1, true) ~= nil, "the tooltip says where it goes")
     -- red under: onClick reaching the wrong seam, or reaching none at all
     link:__fire("OnClick")
+    -- N-3: this used to land on the addon's main panel (categories["general"] was never recorded
+    -- because General registers through the plain NS.RegisterOptionsPage). Landing on General ->
+    -- Spell Categories, not the main panel, is exactly what N-3 fixed.
     assertEqual(NS.Helpers.__pageCtx.general.activeTab, NS.L["Spell Categories"], "lands on General -> Spell Categories")
     local gws = P.rerender("General")
     local dd = P.find(gws, "Dropdown", NS.L["Category"])
     assertEqual(dd.value, "healing", "and selects the row's own category there")
-    -- a Blizzard token row's grid carries no extra column at all
+    -- N-5: a Blizzard token row gets an info icon in the same column instead of a link — never
+    -- both, and never the See spells text.
     local bigDef = gridLine(NS, ws, "bigDefensive")
-    assertTrue(bigDef ~= nil and bigDef[4] == nil, "a token row's grid line carries no extra cell")
+    local icon = bigDef and bigDef[4]
+    assertTrue(icon ~= nil and icon.type == "InteractiveLabel", "a token row's grid line carries the info icon")
+    assertTrue(icon.text:find(NS.L["See spells"], 1, true) == nil, "never the See spells text")
+    local iconTip = tooltipLines(m, icon)
+    assertTrue(iconTip:find("illustrative", 1, true) ~= nil,
+        "N-5: the tooltip says the examples are illustrative, not authoritative")
+    assertTrue(iconTip:find("secure", 1, true) ~= nil or iconTip:find("cannot list", 1, true) ~= nil,
+        "N-5: the tooltip says the addon cannot enumerate the category")
     -- Decision #3: the enchant row gets the link too, since that tab can also draw it
     local enchantKids = gridLine(NS, ws, "weaponEnchants")
-    assertEqual(enchantKids[4].text, NS.L["See spells"], "the enchant row's link too")
+    assertTrue(enchantKids[4].text:find(NS.L["See spells"], 1, true) ~= nil, "the enchant row's link too")
+    -- A "who cast it" flag row (fromPlayers) is the addon's own computation, not a Blizzard secret
+    -- (it lives in its own "Who Cast It" grid) — it carries no extra cell either. Categories is
+    -- already the active tab, so switching container and rerendering redraws it directly — a
+    -- second click on the tab that is already active draws nothing new (page_helpers.lua's P.tab).
+    NS.Helpers.SelectContainer(2)
+    local ws2 = P.rerender("Filters")
+    local whoRow = gridLine(NS, ws2, "fromPlayers")
+    assertTrue(whoRow ~= nil and whoRow[4] == nil, "a caster-identity flag row carries no extra cell")
 end)
 
 -- ── the priority blurb (F-4) ──────────────────────────────────────────────────────────────────
