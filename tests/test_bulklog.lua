@@ -84,7 +84,7 @@ test("bulklog: Reset all, from /am resetall or the General popup, is one line in
     for i, surface in ipairs(surfaces) do
         local NS2, mocks = fresh()
         NS2.ContainerManager.Create({ name = "Extra" })
-        NS2.SetByPath("state.preview", true)          -- a session row the walk writes, muted
+        NS2.SetByPath("state.debugConsole", true)     -- a session row the walk writes, muted
         NS2.SetByPath("container.bars.width", 300, 1)
         local lines = capture(NS2)
         surface(NS2, mocks)
@@ -92,7 +92,7 @@ test("bulklog: Reset all, from /am resetall or the General popup, is one line in
         assertEqual(#lines, 1, "surface " .. i .. ": " .. dump(lines))
         -- red under: the line carrying a count of every row the profile stores
         assertEqual(lines[1], RESET_LINE, "surface " .. i)
-        assertFalse(NS2.State.preview, "the session row is still reset")
+        assertFalse(NS2.DebugLog:IsShown(), "the session row is still reset")
     end
 end)
 
@@ -100,13 +100,13 @@ test("bulklog: the degraded build's Reset all is one line in total, too", functi
     local NS2 = loadDegraded()
     rawset(_G, "AuraMasterDB", nil)
     NS2.addon:OnInitialize()
-    NS2.SetByPath("state.preview", true)
+    NS2.SetByPath("state.debugConsole", true)
     local lines = capture(NS2)
     NS2.Helpers.RestoreAllDefaults()
     -- red under: the stub's own loop logging the session row, or a bulk line beside the handler's
     assertEqual(#lines, 1, dump(lines))
     assertEqual(lines[1], RESET_LINE)
-    assertFalse(NS2.State.preview)
+    assertFalse(NS2.DebugLog:IsShown())
 end)
 
 test("bulklog: Slash's CliResetAll, handed the same pair, is one [Set] reset all line", function()
@@ -297,15 +297,15 @@ end)
 
 test("bulklog: a session row written in a bracket is counted through its own get", function()
     local NS2 = fresh()
-    NS2.SetByPath("state.preview", false)
+    NS2.SetByPath("state.debugConsole", false)
     local lines = capture(NS2)
     NS2.Bulk.Run("reset", "session", function()
-        NS2.SetByPath("state.preview", true)
-        NS2.SetByPath("state.preview", true)             -- no change: get() already answers true
+        NS2.SetByPath("state.debugConsole", true)
+        NS2.SetByPath("state.debugConsole", true)        -- no change: get() already answers true
     end)
     -- red under: rowChanges reading the profile for a session row, or tallying unchanged writes
     assertEqual(dump(lines), "{[Set] reset session: 1 rows}")
-    NS2.SetByPath("state.preview", false)
+    NS2.SetByPath("state.debugConsole", false)
 end)
 
 test("bulklog: each act starts its own count and its own error mark", function()

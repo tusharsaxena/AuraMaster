@@ -232,12 +232,12 @@ end)
 test("slash verbs: set and reset reach a session row, which never lands in the profile", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
-    assertEqual(dump(slash(NS2, lines, "set state.preview on")), "{state.preview = true}")
-    assertTrue(NS2.State.preview)
+    assertEqual(dump(slash(NS2, lines, "set state.debugConsole on")), "{state.debugConsole = true}")
+    assertTrue(NS2.DebugLog:IsShown())
     -- red under: writeRow's sessionOnly branch dropped (the write lands in profile.state, not set())
     assertNil(NS2.db.profile.state)
-    assertEqual(dump(slash(NS2, lines, "reset state.preview")), "{state.preview = false}")
-    assertFalse(NS2.State.preview)
+    assertEqual(dump(slash(NS2, lines, "reset state.debugConsole")), "{state.debugConsole = false}")
+    assertFalse(NS2.DebugLog:IsShown())
 end)
 
 test("slash verbs: reset restores the selected container's row only, and its echo carries no note", function()
@@ -337,52 +337,19 @@ test("slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Ye
     assertTrue(d.hideOnEscape)
 end)
 
--- ── lock, unlock, test, pick ──────────────────────────────────────────────────────────────────
+-- ── lock, unlock, pick ────────────────────────────────────────────────────────────────────────
 
 test("slash verbs: /am lock ends preview mode through the seam; /am unlock says how to drag", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     assertEqual(dump(slash(NS2, lines, "unlock")), "{Containers unlocked — drag a container by its handle}")
     assertFalse(NS2.db.profile.locked)
-    NS2.Slash:OnSlash("test on")
+    NS2.ContainerManager.SetPreview(true)
     assertTrue(NS2.State.preview)
     assertEqual(dump(slash(NS2, lines, "lock")), "{Containers locked}")
     assertTrue(NS2.db.profile.locked)
     -- red under: runLock writing profile.locked around the seam (the locked row's onChange never runs)
     assertFalse(NS2.State.preview)
-end)
-
-test("slash verbs: /am test on and a bare /am test are refused in combat; /am test off is not", function()
-    -- options-ui-§15 / preview-mode (standard v2.48.0): a test-mode start during combat is refused.
-    local NS2, mocks = fresh()
-    local lines = capture(mocks)
-    mocks.__lockdown = true
-    -- red under: runTest printing "Preview on" over a refused start
-    assertEqual(dump(slash(NS2, lines, "test on")), "{cannot start test mode during combat}")
-    assertFalse(NS2.State.preview)
-    assertEqual(dump(slash(NS2, lines, "test")), "{cannot start test mode during combat}", "a bare toggle too")
-    assertFalse(NS2.State.preview)
-    mocks.__lockdown = false
-    slash(NS2, lines, "test on")
-    mocks.__lockdown = true
-    assertEqual(dump(slash(NS2, lines, "test off")), "{Preview off}")
-    assertFalse(NS2.State.preview, "turning it off in combat still works")
-    slash(NS2, lines, "test on")
-    slash(NS2, lines, "test")
-    assertFalse(NS2.State.preview, "and a bare toggle from off is refused again")
-end)
-
-test("slash verbs: /am test reads its word in any case, toggles on anything else, and says which", function()
-    local NS2, mocks = fresh()
-    local lines = capture(mocks)
-    -- red under: firstWord not lowercasing (ON would toggle rather than set)
-    assertEqual(dump(slash(NS2, lines, "test ON")), "{Preview on — placeholder auras are shown}")
-    assertEqual(dump(slash(NS2, lines, "test ON")), "{Preview on — placeholder auras are shown}", "on stays on")
-    assertTrue(NS2.State.preview)
-    assertEqual(dump(slash(NS2, lines, "test Off")), "{Preview off}")
-    assertFalse(NS2.State.preview)
-    slash(NS2, lines, "test sparkles")
-    assertTrue(NS2.State.preview, "an unknown word toggles")
 end)
 
 --- Drive the frame picker's overlay the way the client would.

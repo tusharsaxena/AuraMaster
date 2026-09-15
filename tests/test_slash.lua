@@ -82,44 +82,41 @@ test("slash: /am set writes the selected container through the seam", function()
     assertTrue(said(lines, "Player debuffs"), "a container value names the container it read")
 end)
 
-test("slash: lock, unlock and test drive the same settings the panel does", function()
+test("slash: lock and unlock drive the same setting the panel does", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("unlock")
     assertFalse(NS2.db.profile.locked)
     NS2.Slash:OnSlash("lock")
     assertTrue(NS2.db.profile.locked)
-    NS2.Slash:OnSlash("test on")
-    assertTrue(NS2.State.preview)
-    NS2.Slash:OnSlash("test off")
-    assertFalse(NS2.State.preview)
-    NS2.Slash:OnSlash("test")
-    assertTrue(NS2.State.preview, "a bare /am test toggles preview on")
-    NS2.Slash:OnSlash("test")
-    assertFalse(NS2.State.preview, "and off again")
 end)
 
-test("slash: /am preview is an unknown verb now; it prints the help index and changes nothing", function()
-    local NS2, mocks = fresh()
-    local lines = capture(mocks)
-    NS2.Slash:OnSlash("preview on")
-    -- red under: NS.COMMANDS keeping a {"preview", ...} entry beside {"test", ...}
-    assertFalse(NS2.State.preview, "the old verb no longer reaches state.preview")
-    assertTrue(said(lines, "command 'preview'"), lastLine(lines))
-    assertTrue(said(lines, "slash commands"), "the help index follows the unknown-command line")
+test("slash: /am test and /am preview are unknown verbs; each prints the help index and changes nothing", function()
+    -- Standard v2.49.0 (preview-mode): unlocking already shows the placeholder preview, so the
+    -- unlocked view is the test mode, Lock frame (`/am lock`, `/am unlock`) its switch, and no test verb.
+    for _, verb in ipairs({ "test", "preview" }) do
+        local NS2, mocks = fresh()
+        local lines = capture(mocks)
+        NS2.Slash:OnSlash(verb .. " on")
+        -- red under: NS.COMMANDS keeping a {"test", ...} entry
+        assertFalse(NS2.State.preview, "/am " .. verb .. " reaches no preview")
+        assertTrue(said(lines, "command '" .. verb .. "'"), lastLine(lines))
+        assertTrue(said(lines, "slash commands"), "the help index follows the unknown-command line")
+    end
 end)
 
-test("slash: /am help and the landing page list test, not preview", function()
+test("slash: /am help and the landing page list neither test nor preview", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("help")
     local help, rows = table.concat(lines, "\n"), table.concat(NS2.Slash.LandingRows(), "\n")
     -- The verb, then anything but a letter: a help row closes the verb's color code right after it.
     local function listed(text, verb) return text:find("/am " .. verb .. "[^%w]") ~= nil end
-    assertTrue(listed(help, "test"), "help row for test")
-    assertTrue(listed(rows, "test"), "landing row for test")
-    -- red under: NS.COMMANDS keeping a {"preview", ...} row beside {"test", ...}
-    assertFalse(listed(help, "preview"), "no help row for preview")
-    assertFalse(listed(rows, "preview"), "no landing row for preview")
+    assertTrue(listed(help, "unlock") and listed(rows, "unlock"), "the matcher finds a listed verb")
+    for _, verb in ipairs({ "test", "preview" }) do
+        -- red under: NS.COMMANDS keeping a {"test", ...} row
+        assertFalse(listed(help, verb), "no help row for " .. verb)
+        assertFalse(listed(rows, verb), "no landing row for " .. verb)
+    end
 end)
 
 local function grayLine(lines, fragment)

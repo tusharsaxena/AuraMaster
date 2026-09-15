@@ -152,7 +152,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:102-114`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:89-101`).
 
 ## Weapon enchants
 

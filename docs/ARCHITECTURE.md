@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:407-408`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:394-395`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:233`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -227,8 +227,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:340` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:345` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:530` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:153` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:540` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:345` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:520` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:153` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:530` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -236,7 +236,9 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-two verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-one verbs; `options` is an alias of `config`.
+There is no `test` verb: unlocking already shows the placeholder preview, so the unlocked view is the
+test mode and `/am lock` / `/am unlock` its switch (preview-mode's exception, standard v2.49.0).
 
 | Command | What it does |
 |---|---|
@@ -255,7 +257,6 @@ ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-two verbs; `options` is 
 | `/am delete id-or-name` | Delete a container |
 | `/am lock` | Lock every container in place |
 | `/am unlock` | Unlock containers so they can be dragged (shows placeholder auras) |
-| `/am test [on\|off]` | Show placeholder auras (preview mode) |
 | `/am pick` | Attach the selected container to a frame by clicking it |
 | `/am resetposition` | Move every container back to its default screen position |
 | `/am forgettimed` | Forget which buffs were learned to have a duration |
@@ -270,7 +271,7 @@ Dispatch, the host verbs, the container-relative paths and the degraded path: `d
 | Event | Registered by | Handler → effect |
 |---|---|---|
 | `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:44` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
-| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:45` | `OnCombatChanged` → ends test mode first when it is on (`NS.SetByPath("state.preview", false)`, one chat line, `RefreshOptionsPanel` so the Test mode box unticks; an unlock's placeholders stay), then `VISIBILITY_CHANGED` |
+| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:45` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:46` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:47-48` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
 | `UNIT_PET` | `core/AuraMaster.lua:49` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
@@ -336,8 +337,8 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
   makes, and neither is refused. In combat all three take the parked teardown above: a container the
   reset drops draws nothing until combat ends and is torn down then. Ours also restore the session
-  rows, so preview turns off through `ApplyVisibility` (combat-safe); AceDBOptions' button leaves
-  session rows alone.
+  row, so the debug console closes; AceDBOptions' button leaves it alone. The reset profile is
+  locked, so the preview goes through `ApplyVisibility` (combat-safe).
 - **A profile switch, copy or reset in combat may create anchor frames.** Those are plain frames,
   which is combat-legal; their engines are built by the deferred apply once combat ends.
 - **Every engine and button binding is `pcall`-guarded** (`callEngine`, `Style.Bind`), so a binding

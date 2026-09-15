@@ -91,13 +91,13 @@ end)
 test("general: locking ends preview mode; unlocking leaves it alone", function()
     local NS, _, P, ws = general()
     NS.SetByPath("locked", false)
-    NS.SetByPath("state.preview", true)
+    NS.ContainerManager.SetPreview(true)
     assertTrue(NS.State.preview)
     P.row(ws, "locked"):__fire("OnValueChanged", true)
     -- red under: dropping the `locked` onChange in settings/General.lua
     assertTrue(NS.db.profile.locked)
     assertFalse(NS.State.preview, "locking ended the preview")
-    NS.SetByPath("state.preview", true)
+    NS.ContainerManager.SetPreview(true)
     P.row(ws, "locked"):__fire("OnValueChanged", false)
     -- red under: the onChange ending the preview whatever the new value is
     assertFalse(NS.db.profile.locked)
@@ -121,49 +121,22 @@ test("general: the Debug console checkbox shows the window and writes nothing to
     assertFalse(NS.DebugLog:IsShown(), "and closed again")
 end)
 
-test("general: Master controls' Test mode checkbox turns preview mode on for the session only", function()
-    -- options-ui-§15 (standard v2.46.0): preview mode is this addon's test mode, so its switch is the
-    -- composed Test mode row below Lock frame / Debug console, not a Display-tab row.
-    -- red under: the row still hand-written on the Display tab.
-    local NS, _, P, ws, tab = general()
-    local cb = P.row(ws, "state.preview")
-    assertTrue(cb ~= nil, "Test mode is on the Master controls tab")
-    assertTrue(P.row(tab(NS.L["Display"]), "state.preview") == nil, "and no longer on the Display tab")
-    local msgs = P.messages()
-    cb:__fire("OnValueChanged", true)
-    -- red under: the row's set not reaching ContainerManager.SetPreview
-    assertTrue(NS.State.preview)
-    assertNil(NS.db.profile.state, "a session row never reaches the profile")
-    assertEqual(msgs.config, 0, "and announces no setting change")
-end)
-
-test("general: ticking Test mode in combat is refused with one line and the box stays unticked", function()
-    -- options-ui-§15 / preview-mode (standard v2.48.0): a test-mode start during combat is refused.
-    local NS, m, P, ws = general()
-    local cb = P.row(ws, "state.preview")
-    NS.Helpers.__pageCtx.general.panel:Show()   -- on screen, so the write re-syncs the box in place
-    local lines = P.chat()
-    m.__lockdown = true
-    cb:SetValue(true)   -- the click ticks the box before the handler runs
-    cb:__fire("OnValueChanged", true)
-    -- red under: ContainerManager.SetPreview starting preview under lockdown
-    assertFalse(NS.State.preview, "the start was refused")
-    assertEqual(#lines, 1, "one line says why")
-    assertTrue(lines[1]:find(NS.L["cannot start test mode during combat"], 1, true) ~= nil, lines[1])
-    assertFalse(cb.value, "the box reads the refused state back")
-end)
-
-test("general: unticking Test mode in combat still ends it", function()
-    local NS, m, P, ws = general()
-    local cb = P.row(ws, "state.preview")
-    cb:__fire("OnValueChanged", true)
-    assertTrue(NS.State.preview)
-    local lines = P.chat()
-    m.__lockdown = true
-    cb:__fire("OnValueChanged", false)
-    -- red under: the combat refusal catching a stop as well as a start
-    assertFalse(NS.State.preview)
-    assertEqual(#lines, 0, "a stop is not refused")
+test("general: Master controls has no Test mode row; Lock frame is the preview's switch", function()
+    -- preview-mode (standard v2.49.0): unlocking already shows every container's placeholder auras,
+    -- so the unlocked view is this addon's test mode and Lock frame its switch; no Test mode row.
+    local NS, _, P, ws = general()
+    -- red under: settings/General.lua still handing MasterControls a testModePath
+    -- (with no row, the page can draw none: P.row itself refuses a path the schema lacks)
+    assertNil(NS.FindSchemaRow("state.preview"), "no state.preview row in the schema")
+    local lock = P.row(ws, "locked")
+    lock:__fire("OnValueChanged", false)
+    for id, inst in pairs(NS.ContainerManager.instances) do
+        assertTrue(inst.previewShown, "container " .. id .. " shows its placeholders while unlocked")
+    end
+    lock:__fire("OnValueChanged", true)
+    for id, inst in pairs(NS.ContainerManager.instances) do
+        assertFalse(inst.previewShown, "container " .. id .. " drops them when locked")
+    end
 end)
 
 test("general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was", function()

@@ -27,7 +27,7 @@ local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
 local cli
 
-local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runTest, runPick
+local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPick
 local runResetPosition, runForgetTimed, runDebug, runPerf
 
 NS.COMMANDS = {
@@ -61,8 +61,6 @@ NS.COMMANDS = {
         function() runLock(true) end},
     {"unlock",        L["Unlock containers so they can be dragged (shows placeholder auras)"],
         function() runLock(false) end},
-    {"test",          L["Show placeholder auras — /am test [on|off]"],
-        function(rest) runTest(rest) end},
     {"pick",          L["Attach the selected container to a frame by clicking it"],
         function() runPick() end},
     {"resetposition", L["Move every container back to its default screen position"],
@@ -218,18 +216,6 @@ end
 function runLock(locked)
     NS.SetByPath("locked", locked)
     print(locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
-end
-
-function runTest(rest)
-    local word = firstWord(rest)
-    local on
-    if word == "on" then on = true
-    elseif word == "off" then on = false
-    else on = not (NS.State and NS.State.preview) end
-    NS.SetByPath("state.preview", on)
-    -- A start refused in combat: ContainerManager.SetPreview already printed why.
-    if on and not (NS.State and NS.State.preview) then return end
-    print(on and L["Preview on — placeholder auras are shown"] or L["Preview off"])
 end
 
 function runPick()

@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 203 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 202 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -10,7 +10,7 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS` |
-| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock, debug console, test mode (the placeholder preview), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the placeholder preview), debug console, the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
@@ -88,7 +88,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (17 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -99,9 +99,12 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | General visibility | `visibility` | string | `always` / `inCombat` / `outOfCombat` / `never`; combat read with `UnitAffectingCombat("player")` |
 | Master scale | `scale` | number | Multiplies each container's own Layout → Frame scale |
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
-| Lock frame | `locked` | bool | Unlocked shows every handle and the preview; locking ends preview mode |
+| Lock frame | `locked` | bool | Unlocked shows every handle and the placeholder preview; locking ends it. The unlocked view is this addon's test mode, so Lock frame is its switch |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
-| Test mode | `state.preview` | bool, session | The composed Test mode row (options-ui-§15, `testModePath`): `ContainerManager.SetPreview`, placeholder auras in every container; off at `/reload`; ends when combat starts (`PLAYER_REGEN_DISABLED`: one chat line, and the box unticks); a start during combat is refused with one gray line and the box stays unticked (`SetPreview`), while turning it off in combat is allowed; `/am test` and unlocking reach the same preview |
+
+There is **no Test mode row**. Unlocking already shows every container's placeholder auras, so under
+preview-mode's exception (standard v2.49.0) the unlocked view is the test mode: `testModePath` is not
+passed to the composer and there is no `/am test` verb.
 
 Then the composed button pair: **Reset position** (`ContainerManager.ResetPositions` — every
 container back to the screen, staggered) and **Reset all settings** (the `AURAMASTER_RESET_ALL`

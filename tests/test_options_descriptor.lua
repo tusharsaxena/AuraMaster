@@ -115,7 +115,7 @@ test("options descriptor: Reset all writes only session rows through the seam an
     NS2.SetByPath("alpha", 0.3)
     NS2.db:SetProfile("Default")
     NS2.SetByPath("alpha", 0.6)
-    NS2.SetByPath("state.preview", true)
+    NS2.SetByPath("state.debugConsole", true)
     local written, real = {}, NS2.SetByPath
     NS2.SetByPath = function(path, ...)
         written[#written + 1] = path
@@ -131,7 +131,7 @@ test("options descriptor: Reset all writes only session rows through the seam an
     end
     -- red under: the descriptor's resetProfile dropped (nothing empties the profile)
     assertEqual(NS2.db.profile.alpha, 1)
-    assertFalse(NS2.State.preview)
+    assertFalse(NS2.DebugLog:IsShown())
     -- red under: a reset that empties every profile, not the active one
     assertEqual(NS2.db.sv.profiles.Raid.alpha, 0.3)
 end)

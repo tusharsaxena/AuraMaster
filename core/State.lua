@@ -8,9 +8,9 @@ local _, NS = ...
 --                      (settings/Schema.lua). The settings banner moves it; nil means "the
 --                      first container in display order", which is what the CLI gets on a fresh
 --                      login where nothing has ever selected one.
---   preview            the preview/test mode flag (preview-mode): placeholder auras are fed through
---                      the real render path so a container can be seen and placed without waiting
---                      for a real buff.
+--   preview            ContainerManager.SetPreview's flag (preview-mode): placeholder auras fed through
+--                      the real render path. No control sets it now: unlocking previews by itself,
+--                      and that unlocked view is this addon's test mode (standard v2.49.0).
 NS.State = NS.State or {}
 local State = NS.State
 

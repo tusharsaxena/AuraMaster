@@ -82,6 +82,9 @@ test("options: the General page leads with Master controls, in canonical order",
         assertEqual(rows[i].path, path)
         assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)
     end
+    -- red under: a seventh composed row. Standard v2.49.0 (preview-mode): unlocking already shows the
+    -- placeholder preview, so Lock frame is the test mode's switch and no Test mode row is composed.
+    assertTrue(rows[7] == nil or rows[7].group ~= NS.Helpers.MASTER_GROUP, "Master controls has six rows")
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 
@@ -182,7 +185,7 @@ test("options: Reset all settings resets the active profile whole, and nothing e
     local CM = NS2.ContainerManager
     CM.Create({ name = "Extra one" })
     CM.Create({ name = "Extra two" })
-    NS2.SetByPath("state.preview", true)
+    NS2.SetByPath("state.debugConsole", true)
     NS2.db:SetProfile("Raid")
     NS2.db:SetProfile("Default")
     local profilesBefore = table.concat(NS2.db:GetProfiles(), ",")
@@ -199,7 +202,7 @@ test("options: Reset all settings resets the active profile whole, and nothing e
         "exactly the shipped set survives")
     assertEqual(table.concat(NS2.db:GetProfiles(), ","), profilesBefore, "the profile list is untouched")
     assertEqual(NS2.db:GetCurrentProfile(), "Default")
-    assertFalse(NS2.State.preview, "session rows are swept too")
+    assertFalse(NS2.DebugLog:IsShown(), "session rows are swept too")
     assertTrue(changed[1] >= 1, "the registry change was announced")
 end)
 

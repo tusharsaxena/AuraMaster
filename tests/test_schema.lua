@@ -171,12 +171,12 @@ end)
 
 test("schema: a session row is stored by its own set, never in the profile", function()
     local NS2 = fresh()
-    NS2.SetByPath("state.preview", true)
-    assertTrue(NS2.State.preview)
-    assertEqual(NS2.GetSetting("state.preview"), true)
+    NS2.SetByPath("state.debugConsole", true)
+    assertTrue(NS2.DebugLog:IsShown())
+    assertEqual(NS2.GetSetting("state.debugConsole"), true)
     -- red under: SetByPath writing session rows into the profile (dropping the sessionOnly branch)
     assertNil(NS2.db.profile.state)
-    NS2.SetByPath("state.preview", false)
+    NS2.SetByPath("state.debugConsole", false)
 end)
 
 test("schema: a session row announces no CONFIG_CHANGED and queues no apply", function()
@@ -186,7 +186,6 @@ test("schema: a session row announces no CONFIG_CHANGED and queues no apply", fu
     CM.RequestApply = function(...) requests[1] = requests[1] + 1; return orig(...) end
     local announced = { 0 }
     NS2.NewBusTarget():RegisterMessage(NS2.MSG.CONFIG_CHANGED, function() announced[1] = announced[1] + 1 end)
-    assertTrue(NS2.SetByPath("state.preview", true))
     assertTrue(NS2.SetByPath("state.debugConsole", true))
     mocks.__fireTimers()
     -- red under: announceWrite sending for sessionOnly rows

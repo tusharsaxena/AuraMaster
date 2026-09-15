@@ -53,15 +53,9 @@ suite covers what only the client can show.
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
     the help mark moves it too. Right-click a handle → the settings open with that container selected.
 16. `/am lock` → handles and placeholders go; real auras return.
-17. `/am test` → placeholders without handles; `/am test off` → gone. `/am test on` then
-    `/reload` → preview is off again. `/am preview` → an unknown-command line and the help index.
-    **Combat ends it.** Open General → Master controls, tick **Test mode**, then attack a training
-    dummy → chat prints `[AM] Test mode off — combat started` once, the placeholders go, real auras
-    draw, and the Test mode box is unticked. Repeat after `/am unlock`: the same line prints and the
-    box unticks, but the placeholders and handles stay until `/am lock`. With Test mode off, a pull
-    prints nothing. **In combat,** tick Test mode → chat prints `[AM] cannot start test mode during
-    combat` in gray, no placeholders appear and the box stays unticked; `/am test on` and a bare
-    `/am test` print the same line. `/am test off` in combat → `Preview off`, not refused.
+17. **Unlocking is the test mode.** General → Master controls has no Test mode row (Lock frame,
+    Debug console, then the button pair). `/am test` and `/am preview` → an unknown-command line and
+    the help index; neither is listed in `/am help`.
 18. **Combat drag.** Unlock, enter combat, try to drag → the container does not move.
 
 ## D. Settings panel — every page and tab
@@ -214,8 +208,8 @@ suite covers what only the client can show.
 
 46. **Enter combat** (a training dummy) and change a container's bar width or a filter → chat prints
     once: `[AM] Aura Master settings changes will apply when combat ends.`; nothing changes on screen.
-    Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am test off`
-    and a rename print no notice (a `/am test` start is refused instead; see step 17). With a target container's border on class color, target a player
+    Leave combat → the change lands with no reload and no error. In combat, `/am lock` and a rename
+    print no notice. With a target container's border on class color, target a player
     of another class and pull at once → no notice prints (you changed no setting), and the border
     takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →
     the change waits until the key or encounter ends, even if you drop combat between pulls. A change
@@ -400,7 +394,7 @@ listed here too, so the batch can be signed off in one pass.
     again → the unit's tooltip comes back, proving the blocker that closes the gap is gated off, not
     unconditional. Turn Click-through back off, then turn **Show tooltips** off instead and hover the
     gap once more → the unit's tooltip shows there too, for the same reason.
-    **Preview is exempt by design.** `/am unlock` (or `/am test`) and hover a gap between placeholders
+    **Preview is exempt by design.** `/am unlock` and hover a gap between placeholders
     → the unit's tooltip shows there, same as Click-through. Expected: the blocker is hidden whenever
     the engine is (real auras are hidden while previewing too), so this is not a regression to report.
 

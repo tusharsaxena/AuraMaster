@@ -1,5 +1,6 @@
--- tests/test_preview.lua — modules/Preview.lua: the placeholder auras shown while unlocked or under
--- `/am test`. How many are drawn and where, the pool that keeps them, and when they are dressed again.
+-- tests/test_preview.lua — modules/Preview.lua: the placeholder auras shown while unlocked (or while
+-- `CM.SetPreview` holds them). How many are drawn and where, the pool that keeps them, and when they
+-- are dressed again.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -138,7 +139,7 @@ test("preview: placeholders paint with the container's class snapshot, as its re
     for i, cc in ipairs(seen) do assertTrue(cc == k.classColor, "element " .. i) end
 end)
 
-test("preview: /am test shows placeholders on a locked addon, with the engine off and no drag handle", function()
+test("preview: CM.SetPreview shows placeholders on a locked addon, with the engine off and no drag handle", function()
     local NS2 = fresh()
     local CM = NS2.ContainerManager
     assertTrue(NS2.db.profile.locked, "locked by default")

@@ -8,8 +8,7 @@ local _, NS = ...
 --                      [Master scale]        [Master alpha]
 --                      [Lock frame]          [Debug console]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
---     Display          -- Preview --          [Show placeholder auras]
---                      -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
+--     Display          -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
 --     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
 --     Dispel Colors    settings/GeneralSpells.lua: one color per dispel type, profile-wide
 --
@@ -23,6 +22,10 @@ local _, NS = ...
 -- rows from one declaration. Every row applies — containers are movable frames — so nothing is
 -- omitted. Master scale and alpha MULTIPLY each container's own scale and alpha on the Layout page;
 -- the two are different settings and neither replaces the other.
+--
+-- NO TEST MODE ROW. Unlocking already shows every container's placeholder auras, so under
+-- preview-mode's exception (standard v2.49.0) the unlocked view is this addon's test mode and Lock
+-- frame is its switch: no `testModePath` is passed, and there is no `/am test` verb.
 
 local L = NS.L
 local H = NS.Helpers
@@ -30,9 +33,6 @@ local print = NS.Print
 local GS = NS.GeneralSpells
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
--- Preview mode is this addon's test mode (`/am test`), so its switch is Master controls' Test mode row
--- (options-ui-§15, standard v2.46.0), composed from `testModePath` (LibKa0s v1.37.0).
-local TEST_MODE_PATH = "state.preview"
 
 local masterRows, masterTail = H.MasterControls({
     prefix           = "",
@@ -40,7 +40,6 @@ local masterRows, masterTail = H.MasterControls({
     addonName        = "Aura Master",
     frameless        = false,
     debugConsolePath = DEBUG_CONSOLE_PATH,
-    testModePath     = TEST_MODE_PATH,
     onResetPosition  = function() NS.ContainerManager.ResetPositions() end,
     onResetAll       = function() StaticPopup_Show("AURAMASTER_RESET_ALL") end,
 })
@@ -48,9 +47,10 @@ local masterRows, masterTail = H.MasterControls({
 -- The composer emits DATA; the host attaches behavior, keyed by PATH so an upstream reorder cannot
 -- move a handler onto the wrong row.
 local masterOnChange = {
-    -- Locking ends preview mode (preview-mode), through the seam; unlocking starts it by itself.
+    -- Locking ends preview mode (preview-mode). Unlocking previews by itself: ContainerClass:ShouldShow
+    -- reads the lock, so only a preview held on through ContainerManager.SetPreview needs ending here.
     ["locked"] = function(v)
-        if v and NS.State and NS.State.preview then NS.SetByPath("state.preview", false) end
+        if v and NS.State and NS.State.preview then NS.ContainerManager.SetPreview(false) end
     end,
 }
 
@@ -84,14 +84,6 @@ for _, row in ipairs(masterRows) do
         row.default = false
         -- Explicitly nothing: toggling a window re-applies no container.
         row.onChange = function() end
-    end
-    if row.path == TEST_MODE_PATH then
-        -- Session state bound to preview mode, as the console row is bound to the console window.
-        -- The composer gives the row a generic tooltip; this addon's says what the placeholders are.
-        row.get = function() return NS.State and NS.State.preview or false end
-        row.set = function(v) NS.ContainerManager.SetPreview(v) end
-        row.default = false
-        row.tooltip = L["Fill every container with sample auras so you can see and style it without waiting for a real buff. Turns off at /reload. Unlocking shows them too."]
     end
 end
 

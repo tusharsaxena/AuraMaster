@@ -25,8 +25,8 @@ client. The player-facing contract is the README; the engineering boundary is th
   per-group cap.
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
-- **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked or via
-  `/am test` (preview-mode).
+- **Preview mode:** placeholder auras drawn through the same `Style` code while unlocked; the
+  unlocked view is the test mode (preview-mode's exception, standard v2.49.0).
 - **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
 - **Profiles** through AceDB, with a Profiles sub-page.
 - **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through

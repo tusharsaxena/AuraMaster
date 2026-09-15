@@ -164,9 +164,10 @@ over the template:
 ## Session state (not persisted)
 
 `NS.State` (`core/State.lua`): `debug` (the console's logging flag), `activeContainerId` (which
-container every `container.` path resolves against) and `preview`. All three reset at every `/reload`.
-The schema reaches the session state through two `sessionOnly` rows, `state.debugConsole` and
-`state.preview`, which write nothing to the database.
+container every `container.` path resolves against) and `preview` (`ContainerManager.SetPreview`'s
+flag; no control sets it now, since unlocking previews by itself). All three reset at every `/reload`.
+The schema reaches the session state through one `sessionOnly` row, `state.debugConsole`, which
+writes nothing to the database.
 
 ## `AuraMasterPerfDB` — the capture ring
 

@@ -304,7 +304,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: CopyFrom is all or nothing — a corrupt later section stores and announces nothing
 - manager: many apply requests in one frame schedule one pass
 - manager: an apply under combat lockdown waits, says so once, and runs after combat
-- manager: /am test, /am lock and a rename under lockdown print no deferral notice
+- manager: /am lock and a rename under lockdown print no deferral notice
 - manager: a master visibility row hides containers at once, with no apply pass
 - manager: a profile-wide dispel color or spell-list write re-applies every container (G-2, G-3)
 - manager: disabling a container in combat hides it at once, with no apply and no deferral notice
@@ -386,16 +386,13 @@ badge and any count quoted in the docs must agree with it.
 - state: the session flags start off, are never saved, and a reload starts them clean
 - state: preview's toggle stores a strict boolean and hides or restores the engines at once
 
-### test_lifecycle.lua (13)
+### test_lifecycle.lua (10)
 
 - lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
 - lifecycle: combat starting runs no held apply; combat ending does
-- lifecycle: combat starting ends test mode, prints one line and unticks the Test mode box
-- lifecycle: combat starting with test mode off prints nothing and refreshes no panel
-- lifecycle: combat starting unlocked ends test mode but keeps the unlocked placeholders
 - lifecycle: a profile switch out of combat rebuilds every container for the new profile at once
 - lifecycle: every profile event clears the container selection and re-renders the panel once
 - lifecycle: a copied profile is prepared before its containers are built
@@ -626,7 +623,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: Hide releases every placeholder, and the next Show dresses them again
 - preview: a container whose settings are gone draws nothing and raises nothing
 - preview: placeholders paint with the container's class snapshot, as its real buttons do
-- preview: /am test shows placeholders on a locked addon, with the engine off and no drag handle
+- preview: CM.SetPreview shows placeholders on a locked addon, with the engine off and no drag handle
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
@@ -679,9 +676,9 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am new with a word it does not know creates nothing and says why
 - slash: /am select takes an id or a name; /am containers marks the selection
 - slash: /am set writes the selected container through the seam
-- slash: lock, unlock and test drive the same settings the panel does
-- slash: /am preview is an unknown verb now; it prints the help index and changes nothing
-- slash: /am help and the landing page list test, not preview
+- slash: lock and unlock drive the same setting the panel does
+- slash: /am test and /am preview are unknown verbs; each prints the help index and changes nothing
+- slash: /am help and the landing page list neither test nor preview
 - slash: /am disable and /am enable write the master switch through the seam and say so
 - slash: /am disable in combat is not refused; the master switch is a visibility write
 - slash: /am enable prints the seam's error instead of the success line
@@ -697,7 +694,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (37)
+### test_slash_verbs.lua (35)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -720,8 +717,6 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
 - slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
 - slash verbs: /am lock ends preview mode through the seam; /am unlock says how to drag
-- slash verbs: /am test on and a bare /am test are refused in combat; /am test off is not
-- slash verbs: /am test reads its word in any case, toggles on anything else, and says which
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
 - slash verbs: /am set on a free-text row stores every word typed after the path
@@ -801,16 +796,14 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (38)
+### test_pages_general.lua (36)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
 - general: the visibility dropdown offers the four states in order and stores the one chosen
 - general: locking ends preview mode; unlocking leaves it alone
 - general: the Debug console checkbox shows the window and writes nothing to the profile
-- general: Master controls' Test mode checkbox turns preview mode on for the session only
-- general: ticking Test mode in combat is refused with one line and the box stays unticked
-- general: unticking Test mode in combat still ends it
+- general: Master controls has no Test mode row; Lock frame is the preview's switch
 - general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
@@ -1081,7 +1074,7 @@ badge and any count quoted in the docs must agree with it.
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
-| test_lifecycle.lua | 13 |
+| test_lifecycle.lua | 10 |
 | test_anchors.lua | 63 |
 | test_style.lua | 43 |
 | test_timedspells.lua | 19 |
@@ -1092,11 +1085,11 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
-| test_slash_verbs.lua | 37 |
+| test_slash_verbs.lua | 35 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 38 |
+| test_pages_general.lua | 36 |
 | test_pages_containers.lua | 22 |
 | test_pages_filters.lua | 38 |
 | test_pages_layout.lua | 22 |
@@ -1115,4 +1108,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **921** |
+| **Total** | **914** |

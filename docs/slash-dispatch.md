@@ -1,12 +1,12 @@
 # Slash dispatch
 
-`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 22 commands, over the
+`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 21 commands, over the
 eight-or-more trigger (documentation-§3).
 
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:405`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:391`), called from `OnInitialize`. There is no `SLASH_*` global.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -36,19 +36,18 @@ eight-or-more trigger (documentation-§3).
 | 12 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
 | 13 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
 | 14 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
-| 15 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders |
-| 16 | `test [on\|off]` | host | `NS.SetByPath("state.preview", on)`; bare toggles; combat start turns it off (`OnCombatChanged`); a start in combat (`on`, or a bare toggle from off) is refused: `ContainerManager.SetPreview` prints the gray line and the verb prints nothing more; `off` still works in combat |
-| 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
-| 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
-| 19 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 20 | `debug [on\|off]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled` |
-| 21 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
-| 22 | `version` | host | `v` + `NS.Version()` |
+| 15 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders; the unlocked view is the addon's test mode (no `test` verb, preview-mode's exception, standard v2.49.0) |
+| 16 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
+| 17 | `resetposition` | host | `ContainerManager.ResetPositions()` |
+| 18 | `forgettimed` | host | `TimedSpells.Forget()` |
+| 19 | `debug [on\|off]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled` |
+| 20 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
+| 21 | `version` | host | `v` + `NS.Version()` |
 
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:176`):
+(`NEW_WORDS`, `settings/Slash.lua:174`):
 
 | Words | Field |
 |---|---|
@@ -74,12 +73,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:102`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:389`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:375`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:336`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:322`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -99,7 +98,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:285` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:271` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's
 formatting or parsing. `tests/degraded_env.lua` loads the addon that way.

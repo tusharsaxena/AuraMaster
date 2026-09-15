@@ -68,20 +68,7 @@ function addon:OnEnterWorld()
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
 end
 
---- Test mode (preview mode, `state.preview`) ends as a fight begins (preview-mode, options-ui-§15).
---- PLAYER_REGEN_DISABLED fires before lockdown, so the visibility pass that re-enables each engine
---- still runs unrestricted. It goes through the seam the Test mode checkbox and `/am test` use, then
---- prints one line and re-draws the panel so the box unticks. An unlock's placeholders stay: unlocking
---- is its own mode, and the fight ends only the test mode.
-local function endTestModeForCombat()
-    if not (NS.State and NS.State.preview) then return end
-    NS.SetByPath("state.preview", false)
-    NS.Print(NS.L["Test mode off — combat started"])
-    if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
-end
-
 function addon:OnCombatChanged(event)
-    if event == "PLAYER_REGEN_DISABLED" then endTestModeForCombat() end
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if event == "PLAYER_REGEN_ENABLED" then
         -- "regen": the deferral notice never escalates on this edge (modules/ContainerManager.lua).
