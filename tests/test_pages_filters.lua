@@ -512,3 +512,16 @@ test("filters: a blacklisted spell a Hide category would also hide gets no note"
     local ws = P.tab("filters", "overrides")
     assertFalse(P.hasText(ws, "would otherwise"), "the blacklist and the category agree")
 end)
+
+-- Fix round 1: a whitelisted spell no category claims, under "only these categories", would vanish
+-- from the container entirely if it were not whitelisted (R-9's catch-all is gone) — the case the
+-- rank-4-only check missed, because the counterfactual is rank 5 hidden, not rank 4.
+-- red under: overrideNote checking `cat.rank == 4` instead of `cat.verdict == "hidden"`
+test("filters: a whitelisted spell no category claims, under 'only these categories', warns it would vanish", function()
+    local NS, _, P = filters()
+    NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
+    NS.SetByPath("container.filter.onlyShown", true, 1)
+    local ws = P.tab("filters", "overrides")
+    assertTrue(P.hasText(ws, NS.L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."]),
+        "an unclaimed whitelisted spell under onlyShown needs its own wording, not the category one")
+end)

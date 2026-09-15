@@ -202,6 +202,7 @@ L["Shown here anyway — it is also on the whitelist, which outranks the blackli
 L["Hidden here by the blacklist; %s would otherwise show it."] = "Hidden here by the blacklist; %s would otherwise show it."
 L["Also on the blacklist, but the whitelist outranks it — still shown here."] = "Also on the blacklist, but the whitelist outranks it — still shown here."
 L["Shown here by the whitelist; %s would otherwise hide it."] = "Shown here by the whitelist; %s would otherwise hide it."
+L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."] = "Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."
 L["Only these categories"] = "Only these categories"
 L["Draw only the Overrides whitelist and the categories set to Show; drop everything else, including auras in no category at all."] = "Draw only the Overrides whitelist and the categories set to Show; drop everything else, including auras in no category at all."
 L["Filters"] = "Filters"

@@ -313,7 +313,11 @@ local function withoutOverrides(cfg, id)
 end
 
 --- The labels of `list` (an `ExplainSpell` `categories` array, or a filtered copy of one), in
---- order, comma-joined — the note's "which categories" fragment.
+--- order, comma-joined — the note's "which categories" fragment. UNROUTED join: only enUS.lua ships
+--- today, so a plain ", " between already-localized labels is not costing a translation anything yet
+--- (there is not one). Accepted for now because every label in `list` is itself routed through
+--- NS.L, so the sentence a translation actually owns is still whole; if a second locale ships, this
+--- separator is the thing to route (a locale-specific list join), not the labels themselves.
 local function categoryLabelList(list)
     local names = {}
     for i, c in ipairs(list) do names[i] = c.label end
@@ -339,6 +343,12 @@ local function overrideNote(cfg, id, ctx, key)
         if (filter.whitelist or {})[id] == true then
             return L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]
         end
+        -- Rank 3 only, not "verdict shown" generally: a blacklisted id nothing else claims is
+        -- naturally rank 5 (shown) without the blacklist too — that is the ordinary, unsurprising
+        -- reason to blacklist something, not a conflict, and noting it would fire on most entries.
+        -- onlyShown changes nothing here either: a claimed-by-nothing id is rank 5 HIDDEN without
+        -- the blacklist under that toggle, same as with it, so there is no counterfactual case the
+        -- rank-3 check misses on this side (checked as the mirror of the whitelist fix above).
         local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
         if cat.rank == 3 then
             return L["Hidden here by the blacklist; %s would otherwise show it."]:format(
@@ -349,12 +359,18 @@ local function overrideNote(cfg, id, ctx, key)
     if (filter.blacklist or {})[id] == true then
         return L["Also on the blacklist, but the whitelist outranks it — still shown here."]
     end
+    -- Fire on the counterfactual's VERDICT ("hidden"), not on rank 4 alone: rank 5 hides too, under
+    -- onlyShown (R-9's catch-all is gone), and that is the one case most worth a note — without the
+    -- whitelist this id would vanish from the container entirely, not merely lose a category fight.
     local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
-    if cat.rank == 4 then
-        return L["Shown here by the whitelist; %s would otherwise hide it."]:format(
-            categoryLabelList(cat.categories))
+    if cat.verdict ~= "hidden" then
+        return nil
     end
-    return nil
+    if cat.rank == 5 then
+        return L["Shown here by the whitelist; with 'Only these categories' on and nothing here set to Show, it would otherwise not be drawn at all."]
+    end
+    return L["Shown here by the whitelist; %s would otherwise hide it."]:format(
+        categoryLabelList(cat.categories))
 end
 
 --- One override list: its heading and blurb, then the library's ID list over `filter[key]`.
