@@ -32,16 +32,16 @@ it against `git log`, trust git over the table, continue at the first row that i
 
 | Task | Req | Repo | Status | Commit | Notes |
 |---|---|---|---|---|---|
-| P1 ASCII sweep + guard, strata, issue | T-1 X-1 X-3 | AM | todo | | |
-| P2 Uncategorized category | U-1…U-5 X-2 | AM | todo | | |
-| P3 LibKa0s v1.36.2 plain checkbox | G-1…G-3 | LibKa0s | todo | | |
-| P4 re-vendor v1.36.2 (10 repos) | G-3 | all | todo | | needs P3 |
-| P5 Containers page + sub-pages | N-1 N-2 | AM | todo | | |
-| P6 navigation fix + See spells + info icons | N-3 N-4 N-5 | AM | todo | | needs P5 |
-| P7 Categories tab readability | T-2 T-3 | AM | todo | | needs P2 |
-| P8 Bars/Icons tab restructure | S-1 | AM | todo | | |
-| P10 spark appearance in clip mode | SP-1 SP-2 | AM | todo | | owner report 2026-09-15 |
-| P9 docs + final battery | all | all | todo | | last |
+| P1 ASCII sweep + guard, strata, issue | T-1 X-1 X-3 | AM | done | 0f31609 | guard allowlists ASCII + em dash, proven red on a pasted glyph |
+| P2 Uncategorized category | U-1…U-5 X-2 | AM | done | 5105b93 f00123d eb52b27 64c25e4 2111e40 0e2b79a | 5 rounds; toggle removed; debuff row restored; FINAL REVIEW CRITICAL: migration widened a narrowed container |
+| P3 LibKa0s v1.36.2 plain checkbox | G-1…G-3 | LibKa0s | done | 331416d d39e4b4 6acc177 | fill withdrawn; ASCII guard rewritten to decode bytes |
+| P4 re-vendor v1.36.2 (10 repos) | G-3 | all | done | P4a nine + P4b bd4fa80 | all eleven byte-identical to the tag |
+| P5 Containers page + sub-pages | N-1 N-2 | AM | done | 0c39032 | label-prefix nesting, copied from MultiMeters |
+| P6 navigation fix + See spells + info icons | N-3 N-4 N-5 | AM | done | 4087784 | every page now records its category, not just container pages |
+| P7 Categories tab readability | T-2 T-3 | AM | done | 6b2981e | blurb one rank per line; T-3 overtaken, enchant row re-homed |
+| P8 Bars/Icons tab restructure | S-1 | AM | done | 2880b6e | Size folded into a renamed General; Icons deliberately unchanged, reason documented |
+| P10 spark appearance in clip mode | SP-1 SP-2 | AM | done | 0b4b0c9 | backdrop is half-opaque, so BLEND not colour-match |
+| P9 docs + final battery | all | all | done | 1821ca8 | 10 false statements fixed, six of them unpassable smoke checks |
 
 **Dependency order:** P1, P2, P3, P8, P10 are independent. P4 needs P3. P6 needs P5. P7 needs P2.
 P9 is last.
