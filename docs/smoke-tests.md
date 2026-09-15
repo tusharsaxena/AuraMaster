@@ -59,7 +59,9 @@ suite covers what only the client can show.
     dummy → chat prints `[AM] Test mode off — combat started` once, the placeholders go, real auras
     draw, and the Test mode box is unticked. Repeat after `/am unlock`: the same line prints and the
     box unticks, but the placeholders and handles stay until `/am lock`. With Test mode off, a pull
-    prints nothing.
+    prints nothing. **In combat,** tick Test mode → chat prints `[AM] cannot start test mode during
+    combat` in gray, no placeholders appear and the box stays unticked; `/am test on` and a bare
+    `/am test` print the same line. `/am test off` in combat → `Preview off`, not refused.
 18. **Combat drag.** Unlock, enter combat, try to drag → the container does not move.
 
 ## D. Settings panel — every page and tab
@@ -212,8 +214,8 @@ suite covers what only the client can show.
 
 46. **Enter combat** (a training dummy) and change a container's bar width or a filter → chat prints
     once: `[AM] Aura Master settings changes will apply when combat ends.`; nothing changes on screen.
-    Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am test`
-    and a rename print no notice. With a target container's border on class color, target a player
+    Leave combat → the change lands with no reload and no error. In combat, `/am lock`, `/am test off`
+    and a rename print no notice (a `/am test` start is refused instead; see step 17). With a target container's border on class color, target a player
     of another class and pull at once → no notice prints (you changed no setting), and the border
     takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →
     the change waits until the key or encounter ends, even if you drop combat between pulls. A change

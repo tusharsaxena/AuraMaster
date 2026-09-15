@@ -137,6 +137,35 @@ test("general: Master controls' Test mode checkbox turns preview mode on for the
     assertEqual(msgs.config, 0, "and announces no setting change")
 end)
 
+test("general: ticking Test mode in combat is refused with one line and the box stays unticked", function()
+    -- options-ui-§15 / preview-mode (standard v2.48.0): a test-mode start during combat is refused.
+    local NS, m, P, ws = general()
+    local cb = P.row(ws, "state.preview")
+    NS.Helpers.__pageCtx.general.panel:Show()   -- on screen, so the write re-syncs the box in place
+    local lines = P.chat()
+    m.__lockdown = true
+    cb:SetValue(true)   -- the click ticks the box before the handler runs
+    cb:__fire("OnValueChanged", true)
+    -- red under: ContainerManager.SetPreview starting preview under lockdown
+    assertFalse(NS.State.preview, "the start was refused")
+    assertEqual(#lines, 1, "one line says why")
+    assertTrue(lines[1]:find(NS.L["cannot start test mode during combat"], 1, true) ~= nil, lines[1])
+    assertFalse(cb.value, "the box reads the refused state back")
+end)
+
+test("general: unticking Test mode in combat still ends it", function()
+    local NS, m, P, ws = general()
+    local cb = P.row(ws, "state.preview")
+    cb:__fire("OnValueChanged", true)
+    assertTrue(NS.State.preview)
+    local lines = P.chat()
+    m.__lockdown = true
+    cb:__fire("OnValueChanged", false)
+    -- red under: the combat refusal catching a stop as well as a start
+    assertFalse(NS.State.preview)
+    assertEqual(#lines, 0, "a stop is not refused")
+end)
+
 test("general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was", function()
     local NS, m, P, _, tab = general()
     local original = m.UIParent

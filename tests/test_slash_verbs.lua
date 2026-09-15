@@ -352,6 +352,26 @@ test("slash verbs: /am lock ends preview mode through the seam; /am unlock says 
     assertFalse(NS2.State.preview)
 end)
 
+test("slash verbs: /am test on and a bare /am test are refused in combat; /am test off is not", function()
+    -- options-ui-§15 / preview-mode (standard v2.48.0): a test-mode start during combat is refused.
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    -- red under: runTest printing "Preview on" over a refused start
+    assertEqual(dump(slash(NS2, lines, "test on")), "{cannot start test mode during combat}")
+    assertFalse(NS2.State.preview)
+    assertEqual(dump(slash(NS2, lines, "test")), "{cannot start test mode during combat}", "a bare toggle too")
+    assertFalse(NS2.State.preview)
+    mocks.__lockdown = false
+    slash(NS2, lines, "test on")
+    mocks.__lockdown = true
+    assertEqual(dump(slash(NS2, lines, "test off")), "{Preview off}")
+    assertFalse(NS2.State.preview, "turning it off in combat still works")
+    slash(NS2, lines, "test on")
+    slash(NS2, lines, "test")
+    assertFalse(NS2.State.preview, "and a bare toggle from off is refused again")
+end)
+
 test("slash verbs: /am test reads its word in any case, toggles on anything else, and says which", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)

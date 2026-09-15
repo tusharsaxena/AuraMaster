@@ -227,6 +227,8 @@ function runTest(rest)
     elseif word == "off" then on = false
     else on = not (NS.State and NS.State.preview) end
     NS.SetByPath("state.preview", on)
+    -- A start refused in combat: ContainerManager.SetPreview already printed why.
+    if on and not (NS.State and NS.State.preview) then return end
     print(on and L["Preview on — placeholder auras are shown"] or L["Preview off"])
 end
 

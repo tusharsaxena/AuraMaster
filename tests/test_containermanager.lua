@@ -178,8 +178,9 @@ end
 test("manager: /am test, /am lock and a rename under lockdown print no deferral notice", function()
     local NS, mocks = fresh()
     local lines = chat(mocks)
-    mocks.__lockdown = true
+    -- Started before the pull: a test-mode start under lockdown is refused (standard v2.48.0).
     assertTrue(NS.SetByPath("state.preview", true))
+    mocks.__lockdown = true
     assertTrue(NS.SetByPath("locked", true))
     assertTrue(NS.SetByPath("container.name", "Renamed", 1))
     mocks.__fireTimers()

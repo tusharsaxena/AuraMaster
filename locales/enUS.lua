@@ -370,6 +370,7 @@ L["Containers unlocked — drag a container by its handle"] = "Containers unlock
 L["Preview on — placeholder auras are shown"] = "Preview on — placeholder auras are shown"
 L["Preview off"] = "Preview off"
 L["Test mode off — combat started"] = "Test mode off — combat started"
+L["cannot start test mode during combat"] = "cannot start test mode during combat"
 L["cannot pick a frame during combat — attaching to a frame waits until combat ends"] = "cannot pick a frame during combat — attaching to a frame waits until combat ends"
 L["cannot delete a container during combat — its display cannot be torn down until combat ends"] = "cannot delete a container during combat — its display cannot be torn down until combat ends"
 L["cannot create a container during combat — it would not be drawn or placed until combat ends"] = "cannot create a container during combat — it would not be drawn or placed until combat ends"

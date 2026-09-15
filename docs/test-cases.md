@@ -697,7 +697,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (36)
+### test_slash_verbs.lua (37)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -720,6 +720,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
 - slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
 - slash verbs: /am lock ends preview mode through the seam; /am unlock says how to drag
+- slash verbs: /am test on and a bare /am test are refused in combat; /am test off is not
 - slash verbs: /am test reads its word in any case, toggles on anything else, and says which
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
@@ -800,7 +801,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (36)
+### test_pages_general.lua (38)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -808,6 +809,8 @@ badge and any count quoted in the docs must agree with it.
 - general: locking ends preview mode; unlocking leaves it alone
 - general: the Debug console checkbox shows the window and writes nothing to the profile
 - general: Master controls' Test mode checkbox turns preview mode on for the session only
+- general: ticking Test mode in combat is refused with one line and the box stays unticked
+- general: unticking Test mode in combat still ends it
 - general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
@@ -1089,11 +1092,11 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
-| test_slash_verbs.lua | 36 |
+| test_slash_verbs.lua | 37 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 36 |
+| test_pages_general.lua | 38 |
 | test_pages_containers.lua | 22 |
 | test_pages_filters.lua | 38 |
 | test_pages_layout.lua | 22 |
@@ -1112,4 +1115,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **918** |
+| **Total** | **921** |

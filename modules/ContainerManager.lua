@@ -315,10 +315,20 @@ function CM.ReapplyStaleClass()
     end
 end
 
---- Turn preview mode on or off (preview-mode). Session-only.
+--- Turn preview mode on or off (preview-mode). Session-only. The ONE writer of `state.preview`, so
+--- the Test mode checkbox and `/am test` share its refusal: a START under combat lockdown is refused
+--- with one gray line (options-ui-§15, standard v2.48.0), and the checkbox reads the refused state
+--- back through the seam's scalar refresh. A stop is never refused.
+--- @return boolean started_or_stopped  false when a start was refused
 function CM.SetPreview(on)
-    if NS.State then NS.State.preview = on and true or false end
+    on = on and true or false
+    if on and not (NS.State and NS.State.preview) and InCombatLockdown() then
+        print_(("|cff808080%s|r"):format(L["cannot start test mode during combat"]))
+        return false
+    end
+    if NS.State then NS.State.preview = on end
     CM.ApplyVisibility()
+    return true
 end
 
 -- ---------------------------------------------------------------------------
