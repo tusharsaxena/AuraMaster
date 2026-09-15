@@ -175,6 +175,35 @@ test("bars: with the timeless spark on, and in every preview, nothing is clipped
     assertEqual(am.sparkClip:__joined("SetClipsChildren"), "false")
 end)
 
+-- ── spark blend mode matches its backdrop (SP-1) ─────────────────────────────────────────────────
+
+test("bars: with the timeless spark off, the live clipped spark blends normally, not additively", function()
+    local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), true)
+    -- red under: the clip-mode spark still summing onto its (partly transparent) backdrop, which
+    -- reads as a random wash rather than the spark's own authored color (feedback batch 7 SP-1)
+    assertEqual(am.spark:__joined("SetBlendMode"), "BLEND")
+end)
+
+test("bars: with the timeless spark on, the live spark stays additive over the opaque fill", function()
+    local _, am = dressed(cfg({ bars = { sparkTimeless = true } }), true)
+    assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
+end)
+
+test("bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says", function()
+    local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), false)
+    -- red under: wireSpark keying the blend mode off sparkTimeless alone instead of `engine and not sparkTimeless`
+    assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
+end)
+
+test("bars: the clip-mode blend switch leaves the player's own spark color alone", function()
+    local _, am = dressed(cfg({ bars = { sparkTimeless = false,
+        sparkColor = { r = 0.1, g = 0.2, b = 0.9, a = 0.4 } } }), true)
+    -- red under: neutralizing the backdrop by overriding sparkColor instead of the blend mode, which
+    -- would silently discard a custom color the player chose
+    assertEqual(am.spark:__joined("SetVertexColor"), "0.1,0.2,0.9,0.4")
+    assertEqual(am.spark:__joined("SetBlendMode"), "BLEND")
+end)
+
 test("bars: a missing timeless-spark setting reads the template's", function()
     local ns = ownTemplate("sparkTimeless", false)
     local c = cfg()

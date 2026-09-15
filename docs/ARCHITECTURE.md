@@ -435,7 +435,13 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
   leaves empty (`docs/midnight-quirks.md`). The spark must sit wholly on the elapsed side to be
   clipped, so it moves half its width off center. With the option on (the default) the spark is
   centered, as before. That a zero-duration bar leaves the region empty is still an in-game check
-  (`docs/smoke-tests.md`, checks 26 and 63).
+  (`docs/smoke-tests.md`, checks 26 and 63). Moving the spark off the fill onto the elapsed
+  background also moves it onto a different backdrop — the elapsed side's background defaults to
+  half-opaque and lets whatever sits behind the frame bleed through — so `wireSpark`
+  (`modules/Style_Bars.lua`) blends the spark normally there instead of additively, or that bleed-
+  through reads as "a random yellow-golden spark" (owner report 2026-09-14, `SP-1`); centered mode
+  keeps the additive blend, since its backdrop is the opaque fill. Verified in-game only
+  (`docs/smoke-tests.md`, check 85).
 
 ## Documentation map
 

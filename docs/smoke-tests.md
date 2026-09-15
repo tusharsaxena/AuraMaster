@@ -469,3 +469,15 @@ one. None of this is reproducible headlessly; these checks are.
     Mouse's own documented tradeoff, not a bug — confirm the tab's **Show tooltips** text names it
     and that turning **Click-through** on restores mouseover targeting everywhere under the
     container, padding included.
+85. **A timed bar's spark reads the same with the timeless option on or off (owner report
+    2026-09-14, `SP-1`).** Put two live, timed auras of the same kind side by side on one bar
+    container — say, two casts of the same buff so their sparks share a color and position along the
+    bar. On **General** tick **Show the spark on auras without a duration**, screenshot or eyeball
+    one bar's spark, then untick it and compare the same bar's spark again → the spark should look
+    the same both times (same color, same brightness), not "a random yellow-golden spark" that
+    only appears with the option off. This is the half of the check that FAILS if the fix regresses:
+    if the two sparks still visibly differ, report it and cite this check. Then, without changing
+    anything else, confirm the other half still holds — a permanent (no-duration) aura's bar still
+    shows NO spark with the option off (check 26/63): if unticking the option makes every spark
+    uniform by also restoring the permanent aura's spark, that is a regression of B-3, not a fix of
+    this defect, and must also be reported.
