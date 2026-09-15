@@ -70,7 +70,12 @@ Suites worth knowing by name:
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
   `## Documentation map` agreeing with `docs/` in both directions, and every `file:line` citation in
-  `docs/*.md`, `DEPENDENCIES.md` and `README.md` naming an existing file and a non-blank line.
+  `docs/*.md`, `DEPENDENCIES.md` and `README.md` naming an existing file and a non-blank line. Each
+  citation must also still point at what its sentence names: the sentence gives at least one name in
+  backticks (a table row is one sentence; a line in a fenced block names everything on it), and one
+  of those names sits within 3 lines of the cited range. A line that moved under a citation fails
+  this, where existence alone passes. It is a heuristic, not a proof: whether the cited code still
+  does what the prose says is still for review to decide.
 - **`tests/test_lintconfig.lua`** — `.luacheckrc` carries no blanket suppression, so `0/0` is a
   statement about the code.
 - **`tests/test_vendor_sync.lua`** — `libs/LibKa0s/` and `tests/_kit/` are byte-identical to the

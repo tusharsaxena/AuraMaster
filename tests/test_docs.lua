@@ -1,6 +1,6 @@
 -- tests/test_docs.lua — the shipped prose is checkable, so it is checked.
 --
--- Four rules about text that no code path enforces and no reviewer reliably catches:
+-- Five rules about text that no code path enforces and no reviewer reliably catches:
 --
 --   1. Angle-bracket argument placeholders must not appear in README.md. CurseForge's renderer treats
 --      `<path>` as an unknown HTML tag and strips it — inside backticks too — so a command that reads
@@ -12,8 +12,14 @@
 --   3. The Tier 2 rows of docs/ARCHITECTURE.md's `## Documentation map` agree with the disk: a doc
 --      filed Present exists, and one filed Not applicable does not (documentation-§3).
 --   4. Every `path.lua:N[-M]` or `AuraMaster.toc:N[-M]` citation in docs/*.md, DEPENDENCIES.md and
---      README.md names a file that exists and a range inside it whose first line is not blank. That is
---      mechanical only: whether the cited line still carries the doc's claim stays a reviewer's job.
+--      README.md names a file that exists and a range inside it whose first line is not blank.
+--   5. Each of those citations still points at what its sentence is about: the sentence names
+--      something in backticks, and one of those names sits within CITATION_SLACK lines of the cited
+--      range. A table row counts as one sentence, and so does each line of a fenced block, whose
+--      every identifier counts as a name. A line that moved under a citation fails here while rule 4
+--      still passes. It is a
+--      heuristic, not a proof: whether the cited code still does what the prose says stays a
+--      reviewer's job.
 --
 -- Out of scope, named rather than inferred (localization-§5): `libs/` and `tests/_kit/` (vendored),
 -- the frozen bundles under `docs/audits/`, `docs/reviews/` and `docs/automated-tests/<run>/`,
@@ -266,6 +272,13 @@ local function sourceLines(path)
   return sourceCache[path]
 end
 
+--- One `path:N` or `path:N-M` citation; `isSource` keeps the .lua and .toc hits.
+local CITATION = "([%w_%./]+%.[lt][uo][ac]):(%d+)%-?(%d*)"
+
+local function isSource(path)
+  return path:match("%.lua$") ~= nil or path:match("%.toc$") ~= nil
+end
+
 --- Why one citation does not resolve, or nil when it does.
 local function citationFault(path, first, last)
   local src = sourceLines(path)
@@ -283,8 +296,8 @@ test("docs: every file:line citation names an existing file and a non-blank line
     local lineNo = 0
     for line in (readFile(doc) .. "\n"):gmatch("([^\n]*)\n") do
       lineNo = lineNo + 1
-      for path, a, b in line:gmatch("([%w_%./]+%.[lt][uo][ac]):(%d+)%-?(%d*)") do
-        if path:match("%.lua$") or path:match("%.toc$") then
+      for path, a, b in line:gmatch(CITATION) do
+        if isSource(path) then
           checked = checked + 1
           local first = tonumber(a)
           local fault = citationFault(path, first, tonumber(b ~= "" and b or a))
@@ -298,4 +311,130 @@ test("docs: every file:line citation names an existing file and a non-blank line
   end
   assertTrue(checked > 50, "matched only " .. checked .. " citations -- the pattern or the glob broke")
   assertEqual(#offenders, 0, "citations that do not resolve: " .. table.concat(offenders, "; "))
+end)
+
+-- ── file:line citations still point at what their sentence names ──────────────────────────────
+
+--- How far either side of a cited range a sentence's name may sit. Three absorbs a signature or a
+--- comment block above the cited code; wider, and a line that moved can land in range by luck.
+local CITATION_SLACK = 3
+
+--- Words that name nothing: a backticked code snippet's keywords would match almost any line.
+local LUA_KEYWORDS = {
+  ["and"] = true, ["break"] = true, ["else"] = true, ["elseif"] = true, ["end"] = true,
+  ["false"] = true, ["for"] = true, ["function"] = true, ["local"] = true, ["nil"] = true,
+  ["not"] = true, ["repeat"] = true, ["return"] = true, ["then"] = true, ["true"] = true,
+  ["until"] = true, ["while"] = true,
+}
+
+--- One prose paragraph's sentences, appended to `out`. A sentence ends at a `.`, `;` or `:` followed
+--- by space and a capital, backtick, bracket or asterisk, and at a bullet, a numbered item or a table
+--- row. A table row is one sentence: its first cell names what the row's citation is about.
+local function splitProse(para, out)
+  local cut = para
+    :gsub("\n(%s*[%-%*] )", "\1%1")
+    :gsub("\n(%s*%d+%. )", "\1%1")
+    :gsub("\n(%s*|)", "\1%1")
+    :gsub("([%.;:])(%s+)([%u`%(%*])", "%1\1%2%3")
+  for text in (cut .. "\1"):gmatch("([^\1]*)\1") do
+    out[#out + 1] = { text = text }
+  end
+end
+
+--- A doc's sentences, as `{ text, code }`. Prose sentences never cross a blank line; each line of a
+--- fenced block is its own sentence, marked `code` (a diagram names things without backticks).
+local function docSentences(doc)
+  local out, para, fenced = {}, {}, false
+  local function flush()
+    if para[1] then splitProse(table.concat(para, "\n"), out) end
+    para = {}
+  end
+  for line in (readFile(doc):gsub("\r", "") .. "\n"):gmatch("([^\n]*)\n") do
+    if line:match("^%s*```") then
+      flush()
+      fenced = not fenced
+    elseif fenced then
+      out[#out + 1] = { text = line, code = true }
+    elseif line:match("^%s*$") then
+      flush()
+    else
+      para[#para + 1] = line
+    end
+  end
+  flush()
+  return out
+end
+
+--- The spans of a sentence that name things: its backticked spans, never one that is itself a path;
+--- a code line whole, with its paths and citations cut out.
+local function namingSpans(sentence)
+  if sentence.code then
+    local text = sentence.text
+    for _, ext in ipairs({ "lua", "toc", "md" }) do
+      text = text:gsub("[%w_%./]+%." .. ext .. "[:%d%-]*", "")
+    end
+    return { text }
+  end
+  local spans = {}
+  for span in sentence.text:gmatch("`([^`]+)`") do
+    if not (span:find("%.lua") or span:find("%.toc") or span:find("%.md")) then
+      spans[#spans + 1] = span
+    end
+  end
+  return spans
+end
+
+--- The names a sentence gives: identifiers of three or more characters in its naming spans, not Lua
+--- keywords and not the cited file's own name.
+local function sentenceNames(sentence, citedPath)
+  local own = citedPath:match("([^/]+)%.%a+$")
+  local names = {}
+  for _, span in ipairs(namingSpans(sentence)) do
+    for word in span:gmatch("[%a_][%w_]*") do
+      local long = word:len() >= 3
+      if long and word ~= own and not LUA_KEYWORDS[word] then
+        names[#names + 1] = word
+      end
+    end
+  end
+  return names
+end
+
+--- Why a resolving citation no longer points at what its sentence names, or nil when it does.
+local function driftFault(sentence, path, first, last)
+  local names = sentenceNames(sentence, path)
+  if next(names) == nil then return "its sentence names nothing in backticks" end
+  local src = sourceLines(path)
+  local lo = math.max(1, first - CITATION_SLACK)
+  local count = #src
+  local hi = math.min(count, last + CITATION_SLACK)
+  for i = lo, hi do
+    for _, name in ipairs(names) do
+      if src[i]:find("%f[%w_]" .. name .. "%f[^%w_]") then return nil end
+    end
+  end
+  return ("none of `%s` within %d lines"):format(table.concat(names, "`, `"), CITATION_SLACK)
+end
+
+test("docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks", function()
+  -- red under: moving docs/schema.md's SCHEMA_STEPS citation back to core/Database.lua:683.
+  local checked, offenders = 0, {}
+  for _, doc in ipairs(citingDocs()) do
+    for _, sentence in ipairs(docSentences(doc)) do
+      for path, a, b in sentence.text:gmatch(CITATION) do
+        local first, last = tonumber(a), tonumber(b ~= "" and b or a)
+        if isSource(path) and not citationFault(path, first, last) then
+          checked = checked + 1
+          local fault = driftFault(sentence, path, first, last)
+          if fault then
+            offenders[#offenders + 1] = ("%s cites %s:%s%s (%s)"):format(
+              doc, path, a, b ~= "" and ("-" .. b) or "", fault)
+          end
+        end
+      end
+    end
+  end
+  assertTrue(checked > 50, "matched only " .. checked .. " citations -- the pattern or the split broke")
+  assertEqual(#offenders, 0, #offenders .. " citations drifted from their sentence:\n  "
+    .. table.concat(offenders, "\n  "))
 end)

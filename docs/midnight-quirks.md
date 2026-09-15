@@ -33,7 +33,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one engine (`modules/Container.lua:215`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:215`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -95,7 +95,7 @@ new shape disables, hides and retires the old engine and builds a new one (`Cont
 
 **What this addon does.** The filters still compile, because a target or focus can be either, but
 `FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
-(`modules/FilterCompiler.lua:243`): ignored outright for debuffs on the player or pet, conditional on
+(`identityWarning`, `modules/FilterCompiler.lua:558`): ignored outright for debuffs on the player or pet, conditional on
 hostility or friendliness for target and focus. The Filters page prints them in orange. The starter
 spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
 
@@ -116,7 +116,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:168`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:183`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -125,9 +125,9 @@ TinyBuffBars' (MIT).
 duration, and the duration itself is secret, so Lua cannot test it. `SetDurationBar` neither hides
 nor resets the bar for a permanent aura.
 
-**What this addon does.** With Bars → Bar → **Show the spark on auras without a duration** off, a
+**What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:149`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:170`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
@@ -139,7 +139,7 @@ preview reads its placeholders' durations and hides the spark directly.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:156`), and then adds again
-(`modules/Style_Bars.lua:256`, `modules/Style_Icons.lua:108`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:299`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same

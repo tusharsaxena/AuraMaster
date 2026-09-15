@@ -420,7 +420,7 @@ test("filters: a grid checkbox stores show or hide for the selected container an
     local NS, _, _, ws = categories()
     NS.Helpers.__pageCtx.filters.panel:Show()   -- on screen, so a write re-syncs the widgets in place
     local cells = gridLine(NS, ws, "defensives")
-    -- red under: LibKa0s v1.36.0 draws choice cells as CheckBox widgets (yellow fill), not radios
+    -- red under: LibKa0s v1.36.0+ draws choice cells as CheckBox widgets, not radios
     assertEqual(cells[1].type, "CheckBox")
     assertTrue(cells[1].value == true, "Show is lit for a fresh container")
     cells[2]:__fire("OnValueChanged", true)
