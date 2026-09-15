@@ -6,8 +6,12 @@ local _, NS = ...
 -- something Blizzard's aura container evaluates in its own secure code (we never see aura data in
 -- combat, so every filter has to be declared up front — see docs/data-flow.md):
 --
--- Show is the absence of a decision (schema v3): it never adds anything to a group. Only Hide writes
--- a constraint, an exclusion, on the container's one category group (modules/FilterCompiler.lua).
+-- Show is the absence of a decision (schema v3) in the sense that it never NARROWS what draws: it is
+-- the default every key starts at (`DefaultStates` below). It is not inert, though (batch 6's filter-
+-- priority revision, modules/FilterCompiler.lua) — a Show is a POSITIVE claim that beats a Hide on
+-- the same aura, and once any category is Hidden the compiler emits one group PER Show category
+-- (plus a catch-all), not the single group a container with nothing Hidden still gets. Only Hide
+-- writes a constraint, an exclusion, and only on the group(s) it actually reaches.
 --
 --   token          an aura filter token (`BIG_DEFENSIVE`, `CROWD_CONTROL`, …). Hiding it adds the
 --                  negation `!TOKEN` to the group's filter string.

@@ -33,7 +33,10 @@ local _, NS = ...
 --     constraint, minus every earlier shown category and the whitelist, so no aura is drawn twice),
 --     followed by a catch-all: the base, minus every hidden AND every shown category, minus the
 --     whitelist (rule 5 — an aura in no category). The catch-all is skipped instead whenever an
---     `uncategorized` category exists for the aura type (below) — it supersedes it, not joins it.
+--     `uncategorized` category ACTUALLY SUPERSEDES it for this compile (below, `supersedesCatchAll`)
+--     — not merely whenever one exists for the aura type: a Hide always supersedes it, but a Show
+--     only does when `hasUnion` is true (fix round 3's asymmetry — a debuff Show contributes no group
+--     of its own and leaves the catch-all exactly as if the category did not exist).
 --
 -- Fix round 2 (batch 7): the per-container "Only these categories" toggle (`D8`/`R-8`..`R-11`) is
 -- RETIRED. It once dropped the catch-all so a container drew only its whitelist plus its shown
@@ -203,10 +206,10 @@ end
 --- never reaches here — it matches no aura at all, deciding only whether the container's weapon-
 --- enchant slots exist (splitCategories skips it categorically). Kind `uncategorized` never reaches
 --- here either, despite taking part in the shown/hidden partition (unlike `enchant`, it DOES match
---- auras) — it has no id list of its own to negate, and once it exists for the aura type the
---- catch-all it would otherwise contribute to is never emitted at all (fix round 1 — `addCategoryGroups`'s
---- `uncategorizedPresent`). It can also never be an "earlier shown category" since it is always last
---- (U-1). `excludeDef` in `addCategoryGroups` is what actually guards the call.
+--- auras) — it has no id list of its own to negate. It can also never be an "earlier shown category"
+--- since it is always last (U-1). `excludeGuarded` (below `addShownGroups`) is what actually guards
+--- the call — see `addCategoryGroups`'s `supersedesCatchAll` for when its Hide or Show state removes
+--- the catch-all entirely rather than merely being excluded from it.
 local function excludeCategory(con, def, spellEdits)
     local kind = def.kind
     if kind == "token" then
@@ -488,11 +491,14 @@ local function addShownGroups(plan, base, cats, look, hasUnion)
 end
 
 --- The catch-all group (R-5): the base minus every hidden AND every shown category, minus the
---- whitelist — what draws an aura in no category at all. The caller never invokes this once an
---- `uncategorized` category exists for the aura type (fix round 1 — see the top-of-file comment for
---- why it would either double-draw what `uncategorized`'s own group already covers, or ship a group
---- that could never match), so `cats.hidden`/`cats.shown` never actually contain that kind here;
---- `excludeGuarded` is reused for it anyway rather than a second, narrower helper.
+--- whitelist — what draws an aura in no category at all. The caller (`addCategoryGroups`) skips this
+--- entirely whenever `uncategorized` ACTUALLY supersedes it (`supersedesCatchAll`) — see the
+--- top-of-file comment for why shipping both would either double-draw what `uncategorized`'s own
+--- group already covers, or ship a group that could never match. That is not every time an
+--- `uncategorized` category exists for the aura type, though: on a debuff container with it Shown
+--- (`hasUnion` false, fix round 3), it does NOT supersede the catch-all, so `cats.shown` genuinely can
+--- contain that kind here — `excludeGuarded`'s own no-op guard is what keeps this group correct in
+--- that case (it contributes no exclusion, exactly as a category with no id list of its own should).
 --- @return boolean usesSpellIds
 local function addCatchAllGroup(plan, base, cats, look)
     local edits = cats.spellEdits
@@ -670,6 +676,17 @@ end
 ---     nothing — this falls through to the ordinary rank 5, exactly as if the row did not exist. No
 ---     category is named in either rank-5 branch (a `token`/`flag`/`dispel` guess is never made —
 ---     see `ExplainSpell`'s comment).
+---
+--- THE APPROXIMATION (review, item 6): the Hide branch's "hidden, rank 4" is confident about
+--- `uncategorized` itself, but NOT about the aura as a whole — `id` might still genuinely belong to a
+--- Shown `token`/`flag`/`dispel` category the addon cannot check from a bare id (the same silence
+--- `ExplainSpell`'s own comment already names), in which case rank 3 there would actually draw it and
+--- this "hidden" verdict would be wrong. An Overrides note built on this can therefore claim the
+--- whitelist "overrode" a Hide that, in the real compiled plan, never removed anything to begin with.
+--- This is not new to `uncategorized` — every rank-4 verdict `ExplainSpell` reports already carries
+--- the same silent gap — but it is worth naming here specifically, since a Hide `uncategorized`
+--- verdict looks unusually definite (one row decided it) when it is really no more certain than any
+--- other rank 4.
 --- @return table  { verdict, rank, categories }
 local function explainUncategorized(Categories, auraType, filter, hasUnion)
     local def = uncategorizedDef(Categories, auraType)

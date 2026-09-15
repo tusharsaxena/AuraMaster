@@ -157,17 +157,17 @@ NS.RegisterSchemaRows({
     {
         path = "container.filter.sortMethod", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.SORT_METHODS, C.SORT_METHOD_LABELS), label = L["Sort by"],
-        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden — each category set to Show gets its own group, and EACH is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
+        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden — each category set to Show gets its own group (a debuff container's Uncategorized row is the one exception, and never does), and EACH of those groups is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
     },
     {
         path = "container.filter.sortDirection", page = PAGE, group = G_SORT,
         type = "string", values = NS.Choices(C.SORT_DIRECTIONS, C.SORT_DIRECTION_LABELS), label = L["Direction"],
-        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden — each category set to Show gets its own group, and EACH is reversed separately; the groups' own layout order does not change."],
+        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden — each category set to Show gets its own group (a debuff container's Uncategorized row is the one exception, and never does), and EACH of those groups is reversed separately; the groups' own layout order does not change."],
     },
     {
         path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "number", min = 0, max = 40, step = 1, label = L["Max auras per group (0 = no limit)"],
-        desc = L["The cap applies to each engine group, not the whole container. With nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden — each category set to Show gets its own group, and the cap applies to EACH of those separately."],
+        desc = L["The cap applies to each engine group, not the whole container. With nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden — each category set to Show gets its own group (a debuff container's Uncategorized row is the one exception, and never does), and the cap applies to EACH of those groups separately."],
     },
 })
 
@@ -312,7 +312,11 @@ end
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
 -- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
 -- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell Categories grid, in
--- the tab's own text rather than a tooltip only the row's own label would carry.
+-- the tab's own text rather than a tooltip only the row's own label would carry. BUFFS ONLY (review
+-- fix wave, fix round 3 restored the debuff row underneath this same grid): a debuff Show rescues
+-- NOTHING — there is no spell list for it to be outside of — so this sentence is false on a debuff
+-- container and contradicts that row's own tooltip ("Show ... changes nothing by itself") in the
+-- same glance. Gated by `customGridHasEditableList` below, same as the "These are the lists..." line.
 local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
 
 -- T-2 fix round 4 (batch 7, readability): "These are the lists on General -> Spell Categories..."
@@ -369,10 +373,12 @@ end
 local WEAPON_ENCHANT_TIE = L["A sub-option of the Weapon enchants row above:"]
 
 --- The Categories tab: the priority blurb (F-4), then a grid each. The Spell Categories grid (kind
---- `custom`) carries F-2's blurb (conditionally — T-2 fix round 4, only when the grid holds an
---- editable list) and F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a
---- Show/Hide choice — drawn right under that grid (T-3), tied by name to the weaponEnchants row it
---- governs since ChoiceGrid draws its rows atomically and cannot host it inline.
+--- `custom`) carries F-2's blurb AND `UNCATEGORIZED_NOTE` (both conditionally — T-2 fix round 4 and
+--- the review fix wave, only when the grid holds an editable list, i.e. a buff container — a debuff
+--- container's Uncategorized row rescues nothing, so neither sentence is true there) and F-3's
+--- `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide choice — drawn
+--- right under that grid (T-3), tied by name to the weaponEnchants row it governs since ChoiceGrid
+--- draws its rows atomically and cannot host it inline.
 local function renderCategories(ctx, _, rows)
     renderPriorityBlurb(ctx)
 
@@ -397,7 +403,9 @@ local function renderCategories(ctx, _, rows)
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
                     hideDrawn = true
                 end
-                H.TextRow(ctx, UNCATEGORIZED_NOTE)
+                if customGridHasEditableList(mine) then
+                    H.TextRow(ctx, UNCATEGORIZED_NOTE)
+                end
             else
                 -- N-5: only the Blizzard Categories grid gets the extra column here — Dispel Types
                 -- and Who Cast It stay exactly as wide as before. A grid with no extraColumn at all

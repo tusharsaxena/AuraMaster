@@ -501,18 +501,28 @@ local KNOWN_AURA_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
 ---
 --- `uncategorized` (batch 7, U-1..U-5) is excluded for a DIFFERENT reason, and it matters: unlike
 --- `enchant` it DOES match auras, but the old whitelist model it predates never had an opinion about
---- it — no stored container has ever carried a `categories.uncategorized` key, "" or otherwise. If it
---- were left in `filterableCategories`, a v2->v3 migration of an already-narrowed container (one with
---- some category at "show") would hit `liftWhitelisted` and sweep the unset `uncategorized` key to
---- "hide" right alongside the categories that really were excluded from the old whitelist — stamping
---- the WRONG default (D3 says Show) onto a key MigrateV3 has no evidence about, permanently: once it
---- is written "hide" here, `Database.Backfill`'s `== nil` guard (backfillContainers, run right after
---- migrations) can no longer supply the correct "show" default, because the key is no longer nil.
---- That reintroduces the exact defect this batch fixes — cancelable-but-unlisted buffs vanishing —
---- for every profile that migrates through v3 from here on, which is the "migration bug this effort
---- already fixed twice" the spec warns about. Leaving it out of this sweep keeps the key nil after
---- MigrateV3 runs, so the ordinary backfill (defaults/Categories.lua's `DefaultStates`, via
---- NS.CONTAINER_TEMPLATE) is what supplies "show" — the same path a brand-new key always takes.
+--- it — no stored container has ever carried a `categories.uncategorized` key, "" or otherwise, so
+--- neither the generic sweep NOR the `categoriesDecided` fixed-point check may treat it as an
+--- ordinary filterable category.
+---
+--- CORRECTION (review, after this shipped once already wrong): excluding it from `filterableCategories`
+--- is right for the UNWHITELISTED branch (`liftUnwhitelisted`) — leaving the key nil there is what
+--- lets the ordinary backfill (defaults/Categories.lua's `DefaultStates`, via `NS.CONTAINER_TEMPLATE`)
+--- supply its D3 default, Show. It is WRONG, on its own, for the WHITELISTED branch
+--- (`liftWhitelisted`): the old exclusive whitelist meant "only these categories", and the longhand
+--- of that is `uncategorized = "hide"` — leaving it nil there does not defer to a neutral default, it
+--- silently WIDENS an already-narrowed container. The gap is real and was shipped once: a v2 profile
+--- narrowed to "Defensives only" migrates through v3 with every OTHER category explicitly `"hide"`
+--- but `uncategorized` still nil; the ordinary backfill then supplies `"show"`; `addCategoryGroups`
+--- (modules/FilterCompiler.lua) sees a Show `uncategorized` category, emits its own group (the base
+--- plus `excludeSpellIDs(union)`, carrying NO hidden-category exclusion) AND suppresses the catch-all
+--- — so the container ends up drawing every buff not on any spell list, in place, irreversibly. That
+--- is exactly the "silently WIDEN what an already-stored container draws" failure this whole lift
+--- exists to prevent (the header comment above `KNOWN_AURA_TYPES`). The fix: `liftCategoryWhitelist`
+--- stamps the aura type's `uncategorized` key `"hide"` itself, in the WHITELISTED branch ONLY, using
+--- the un-filtered `def` (`uncategorizedKeyOf`) since `filterableCategories` has already stripped it
+--- out of `filterable`. The UNWHITELISTED branch is untouched — the key stays nil there, exactly as
+--- documented above.
 local function filterableCategories(def)
     local out = {}
     for _, cat in ipairs(def) do
@@ -557,6 +567,19 @@ local function liftWhitelisted(def, cats)
     end
 end
 
+--- The `uncategorized`-kind category's key in `def` (the UN-filtered `NS.Categories.For(auraType)`
+--- list, before `filterableCategories` strips it out), or nil if this aura type carries none. What
+--- `liftCategoryWhitelist` uses to give the WHITELISTED branch the one thing `filterableCategories`'s
+--- categorical exclusion cannot: the longhand of "only these categories" for a key the generic sweep
+--- must never touch.
+--- @return string|nil
+local function uncategorizedKeyOf(def)
+    for _, cat in ipairs(def) do
+        if cat.kind == "uncategorized" then return cat.key end
+    end
+    return nil
+end
+
 local function liftCategoryWhitelist(c)
     local def = NS.Categories and NS.Categories.For(c.auraType)
     local cats = type(c.filter) == "table" and c.filter.categories
@@ -566,6 +589,11 @@ local function liftCategoryWhitelist(c)
     if filterableCount == 0 or categoriesDecided(filterable, cats) then return end
     if anyShown(filterable, cats) then
         liftWhitelisted(filterable, cats)
+        -- The bug this correction closes (see filterableCategories's doc comment): only the
+        -- WHITELISTED branch stamps this, and only "hide" — Show is exactly the case the ordinary
+        -- backfill already handles correctly, for a key the sweep above deliberately never reaches.
+        local uncatKey = uncategorizedKeyOf(def)
+        if uncatKey then cats[uncatKey] = "hide" end
     else
         liftUnwhitelisted(filterable, cats)
     end
@@ -617,34 +645,16 @@ function Database.MigrateV3(p)
     return walked
 end
 
---- Schema v4 (fix round 2, batch 7): the retired per-container "Only these categories" toggle (D8,
---- superseded R-8..R-11) becomes `categories.uncategorized = "hide"` on a HELPFUL container — the
---- one aura type that carries an `uncategorized` category (buffs only, fix round 1's ruling) — so a
---- container that had the toggle on keeps drawing only what it categorized, rather than silently
---- widening the moment the toggle's own catch-all suppression disappears with it (fix round 1 already
---- proved the two are the same shape: once `uncategorized`'s own group correctly supersedes the
---- catch-all in both its states, the toggle has nothing left to do). `filter.onlyShown` is cleared
---- whenever it was `true`, converted or not — the key means nothing any more and
---- `NS.CONTAINER_TEMPLATE` no longer carries it, so nothing would ever supply it a default again.
----
---- A HARMFUL (or any other aura type) container with the toggle on has nothing to migrate onto:
---- `Cat.HARMFUL` carries no `uncategorized` category (fix round 1 — a debuff-side row's union would
---- always be empty, making its Show silently no-op every Hide on the tab, the owner's original
---- complaint inverted), so there is no category whose Hide can stand in for what the toggle used to
---- do. The honest answer, not a silent one: such a container LOSES the capability — an unclaimed
---- debuff reaches the ordinary catch-all again, same as any container that never had the toggle on.
---- This is a real, user-visible narrowing lost, not something this migration can invent its way
---- around (a debuff-side Uncategorized row was explicitly not asked for and would reopen the same
---- problem it would be trying to solve). Logged once per such container rather than converted quietly.
---- @return number converted, number lost  containers moved to `uncategorized = "hide"`, and
----                 containers whose narrowing could not be preserved (no such category exists)
 --- Which stored `filter.categories` key preserves "Only these categories" for `auraType`, or nil.
 --- Fix round 3: both HELPFUL and HARMFUL now carry an `uncategorized` category (asymmetric —
 --- defaults/Categories.lua's KINDS doc — but Hide reproduces the retired toggle on either type, which
 --- is all this migration ever needed). `ENCHANT` is deliberately excluded, not merely absent: an
 --- ENCHANT container compiles to no aura groups at all (`FC.Compile`'s `compileEnchant`), so its
 --- `onlyShown` — however it got set — never did anything, and clearing it loses nothing worth
---- counting. Any other or unrecognized `auraType` returns nil, the "lost" case.
+--- counting. Any other or unrecognized `auraType` returns nil, the "lost" case — reachable in
+--- practice only for a corrupt or future `auraType` (`Database.MigrateV3`'s `KNOWN_AURA_TYPES` names
+--- the same three this migration actually expects), not a common one: every real HELPFUL or HARMFUL
+--- container converts.
 local function uncategorizedKeyFor(auraType)
     if auraType == "HELPFUL" then return "uncategorized" end
     if auraType == "HARMFUL" then return "uncategorizedDebuffs" end

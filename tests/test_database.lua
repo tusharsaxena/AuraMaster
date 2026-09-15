@@ -599,6 +599,10 @@ test("v3: a container that whitelisted a category hides every other category of 
     assertEqual(c.defensives, "show")
     assertEqual(c.raidCDs, "hide")
     assertEqual(c.cancelable, "hide")
+    -- Critical review fix: `uncategorized` is the longhand of "only these categories" too — a narrowed
+    -- container that left it nil (the pre-fix bug) would have every unlisted buff flood back in the
+    -- moment the ordinary backfill supplied Show for it.
+    assertEqual(c.uncategorized, "hide", "the narrowing covers unlisted auras too, not just the named categories")
 end)
 
 test("v3: a container with no whitelisted category gets every row at show", function()
@@ -736,22 +740,61 @@ test("v3: a narrowed container's filter.whitelist is left untouched — the comp
     assertEqual(c.raidCDs, "hide")
 end)
 
-test("v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself", function()
+test("v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself — UNWHITELISTED branch only", function()
     -- U-1..U-5/X-2: `Cat.DefaultStates()` stamps every category "show" by default, including
     -- `uncategorized` (defaults/Categories.lua), and `NS.CONTAINER_TEMPLATE.filter.categories` is
     -- built from that — so the ordinary per-container backfill (`Database.Backfill` against the
     -- template, run by `backfillContainers`/`PrepareProfile` right after every migration) is what
-    -- actually stamps "show" onto an existing container's new key. `filterableCategories`'s comment
-    -- explains why MigrateV3 itself must NOT touch it: it predates the old whitelist model this lift
-    -- converts, so sweeping it here would risk stamping the wrong default on a narrowed container.
+    -- actually stamps "show" onto an existing container's new key, for a container that was never
+    -- narrowed. UNWHITELISTED fixture on purpose — no category here is "show" — because this is only
+    -- true in that branch; the WHITELISTED branch stamps "hide" directly, see the test below (review
+    -- fix: this test used a WHITELISTED fixture and asserted the widening bug as correct until then).
     local NS = fresh()
     local p = { containers = { { auraType = "HELPFUL",
-        filter = { categories = { defensives = "show", raidCDs = "" } } } } }
+        filter = { categories = { defensives = "", raidCDs = "hide" } } } } }
     NS.Database.MigrateV3(p)
     assertNil(p.containers[1].filter.categories.uncategorized, "MigrateV3 leaves it nil")
     NS.Database.PrepareProfile(p)
     assertEqual(p.containers[1].filter.categories.uncategorized, "show",
         "the ordinary backfill supplies U-1's default")
+end)
+
+-- Critical review fix: the WHITELISTED branch. `filterableCategories`'s exclusion of `uncategorized`
+-- was correct for the UNWHITELISTED branch above and WRONG, on its own, here — leaving the key nil
+-- for a narrowed container lets the ordinary backfill hand it "show", which
+-- `addCategoryGroups` (modules/FilterCompiler.lua) then reads as a real, catch-all-superseding Show
+-- category: the container ends up drawing every buff not on any spell list, the exact "silently
+-- WIDEN what an already-stored container draws" failure this whole lift exists to prevent.
+test("v3: a WHITELISTED (narrowed) container gets uncategorized stamped hide directly from MigrateV3, never left for the backfill", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "" } } } } }
+    NS.Database.MigrateV3(p)
+    -- red under: the pre-fix bug — MigrateV3 leaving this nil for a narrowed container
+    assertEqual(p.containers[1].filter.categories.uncategorized, "hide",
+        "the longhand of the old exclusive whitelist's 'only these categories'")
+    -- The backfill must not be needed, and must not disagree, either
+    NS.Database.PrepareProfile(p)
+    assertEqual(p.containers[1].filter.categories.uncategorized, "hide",
+        "the backfill only fills a NIL key (== nil, savedvariables-§5) — it never overwrites this")
+end)
+
+-- The concrete proof the coordinator asked for: compile the migrated container and confirm an
+-- arbitrary id on no spell list — the exact shape of aura that used to flood back in — is NOT drawn.
+test("v3: a narrowed container does not gain unlisted auras after migrating — compiled, not just stored", function()
+    local NS = fresh()
+    local p = { containers = { { auraType = "HELPFUL",
+        filter = { categories = { defensives = "show", raidCDs = "" } } } } }
+    NS.Database.MigrateV3(p)
+    NS.Database.PrepareProfile(p)
+    local cfg = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), p.containers[1])
+    local plan = NS.FilterCompiler.Compile(cfg, {})
+    for _, g in ipairs(plan.groups) do
+        -- red under: an Uncategorized (or catch-all) group surviving the migration and admitting an
+        -- aura that was never on any spell list — the near-everything container the bug produced
+        assertTrue(g.label ~= "Uncategorized" and g.label ~= "All",
+            "no group draws an unlisted aura: got " .. g.label)
+    end
 end)
 
 test("v3: MigrateV3 returns the number of containers it walked", function()
@@ -806,12 +849,16 @@ test("v4: the current schema version is 4", function()
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
+    -- UNWHITELISTED fixture on purpose (no category at "show"): this test's own point is the
+    -- ordinary-backfill path end to end, which only applies in that branch — see the dedicated
+    -- WHITELISTED-branch tests below (and in modules/FilterCompiler.lua's) for the narrowed case,
+    -- where `uncategorized` must come out "hide" from MigrateV3 itself, not from the backfill.
     local function raw()
         return {
             seeded = true, nextContainerId = 2, containerOrder = { 1 },
             containers = { [1] = {
                 name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
-                filter = { includeEnchants = true, categories = { defensives = "show", raidCDs = "" } },
+                filter = { includeEnchants = true, categories = { defensives = "", raidCDs = "hide" } },
             } },
         }
     end
@@ -830,9 +877,9 @@ test("v3: RunMigrations migrates every stored profile, the inactive one included
     end
     -- X-2, end to end: the active profile (Default) runs the full pipeline through OnEnable's
     -- PrepareProfile call (tests/fresh_env.lua), so its existing container gets `uncategorized`
-    -- stamped "show" by the ordinary backfill. Raid stays inactive here and is never backfilled
-    -- (only a profile switch would prepare it) — see the dedicated test above for that step in
-    -- isolation, direct on a plain profile table.
+    -- stamped "show" by the ordinary backfill (this container was never narrowed — see above). Raid
+    -- stays inactive here and is never backfilled (only a profile switch would prepare it) — see the
+    -- dedicated test above for that step in isolation, direct on a plain profile table.
     local active = NS.db.sv.profiles.Default.containers[1]
     assertEqual(active.filter.categories.uncategorized, "show", "an existing container gets the new row at Show")
 end)

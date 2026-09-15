@@ -296,6 +296,18 @@ test("filters: the 'these are the lists' line draws on a buff container and not 
     assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its one Uncategorized row")
 end)
 
+-- Review fix wave, item 2: UNCATEGORIZED_NOTE ("Uncategorized defaults to Show, which rescues...")
+-- claims a buff-only truth — on a debuff container Show rescues nothing at all (there is no spell
+-- list for it to be outside of), and the sentence would flatly contradict that row's own tooltip
+-- ("Show ... changes nothing by itself") in the same glance. Gated the same way as F-2's blurb above.
+test("filters: the Uncategorized cost note draws on a buff container and not on a debuff one (review fix wave, item 2)", function()
+    local _, _, P, buffWs = categories(1)
+    assertTrue(P.hasText(buffWs, "rescues any aura not on the lists above"), "true on a buff container")
+    local _, _, P2, debuffWs = categories(2)
+    assertFalse(P2.hasText(debuffWs, "rescues any aura not on the lists above"),
+        "false on a debuff container — nothing there for Show to rescue")
+end)
+
 --- The lines a widget's tooltip draws when hovered, via the mocked GameTooltip's :AddLine (the
 --- idiom this suite already uses below for the Overrides tooltip).
 local function tooltipLines(m, widget)
