@@ -85,7 +85,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | File | Responsibility |
 |---|---|
 | `settings/Schema.lua` | The path machinery: container-relative resolution, `NS.RegisterSchemaRows`, the read seam `NS.GetSetting`, the write seam `NS.SetByPath`, the carve-outs, `NS.Choices`, `NS.ValidateSchema` |
-| `settings/Slash.lua` | `NS.COMMANDS` (22 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
+| `settings/Slash.lua` | `NS.COMMANDS` (21 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
 | `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor (its `get` shows a row's `panelGet`) and its load-completing stub; the container banner and the body picker cell; `RenderTabbedPage` (schema-group tabs, then bespoke tabs, each optionally `before` another; a page-wide disable with its notice, `disabledFor` and `disabledNotice`; `pairWith`) and `RenderContainerPage`; `NS.RegisterContainerPage`, `NS.OpenOptionsPage`, `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
 | `settings/GeneralSpells.lua` | General → Spell Categories (one spell category's ID list over the profile's `categorySpells` and its restore, or — for the Weapon enchants entry — the profile-wide `enchantSlots` toggles) and General → Dispel Colors (the six profile-wide `dispelColors.<type>` rows); registers nothing itself, `settings/General.lua` registers its rows and draws its tabs |
