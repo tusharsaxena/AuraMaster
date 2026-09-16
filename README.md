@@ -132,7 +132,7 @@ Please file reports there rather than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.1.0 | 2026-09-11 | First release: buff, debuff and weapon enchant containers for player, target, focus and pet, drawn as bars or icons, with category filters, spell lists, attach-anywhere placement and a preview mode |
+| 0.1.0 | 2026-09-11 | - First release: buff, debuff and weapon enchant containers for player, target, focus and pet, drawn as bars or icons, with category filters, spell lists, attach-anywhere placement and a preview mode |
 
 ## Credits
 

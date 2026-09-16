@@ -281,7 +281,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
 - **Schema v1** is the shape the addon shipped with at 0.1.0.
 - **Schema v2** (`Database.MigrateV2`) runs over **every** stored profile: AceDB's raw
   `sv.profiles`, the inactive ones included, or the no-AceDB fallback's one profile. It logs one
-  `[Migrate] v2 profile '<name>'` line each, and `Database.CurrentSchemaVersion()` answers `2`.
+  `[Migrate] v2 profile '<name>'` line each, and stamps `global.schemaVersion` to `2`.
   - The container key rules `PrepareProfile` applies (below) run first, so a string twin of a
     numeric id and a non-numeric key are dropped before any merge and never supply a palette or an
     editor.
@@ -298,7 +298,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   - Additive keys ride the ordinary backfill with no step.
 - **Schema v3** (`Database.MigrateV3`, `core/Database.lua:639`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
-  `Database.CurrentSchemaVersion()` answers `3`. Only a container whose `auraType` is a known one
+  stamps `global.schemaVersion` to `3`. Only a container whose `auraType` is a known one
   (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
   alone rather than half-converted, does not count toward the step's "over N container(s)" total,
   and logs its own `[Migrate] v3 container '<id>' skipped: unrecognized auraType <value>` line — a
