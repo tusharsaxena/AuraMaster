@@ -363,46 +363,107 @@ test("filters: a spells-kind row's See spells link selects that category on Gene
     assertTrue(whoRow ~= nil and whoRow[4] == nil, "a caster-identity flag row carries no extra cell")
 end)
 
--- ── the priority blurb (F-4) ──────────────────────────────────────────────────────────────────
+-- ── the priority block (F-4) ──────────────────────────────────────────────────────────────────
 
-test("filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first", function()
+-- BATCH 8 (owner, from a screenshot): the five ranks used to be restated at the TOP of both the
+-- Categories and the Overrides tab. They are now drawn ONCE, at the foot of What to show. The
+-- expectations below moved with the behavior — the order itself, and every word of it, is unchanged.
+
+test("filters: the priority order (spec §6) is stated on the What to show tab, highest rank first", function()
+    -- What to show is the page's FIRST tab, so the show's own draw is that tab's (a click on the
+    -- active tab draws nothing — tests/page_helpers.lua).
+    local _, _, P, ws = filters()
+    -- red under: the block missing from the tab, or restating the superseded blacklist-first order
+    assertTrue(P.hasText(ws, "whitelist"), "names the whitelist")
+    assertTrue(P.hasText(ws, "blacklist"), "names the blacklist")
+    assertTrue(P.hasText(ws, "set to Show"), "Show is its own rank, not the absence of Hide")
+    assertTrue(P.hasText(ws, "all say Hide"), "only an aura hidden by every one of its categories is removed")
+end)
+
+test("filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)", function()
     local NS, _, P = filters()
-    local cats = P.tab("filters", NS.L["Categories"])
-    local overrides = P.tab("filters", "overrides")
-    -- red under: the blurb missing from either tab, or restating the superseded blacklist-first order
-    for _, ws in ipairs({ cats, overrides }) do
-        assertTrue(P.hasText(ws, "whitelist"), "names the whitelist")
-        assertTrue(P.hasText(ws, "blacklist"), "names the blacklist")
-        assertTrue(P.hasText(ws, "set to Show"), "Show is its own rank, not the absence of Hide")
-        assertTrue(P.hasText(ws, "all say Hide"), "only an aura hidden by every one of its categories is removed")
+    for _, key in ipairs({ NS.L["Categories"], "overrides" }) do
+        local ws = P.tab("filters", key)
+        -- red under: either tab keeping its copy of the five-line wall the owner asked to be rid of
+        assertFalse(P.hasText(ws, "Highest priority first"), key .. " carries no lead-in")
+        for _, t in ipairs(P.texts(ws)) do
+            assertFalse(t:find("^1%. On the Overrides whitelist") ~= nil, key .. " carries no rank line")
+        end
     end
 end)
 
--- T-2 (batch 7): the blurb used to be one dense paragraph carrying all five ranks. It now draws one
--- line per rank (plus a lead-in), consistent on both tabs — two halves of one decision.
-test("filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)", function()
-    local NS, _, P = filters()
-    local cats = P.tab("filters", NS.L["Categories"])
-    local overrides = P.tab("filters", "overrides")
-    for _, ws in ipairs({ cats, overrides }) do
-        local texts = P.texts(ws)
-        local found = {}
-        for _, t in ipairs(texts) do
-            for rank = 1, 5 do
-                if t:find("^" .. rank .. "%.") then found[rank] = t end
-            end
-        end
+-- T-2 (batch 7) gave each rank its own line; batch 8 kept that and framed it — an H.Section heading,
+-- the lead-in in the normal font, the ranks in GameFontHighlight rather than the Label default's
+-- small font, and a gap between them. The wording is verbatim what it was.
+test("filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)", function()
+    local NS, _, P, ws = filters()
+    local found = {}
+    for _, t in ipairs(P.texts(ws)) do
         for rank = 1, 5 do
-            -- red under: a rank folded back into a shared paragraph rather than its own Label line
-            assertTrue(found[rank] ~= nil, "rank " .. rank .. " is its own line")
+            if t:find("^" .. rank .. "%.") then found[rank] = t end
         end
-        assertTrue(found[1]:find("whitelist", 1, true) ~= nil, "rank 1 is the whitelist")
-        assertTrue(found[2]:find("blacklist", 1, true) ~= nil, "rank 2 is the blacklist")
-        assertTrue(found[3]:find("set to Show", 1, true) ~= nil, "rank 3 is the positive Show claim")
-        assertTrue(found[4]:find("all say Hide", 1, true) ~= nil, "rank 4 is the all-Hide case")
-        assertTrue(found[5]:find("no category at all", 1, true) ~= nil, "rank 5 is the uncategorized case")
-        assertTrue(P.hasText(ws, "Highest priority first"), "the lead-in line still introduces the order")
     end
+    for rank = 1, 5 do
+        -- red under: a rank folded back into a shared paragraph rather than its own Label line
+        assertTrue(found[rank] ~= nil, "rank " .. rank .. " is its own line")
+    end
+    assertTrue(found[1]:find("whitelist", 1, true) ~= nil, "rank 1 is the whitelist")
+    assertTrue(found[2]:find("blacklist", 1, true) ~= nil, "rank 2 is the blacklist")
+    assertTrue(found[3]:find("set to Show", 1, true) ~= nil, "rank 3 is the positive Show claim")
+    assertTrue(found[4]:find("all say Hide", 1, true) ~= nil, "rank 4 is the all-Hide case")
+    assertTrue(found[5]:find("no category at all", 1, true) ~= nil, "rank 5 is the uncategorized case")
+    assertTrue(P.hasText(ws, "Highest priority first"), "the lead-in line still introduces the order")
+    -- red under: the block drawn as bare text again, with nothing announcing or separating it
+    local heads = headings(ws)
+    assertEqual(heads[#heads], NS.L["Which aura wins"], "a Section heading announces it, last on the tab")
+end)
+
+-- The block is a FOOTNOTE to the tab: every one of the tab's own controls is drawn before it.
+test("filters: the priority block is drawn under the What to show rows, not above them (batch 8)", function()
+    local NS, _, _, ws = filters()
+    local lastRow, firstRankLine
+    for i, w in ipairs(ws) do
+        if w.labelText == NS.L["Max duration"] or w.labelText == NS.L["Cast by"]
+            or w.labelText == NS.L["Duration"] then
+            lastRow = i
+        end
+        if not firstRankLine and type(w.text) == "string"
+            and w.text:find("^1%. On the Overrides whitelist") then
+            firstRankLine = i
+        end
+    end
+    assertTrue(lastRow ~= nil and firstRankLine ~= nil, "both the rows and the block drew")
+    -- red under: the block hoisted back above the controls it is a footnote to
+    assertTrue(lastRow < firstRankLine, "every What to show control comes first")
+end)
+
+-- The ranks are readable text, not the Label default's small font, and the lead-in is not a rank.
+test("filters: the priority lead-in and its ranks are drawn in the fonts the block asks for (batch 8)", function()
+    local NS, m = fresh()
+    local P = pages(NS, m)
+    local H = NS.Helpers
+    local seen = {}
+    local textRow = H.TextRow
+    H.TextRow = function(ctx, text, opts)
+        seen[text] = opts or false
+        return textRow(ctx, text, opts)
+    end
+    P.show("Filters")
+    H.TextRow = textRow
+    -- red under: the ranks back at the AceGUI Label default (GameFontHighlightSmall), which is the
+    -- size the owner called unreadable
+    assertEqual(seen[NS.L["Highest priority first:"]].fontObject, "GameFontNormal")
+    assertEqual(seen[NS.L["1. On the Overrides whitelist — always shown."]].fontObject, "GameFontHighlight")
+end)
+
+-- BATCH 8: Overrides moved up to sit beside Categories — the two halves of one decision — and
+-- Sorting, which only orders whatever survived them, is last.
+test("filters: the four tabs read What to show, Categories, Overrides, Sorting (batch 8)", function()
+    local NS, _, P = filters()
+    local L = NS.L
+    -- red under: the overrides tab appended after Sorting again (its `before` dropped)
+    assertEqual(table.concat(P.tabKeys("filters"), ","),
+        table.concat({ L["What to show"], L["Categories"], "overrides", L["Sorting"] }, ","))
 end)
 
 -- Fix round 2 (batch 7): "Only these categories" (D8/R-8..R-11) is retired — the owner chose one

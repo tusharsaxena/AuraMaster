@@ -4,7 +4,9 @@ local _, NS = ...
 --
 --     [ Containers ]
 --     Containers  [Container v picker ][ New container ]            <- the tab body's first line
---                 [Name] [Enabled] / [Unit] [Aura type] / [Style]
+--                 [Name] [Enabled]
+--                 -- What it shows, and how --                     <- subsection (options-ui-§7)
+--                 [Unit] [Aura type] / [Style]
 --                 [Duplicate] [Delete]                             <- acts on the selected container
 --                 -- Copy settings from --  [Source v] [What v] [Copy]
 --
@@ -32,6 +34,14 @@ local printf = NS.Printf
 local PAGE = "containers"
 local GROUP = L["Containers"]
 
+-- options-ui-§7: the tab is the GROUP's heading, and a subgroup is what breaks a tab up inside
+-- itself. Name and Enabled answer "which container is this" and need no heading; Unit, Aura type and
+-- Style answer a different question — what it watches and how it is drawn — and sat unheaded in the
+-- same run of rows, which read as one undifferentiated block (owner, batch 8, from a screenshot).
+-- They now carry a subsection of their own. Worded the way a player would ask it rather than after
+-- the three field names, which would only repeat the labels immediately under it.
+local S_SHOWS = L["What it shows, and how"]
+
 -- Changing what a container IS changes which rows other pages offer (buff categories are not
 -- debuff categories), so the panel is rebuilt — on the next frame, out of the dropdown's callback.
 local function structural() if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end end
@@ -57,19 +67,19 @@ local ROWS = {
         label = L["Enabled"], desc = L["Draw this container. A disabled container keeps its settings."], effect = "visibility",
     },
     {
-        path = "container.unit", page = PAGE, group = GROUP, type = "string",
+        path = "container.unit", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.UNITS, C.UNIT_LABELS), label = L["Unit"],
         desc = L["Whose auras this container shows."],
         onChange = structural,
     },
     {
-        path = "container.auraType", page = PAGE, group = GROUP, type = "string",
+        path = "container.auraType", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS), label = L["Aura type"],
         desc = L["Buffs, debuffs, or your temporary weapon enchants. The Filters page offers the categories of whichever you choose."],
         onChange = structural,
     },
     {
-        path = "container.style", page = PAGE, group = GROUP, type = "string",
+        path = "container.style", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.STYLES, C.STYLE_LABELS), label = L["Style"],
         desc = L["Draw each aura as a bar or as an icon. Bars and Icons each have their own settings page."],
         onChange = structural,

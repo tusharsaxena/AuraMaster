@@ -12,7 +12,7 @@ is a defect in this doc (documentation-§3).
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the placeholder preview), debug console, the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Sorting · Overrides | Who cast it, timed or permanent, max duration; the Show/Hide category grids (weapon enchants among them) and the five-rank priority; sort order and cap (per group); the whitelist and blacklist spell lists, each entry's verdict note. Tabs vary with the aura type |
+| - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
@@ -159,6 +159,7 @@ selected) on one line. With no container, that line and one sentence are all the
 |---|---|---|---|
 | Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
 | Enabled | `container.enabled` | bool | A disabled container keeps its settings |
+| *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enabled's "which container is this". Name and Enabled carry no heading of their own — one above a tab's first row only repeats the tab |
 | Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
 | Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
 | Style | `container.style` | string | Bars / Icons; structural (rebuilds the engine) |
@@ -186,9 +187,9 @@ come from the profile-wide `enchantSlots`. `Hide enchants without a duration` ke
 (`container.filter.hidePermanentEnchants`, bool, buffs and enchants) but moves in with the category
 group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` row.
 
-**Categories** (`F-1`…`F-7`) — every tab opens with the five-rank priority blurb, one rank per line
-(batch 7, `T-2`: readability — it used to be one dense paragraph) and mirrored on Overrides too — see
-*Filter priority* below. The per-container **Only these categories** toggle
+**Categories** (`F-1`…`F-7`) — the grids and nothing above them: the five-rank priority block moved
+to the foot of **What to show** in batch 8 (see *Filter priority* below), off both this tab and
+Overrides. The per-container **Only these categories** toggle
 (`container.filter.onlyShown`) that used to sit here is RETIRED (batch 7 fix round 2): once
 `Uncategorized = Hide` correctly suppresses the catch-all on its own, on EITHER aura type (fix round
 3 restored the debuff row fix round 1 had dropped), the toggle had nothing left to do, so the owner
@@ -246,8 +247,8 @@ own, with no tie line (there is no row above to tie it to).
 | Direction | `container.filter.sortDirection` | string | every type (also orders weapon enchants) |
 | Max auras (0 = no limit) | `container.filter.maxAuras` | number 0–40 | buffs, debuffs; per group |
 
-**Overrides** (buff and debuff containers) — opens with the same five-rank priority blurb as
-Categories (`F-4`; see *Filter priority* below), then bespoke: a **Whitelist** and a **Blacklist**
+**Overrides** (buff and debuff containers, the third tab since batch 8 — it sits beside Categories,
+the other half of the same decision, and Sorting is last) — bespoke: a **Whitelist** and a **Blacklist**
 section, each the library's `IdList` in spell mode over `container.filter.whitelist` /
 `container.filter.blacklist`, adding by spell id, link or name with the same suggestions,
 candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
@@ -261,8 +262,11 @@ or Cast by can still keep it off screen even where the lists and categories alon
 nothing else Shown, whose whitelist entry really was the only thing keeping an aura on screen): rank 5
 can no longer be "hidden" at all once the toggle is gone, so every note stays non-definite now.
 
-**Filter priority.** The same five ranks, highest first, are restated verbatim at the top of both the Categories and the
-Overrides tabs (`P-1`, `P-4`) — two halves of one decision — and drive `FC.ExplainSpell`, the
+**Filter priority.** The five ranks, highest first, are stated in ONE place — the foot of the **What
+to show** tab (`P-1`, `P-4`), under the heading *Which aura wins*: a lead-in in the normal font, then
+one rank per line in `GameFontHighlight` with a hairline gap between them. Before batch 8 the same
+five lines were restated at the top of both Categories and Overrides, which put a wall of small text
+above the controls on two tabs at once. The wording is unchanged, and drives `FC.ExplainSpell`, the
 per-entry notes above: (1) on the Overrides whitelist — always shown; (2) on the Overrides blacklist
 — hidden, unless the whitelist already claimed it; (3) in at least one category set to Show — shown,
 even if another of its categories says Hide; (4) in categories that all say Hide — hidden; (5) in no
@@ -270,7 +274,8 @@ category at all — shown, nothing removed it. Full detail and how it compiles: 
 → Filter priority.
 
 A weapon-enchant container drops **What to show** and **Overrides** entirely (neither has a row that
-means anything for it) and sees only **Categories** — just **Hide enchants without a duration**,
+means anything for it, and with What to show goes the priority block — it has no whitelist, no
+blacklist and no categories to rank) and sees only **Categories** — just **Hide enchants without a duration**,
 since it draws no Spell Categories grid (`Cat.For("ENCHANT")` is empty) — and **Sorting**, just
 **Direction**.
 
@@ -329,9 +334,12 @@ container), Click-through `container.behavior.clickThrough` (no tooltips and no 
 
 ### Bars (71 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-When the selected container is drawn as icons, a large orange notice heads every tab, naming
-Containers, and every control below it is drawn disabled (the spec's `disabledFor`,
-`settings/OptionsSetup.lua`'s renderActiveTab). The tabs and the container picker stay live.
+When the selected container is drawn as icons, a small gray note heads every tab — "Not in use: this
+container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
+and every control below it is drawn disabled (the spec's `disabledFor`,
+`settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
+shouted for what is an aside; orange is left to the engine warnings, which can head the same page.
+The tabs and the container picker stay live.
 
 | Tab | Rows (all under `container.bars.`) |
 |---|---|
@@ -367,8 +375,9 @@ two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this p
 group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
 deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
-When the selected container is drawn as bars, a large orange notice heads every tab and every
-control is drawn disabled, as on the Bars page.
+When the selected container is drawn as bars, the same small gray note heads every tab — "Not in
+use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these
+settings." — and every control is drawn disabled, as on the Bars page.
 
 | Tab | Rows (all under `container.icons.`) |
 |---|---|

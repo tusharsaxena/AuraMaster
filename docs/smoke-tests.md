@@ -78,7 +78,9 @@ suite covers what only the client can show.
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
 23. **Containers** (its own top-level page, one tab) → the tab body's first line holds the Container picker and **New
-    container**, side by side and aligned. Below: Name, Enabled, Unit, Aura type, Style, then Duplicate
+    container**, side by side and aligned. Below: Name and Enabled, then the subsection heading
+    **What it shows, and how** with Unit, Aura type and Style under it (batch 8 — there is no heading
+    above Name, and the three rows are visibly one block apart from the two), then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
     **Delete** it → the picker and New container are still there, and the picker lists what is left.
     Rename a container and change its Unit, then press the page's **Defaults** → Enabled, Unit, Aura
@@ -89,8 +91,11 @@ suite covers what only the client can show.
     behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
 24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
-    show ][ Categories ][ Sorting ][ Overrides ]**, with no Spell lists tab on any aura type.
-    **Categories** opens with the five-rank priority sentence, one rank per line, then two grids,
+    show ][ Categories ][ Overrides ][ Sorting ]**, with no Spell lists tab on any aura type
+    (batch 8: Overrides sits right after Categories and Sorting is last). **What to show** ends with
+    the priority block — heading **Which aura wins**, the lead-in, then the five rank lines — below
+    its own three rows, and neither Categories nor Overrides carries a copy of it any more.
+    **Categories** opens straight onto two grids,
     **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
     once, with columns **Show · Hide** and the category name (hover it for its description). Click
     **Hide** on a line → that line's cell shows a plain checkbox check and the other goes unlit, and
@@ -109,8 +114,9 @@ suite covers what only the client can show.
     row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
     the same frame; → *Another container* → Another container and Offset are live.
 26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Highlights ]**. On an icon container every tab carries the large orange "drawn as icons" notice
-    naming Containers, a gap below it, and every control dimmed and unclickable; the tabs
+    Highlights ]**. On an icon container every tab carries the small gray "Not in use: this container
+    is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
+    quiet text, not a full-width orange banner, and not larger than the labels under it — a gap below it, and every control dimmed and unclickable; the tabs
     and the Container dropdown still work. **General** opens on its Size subsection (**Width**,
     **Height**) before Fill and Spark. On **Icon** tick **Show border**, set the thickness to 3 →
     a border frames each bar's icon and the art shrinks inside it rather than under it. On **General**
@@ -439,14 +445,16 @@ one. None of this is reproducible headlessly; these checks are.
     container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
     row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
     slot toggles, not a spell list.
-80. **The priority blurb reads as one rank per line (`F-4`, `P-1`, `T-2`).** At the top of both
-    Filters → Categories and Filters → Overrides, read the lead-in line ("Highest priority first:")
-    then the five numbered rank lines below it → each rank is its own line, none sharing a line with
-    another, no word cut off mid-character on any of them, no horizontal scrollbar appearing on the
-    tab, and no overlap with the row or grid drawn immediately below — and on Categories, no leftover
-    gap where the retired **Only these categories** toggle used to sit; the last rank line runs
-    straight into the grid below it. Resize the WoW window narrower (if your UI scale allows it) and
-    re-open the tab → each line still wraps cleanly on its own, just onto more sub-lines.
+80. **The priority block reads as one rank per line, once, at the foot of What to show (`F-4`,
+    `P-1`, `T-2`, batch 8).** On Filters → **What to show**, scroll past Cast by, Duration and Max
+    duration → a **Which aura wins** section heading, the lead-in line ("Highest priority first:")
+    and the five numbered rank lines below it → each rank is its own line, none sharing a line with
+    another, the ranks readably larger than they were and separated by a hairline gap, no word cut
+    off mid-character, no horizontal scrollbar appearing on the tab. Now open **Categories** and
+    **Overrides** → neither carries the lead-in or any rank line; Categories opens straight onto its
+    first grid and Overrides onto **Whitelist**. Resize the WoW window narrower (if your UI scale
+    allows it) and re-open the tab → each line still wraps cleanly on its own, just onto more
+    sub-lines.
 81. **The grid cell is a plain checkbox, on both columns (`G-1`, `G-2`).** On Filters → Categories,
     look closely at a lit cell (Show or Hide) → it shows an ordinary checkbox check, the same shape
     and color as every other checkbox in the panel, with no colored fill behind it. Click the other

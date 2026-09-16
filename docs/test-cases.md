@@ -764,7 +764,7 @@ badge and any count quoted in the docs must agree with it.
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
 - options: the Filters page offers the Overrides tab only for a buff or debuff container
-- options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back
+- options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
 - options: the Containers page's New button creates and selects a container
@@ -835,9 +835,11 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_containers.lua (22)
+### test_pages_containers.lua (24)
 
 - containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
+- containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
+- containers: the subsection heading is drawn between Enabled and Unit, not anywhere else
 - containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
 - containers: the tab body opens with the Container picker and New container on one line
 - containers: the picker retargets the tab and every page
@@ -860,7 +862,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (38)
+### test_pages_filters.lua (42)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -879,8 +881,12 @@ badge and any count quoted in the docs must agree with it.
 - filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)
 - filters: the Uncategorized cost note draws on a buff container and not on a debuff one (review fix wave, item 2)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
-- filters: the priority order (spec §6) appears on both the Categories and the Overrides tab, highest rank first
-- filters: the priority blurb is five separate lines, one per rank, identical on both tabs (T-2)
+- filters: the priority order (spec §6) is stated on the What to show tab, highest rank first
+- filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
+- filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
+- filters: the priority block is drawn under the What to show rows, not above them (batch 8)
+- filters: the priority lead-in and its ranks are drawn in the fonts the block asks for (batch 8)
+- filters: the four tabs read What to show, Categories, Overrides, Sorting (batch 8)
 - filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
@@ -928,9 +934,9 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_bars.lua (11)
 
-- bars: every tab of an icons container carries the orange notice; a bars container's carry none
+- bars: every tab of an icons container carries the gray note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
-- bars: the wrong-style notice is drawn large, then a spacer before the first control (B-2)
+- bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
 - bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
 - bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)
@@ -942,9 +948,9 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_icons.lua (7)
 
-- icons: a bars container's tabs carry the orange notice; an icons container's carry none
+- icons: a bars container's tabs carry the gray note; an icons container's carry none
 - icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
-- icons: the wrong-style notice is drawn large, then a spacer before the first control (B-2)
+- icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - icons: the six tabs are drawn in order
 - icons: Width on the Icons page writes the icon width, never the bar width
 - icons: the Cooldown rows write the selected container's swipe
@@ -1090,8 +1096,8 @@ badge and any count quoted in the docs must agree with it.
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
-| test_pages_containers.lua | 22 |
-| test_pages_filters.lua | 38 |
+| test_pages_containers.lua | 24 |
+| test_pages_filters.lua | 42 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 7 |
@@ -1108,4 +1114,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **914** |
+| **Total** | **920** |

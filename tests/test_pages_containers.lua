@@ -52,6 +52,46 @@ test("containers: registers its own top-level Blizzard category, with one tab, C
     end
 end)
 
+-- BATCH 8 (owner, from a screenshot): Unit, Aura type and Style used to run on from Name and Enabled
+-- with nothing between them, one undifferentiated block of five rows. They are a different question
+-- — what the container watches and how it is drawn, against which container this is — so they now
+-- carry a subgroup of their own, the same options-ui-§7 mechanism Bars, Icons and Layout use. Name
+-- and Enabled deliberately keep no heading: a heading above the first row of a tab reads as a
+-- repeat of the tab.
+test("containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not", function()
+    local NS, _, _, ws = containers()
+    local S = NS.L["What it shows, and how"]
+    for _, path in ipairs({ "container.unit", "container.auraType", "container.style" }) do
+        -- red under: a row losing the subgroup, which would drop it back into the identity block
+        assertEqual(NS.FindSchemaRow(path).subgroup, S, path)
+    end
+    for _, path in ipairs({ "container.name", "container.enabled" }) do
+        assertNil(NS.FindSchemaRow(path).subgroup, path)
+    end
+    local heads = {}
+    for _, w in ipairs(ws) do
+        if w.type == "Heading" then
+            heads[#heads + 1] = w.text
+        end
+    end
+    -- red under: the subgroup declared but never drawn (a page rendering with the headings off)
+    assertEqual(heads[1], S, "the subsection heading is drawn, above Copy settings from")
+end)
+
+test("containers: the subsection heading is drawn between Enabled and Unit, not anywhere else", function()
+    local NS, _, _, ws = containers()
+    local at, enabled, unit
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["What it shows, and how"] then at = i end
+        if w.labelText == NS.L["Enabled"] then enabled = i end
+        if w.labelText == NS.L["Unit"] then unit = i end
+    end
+    assertTrue(at ~= nil and enabled ~= nil and unit ~= nil, "all three drew")
+    -- red under: the subgroup landing on the wrong rows, or the heading emitted after them
+    assertTrue(enabled < at, "Enabled is above the heading")
+    assertTrue(at < unit, "Unit is below it")
+end)
+
 test("containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)", function()
     -- Subcategory ids start at 101: the kit's main category answers GetID() == 1. Registering its
     -- own category (the test above) used to not be enough for OpenOptionsPage to find it: that seam

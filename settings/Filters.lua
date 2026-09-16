@@ -3,14 +3,13 @@ local _, NS = ...
 -- settings/Filters.lua — what a container shows.
 --
 --     band          [Container ▾]
---     [ What to show ][ Categories ][ Sorting ][ Overrides ]
---     Categories    priority blurb (spec §6)
---                   Blizzard Categories   Show · Hide · Category, plus an info icon (N-5)
+--     [ What to show ][ Categories ][ Overrides ][ Sorting ]
+--     What to show  the rows, then the priority block (spec §6) at the foot of the tab
+--     Categories    Blizzard Categories   Show · Hide · Category, plus an info icon (N-5)
 --                   Spell Categories      (buffs)        the same grid, plus a `See spells` link
 --                                                         and hidePermanentEnchants beneath it
 --                   Dispel Types · Who Cast It  (debuffs)
---     Overrides     the same priority blurb, then:
---                   Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
+--     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
 --
 -- Every row here compiles, through modules/FilterCompiler.lua, into the aura groups Blizzard's aura
@@ -22,8 +21,8 @@ local _, NS = ...
 -- they belong to (`auraTypes`); a category is a two-state choice, stored as "show" / "hide" and
 -- labeled Show / Hide. Show is a POSITIVE claim (spec §6, revised 2026-09-15): an aura in at least
 -- one category set to Show is drawn even if another of its categories says Hide, and only an aura
--- whose every category says Hide is removed by them. The priority blurb at the top of both the
--- Categories and Overrides tabs states the whole order, Overrides included. The rows stay in the
+-- whose every category says Hide is removed by them. The priority block at the foot of the What to
+-- show tab states the whole order, Overrides included, and is the only place that does. The rows stay in the
 -- schema, so `/am get|set|list`, Defaults and the resets see them, but carry `skipRender`: the
 -- Categories tab, bespoke and keyed by the group's name, draws them as one ChoiceGrid per `grid`.
 -- Which spells a spell category matches is the profile's, edited on General → Spell Categories
@@ -268,23 +267,34 @@ local CATEGORY_EXTRA = {
     end,
 }
 
--- F-4/spec §6: the five ranks, highest first, restated verbatim on both the Categories and the
--- Overrides tabs — two halves of one decision. Rank 1 is the whitelist, rank 2 the blacklist
--- (revised 2026-09-15: the whitelist now beats the blacklist, and rank 3's Show is a positive claim
--- that rescues an aura from a Hide elsewhere).
+-- F-4/spec §6: the five ranks, highest first. ONE place in the panel states them — the BOTTOM of the
+-- What to show tab. Rank 1 is the whitelist, rank 2 the blacklist (revised 2026-09-15: the whitelist
+-- beats the blacklist, and rank 3's Show is a positive claim that rescues an aura from a Hide
+-- elsewhere).
 -- Fix round 2 (batch 7): rank 5's trailing "UNLESS 'Only these categories' is on" clause is gone —
 -- the toggle is retired (D8/R-8..R-11 superseded; `Uncategorized = Hide` says the same thing now, on
 -- buffs — see `UNCATEGORIZED_NOTE` below).
 --
--- T-2 (batch 7, readability pass): this used to be ONE dense paragraph carrying all five ranks —
--- the owner found it unreadable in-game. It is still the one place the whole order is stated and is
--- still verified rank by rank against modules/FilterCompiler.lua's own header comment (same five
--- ranks, same order), so the WORDING here stays exactly what it said; only the shape changes, one
--- rank per line. The library offers nothing between a single-line H.TextRow and hand-rolling a list
--- widget (checked: OptionsWidgets.lua has no bullet/list maker), so this is six H.TextRow calls
--- (the lead-in plus one per rank) rather than one — see PRIORITY_LINES below.
-local PRIORITY_LINES = {
-    L["Highest priority first:"],
+-- WHERE IT LIVES (batch 8, from the owner's screenshots). It used to be restated verbatim at the
+-- TOP of BOTH the Categories and the Overrides tabs — "two halves of one decision" — which put a
+-- five-line wall of small text between the player and the controls, twice: "right now it looks
+-- horrible". It is now drawn once, after the What to show rows, through the flow engine's
+-- `afterGroup` hook (the page spec at the bottom of this file). What to show is the tab where the
+-- player asks what this container shows at all, so the order that settles it is a footnote to that
+-- answer rather than a preamble to two grids.
+--
+-- T-2 (batch 7) had already broken the old single dense paragraph into one line per rank; this keeps
+-- that and adds the frame around it, all from helpers that already exist (no new widget type, and
+-- OptionsWidgets.lua still has no bullet/list maker to reach for): an H.Section so the block is
+-- announced and separated by the library's own heading rule, the lead-in in GameFontNormal, and each
+-- rank its own H.TextRow in GameFontHighlight — the readable size, where the AceGUI Label default is
+-- GameFontHighlightSmall — with a hairline spacer between ranks so five lines read as five lines.
+--
+-- The WORDING is untouched, and is still verified rank by rank against modules/FilterCompiler.lua's
+-- own header comment (same five ranks, same order).
+local PRIORITY_HEADING = L["Which aura wins"]
+local PRIORITY_LEAD = L["Highest priority first:"]
+local PRIORITY_RANKS = {
     L["1. On the Overrides whitelist — always shown."],
     L["2. On the Overrides blacklist — hidden, unless the whitelist already claimed it."],
     L["3. In at least one category set to Show — shown, even if another of its categories says Hide."],
@@ -292,21 +302,23 @@ local PRIORITY_LINES = {
     L["5. In no category at all — shown, nothing removed it."],
 }
 
---- Draws PRIORITY_LINES, one H.TextRow per line, then a small gap before whatever follows.
----
---- T-2's second half ("reduce the blank space below where 'Only these categories' used to sit"):
---- that checkbox (D8) is gone entirely now, not merely hidden, and removing its own RenderRows call
---- removed the whole gap with it — this render, right now, drops straight from the last line here
---- into the next Section's heading with NO gap at all (verified against the widget list a fresh
---- render actually draws: no spacer widget sits between them). So the "reduce" half of T-2 was
---- already done by that removal; what is left is a SINGLE small ROW_VSPACER so the text does not
---- run flush into the heading below it — not the old toggle's much larger combined gap back.
+-- Between two rank lines: enough that they are not read as one wrapped paragraph, small enough that
+-- the five still read as one block. Deliberately smaller than H.ROW_VSPACER, which is the gap
+-- between two CONTROLS.
+local PRIORITY_RANK_GAP = 4
+
+--- The priority block at the foot of the What to show tab: a heading, the lead-in, then one line per
+--- rank. H.Section supplies the gap above it (the library adds its own top spacer once a group has
+--- been drawn), so this adds none of its own.
 local function renderPriorityBlurb(ctx)
-    for _, line in ipairs(PRIORITY_LINES) do
-        H.TextRow(ctx, line)
-    end
     local scroll = H.EnsureScroll(ctx)
-    if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
+    H.Section(ctx, PRIORITY_HEADING)
+    H.TextRow(ctx, PRIORITY_LEAD, { fontObject = "GameFontNormal" })
+    if scroll then H.AddSpacer(scroll, PRIORITY_RANK_GAP) end
+    for _, line in ipairs(PRIORITY_RANKS) do
+        H.TextRow(ctx, line, { fontObject = "GameFontHighlight" })
+        if scroll then H.AddSpacer(scroll, PRIORITY_RANK_GAP) end
+    end
 end
 
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
@@ -372,7 +384,7 @@ end
 -- does not always put weaponEnchants directly above it.
 local WEAPON_ENCHANT_TIE = L["A sub-option of the Weapon enchants row above:"]
 
---- The Categories tab: the priority blurb (F-4), then a grid each. The Spell Categories grid (kind
+--- The Categories tab: a grid each (the priority blurb is the What to show tab's now, F-4). The Spell Categories grid (kind
 --- `custom`) carries F-2's blurb AND `UNCATEGORIZED_NOTE` (both conditionally — T-2 fix round 4 and
 --- the review fix wave, only when the grid holds an editable list, i.e. a buff container — a debuff
 --- container's Uncategorized row rescues nothing, so neither sentence is true there) and F-3's
@@ -380,8 +392,6 @@ local WEAPON_ENCHANT_TIE = L["A sub-option of the Weapon enchants row above:"]
 --- right under that grid (T-3), tied by name to the weaponEnchants row it governs since ChoiceGrid
 --- draws its rows atomically and cannot host it inline.
 local function renderCategories(ctx, _, rows)
-    renderPriorityBlurb(ctx)
-
     local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
     local hideDrawn = false
     for _, g in ipairs(GRIDS) do
@@ -565,7 +575,6 @@ local function overrideList(ctx, cfg, key, heading, blurb)
 end
 
 local function renderOverrides(ctx, cfg)
-    renderPriorityBlurb(ctx)
     overrideList(ctx, cfg, "whitelist", L["Whitelist"],
         L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."])
     overrideList(ctx, cfg, "blacklist", L["Blacklist"],
@@ -583,9 +592,19 @@ NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
     pairWith = {
         ["container.filter.maxDuration"] = maxDurationPresets,
     },
+    -- The priority block is drawn after the last What to show row, not above the first (see
+    -- PRIORITY_RANKS). An enchant container has no What to show tab at all (every row in the group
+    -- is HELPFUL/HARMFUL only), and no Overrides tab either, so it is offered neither — which is
+    -- correct: it has no whitelist, no blacklist and no categories to rank.
+    afterGroup = {
+        [G_SHOW] = renderPriorityBlurb,
+    },
     tabs = {
         -- Keyed by its group, so it takes the group's place and is handed the group's rows.
         { key = G_CATS, label = G_CATS, auraTypes = CATS_TYPES, render = renderCategories },
-        { key = "overrides", label = L["Overrides"], auraTypes = BUFFS_DEBUFFS, render = renderOverrides },
+        -- `before` the Sorting group: Overrides is the other half of the Categories decision, so it
+        -- sits next to it, and Sorting — which orders whatever survived — goes last (batch 8).
+        { key = "overrides", label = L["Overrides"], auraTypes = BUFFS_DEBUFFS, before = G_SORT,
+          render = renderOverrides },
     },
 })

@@ -106,9 +106,11 @@ NS.RegisterSchemaRows({
       label = L["Refresh-window color"], desc = L["The highlight's color."] },
 })
 
--- A container drawn as bars sees every row here disabled, under a notice naming where its style is
--- changed (B-2; settings/OptionsSetup.lua's renderActiveTab).
+-- A container drawn as bars sees every row here disabled, under a note naming where its style is
+-- changed (B-2; settings/OptionsSetup.lua's drawDisabledNotice, which draws it small and gray).
+-- The wording states the condition first ("nothing here is in use") and then the one thing to do
+-- about it, and names the page the style lives on rather than parenthesizing it.
 NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "icons" end,
-    disabledNotice = L["This container is drawn as bars; these settings apply once its style is Icons (Containers)."],
+    disabledNotice = L["Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings."],
 })

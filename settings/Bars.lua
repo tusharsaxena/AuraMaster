@@ -5,8 +5,8 @@ local _, NS = ...
 --     band   [Container ▾]
 --     [ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
 --
--- A container drawn as icons sees every row here disabled, under a notice naming where its style is
--- changed (B-2; settings/OptionsSetup.lua's renderActiveTab).
+-- A container drawn as icons sees every row here disabled, under a note naming where its style is
+-- changed (B-2; settings/OptionsSetup.lua's drawDisabledNotice, which draws it small and gray).
 --
 -- The font, border, bar and background blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
 -- with anything extra appended after the block — and every color row has its class-color companion
@@ -179,5 +179,5 @@ NS.RegisterSchemaRows(HI)
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "bars" end,
-    disabledNotice = L["This container is drawn as icons; these settings apply once its style is Bars (Containers)."],
+    disabledNotice = L["Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."],
 })

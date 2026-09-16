@@ -110,22 +110,28 @@ end)
 -- Characterization (testing-§13): pinned on RenderContainerPage as one function, before its tab
 -- collection and tab validation moved into local helpers.
 
-test("options: a container page's tabs are its schema groups, then its admitted bespoke tabs; a stale tab falls back", function()
+test("options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back", function()
     local NS2 = fresh()
     local ctx = NS2.Helpers.__pageCtx.filters
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
+    -- Batch 8: the Filters page's `overrides` tab carries `before = Sorting`, so it is INSERTED
+    -- ahead of that group rather than appended after every group (placeTab). A bespoke tab with no
+    -- `before` still lands last; this page no longer has one to prove it with, so the expectation
+    -- below is the insertion, derived from the schema rather than written out.
     local want, seen = {}, {}
     for _, row in ipairs(NS2.SchemaForPage("filters")) do
         if not seen[row.group] then
             seen[row.group] = true
+            if row.group == NS2.L["Sorting"] then
+                want[#want + 1] = "overrides"
+            end
             want[#want + 1] = row.group
         end
     end
-    want[#want + 1] = "overrides"
     local got = {}
     for i, t in ipairs(ctx.__tabs) do got[i] = t.key end
-    assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups first, then bespoke")
+    assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups, the bespoke tab where it asked")
     ctx.activeTab = "no such tab"
     NS2.Helpers.RefreshAllPanels()   -- a hidden panel is marked dirty, and re-renders on its next show
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")

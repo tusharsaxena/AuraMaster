@@ -15,11 +15,18 @@ local function icons(opts)
     return NS, m, P, P.show("Icons")
 end
 
-local NOTICE = "This container is drawn as bars; these settings apply once its style is Icons (Containers)."
+-- BATCH 8 (owner, from a screenshot): the wrong-style note was a full-width GameFontNormalLarge
+-- line in warning orange, which shouted for what is a quiet aside — nothing is wrong, the page is
+-- simply inert until the style changes. It is now the small default font in the addon's
+-- report-not-warn gray, reworded to lead with the condition and name the page that fixes it, and
+-- followed by the ordinary row gap rather than a 12px one. Orange is left to RenderWarnings, which
+-- can draw on this very page and must stay the loudest thing on it.
+local NOTICE = "Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings."
+local GRAY = "|cff808080"
 
-test("icons: a bars container's tabs carry the orange notice; an icons container's carry none", function()
+test("icons: a bars container's tabs carry the gray note; an icons container's carry none", function()
     local NS, _, P, ws = icons()
-    local notice = "|cffffa040" .. NS.L[NOTICE] .. "|r"
+    local notice = GRAY .. NS.L[NOTICE] .. "|r"
     assertFalse(P.hasText(ws, notice), "container 2 is drawn as icons")
     NS.Helpers.SelectContainer(1)
     ws = P.show("Icons")
@@ -48,7 +55,7 @@ test("icons: on a bars container every row of every tab is drawn disabled; on an
     end)
 end)
 
-test("icons: the wrong-style notice is drawn large, then a spacer before the first control (B-2)", function()
+test("icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)", function()
     local NS, _, P = icons()
     local H = NS.Helpers
     local seen = {}
@@ -60,18 +67,18 @@ test("icons: the wrong-style notice is drawn large, then a spacer before the fir
     H.SelectContainer(1)
     P.show("Icons")
     H.TextRow = textRow
-    local notice = "|cffffa040" .. NS.L[NOTICE] .. "|r"
-    assertTrue(seen[notice] ~= nil, "the notice is a TextRow, in the orange it had")
-    -- red under: the notice drawn in the default small font
-    assertEqual(seen[notice] and seen[notice].fontObject, "GameFontNormalLarge")
+    local notice = GRAY .. NS.L[NOTICE] .. "|r"
+    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the gray the addon reports in")
+    -- red under: the note back in large orange, shouting over a page that is merely inert
+    assertEqual(seen[notice] and seen[notice].fontObject, "GameFontHighlightSmall")
     local kids = H.EnsureScroll(H.__pageCtx.icons).children
     local at
     for i, w in ipairs(kids) do
         if w.type == "Label" and w.text == notice then at = i end
     end
-    -- red under: the notice followed straight by the first control
+    -- red under: the note followed straight by the first control
     assertEqual(kids[at + 1].type, "SimpleGroup")
-    assertEqual(kids[at + 1].height, 12)
+    assertEqual(kids[at + 1].height, NS.Helpers.ROW_VSPACER)
 end)
 
 test("icons: the six tabs are drawn in order", function()
