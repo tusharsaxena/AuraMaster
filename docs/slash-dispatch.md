@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:408`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:462`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). Disabling runs
   the visibility pass and hides containers; it touches nothing about dispatch.
@@ -53,10 +53,34 @@ eight-or-more trigger (documentation-§3).
 | 20 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
 | 21 | `version` | host | `v` + `NS.Version()` |
 
+The **Kind** column says who implements the verb, not who gates it — see below.
+
+## While the addon is disabled
+
+`/am disable` stands the addon's **features** down; it does not take the command surface with it
+(slash-commands-§2). A verb that **drives those features** answers on one tagged line naming
+`/am enable` and does nothing else:
+
+    [AM] Aura Master is off — /am enable turns it back on
+
+Refusing: `new`, `delete`, `lock`, `unlock`, `pick`, `resetposition`, `forgettimed`.
+
+Still answering, always: `help`, `config`, `version`, `enable`, `disable`, `debug`, `perf` and the
+schema CLI (`get`, `set`, `list`, `reset`, `resetall`) — a player must be able to read and repair
+settings, and reach the panel, while the addon is off, and `enable` above all or the pair is
+one-way. `containers` and `select` stay live too, and that is this addon's own addition: almost every
+schema path here is container-relative, so those two are how a player aims `get`, `set` and `reset`
+at the container they mean. Neither draws, creates or deletes anything.
+
+**The gate is in one place**, `LIVE_WHILE_DISABLED` plus the loop beneath it in `settings/Slash.lua`,
+which wraps the handlers in `NS.COMMANDS` once. Both dispatchers — the library's and the degraded
+stub's — call `entry[3]`, so one wrap covers both, and a verb added to the table is gated by default
+until the live set names it.
+
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:174`):
+(`NEW_WORDS`, `settings/Slash.lua:228`):
 
 | Words | Field |
 |---|---|
@@ -82,12 +106,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:132`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:385`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:439`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:332`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:388`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -107,7 +131,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:271` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:325` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), a bare `/am` runs `config` as the library's does (the
 panel's own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's

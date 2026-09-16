@@ -76,6 +76,60 @@ NS.COMMANDS = {
 }
 
 -- ---------------------------------------------------------------------------
+-- The disabled gate (slash-commands-§2)
+-- ---------------------------------------------------------------------------
+--
+-- DISABLED means the addon stands its FEATURES down — every container is hidden, nothing is drawn.
+-- A verb that drives those features is therefore asking for something the addon is currently not
+-- doing, and acting on it anyway is wrong twice over: the player does not get what they asked for,
+-- and a silent no-op leaves them with no clue why. So such a verb answers on ONE tagged line that
+-- names `/am enable`, and does nothing else. One line is the whole courtesy.
+--
+-- ONE PLACE, AND IT IS THE VERB TABLE ITSELF. Every dispatch path in this addon ends at an entry's
+-- `entry[3]` — the library's dispatcher calls it, and so does the degradation stub's own OnSlash
+-- below — so wrapping the handlers here gates both surfaces with no second copy and no per-verb
+-- guard. A guard pasted into each verb is a dozen places to forget, and the NEXT verb added forgets
+-- it by default; here the default runs the other way, and a new verb is gated unless the set below
+-- names it.
+--
+-- THE LIVE SET IS DATA, NAMED ONCE. slash-commands-§2's own list is the floor — a player must be
+-- able to READ AND REPAIR SETTINGS and REACH THE PANEL while the addon is off, which is exactly
+-- when they are most likely to need to, and `enable` above all or the pair is one-way. `debug` and
+-- `perf` are diagnostics rather than features: the usual reason to reach for either is that the
+-- addon is misbehaving.
+local LIVE_WHILE_DISABLED = {
+    help = true, config = true, version = true, enable = true, disable = true,
+    debug = true, perf = true,
+    get = true, set = true, list = true, reset = true, resetall = true,
+    -- TWO MORE THAN THE SECTION NAMES, and the reason is this addon's path model. Almost every
+    -- schema path here is container-relative (`container.bars.width`) and resolves against the
+    -- SELECTED container, so `/am containers` and `/am select` are how a player AIMS get, set and
+    -- reset at the container they mean — they are part of reading and repairing settings, not
+    -- features. Neither draws, hides, creates or deletes anything: `containers` prints a list, and
+    -- `select` moves one integer of session state. §2's list is what a refusal may never be turned
+    -- on, not a ceiling on what stays live.
+    containers = true, select = true,
+}
+
+--- Whether the addon is standing its features down. EXPLICITLY false only: before core/Database.lua
+--- builds NS.db the read answers nil, and reading nil as "off" would refuse every feature verb on a
+--- load that has not finished.
+local function standingDown()
+    return NS.GetSetting("enabled") == false
+end
+
+for _, entry in ipairs(NS.COMMANDS) do
+    if not LIVE_WHILE_DISABLED[entry[1]] then
+        local run = entry[3]
+        entry[3] = function(rest)
+            -- One line, and NOTHING else: no partial work, no side effect, no second line.
+            if standingDown() then return print(L["Aura Master is off — /am enable turns it back on"]) end
+            return run(rest)
+        end
+    end
+end
+
+-- ---------------------------------------------------------------------------
 -- Host verbs
 -- ---------------------------------------------------------------------------
 

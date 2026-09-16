@@ -716,7 +716,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (37)
+### test_slash_verbs.lua (40)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -755,6 +755,9 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
+- slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
+- slash verbs: while disabled the live set still answers — settings stay readable and repairable
+- slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 
 ### test_bulklog.lua (20)
 
@@ -1115,7 +1118,7 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_slash.lua | 23 |
-| test_slash_verbs.lua | 37 |
+| test_slash_verbs.lua | 40 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -1138,4 +1141,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **940** |
+| **Total** | **943** |

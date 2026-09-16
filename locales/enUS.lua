@@ -342,6 +342,7 @@ L["Turn Aura Master on (every enabled container shows again)"] = "Turn Aura Mast
 L["Turn Aura Master off (hides every container)"] = "Turn Aura Master off (hides every container)"
 L["Aura Master enabled"] = "Aura Master enabled"
 L["Aura Master disabled — /am enable turns it back on"] = "Aura Master disabled — /am enable turns it back on"
+L["Aura Master is off — /am enable turns it back on"] = "Aura Master is off — /am enable turns it back on"
 L["Reset one setting to its default — /am reset path"] = "Reset one setting to its default — /am reset path"
 L["Reset every setting to defaults"] = "Reset every setting to defaults"
 L["List your containers; the selected one is marked"] = "List your containers; the selected one is marked"

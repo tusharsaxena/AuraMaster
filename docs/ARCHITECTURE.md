@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:409-410`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:463-464`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:233`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -270,6 +270,13 @@ test mode and `/am lock` / `/am unlock` its switch (preview-mode's exception, st
 | `/am debug [on\|off]` | Toggle the debug console; `on`/`off` enable or disable logging |
 | `/am perf …` | Measure performance — bare `/am perf` opens the workflow |
 | `/am version` | Print the addon version |
+
+**While the addon is disabled** the seven verbs that drive its features — `new`, `delete`, `lock`,
+`unlock`, `pick`, `resetposition`, `forgettimed` — answer on one tagged line naming `/am enable` and
+do nothing else (slash-commands-§2). Everything else keeps working, so settings stay readable and
+repairable and the panel stays one word away. The gate is one wrapping loop over `NS.COMMANDS` in
+`settings/Slash.lua`, with the live set named once as data; a verb added to the table refuses by
+default.
 
 Dispatch, the host verbs, the container-relative paths and the degraded path: `docs/slash-dispatch.md`.
 

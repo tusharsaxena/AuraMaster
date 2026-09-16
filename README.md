@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-940%2F940_passing-green)
+![Tests](https://img.shields.io/badge/Tests-943%2F943_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -62,9 +62,11 @@ spacing, scale and tooltips, and right-clicking one of your own buffs cancels it
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
 chat too: `/am new target debuffs icons` makes a container, `/am select` changes which one you're
 editing, and `/am set` changes any single setting. `/am disable` hides every container at once,
-`/am enable` brings them back, and neither one waits for combat to end. If you change something else
-mid-fight, it waits until combat ends (or, inside a key, encounter or match, until that's over), and
-chat tells you which.
+`/am enable` brings them back, and neither one waits for combat to end. While it is off, a command
+that would draw or change a container tells you so and names `/am enable` instead of quietly doing
+nothing; reading and changing settings keeps working. If you change something else mid-fight, it
+waits until combat ends (or, inside a key, encounter or match, until that's over), and chat tells you
+which.
 
 Everything else is on the addon's page under Settings → AddOns, which `/am` on its own opens.
 `/am help` (or `/auramaster help`) lists every command.

@@ -614,3 +614,94 @@ test("slash verbs: without the library the host verbs keep working", function()
     assertEqual(NS2.db.profile.alpha, 1, "the stub's Reset all is a profile reset")
     assertEqual(p[#p], "All settings reset to defaults.")
 end)
+
+-- ── the disabled state (slash-commands-§2) ────────────────────────────────────────────────────
+--
+-- Disabled means the addon stands its FEATURES down. A verb that drives those features answers on
+-- one tagged line naming `/am enable` and does nothing else; everything a player needs to read and
+-- repair settings, and to reach the panel, keeps answering. The gate is settings/Slash.lua's one
+-- wrapping loop over NS.COMMANDS, so these cases drive the real dispatcher rather than the gate.
+
+local REFUSAL = "Aura Master is off — /am enable turns it back on"
+
+test("slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing",
+function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+
+    -- The state each of these verbs would move if it acted.
+    local id = NS2.Database.GetContainers()[1].id
+    NS2.SetByPath("container.position.x", 123, id)
+    NS2.SetByPath("locked", true)
+    NS2.db.global.timedSpells[12345] = true
+    local before = #NS2.Database.GetContainers()
+
+    NS2.Slash:OnSlash("disable")
+    assertFalse(NS2.GetSetting("enabled"))
+
+    for _, line in ipairs({ "new target debuffs icons", "delete " .. id, "lock", "unlock", "pick",
+                            "resetposition", "forgettimed" }) do
+        local p = slash(NS2, lines, line)
+        -- IT SAID SO, on one line and one only: no partial work, no second line explaining the
+        -- state to a player who is about to re-run the command anyway.
+        assertEqual(#p, 1, "/am " .. line .. " answered " .. dump(p))
+        assertEqual(p[1], REFUSAL, "/am " .. line)
+    end
+
+    -- AND IT DID NOT ACT. Reading the message alone would pass over a verb that printed the line
+    -- and then went ahead, which is the failure the gate exists to prevent.
+    assertEqual(#NS2.Database.GetContainers(), before, "no container was created")
+    assertTrue(NS2.Database.FindContainer(id) ~= nil, "and none was deleted")
+    assertEqual(NS2.GetSetting("locked"), true, "the lock never moved")
+    assertFalse(NS2.FramePicker.IsActive(), "the frame picker never started")
+    assertEqual(NS2.Database.FindContainer(id).position.x, 123, "no position was reset")
+    assertTrue(NS2.db.global.timedSpells[12345], "no learned buff was forgotten")
+end)
+
+test("slash verbs: while disabled the live set still answers — settings stay readable and repairable",
+function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    local opened = 0
+    NS2.OpenOptionsPanel = function() opened = opened + 1 end
+    NS2.Slash:OnSlash("disable")
+
+    -- red under: a gate turned on the whole command surface. Nothing on slash-commands-§2's live
+    -- list may ever be refused — a player must be able to read and repair settings, and reach the
+    -- panel, while the addon is off, which is exactly when they are most likely to need to.
+    for _, line in ipairs({ "help", "config", "version", "list", "get alpha", "set alpha 0.5",
+                            "reset alpha", "debug", "debug off", "perf", "containers", "select 1" }) do
+        local p = slash(NS2, lines, line)
+        assertFalse(said(p, REFUSAL), "/am " .. line .. " must never be refused: " .. dump(p))
+    end
+    assertEqual(opened, 1, "/am config still opens the panel")
+
+    -- And `set` really WROTE: the point of keeping it live is repair, not a polite answer.
+    NS2.Slash:OnSlash("set alpha 0.5")
+    assertEqual(NS2.db.profile.alpha, 0.5)
+    -- `enable` above all, or the pair is one-way.
+    NS2.Slash:OnSlash("enable")
+    assertTrue(NS2.db.profile.enabled)
+end)
+
+test("slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard",
+function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    -- slash-commands-§2's live list, plus the two this addon keeps live because almost every schema
+    -- path here is container-relative: `containers` and `select` are how a player aims get, set and
+    -- reset at the container they mean, so they read and repair settings rather than drive features.
+    local LIVE = {
+        help = true, config = true, version = true, enable = true, disable = true,
+        debug = true, perf = true, get = true, set = true, list = true, reset = true,
+        resetall = true, containers = true, select = true,
+    }
+    for _, entry in ipairs(NS2.COMMANDS) do
+        NS2.SetByPath("enabled", false)
+        local p = slash(NS2, lines, entry[1])
+        -- red under: a verb added to NS.COMMANDS with no thought about the disabled state. The gate
+        -- is a wrapping loop over this table, so a new verb lands on the refusing side by default
+        -- and keeping it live is a deliberate edit to one named list.
+        assertEqual(said(p, REFUSAL), not LIVE[entry[1]], "/am " .. entry[1] .. ": " .. dump(p))
+    end
+end)
