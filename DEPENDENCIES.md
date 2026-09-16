@@ -26,9 +26,9 @@ marked as such rather than listed as a requirement.
   falls back to the deprecated global `GetAddOnMetadata`; the TOC is Retail-only, where `C_AddOns`
   always exists.
 - **Nothing else.** The TOC declares no `## Dependencies`. Every library it loads — LibStub,
-  CallbackHandler-1.0, the Ace3 modules, LibKa0s, LibSharedMedia-3.0 and
-  AceGUI-3.0-SharedMediaWidgets — is vendored under `libs/` and listed in the `# Libraries` block
-  (`AuraMaster.toc:15-30`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
+  CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s,
+  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets — is vendored under `libs/` and listed in
+  the `# Libraries` block (`AuraMaster.toc:15-32`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
   ordering, not as things to download (library-stack).
 - **No optional integration.** Nothing in the addon checks whether another addon is loaded before
   using it. The only add-on-loaded check is `Compat.EnsureAuraContainer`'s own
@@ -97,9 +97,9 @@ git -C ../LibKa0s rev-parse --short v1.39.0   # verify: prints a commit
 - **LuaFileSystem.** Not used; the kit lists directories by shelling out. `luacheck` pulls it in for
   itself, which is LuaRocks' business rather than this addon's.
 - **A CI runner.** There is none; every gate is local and hand-run (testing-§5).
-- **The vendored libraries.** LibStub, CallbackHandler-1.0, the Ace3 modules, LibKa0s,
-  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed under `libs/`. Listing them
-  here does not license fetching them at build time.
+- **The vendored libraries.** LibStub, CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1,
+  LibDBIcon-1.0, LibKa0s, LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed
+  under `libs/`. Listing them here does not license fetching them at build time.
 
 ## Release / assets
 
@@ -107,10 +107,23 @@ git -C ../LibKa0s rev-parse --short v1.39.0   # verify: prints a commit
 with no `externals:` block, and nothing is generated at build time. **None of this group is required
 to build, run or test the addon.**
 
-- **The logo is committed in all three forms.** `media/logos/auramaster.logo.tga` is what the client
-  loads (`core/Constants.lua:26`, `AuraMaster.toc:6`); the `.png` and `.jpg` beside it are the source
-  art and the project-page image, and `.pkgmeta` keeps both out of the package. No script in this
-  repo reads or regenerates any of them, so no image tooling is a dependency.
+- **The logo is committed in every form, and TWO of them are loaded.** `auramaster.logo.tga` is
+  the settings panel's landing-page art (`C.LOGO_PATH`, `core/Constants.lua:25`) and
+  `auramaster.logo.128.tga` is the icon the AddOns list, the minimap button and a broker display
+  all draw (`C.LOGO_ICON_PATH`, `core/Constants.lua:31`, `AuraMaster.toc:6`). The `.png` and
+  `.jpg` beside them are the 2000×2000 source art and the project-page image, and `.pkgmeta`
+  keeps both out of the package.
+- **Pillow regenerates the 128 icon, and is NOT required to build, run or test the addon.** The
+  file is committed; the recipe is recorded so it is reproducible rather than a one-off export
+  (layout-§4). It must come out uncompressed 32-bit — TGA image type 2, 32 bpp, ~64 KB — which
+  `tests/test_launcher.lua` reads out of the header, because an icon in the wrong format draws
+  nothing and raises nothing.
+
+  ```sh
+  python3 -c "from PIL import Image; Image.open('media/logos/auramaster.logo.png')\
+    .convert('RGBA').resize((128,128), Image.LANCZOS)\
+    .save('media/logos/auramaster.logo.128.tga', format='TGA')"
+  ```
 - **The debug console's monospace face is not this addon's asset.** It ships in the vendored
   `libs/LibKa0s/media/fonts/` and is reached through `core/MediaSetup.lua`.
 

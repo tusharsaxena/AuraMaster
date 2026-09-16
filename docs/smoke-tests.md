@@ -506,3 +506,34 @@ one. None of this is reproducible headlessly; these checks are.
     shows NO spark with the option off (check 26/63): if unticking the option makes every spark
     uniform by also restoring the permanent aura's spark, that is a regression of B-3, not a fix of
     this defect, and must also be reported.
+
+## R. The launcher — the minimap button and the broker plugin
+
+Only the client can settle these: the headless suite proves what was handed to the two libraries,
+never that the icon file actually draws (a TGA in the wrong format draws **nothing** and raises
+nothing).
+
+86. **The AddOns list.** Esc → AddOns (or the character-select AddOns list) → *Ka0s Aura Master*
+    shows **the addon's own logo**, not a blank square and not a Blizzard icon.
+87. **The button is there.** A round button wearing that same logo sits on the minimap ring. Drag it
+    around the ring → it follows; `/reload` → it is still where you left it.
+88. **Left-click = unlock.** With containers locked, left-click the button → every container shows
+    its handle and its placeholder auras, exactly as `/am unlock` does, and General → Master
+    controls → **Lock frame** goes unticked. Left-click again → locked, handles and placeholders
+    gone, the checkbox ticked.
+89. **Right-click = settings.** Right-click the button → Settings opens at **Ka0s Aura Master**, and
+    the lock does **not** change.
+90. **The checkbox and the button agree, both ways.** Untick General → Master controls → **Minimap
+    button** → the button vanishes at once, no reload. Tick it → it comes back **at the same angle**.
+    Now hide it from LibDBIcon's own right-click menu instead → reopen the settings and the checkbox
+    is unticked too.
+91. **It survives a profile switch and a reset.** Hide the button, then Profiles → create and switch
+    to a new profile → it stays hidden. Switch back, then General → **Reset all settings** → the
+    button stays hidden and the checkbox stays unticked (it is global; the reset is a profile
+    reset). `/am reset global.minimap.hide` → it comes back.
+92. **A broker display, if one is installed.** With Titan Panel, Bazooka or ElvUI data texts, add
+    *Aura Master* as a plugin → one row, the same logo, **no empty value cell beside it**, and its
+    left and right clicks do exactly what the minimap button's do.
+93. **Without the libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one chat line naming
+    Aura Master and the missing library, **no error frame**, and the addon otherwise works. Rename
+    `libs/LibDataBroker-1.1` aside too, `/reload` → the same. Put both back.

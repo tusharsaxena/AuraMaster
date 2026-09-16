@@ -34,6 +34,7 @@ otherwise (`docs/profiles.md`).
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `schemaVersion` | number | `1` | The migration stamp (savedvariables-§1). Defaults to 1, not the current version: AceDB fills an absent key before `RunMigrations` reads it |
+| `minimap` | table | `{ hide = false }` | **LibDBIcon-1.0's own table**, handed straight to `:Register` (launcher-§3). `hide` is the Minimap button row's storage; `minimapPos` is written by LibDBIcon when the player drags the button. Global, not profile, on purpose: a profile switch must not move the player's buttons and `Reset all settings` — a profile reset — must not un-hide a button they deliberately hid. Nothing seeds it but this declaration (architecture-§5) |
 | `timedSpells` | map | `{}` | `[spellId] = true` for every buff `modules/TimedSpells.lua` has seen carry a duration; account-wide because it is a fact about the game. Learned data, not a setting: written at runtime only by its owner, `modules/TimedSpells.lua` (`TS.Scan` learns, `TS.Forget` behind `/am forgettimed` empties it), and backfilled on load by `NS.RunMigrations`. Named in `docs/ARCHITECTURE.md` → Settings Schema (architecture-§5) |
 
 ## The container template
@@ -180,13 +181,21 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## How the schema paths map onto this shape
 
-A schema row's `path` is either absolute into `profile` (`enabled`, `hideBlizzardBuffs`) or
+A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`), absolute into
+`global` — which **one** row is, `global.minimap.hide` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
 `containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:132`). `NS.DefaultFor(path)` reads the
 same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
+
+`global.minimap.hide` is the exception, and it is one branch in each seam rather than a second
+resolver: `NS.GetSetting` answers `not hide`, `NS.SetByPath` stores `not value` and calls
+`NS.Launcher:SetShown`, and `NS.DefaultFor` inverts `NS.defaults.global.minimap.hide` so the
+shipped default still comes from the one declaration. The path is spelled verbatim and carries no
+profile prefix, because the table is LibDBIcon's and lives outside any profile. Its `effect` is
+`"none"`: the button is not a container, and the seam already moved it.
 
 A row may also declare `effect`, which tells `modules/ContainerManager.lua` what a write needs beyond
 the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`, and

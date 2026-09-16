@@ -1,7 +1,8 @@
 # Module map
 
 Every file this repo authors, what it is for, and where it sits in load order. Vendored code —
-`libs/` (Ace3, LibStub, CallbackHandler, LibSharedMedia, AceGUI-3.0-SharedMediaWidgets, LibKa0s) and
+`libs/` (Ace3, LibStub, CallbackHandler, LibSharedMedia, AceGUI-3.0-SharedMediaWidgets,
+LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s) and
 `tests/_kit/` (the LibKa0s testkit) — is out of scope: it is documented upstream and never edited
 here.
 
@@ -53,6 +54,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, suspend/resume, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
 | `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `IsSafeKey` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
+| `core/LauncherSetup.lua` | `LibKa0s-Launcher-1.0` seam: `NS.Launcher`, the one broker object behind both the minimap button and a broker display. Left-click toggles the lock (rung (b)), right-click opens the panel | Conventional: `Register()` is called from `OnInitialize` after `InitDB`, and every click resolves at call time |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
 | `core/Database.lua` | AceDB init (with a no-AceDB fallback), `RunMigrations` and the `SCHEMA_STEPS` ladder (v2: `MigrateV2`; v3: `MigrateV3`, the Show/Hide
 category collapse and the `weaponEnchants` category row — both over every stored profile; v4: `MigrateV4`, which folds the retired `filter.onlyShown` toggle into the `uncategorized` categories' Hide), `PrepareProfile` (the registry's load pass: repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps directly, as architecture-§5 allows a named load pass), `NewContainerData` (the id mint, called only by the registry writer), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
@@ -155,6 +157,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_defaults.lua` | `defaults/Profile.lua` and `defaults/Categories.lua`: the shape invariants the code relies on |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |
 | `test_debuglogsetup.lua` | `core/DebugLogSetup.lua`: the descriptor this addon owns (flag, `[Init]` summary, chat acknowledgment, visibility refresh) and its stub |
+| `test_launcher.lua` | The launcher (launcher-§1..§5): one object registered twice under the folder name, the icon file's own TGA header, rung (b)'s left click driving the lock through the seam, right-click opening the panel, the Minimap button row's inverting get/set, the two reserved verbs, and three degraded hosts |
 | `test_locale.lua` | `locales/enUS.lua` defines every routed string and nothing unused |
 | `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways, every file:line citation resolving to a non-blank line |
 | `test_surface_parity.lua` | Each degradation stub against the live surface it stands in for |
@@ -174,4 +177,6 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `LICENSE` | MIT |
 | `README.md`, `CLAUDE.md`, `DEPENDENCIES.md` | The three root docs (documentation-§1/§2/§7) |
 | `docs/` | The engineering docs; every file is registered in `docs/ARCHITECTURE.md` → Documentation map, which also names the frozen bundle directories |
-| `media/logos/auramaster.logo.tga` | The logo the client loads (landing page, `## IconTexture`); `.png` and `.jpg` beside it are the source art |
+| `media/logos/auramaster.logo.tga` | The landing-page logo, drawn at 300×300 (options-ui-§5) |
+| `media/logos/auramaster.logo.128.tga` | The ICON logo, 128×128 and uncompressed 32-bit (layout-§4): `## IconTexture`, the minimap button and the broker row. Regenerated from the `.png`, never hand-edited |
+| `media/logos/auramaster.logo.png`, `….jpg` | The 2000×2000 source art and its render; shipped but never loaded — the client reads neither format |

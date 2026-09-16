@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.0-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-920%2F920_passing-green)
+![Tests](https://img.shields.io/badge/Tests-939%2F939_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -15,7 +15,11 @@ It is built around the aura rules Midnight brought in. Since patch 12.1 the game
 from addons during combat, so Aura Master never reads your auras at all. It tells the game's own aura
 display what to show and how to dress it, and the game handles the rest, in combat and out of it.
 
-Everything is set up from the addon's page under Settings → AddOns, or from chat with `/am`.
+Everything is set up from the addon's page under Settings → AddOns, from the button on your
+minimap, or from chat with `/am`. Left-clicking the minimap button unlocks your containers so you
+can see and move them, and clicking it again locks them; right-clicking it opens the settings.
+If you would rather not have the button, the Minimap button checkbox under General → Master
+controls turns it off.
 
 ## Screenshots
 

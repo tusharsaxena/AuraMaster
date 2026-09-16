@@ -6,7 +6,10 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:408`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:408`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
+  door: every verb still answers while the addon is disabled (slash-commands-§2). Disabling runs
+  the visibility pass and hides containers; it touches nothing about dispatch.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -15,6 +18,10 @@ eight-or-more trigger (documentation-§3).
   same combat refusal `config` does (slash-commands-§4, LibKa0s Slash minor 11). `/am help` prints
   the list. An unknown verb prints the library's unknown-command line and then help.
 - **Aliases:** `options` → `config`.
+- **`lock` and `unlock` have a second caller.** Both run through `Sl.SetLocked`, published for
+  the launcher's left click (`core/LauncherSetup.lua`, rung (b), launcher-§2), so the minimap
+  button, the two verbs and the General → Master controls *Lock frame* checkbox are three doors
+  onto one `NS.SetByPath("locked", …)` and print the same line.
 - **`NS.COMMANDS` is the addon's own**, an ordered array of positional triples `{name, desc, fn}`,
   passed *into* the library. The landing page renders the same table through `Slash.LandingRows`
   (`settings/About.lua`), so the page and `/am help` cannot drift.

@@ -48,7 +48,8 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
-| LibKa0s v1.39.0 | Eight modules wired, one setup file each — table below |
+| LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
+| LibKa0s v1.39.0 | Nine modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -58,6 +59,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
 | `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, suspend) |
 | `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |
+| `LibKa0s-Launcher-1.0` | `core/LauncherSetup.lua` | `NS.Launcher` — the one LibDataBroker object, registered with LibDBIcon under the folder name |
 | `LibKa0s-Slash-1.0` | `settings/Slash.lua` | the `/am` dispatcher over `NS.COMMANDS` |
 | `LibKa0s-Options-1.0` | `settings/OptionsSetup.lua` | `NS.Helpers` (the panel shell, flow engine, composers, and the `ChoiceGrid` and `IdList` widgets the Filters and General pages draw) |
 
@@ -68,7 +70,7 @@ the library is absent, exercised by `tests/degraded_env.lua`.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 40 authored Lua files under them: one locale, 14 core, 2 defaults, 11
+`settings/` (layout-§1) — 41 authored Lua files under them: one locale, 15 core, 2 defaults, 11
 modules and 12 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -93,7 +95,7 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **202** rows across six pages: General 17 (its Dispel Colors tab's six and its
+`NS.Schema` holds **203** rows across six pages: General 18 (its Dispel Colors tab's six and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 41, Layout 26, Bars 71 and Icons 42. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
@@ -114,7 +116,10 @@ cannot cheaply snapshot the rows it changes (`docs/schema.md`, `docs/profiles.md
 Almost every row belongs to one container, so container rows use a **relative path**:
 `container.bars.width` resolves against the container the settings banner has selected
 (`NS.State.activeContainerId`), falling back to the first one. Addon-wide rows keep absolute paths
-(`enabled`, `hideBlizzardBuffs`). A row's `default` is never typed in a page file —
+(`enabled`, `hideBlizzardBuffs`). **One row resolves outside the profile entirely:**
+`global.minimap.hide` is LibDBIcon's own key in the GLOBAL store, so the seam answers and writes
+it directly, inverting on the way (the row says shown, the key says hidden) and telling
+`NS.Launcher` so the button moves at once. A row's `default` is never typed in a page file —
 `NS.RegisterSchemaRows` stamps it from `defaults/Profile.lua`, and `NS.ValidateSchema` proves every
 path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the
 profile-wide `categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
@@ -267,6 +272,40 @@ test mode and `/am lock` / `/am unlock` its switch (preview-mode's exception, st
 | `/am version` | Print the addon version |
 
 Dispatch, the host verbs, the container-relative paths and the degraded path: `docs/slash-dispatch.md`.
+
+`enable` and `disable` are **aliases, not state**: both write the Master controls Enable row's own
+path through `NS.SetByPath`, so the verb and the checkbox cannot disagree. The dispatcher is
+registered in `OnInitialize` and is never torn down, so every verb — `enable` above all — still
+answers while the addon is disabled (slash-commands-§2); disabling hides containers, it does not
+remove the way back.
+
+## Launcher
+
+**One object, registered twice** (launcher-§1). `core/LauncherSetup.lua` owns it: it builds a single
+LibDataBroker-1.1 object of `type = "launcher"` through `LibKa0s-Launcher-1.0` and hands that very
+object to LibDBIcon-1.0, so the minimap button and any broker display (Titan Panel, ElvUI data
+texts, Bazooka) draw from one icon, one label and one `OnClick`. `NS.Launcher:Register()` is called
+from `OnInitialize` after `InitDB`, and is idempotent.
+
+| | |
+|---|---|
+| Owner | `core/LauncherSetup.lua` → `NS.Launcher` |
+| Registered as | `AuraMaster` — the **folder name**, on both registrations, because LibDBIcon keys the button's saved position by it |
+| Icon | `C.LOGO_ICON_PATH`, the same file `## IconTexture` names (launcher-§4) |
+| Left click | **Rung (b)**: toggles the lock, by calling `NS.Slash.SetLocked` — the same host verb `/am lock` and `/am unlock` run, which writes `locked` through `NS.SetByPath`. The launcher holds no copy of the lock |
+| Right click | Always `NS.OpenOptionsPanel()`. Neither button is reassignable and there is no setting for either |
+| Visibility | The **Minimap button** row, `global.minimap.hide`, in the global store (launcher-§3, `docs/settings-panel.md`) |
+
+**Rung (b) because unlocking is the preview.** This addon has no primary window, and no Test mode
+row — unlocking already draws every container's placeholder auras, so the unlocked view is its test
+mode and Lock frame is the switch (preview-mode's exception). The left button therefore spends
+itself on that switch, which it can because the panel is already on the right button.
+
+**Both broker libraries are optional.** `LibKa0s-Launcher-1.0` resolves them with
+`LibStub(…, true)` at Register time, so a client with LibDataBroker but no LibDBIcon gets the
+broker plugin and no button, one with neither gets a line naming what is missing, and one without
+LibKa0s at all gets this file's stub. In every case the stored `hide` is still written, so the
+checkbox reflects what the player chose and a later reload draws the button where they left it.
 
 ## Event Subscriptions
 

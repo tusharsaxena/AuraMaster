@@ -49,7 +49,9 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Trigger logic, custom code or conditions.** No user-supplied Lua, no "show when X and Y", no
   sounds, glows or per-spell colors. That is an aura framework, not a display addon.
 - **Cooldown tracking.** Spell cooldowns are not auras.
-- **An LDB feed or minimap button.** The settings panel and `/am` are the entry points.
+- **A live LDB data feed.** The addon ships a broker object and a minimap button (launcher-§1,
+  `core/LauncherSetup.lua`), but it is a `type = "launcher"` — something to click, not a value a
+  display watches. There is no count, timer or status text to feed one.
 - **Profile import/export strings.** AceDB profiles persist in `AuraMasterDB`; there is no
   serialization layer.
 - **Hiding Blizzard frames during combat.** Reparenting a Blizzard frame under lockdown is refused, so
