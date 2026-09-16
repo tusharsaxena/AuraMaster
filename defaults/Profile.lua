@@ -76,6 +76,19 @@ NS.defaults.global = {
     -- Spell ids modules/TimedSpells.lua has seen carry a duration. Account-wide on purpose: whether a
     -- spell is timed is a fact about the game, not a preference, and a character learns it for all.
     timedSpells = {},
+
+    -- LibDBIcon's OWN table, and the declaration here is what materializes it (architecture-§5):
+    -- the library writes `minimapPos` into it when the player drags the button and `hide` when
+    -- they use its own menu, and the Minimap button row writes the same `hide`. One record, never
+    -- a `show` beside it (launcher-§3, anti-pattern #81).
+    --
+    -- GLOBAL, deliberately, not profile: a ring of minimap buttons is furniture the player
+    -- arranged once, so a profile switch must not move it, and Reset all settings -- a profile
+    -- reset by definition (options-ui-§12) -- must not un-hide a button they deliberately hid.
+    --
+    -- `hide = false`: the button ships SHOWN. The row's label says shown and this key says
+    -- hidden, which is why settings/Schema.lua's seam inverts.
+    minimap = { hide = false },
 }
 
 --- The font block every text element carries: the six canonical leaves (options-ui-§16), then where

@@ -3,9 +3,9 @@
 ## Notes: Build your own buff, debuff and weapon enchant displays for player, target, focus and pet, as bars or icons.
 ## Author: add1kted2ka0s
 ## Version: 0.1.0
-## IconTexture: Interface\AddOns\AuraMaster\media\logos\auramaster.logo.tga
+## IconTexture: Interface\AddOns\AuraMaster\media\logos\auramaster.logo.128.tga
 ## SavedVariables: AuraMasterDB, AuraMasterPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
 ## DefaultState: enabled
 ## Category-enUS: Combat
 ## X-License: MIT
@@ -24,6 +24,8 @@ libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceGUI-3.0\AceGUI-3.0.xml
 libs\AceConfig-3.0\AceConfig-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 libs\LibKa0s\LibKa0s.xml
 libs\LibSharedMedia-3.0\lib.xml
 libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
@@ -60,6 +62,9 @@ core\Secrets.lua
 # LOAD-BEARING: after Constants (the font), State (the flag) and CoreSetup (the printer), and before
 # anything that calls NS.Debug.
 core\DebugLogSetup.lua
+# Conventional: the LibKa0s-Launcher-1.0 seam. Reads Constants at load; NS.db, the lock and the
+# settings panel are all reached at Register or click time.
+core\LauncherSetup.lua
 # LOAD-BEARING: the AceAddon promotion; reclaims NS.Print from AceConsole's embed.
 core\AuraMaster.lua
 # Conventional: reached from OnInitialize, at call time.

@@ -43,7 +43,7 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
   banner; Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:171`): the buff categories are not offered on a debuff container, and a
+  (`settings/Schema.lua:209`): the buff categories are not offered on a debuff container, and a
   weapon-enchant container sees only the rows that mean something for it.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other

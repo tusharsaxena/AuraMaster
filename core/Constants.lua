@@ -25,6 +25,12 @@ C.FONT_MONO_NAME = "JetBrains Mono"
 -- The landing page logo (options-ui-§5): a .tga, because the client cannot load .png or .jpg.
 C.LOGO_PATH = "Interface\\AddOns\\" .. addonName .. "\\media\\logos\\auramaster.logo.tga"
 
+-- The ICON logo (launcher-§4, layout-§4): a DIFFERENT, smaller file doing a different job --
+-- 128x128, uncompressed 32-bit, the face the client draws in the AddOns list (## IconTexture), on
+-- the minimap button and in a broker display. The landing page keeps the 300x300 file above;
+-- neither substitutes for the other.
+C.LOGO_ICON_PATH = "Interface\\AddOns\\" .. addonName .. "\\media\\logos\\auramaster.logo.128.tga"
+
 -- ---------------------------------------------------------------------------
 -- What a container shows
 -- ---------------------------------------------------------------------------

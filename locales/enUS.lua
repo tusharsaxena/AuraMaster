@@ -18,6 +18,7 @@ local L = NS.L
 L["The LibKa0s library is missing from this installation of Aura Master (expected in libs/LibKa0s)"] = "The LibKa0s library is missing from this installation of Aura Master (expected in libs/LibKa0s)"
 L["running on reduced built-in fallbacks."] = "running on reduced built-in fallbacks."
 L["so the debug console window is unavailable."] = "so the debug console window is unavailable."
+L["so the minimap button is unavailable."] = "so the minimap button is unavailable."
 L["The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."] = "The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."
 L["Debug logging on."] = "Debug logging on."
 L["Debug logging off."] = "Debug logging off."

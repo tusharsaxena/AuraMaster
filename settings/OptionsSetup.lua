@@ -217,13 +217,21 @@ if not lib then
         for k in pairs(spec.omit or {}) do omit[k] = true end
         if spec.frameless then omit.scale, omit.alpha, omit.locked = true, true, true end
         -- No Test mode leaf: this addon passes no `testModePath` (its unlocked view is the preview).
-        local rows = composeBlock({
+        -- The minimap leaf IS emitted, and STORED rather than session-only, because the live
+        -- composer emits it that way: a row this build left out is a row `/am set` and the
+        -- profile defaults would not know about, on the build whose panel will not open.
+        local leaves = {
             { leaf = "enabled", type = "bool" }, { leaf = "visibility", type = "string" },
             { leaf = "scale", type = "number" }, { leaf = "alpha", type = "number" },
             { leaf = "locked", type = "bool" },
             { leaf = "debugConsole", type = "bool", sessionOnly = true,
               path = spec.debugConsolePath or "state.debugConsole" },
-        }, { prefix = spec.prefix, page = spec.page, group = spec.group or Helpers.MASTER_GROUP,
+        }
+        if spec.minimapPath then
+            leaves[#leaves + 1] = { leaf = "minimap", type = "bool", path = spec.minimapPath }
+        end
+        local rows = composeBlock(leaves,
+            { prefix = spec.prefix, page = spec.page, group = spec.group or Helpers.MASTER_GROUP,
              subgroup = spec.subgroup, omit = omit, extra = spec.extra })
         return rows, function() end
     end

@@ -7,6 +7,7 @@ local _, NS = ...
 --     Master controls  [Enable Aura Master]  [General visibility]
 --                      [Master scale]        [Master alpha]
 --                      [Lock frame]          [Debug console]
+--                      [Minimap button]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
 --     Display          -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
 --     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
@@ -25,7 +26,14 @@ local _, NS = ...
 --
 -- NO TEST MODE ROW. Unlocking already shows every container's placeholder auras, so under
 -- preview-mode's exception (standard v2.49.0) the unlocked view is this addon's test mode and Lock
--- frame is its switch: no `testModePath` is passed, and there is no `/am test` verb.
+-- frame is its switch: no `testModePath` is passed, and there is no `/am test` verb. The fourth
+-- line is therefore [Minimap button] alone, which is the shape the composer computes for an addon
+-- that names one of the two paths.
+--
+-- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.hide`, and that is not an
+-- oversight of the empty prefix above: the table is LibDBIcon's own and lives in the GLOBAL store,
+-- outside any profile (launcher-§3). The row says SHOWN and the key says HIDDEN;
+-- settings/Schema.lua inverts once, at the write seam.
 
 local L = NS.L
 local H = NS.Helpers
@@ -33,6 +41,8 @@ local print = NS.Print
 local GS = NS.GeneralSpells
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
+-- VERBATIM: the global store, outside the profile prefix (launcher-§3).
+local MINIMAP_PATH = "global.minimap.hide"
 
 local masterRows, masterTail = H.MasterControls({
     prefix           = "",
@@ -40,6 +50,7 @@ local masterRows, masterTail = H.MasterControls({
     addonName        = "Aura Master",
     frameless        = false,
     debugConsolePath = DEBUG_CONSOLE_PATH,
+    minimapPath      = MINIMAP_PATH,
     onResetPosition  = function() NS.ContainerManager.ResetPositions() end,
     onResetAll       = function() StaticPopup_Show("AURAMASTER_RESET_ALL") end,
 })
@@ -54,6 +65,9 @@ local masterRows, masterTail = H.MasterControls({
 local masterEffect = {
     ["enabled"] = "visibility", ["visibility"] = "visibility",
     ["locked"]  = "visibility", ["alpha"]      = "visibility",
+    -- The minimap button is not a container: the write seam already moved it through
+    -- NS.Launcher:SetShown, and re-applying every container for it would be work for nothing.
+    [MINIMAP_PATH] = "none",
 }
 
 -- The two Blizzard-frame rows' whole effect: no container reads them, so none re-applies. Under

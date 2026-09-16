@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:401`), called from `OnInitialize`. There is no `SLASH_*` global.
+  (`settings/Slash.lua:408`), called from `OnInitialize`. There is no `SLASH_*` global.
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -72,7 +72,7 @@ migrated. Addressing the container by its number works as before.
 
 A path beginning `container.` resolves against the **selected** container — the one the settings
 banner last chose, or `/am select`, or the first container when nothing has been chosen this session
-(`NS.ActiveContainer`, `settings/Schema.lua:102`). So `/am set container.bars.width 300` means the
+(`NS.ActiveContainer`, `settings/Schema.lua:132`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
 `settings/Slash.lua:385`), so a value never reads as the only one. `/am containers` then `/am select`

@@ -77,14 +77,16 @@ end)
 
 test("options: the General page leads with Master controls, in canonical order", function()
     local rows = NS.SchemaForPage("general")
-    local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole" }
+    local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole",
+                   "global.minimap.hide" }
     for i, path in ipairs(want) do
         assertEqual(rows[i].path, path)
         assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)
     end
-    -- red under: a seventh composed row. Standard v2.49.0 (preview-mode): unlocking already shows the
-    -- placeholder preview, so Lock frame is the test mode's switch and no Test mode row is composed.
-    assertTrue(rows[7] == nil or rows[7].group ~= NS.Helpers.MASTER_GROUP, "Master controls has six rows")
+    -- red under: an eighth composed row. Standard v2.49.0 (preview-mode): unlocking already shows the
+    -- placeholder preview, so Lock frame is the test mode's switch and no Test mode row is composed;
+    -- the minimap row closes the set, in the first column of the line the Test mode row would share.
+    assertTrue(rows[8] == nil or rows[8].group ~= NS.Helpers.MASTER_GROUP, "Master controls has seven rows")
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 

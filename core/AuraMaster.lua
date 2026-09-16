@@ -26,6 +26,9 @@ if NS.Util and NS.Util.printf then NS.Printf = NS.Util.printf end
 function addon:OnInitialize()
     NS:InitDB()
     if NS.Slash and NS.Slash.Register then NS.Slash:Register() end
+    -- AFTER InitDB, never before: the launcher is handed `db.global.minimap`, which AceDB
+    -- materializes from the declared default there. Idempotent, so a later caller may repeat it.
+    if NS.Launcher then NS.Launcher:Register() end
 end
 
 -- PLAYER_LOGIN timing. Containers are built here rather than at load: the engine applies its access

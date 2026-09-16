@@ -7,8 +7,8 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:99`, `NS.CONTAINER_TEMPLATE`).
-- **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:33`).
+  filters, placement and look (`defaults/Profile.lua:112`, `NS.CONTAINER_TEMPLATE`).
+- **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:39`).
 - **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
   enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container also
   appends the weapon enchants after its buffs, unless the `weaponEnchants` category

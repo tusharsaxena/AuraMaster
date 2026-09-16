@@ -1,0 +1,111 @@
+local addonName, NS = ...
+
+-- core/LauncherSetup.lua — the LibKa0s-Launcher-1.0 seam: the minimap button and the broker plugin
+-- (launcher-§1).
+--
+-- ONE OBJECT, REGISTERED TWICE, and that is the whole point of the section. The library builds a
+-- single LibDataBroker-1.1 object of `type = "launcher"` and hands THAT object to LibDBIcon-1.0, so
+-- the minimap button and any broker display (Titan Panel, ElvUI data texts, Bazooka) draw from one
+-- icon, one label and one OnClick. Two click handlers for one feature is anti-pattern #81, and it
+-- cannot be written here because there is only one place to write it.
+--
+-- WHAT IS OURS AND NOTHING ELSE: the folder name, the logo, what the left button does, and how the
+-- settings panel opens. The object, the click dispatch, the two LibStub lookups and the Show/Hide
+-- plumbing are the library's.
+--
+-- RUNG (b) — THE PREVIEW SWITCH IS THE LOCK (launcher-§2). This addon has no primary window and no
+-- Test mode row: unlocking already draws every container's placeholder auras, so under
+-- preview-mode's exception the unlocked view IS the preview and `Lock frame` is its switch
+-- (settings/General.lua says the same thing where the row is composed). Left-click therefore
+-- toggles the lock, and it does so by calling the SAME host verb `/am lock` and `/am unlock` call,
+-- which writes `locked` through NS.SetByPath — the addon's single write seam (architecture-§5). No
+-- copy of the lock lives here; a second copy is the state that drifts on the next change.
+--
+-- RIGHT-CLICK ALWAYS OPENS THE PANEL, on every addon in the collection, which is what lets the left
+-- button be spent on the lock. Neither button is reassignable and there is no setting for either.
+--
+-- THE MINIMAP TABLE IS PASSED AS A FUNCTION, not as a table. `NS.db` does not exist at file load —
+-- core/Database.lua builds it in OnInitialize — and AceDB replaces whatever table was there, so a
+-- table captured here would be the one nothing writes to. The library resolves it at Register time.
+--
+-- THE ROW THAT SHOWS AND HIDES IT IS NOT HERE. It is a composed Master controls row
+-- (settings/General.lua's `minimapPath`), stored at `db.global.minimap.hide` in the GLOBAL store —
+-- global so a profile switch does not move the player's buttons and so Reset all settings, which is
+-- a profile reset, cannot un-hide a button they deliberately hid (launcher-§3). The row's label says
+-- SHOWN and LibDBIcon's key says HIDDEN, so settings/Schema.lua's seam inverts once, in one place,
+-- and calls NS.Launcher:SetShown from there.
+
+local Launcher = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
+
+if not Launcher then
+    -- Degrade, never error. Nothing in the addon reaches NS.Launcher except this file's Register and
+    -- the write seam's inversion, but both would otherwise need a nil guard that says nothing about
+    -- why, and the seam's `hide` write must still land so the player's choice survives a reload on a
+    -- library-less build. So the stub answers every member of the live instance, honestly: nothing
+    -- is registered, there is no object, and the stored `hide` is still the truth about the button.
+    local missing = NS.LIBKA0S_MISSING .. ", " .. NS.L["so the minimap button is unavailable."]
+    local announced = false
+    local function sayOnce()
+        if announced then return end
+        announced = true
+        if NS.Print then NS.Print(missing) end
+    end
+
+    --- The one table both halves read, or nil before the database exists.
+    local function store()
+        local g = NS.db and NS.db.global
+        return type(g) == "table" and g.minimap or nil
+    end
+
+    NS.Launcher = {
+        Register      = function() sayOnce() return false end,
+        IsRegistered  = function() return false end,
+        Object        = function() return nil end,
+        -- From the STORE, exactly as the live instance answers it, so the Master controls checkbox
+        -- shows what the player chose rather than reading `true` because nothing contradicted it.
+        IsShown       = function()
+            local t = store()
+            if not t then return true end
+            return not t.hide
+        end,
+        -- The store is updated; there is no button to move, which is what `false` reports.
+        SetShown      = function(_, shown)
+            local t = store()
+            if t then t.hide = not shown end
+            return false
+        end,
+    }
+    return
+end
+
+NS.Launcher = Launcher:New({
+    -- THE FOLDER NAME, and it is not cosmetic: LibDBIcon keys the button's saved position by it, so
+    -- a second spelling would drop the angle the player dragged the button to and label the broker
+    -- plugin with the other name. Both registrations take this one string.
+    name  = addonName,
+    -- The addon's own face, the same file `## IconTexture` names — never a Blizzard path and never a
+    -- numeric file id (anti-pattern #82). The 128 file, not the landing page's 300x300 one.
+    icon  = NS.Constants.LOGO_ICON_PATH,
+    -- What a broker display prints beside the icon. The title, not the folder name, because this one
+    -- IS cosmetic and the player reads it.
+    label = "Aura Master",
+
+    -- CALL-TIME, for the reason in the header: NS.db is AceDB's and arrives in OnInitialize.
+    minimap = function() return NS.db and NS.db.global and NS.db.global.minimap end,
+
+    -- Right-click, always, on every addon in the collection.
+    openSettings = function() NS.OpenOptionsPanel() end,
+
+    -- LEFT-CLICK, AND ITS PRESENCE IS THE RUNG. The same host verb `/am lock` and `/am unlock` run,
+    -- so the launcher, the two verbs and the Lock frame checkbox are three doors onto one write.
+    onClick = function()
+        if NS.Slash and NS.Slash.SetLocked then
+            NS.Slash.SetLocked(not NS.GetSetting("locked"))
+        end
+    end,
+
+    -- CALL-TIME forwarders: core/CoreSetup.lua's printer is reclaimed from AceConsole's embed in
+    -- core/AuraMaster.lua, which loads after this file.
+    print = function(line) NS.Print(line) end,
+    debug = function(tag, message) NS.Debug(tag, "%s", message) end,
+})

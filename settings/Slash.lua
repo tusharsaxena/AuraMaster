@@ -400,6 +400,11 @@ function Sl.LandingRows() return cli:LandingRows() end
 
 function Sl.OnSlash(_, msg) cli:OnSlash(msg) end
 
+--- Lock or unlock every container -- what `/am lock` and `/am unlock` run, published so the
+--- launcher's left click (core/LauncherSetup.lua, rung (b)) drives the SAME write and prints the
+--- same line. The lock is stored once, by NS.SetByPath; nothing here holds a copy of it.
+function Sl.SetLocked(locked) runLock(locked) end
+
 function Sl.Register()
     NS.addon:RegisterChatCommand("am", function(msg) Sl:OnSlash(msg) end)
     NS.addon:RegisterChatCommand("auramaster", function(msg) Sl:OnSlash(msg) end)

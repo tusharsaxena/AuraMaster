@@ -49,6 +49,36 @@ local CONTAINER = "container"
 local L = NS.L
 local NO_CONTAINER = L["No container exists yet — create one on Containers."]
 
+-- THE MINIMAP ROW IS THE ONE PATH THAT IS NOT THE PROFILE'S (launcher-§3).
+--
+-- Every other absolute path in this schema resolves against `db.profile`, which is why resolveRoot
+-- needs no root argument. This one resolves against `db.global`, and it is spelled `global.minimap.
+-- hide` VERBATIM -- the composer takes the path unprefixed for exactly that reason. The scope is the
+-- decision: a minimap button belongs to the installation, so a profile switch must not move it and
+-- Reset all settings, a profile reset, must not un-hide one the player deliberately hid.
+--
+-- AND THE SENSE INVERTS. The row is labeled "Minimap button" and means SHOWN; the stored key is
+-- LibDBIcon's own `hide`, which the library writes too when the player uses its menu. Storing the
+-- library's key is what keeps there being ONE record of one state (anti-pattern #81); the inversion
+-- is the whole cost of that, and it is paid HERE, once, in the read seam and the write seam, rather
+-- than at each of the three places that reach it (the checkbox, `/am set`, `/am reset`).
+local MINIMAP_PATH = "global.minimap.hide"
+
+--- LibDBIcon's table inside the global store, or nil before core/Database.lua has built NS.db.
+local function minimapStore()
+    local g = NS.db and NS.db.global
+    return type(g) == "table" and type(g.minimap) == "table" and g.minimap or nil
+end
+
+--- Whether the button is SHOWN -- the row's sense, inverted off the stored `hide`. A store that does
+--- not exist yet answers `true`, the shipped default, never nil: a checkbox handed nil draws unset
+--- and would tell the player the button is off while it is on screen.
+local function minimapShown()
+    local t = minimapStore()
+    if not t then return true end
+    return not t.hide
+end
+
 -- ---------------------------------------------------------------------------
 -- Path plumbing
 -- ---------------------------------------------------------------------------
@@ -129,6 +159,14 @@ end
 --- The shipped default for `path` — from the container template for a `container.` path, from the
 --- profile defaults otherwise. A deep copy, so a caller can never mutate the template.
 function NS.DefaultFor(path)
+    -- Inverted off the ONE declaration, defaults/Profile.lua's `global.minimap.hide = false`,
+    -- rather than typed as `true` here: one hardcoded default, as for every other row.
+    if path == MINIMAP_PATH then
+        local g = NS.defaults and NS.defaults.global
+        local t = type(g) == "table" and g.minimap or nil
+        if type(t) ~= "table" then return nil end
+        return not t.hide
+    end
     local parts = splitPath(path)
     if parts[1] == CONTAINER then
         return copy(readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
@@ -198,6 +236,7 @@ end
 --- debugging tool as much as a settings reader.
 function NS.GetSetting(path, containerId)
     if type(path) ~= "string" then return nil end
+    if path == MINIMAP_PATH then return minimapShown() end
     local row = index[path]
     if row and row.sessionOnly then
         if row.get then return row.get() end
@@ -349,6 +388,31 @@ local function announceWrite(section, containerId, path, value, sessionOnly, log
     -- emphatically does not need.
     local H = NS.Helpers
     if H and H.RefreshScalars then H.RefreshScalars() end
+end
+
+--- The minimap row: the one write in this schema that lands in `db.global`, and the one that
+--- INVERTS (launcher-§3). It is a real write through this seam like every other row -- it tallies
+--- inside a bulk bracket, it runs the row's onChange and it announces -- and it takes exactly two
+--- liberties, both forced by whose key it is:
+---
+---   * it stores `not value`, because the row says SHOWN and LibDBIcon's key says HIDDEN; and
+---   * it tells the launcher, so the button follows the checkbox NOW rather than at the next
+---     reload. The store is written FIRST, so a SetShown that cannot reach LibDBIcon (no library,
+---     a broker display only) still leaves the player's choice on disk.
+---
+--- Refused before the database exists rather than writing into a table AceDB is about to replace.
+local function writeMinimap(value)
+    local t = minimapStore()
+    if not t then return false, L["Setting not found: %s"]:format(MINIMAP_PATH) end
+    local row = index[MINIMAP_PATH]
+    value = not not value
+    local changed = bulk.depth > 0 and t.hide ~= (not value)
+    t.hide = not value
+    if NS.Launcher then NS.Launcher:SetShown(value) end
+    if changed then tally(1) end
+    if row and row.onChange then row.onChange(value, nil) end
+    announceWrite(row and row.page, nil, MINIMAP_PATH, value, false, false)
+    return true
 end
 
 --- A carve-out: the whole set, normalized by its CARVE_OUTS entry, written, then announced.
@@ -551,6 +615,7 @@ end
 --- @return boolean ok, string|nil err
 function NS.SetByPath(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+    if path == MINIMAP_PATH then return writeMinimap(value) end
     if CARVE_OUTS[path] then return writeCarveOut(path, value, containerId) end
     local sec = SECTIONS[path]
     if sec then return writeSection(path, value, containerId, sec) end
@@ -598,6 +663,11 @@ end
 --- @return boolean ok, string|nil err
 function NS.CheckWrite(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
+    -- Stored once the database exists; the value is a bool and nothing about it can be refused.
+    if path == MINIMAP_PATH then
+        if not minimapStore() then return false, L["Setting not found: %s"]:format(MINIMAP_PATH) end
+        return true
+    end
     if CARVE_OUTS[path] then return checkCarveOut(path, value, containerId) end
     if SECTIONS[path] then
         local v, err = prepareSection(path, value, containerId)
