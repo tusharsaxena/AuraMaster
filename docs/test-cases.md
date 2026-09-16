@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_launcher.lua (19)
+### test_launcher.lua (20)
 
 - launcher: one broker object, of type launcher, registered with LibDBIcon under the FOLDER name
 - launcher: Register is idempotent, so a second call builds no second button
@@ -45,7 +45,8 @@ badge and any count quoted in the docs must agree with it.
 - minimap row: composed, stored not session, default SHOWN, in its canonical position
 - minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
 - minimap row: one record of one state — LibDBIcon writes the very table the row writes
-- minimap row: GLOBAL, so a profile switch and Reset all settings both leave the button alone
+- minimap row: Reset all settings and a profile switch both leave the button alone
+- minimap row: the General page's Defaults button leaves the button alone and resets the rest
 - minimap row: /am set and /am reset reach it through the same seam, inverted the same way
 - verbs: /am enable and /am disable are aliases of the Enable row's path, holding no state
 - verbs: the dispatcher answers while the addon is disabled, or the pair is one-way
@@ -1092,7 +1093,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_launcher.lua | 19 |
+| test_launcher.lua | 20 |
 | test_database.lua | 64 |
 | test_schema.lua | 28 |
 | test_schema_paths.lua | 36 |
@@ -1137,4 +1138,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **939** |
+| **Total** | **940** |

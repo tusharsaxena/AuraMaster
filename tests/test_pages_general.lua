@@ -228,7 +228,7 @@ test("general: the page's Defaults tooltip no longer mentions a container's iden
     local NS, m = general()
     -- red under: the tooltip still describing container rows General's Defaults no longer reaches
     assertEqual(m.__subcategories.General.defaultsTooltip,
-        NS.L["Restore every General setting on this profile to its addon default. The spell categories' lists are not rows; each category has its own restore."])
+        NS.L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."])
 end)
 
 test("general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it", function()

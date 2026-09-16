@@ -30,10 +30,15 @@ local addonName, NS = ...
 --
 -- THE ROW THAT SHOWS AND HIDES IT IS NOT HERE. It is a composed Master controls row
 -- (settings/General.lua's `minimapPath`), stored at `db.global.minimap.hide` in the GLOBAL store —
--- global so a profile switch does not move the player's buttons and so Reset all settings, which is
--- a profile reset, cannot un-hide a button they deliberately hid (launcher-§3). The row's label says
+-- global so a profile switch does not move the player's buttons (launcher-§3). The row's label says
 -- SHOWN and LibDBIcon's key says HIDDEN, so settings/Schema.lua's seam inverts once, in one place,
 -- and calls NS.Launcher:SetShown from there.
+--
+-- AND IT SURVIVES EVERY RESET — a PROPERTY of the setting, not a consequence of the global store
+-- (launcher-§3, standard v2.54.0). Whether the button is shown is a per-installation display
+-- preference, the same class of thing as the POSITION LibDBIcon keeps in this very table and that no
+-- reset touches. settings/OptionsSetup.lua holds the one veto that makes that true here, because
+-- this addon's General page has a Defaults button that would otherwise walk the row back to shown.
 
 local Launcher = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
 
@@ -86,9 +91,14 @@ NS.Launcher = Launcher:New({
     -- The addon's own face, the same file `## IconTexture` names — never a Blizzard path and never a
     -- numeric file id (anti-pattern #82). The 128 file, not the landing page's 300x300 one.
     icon  = NS.Constants.LOGO_ICON_PATH,
-    -- What a broker display prints beside the icon. The title, not the folder name, because this one
-    -- IS cosmetic and the player reads it.
-    label = "Aura Master",
+    -- THE BRAND NAME IN PLAIN TEXT (launcher-§1). This is the string a broker display prints in its
+    -- own row, beside the other ten Ka0s addons, so it is the one field that decides whether the
+    -- collection reads as one collection in Titan Panel or as eleven unrelated addons. It is
+    -- deliberately NOT the TOC's `## Title`: a Title may carry color escapes and one in the
+    -- collection does, which would splatter that row across a list of plain-text ones. And it is not
+    -- the folder name: `AuraMaster` is the registration identifier above, which LibDBIcon keys the
+    -- saved position by; `Ka0s Aura Master` is the name a player reads. Two fields, two jobs.
+    label = "Ka0s Aura Master",
 
     -- CALL-TIME, for the reason in the header: NS.db is AceDB's and arrives in OnInitialize.
     minimap = function() return NS.db and NS.db.global and NS.db.global.minimap end,

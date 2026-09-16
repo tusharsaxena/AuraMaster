@@ -153,8 +153,11 @@ local function build(mainCategory)
         pageKey         = "general",
         defaultsButton  = true,
         -- Page-wide (options-ui-§13): the Dispel Colors rows are this page's, so Defaults takes them
-        -- back too. The spell categories' lists are not rows; each has its own restore.
-        defaultsTooltip = L["Restore every General setting on this profile to its addon default. The spell categories' lists are not rows; each category has its own restore."],
+        -- back too. The spell categories' lists are not rows; each has its own restore. And the
+        -- Minimap button row is exempt (settings/OptionsSetup.lua's `vetoedFromPanelReset`,
+        -- launcher-§3) -- it is on this page, so the tooltip says so rather than letting a press
+        -- silently skip a row the player can see.
+        defaultsTooltip = L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."],
     })
     ctx.panel.defaultsOnClick = function() H.RestoreDefaults("general", ctx) end
     H.__pageCtx.general = ctx

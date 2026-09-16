@@ -239,13 +239,15 @@ test("minimap row: one record of one state — LibDBIcon writes the very table t
     end
 end)
 
-test("minimap row: GLOBAL, so a profile switch and Reset all settings both leave the button alone",
-function()
+test("minimap row: Reset all settings and a profile switch both leave the button alone", function()
     local NS2 = withBroker()
     NS2.SetByPath(MINIMAP_PATH, false)
     assertEqual(NS2.db.global.minimap.hide, true)
 
-    -- Reset all settings IS a profile reset (options-ui-§12), and the button is not in a profile.
+    -- SURVIVING A RESET IS A PROPERTY OF THE SETTING (launcher-§3, standard v2.54.0), not something
+    -- derived from the global store. That this particular reset misses it BECAUSE it is a profile
+    -- reset is true here and is worth pinning, but it is not the reason it must — the page's own
+    -- Defaults button is a reset the same argument says nothing about, and the case below runs it.
     NS2.Helpers.RestoreAllDefaults()
     assertEqual(NS2.db.global.minimap.hide, true, "a reset must not un-hide a button they hid")
     assertEqual(NS2.GetSetting(MINIMAP_PATH), false)
@@ -253,6 +255,37 @@ function()
     -- Nor may a profile switch: the ring of buttons is furniture, arranged once.
     NS2.db:SetProfile("Somebody Else")
     assertEqual(NS2.db.global.minimap.hide, true, "still hidden on another profile")
+end)
+
+test("minimap row: the General page's Defaults button leaves the button alone and resets the rest",
+function()
+    local NS2, rec, mocks = withBroker()
+    NS2.SetByPath(MINIMAP_PATH, false)
+    NS2.SetByPath("hideBlizzardBuffs", true)
+    NS2.SetByPath("alpha", 0.25)
+    local shownBefore, hiddenBefore = #rec.shown, #rec.hidden
+
+    -- THE BUTTON A PLAYER PRESSES, not the library call behind it.
+    mocks.__subcategories.General.defaultsOnClick()
+
+    -- red under: dropping settings/OptionsSetup.lua's `vetoedFromPanelReset`. The minimap row IS a
+    -- General row and it declares `default = true` (SHOWN), so the page's walk reached it and one
+    -- press un-hid a button the player had deliberately hidden. Measured before the veto existed.
+    assertEqual(NS2.db.global.minimap.hide, true, "a page's Defaults must not un-hide it either")
+    assertEqual(NS2.GetSetting(MINIMAP_PATH), false, "and the checkbox still shows what they chose")
+    assertEqual(#rec.shown, shownBefore, "nothing told LibDBIcon to put the button back")
+    assertEqual(#rec.hidden, hiddenBefore, "and nothing moved it the other way either")
+
+    -- ONE ROW EXEMPTED, not a Defaults button turned off: every other General row came back.
+    assertFalse(NS2.db.profile.hideBlizzardBuffs)
+    assertEqual(NS2.db.profile.alpha, NS2.defaults.profile.alpha)
+
+    -- A SHOWN button is not re-hidden by the same press (launcher-§3's other direction).
+    NS2.SetByPath(MINIMAP_PATH, true)
+    hiddenBefore = #rec.hidden
+    mocks.__subcategories.General.defaultsOnClick()
+    assertEqual(NS2.db.global.minimap.hide, false)
+    assertEqual(#rec.hidden, hiddenBefore)
 end)
 
 test("minimap row: /am set and /am reset reach it through the same seam, inverted the same way",

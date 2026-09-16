@@ -72,6 +72,9 @@ band holds **the picker itself** (options-ui-§14):
   the selected container. On General it restores the General rows of the profile only. On Containers
   it restores the selected container's Enabled, Unit, Aura type and Style; a container's name is
   never reset (its row carries `noReset`), and `/am reset container.name` says so and changes nothing.
+  General's press also skips the **Minimap button** row — the only row any press skips because of
+  what kind of setting it is rather than because it has no default (launcher-§3, the row below) — and
+  the button's tooltip says so, since the row is on the page the player is looking at.
   Either press logs one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
 - **`noReset` does not reach Reset all settings, on purpose.** Reset all is a whole-profile reset
   (options-ui-§12, `db:ResetProfile`), not a row walk: it removes your own containers rather than
@@ -101,7 +104,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every handle and the placeholder preview; locking ends it. The unlocked view is this addon's test mode, so Lock frame is its switch |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
-| Minimap button | `global.minimap.hide` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label says SHOWN and the stored key says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once |
+| Minimap button | `global.minimap.hide` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label says SHOWN and the stored key says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.hide` still restores it |
 
 There is **no Test mode row**. Unlocking already shows every container's placeholder auras, so under
 preview-mode's exception (standard v2.49.0) the unlocked view is the test mode: `testModePath` is not

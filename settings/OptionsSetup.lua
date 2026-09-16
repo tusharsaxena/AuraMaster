@@ -16,11 +16,36 @@ local print = NS.Print
 
 local PARENT_TITLE = "Ka0s Aura Master"
 
+-- THE ONE ROW NO RESET THIS PANEL RUNS MAY TOUCH (launcher-§3, standard v2.54.0).
+--
+-- Whether the minimap button is shown is a PER-INSTALLATION DISPLAY PREFERENCE, the same class of
+-- thing as the POSITION LibDBIcon keeps in the very same table and that no reset in the collection
+-- touches. Nobody has ever wanted "reset my settings" to mean "and put the button back on my
+-- minimap". That is a property of the setting, and it does NOT follow from the row living in the
+-- global store: *Reset all settings* here is a profile reset and misses it for that reason, but this
+-- page's own DEFAULTS button walks every General row carrying a `default` and reached it — the row
+-- is on General, it declares `default = true` (shown), so one press un-hid a button the player had
+-- deliberately hidden. Measured, not assumed: `Helpers.RestoreDefaults("general")` did exactly that
+-- before this veto existed.
+--
+-- The veto is the descriptor's `applyDefault`, which is the library's SINGLE reset seam — both
+-- O.RestoreDefaults (a page's Defaults) and O.RestoreAllDefaults call it and nothing else — so one
+-- clause covers both resets and any reset walk added later. `/am reset global.minimap.hide` is NOT
+-- vetoed and must not be: that is the player naming this one row, which is how they bring a hidden
+-- button back, and settings/Slash.lua's descriptor carries its own applyDefault for exactly that.
+local MINIMAP_PATH = "global.minimap.hide"
+
+local function vetoedFromPanelReset(row)
+    return row.path == MINIMAP_PATH
+end
+
 -- The one rule about what a global reset must not touch, named once because it is enforced twice:
 -- by the library through skipRestoreAll, and by the degradation stub's own reset loop. It vetoes
--- the Profiles page and every profile-backed row (options-ui-§12): the global reset IS a profile
--- reset, so what the walk keeps is only what a profile reset cannot reach — the session rows.
+-- the minimap row (above), the Profiles page and every profile-backed row (options-ui-§12): the
+-- global reset IS a profile reset, so what the walk keeps is only what a profile reset cannot
+-- reach — the session rows.
 local function vetoedFromResetAll(row)
+    if vetoedFromPanelReset(row) then return true end
     if row.page == "profiles" then return true end
     return not row.sessionOnly
 end
@@ -95,7 +120,11 @@ local descriptor = {
 
     get          = panelRead,
     set          = function(path, value) NS.SetByPath(path, value) end,
-    applyDefault = function(row) NS.ApplyDefault(row) end,
+    -- THE PANEL'S ONE RESET SEAM, and therefore where the minimap veto lives (above).
+    applyDefault = function(row)
+        if vetoedFromPanelReset(row) then return end
+        NS.ApplyDefault(row)
+    end,
     allRows      = function() return NS.Schema end,
     rowsForPage  = function(pageKey, filter) return NS.SchemaForPage(pageKey, filter) end,
 
