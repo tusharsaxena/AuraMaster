@@ -42,19 +42,27 @@ end
 
 local function sortedKeys(t)
     local keys = {}
-    for k in pairs(t) do keys[#keys + 1] = k end
+    for k in pairs(t) do
+        local n = #keys
+        keys[n + 1] = k
+    end
     table.sort(keys)
     return keys
 end
 
 local function dumpRegs(t)
     local out = {}
-    for _, k in ipairs(sortedKeys(t)) do out[#out + 1] = k .. "x" .. t[k] end
+    for _, k in ipairs(sortedKeys(t)) do
+        local n = #out
+        out[n + 1] = k .. "x" .. t[k]
+    end
     return "{" .. table.concat(out, " | ") .. "}"
 end
 
 local function sameRegs(a, b)
-    if #sortedKeys(a) ~= #sortedKeys(b) then return false end
+    local na = #sortedKeys(a)
+    local nb = #sortedKeys(b)
+    if na ~= nb then return false end
     for k, n in pairs(a) do if b[k] ~= n then return false end end
     return true
 end
@@ -63,7 +71,10 @@ end
 local function regsOn(mocks, target)
     local out = {}
     for _, r in ipairs(mocks.__registrations()) do
-        if r.target == target then out[#out + 1] = r.kind .. ":" .. tostring(r.event) end
+        if r.target == target then
+            local n = #out
+            out[n + 1] = r.kind .. ":" .. tostring(r.event)
+        end
     end
     table.sort(out)
     return out
