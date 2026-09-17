@@ -619,10 +619,13 @@ end)
 --
 -- Disabled means the addon stands its FEATURES down. A verb that drives those features answers on
 -- one tagged line naming `/am enable` and does nothing else; everything a player needs to read and
--- repair settings, and to reach the panel, keeps answering. The gate is settings/Slash.lua's one
--- wrapping loop over NS.COMMANDS, so these cases drive the real dispatcher rather than the gate.
+-- repair settings, and to reach the panel, keeps answering. The gate is the LIBRARY's, closed by the
+-- descriptor's `isEnabled` (settings/Slash.lua), so these cases drive the real dispatcher.
+--
+-- The line is the collection's, not this addon's: `<BrandName> is disabled — enable it with
+-- /<slash> enable`, built by LibKa0s-Slash-1.0 from `brandName` and `slash`.
 
-local REFUSAL = "Aura Master is off — /am enable turns it back on"
+local REFUSAL = "Ka0s Aura Master is disabled — enable it with /am enable"
 
 test("slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing",
 function()
@@ -669,11 +672,18 @@ function()
     -- red under: a gate turned on the whole command surface. Nothing on slash-commands-§2's live
     -- list may ever be refused — a player must be able to read and repair settings, and reach the
     -- panel, while the addon is off, which is exactly when they are most likely to need to.
-    for _, line in ipairs({ "help", "config", "version", "list", "get alpha", "set alpha 0.5",
+    for _, line in ipairs({ "config", "version", "list", "get alpha", "set alpha 0.5",
                             "reset alpha", "debug", "debug off", "perf", "containers", "select 1" }) do
         local p = slash(NS2, lines, line)
         assertFalse(said(p, REFUSAL), "/am " .. line .. " must never be refused: " .. dump(p))
     end
+
+    -- `help` is the one live verb that carries the line, and it is NOT a refusal OF help: the index
+    -- prints in full, because the player has to be able to SEE `enable` to type it. The line sits
+    -- under the header, above the first row, as a heading for the state the rows are read in.
+    local help = slash(NS2, lines, "help")
+    assertEqual(help[2], REFUSAL, "the line follows the help header")
+    assertTrue(#help > 20, "and the whole index still prints: " .. dump(help))
     assertEqual(opened, 1, "/am config still opens the panel")
 
     -- And `set` really WROTE: the point of keeping it live is repair, not a polite answer.
@@ -700,8 +710,12 @@ function()
         NS2.SetByPath("enabled", false)
         local p = slash(NS2, lines, entry[1])
         -- red under: a verb added to NS.COMMANDS with no thought about the disabled state. The gate
-        -- is a wrapping loop over this table, so a new verb lands on the refusing side by default
-        -- and keeping it live is a deliberate edit to one named list.
-        assertEqual(said(p, REFUSAL), not LIVE[entry[1]], "/am " .. entry[1] .. ": " .. dump(p))
+        -- is the library's one decision over `liveVerbs`, so a new verb lands on the refusing side
+        -- by default and keeping it live is a deliberate edit to one named list.
+        -- `help` prints the line under its header in EITHER direction of this assertion, and that
+        -- is not a refusal: the index prints in full beneath it. The case above pins that shape.
+        if entry[1] ~= "help" then
+            assertEqual(said(p, REFUSAL), not LIVE[entry[1]], "/am " .. entry[1] .. ": " .. dump(p))
+        end
     end
 end)

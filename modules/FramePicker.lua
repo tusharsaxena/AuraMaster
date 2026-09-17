@@ -126,6 +126,13 @@ function FP.Start(pick, cancel)
     overlay:SetScript("OnUpdate", onUpdate)
 end
 
+--- Stop a pick in progress with no callback -- what the stand-down calls (slash-commands-§7). The
+--- overlay's OnUpdate goes with it, because a stood-down addon runs none; a canceled pick prints
+--- nothing, since the player did not cancel it.
+function FP.Stop()
+    stop()
+end
+
 --- Whether a pick is in progress.
 function FP.IsActive()
     return overlay ~= nil and overlay:IsShown() and true or false

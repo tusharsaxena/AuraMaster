@@ -138,6 +138,12 @@ end
 --- next frame. `system` marks a request the addon makes for itself, not for a change the player
 --- made: it waits like any other, but its deferral prints no notice (see noteDeferred).
 function CM.RequestApply(id, system)
+    -- A stood-down addon arms no timer (slash-commands-§7): the coalescing C_Timer is exactly the
+    -- shape anti-pattern #85 names -- a repaint that keeps re-arming and then finds nothing to paint.
+    -- Nothing is lost by dropping the request, because the stand-up re-applies everything from the
+    -- settings as they are then. The stand-up's own call gets through: LibKa0s-Lifecycle-1.0 empties
+    -- the hold set BEFORE it calls `standUp`, so the latch is already up by the time this is reached.
+    if NS.IsStoodDown() then return end
     if id == nil then
         pendingAll = true
     else
@@ -242,7 +248,9 @@ end
 --- the coalescing timer passes nothing.
 function CM.FlushPending(edge)
     scheduled = false
-    if Perf.suspended then return 0 end   -- performance-§6: held; resume's RequestApply drains it
+    -- The latch, not a flag of this file's own: a stood-down addon applies nothing, for either
+    -- reason it is down (slash-commands-§7). Stand-up's own RequestApply drains the queue.
+    if NS.IsStoodDown() then return 0 end
     local idle = not pendingAll and next(pending) == nil and next(retiring) == nil
     if CM.MustDefer() then
         if not idle then noteDeferred(edge, not userPending) end
@@ -266,10 +274,18 @@ function CM.FlushPending(edge)
 end
 
 --- Re-evaluate every container's show ladder (combat started or ended, a master setting changed).
+--- Answers `false` when combat refused part of the pass -- hiding a stood-down container's anchor is
+--- hiding an aura engine's ancestry, which lockdown forbids, so core/LifecycleSetup.lua holds that
+--- half pending and finishes it on PLAYER_REGEN_ENABLED.
 function CM.ApplyVisibility()
     local t0 = Perf.on and debugprofilestop()
-    for _, inst in pairs(CM.instances) do inst:ApplyVisibility() end
+    local done = true
+    for _, inst in pairs(CM.instances) do
+        local _, _, deferred = inst:ApplyVisibility()
+        if deferred then done = false end
+    end
     if t0 then Perf.Note("visibilityPass", debugprofilestop() - t0) end
+    return done
 end
 
 --- Whether `unit`'s class differs from the one `inst`'s last apply painted with. Two unresolved
@@ -502,11 +518,10 @@ local function requestFollowers(p)
     for _, id in ipairs(NS.Anchors.Followers(p.containerId)) do CM.RequestApply(id) end
 end
 
---- Build every container and start listening. Called once from core/AuraMaster.lua's OnEnable.
-function CM.Init()
-    if not NS.Compat.EnsureAuraContainer() then
-        print_(L["This client has no aura container API (Retail 12.1 or later is required); containers will not be drawn."])
-    end
+--- Subscribe to the bus. Separate from CM.Init because the stand-down UNREGISTERS these three
+--- (slash-commands-§7) and the stand-up has to put them back -- a handler left registered and gated
+--- on a flag is the draw gate the section exists to end (anti-pattern #85).
+function CM.StartListening()
     if not ev then
         ev = NS.NewBusTarget()
         -- A setting changed: run what its row's `effect` says — the visibility pass, nothing, or (the
@@ -528,6 +543,29 @@ function CM.Init()
             CM.RequestApply(nil, not (type(payload) == "table" and payload.byPlayer))
         end)
     end
+end
+
+--- Drop every subscription this file owns, and the queue behind them. What was pending is not kept:
+--- the stand-up rebuilds from the settings AS THEY ARE THEN, never from a snapshot taken on the way
+--- down (performance-§6).
+function CM.StopListening()
+    if ev then
+        ev:UnregisterAllMessages()
+        ev = nil
+    end
+    pending, pendingAll, userPending = {}, false, false
+end
+
+--- Whether this file is subscribed (a test seam).
+function CM.__listening() return ev ~= nil end
+
+--- Build every container and start listening. Called once from core/AuraMaster.lua's OnEnable, and
+--- only when the addon is actually running -- a stood-down addon subscribes to nothing.
+function CM.Init()
+    if not NS.Compat.EnsureAuraContainer() then
+        print_(L["This client has no aura container API (Retail 12.1 or later is required); containers will not be drawn."])
+    end
+    if not NS.IsStoodDown() then CM.StartListening() end
     CM.Sync()
     CM.RequestApply(nil, true)   -- the startup build: a reload in combat changed no setting
     CM.FlushPending()

@@ -14,7 +14,7 @@ local addonName, NS = ...
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 if not lib then
     -- Degrade, never error. The stub carries EVERY member the addon calls: the bracket gate and sink
-    -- (`on` / `Note`), the show-decision ladder's `suspended`, and `OnCommand`, because `/am perf` is
+    -- (`on` / `Note`), the probe's `suspended` view, and `OnCommand`, because `/am perf` is
     -- registered unconditionally and an honest line beats a Lua error.
     NS.Perf = {
         on        = false,
@@ -63,31 +63,13 @@ NS.Perf = lib:New({
         { key = "timedScan" },
     },
 
-    --- Make the addon inert without a /reload (performance-§6). Every event unregistered and every
-    --- container's engine disabled; visibility is refused AT THE SOURCE — modules/Container.lua's show
-    --- ladder checks NS.Perf.suspended as step 0, so nothing can re-enable an engine behind suspend's
-    --- back.
-    suspend = function()
-        local addon = NS.addon
-        if addon and addon.UnregisterLifecycleEvents then addon:UnregisterLifecycleEvents() end
-        if NS.TimedSpells and NS.TimedSpells.Stop then NS.TimedSpells.Stop() end
-        if NS.ContainerManager and NS.ContainerManager.ApplyVisibility then
-            NS.ContainerManager.ApplyVisibility()
-        end
-    end,
-
-    --- Restore from CURRENT state: re-register, then re-evaluate every container's visibility and
-    --- apply anything that changed while suspended.
-    resume = function()
-        local addon = NS.addon
-        if addon and addon.RegisterLifecycleEvents then addon:RegisterLifecycleEvents() end
-        if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
-        if NS.ContainerManager then
-            if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
-            -- The addon's own request: a player change held by the suspension keeps its notice.
-            if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
-        end
-    end,
+    -- THE SUSPENDED ARM IS A HOLD ON THE ADDON'S LATCH, not a second teardown path
+    -- (slash-commands-§7, LibKa0s-Lifecycle-1.0). This descriptor used to carry `suspend` and
+    -- `resume`; those two functions are now core/LifecycleSetup.lua's `standDown` and `standUp`,
+    -- MOVED rather than copied, and the probe takes the `perf` hold on that same latch. So
+    -- `/am disable` during a capture and a resume at the end of one cannot contradict each other:
+    -- the arm releases its own hold, and an addon the player disabled mid-run stays down.
+    lifecycle = NS.lifecycle,
 
     -- Perf output is not gated on the debug flag: a run is explicit user action.
     log = function(line)

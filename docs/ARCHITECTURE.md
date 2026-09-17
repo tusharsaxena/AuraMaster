@@ -43,13 +43,13 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:463-464`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:493-494`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:233`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.39.0 | Nine modules wired, one setup file each — table below |
+| LibKa0s v1.42.0 | Ten modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -57,7 +57,8 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | `LibKa0s-Env-1.0` | `core/EnvSetup.lua` | `NS.Meta`, `NS.Version` |
 | `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.MakeCloseButton` |
 | `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
-| `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, suspend) |
+| `LibKa0s-Lifecycle-1.0` | `core/LifecycleSetup.lua` | `NS.lifecycle` — the one latch; `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled` |
+| `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, and the `perf` hold on that latch) |
 | `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |
 | `LibKa0s-Launcher-1.0` | `core/LauncherSetup.lua` | `NS.Launcher` — the one LibDataBroker object, registered with LibDBIcon under the folder name |
 | `LibKa0s-Slash-1.0` | `settings/Slash.lua` | the `/am` dispatcher over `NS.COMMANDS` |
@@ -231,9 +232,9 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:370` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:154` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:514` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:153` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:524` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:370` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:159` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:514` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:158` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:539` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -273,18 +274,18 @@ test mode and `/am lock` / `/am unlock` its switch (preview-mode's exception, st
 
 **While the addon is disabled** the seven verbs that drive its features — `new`, `delete`, `lock`,
 `unlock`, `pick`, `resetposition`, `forgettimed` — answer on one tagged line naming `/am enable` and
-do nothing else (slash-commands-§2). Everything else keeps working, so settings stay readable and
-repairable and the panel stays one word away. The gate is one wrapping loop over `NS.COMMANDS` in
-`settings/Slash.lua`, with the live set named once as data; a verb added to the table refuses by
-default.
+do nothing else (slash-commands-§2). Everything else keeps working, the bare `/am` included: it
+opens the settings panel, which is the surface a player switches the addon back on from by hand. The
+gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
+`liveVerbs` naming the live set as data; a verb added to `NS.COMMANDS` refuses by default.
 
 Dispatch, the host verbs, the container-relative paths and the degraded path: `docs/slash-dispatch.md`.
 
 `enable` and `disable` are **aliases, not state**: both write the Master controls Enable row's own
 path through `NS.SetByPath`, so the verb and the checkbox cannot disagree. The dispatcher is
 registered in `OnInitialize` and is never torn down, so every verb — `enable` above all — still
-answers while the addon is disabled (slash-commands-§2); disabling hides containers, it does not
-remove the way back.
+answers while the addon is disabled (slash-commands-§2). What disabling *does* do is
+`## The disabled state`, below.
 
 ## Launcher
 
@@ -320,20 +321,68 @@ checkbox reflects what the player chose and a later reload draws the button wher
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:44` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
-| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:45` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:58` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
+| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:59` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:46` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:47-48` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
-| `UNIT_PET` | `core/AuraMaster.lua:49` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
-| `ADDON_LOADED` | `core/AuraMaster.lua:50` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
-| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:52` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:61-62` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
+| `UNIT_PET` | `core/AuraMaster.lua:63` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
+| `ADDON_LOADED` | `core/AuraMaster.lua:64` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:66` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
 | `UNIT_AURA` | `modules/TimedSpells.lua` (AceEvent, on its own target) — only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret) | `onUnitAura`: a safe-key `player`/`pet` schedules a scan 0.5 s later (bucket `timedScan`); every other unit is dropped. A scan that comes due after the gate closed is dropped too |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:236-240` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:258`) and
 is not addon code. The eight `core/AuraMaster.lua` registrations live in one function,
-`RegisterLifecycleEvents`, so the perf probe's suspend and resume remove and restore the same list.
+`RegisterLifecycleEvents`, so the stand-down and the stand-up remove and restore the same list.
+
+**Every row in this table is gone while the addon is stood down** — unregistered, not gated. The one
+exception is `PLAYER_REGEN_ENABLED`, which a stand-down that combat refused re-registers on its own
+handler until the combat-restricted half finishes; see below.
+
+## The disabled state
+
+**Disabled means the addon is not running.** Not hidden, not quiet, not skipping a repaint — not
+running (slash-commands-§7). Unticking *Enable Aura Master*, or `/am disable`, or a profile switch to
+a profile where the path is false, all land on the same seam and all produce the same outcome.
+
+**One latch, two named holds.** `core/LifecycleSetup.lua` builds one `LibKa0s-Lifecycle-1.0`
+instance. `disabled` is taken from the stored `enabled` path and is persisted; `perf` is taken by
+`LibKa0s-Perf-1.0` for a capture's suspended arm and is session-only. The addon is down whenever at
+least one hold is taken and comes back only when the last one is released, so `/am enable` during a
+capture does not resurrect it mid-run and a resume at the end of one does not stand up an addon the
+player switched off. There is no `StandUp()` to call; the only route out is releasing a hold.
+
+**What stands down**, in the same turn as the write:
+
+| | |
+|---|---|
+| The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
+| `modules/TimedSpells.lua` | `TS.StandDown()`: its `UNIT_AURA` gate and its two bus subscriptions |
+| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
+| The coalescing apply timer | `CM.RequestApply` returns immediately, so nothing re-arms |
+| `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
+| Every container | `ContainerClass:ShouldShow` answers no at **step 0**, so the engine is disabled, the preview and handle hidden and the anchor hidden |
+| Blizzard's buff and debuff frames | reparented back where they belong: an addon that is not running must not still be hiding them |
+
+**What survives, because it is setup and not a feature:** the chat command registration, the
+dispatcher and `NS.COMMANDS`; the settings-category registration and the panel body; the AceDB
+handle, `NS.SetByPath` and AceDB's three profile callbacks; the launcher's registration. The slash
+surface is unchanged — see *Slash Commands* above.
+
+**The combat carve-out.** Hiding a container's anchor is hiding an aura engine's ancestry, and
+reparenting a Blizzard frame is refused under lockdown, so neither is attempted in combat. The
+stand-down holds that half pending and finishes it on `PLAYER_REGEN_ENABLED` — the one registration a
+disabled addon keeps — releasing it the moment it fires.
+
+**Standing up rebuilds from current state**, never from a snapshot taken on the way down: a setting
+changed while the addon was off is reflected when it comes back.
+
+**Not a draw gate.** A handler that early-returns has not stopped watching, it has stopped reacting,
+and the client still walks the registration list and still enters Lua on every event
+(anti-pattern #85). `tests/test_disabled.lua` therefore asserts on the registration set, the live
+timer set, the shown frames, the SavedVariables writes and the printed lines — never on a handler's
+return value.
 
 ## Taint Notes
 
@@ -359,10 +408,10 @@ is not addon code. The eight `core/AuraMaster.lua` registrations live in one fun
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:219-223`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:155`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:161`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:417`).
+  button's ancestry (`modules/Container.lua:434`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),

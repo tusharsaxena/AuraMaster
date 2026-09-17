@@ -82,6 +82,14 @@ local console = NS.DebugLog:ConsoleCheckbox()
 
 for _, row in ipairs(masterRows) do
     row.effect = masterEffect[row.path]
+    -- THE MASTER SWITCH DRIVES THE LATCH, and this row is where it is wired (slash-commands-§7).
+    -- `/am enable`, `/am disable` and `/am set enabled` all write this same path through the same
+    -- seam, so they land on this same onChange -- one branch, not four. Disabled is not a visibility
+    -- pass: the addon stops registering, stops timing and stops writing, which is what NS.SyncEnabled
+    -- asks the latch for.
+    if row.path == "enabled" then
+        row.onChange = function() NS.SyncEnabled() end
+    end
     if row.path == DEBUG_CONSOLE_PATH then
         row.get, row.set = console.get, console.set
         -- Closed, stated here because the library's composer gives the row none. Without it a

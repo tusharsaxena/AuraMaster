@@ -6,10 +6,11 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:462`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:493`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
-  door: every verb still answers while the addon is disabled (slash-commands-§2). Disabling runs
-  the visibility pass and hides containers; it touches nothing about dispatch.
+  door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
+  the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
+  them (slash-commands-§7).
 - **Dispatch** is `LibKa0s-Slash-1.0` (slash-commands-§1), built from a descriptor at the bottom of
   `settings/Slash.lua`. The library trims the message, lowercases only the verb (paths are
   case-sensitive, and a color is several tokens), maps aliases, finds the verb in `NS.COMMANDS` and
@@ -57,25 +58,36 @@ The **Kind** column says who implements the verb, not who gates it — see below
 
 ## While the addon is disabled
 
-`/am disable` stands the addon's **features** down; it does not take the command surface with it
-(slash-commands-§2). A verb that **drives those features** answers on one tagged line naming
-`/am enable` and does nothing else:
+`/am disable` makes the addon **inert** — every registration gone, every timer canceled, every frame
+hidden, nothing written from a game event (slash-commands-§7, `docs/ARCHITECTURE.md` → *The disabled
+state*). It does **not** take the command surface with it. A verb that **drives the addon's
+features** answers on one tagged line naming `/am enable` and does nothing else:
 
-    [AM] Aura Master is off — /am enable turns it back on
+    [AM] Ka0s Aura Master is disabled — enable it with /am enable
+
+That wording is the **collection's**, not this addon's: `LibKa0s-Slash-1.0` builds it from the
+descriptor's `brandName` and `slash`, so eleven addons say it the same way and none of it is an
+`L[]` key here.
 
 Refusing: `new`, `delete`, `lock`, `unlock`, `pick`, `resetposition`, `forgettimed`.
 
 Still answering, always: `help`, `config`, `version`, `enable`, `disable`, `debug`, `perf` and the
-schema CLI (`get`, `set`, `list`, `reset`, `resetall`) — a player must be able to read and repair
-settings, and reach the panel, while the addon is off, and `enable` above all or the pair is
-one-way. `containers` and `select` stay live too, and that is this addon's own addition: almost every
-schema path here is container-relative, so those two are how a player aims `get`, `set` and `reset`
-at the container they mean. Neither draws, creates or deletes anything.
+schema CLI (`get`, `set`, `list`, `reset`, `resetall`) — **and the bare `/am`, which opens the
+settings panel**, in either state. A player must be able to read and repair settings, and to reach
+the panel, while the addon is off, and `enable` above all or the pair is one-way. `help` prints its
+index in full with the refusal line under the header, because the player has to be able to SEE
+`enable` to type it. `containers` and `select` stay live too, and that is this addon's own addition:
+almost every schema path here is container-relative, so those two are how a player aims `get`, `set`
+and `reset` at the container they mean. Neither draws, creates or deletes anything.
 
-**The gate is in one place**, `LIVE_WHILE_DISABLED` plus the loop beneath it in `settings/Slash.lua`,
-which wraps the handlers in `NS.COMMANDS` once. Both dispatchers — the library's and the degraded
-stub's — call `entry[3]`, so one wrap covers both, and a verb added to the table is gated by default
-until the live set names it.
+**The gate is the library's**, closed by the descriptor's `isEnabled` at the bottom of
+`settings/Slash.lua`, with `liveVerbs` naming the live set as data. There is no wrapper around the
+verb table and no per-verb guard: a verb added to `NS.COMMANDS` refuses by default until
+`liveVerbs()` names it. The degraded stub in the same file carries the same gate over the same
+descriptor fields, so a library-less build answers identically.
+
+**A green surface is not a stand-down.** Everything in this section is about what `/am` *says*; that
+the addon is actually inert is `tests/test_disabled.lua` steps 1–6.
 
 ### `/am new` words
 
@@ -111,7 +123,7 @@ changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:388`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:403`) does it; every other row prints as the
 library formats it.
 
 Examples:

@@ -72,11 +72,12 @@ Example: a bar option.
    `NS.SetByPath`, never a direct write.
 3. The reserved verbs — `help get set list reset resetall config version debug perf` — keep their
    meaning (slash-commands-§2).
-4. **Decide what it does while the addon is disabled.** A new verb REFUSES by default — the loop
-   under `LIVE_WHILE_DISABLED` in `settings/Slash.lua` wraps every `NS.COMMANDS` handler it does not
-   name — and that is right for anything driving the addon's features. If the verb instead helps a
-   player read or repair settings, or reach the panel, add its name to `LIVE_WHILE_DISABLED` and say
-   why there (slash-commands-§2).
+4. **Decide what it does while the addon is disabled.** A new verb REFUSES by default — the
+   library's gate refuses every `NS.COMMANDS` verb that `liveVerbs()` in `settings/Slash.lua` does
+   not name — and that is right for anything driving the addon's features. If the verb instead helps
+   a player read or repair settings, or reach the panel, add its name to `liveVerbs()` and say why
+   there (slash-commands-§2). If it registers an event, arms a timer or draws, it also belongs in
+   `core/LifecycleSetup.lua`'s `standDown` / `standUp` and in `tests/test_disabled.lua`.
 5. The help block and the landing page's command list are generated from `NS.COMMANDS`; nothing else
    to register. Add the description to `locales/enUS.lua`, the row to the Slash Commands table in
    `docs/ARCHITECTURE.md`, and the verb to `docs/slash-dispatch.md` — including which side of the

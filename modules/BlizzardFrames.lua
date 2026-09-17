@@ -40,12 +40,20 @@ end
 
 --- Apply the profile's two settings. Returns true when applied, false when it has to wait for
 --- combat to end, and nil when no profile is loaded (nothing to apply, and nothing waiting).
+---
+--- A STOOD-DOWN ADDON GIVES THE FRAMES BACK (slash-commands-§7). Hiding Blizzard's buff display is
+--- one of the things this addon DOES, so an addon that is not running must not still be doing it --
+--- the player's evidence that it is off is Blizzard's own frame reappearing. The latch is read here,
+--- inside the one function that decides, rather than at the call sites, so no caller can reparent
+--- the frames away behind it. Reparenting is refused under lockdown as it always was, and
+--- core/LifecycleSetup.lua re-runs this on PLAYER_REGEN_ENABLED.
 function BF.Apply()
     if InCombatLockdown() then return false end
     local p = NS.db and NS.db.profile
     if not p then return nil end
-    apply("BuffFrame", p.hideBlizzardBuffs)
-    apply("DebuffFrame", p.hideBlizzardDebuffs)
+    local down = NS.IsStoodDown()
+    apply("BuffFrame", not down and p.hideBlizzardBuffs)
+    apply("DebuffFrame", not down and p.hideBlizzardDebuffs)
     return true
 end
 

@@ -390,15 +390,20 @@ local function visibilityAllows(vis)
     return true
 end
 
---- The show ladder, in order. Step 0 is the perf probe's suspend (performance-§6): nothing below it
---- can re-enable a container behind suspend's back. A parked container (Park) shows nothing either:
---- its engine may still be built for a container that no longer lives under its id.
+--- The show ladder, in order. STEP 0 IS THE LATCH (slash-commands-§7, core/LifecycleSetup.lua):
+--- whether the addon is running at all, for either reason it might not be -- the player switched it
+--- off, or a perf capture is measuring its suspended arm. Nothing below it can re-show a container
+--- behind the latch's back, which is why the stand-down refuses AT THE SOURCE rather than hiding
+--- frames imperatively: a hidden frame comes back on the next combat transition or target swap.
+--- The stored `enabled` path is NOT read again here: on a build with no LibKa0s the degraded
+--- NS.IsStoodDown answers from that path itself, so step 0 is the one question. A parked container (Park) shows nothing either: its engine may still be
+--- built for a container that no longer lives under its id.
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
-    if NS.Perf.suspended or self.parked then return false, false end
+    if NS.IsStoodDown() or self.parked then return false, false end
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
-    if not (p and cfg and p.enabled and cfg.enabled) then return false, false end
+    if not (p and cfg and cfg.enabled) then return false, false end
     local previewing = not p.locked
     return visibilityAllows(p.visibility), previewing
 end
@@ -410,10 +415,22 @@ end
 --- or a disabled-but-still-drawn engine (out-of-combat visibility, the master switch, perf suspend, a
 --- parked container) would leave an invisible mouse-blocking rect over the world where nothing shows
 --- (review round 1, B-9: the inverse of the reported bug).
+--- @return boolean show, boolean previewing, boolean deferred -- `deferred` when combat refused the
+--- anchor half of a stand-down (core/LifecycleSetup.lua re-runs it on PLAYER_REGEN_ENABLED).
 function ContainerClass:ApplyVisibility()
     local show, previewing = self:ShouldShow()
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
+    -- THE ANCHOR ITSELF, and only while the addon is stood down. A stood-down addon draws NOTHING,
+    -- and an anchor left shown is a frame of ours still on screen. It is the aura engine's ancestry,
+    -- though, so it must not be shown or hidden under combat lockdown (events-frames-taint-§2):
+    -- that half waits for PLAYER_REGEN_ENABLED and is reported here as `deferred`.
+    local deferred = false
+    if NS.IsStoodDown() then
+        if InCombatLockdown() then deferred = true else self.anchor:Hide() end
+    elseif not self.anchor:IsShown() and not InCombatLockdown() then
+        self.anchor:Show()
+    end
     if self.engine then callEngine(self.engine, "SetEnabled", show and not previewing) end
     if self.blocker then self.blocker:SetShown(show and not previewing) end
     local L = cfg and cfg.layout or {}
@@ -426,7 +443,7 @@ function ContainerClass:ApplyVisibility()
     NS.Anchors.UpdateHandle(self, previewing and p and not p.locked)
     -- Containers attached to this one hang from its preview extent while it previews (L-4).
     NS.Anchors.PlaceAttached(self)
-    return show, previewing
+    return show, previewing, deferred
 end
 
 --- Tell the engine its unit may now be someone else (target / focus / pet changed).

@@ -75,7 +75,7 @@ These are not declined; the game forbids them, and a request for one is answered
   friendly units and debuffs on hostile units. The addon warns per container
   (`identityWarning`, `modules/FilterCompiler.lua:558`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
-  (`CM.MustDefer`, `modules/ContainerManager.lua:155`).
+  (`CM.MustDefer`, `modules/ContainerManager.lua:161`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
 

@@ -25,6 +25,11 @@ if NS.Util and NS.Util.printf then NS.Printf = NS.Util.printf end
 
 function addon:OnInitialize()
     NS:InitDB()
+    -- THE HOLD IS TAKEN FROM THE STORED PATH, here, before anything registers or draws. Not a
+    -- special case: it is the same NS.SyncEnabled call the checkbox, the two verbs and the profile
+    -- callbacks make (core/LifecycleSetup.lua). Surviving a /reload is the whole point of the
+    -- setting, which is why this hold is the persisted one and `perf` is not.
+    NS.SyncEnabled()
     if NS.Slash and NS.Slash.Register then NS.Slash:Register() end
     -- AFTER InitDB, never before: the launcher is handed `db.global.minimap`, which AceDB
     -- materializes from the declared default there. Idempotent, so a later caller may repeat it.
@@ -35,9 +40,15 @@ end
 -- restrictions to aura buttons at PLAYER_ENTERING_WORLD, and building before that gives every button's
 -- initializeFrame an unrestricted window (Blizzard_AuraContainerUtil.ApplyAccessRestrictions).
 function addon:OnEnable()
-    self:RegisterLifecycleEvents()
+    -- The panel and the dispatcher are SETUP and come up in either state; everything else is a
+    -- FEATURE and comes up only if the addon is actually running (slash-commands-§7). A disabled
+    -- addon that registered its events at login and unregistered them a moment later would still
+    -- have been watching for that moment, and would draw a container before hiding it.
+    if not NS.IsStoodDown() then
+        self:RegisterLifecycleEvents()
+        if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
+    end
     if NS.ContainerManager and NS.ContainerManager.Init then NS.ContainerManager.Init() end
-    if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.CreateOptionsPanel then NS.CreateOptionsPanel() end
 end
 
@@ -130,9 +141,18 @@ end
 local function prepareProfile()
     if NS.Database and NS.db then NS.Database.PrepareProfile(NS.db.profile) end
     if NS.State then NS.State.SetActiveContainer(nil) end
+    -- A PROFILE SWITCH CAN FLIP THE ENABLE PATH with no checkbox and no verb touched, so the latch
+    -- is re-read from the new profile before anything rebuilds against it. `enabled` is a stored
+    -- setting like any other, and a player switching to a profile where the addon is on expects it
+    -- to come up (slash-commands-§7). This is the one reason a disabled addon MUST keep AceDB's
+    -- three profile callbacks.
+    NS.SyncEnabled()
 end
 
 local function rebuildProfile()
+    -- The registry still follows the new profile while the addon is down -- its containers are the
+    -- ones the stand-up will build -- but nothing below the panel refresh draws or registers, because
+    -- the show ladder and CM.Init both read the latch.
     if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end

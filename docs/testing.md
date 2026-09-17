@@ -67,6 +67,17 @@ Suites worth knowing by name:
   reset or copy logs one line, from its handler; the reset's carries no count. A nested bracket logs
   once. An act an error stops logs its line once, marked ` (stopped by an error)`, counting the writes
   it stored.
+- **`tests/test_disabled.lua`**: the stand-down conformance suite slash-commands-§7 requires. Every
+  negative assertion reads the kit's recording mock (`__registrations`, `__timers()`,
+  `__shownFrames()`, `__svWrites()`, the printed lines), never a handler's return value, because an
+  early return is exactly what a draw gate does. Disabling through the write seam unregisters the
+  addon's events, messages and timers and hides its frames at the source; re-enabling rebuilds from
+  the settings as they are then; the `disabled` and `perf` holds release independently. The slash
+  step walks every entry in `NS.COMMANDS`: the reserved verbs, the schema CLI, `containers`,
+  `select` and the bare `/am` (which opens the panel) answer normally, and only the feature verbs
+  refuse on the collection's one line with no SavedVariables write. The launcher's left-click is
+  refused the same way; its right-click still opens the panel. The negative steps carry testing-§12
+  falsification comments.
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
   `## Documentation map` agreeing with `docs/` in both directions, and every `file:line` citation in

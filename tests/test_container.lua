@@ -120,12 +120,19 @@ test("container: the show ladder — suspend, the master switch, the container s
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     assertTrue((inst:ShouldShow()))
-    NS.Perf.suspended = true
-    assertFalse((inst:ShouldShow()), "step 0 is the perf probe's suspend")
-    NS.Perf.suspended = false
-    NS.db.profile.enabled = false
-    assertFalse((inst:ShouldShow()))
-    NS.db.profile.enabled = true
+    -- Step 0 is the LATCH, not a flag of the perf module's own: `P.suspended` reads through to
+    -- `lc:IsHeld("perf")` and refuses assignment, so the hold is taken rather than a boolean set.
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    assertFalse((inst:ShouldShow()), "step 0 is the latch — here, the perf hold")
+    NS.lifecycle:Release(NS.HOLD_PERF)
+    NS.lifecycle:Hold(NS.HOLD_DISABLED)
+    assertFalse((inst:ShouldShow()), "step 0 is the latch — here, the disabled hold")
+    NS.lifecycle:Release(NS.HOLD_DISABLED)
+    -- The master switch reaches the ladder ONLY through that latch: the stored path is not a second
+    -- rung (slash-commands-§7 wants a latch, not a draw gate), so it is driven through the write seam.
+    NS.SetByPath("enabled", false)
+    assertFalse((inst:ShouldShow()), "the master switch, through the latch")
+    NS.SetByPath("enabled", true)
     NS.Database.FindContainer(1).enabled = false
     assertFalse((inst:ShouldShow()))
     NS.Database.FindContainer(1).enabled = true

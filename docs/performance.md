@@ -14,7 +14,7 @@ readable-state timed-spell scan, bracketed `timedScan` (below). What remains is 
 and one path that runs on ordinary play (a target, focus or pet change).
 
 Other timers and frames of the addon's own: a next-frame `C_Timer.After(0)` that coalesces applies
-(`modules/ContainerManager.lua:149`), the half-second timed-spell scan timer, armed by a player or pet
+(`modules/ContainerManager.lua:155`), the half-second timed-spell scan timer, armed by a player or pet
 `UNIT_AURA` only while a container uses "only auras without a duration" and auras are readable, and
 the frame picker's `OnUpdate`, which runs only while a pick is in progress.
 
@@ -48,10 +48,10 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:47`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:90`, `:98` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:257-262` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `unitSwap` | — | `core/AuraMaster.lua:107`, `:98` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:266-270` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:343-375` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:270` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `visibilityPass` | — | `modules/ContainerManager.lua:287` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:332-340` | Dressing one bar or icon: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path; absent from a capture with no "without a duration" container |
 
@@ -92,14 +92,27 @@ as described in `docs/perf-analysis/README.md`.
 
 ### Suspend
 
-Arm B suspends the addon without a reload (performance-§6). `suspend` (`core/PerfSetup.lua:70`)
-calls `addon:UnregisterLifecycleEvents()` — the eight events `core/AuraMaster.lua` registers — then
-`NS.TimedSpells.Stop()`, which drops TimedSpells' own `UNIT_AURA` and its three gate events, and
-runs a visibility pass; `Container:ShouldShow` checks `NS.Perf.suspended` as **step 0**, so every engine is disabled and
-nothing — a combat transition, a target swap, a settings change — can enable one behind suspend's
-back, and a queued apply waits for resume: `ContainerManager.FlushPending` returns early while
-suspended and keeps the pending set. `resume` re-registers the events, calls `NS.TimedSpells.Sync()`, runs a visibility pass and re-applies every container from the
-current settings. The suspended flag is session-only.
+Arm B suspends the addon without a reload (performance-§6), and **it is not a mechanism of the perf
+module's own**: the probe takes the `perf` hold on the addon's one latch, and the addon goes down the
+same way it goes down when a player unticks *Enable Aura Master* (slash-commands-§7,
+`docs/ARCHITECTURE.md` → *The disabled state*). A second teardown path beside this one is
+anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
+on the first module added after the second was written.
+
+So `standDown` (`core/LifecycleSetup.lua:87`) calls `addon:UnregisterLifecycleEvents()` — the eight
+events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
+own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopListening()`,
+`FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
+every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
+enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
+(`core/LifecycleSetup.lua:100`) re-registers the events, subscribes again, and re-applies every
+container from the settings **as they are then**, never a snapshot. `NS.Perf.suspended` still reads
+true through the whole of arm B — the field is now the latch's answer to `IsHeld("perf")` rather than
+a boolean beside it — and the hold is session-only.
+
+**Releasing the `perf` hold does not stand up an addon the player also disabled**, and that is the
+whole reason the latch exists: `/am disable` is live during a capture, so without it a resume at the
+end of the run would bring the addon back under a player who had switched it off.
 
 ## Reading the report
 

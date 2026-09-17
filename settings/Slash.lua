@@ -76,57 +76,58 @@ NS.COMMANDS = {
 }
 
 -- ---------------------------------------------------------------------------
--- The disabled gate (slash-commands-§2)
+-- The disabled gate (slash-commands-§2, §7)
 -- ---------------------------------------------------------------------------
 --
--- DISABLED means the addon stands its FEATURES down — every container is hidden, nothing is drawn.
--- A verb that drives those features is therefore asking for something the addon is currently not
--- doing, and acting on it anyway is wrong twice over: the player does not get what they asked for,
--- and a silent no-op leaves them with no clue why. So such a verb answers on ONE tagged line that
--- names `/am enable`, and does nothing else. One line is the whole courtesy.
+-- THE GATE IS THE LIBRARY'S, and the host's whole share of it is three descriptor fields at the
+-- bottom of this file: `isEnabled`, `brandName` and `liveVerbs`. There is no wrapper around the verb
+-- table any more and there is no per-verb guard, because a branch written eleven times is a branch
+-- one host writes backwards -- which is precisely what happened the last time the rule moved.
 --
--- ONE PLACE, AND IT IS THE VERB TABLE ITSELF. Every dispatch path in this addon ends at an entry's
--- `entry[3]` — the library's dispatcher calls it, and so does the degradation stub's own OnSlash
--- below — so wrapping the handlers here gates both surfaces with no second copy and no per-verb
--- guard. A guard pasted into each verb is a dozen places to forget, and the NEXT verb added forgets
--- it by default; here the default runs the other way, and a new verb is gated unless the set below
--- names it.
+-- WHAT ANSWERS WHILE DISABLED: everything. `help`, `config`, `version`, `enable`, `disable`, `debug`,
+-- `perf` and the whole schema CLI -- `get`, `set`, `list`, `reset`, `resetall` -- and the BARE `/am`,
+-- which opens the settings panel. That last one is the case that settled it: the panel is the one
+-- surface a player switches the addon back on from by hand, and a rule that answers it with a
+-- refusal has hidden the off switch. Reading and repairing settings is what a player needs from an
+-- addon they have switched off, and `debug` and `perf` are diagnostics rather than features -- the
+-- usual reason to reach for either is that something is misbehaving.
 --
--- THE LIVE SET IS DATA, NAMED ONCE. slash-commands-§2's own list is the floor — a player must be
--- able to READ AND REPAIR SETTINGS and REACH THE PANEL while the addon is off, which is exactly
--- when they are most likely to need to, and `enable` above all or the pair is one-way. `debug` and
--- `perf` are diagnostics rather than features: the usual reason to reach for either is that the
--- addon is misbehaving.
-local LIVE_WHILE_DISABLED = {
-    help = true, config = true, version = true, enable = true, disable = true,
-    debug = true, perf = true,
-    get = true, set = true, list = true, reset = true, resetall = true,
-    -- TWO MORE THAN THE SECTION NAMES, and the reason is this addon's path model. Almost every
-    -- schema path here is container-relative (`container.bars.width`) and resolves against the
-    -- SELECTED container, so `/am containers` and `/am select` are how a player AIMS get, set and
-    -- reset at the container they mean — they are part of reading and repairing settings, not
-    -- features. Neither draws, hides, creates or deletes anything: `containers` prints a list, and
-    -- `select` moves one integer of session state. §2's list is what a refusal may never be turned
-    -- on, not a ceiling on what stays live.
-    containers = true, select = true,
-}
+-- WHAT IS REFUSED: this addon's OWN feature verbs, on one line, through the library's
+-- `DisabledLine()`. That is §2's SHOULD, and the wording is the collection's rather than ours -- one
+-- spelling across eleven addons, which is why it is not an L[] key here.
+--
+-- AND THE REFUSAL IS NOT THE STAND-DOWN. The addon being genuinely inert is slash-commands-§7 and
+-- it lives in core/LifecycleSetup.lua; this file only decides what the command surface says about
+-- it. A green gate here says nothing about whether anything is still registered.
 
---- Whether the addon is standing its features down. EXPLICITLY false only: before core/Database.lua
---- builds NS.db the read answers nil, and reading nil as "off" would refuse every feature verb on a
---- load that has not finished.
-local function standingDown()
-    return NS.GetSetting("enabled") == false
+--- Is the addon enabled, from the stored path? Asked at DISPATCH TIME by the library, never cached,
+--- so the command after an `/am enable` works. EXPLICITLY false only: before core/Database.lua builds
+--- NS.db the read answers nil, and reading nil as "off" would refuse every feature verb on a load
+--- that has not finished.
+local function isEnabled()
+    return NS.GetSetting("enabled") ~= false
 end
 
-for _, entry in ipairs(NS.COMMANDS) do
-    if not LIVE_WHILE_DISABLED[entry[1]] then
-        local run = entry[3]
-        entry[3] = function(rest)
-            -- One line, and NOTHING else: no partial work, no side effect, no second line.
-            if standingDown() then return print(L["Aura Master is off — /am enable turns it back on"]) end
-            return run(rest)
-        end
+--- The verbs that keep answering. The library's own default is the standard's twelve reserved verbs
+--- and it is named rather than copied, so a change upstream arrives with the re-vendor instead of
+--- being missed here.
+---
+--- TWO MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
+--- path here is container-relative (`container.bars.width`) and resolves against the SELECTED
+--- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
+--- container they mean -- they are part of reading and repairing settings, not features. Neither
+--- draws, hides, creates or deletes anything: `containers` prints a list, and `select` moves one
+--- integer of session state. §2's list is what a refusal may never be turned on, not a ceiling on
+--- what stays live.
+local function liveVerbs()
+    local out = { "containers", "select" }
+    for _, verb in ipairs((SlashLib and SlashLib.LIVE_VERBS) or {
+        "help", "config", "version", "enable", "disable", "debug", "perf",
+        "get", "set", "list", "reset", "resetall",
+    }) do
+        out[#out + 1] = verb
     end
+    return out
 end
 
 -- ---------------------------------------------------------------------------
@@ -353,8 +354,18 @@ if not SlashLib then
                 if e[1] == name then return e end
             end
         end
+        -- The refusal line, spelled as the library spells it (slash-commands-§7) rather than as a
+        -- second wording invented for the library-less build. Plain text plus the one gold command.
+        local live = {}
+        for _, name in ipairs(d.liveVerbs or {}) do live[name] = true end
+        stub.DisabledLine = function()
+            return ("%s is disabled \226\128\148 enable it with |cFFFFFF00%s enable|r")
+                :format(tostring(d.brandName or d.slash), d.slash)
+        end
         stub.OnSlash = function(_, msg)
             local raw = (msg or ""):match("^%s*(.-)%s*$") or ""
+            -- The bare command opens the panel in EITHER state: it is the surface the addon gets
+            -- switched back on from.
             if raw == "" then
                 local config = verb("config")
                 if config then return config[3]("") end
@@ -364,6 +375,10 @@ if not SlashLib then
             cmd = (cmd or ""):lower()
             cmd = (d.aliases or {})[cmd] or cmd
             local e = verb(cmd)
+            -- After the lookup, exactly as the library gates: a verb this addon SHIPS and is
+            -- standing down from is refused; a TYPO still gets `unknown command` and the index.
+            local down = type(d.isEnabled) == "function" and not d.isEnabled()
+            if down and e and not live[cmd] then return print(stub.DisabledLine()) end
             if e then return e[3](rest or "") end
             printf(L["Unknown command '%s'"], cmd)
             stub.PrintHelp()
@@ -406,6 +421,14 @@ cli = SlashLib:New({
     commands     = NS.COMMANDS,
     aliases      = { options = "config" },
 
+    -- The disabled gate (see the section above).
+    isEnabled    = isEnabled,
+    -- THE BRAND NAME IN PLAIN TEXT, the same string core/LauncherSetup.lua hands the broker object
+    -- as its `label` (launcher-§1). One brand spelling per addon, and that field is already
+    -- forbidden escape sequences, which is what makes it safe to drop into a colored line.
+    brandName    = "Ka0s Aura Master",
+    liveVerbs    = liveVerbs(),
+
     print   = function(line) print(line) end,
     version = function() return NS.Version() end,
 
@@ -447,6 +470,13 @@ end)
 
 -- Published for introspection (read by tests/run.lua and tests/test_surface_parity.lua).
 Sl.__cli = cli
+
+--- The one refusal line, built by the library from `brandName` and `slash`. Published because the
+--- launcher's refused left-click prints THIS line rather than a second spelling of it
+--- (launcher-§2, slash-commands-§7).
+function Sl.DisabledLine()
+    return cli.DisabledLine and cli:DisabledLine() or ""
+end
 
 --- The command list the landing page renders — the same rows `/am help` prints, without the chat
 --- indent.

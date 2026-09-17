@@ -297,8 +297,18 @@ page under the header.
 57. Out of combat, `/am disable` → `Aura Master disabled — /am enable turns it back on` and every
     container hides; General → **Enable Aura Master** is unticked. `/am enable` → `Aura Master
     enabled` and every enabled container shows again. Repeat both **in combat** → the same lines, no
-    gray refusal, no "will apply when combat ends" notice and no taint warning; containers hide and
-    return at once.
+    gray refusal, no "will apply when combat ends" notice and no taint warning; containers stop
+    drawing and return at once (the anchors themselves finish hiding when combat ends, step 59).
+58. **The disabled addon is inert, not merely blank** (slash-commands-§7). With it disabled: Blizzard's
+    own buff and debuff frames come back if you had them hidden; changing target, entering and leaving
+    combat and summoning a pet all do nothing at all; `/am` still opens the settings panel and
+    `/am list`, `/am get` and `/am set` still read and repair settings; `/am lock` answers
+    `Ka0s Aura Master is disabled — enable it with /am enable` on one line; **left-clicking the
+    minimap button** answers that same one line and changes nothing, while **right-clicking** still
+    opens the panel. Then `/reload` while disabled → it comes up disabled and still answers `/am`.
+59. **Disable it in combat.** Enter combat with containers shown, `/am disable` → the containers'
+    engines go quiet at once and the anchors finish hiding when combat ends; no taint warning either
+    side of the transition.
 
 ## P. Feedback batch 5 checks owed (2026-09-13)
 

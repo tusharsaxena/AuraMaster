@@ -133,10 +133,10 @@ function TS.Stop()
     listening = false
 end
 
---- Start or stop listening, from what the containers need right now. Suspend wins
---- (performance-§6): a suspended addon registers nothing.
+--- Start or stop listening, from what the containers need right now. THE LATCH WINS
+--- (slash-commands-§7): a stood-down addon registers nothing, for either reason it is down.
 function TS.Sync()
-    if not (TS.Needed() and not Perf.suspended) then return TS.Stop() end
+    if not (TS.Needed() and not NS.IsStoodDown()) then return TS.Stop() end
     events:RegisterEvent("PLAYER_REGEN_DISABLED", syncAuraListen)
     events:RegisterEvent("PLAYER_REGEN_ENABLED", syncAuraListen)
     events:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", syncAuraListen)
@@ -150,8 +150,33 @@ function TS.__events() return events end
 -- Whether a scan is needed changes when a container's filter or the registry does, so both messages
 -- re-sync — on this file's own bus target (architecture-§4).
 local bus = NS.NewBusTarget()
-bus:RegisterMessage(NS.MSG.CONFIG_CHANGED, function() TS.Sync() end)
-bus:RegisterMessage(NS.MSG.CONTAINERS_CHANGED, function() TS.Sync() end)
+
+--- Subscribe. Called at load, and again by the stand-up: the stand-down drops these two, because
+--- slash-commands-§7 counts a MESSAGE registration exactly as it counts a game event, and a
+--- subscription kept alive behind a flag is the draw gate the section exists to end.
+function TS.StartListening()
+    bus:RegisterMessage(NS.MSG.CONFIG_CHANGED, function() TS.Sync() end)
+    bus:RegisterMessage(NS.MSG.CONTAINERS_CHANGED, function() TS.Sync() end)
+end
+
+--- Everything this file has registered, gone: the two subscriptions and whatever UNIT_AURA gate
+--- TS.Sync last opened. A scan already queued is dropped by scanTick's `listening` guard rather than
+--- canceled -- C_Timer.After hands back no handle to cancel.
+function TS.StandDown()
+    TS.Stop()
+    bus:UnregisterAllMessages()
+end
+
+--- Subscribed again, then re-synced from what the containers need NOW.
+function TS.StandUp()
+    TS.StartListening()
+    TS.Sync()
+end
+
+--- This file's bus target (a test seam).
+function TS.__bus() return bus end
+
+TS.StartListening()
 
 --- How many spells are known to be timed.
 function TS.Count()

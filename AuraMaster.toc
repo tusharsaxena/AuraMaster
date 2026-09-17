@@ -55,6 +55,9 @@ core\CoreSetup.lua
 core\Bus.lua
 # Conventional: NS.Pool, reached at render time.
 core\PoolSetup.lua
+# LOAD-BEARING: before core/PerfSetup.lua, which takes this instance as its `lifecycle`
+# descriptor field; LibKa0s-Perf-1.0 raises at New without one.
+core\LifecycleSetup.lua
 # LOAD-BEARING: before core/AuraMaster.lua and every module taking NS.Perf as a load-time upvalue.
 core\PerfSetup.lua
 # Conventional: the secret-value gates, reached at call time.

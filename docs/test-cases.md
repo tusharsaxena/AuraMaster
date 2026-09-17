@@ -690,6 +690,21 @@ badge and any count quoted in the docs must agree with it.
 - picker: any other key passes through and the pick continues
 - picker: a new pick waits for the buttons to be released again before it can pick
 
+### test_disabled.lua (12)
+
+- disabled: enabled, the addon registers a non-empty set
+- disabled: every registration the addon owns is UNREGISTERED, not gated
+- disabled: what MUST survive does — the dispatcher, the panel, AceDB and the launcher
+- disabled: nothing is left armed, and nothing arms itself afterwards
+- disabled: every frame that was shown is hidden, at the source
+- disabled: firing every baseline event writes nothing, says nothing and shows nothing
+- disabled: every reserved verb answers, and the bare /am opens the panel
+- disabled: this addon's own feature verbs refuse on one line and reach no write seam
+- disabled: the launcher's left-click is refused and its right-click still opens the panel
+- disabled: re-enabling restores the registration set, from the settings as they are NOW
+- disabled: releasing one hold does not stand up an addon the other still holds down
+- disabled: a profile switch to an enabled profile stands the addon back up
+
 ### test_slash.lua (23)
 
 - slash: every command is a positional {name, desc, fn} triple
@@ -1117,6 +1132,7 @@ badge and any count quoted in the docs must agree with it.
 | test_render_coverage.lua | 2 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
+| test_disabled.lua | 12 |
 | test_slash.lua | 23 |
 | test_slash_verbs.lua | 40 |
 | test_bulklog.lua | 20 |
@@ -1141,4 +1157,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **943** |
+| **Total** | **955** |
