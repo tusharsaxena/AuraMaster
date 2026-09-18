@@ -62,8 +62,8 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 3 | B5 Style resets Fill (+ seam passes the replaced value) | done | 07f8016; review clean |
 | 4 | Text-style client APIs: fixture + four Compat wrappers | done | ecf5855; review clean |
 | 5 | Constants + the template parser | done | 11f86ab, fixes 3d8ebbb + ec9a485; review clean after 2 fix rounds |
-| 6 | The Text settings surface (data block, page, refusal reasons, notices, sections, slash) | done | 1002 tests, 0 luacheck; awaiting commit |
-| 7 | Style.lua shared helpers; Bars on the shared icon helpers | todo | |
+| 6 | The Text settings surface (data block, page, refusal reasons, notices, sections, slash) | done | 936199d; review clean (5 minors deferred to the final wave) |
+| 7 | Style.lua shared helpers; Bars on the shared icon helpers | in progress | |
 | 8 | Style_Text: the chain, bindings, loops, icon, preview fill | todo | |
 | 9 | Preview dispatch + the text shape in the engine's structure key | todo | |
 | 10 | The fourth starter "Player cooldowns" + Cat.StatesShowing + test fallout | todo | |

@@ -364,7 +364,7 @@ The tabs and the container picker stay live.
 | Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:186`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:161`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine

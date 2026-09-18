@@ -72,10 +72,23 @@ local function anyClassFlag(t)
     return false
 end
 
+--- The key of the style `cfg` is drawn in: "icons", "text", or "bars" for anything else (a style a
+--- later version removed draws as bars, the template's own style).
+function Style.StyleKey(cfg)
+    local style = cfg.style
+    if style == "icons" or style == "text" then return style end
+    return "bars"
+end
+
+--- The container's active style block: cfg.icons, cfg.text or cfg.bars.
+local function styleBlock(cfg)
+    return cfg[Style.StyleKey(cfg)]
+end
+
 --- Whether the container's active style block (or one of its text blocks) turns a class color on.
 --- Allocation-free: it runs on every unit swap for each container tracking the swapped unit.
 function Style.UsesClassColor(cfg)
-    local s = (cfg.style == "icons") and cfg.icons or cfg.bars
+    local s = styleBlock(cfg)
     if type(s) ~= "table" then return false end
     if anyClassFlag(s) then return true end
     for _, sub in pairs(s) do
@@ -94,13 +107,10 @@ local function textWidth(boxWidth, x)
     return math.max(1, boxWidth - math.abs(x))
 end
 
---- Apply one text block (the six canonical font leaves plus point / x / y / justify / show) to a
---- FontString parented under `anchorTo`. `tdef` is the template's block for the same element, which
---- the size, point and justify fall back to. `boxWidth` is the width the text may take (its host's):
---- a single-anchor font string sized to its own string has nothing to justify within, so a text given
---- a box is as wide as the box less its offset. A second anchor, set after this, overrides the width.
-function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
-    if not (fs and t) then return end
+--- Apply the six canonical font leaves of `t` (options-ui-§16) to a FontString: face, size, flags,
+--- color (with its class-color companion) and shadow. `tdef` is the template's block for the same
+--- text, which the size falls back to.
+function Style.ApplyFont(fs, t, tdef)
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
     local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
@@ -112,6 +122,16 @@ function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
     else
         fs:SetShadowOffset(0, 0)
     end
+end
+
+--- Apply one text block (the six canonical font leaves plus point / x / y / justify / show) to a
+--- FontString parented under `anchorTo`. `tdef` is the template's block for the same element, which
+--- the size, point and justify fall back to. `boxWidth` is the width the text may take (its host's):
+--- a single-anchor font string sized to its own string has nothing to justify within, so a text given
+--- a box is as wide as the box less its offset. A second anchor, set after this, overrides the width.
+function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
+    if not (fs and t) then return end
+    Style.ApplyFont(fs, t, tdef)
     fs:ClearAllPoints()
     local point = t.point or tdef.point
     local x = tonumber(t.x) or 0
@@ -119,6 +139,46 @@ function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
     fs:SetWidth(textWidth(boxWidth, x))
     fs:SetJustifyH(t.justify or tdef.justify)
     fs:SetWordWrap(false)
+end
+
+-- ---------------------------------------------------------------------------
+-- The icon beside a bar or a line of text
+-- ---------------------------------------------------------------------------
+-- Shared by modules/Style_Bars.lua and modules/Style_Text.lua. `s` is the stored style block and
+-- `sdef` the template's block it was copied from (D.bars, D.text); both carry the same icon leaves:
+-- iconSize, iconZoom and the composed icon-border block.
+
+--- The icon's side: its stored size, or the template's when that is missing; zero means `h`, the
+--- element's height.
+function Style.IconSizeFor(s, sdef, h)
+    local size = tonumber(s.iconSize) or sdef.iconSize
+    return size > 0 and size or h
+end
+
+--- The icon border's thickness when it draws, else 0: how far the art is inset inside the icon's box.
+function Style.IconInset(s, sdef)
+    if not Style.OrTemplate(s.iconBorderShow, sdef.iconBorderShow) then return 0 end
+    if Style.OrTemplate(s.iconBorderStyle, sdef.iconBorderStyle) == "None" then return 0 end
+    return tonumber(s.iconBorderSize) or sdef.iconBorderSize
+end
+
+--- Place the icon's `size` box at `side` ("LEFT" | "RIGHT") of `host`: the icon border (am.iconBorder)
+--- takes the whole box and the art (am.icon) sits inside it, inset by the border's thickness, as
+--- modules/Style_Icons.lua's layoutIcon does, so a thick border never hides the art.
+function Style.LayoutIcon(host, am, s, sdef, side, size)
+    local inset = Style.IconInset(s, sdef)
+    am.iconBorder:ClearAllPoints()
+    am.iconBorder:SetSize(size, size)
+    am.iconBorder:SetPoint(side, host, side, 0, 0)
+    Style.ApplyBorder(am.iconBorder, inset > 0, Style.OrTemplate(s.iconBorderStyle, sdef.iconBorderStyle), inset,
+        s.iconBorderColor or sdef.iconBorderColor, s.useClassColorIconBorder)
+
+    local art = math.max(0, size - 2 * inset)
+    am.icon:Show()
+    am.icon:SetSize(art, art)
+    am.icon:SetPoint(side, host, side, side == "RIGHT" and -inset or inset, 0)
+    local z = tonumber(s.iconZoom) or sdef.iconZoom
+    am.icon:SetTexCoord(z, 1 - z, z, 1 - z)
 end
 
 -- ---------------------------------------------------------------------------
@@ -229,6 +289,7 @@ local WEAK_KEYS = { __mode = "k" }
 local NO_COLOR = {}
 local formatters = {}
 local curves = setmetatable({}, WEAK_KEYS)
+local blinkCurves = setmetatable({}, WEAK_KEYS)
 local dispelMaps = setmetatable({}, WEAK_KEYS)
 
 --- The engine's text formatter for one time format, shared by every button that uses it.
@@ -242,22 +303,40 @@ local function formatterFor(fmt)
     return f
 end
 
---- The expiring-text color curve for one threshold and color pair: `curves[expiring][normal][threshold]`.
-local function curveFor(threshold, expiring, normal)
-    local byNormal = curves[expiring]
+--- The memo slot for one color pair under `root`: `root[expiring][normal]`, a table keyed by
+--- threshold, each level built on demand. Weak on both colors, so a replaced color takes its entries.
+local function curveSlot(root, expiring, normal)
+    local byNormal = root[expiring]
     if not byNormal then
         byNormal = setmetatable({}, WEAK_KEYS)
-        curves[expiring] = byNormal
+        root[expiring] = byNormal
     end
     local byThreshold = byNormal[normal]
     if not byThreshold then
         byThreshold = {}
         byNormal[normal] = byThreshold
     end
-    local tc = byThreshold[threshold]
+    return byThreshold
+end
+
+--- The expiring-text color curve for one threshold and color pair: `curves[expiring][normal][threshold]`.
+local function curveFor(threshold, expiring, normal)
+    local slot = curveSlot(curves, expiring, normal)
+    local tc = slot[threshold]
     if tc == nil then
         tc = NS.Compat.ExpiringTextColor(threshold, expiring, normal)
-        byThreshold[threshold] = tc
+        slot[threshold] = tc
+    end
+    return tc
+end
+
+--- The blinking running-out curve for one threshold and color pair, memoized as curveFor is.
+local function blinkCurveFor(threshold, blink, normal)
+    local slot = curveSlot(blinkCurves, blink, normal)
+    local tc = slot[threshold]
+    if tc == nil then
+        tc = NS.Compat.BlinkTextColor(threshold, blink, normal)
+        slot[threshold] = tc
     end
     return tc
 end
@@ -299,12 +378,9 @@ end
 --- is told (elementWidth / elementHeight), and what the drag handle and the preview are sized to.
 --- @return number width, number height
 function Style.ElementSize(cfg)
-    if cfg.style == "icons" then
-        local ic = cfg.icons or {}
-        return tonumber(ic.width) or D.icons.width, tonumber(ic.height) or D.icons.height
-    end
-    local b = cfg.bars or {}
-    return tonumber(b.width) or D.bars.width, tonumber(b.height) or D.bars.height
+    local key = Style.StyleKey(cfg)
+    local s, sdef = cfg[key] or {}, D[key]
+    return tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
 end
 
 --- Hide `am`'s regions and remember which were shown, so a return to that style draws them as they
@@ -330,7 +406,7 @@ local function restoreRegions(frame, am)
     frame.__amShown[am] = nil
 end
 
---- The regions `frame` carries for `style` ("bars" | "icons"), building them when absent or built
+--- The regions `frame` carries for `style` ("bars" | "icons" | "text"), building them when absent or built
 --- for the other style (C-4: a button restyled from bars to icons must not be dressed with a bar's
 --- regions, which have no cooldown). The other style's regions are hidden, never destroyed: frames
 --- are never freed in WoW, so a switch back finds and re-shows them. Identity is `__amByStyle`, the
@@ -356,6 +432,15 @@ function Style.RegionsFor(frame, style, build)
     am = build(frame)
     byStyle[style] = am
     return am
+end
+
+--- The styler that dresses `cfg`'s elements: Style.Bars, Style.Icons or Style.Text (each decorates
+--- NS.Style at file scope in its own file, so it is looked up here, at call time).
+function Style.Styler(cfg)
+    local key = Style.StyleKey(cfg)
+    if key == "icons" then return Style.Icons end
+    if key == "text" then return Style.Text end
+    return Style.Bars
 end
 
 -- The dress in progress, handed to runDress through upvalues: Lua 5.1's xpcall passes no arguments
@@ -387,7 +472,7 @@ Style.WithStack = withStack
 --- the styler's own stack attached (withStack).
 function Style.Element(frame, cfg, engine, classColor)
     local t0 = Perf.on and debugprofilestop()
-    local styler = (cfg.style == "icons") and Style.Icons or Style.Bars
+    local styler = Style.Styler(cfg)
     if styler then
         dressClass, dressStyler, dressFrame, dressCfg, dressEngine = classColor, styler, frame, cfg, engine
         local ok, err = xpcall(runDress, withStack)
@@ -453,6 +538,68 @@ function Style.BindDurationText(frame, fs, s, sdef)
             (s.time and s.time.fontColor) or NO_COLOR)
     end
     Style.Bind(frame, "SetDurationText", fs, opts)
+end
+
+-- ---------------------------------------------------------------------------
+-- A Text style's duration run (modules/Style_Text.lua)
+-- ---------------------------------------------------------------------------
+
+local textFormats = setmetatable({}, WEAK_KEYS)
+local PERCENT_BREAKPOINTS = { { threshold = 0, format = "%d%%" } }
+local percentFormatter   -- nil until first asked for; false when the client cannot build one
+
+--- The rule formatter every percent component shares: "%d%%", RemainingPercent being 0-100.
+local function percentFor()
+    if percentFormatter == nil then
+        percentFormatter = NS.Compat.CreateRuleFormatter(PERCENT_BREAKPOINTS) or false
+    end
+    return percentFormatter or nil
+end
+
+--- The `textFormat` option for one compiled duration piece (modules/TextTemplate.lua) in one time
+--- format: the piece's format string, and one { property, formatter } component per {} in order, a
+--- time through the look's seconds formatter (formatterFor) and a percent through "%d%%". Built once
+--- per piece and time format; the parser memoizes its pieces, so a hit allocates nothing.
+function Style.DurationTextFormat(piece, timeFormat)
+    local byFormat = textFormats[piece]
+    if not byFormat then
+        byFormat = {}
+        textFormats[piece] = byFormat
+    end
+    local key = timeFormat or false
+    local tf = byFormat[key]
+    if tf then return tf end
+    local components = {}
+    for i, c in ipairs(piece.components) do
+        components[i] = { property = NS.Compat.DurationProperty(c.prop),
+            formatter = (c.fmt == "percent") and percentFor() or formatterFor(timeFormat) }
+    end
+    tf = { formatString = piece.format, components = components }
+    byFormat[key] = tf
+    return tf
+end
+
+--- The `textColor` of a Text style's duration run: the blinking curve when `expiringBlink` is on (in
+--- the running-out color when the recolor is on too, else in `normal`), the plain running-out curve
+--- when only the recolor is on, else nil, and the font color stands.
+local function runTextColor(s, sdef, normal)
+    local threshold = tonumber(s.expiringThreshold) or sdef.expiringThreshold
+    local expiring = s.expiringColor or NO_COLOR
+    if s.expiringBlink then
+        return blinkCurveFor(threshold, s.expiringColorOn and expiring or normal, normal)
+    end
+    if s.expiringColorOn then return curveFor(threshold, expiring, normal) end
+    return nil
+end
+
+--- Bind a Text style's duration run: `textFormat` (Style.DurationTextFormat) through the prebuilt
+--- `binding` (Compat.CreateDurationBinding, nil on a client without one), recolored by the
+--- running-out curve or the blinking one (runTextColor). `normal` is the line's font color, which a
+--- curve returns to above the threshold. `sdef` is the template's block the threshold falls back to.
+function Style.BindDurationFormat(frame, fs, textFormat, binding, s, sdef, normal)
+    Style.Bind(frame, "SetDurationText", fs, {
+        textFormat = textFormat, binding = binding, textColor = runTextColor(s, sdef, normal or NO_COLOR),
+    })
 end
 
 --- `seconds` written as a live button's time text reads (B-5), for a placeholder: through the
