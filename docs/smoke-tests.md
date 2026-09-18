@@ -551,3 +551,45 @@ nothing).
 93. **Without the libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one chat line naming
     Aura Master and the missing library, **no error frame**, and the addon otherwise works. Rename
     `libs/LibDataBroker-1.1` aside too, `/reload` → the same. Put both back.
+
+## S. The Text style (issue #2)
+
+94. **The default template on player buffs.** Style a player-buff container as Text: names, ` x3`
+    stacks and ` - 12s`, all live in combat; a timeless buff shows its name only.
+95. **Several durations.** Template `$spellname$ $remainingduration$ / $maxduration$ ($remainingpercent$)`,
+    justified Left, then Right: the line reads and lines up both ways.
+96. **Dispel type.** `$spellname$[ ($dispeltype$)]` on a target-debuff Text container: correct type
+    names; nothing (brackets included) on a typeless debuff.
+97. **Loops.** Pulse, Blink and Bounce, each through a pull: no piece overlaps another while it
+    animates; a change made in combat starts when combat ends.
+98. **Running out.** Recolor on, then Blink on: the duration run turns the color, then blinks, in the
+    last N seconds; the rest of the line keeps the font color.
+99. **The icon.** Icon Left, then Right, with a border: the text starts after the icon and its gap,
+    and a long line is cut at its box rather than drawn under the icon.
+100. **Refusals.** In the Template box and with `/am set container.text.template $spellname$ $bogus$`
+     (no quotes): chat prints `Invalid value for container.text.template` and, indented, the rule
+     that broke; the stored template does not change. Try each rule of spec §3.2 once.
+101. **Style switching.** A container Bars → Text → Icons → Text, out of combat: each redraws cleanly,
+     and Layout → Growth → Fill follows (Columns, Rows, Columns).
+102. **Weapon enchants.** A weapon-enchant container styled Text shows the enchant's name and time.
+103. **The Player cooldowns starter.** On a NEW profile, the "Player cooldowns" Text container shows
+     an offensive and a defensive cooldown when popped, and nothing else (no food, flask, mount or
+     raid buffs).
+104. **The running-out blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
+     in 0.01 s increments with delays under REPEAT, so it reads as a blink, not a flicker or a smooth
+     fade.
+105. **Nested clipping.** A template wider than the box, on a narrow Text container: the line is cut
+     at the box edge, never drawn past it or under a neighboring container.
+106. **Dispel type text.** `[$dispeltype$]` on a Bleed debuff and on an Enrage-type buff: Bleed prints
+     "Bleed"; check what Enrage's own dispel name actually reads (is it really "Enrage"?) and record
+     it.
+107. **A Text button built in combat.** With a Text container already up, let it gain a brand-new aura
+     mid-fight (one the engine has not drawn before): the new button dresses and animates like every
+     other one, with no error.
+108. **Icon Left → None live.** On an unlocked, already-dressed Text container showing its icon on the
+     Left, switch Icon position to None: the icon disappears cleanly, with no stray icon left behind
+     or reappearing on the next aura change.
+109. **A literal percent sign.** Template `$remainingduration$ % $maxduration$`: the line shows a
+     literal `%` between the two times, not a formatting artifact or an error.
+110. **Bracketed stacks.** Template `[[[$stacks$]]]`: on a stacked aura the line reads `[3]` (or
+     however many stacks); on a non-stacking aura the brackets do not appear at all.

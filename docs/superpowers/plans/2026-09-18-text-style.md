@@ -67,9 +67,9 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 8 | Style_Text: the chain, bindings, loops, icon, preview fill | done | 53fc6a4; review clean |
 | 9 | Preview dispatch + the text shape in the engine's structure key | done | 5dc3f39; review clean |
 | 10 | The fourth starter "Player cooldowns" + Cat.StatesShowing + test fallout | done | 7b4754e; review clean |
-| 11 | Render coverage walks the Text page | done | batched with 12; suite green (1038/1038), luacheck 0/0 |
-| 12 | perf: a text restyle scenario | done | batched with 11; restyleText row added, same-shape re-dress builds 0 frames; suite green (1038/1038), luacheck 0/0 |
-| 13 | Part A docs | todo | |
+| 11 | Render coverage walks the Text page | done | 9eae306; review clean |
+| 12 | perf: a text restyle scenario | done | 115e927; review clean |
+| 13 | Part A docs | in progress | |
 | 14 | B1 unlock keeps live auras; a standard session-only test mode | todo | |
 | 15 | B2a LibKa0s v1.44.0 `removeStyle = "icon"` (STOP before tag/push) | todo | |
 | 16 | B2b re-vendor LibKa0s v1.44.0 into Aura Master | todo | needs the owner's go-ahead on 15 |

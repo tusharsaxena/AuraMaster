@@ -4,17 +4,15 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-955%2F955_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1038%2F1038_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
-debuffs or your weapon enchants, and whether they draw as timer bars or as icons. Make as many as you
-like and trim each one down to the auras you actually care about. They can sit anywhere on screen or
-hang off another frame.
+debuffs or your weapon enchants, and whether they draw as timer bars, as icons or as lines of text.
+Make as many as you like and trim each one down to the auras you actually care about. They can sit
+anywhere on screen or attach to another container or any in-game frame.
 
-It is built around the aura rules Midnight brought in. Since patch 12.1 the game hides aura details
-from addons during combat, so Aura Master never reads your auras at all. It tells the game's own aura
-display what to show and how to dress it, and the game handles the rest, in combat and out of it.
+Aura Master is built on top of the new Aura Container APIs introduced in 12.1. The game hides aura details from addons during combat, so Aura Master never reads your auras at all. It tells the game's own aura display what to show and how to style it, and the game handles the rest, in combat and out of it.
 
 Everything is set up from the addon's page under Settings → AddOns, from the button on your
 minimap, or from chat with `/am`. Left-clicking the minimap button unlocks your containers so you
@@ -69,6 +67,15 @@ nothing; reading and changing settings keeps working. If you change something el
 waits until combat ends (or, inside a key, encounter or match, until that's over), and chat tells you
 which.
 
+A **Text** container draws each aura as one line, from a template you write on its Text page, such
+as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname$`, `$stacks$`,
+`$dispeltype$`, `$remainingduration$`, `$maxduration$`, `$elapsedduration$`, `$remainingpercent$` and
+`$elapsedpercent$`; text inside `[ ]` hides along with the token it holds (so ` x3` shows only at two
+or more stacks, and ` - 12s` only on an aura with a duration). The page lists them all, and a line
+can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. A new
+profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
+cooldowns.
+
 Everything else is on the addon's page under Settings → AddOns, which `/am` on its own opens.
 `/am help` (or `/auramaster help`) lists every command.
 
@@ -82,9 +89,9 @@ addon can still show your auras in the middle of a boss fight. The steps go like
    to Show, or a single set when none is) and hands them to the aura display the game added in 12.1.
 3. The game watches that unit's auras, in combat too, where addons aren't allowed to look, and keeps
    the ones that match.
-4. For each match the game makes a bar or an icon, and Aura Master dresses it with your textures,
-   fonts, colors and border. The game fills in the icon, the name, the time left and the stack count,
-   and runs the countdown.
+4. For each match the game makes a bar, an icon or a line of text, and Aura Master dresses it with
+   your textures, fonts, colors and border. The game fills in the icon, the name, the time left and
+   the stack count, and runs the countdown.
 5. When you change a setting, Aura Master rebuilds the rules and redresses what's already on screen as
    soon as the game allows it.
 
@@ -100,7 +107,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 |----------|--------|
 | Do I need to install anything else? | No. Everything the addon needs comes inside it. |
 | Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change and says so in chat. If the lock outlasts combat because an encounter, key or match is still going, it says so once more. The change goes in as soon as the lock lifts. |
-| Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned and tracked as a GitHub issue, and so is a text-only container style. |
+| Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned and tracked as a GitHub issue. |
 | Can I put a container on my unit frame? | Yes. On Layout → Anchor use **Pick a frame…** and click it, or set **Attach to** to *Named frame* and type the frame's name. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
 | Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on friendly units and debuffs on hostile ones. Categories, dispel types and the other filters work on any unit. |
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |

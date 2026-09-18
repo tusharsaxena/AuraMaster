@@ -16,6 +16,7 @@ is a defect in this doc (documentation-§3).
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
+| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
@@ -171,14 +172,14 @@ selected) on one line. With no container, that line and one sentence are all the
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enabled's "which container is this". Name and Enabled carry no heading of their own — one above a tab's first row only repeats the tab |
 | Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
 | Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
-| Style | `container.style` | string | Bars / Icons; structural (rebuilds the engine) |
+| Style | `container.style` | string | Bars / Icons / Text; structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
 re-choosing the same style keeps a Fill set by hand (B5).
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
-Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
+Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
 ### Filters (41 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -403,6 +404,35 @@ settings." — and every control is drawn disabled, as on the Bars page.
 `dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
 harmful auras with a dispel type only. The art sits above your border and replaces it there; every
 other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
+
+### Text (31 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+
+Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put two
+read-only blocks between its rows: the token cheat sheet under the Template box, and the centering
+note under Placement. Its rows are still ordinary schema rows — the panel, `/am set`, Defaults and the
+resets all reach them through the one write seam.
+
+The Template row's `validate` is the parser (`modules/TextTemplate.lua`'s `TT.Validate`): a refused
+template is never stored, and its reason reaches the player through the write seam's third return
+(`settings/Schema.lua`), printed under "Invalid value for container.text.template" — in the panel and
+by `/am set` alike.
+
+Running out is dimmed (the running-out swatch excepted, since a swatch is read for its alpha even
+unused) when the template carries no duration token, with a note saying so; the Loop rows are dimmed
+per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
+Bounce).
+
+When the selected container is drawn as bars or icons, the same small muted-gold note heads every tab
+— naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
+its Style to Text on the Containers page to use these settings.") — and every control is drawn
+disabled, as on the Bars and Icons pages.
+
+| Tab | Rows (all under `container.text.`) |
+|---|---|
+| General | Size: `width`, `height`. What each line says: `template` (+ the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
+| Font | the composed font block under `font.`; Countdown: `timeFormat` |
+| Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
 
 ### Profiles (`settings/Profiles.lua`)
 

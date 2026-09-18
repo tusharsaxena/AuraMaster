@@ -7,9 +7,9 @@ in the topic docs registered under [Documentation map](#documentation-map) (docu
 
 Ka0s Aura Master draws player-built aura **containers**. A container is one unit (`player`,
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL`, `HARMFUL`, or
-`ENCHANT` for the player's temporary weapon enchants — `:39`) and one style (`bars` or `icons` —
-`:43`), plus its filters, placement and look. A profile holds any number of them; a fresh profile is
-seeded with three (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:234`).
+`ENCHANT` for the player's temporary weapon enchants — `:39`) and one style (`bars`, `icons` or
+`text` — `:48`), plus its filters, placement and look. A profile holds any number of them; a fresh
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:235`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -85,8 +85,10 @@ then its four sub-pages — Filters, Layout, Bars, Icons, each marked with `NS.S
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
 profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one
 engine), `modules/ContainerManager.lua` (the registry and the deferred apply, each container's apply
-guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its two style
-files (dressing a button). Placement is `modules/Anchors.lua`. A container attached to another
+guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its three style
+files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per container by
+`Style.Styler`), plus the pure template parser the Text style draws from
+(`modules/TextTemplate.lua`). Placement is `modules/Anchors.lua`. A container attached to another
 continues its chain root's flow (`Anchors.EffectiveLayout`, `Anchors.DerivedPoints`), and a write to a
 flow or attachment path re-applies its followers (`Anchors.Followers`). While a container previews,
 the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
@@ -261,7 +263,7 @@ test mode and `/am lock` / `/am unlock` its switch (preview-mode's exception, st
 | `/am resetall` | Reset every setting to defaults (a profile reset) |
 | `/am containers` | List your containers; the selected one is marked |
 | `/am select id-or-name` | Choose the container settings apply to |
-| `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`) |
+| `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`/`text`) |
 | `/am delete id-or-name` | Delete a container |
 | `/am lock` | Lock every container in place |
 | `/am unlock` | Unlock containers so they can be dragged (shows placeholder auras) |
@@ -447,11 +449,25 @@ return value.
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
   and release cannot cancel the wrong aura (`modules/Style.lua:533-535`).
+- **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
+  three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
+  restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is
+  logged. There is no Scale loop: glyphs scaled past their anchored boxes overlap the next piece.
 
 ## Known Limitations
 
 - **Units are player, target, focus and pet.** Party units 1–5 are deferred and tracked as a GitHub
-  issue; so is a text-only container style.
+  issue.
+- **A Text line centers only when its template is one piece.** A line is a chain of font strings the
+  engine writes secret, so the chain's width is never readable; a multi-piece template set to Center
+  lines up Left, and the Text page says so (`Style.Text.JustifyFor`).
+- **A Text token can be used once, the duration tokens must sit together, and there is no caster
+  token.** The engine has one binding per field (one spell name, one stack count, one dispel type, one
+  duration text whose format holds every duration value); it has none for the caster
+  (`modules/TextTemplate.lua`).
+- **A Text animation cannot start, stop or change in combat.** Every call on an engine button's
+  objects is refused in combat; loops are built and played at dress time and keep running, and a
+  change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
   (`identityWarning`, `modules/FilterCompiler.lua:558`), rendered in orange on the Filters page.

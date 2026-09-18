@@ -144,16 +144,31 @@ The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constant
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
+### `text`
+
+The Text style (issue #2). `width` (220), `height` (16); `template`
+(`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
+refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` only for a one-piece
+template), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, size
+12); `timeFormat` (`"blizzard"`); the icon — `icon` (`"NONE"`), `iconSize` (0 = the line's height),
+`iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
+`iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
+false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
+`animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); running out — `expiringColorOn`
+(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false). An existing container
+gains the block by the ordinary backfill; there is no schema-version bump.
+
 ### The text block
 
-Every text element (`bars.name`, `bars.time`, `bars.stacks`, `icons.time`, `icons.stacks`) has the
-six canonical font leaves (options-ui-§16) and then its placement: `show` (`true`), `font`
-(`"Friz Quadrata TT"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`), `useClassColorFont` (`false`),
-`fontFlags` (`"OUTLINE"`), `fontShadow` (`false`), `point`, `x`, `y`, `justify`.
+Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
+`icons.stacks`) has the six canonical font leaves (options-ui-§16) and then its placement: `show`
+(`true`), `font` (`"Friz Quadrata TT"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`),
+`useClassColorFont` (`false`), `fontFlags` (`"OUTLINE"`), `fontShadow` (`false`), `point`, `x`, `y`,
+`justify` (the Text style's `text.font` carries the six font leaves only).
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:234`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:235`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -161,6 +176,7 @@ over the template:
 | Player buffs | player | HELPFUL | bars | `TOPRIGHT` −240, −220; enchants draw by the `weaponEnchants` category's default (Show) |
 | Player debuffs | player | HARMFUL | icons | `TOPRIGHT` −240, −160; horizontal, grows left |
 | Target debuffs (mine) | target | HARMFUL | icons | `castBy = "mine"`; `CENTER` 0, −160; horizontal, grows right |
+| Player cooldowns | player | HELPFUL | text | `CENTER` −260, −40; vertical, grows right and down; `filter.categories` from `Cat.StatesShowing({ "offensiveCDs", "defensives" })`: every other buff category Hidden, Uncategorized included |
 
 ## Session state (not persisted)
 

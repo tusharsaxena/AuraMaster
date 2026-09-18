@@ -152,6 +152,34 @@ timed bar's spark sits just inside its edge rather than centered on it. This res
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
 preview reads its placeholders' durations and hides the spark directly.
 
+## Text chains and animations on engine buttons
+
+**Measured in-game, client 12.1.0 (120100), 2026-09-18** (two throwaway probes, 40 player-buff
+buttons each, for issue #2):
+- Every binding the Text style uses was accepted: `SetSpellName`; `SetApplicationCount` with a
+  `C_StringUtil.CreateNumericRuleFormatter` whose breakpoints `{0: ""}, {2: " x%d"}` hide a single
+  stack; `SetDurationText` with `textFormat = { formatString, components }` (several `{}` in one
+  string) and a prebuilt `C_DurationUtil.CreateDurationTextBinding()` carrying
+  `SetZeroDurationText("")`, `SetExpiredText("")` and `SetUpdateInterval(0.1)`; a stepped
+  `C_CurveUtil` color curve on `RemainingDuration`. `RemainingPercent` arrives on a 0–100 scale.
+- A timeless aura writes nothing through that binding, so text folded into the duration's format
+  disappears with it.
+- A stepped curve with alternating alpha blinks the duration text in the last seconds, in and out of
+  combat.
+- AnimationGroups started at dress time keep playing through combat and after it. In combat every
+  call on the button's objects raises "Attempt to access forbidden object from code tainted by an
+  AddOn" (`AnimationGroup:IsPlaying/Play/Stop`, `Region:IsShown`, `IsAnchoringSecret`), so an
+  animation is set up at dress time only.
+- `FontString:IsAnchoringSecret()` answers true even out of combat for an engine-written name: no
+  width in a chain can be read, so a multi-piece line cannot be centered.
+- A **Scale** animation broke a left-justified chain (the glyphs grew about 8 % past their boxes and
+  overlapped the next piece); an Alpha animation did not. Round 2, four chains each piece boxed and
+  tinted, laid out cleanly in and out of combat: the client sizes an engine-written, single-anchored,
+  auto-sized font string to its secret text, and a chain anchored to it lays out right.
+
+So a Text line is a chain of single-anchored, auto-sized font strings (`modules/Style_Text.lua`),
+its loops are Alpha and Translation only, built and played at dress time.
+
 ## Additive bindings stack
 
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.

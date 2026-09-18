@@ -20,14 +20,15 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 3. **`core/`** — namespace, then the seams in the order their consumers need them (below).
 4. **`defaults/`** — `Categories.lua` before `Profile.lua`, because the container template's
    `filter.categories` is built from the category lists.
-5. **`modules/`** — `Style.lua` before `Style_Bars.lua` and `Style_Icons.lua`, which decorate
+5. **`modules/`** — `TextTemplate.lua` before `Style_Text.lua` (a file-scope upvalue), and
+   `Style.lua` before `Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, which decorate
    `NS.Style` at file scope. The rest reach each other only at call time.
 6. **`settings/`** — last. `Schema.lua` first (every page registers into it), `Slash.lua`, then
    `OptionsSetup.lua` before every page file, because the pages call the composers
    (`NS.Helpers.ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`, `MasterControls`) inside
    `NS.RegisterSchemaRows` at file load. The page files are in the order their Blizzard subcategories
    appear (**load-bearing** for the tree order, N-2): `General.lua`, then `Containers.lua`, then its
-   four sub-pages `Filters.lua`, `Layout.lua`, `Bars.lua`, `Icons.lua` (each marked with
+   five sub-pages `Filters.lua`, `Layout.lua`, `Bars.lua`, `Icons.lua`, `Text.lua` (each marked with
    `NS.SubPageLabel`'s indent, D6), then `Profiles.lua`. `GeneralSpells.lua` loads before
    `General.lua` (**load-bearing**): it publishes its rows and tab renderers, and `General.lua`
    registers those rows after its own, so the Spell Categories and Dispel Colors tabs follow Display.
@@ -73,9 +74,11 @@ category collapse and the `weaponEnchants` category row — both over every stor
 |---|---|
 | `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens through AceEvent only while a container needs it and auras are readable, and announces what it learned on the bus |
 | `modules/FilterCompiler.lua` | Pure: one container's filter settings → aura groups (filter strings + candidate filters), enchant slots and warnings, with the profile's spell-category edits handed in through `ctx` (`FC.ProfileContext`); `Signature`, `StructureKey` |
-| `modules/Style.lua` | Shared dressing: LSM fetch, class color (the container's unit's, as snapshotted), text in a box its justify can act in, border, guarded engine bindings (the additive ones cleared first, `ClearAdditiveBindings`), one region set per style on a frame (`RegionsFor`), element size, mouse behavior and hover (`TakesHover`), duration text and a placeholder's time text (`PreviewTime`), the profile's dispel palette (`DispelColorMap`); bucket `styleElement` |
+| `modules/TextTemplate.lua` | Pure: the Text style's template language. `TT.Compile` turns a template into ordered pieces (literal, name, stacks, dispel, duration run), memoized; `TT.Validate` is the Template row's `validate`; `TT.ForDraw` draws a refused stored template as the default |
+| `modules/Style.lua` | Shared dressing: LSM fetch, class color (the container's unit's, as snapshotted), text in a box its justify can act in, border, guarded engine bindings (the additive ones cleared first, `ClearAdditiveBindings`), one region set per style on a frame (`RegionsFor`), element size, mouse behavior and hover (`TakesHover`), duration text and a placeholder's time text (`PreviewTime`), the profile's dispel palette (`DispelColorMap`); the style dispatch (`StyleKey`, `Styler`, `StructureKey`), the shared icon helpers (`IconSizeFor`, `IconInset`, `LayoutIcon`), a Text duration run's `textFormat` and binding, the measured time-text width (`TimeTextWidth`); bucket `styleElement` |
 | `modules/Style_Bars.lua` | Builds and dresses a bar button; the elapsed-time status bar with an edge-anchored fill; the icon and its border; the spark, clipped to the elapsed region when timeless auras show none; preview fill |
 | `modules/Style_Icons.lua` | Builds and dresses an icon button: aspect-correct crop, cooldown swipe, the dispel border on its own frame above ours (`dispelHost`), in Blizzard's own colors; preview fill |
+| `modules/Style_Text.lua` | Builds and dresses a text button: clip, animation and text-area frames, one chain of font strings per template shape, the Left/Right/Center chain anchors, the line's font, the three loops (played at dress time), each piece's engine binding (rule formatter, dispel text map, duration `textFormat` with a prebuilt binding and the blink curve), the optional icon; preview fill |
 | `modules/Anchors.lua` | Places a container's anchor on the screen, another container or a named frame; cycle check; the flow a container attached to another inherits (`FlowRoot`, `EffectiveLayout`, `DerivedPoints`, `Followers`); re-placing those attached to a previewing container onto its extent (`PlaceAttached`); pending frame re-resolve; the drag handle, `HANDLE_LEVEL` above its anchor and above an attached target's |
 | `modules/Preview.lua` | Placeholder elements from one pool per style (`container.previewPools[style]`), dressed by `Style` with `engine` false, positioned by `Preview.Offset`; the extent the containers attached to this one hang from while it previews (`Preview.Extent`) |
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor; left-click picks, right-click or Escape cancels |
@@ -96,8 +99,9 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `settings/Containers.lua` | The top-level Containers page (`N-1`, batch 7), one tab: the picker and New container in the tab body, the name, enable, unit, aura type and style rows, Duplicate / Delete / Copy settings from |
 | `settings/Filters.lua` | The Filters page, a sub-page of Containers (`N-2`, D6): what to show, the generated Show/Hide category rows (drawn as grids with a `See spells` link by a bespoke Categories tab), the five-rank priority block at the foot of What to show, sorting, and the bespoke Overrides tab (placed `before` Sorting) (two ID lists, each entry's verdict note from `FC.ExplainSpell`) |
 | `settings/Layout.lua` | The Layout page, a sub-page of Containers (`N-2`, D6): frame, anchor (Screen / Another container / Named frame / Offset, dimmed by attach mode), growth, mouse; Pick a frame |
-| `settings/Bars.lua` | The Bars page, a sub-page of Containers (`N-2`, D6): size, the composed bar, border and font blocks, spark, the icon and its composed border, background, text placement, highlights; disabled for an icons container |
-| `settings/Icons.lua` | The Icons page, a sub-page of Containers (`N-2`, D6): size, the composed border and font blocks, cooldown, text placement, highlights; disabled for a bars container |
+| `settings/Bars.lua` | The Bars page, a sub-page of Containers (`N-2`, D6): size, the composed bar, border and font blocks, spark, the icon and its composed border, background, text placement, highlights; disabled for any other style |
+| `settings/Icons.lua` | The Icons page, a sub-page of Containers (`N-2`, D6): size, the composed border and font blocks, cooldown, text placement, highlights; disabled for any other style |
+| `settings/Text.lua` | The Text page, a sub-page of Containers (`N-2`, D6): size, the Template box with its token cheat sheet (a bespoke General tab), placement and the centering note, the composed font block and time format, the icon and its composed border, the loop and the running-out rows; disabled for a bars or icons container |
 | `settings/Profiles.lua` | The Profiles sub-page: AceDBOptions drawn by AceConfigDialog inside the canvas |
 
 ## `tests/`
@@ -112,6 +116,8 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves, and `P.suggestions()`, which reads the ID lists' suggestion dropdown), for the `test_pages_*` suites |
 | `tests/region_recorder.lua` | Not a suite: a stand-in frame region that records every method called on it, so the style suites can tell one region's paint from another's (the kit hands a frame back as its own texture) |
 | `tests/engine_recorder.lua` | Not a suite: makes a recorder button answer its dispel bindings the way the client's `CustomAuraButton` does (every `Set*` / `Add*` binding ends in a full apply pass; `ClearDispelTypeTextures` only empties the list) |
+| `text_apis.lua` | Not a suite: the Text style's client APIs as recording stand-ins, installed from a fresh environment's `before` |
+| `region_builder.lua` | Not a suite: a recorder that builds recorders, so each piece of a chain records its own calls |
 | `tests/test_*.lua` | One suite per subject, in the order `tests/run.lua` declares them; the cases are enumerated in the generated `docs/test-cases.md` |
 
 The suites, in the order `tests/run.lua` runs them (it is the authority on the list):
@@ -137,8 +143,10 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_timedspells.lua` | `modules/TimedSpells.lua`: readable-state listening, the bus announcement, learning out of combat, feeding the timeless filter |
 | `test_style_bars.lua` | `modules/Style_Bars.lua`: every bar setting reaching the region it paints, icon side and gap, drain direction, texts, bindings, preview fill |
 | `test_style_icons.lua` | `modules/Style_Icons.lua`: the art inside its border, the aspect crop, the cooldown swipe, the dispel border, texts, bindings, preview fill |
+| `test_style_text.lua` | `modules/Style_Text.lua`: the nested frames, the chain's anchors per justify, the Center fallback, each piece's binding and options, the blink, the loops, the icon, a refused stored template, the chain per shape, the preview fill |
+| `test_texttemplate.lua` | `modules/TextTemplate.lua`: every template rule with its message, the escapes, case, the compiled pieces, `ForDraw` |
 | `test_preview.lua` | `modules/Preview.lua`: how many placeholders are drawn and where, the pool per style, when they are dressed again |
-| `test_render_coverage.lua` | Every Bars and Icons schema row, written to a value other than the one in force, reaches a drawn region on a live button and on a placeholder, unless it declares `coverage` |
+| `test_render_coverage.lua` | Every Bars, Icons and Text schema row, written to a value other than the one in force, reaches a drawn region on a live button and on a placeholder, unless it declares `coverage` |
 | `test_blizzardframes.lua` | `modules/BlizzardFrames.lua`: reparenting `BuffFrame`/`DebuffFrame` under a hidden parent and back |
 | `test_framepicker.lua` | `modules/FramePicker.lua`: the named-ancestor walk, the outline and label that track the cursor, every way a pick ends |
 | `test_slash.lua` | `settings/Slash.lua`: `NS.COMMANDS` and every host verb through the real dispatcher |
@@ -152,6 +160,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the tab order, the attach rows, their dimming per mode and their cycle guard, Pick a frame, the inherited Growth rows, what a Growth or Frame row re-applies, Defaults |
 | `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs (the Icon tab among them), the not-drawn-as-bars notice with every control disabled, sliders and swatches, Defaults |
 | `test_pages_icons.lua` | `settings/Icons.lua` through its widgets: tabs, the not-drawn-as-icons notice with every control disabled, rows, Defaults |
+| `test_pages_text.lua` | `settings/Text.lua` through its widgets: the tabs, the notice and disabled rows for another style, the Template box and its refusal text (panel and `/am set`), the cheat sheet, the centering note, the rows the effect and the template dim, Defaults |
 | `test_pages_about.lua` | `settings/About.lua`: the command list, the Notes line and the logo, and when each is read |
 | `test_pages_profiles.lua` | `settings/Profiles.lua`: the table it registers, how often it opens the dialog and into what, when it opts out |
 | `test_envsetup.lua` | `core/EnvSetup.lua` on both arms (live and library-absent): which manifest `NS.Meta` reads, what `NS.Version` answers |

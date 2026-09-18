@@ -56,7 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (64)
+### test_database.lua (65)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -122,8 +122,9 @@ badge and any count quoted in the docs must agree with it.
 - v4: MigrateV4 is idempotent
 - v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)
 - v4: no notice is printed when nothing was lost
+- database: a fresh profile seeds the Player cooldowns text container last, showing only two buff lists
 
-### test_schema.lua (28)
+### test_schema.lua (29)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -153,6 +154,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write refuses a non-section path, a non-table, and a value a row rejects
 - schema: a section write runs the normalize hook of every row under it, with the target id
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
+- schema: a row's own refusal reason travels as the third return of SetByPath and CheckWrite
 
 ### test_schema_paths.lua (36)
 
@@ -193,7 +195,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (74)
+### test_filtercompiler.lua (75)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -269,8 +271,9 @@ badge and any count quoted in the docs must agree with it.
 - explain: an aura in no category is shown, with no categories named — rank 5
 - explain: a stray filter.onlyShown key does not affect rank 5 — the toggle is retired
 - explain: a token category is never named — only spells-kind categories are reasoned about
+- filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 
-### test_container.lua (41)
+### test_container.lua (42)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -295,6 +298,7 @@ badge and any count quoted in the docs must agree with it.
 - container: sort, cap and layout changes each send only their own setter
 - container: a unit change is sent to the live engine once
 - container: switching style rebuilds the engine even when the filter plan keeps its shape
+- container: a text template of a new shape rebuilds the engine; one of the same shape restyles it
 - container: a weapon-enchant container shows the player's enchants in the engine's three slots, whatever its unit
 - container: an enchant slot the engine refuses costs that slot, not the build
 - container: an engine call that raises is traced, and the build carries on to the unit
@@ -368,7 +372,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (19)
+### test_compat.lua (23)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -387,6 +391,10 @@ badge and any count quoted in the docs must agree with it.
 - compat: without the curve API, or with a curve that refuses a point, the Blizzard format tops out at days
 - compat: the expiring text color is a step curve from the expiring color to the normal one at the threshold
 - compat: no curve API, or a curve that refuses a point, gives no text color
+- compat: a duration property reads the engine enum by member, and nil without it
+- compat: a rule formatter is built with its breakpoints, and nil without the API or when refused
+- compat: a duration binding writes nothing for a timeless or expired aura, and refreshes only when asked
+- compat: the blink curve alternates the running-out color's alpha every quarter second, then the normal color
 - compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global
 - compat: spell info comes from C_Spell, and the pre-11.0 global only when C_Spell is absent
 
@@ -488,7 +496,34 @@ badge and any count quoted in the docs must agree with it.
 - anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 
-### test_style.lua (43)
+### test_texttemplate.lua (24)
+
+- template: an unknown token is refused, naming it and every known token (rule 1)
+- template: a lone $ with no closing $ is literal text (rule 1)
+- template: a token used twice is refused (rule 2)
+- template: a token between two duration tokens is refused, naming it (rule 3)
+- template: nested and unmatched brackets are refused (rule 4)
+- template: a [ ] group holds exactly one of stacks, dispel type or the duration run (rule 4)
+- template: a bracket around the duration run must hold all of it (rule 5)
+- template: { and } are refused inside the duration run and its bracket, allowed elsewhere (rule 6)
+- template: an empty template, or one with no token, is refused (rule 7)
+- template: longer than 200 characters is refused (rule 8)
+- template: the first broken rule is the one reported
+- template: [[, ]] and $$ write a literal [, ] and $
+- template: an odd run of [ opens with its first, an even run is all escapes (]] ]  mirror)
+- template: tokens are case-insensitive
+- template: the default template folds its bracket text into the stacks and duration pieces
+- template: the name alone is one piece, and single
+- template: a duration run keeps its inner text in the format, one component per token
+- template: a bracketed duration run carries the bracket text in its format
+- template: a % in a stacks bracket is doubled in the rule format and kept in pre/post
+- template: a dispel type keeps its bracket text as pre and post
+- template: adjacent literals merge into one piece, and none is empty
+- template: compiled results are memoized per template string
+- template: Validate answers true, or false and the refusal
+- template: ForDraw draws a refused stored template as the default one, and says it fell back
+
+### test_style.lua (48)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -533,6 +568,11 @@ badge and any count quoted in the docs must agree with it.
 - style: a style leaf left nil draws the template's value, never a literal of its own
 - style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's
 - style: hiding the other style's regions never hides the element itself
+- style: a text element takes its size from its own block, and a missing leaf from the template
+- style: a text container's class color is looked for in its text block, the font included
+- style: a duration run's text format has its format string and one component per token, built once
+- style: a duration run binds its format and binding, recolored only when asked, blinking only when asked
+- style: a placeholder's seconds are written by the format's formatter, else as whole seconds
 
 ### test_timedspells.lua (19)
 
@@ -556,7 +596,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (50)
+### test_style_bars.lua (52)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -592,6 +632,8 @@ badge and any count quoted in the docs must agree with it.
 - bars: the name and time are laid against the bar, in their configured corners
 - bars: each text is boxed to its host less its offset: the bar area, or the icon for the stacks on it
 - bars: beside the name the time is boxed to its format's widest string, so its justify shows and the name keeps its room
+- bars: beside the name the time is boxed to the measured width of its format's widest string (B4)
+- bars: where nothing can be measured the time keeps its ems budget
 - bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on
 - bars: a hidden region is never handed to the engine
 - bars: every shown region is bound to its own engine field
@@ -637,7 +679,35 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_preview.lua (18)
+### test_style_text.lua (25)
+
+- text style: the element takes its size; clip, animation and text-area frames nest inside it
+- text style: Left lays the first piece at the area's left and each next piece against the previous one
+- text style: Right lays the last piece at the area's right and each earlier piece against the next
+- text style: the vertical justify picks the top, middle or bottom anchor points
+- text style: Center centers a one-piece template and lines a longer one up Left
+- text style: every piece takes the line's font; a literal takes its text
+- text style: each engine piece is bound to its own field, a literal to none
+- text style: stacks bind a rule formatter that hides one stack and folds the bracket text
+- text style: dispel type binds a text map of every type in the bracket text, nothing without a type
+- text style: the duration run binds its format, components and a prebuilt binding that writes nothing when timeless
+- text style: blink binds the blinking curve and a 0.1 s refresh; off, neither
+- text style: a template without a duration token binds no duration text
+- text style: a preview dress binds nothing
+- text style: the three loops are built once, looping as each effect needs, and None plays none
+- text style: each effect plays its own loop with the speed, fade and height set
+- text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
+- text style: an icon on the right insets the area's right edge; none hides it and binds nothing
+- text style: a refused stored template draws the default one and logs it once
+- text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
+- text style: the structure key carries the template's shape, so a live shape change gets new buttons
+- text style: Style.Element dresses a text container through Style.Text, bound and unbound, without raising
+- text style: bars, then text, then bars again keeps each style's regions, hidden while the other draws
+- text style: a placeholder fills each piece as the engine would
+- text style: a placeholder hides a single stack, a missing dispel type and a timeless duration with their bracket text
+- text style: a placeholder running out takes the running-out color on its duration piece only
+
+### test_preview.lua (19)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders, and an enchant container shows at most two
@@ -657,11 +727,13 @@ badge and any count quoted in the docs must agree with it.
 - preview: the extent covers the placeholder block from the corner it starts at, sized by Preview.Offset (L-4)
 - preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
 - preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
+- preview: a text container's placeholders read its template, each bracket's text hidden with its value
 
-### test_render_coverage.lua (2)
+### test_render_coverage.lua (3)
 
 - coverage: every Bars row reaches a drawn region, on a live button and on the preview
 - coverage: every Icons row reaches a drawn region, on a live button and on the preview
+- coverage: every Text row reaches a drawn region, on a live button and on the preview
 
 ### test_blizzardframes.lua (8)
 
@@ -797,7 +869,7 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: Bulk.Run stays silent only when its act answers true, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
-### test_optionssetup.lua (17)
+### test_optionssetup.lua (18)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -816,6 +888,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Background block is composed in canonical order, and its tooltips name the background
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
+- options: a page drawn for another style heads its tabs with the notice in muted gold (B3)
 
 ### test_options_descriptor.lua (18)
 
@@ -876,7 +949,7 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_containers.lua (24)
+### test_pages_containers.lua (28)
 
 - containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
@@ -893,7 +966,11 @@ badge and any count quoted in the docs must agree with it.
 - containers: a rename re-lists every picker and re-applies no container
 - containers: the Unit dropdown offers the four units in order and writes the selected container
 - containers: changing the aura type redraws an open Filters page for the new type, on the next frame
-- containers: the Style dropdown offers bars and icons and writes the selected container
+- containers: the Style dropdown offers bars, icons and text and writes the selected container
+- containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)
+- containers: re-choosing the same Style keeps a Fill set by hand (B5)
+- containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)
+- containers: a duplicate and a copy-from keep the source's Fill (B5)
 - containers: New and Duplicate in combat refuse in gray and create nothing
 - containers: Duplicate copies the selected container and selects the copy
 - containers: Delete asks first, naming the container, and deletes it only on Yes
@@ -997,6 +1074,20 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Cooldown rows write the selected container's swipe
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
+### test_pages_text.lua (11)
+
+- text page: the four tabs are drawn in order
+- text page: a bars or icons container sees every row disabled under the note naming its style
+- text page: the Bars and Icons pages name the text style on a text container
+- text page: General holds Size, the Template box, the cheat sheet, then Placement
+- text page: a valid template is stored; a refused one is not, and the panel prints why
+- text page: /am set refuses a bad template with the parser's reason, indented under the refusal
+- text page: Center on a multi-piece template draws the note naming the piece count
+- text page: each loop row is live only for the effects that use it
+- text page: without a duration token the running-out rows dim, except the swatch, under a note
+- text page: the blink row is engine-only, and the Font tab carries the composed font block and time format
+- text page: Defaults restores the selected container's text look and nothing else
+
 ### test_pages_about.lua (3)
 
 - about: the landing page lists every slash command, in /am help's own words
@@ -1023,7 +1114,7 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (13)
+### test_defaults.lua (14)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
@@ -1038,6 +1129,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: one Healing category holds both retired healing lists, where Core healing was
 - defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
 - defaults: the global schema stamp defaults to 1, never the current version
+- defaults: StatesShowing hides every buff category but the ones named, and leaves the debuff ones at Show
 
 ### test_perf.lua (8)
 
@@ -1112,43 +1204,46 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 20 |
-| test_database.lua | 64 |
-| test_schema.lua | 28 |
+| test_database.lua | 65 |
+| test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 74 |
-| test_container.lua | 41 |
+| test_filtercompiler.lua | 75 |
+| test_container.lua | 42 |
 | test_containermanager.lua | 51 |
-| test_compat.lua | 19 |
+| test_compat.lua | 23 |
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
 | test_anchors.lua | 63 |
-| test_style.lua | 43 |
+| test_texttemplate.lua | 24 |
+| test_style.lua | 48 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 50 |
+| test_style_bars.lua | 52 |
 | test_style_icons.lua | 25 |
-| test_preview.lua | 18 |
-| test_render_coverage.lua | 2 |
+| test_style_text.lua | 25 |
+| test_preview.lua | 19 |
+| test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_disabled.lua | 12 |
 | test_slash.lua | 23 |
 | test_slash_verbs.lua | 40 |
 | test_bulklog.lua | 20 |
-| test_optionssetup.lua | 17 |
+| test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
-| test_pages_containers.lua | 24 |
+| test_pages_containers.lua | 28 |
 | test_pages_filters.lua | 42 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 7 |
+| test_pages_text.lua | 11 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 13 |
+| test_defaults.lua | 14 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
@@ -1157,4 +1252,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **955** |
+| **Total** | **1038** |
