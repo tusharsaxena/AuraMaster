@@ -82,7 +82,15 @@ local ROWS = {
         path = "container.style", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.STYLES, C.STYLE_LABELS), label = L["Style"],
         desc = L["Draw each aura as a bar or as an icon. Bars and Icons each have their own settings page."],
-        onChange = structural,
+        -- B5: a new style resets Fill (Layout -> Growth) to the one it suits, through the one write
+        -- seam and for the same container, then the panel rebuilds once. Only on a real change: the
+        -- seam hands onChange the value it replaced. A duplicate, a copy-from's own layout, a profile
+        -- switch and the starter seeding never come through here, so their stored Fill stands.
+        onChange = function(v, id, old)
+            local axis = C.STYLE_FILL_AXIS[v]
+            if axis and old ~= v then NS.SetByPath("container.layout.axis", axis, id) end
+            structural()
+        end,
     },
 }
 

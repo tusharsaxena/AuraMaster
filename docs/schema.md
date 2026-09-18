@@ -124,7 +124,7 @@ path, never to a number restated in `modules/`.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:159`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:163`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
 `{0.80, 0.00, 0.00}`, all alpha 1.
 
@@ -229,7 +229,8 @@ A row's `validate(value, id)` and its optional `normalize(value, id)` hook are b
 the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`
 resolves that id first and then validates, so a bad value is still refused before a missing container
 is. `normalize` runs after both, just before the write. Whatever it returns is what gets stored, and
-it is also the value `onChange` and the announcement see. The `container.name` row uses it to store the
+it is also the value `onChange` and the announcement see. A row's `onChange(value, id, old)` receives
+the value the write replaced. The `container.name` row uses it to store the
 trimmed name made unique by `ContainerManager.UniqueName`, and that comparison ignores case (`buffs`
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
 `/am set`, `ContainerManager.Rename` or a reset.

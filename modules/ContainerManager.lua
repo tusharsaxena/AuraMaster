@@ -442,11 +442,13 @@ end
 -- What "copy settings from" copies. Identity (name), placement (position, attach) and the registry's
 -- own id are never copied: copying a container onto another is about how it looks and what it shows.
 CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons" }
--- What "everything" copies: every section, then what the container IS.
+-- What "everything" copies: what the container IS, then every section. Identity first, because the
+-- Style row's onChange resets Fill (B5, settings/Containers.lua): the copied layout lands after that
+-- reset, so the copy keeps the source's Fill.
 local COPY_ALL = { "unit", "auraType", "style" }
-local sectionCount = #CM.COPY_SECTIONS
-for i = sectionCount, 1, -1 do
-    table.insert(COPY_ALL, 1, CM.COPY_SECTIONS[i])
+for _, key in ipairs(CM.COPY_SECTIONS) do
+    local n = #COPY_ALL
+    COPY_ALL[n + 1] = key
 end
 
 --- Write each of `keys` from `src` onto container `dstId` through the write seam — all of them or

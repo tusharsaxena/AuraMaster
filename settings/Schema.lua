@@ -492,7 +492,8 @@ local function fireSectionChanges(section, old, v, depth, id)
         if row.onChange and isUnder(row.path, section) then
             local parts = splitPath(row.path)
             local leaf = readFrom(v, parts, depth + 1)
-            if Sig(readFrom(old, parts, depth + 1)) ~= Sig(leaf) then row.onChange(leaf, id) end
+            local was = readFrom(old, parts, depth + 1)
+            if Sig(was) ~= Sig(leaf) then row.onChange(leaf, id, was) end
         end
     end
 end
@@ -572,13 +573,21 @@ local function writeSection(path, value, containerId, sec)
     return true
 end
 
+--- What `row` holds before a write: the stored leaf, or a session row's own get(). Handed to the
+--- row's `onChange` as its third argument, so a reaction can tell a real change from a re-write of
+--- the same value (the Style row's Fill reset, B5).
+local function previousValue(row, root, parts, first)
+    if row.sessionOnly then return row.get and row.get() end
+    return readFrom(root, parts, first)
+end
+
 --- A schema row's storage step: resolve the container, validate the raw value, normalize, store.
 --- `row.validate(value, id)` and the optional `row.normalize(value, id)` are both handed the id the
 --- write targets (nil for a global or session row, or when no container resolves), so a row can
 --- check or rewrite a value against ITS container: the attach row refuses a loop from the container
 --- written, the name row makes a name unique. A bad value is refused before a missing container, so
---- the refusal names the value. It returns ok, err|nil, the container id, and the value as stored
---- (what onChange and the announcement see).
+--- the refusal names the value. It returns ok, err|nil, the container id, the value as stored
+--- (what onChange and the announcement see), and the value it replaced.
 --- Inside a bulk bracket it tallies the row here, once stored, so an onChange that raises
 --- afterwards cannot drop a stored write from the count.
 local function writeRow(row, path, value, containerId)
@@ -593,6 +602,7 @@ local function writeRow(row, path, value, containerId)
     if parts and not root then return false, NO_CONTAINER end
     if row.normalize then value = row.normalize(value, id) end
     local changed = bulk.depth > 0 and rowChanges(row, root, parts, first, value)
+    local old = previousValue(row, root, parts, first)
     if row.sessionOnly then
         -- No database write by definition; the row's own set() IS its storage.
         if row.set then row.set(value) end
@@ -602,7 +612,7 @@ local function writeRow(row, path, value, containerId)
         writeInto(root, parts, first, copy(value))
     end
     if changed then tally(1) end
-    return true, nil, id, value
+    return true, nil, id, value, old
 end
 
 --- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
@@ -622,10 +632,10 @@ function NS.SetByPath(path, value, containerId)
 
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
-    local ok, err, id, stored = writeRow(row, path, value, containerId)
+    local ok, err, id, stored, old = writeRow(row, path, value, containerId)
     if not ok then return false, err end
 
-    if row.onChange then row.onChange(stored, id) end
+    if row.onChange then row.onChange(stored, id, old) end
     announceWrite(row.page, id, path, stored, row.sessionOnly, false)
     return true
 end

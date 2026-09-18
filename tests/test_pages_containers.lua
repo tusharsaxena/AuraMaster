@@ -324,6 +324,61 @@ test("containers: the Style dropdown offers bars and icons and writes the select
     assertEqual(NS.Database.FindContainer(1).style, "icons")
 end)
 
+-- ── B5: changing Style resets Fill ─────────────────────────────────────────────────────────
+
+test("containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)", function()
+    local NS, _, P, ws = containers()
+    local c1 = NS.Database.FindContainer(1)
+    c1.layout.growH, c1.layout.growV = "left", "up"
+    local dd = P.row(ws, "container.style")
+    dd:__fire("OnValueChanged", "icons")
+    -- red under: the Style row without its onChange (Fill stays Columns under an icon row)
+    assertEqual(c1.layout.axis, "horizontal", "bars -> icons: Rows")
+    dd:__fire("OnValueChanged", "bars")
+    assertEqual(c1.layout.axis, "vertical", "icons -> bars: Columns")
+    -- red under: a reset table that also rewrites the grow directions
+    assertEqual(c1.layout.growH, "left")
+    assertEqual(c1.layout.growV, "up")
+end)
+
+test("containers: re-choosing the same Style keeps a Fill set by hand (B5)", function()
+    local NS = containers()
+    NS.SetByPath("container.layout.axis", "horizontal", 1)
+    NS.SetByPath("container.style", "bars", 1)
+    -- red under: onChange resetting Fill without comparing the replaced value
+    assertEqual(NS.Database.FindContainer(1).layout.axis, "horizontal")
+end)
+
+test("containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)", function()
+    local NS, m = containers()
+    local refreshes, applies = 0, 0
+    local refresh = NS.RequestPanelRefresh
+    NS.RequestPanelRefresh = function(...) refreshes = refreshes + 1; return refresh(...) end
+    local inst = NS.ContainerManager.instances[1]
+    local apply = inst.Apply
+    inst.Apply = function(...) applies = applies + 1; return apply(...) end
+    NS.Slash:OnSlash("set container.style icons")
+    m.__fireTimers()
+    assertEqual(NS.Database.FindContainer(1).layout.axis, "horizontal")
+    -- red under: the Fill write re-running the structural handler, or not coalescing with the style's
+    assertEqual(refreshes, 1, "one structural rebuild")
+    assertEqual(applies, 1, "one apply pass for both writes")
+    NS.RequestPanelRefresh = refresh
+end)
+
+test("containers: a duplicate and a copy-from keep the source's Fill (B5)", function()
+    local NS = containers()
+    local CM = NS.ContainerManager
+    NS.Database.FindContainer(2).layout.axis = "vertical"   -- an icon row set to Columns by hand
+    local dup = NS.Database.FindContainer(CM.Duplicate(2))
+    -- red under: Duplicate writing the style through the seam (its onChange would reset Fill)
+    assertEqual(dup.layout.axis, "vertical")
+    assertTrue(CM.CopyFrom(2, 1))
+    -- red under: COPY_ALL writing the layout before the style (the reset lands over the copy)
+    assertEqual(NS.Database.FindContainer(1).style, "icons")
+    assertEqual(NS.Database.FindContainer(1).layout.axis, "vertical")
+end)
+
 test("containers: New and Duplicate in combat refuse in gray and create nothing", function()
     local NS, m, P, ws = containers()
     local lines = P.chat()

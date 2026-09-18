@@ -173,6 +173,9 @@ selected) on one line. With no container, that line and one sentence are all the
 | Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
 | Style | `container.style` | string | Bars / Icons; structural (rebuilds the engine) |
 
+Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
+re-choosing the same style keeps a Fill set by hand (B5).
+
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.

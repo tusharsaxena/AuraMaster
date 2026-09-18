@@ -49,6 +49,10 @@ C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs", ENCHANT = "Weapon
 C.STYLES = { "bars", "icons" }
 C.STYLE_LABELS = { bars = "Bars", icons = "Icons" }
 
+-- The Fill (layout.axis) each style suits, written when a container's Style changes (B5,
+-- settings/Containers.lua): bars and text stack in a column, icons in a row.
+C.STYLE_FILL_AXIS = { bars = "vertical", text = "vertical", icons = "horizontal" }
+
 -- Who applied the aura. "mine" and "others" compile to the PLAYER token and its negation.
 C.CAST_BY = { "any", "mine", "others" }
 C.CAST_BY_LABELS = { any = "Anyone", mine = "Me (and my pet)", others = "Anyone but me" }
