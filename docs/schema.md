@@ -124,7 +124,7 @@ path, never to a number restated in `modules/`.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:154`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:159`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
 `{0.80, 0.00, 0.00}`, all alpha 1.
 

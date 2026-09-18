@@ -343,7 +343,7 @@ container), Click-through `container.behavior.clickThrough` (no tooltips and no 
 
 ### Bars (71 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-When the selected container is drawn as icons, a small gray note heads every tab — "Not in use: this
+When the selected container is drawn as icons, a small muted-gold note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
 and every control below it is drawn disabled (the spec's `disabledFor`,
 `settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
@@ -384,7 +384,7 @@ two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this p
 group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
 deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
-When the selected container is drawn as bars, the same small gray note heads every tab — "Not in
+When the selected container is drawn as bars, the same small muted-gold note heads every tab — "Not in
 use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these
 settings." — and every control is drawn disabled, as on the Bars page.
 

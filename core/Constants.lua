@@ -140,6 +140,11 @@ C.TOOLTIP_ANCHOR_LABELS = {
     ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right", ANCHOR_CURSOR = "At the cursor",
 }
 
+-- The "Not in use" notice over a container page drawn for another style (settings/OptionsSetup.lua's
+-- drawDisabledNotice): a muted gold, about (0.78, 0.66, 0.35), readable on the dark panel and quieter
+-- than the title gold. The AARRGGBB body of a "|c" escape.
+C.NOTICE_COLOR = "ffc8a85a"
+
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "Short (1 unit)",

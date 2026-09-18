@@ -508,8 +508,8 @@ local function settleActiveTab(ctx, tabs)
     ctx.activeTab = tabs[1].key
 end
 
---- The notice over a page drawn disabled: a quiet gray note in the small font, then the ordinary
---- row gap before the first control.
+--- The notice over a page drawn disabled: a quiet muted-gold note (C.NOTICE_COLOR) in the small
+--- font, then the ordinary row gap before the first control.
 ---
 --- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
 --- shouted a full-width warning for what is an informational aside — nothing is wrong, the page is
@@ -517,9 +517,11 @@ end
 --- the same voice the addon already uses for a line that reports rather than warns (the combat
 --- refusals in settings/Containers.lua print in this exact gray), and it leaves orange meaning what
 --- it means everywhere else in the panel: RenderWarnings' "the game will not honor this", which can
---- sit on the very same page and must still be the loudest thing on it.
+--- sit on the very same page and must still be the loudest thing on it. The owner then asked for it
+--- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
+--- quieter than the title's is still no warning. The combat refusals keep their gray.
 local function drawDisabledNotice(ctx, text)
-    Helpers.TextRow(ctx, "|cff808080" .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
+    Helpers.TextRow(ctx, "|c" .. C.NOTICE_COLOR .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
     local scroll = Helpers.EnsureScroll(ctx)
     if scroll then Helpers.AddSpacer(scroll, Helpers.ROW_VSPACER) end
 end
