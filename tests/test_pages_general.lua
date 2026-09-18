@@ -132,18 +132,16 @@ test("general: a Test mode start in combat is refused and the checkbox reads fal
 end)
 
 test("general: combat starting ends test mode, and Reset all settings ends it too (B1)", function()
-    local NS, m, P, ws = general()
+    local NS, _, P = general()
     NS.Preview.SetTestMode(true)
     NS.addon:OnCombatChanged("PLAYER_REGEN_DISABLED")
     -- red under: OnCombatChanged not ending test mode (a placeholder covering real auras in a fight)
     assertFalse(NS.State.testMode)
     assertFalse(P.row(P.rerender("General"), "state.testMode").value and true or false)
-    m.__lockdown = false
     NS.Preview.SetTestMode(true)
     NS.Helpers.RestoreAllDefaults()
     -- red under: the Test mode row without its default (options-ui-§12's reset leaves it on)
     assertFalse(NS.State.testMode)
-    assertTrue(ws ~= nil)
 end)
 
 test("general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was", function()

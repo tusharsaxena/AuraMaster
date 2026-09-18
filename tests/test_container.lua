@@ -177,6 +177,30 @@ test("container: unlocked, a container shows whatever its visibility rule, its e
     assertFalse(inst.outline:IsShown(), "locked: no outline")
 end)
 
+test("container: test mode shows the placeholders while locked, whatever the visibility rule (B1)", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("visibility", "never")
+    assertTrue(NS.db.profile.locked, "locked")
+    NS.Preview.SetTestMode(true)
+    -- red under: ShouldShow applying the visibility rule while previewing (options-ui-§15: test mode
+    -- shows the display without an unlock)
+    assertTrue(inst.previewShown, "test mode: the placeholders show")
+    assertTrue((inst:ShouldShow()), "shown")
+    assertFalse(inst.engine.__enabled, "and real auras do not draw over them")
+end)
+
+test("container: test mode off, a locked container set to never is hidden again (B1)", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("visibility", "never")
+    NS.Preview.SetTestMode(true)
+    NS.Preview.SetTestMode(false)
+    assertFalse(inst.previewShown, "the placeholders go")
+    assertFalse((inst:ShouldShow()), "hidden")
+    assertFalse(inst.engine.__enabled, "nothing draws")
+end)
+
 test("container: a visibility pass re-dresses no preview element unless the settings changed", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]

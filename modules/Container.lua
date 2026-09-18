@@ -406,7 +406,9 @@ end
 ---
 --- PREVIEWING IS THE TEST MODE (NS.State.testMode), not the lock (B1): unlocking makes a container
 --- draggable and its live auras keep drawing. An UNLOCKED container shows whatever its visibility
---- rule says, so one set to "in combat only" can still be found and moved out of combat.
+--- rule says, so one set to "in combat only" can still be found and moved out of combat. A container
+--- in TEST MODE shows too, locked or not: the mode shows the display without an unlock
+--- (options-ui-§15).
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
     if NS.IsStoodDown() or self.parked then return false, false end
@@ -414,7 +416,7 @@ function ContainerClass:ShouldShow()
     local cfg = self:Cfg()
     if not (p and cfg and cfg.enabled) then return false, false end
     local previewing = NS.State.testMode and true or false
-    return (not p.locked) or visibilityAllows(p.visibility), previewing
+    return (not p.locked) or previewing or visibilityAllows(p.visibility), previewing
 end
 
 --- The anchor's own half of a stand-down (see ApplyVisibility). Returns whether combat deferred it.

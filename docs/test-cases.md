@@ -273,7 +273,7 @@ badge and any count quoted in the docs must agree with it.
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 
-### test_container.lua (43)
+### test_container.lua (45)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -286,6 +286,8 @@ badge and any count quoted in the docs must agree with it.
 - container: the show ladder — suspend, the master switch, the container switch, visibility
 - container: test mode previews placeholders through the style code and disables the engine
 - container: unlocked, a container shows whatever its visibility rule, its engine drawing, under an outline (B1)
+- container: test mode shows the placeholders while locked, whatever the visibility rule (B1)
+- container: test mode off, a locked container set to never is hidden again (B1)
 - container: a visibility pass re-dresses no preview element unless the settings changed
 - container: a new target refreshes only the containers tracking the target
 - container: Blizzard's load-on-demand aura container is loaded before the first engine
@@ -1212,7 +1214,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 75 |
-| test_container.lua | 43 |
+| test_container.lua | 45 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
@@ -1256,4 +1258,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1042** |
+| **Total** | **1044** |

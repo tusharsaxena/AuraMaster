@@ -18,7 +18,7 @@ otherwise (`docs/profiles.md`).
 | `visibility` | string | `"always"` | General visibility: `always` / `inCombat` / `outOfCombat` / `never` |
 | `scale` | number | `1.0` | Master scale, multiplied into each container's own |
 | `alpha` | number | `1.0` | Master alpha, multiplied into each container's own |
-| `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and the preview |
+| `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and an outline; live auras keep drawing |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
 | `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |

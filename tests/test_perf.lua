@@ -15,7 +15,7 @@ local function exercise(NS, mocks)
     NS.ContainerManager.RequestApply()
     mocks.__fireTimers()
     NS.ContainerManager.ApplyVisibility()
-    NS.SetByPath("locked", false)   -- preview: dresses placeholder elements through Style.Element
+    NS.Preview.SetTestMode(true)    -- preview: dresses placeholder elements through Style.Element
     mocks.__fireTimers()
 end
 
