@@ -1,4 +1,4 @@
--- tests/test_render_coverage.lua — every Bars and Icons setting reaches a drawn region (B-5).
+-- tests/test_render_coverage.lua — every Bars, Icons and Text setting reaches a drawn region (B-5).
 --
 -- For each row of the Bars and Icons pages, on a container drawn in that style: write a value that
 -- differs from the one in force, flush the apply, and compare what the dressed regions recorded
@@ -56,7 +56,8 @@ local function env()
         E.SecondsFormatterInterval = { Seconds = 1, Minutes = 2, Hours = 3, Days = 4 }
         E.SecondsFormatterAbbreviation = { OneLetter = 1 }
         E.SecondsFormatterRounding = { RoundUp = 0, Truncate = 1 }
-        E.DurationTextBindingProperty = { RemainingDuration = 1 }
+        E.DurationTextBindingProperty = { RemainingDuration = 1, TotalDuration = 2, ElapsedDuration = 3,
+            RemainingPercent = 4, ElapsedPercent = 5 }
         E.LuaCurveType = { Step = 1 }
         m.C_StringUtil = { CreateSecondsFormatter = function()
             local f = recordingObject(FORMATTER_METHODS)
@@ -67,6 +68,12 @@ local function env()
                 return table.concat(words, "+") .. "@" .. tostring(seconds)
             end
             return f
+        end }
+        -- The Text style's rule formatters and prebuilt duration bindings record what they were
+        -- built with, like the seconds formatter above.
+        m.C_StringUtil.CreateNumericRuleFormatter = function() return recordingObject({ "SetBreakpoints" }) end
+        m.C_DurationUtil = { CreateDurationTextBinding = function()
+            return recordingObject({ "SetZeroDurationText", "SetExpiredText", "SetUpdateInterval" })
         end }
         local function curve() return recordingObject({ "SetType", "AddPoint" }) end
         m.C_CurveUtil = { CreateCurve = curve, CreateColorCurve = curve }
@@ -119,11 +126,17 @@ local function serLog(r, names)
     return table.concat(out, ";")
 end
 
+--- Whether `v` is one of this suite's recorders. A text element also keeps plain client objects on
+--- `__am` (its prebuilt duration bindings); only what records is read.
+local function isRecorder(v)
+    return type(v) == "table" and rawget(v, "__log") ~= nil
+end
+
 --- Every recorder that belongs to one dressed element: the element, its regions, a bar's edge.
 local function recordersOf(frame)
     local list = { frame }
     for _, r in pairs(frame.__am or {}) do
-        if type(r) == "table" then
+        if isRecorder(r) then
             push(list, r)
             local edge = rawget(r, "__edge")
             if edge then push(list, edge) end
@@ -149,7 +162,7 @@ end
 local function signature(frame, names)
     local keys = {}
     for k, v in pairs(frame.__am or {}) do
-        if type(v) == "table" then
+        if isRecorder(v) then
             push(keys, k)
             local edge = rawget(v, "__edge")
             if edge and not names[edge] then names[edge] = names[v] .. ".edge" end
@@ -250,8 +263,14 @@ end
 
 local DISTINCT = { r = 0.13, g = 0.57, b = 0.31, a = 0.66 }
 
+-- A free-text row has no list to pick from, so it names the value it is walked with: the Text
+-- template's default, with its bracket text changed and its shape kept (a new shape builds a new
+-- chain of font strings, which a recorder swapped in by `adopt` would never see).
+local SAMPLES = { ["container.text.template"] = "$spellname$[ y$stacks$][ ~ $remainingduration$]" }
+
 --- A legal value for `row` that differs from `cur`.
 local function differing(row, cur)
+    if SAMPLES[row.path] then return SAMPLES[row.path] end
     if row.type == "bool" then return not cur end
     if row.type == "number" then
         if cur ~= row.max then return row.max end
@@ -268,6 +287,9 @@ end
 local GATES = {
     bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true },
     icons = { borderShow = true, expiringColorOn = true },
+    -- Right, so Center (a multi-piece template lines up Left) still moves the chain; an icon, so
+    -- its rows reach one.
+    text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT" },
 }
 
 --- Every row of `page` whose write leaves a side unchanged, as "<path> (<side>)", plus exemptions
@@ -311,5 +333,13 @@ end)
 test("coverage: every Icons row reaches a drawn region, on a live button and on the preview", function()
     local out, n = gaps("icons")
     assertTrue(n >= 30, "the whole Icons page was walked")
+    assertEqual(table.concat(out, "; "), "", "rows that reach no region")
+end)
+
+-- red under: any Style* path that reads a text leaf without drawing it, e.g. applyLoops dropping
+-- the bounce's SetOffset, or dressPieces skipping the literal pieces' font
+test("coverage: every Text row reaches a drawn region, on a live button and on the preview", function()
+    local out, n = gaps("text")
+    assertTrue(n >= 30, "the whole Text page was walked")
     assertEqual(table.concat(out, "; "), "", "rows that reach no region")
 end)
