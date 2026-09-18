@@ -537,7 +537,7 @@ test("slash verbs: /am delete matches a name in any case and names what it delet
         assertEqual(dump(slash(NS2, lines, miss)), "{No such container — /am containers lists them}", miss)
     end
     -- red under: runDelete falling through to Delete(nil) on a miss
-    assertEqual(#NS2.Database.GetContainers(), 2)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
 end)
 
 test("slash verbs: /am resetposition and /am forgettimed do their act and say so", function()

@@ -251,3 +251,17 @@ test("defaults: the global schema stamp defaults to 1, never the current version
     assertEqual(type(NS.defaults.global.timedSpells), "table")
     assertEqual(next(NS.defaults.global.timedSpells), nil, "nothing learned by default")
 end)
+
+test("defaults: StatesShowing hides every buff category but the ones named, and leaves the debuff ones at Show", function()
+    local states = Cat.StatesShowing({ "offensiveCDs", "defensives" })
+    for _, def in ipairs(Cat.HELPFUL) do
+        local want = (def.key == "offensiveCDs" or def.key == "defensives") and "show" or "hide"
+        -- red under: StatesShowing leaving a token or flag category (or Uncategorized) at Show
+        assertEqual(states[def.key], want, def.key)
+    end
+    for _, def in ipairs(Cat.HARMFUL) do
+        -- red under: StatesShowing hiding the debuff categories (a switch to debuffs starts all-hidden)
+        assertEqual(states[def.key], "show", def.key)
+    end
+    assertTrue(Cat.StatesShowing({}) ~= Cat.StatesShowing({}), "a fresh table each call")
+end)

@@ -352,3 +352,17 @@ function Cat.DefaultStates()
     end
     return out
 end
+
+--- The default states with every BUFF category Hidden except `keys`, which stay Show: a container
+--- that draws only the buffs those categories claim (the "Player cooldowns" starter,
+--- defaults/Profile.lua). That hides every Blizzard token and flag category, Weapon enchants and
+--- Uncategorized too, so an unlisted buff has no Show left to draw it. The debuff categories keep
+--- Show: inert on a buff container, and a later switch to debuffs does not start all-hidden.
+--- @param keys table  category keys of Cat.HELPFUL
+--- @return table
+function Cat.StatesShowing(keys)
+    local out = Cat.DefaultStates()
+    for _, def in ipairs(Cat.HELPFUL) do out[def.key] = "hide" end
+    for _, key in ipairs(keys) do out[key] = "show" end
+    return out
+end

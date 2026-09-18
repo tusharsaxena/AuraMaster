@@ -178,7 +178,7 @@ test("general: Reset all settings asks first and resets nothing until the answer
     -- red under: onResetAll calling RestoreAllDefaults straight away (a destructive act unasked)
     assertEqual(#popups, 1)
     assertEqual(popups[1].which, "AURAMASTER_RESET_ALL")
-    assertEqual(#NS.Database.GetContainers(), 4, "nothing reset yet")
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1, "nothing reset yet")
     assertEqual(NS.db.profile.scale, 2)
 end)
 
@@ -221,7 +221,7 @@ test("general: Defaults restores the General rows of the profile and no containe
     -- red under: N-1 half-done (Containers rows still page = "general", so a General Defaults press
     -- would still reach the selected container's identity)
     assertFalse(NS.Database.FindContainer(1).enabled, "a Containers row is not a General row either")
-    assertEqual(#NS.Database.GetContainers(), 3, "and the registry is untouched")
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS, "and the registry is untouched")
 end)
 
 test("general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)", function()

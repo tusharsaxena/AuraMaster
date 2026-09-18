@@ -172,9 +172,9 @@ test("options: the Containers page's New button creates and selects a container"
     -- red under: the Containers page not drawing its create control
     assertTrue(newButton ~= nil, "the tab body carries the create control")
     newButton:__fire("OnClick")
-    assertEqual(#NS2.Database.GetContainers(), 4)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
     local _, id = NS2.ActiveContainer()
-    assertEqual(id, NS2.db.profile.containerOrder[4])
+    assertEqual(id, NS2.db.profile.containerOrder[#NS2.STARTER_CONTAINERS + 1])
 end)
 
 test("options: a page's Defaults button restores only the selected container", function()
@@ -207,7 +207,7 @@ test("options: Reset all settings resets the active profile whole, and nothing e
     for _, c in ipairs(NS2.Database.GetContainers()) do
         names[#names + 1] = c.name
     end
-    assertEqual(table.concat(names, "|"), "Player buffs|Player debuffs|Target debuffs (mine)",
+    assertEqual(table.concat(names, "|"), "Player buffs|Player debuffs|Target debuffs (mine)|Player cooldowns",
         "exactly the shipped set survives")
     assertEqual(table.concat(NS2.db:GetProfiles(), ","), profilesBefore, "the profile list is untouched")
     assertEqual(NS2.db:GetCurrentProfile(), "Default")
@@ -254,7 +254,7 @@ test("options: the Delete popup refuses in combat", function()
     m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(nil, 2)
     -- red under: the Delete popup's OnAccept without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(2) ~= nil, "the registry is intact")
-    assertEqual(#NS2.Database.GetContainers(), 3)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
     assertEqual(#lines, 1, "one refusal")
     assertTrue(lines[1]:find("|cff808080", 1, true) and lines[1]:find("cannot delete a container during combat",
         1, true) ~= nil, lines[1] or "")

@@ -208,7 +208,7 @@ test("options descriptor: Containers' picker is a plain dropdown in the tab body
     local ctx = NS2.Helpers.__pageCtx.containers
     local dd = widget(m, "Dropdown", "Container")
     assertTrue(dd ~= nil, "the tab drew its picker")
-    assertEqual(table.concat(dd.order, ","), "1,2,3")
+    assertEqual(table.concat(dd.order, ","), "1,2,3,4")
     -- red under: the picker drawn into a chrome block (the Containers page draws no banner, D1)
     assertNil(ctx.__bannerWidget)
     local kids = ctx.__chromeKids or {}

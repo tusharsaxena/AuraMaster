@@ -396,26 +396,26 @@ test("manager: a parked id that comes back before combat ends reuses its instanc
     assertNil(CM.__retiring()[2])
 end)
 
---- Create container 4 out of lockdown, then run `leave` under lockdown: id 4 departs (the new or
---- reset profile seeds only 1-3) and must be parked, then torn down once combat ends.
+--- Create container 5 out of lockdown, then run `leave` under lockdown: id 5 departs (the new or
+--- reset profile seeds only 1-4) and must be parked, then torn down once combat ends.
 local function departsUnderLockdown(leave)
     local NS, mocks = fresh()
     local CM = NS.ContainerManager
     local id = CM.Create({})
     mocks.__fireTimers()
-    local inst4 = CM.instances[id]
-    assertEqual(id, 4)
-    assertTrue(inst4.engine ~= nil, "built out of lockdown")
-    inst4.anchor:Show()
-    local hides, clears = counted(inst4.anchor, "Hide"), counted(inst4.anchor, "ClearAllPoints")
+    local inst5 = CM.instances[id]
+    assertEqual(id, 5)
+    assertTrue(inst5.engine ~= nil, "built out of lockdown")
+    inst5.anchor:Show()
+    local hides, clears = counted(inst5.anchor, "Hide"), counted(inst5.anchor, "ClearAllPoints")
     mocks.__lockdown = true
     leave(NS)
     -- red under: CM.Sync ignoring MustDefer
     assertEqual(hides[1], 0)
     assertEqual(clears[1], 0)
-    assertTrue(inst4.anchor:IsShown())
-    assertFalse(inst4.engine.__enabled)
-    assertTrue(CM.__retiring()[4] == inst4)
+    assertTrue(inst5.anchor:IsShown())
+    assertFalse(inst5.engine.__enabled)
+    assertTrue(CM.__retiring()[5] == inst5)
     mocks.__lockdown = false
     CM.FlushPending()
     assertTrue(hides[1] >= 1 and clears[1] >= 1, "torn down after combat")
@@ -491,20 +491,20 @@ test("manager: a parked id revived by a profile change in combat stays parked un
     local home = NS.db:GetCurrentProfile()
     local id = CM.Create({})
     mocks.__fireTimers()
-    local inst4 = CM.instances[id]
-    local made = spyCreate(mocks, "AuraMasterAnchor4")
+    local inst5 = CM.instances[id]
+    local made = spyCreate(mocks, "AuraMasterAnchor5")
     mocks.__lockdown = true
     NS.db:SetProfile("Raid")
-    assertTrue(CM.__retiring()[4] == inst4, "parked: Raid has no container 4")
+    assertTrue(CM.__retiring()[5] == inst5, "parked: Raid has no container 5")
     NS.db:SetProfile(home)
-    assertTrue(CM.instances[4] == inst4, "revived, not rebuilt")
+    assertTrue(CM.instances[5] == inst5, "revived, not rebuilt")
     assertEqual(made[1], 0)
     -- red under: revive calling ApplyVisibility with the instance unparked on a profile change
-    assertFalse(inst4.engine.__enabled, "a revived engine stays disabled while its data may differ")
+    assertFalse(inst5.engine.__enabled, "a revived engine stays disabled while its data may differ")
     mocks.__lockdown = false
     NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
-    assertNil(inst4.parked)
-    assertTrue(inst4.engine.__enabled, "drawing again after the deferred apply")
+    assertNil(inst5.parked)
+    assertTrue(inst5.engine.__enabled, "drawing again after the deferred apply")
 end)
 
 test("manager: an id a later Create reuses after a profile reset while auras are secret stays parked until the deferred apply", function()
@@ -512,32 +512,32 @@ test("manager: an id a later Create reuses after a profile reset while auras are
     local CM = NS.ContainerManager
     local id = CM.Create({})
     mocks.__fireTimers()
-    assertEqual(id, 4)
+    assertEqual(id, 5)
     assertTrue(NS.SetByPath("container.unit", "focus", id))
     mocks.__fireTimers()
-    local inst4 = CM.instances[4]
-    local e = inst4.engine
-    assertEqual(inst4.unit, "focus")
-    assertTrue(e.__enabled, "drawing for the old container 4")
-    local made = spyCreate(mocks, "AuraMasterAnchor4")
+    local inst5 = CM.instances[5]
+    local e = inst5.engine
+    assertEqual(inst5.unit, "focus")
+    assertTrue(e.__enabled, "drawing for the old container 5")
+    local made = spyCreate(mocks, "AuraMasterAnchor5")
     -- Out of combat, but auras are secret (between pulls in a key): Create is allowed, applies wait.
     mocks.__aurasSecret, mocks.__lockdown = true, false
     NS.db:ResetProfile()
-    assertTrue(CM.__retiring()[4] == inst4, "parked: the reset profile has no container 4")
-    assertEqual(CM.Create({}), 4, "the reset counter hands id 4 out again")
-    assertTrue(CM.instances[4] == inst4, "revived, not rebuilt")
+    assertTrue(CM.__retiring()[5] == inst5, "parked: the reset profile has no container 5")
+    assertEqual(CM.Create({}), 5, "the reset counter hands id 5 out again")
+    assertTrue(CM.instances[5] == inst5, "revived, not rebuilt")
     assertEqual(made[1], 0)
-    assertEqual(NS.Database.FindContainer(4).unit, "player")
+    assertEqual(NS.Database.FindContainer(5).unit, "player")
     -- red under: revive ignoring a profile-change park
-    assertFalse(e.__enabled, "the focus engine does not draw under the new container 4")
+    assertFalse(e.__enabled, "the focus engine does not draw under the new container 5")
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     assertFalse(e.__enabled, "a visibility pass does not re-enable it")
     mocks.__aurasSecret = false
     NS.addon:OnRestrictionChanged()
-    assertTrue(CM.instances[4] == inst4)
-    assertNil(inst4.parked, "the deferred apply unparks it")
-    assertEqual(inst4.unit, "player", "rebuilt for the new container 4")
-    assertTrue(inst4.engine.__enabled, "and drawing again")
+    assertTrue(CM.instances[5] == inst5)
+    assertNil(inst5.parked, "the deferred apply unparks it")
+    assertEqual(inst5.unit, "player", "rebuilt for the new container 5")
+    assertTrue(inst5.engine.__enabled, "and drawing again")
 end)
 
 test("manager: creating or duplicating a container in combat is refused and creates nothing", function()
@@ -848,11 +848,11 @@ test("manager: a new container is named and staggered by its id; a given positio
     local NS = fresh()
     local CM = NS.ContainerManager
     local id = CM.Create({})
-    assertEqual(id, 4)
-    local c = NS.Database.FindContainer(4)
-    assertEqual(c.name, "Container 4")
+    assertEqual(id, 5)
+    local c = NS.Database.FindContainer(5)
+    assertEqual(c.name, "Container 5")
     -- red under: newContainerData staggering without the id
-    assertEqual(c.position.y, -90, "three steps down")
+    assertEqual(c.position.y, -120, "four steps down")
     local placed = CM.Create({ position = { point = "CENTER", relativePoint = "CENTER", x = 5, y = 6 } })
     -- red under: newContainerData staggering a position the caller gave
     assertEqual(NS.Database.FindContainer(placed).position.y, 6)
@@ -884,7 +884,7 @@ test("manager: deleting a container leaves every other attachment and the select
     assertEqual(c1.attach.mode, "frame")
     -- red under: Delete clearing the selection whatever was deleted
     assertEqual(NS.State.activeContainerId, 3)
-    assertEqual(table.concat(NS.db.profile.containerOrder, ","), "1,3")
+    assertEqual(table.concat(NS.db.profile.containerOrder, ","), "1,3,4")
 end)
 
 test("manager: a duplicate of an attached container keeps its position; an unknown id is refused", function()

@@ -229,8 +229,9 @@ NS.CONTAINER_TEMPLATE = {
 }
 
 -- The starter containers a fresh profile is seeded with (core/Database.lua): a player-buff bar
--- stack, a player-debuff icon row, and a target-debuff icon row — enough to show what the addon does
--- without the player having to build anything first.
+-- stack, a player-debuff icon row, a target-debuff icon row, and a text list of the player's
+-- offensive and defensive cooldowns — enough to show what the addon does without the player having
+-- to build anything first. New profiles only: a profile already `seeded` gets none of them again.
 NS.STARTER_CONTAINERS = {
     {
         name = "Player buffs", unit = "player", auraType = "HELPFUL", style = "bars",
@@ -247,5 +248,13 @@ NS.STARTER_CONTAINERS = {
         filter = { castBy = "mine" },
         position = { point = "CENTER", relativePoint = "CENTER", x = 0, y = -160 },
         layout = { axis = "horizontal", growH = "right", growV = "down" },
+    },
+    {
+        -- Only the Offensive cooldowns and Defensives lists draw: every other buff category is
+        -- Hidden, Uncategorized included (defaults/Categories.lua's StatesShowing).
+        name = "Player cooldowns", unit = "player", auraType = "HELPFUL", style = "text",
+        filter = { castBy = "any", categories = NS.Categories.StatesShowing({ "offensiveCDs", "defensives" }) },
+        position = { point = "CENTER", relativePoint = "CENTER", x = -260, y = -40 },
+        layout = { axis = "vertical", growH = "right", growV = "down" },
     },
 }
