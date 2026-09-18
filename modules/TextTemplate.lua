@@ -54,9 +54,11 @@ end
 -- 1. Lexing: characters to literals, tokens and bracket marks
 -- ---------------------------------------------------------------------------
 
--- `[[`, `]]` and `$$` are the escapes for a literal `[`, `]` and `$`.
-local ESCAPES = { ["[["] = "[", ["]]"] = "]", ["$$"] = "$" }
-local MARKS = { ["["] = "open", ["]"] = "close" }
+-- `]]` and `$$` are the escapes for a literal `]` and `$`. `[` is handled separately below: a run of
+-- them is ambiguous (`[[[` could open a bracket then escape one `[`, or escape one `[` then open),
+-- resolved by parity — see lexBracketOpen.
+local ESCAPES = { ["]]"] = "]", ["$$"] = "$" }
+local MARKS = { ["]"] = "close" }
 
 --- One `$name$` at `i`: the item and the index after it, or nil when `$` opens no token here (a lone
 --- `$` is literal text). An unknown name is refused (rule 1).
@@ -70,8 +72,20 @@ local function lexToken(s, i)
     return { t = "tok", def = def }, after
 end
 
+--- One `[` (or a run of them) at `i`: the run's length decides it, not left-to-right greed, so the
+--- group a `[` opens (if any) is always the FIRST `[` of an odd run, with every later pair inside
+--- it as an escaped `[`. An even run is all escapes, no open (mirrors how a `]` run already lexes:
+--- pairs first, an odd run's LAST `]` closes — kept as-is below).
+local function lexBracketOpen(s, i)
+    local run = s:match("^%[+", i)
+    local n = #run
+    if n % 2 == 1 then return { t = "open" }, i + 1 end
+    return { t = "lit", s = "[" }, i + 2
+end
+
 --- The item starting at `i` and the index after it, or nil plus a refusal.
 local function lexOne(s, i)
+    if s:sub(i, i) == "[" then return lexBracketOpen(s, i) end
     local two = s:sub(i, i + 1)
     if ESCAPES[two] then return { t = "lit", s = ESCAPES[two] }, i + 2 end
     local c = s:sub(i, i)
@@ -190,20 +204,38 @@ local function countDurations(items)
     return n
 end
 
---- Rules 4c and 5 over every group: exactly one unit, and a duration group holds the whole run.
-local function checkGroups(nodes, totalDurations)
+--- Rule 4c over every group: each one holds exactly one foldable unit. Checked over every group
+--- before rule 5 runs over any of them, so a rule-4 break always outranks a rule-5 break, whichever
+--- group each sits in (a later group's rule-4 break must still beat an earlier group's rule-5 one).
+local function checkUnits(nodes)
     for _, node in ipairs(nodes) do
         if node.t == "group" then
-            local units, durations, hasName = unitsIn(node)
+            local units, _, hasName = unitsIn(node)
             if units ~= 1 or hasName then
                 return L["A [ ] group must hold exactly one of $stacks$, $dispeltype$ or the duration tokens."]
             end
+        end
+    end
+    return nil
+end
+
+--- Rule 5 over every group: a duration group holds the whole run. Only reached once every group has
+--- already passed rule 4c.
+local function checkDurationGroups(nodes, totalDurations)
+    for _, node in ipairs(nodes) do
+        if node.t == "group" then
+            local _, durations = unitsIn(node)
             if durations > 0 and durations ~= totalDurations then
                 return L["Put all the duration tokens inside the same [ ]."]
             end
         end
     end
     return nil
+end
+
+--- Rules 4c and 5, in that order, over every group.
+local function checkGroups(nodes, totalDurations)
+    return checkUnits(nodes) or checkDurationGroups(nodes, totalDurations)
 end
 
 local BRACES = "[{}]"

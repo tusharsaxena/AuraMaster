@@ -115,6 +115,11 @@ test("template: the first broken rule is the one reported", function()
     assertEqual(refusal("$stacks$ $stacks$ $foo$"):sub(1, 14), "Unknown token ")
     assertEqual(refusal("[$stacks$ $stacks$"),
         L["$%s$ appears twice — each token can be used once."]:format("stacks"))
+    -- rule 4 (an earlier group's rule-4 break) before rule 5 (a later group's rule-5 break) — the
+    -- reverse: a LATER group's rule-4 break must still outrank an EARLIER group's rule-5 break.
+    -- red under: checkGroups checking 4c then 5 per group, in group order, instead of one pass each
+    assertEqual(refusal("$spellname$[ $remainingduration$] $maxduration$[ text]"),
+        L["A [ ] group must hold exactly one of $stacks$, $dispeltype$ or the duration tokens."])
 end)
 
 -- ── escapes and case ───────────────────────────────────────────────────────────────────────────
@@ -122,6 +127,14 @@ end)
 test("template: [[, ]] and $$ write a literal [, ] and $", function()
     -- red under: ESCAPES missing a pair (the [ would open a group)
     assertEqual(shape("[[$spellname$]] $$"), "literal <[> | name | literal <] $>")
+end)
+
+test("template: an odd run of [ opens with its first, an even run is all escapes (]] ]  mirror)", function()
+    -- red under: lexOne treating a run's first pair as an escape, leaving the last [ to open —
+    -- the bracket text would then land outside the group instead of as its pre/post
+    assertEqual(shape("[[[$stacks$]]]"), "stacks <[> <]> <[%d]>")
+    assertEqual(shape("[[$spellname$]]"), "literal <[> | name | literal <]>")
+    assertEqual(shape("[[[[$spellname$]] x"), "literal <[[> | name | literal <] x>")
 end)
 
 test("template: tokens are case-insensitive", function()

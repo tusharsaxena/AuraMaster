@@ -126,7 +126,7 @@ formatted by a `SecondsFormatter`.
 7. The template may not be empty and must contain at least one token (*"Use at least one $token$."*).
 8. Length ≤ 200 characters.
 
-To type a literal `[`, `]` or `$`, double it: `[[`, `]]`, `$$`.
+To type a literal `[`, `]` or `$`, double it: `[[`, `]]`, `$$`. In a run of consecutive `[`, an odd-length run opens a group with its **first** `[` and the rest are escaped pairs (`[[[$stacks$]]]` hides both brackets with the count); an odd-length run of `]` closes with its **last** `]`. An even-length run is all literal.
 
 ### 3.3 Compilation: from template to pieces
 
