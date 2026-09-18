@@ -29,9 +29,10 @@ container, an icon container, an unlocked container with its handle, and each se
 
 ## Usage
 
-Your first login gives you three containers to start from: your buffs as bars near the top right of
-the screen, your debuffs as a row of icons just above them, and the debuffs you've put on your target
-as icons a little below the middle of the screen. They start locked. Type `/am unlock` and each one
+Your first login gives you four containers to start from: your buffs as bars near the top right of
+the screen, your debuffs as a row of icons just above them, the debuffs you've put on your target as
+icons a little below the middle of the screen, and your offensive cooldowns and defensives as a line
+of text near the middle of the screen. They start locked. Type `/am unlock` and each one
 fills with sample auras. It also gets a gold-edged handle with its name, placed just outside the
 first bar or icon so it never covers one. Drag the handles where you want them and type
 `/am lock`. Right-clicking a handle opens the settings with that container already selected.
@@ -42,7 +43,7 @@ and `/am lock` brings them back.
 
 Containers is where you create, rename, duplicate and delete containers, change a
 container's unit, aura type or style, or copy another container's settings onto it. Its own Container
-dropdown picks which one you're editing. The Filters, Layout, Bars and Icons pages also edit one
+dropdown picks which one you're editing. The Filters, Layout, Bars, Icons and Text pages also edit one
 container at a time, each with a Container dropdown at the top, and the choice follows you from page
 to page. Filters decides what gets shown: who cast it, timed or permanent auras, a maximum duration,
 and categories like defensives, crowd control or boss debuffs, each set to Show or Hide in a grid —
@@ -51,7 +52,7 @@ category it belongs to is dropped. Its Overrides tab holds a whitelist and a bla
 to by name, by id or by shift-clicking a link; the whitelist always wins. When a filter can't work
 where you've put it, an orange line at the top of the page tells you why. General → Spell Categories edits which spells each spell category
 holds, for every container at once, and General → Dispel Colors picks the color for each dispel type.
-Bars and Icons hold the look for each style. On the page for the style a container doesn't use, a
+Bars, Icons and Text hold the look for each style. On the page for a style a container doesn't use, a
 notice says so and the controls are dimmed.
 
 Layout decides where a container lives. It can sit on the screen, follow another container as that
