@@ -45,13 +45,23 @@ smoke 11–16). Read it with this plan; it is binding.
 
 ## Status ledger (update after every task)
 
+**How to resume after an interruption.** Work runs on branch `feat/text-style` (never merge, push or
+tag without the owner's approval; incremental commits are allowed). One commit per task, made by the
+controller after the task's review; README.md carries owner edits that ride along with the task
+that touches it (13 or 18). The live execution ledger, with every ruling, deferred minor and review
+package, is `.superpowers/sdd/2026-09-18-text-style/progress.md` (git-ignored; the table below is the
+committed copy). To resume: `git log --oneline master..feat/text-style`, read that ledger, then
+continue at the first row below that is not `done`. A row `in review` has its commit(s) and needs its
+review or fix round finished; a row `in progress` may have uncommitted work in the tree, so check
+`git status` before re-dispatching. Task 15 STOPS for the owner to commit and tag LibKa0s v1.44.0.
+
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 1 | B3 muted-gold notice | todo | |
-| 2 | B4 measured bar time box | todo | |
-| 3 | B5 Style resets Fill (+ seam passes the replaced value) | todo | |
-| 4 | Text-style client APIs: fixture + four Compat wrappers | todo | |
-| 5 | Constants + the template parser | todo | |
+| 1 | B3 muted-gold notice | done | 61b411c; review clean |
+| 2 | B4 measured bar time box | done | 294bfe7; review clean |
+| 3 | B5 Style resets Fill (+ seam passes the replaced value) | done | 07f8016; review clean |
+| 4 | Text-style client APIs: fixture + four Compat wrappers | done | ecf5855; review clean |
+| 5 | Constants + the template parser | in review | 11f86ab + fix 3d8ebbb; fix round 2 (one missing test) in progress |
 | 6 | The Text settings surface (data block, page, refusal reasons, notices, sections, slash) | todo | |
 | 7 | Style.lua shared helpers; Bars on the shared icon helpers | todo | |
 | 8 | Style_Text: the chain, bindings, loops, icon, preview fill | todo | |
