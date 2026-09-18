@@ -47,6 +47,8 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
+        { "modules/Style.lua", "modules/Style_Text.lua" },
+        { "modules/TextTemplate.lua", "modules/Style_Text.lua" },
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },

@@ -434,6 +434,15 @@ function Style.RegionsFor(frame, style, build)
     return am
 end
 
+--- What a live engine is rebuilt for when it changes (modules/Container.lua's structure key): the
+--- style, and for the text style the template's shape (modules/Style_Text.lua). A new shape then
+--- gets new buttons, so no engine binding is left pointing into the old shape's font strings.
+function Style.StructureKey(cfg)
+    local key = Style.StyleKey(cfg)
+    if key ~= "text" or not Style.Text then return key end
+    return "text:" .. Style.Text.Compiled(cfg.text or {}).shape
+end
+
 --- The styler that dresses `cfg`'s elements: Style.Bars, Style.Icons or Style.Text (each decorates
 --- NS.Style at file scope in its own file, so it is looked up here, at call time).
 function Style.Styler(cfg)
