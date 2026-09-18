@@ -210,6 +210,90 @@ function Compat.ExpiringTextColor(threshold, expiring, normal)
 end
 
 -- ---------------------------------------------------------------------------
+-- The text style (issue #2)
+-- ---------------------------------------------------------------------------
+
+--- Enum.DurationTextBindingProperty[member] ("RemainingDuration", "TotalDuration", ...), or nil on a
+--- client without it. Each {} of a duration text's format reads the property its component names.
+--- @param member string
+--- @return number|nil
+function Compat.DurationProperty(member)
+    local e = _G.Enum and _G.Enum.DurationTextBindingProperty
+    if e and e[member] ~= nil then return e[member] end
+    return nil
+end
+
+--- A numeric rule formatter for CustomAuraButton:SetApplicationCount's `formatter` and a duration
+--- component's: a count is written through the format of the highest breakpoint it reaches, so
+--- `{ { threshold = 0, format = "" }, { threshold = 2, format = " x%d" } }` hides a single stack.
+--- Nil on a client without C_StringUtil.CreateNumericRuleFormatter, or when it refuses the list.
+--- @param breakpoints table  { { threshold = number, format = string }, ... }
+--- @return table|nil
+function Compat.CreateRuleFormatter(breakpoints)
+    local su = _G.C_StringUtil
+    if not (su and su.CreateNumericRuleFormatter) then return nil end
+    local ok, f = pcall(su.CreateNumericRuleFormatter)
+    if not ok or not f then return nil end
+    if not pcall(f.SetBreakpoints, f, breakpoints) then return nil end
+    return f
+end
+
+--- A prebuilt duration text binding for SetDurationText's `binding` option, the only way to reach
+--- its setters. A timeless or expired aura writes nothing (SetZeroDurationText and SetExpiredText
+--- ""), so a Text style's whole duration piece, its bracket text included, is empty. `interval`, when
+--- given, is SetUpdateInterval's refresh in seconds, which a blinking run needs to blink smoothly;
+--- without it the engine keeps its own cadence. Nil on a client without C_DurationUtil, or when a
+--- setter refuses.
+--- @param interval number|nil
+--- @return table|nil
+function Compat.CreateDurationBinding(interval)
+    local du = _G.C_DurationUtil
+    if not (du and du.CreateDurationTextBinding) then return nil end
+    local ok, b = pcall(du.CreateDurationTextBinding)
+    if not ok or not b then return nil end
+    local built = pcall(function()
+        b:SetZeroDurationText("")
+        b:SetExpiredText("")
+        if interval then b:SetUpdateInterval(interval) end
+    end)
+    return built and b or nil
+end
+
+-- The blink: below the threshold the running-out color alternates between its own alpha and
+-- BLINK_LOW every BLINK_STEP seconds (the stepped curve the 2026-09-18 probe measured).
+local BLINK_STEP, BLINK_LOW = 0.25, 0.1
+
+--- The blink's points on `curve`: `blink` at full and low alpha in turn from 0 up to `threshold`,
+--- then `normal` from the threshold up.
+local function addBlinkPoints(curve, E, threshold, blink, normal)
+    if curve.SetType and E.LuaCurveType then curve:SetType(E.LuaCurveType.Step) end
+    local r, g, b, a = blink.r or 1, blink.g or 0, blink.b or 0, blink.a or 1
+    local steps = math.floor(threshold / BLINK_STEP)
+    for i = 0, steps - 1 do
+        curve:AddPoint(i * BLINK_STEP, _G.CreateColor(r, g, b, (i % 2 == 0) and a or BLINK_LOW))
+    end
+    curve:AddPoint(threshold, _G.CreateColor(normal.r or 1, normal.g or 1, normal.b or 1, normal.a or 1))
+end
+
+--- The `textColor` option for a BLINKING running-out text: a step color curve over REMAINING time
+--- that alternates `blink` between its own alpha and a tenth of it every quarter second below
+--- `threshold` seconds, and is `normal` above it. Nil without the curve API, or when the curve
+--- refuses a point, which leaves the text its font color, as ExpiringTextColor does.
+--- @param threshold number  seconds
+--- @param blink table       {r,g,b,a}
+--- @param normal table      {r,g,b,a}
+--- @return table|nil  { curve = …, property = … }
+function Compat.BlinkTextColor(threshold, blink, normal)
+    local cu = _G.C_CurveUtil
+    local prop = Compat.DurationProperty("RemainingDuration")
+    if not (cu and cu.CreateColorCurve and prop and _G.CreateColor) then return nil end
+    local ok, curve = pcall(cu.CreateColorCurve)
+    if not ok or not curve then return nil end
+    if not pcall(addBlinkPoints, curve, _G.Enum, threshold, blink, normal) then return nil end
+    return { curve = curve, property = prop }
+end
+
+-- ---------------------------------------------------------------------------
 -- Everything else
 -- ---------------------------------------------------------------------------
 
