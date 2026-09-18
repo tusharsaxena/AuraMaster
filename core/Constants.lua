@@ -169,10 +169,62 @@ C.DEFAULT_DISPEL_COLORS = {
     None    = { r = 0.80, g = 0.00, b = 0.00, a = 1 },
 }
 
+-- ---------------------------------------------------------------------------
+-- The text style (issue #2): each aura one line of text, built from a template
+-- ---------------------------------------------------------------------------
+
+-- Where the line sits in its box. Center is honored only for a one-piece template: the chain's width
+-- is never readable, so nothing longer can be centered (modules/Style_Text.lua).
+C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
+C.TEXT_JUSTIFY_V = { "TOP", "MIDDLE", "BOTTOM" }
+C.TEXT_JUSTIFY_V_LABELS = { TOP = "Top", MIDDLE = "Middle", BOTTOM = "Bottom" }
+
+C.TEXT_ICON_POSITIONS = { "NONE", "LEFT", "RIGHT" }
+C.TEXT_ICON_POSITION_LABELS = { NONE = "Hidden", LEFT = "Left of the text", RIGHT = "Right of the text" }
+
+-- The looping effect. No scale effect, on purpose: a Scale animation grows the glyphs past the boxes
+-- the chain is anchored to, and the pieces overlap (docs/midnight-quirks.md).
+C.TEXT_ANIMS = { "none", "pulse", "blink", "bounce" }
+C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce = "Bounce" }
+
+-- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
+-- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also
+-- names the Enum.DurationTextBindingProperty member it reads, and whether it is a time or a percent.
+C.TEXT_TOKENS = {
+    { key = "spellname",         kind = "name" },
+    { key = "stacks",            kind = "stacks" },
+    { key = "dispeltype",        kind = "dispel" },
+    { key = "remainingduration", kind = "duration", prop = "RemainingDuration", fmt = "time" },
+    { key = "maxduration",       kind = "duration", prop = "TotalDuration",     fmt = "time" },
+    { key = "elapsedduration",   kind = "duration", prop = "ElapsedDuration",   fmt = "time" },
+    { key = "remainingpercent",  kind = "duration", prop = "RemainingPercent",  fmt = "percent" },
+    { key = "elapsedpercent",    kind = "duration", prop = "ElapsedPercent",    fmt = "percent" },
+}
+-- What each token shows, one cheat-sheet line each.
+C.TEXT_TOKEN_LABELS = {
+    spellname         = "The aura's name",
+    stacks            = "Its stack count, hidden below 2",
+    dispeltype        = "Its dispel type (Magic, Curse, ...); nothing when it has none",
+    remainingduration = "The time left",
+    maxduration       = "Its full duration",
+    elapsedduration   = "The time since it was applied",
+    remainingpercent  = "How much of it is left, in percent",
+    elapsedpercent    = "How much of it has run, in percent",
+}
+
+-- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry but
+-- None, plus Enrage. A type this list lacks shows the engine's own text.
+C.TEXT_DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "Enrage" }
+C.TEXT_DISPEL_LABELS = { Magic = "Magic", Curse = "Curse", Disease = "Disease", Poison = "Poison",
+    Bleed = "Bleed", Enrage = "Enrage" }
+
+-- The longest template the parser accepts (modules/TextTemplate.lua, rule 8).
+C.TEXT_TEMPLATE_MAX = 200
+
 -- Placeholder auras for preview mode (preview-mode): real render path, invented data.
 C.PREVIEW_AURAS = {
     { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },
-    { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0 },
+    { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0, dispel = "Magic" },
     { name = "Shield Wall",           icon = 132362, remaining = 4,    duration = 8,    stacks = 0 },
     { name = "Ignore Pain",           icon = 1377132, remaining = 11,  duration = 12,   stacks = 3 },
     { name = "Well Fed",              icon = 136000, remaining = 0,    duration = 0,    stacks = 0 },

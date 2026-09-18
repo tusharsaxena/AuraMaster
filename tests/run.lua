@@ -68,6 +68,7 @@ Kit.run{
         "test_state",
         "test_lifecycle",
         "test_anchors",
+        "test_texttemplate",
         "test_style",
         "test_timedspells",
         "test_style_bars",

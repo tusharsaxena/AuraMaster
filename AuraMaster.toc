@@ -83,6 +83,8 @@ defaults\Profile.lua
 # Conventional: TimedSpells and FilterCompiler resolve their peers at call time.
 modules\TimedSpells.lua
 modules\FilterCompiler.lua
+# LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.
+modules\TextTemplate.lua
 # LOAD-BEARING: Style before Style_Bars and Style_Icons, which decorate NS.Style at file scope.
 modules\Style.lua
 modules\Style_Bars.lua
