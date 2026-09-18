@@ -70,8 +70,8 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 11 | Render coverage walks the Text page | done | 9eae306; review clean |
 | 12 | perf: a text restyle scenario | done | 115e927; review clean |
 | 13 | Part A docs | done | a3faa4c (with owner README edits), fix 045daa6; review clean |
-| 14 | B1 unlock keeps live auras; a standard session-only test mode | in progress | implemented (1042 pass, luacheck 0/0, lizard max CCN 12 in Container.lua); awaiting commit + review |
-| 15 | B2a LibKa0s v1.44.0 `removeStyle = "icon"` (STOP before tag/push) | todo | |
+| 14 | B1 unlock keeps live auras; a standard session-only test mode | done | f7af87b, fix b4d7a6e; review clean after 1 fix round |
+| 15 | B2a LibKa0s v1.44.0 `removeStyle = "icon"` (STOP before tag/push) | done (uncommitted in ../LibKa0s) | review clean; WAITING on the owner to commit + tag v1.44.0 |
 | 16 | B2b re-vendor LibKa0s v1.44.0 into Aura Master | todo | needs the owner's go-ahead on 15 |
 | 17 | B2c spell lists adopt the X icon; Restore moves to the top | todo | needs 16 |
 | 18 | Final gate, inventory, lizard; hand back to the owner | todo | |
