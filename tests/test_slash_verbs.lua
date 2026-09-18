@@ -305,7 +305,7 @@ test("slash verbs: /am list prints every row once, grouped by page in page order
         end
     end
     -- Containers is its own page now (N-1, batch 7), between General and Filters — the tree order.
-    assertEqual(table.concat(groups, ","), "general,containers,filters,layout,bars,icons")
+    assertEqual(table.concat(groups, ","), "general,containers,filters,layout,bars,icons,text")
     -- red under: allRows answering fewer rows than NS.Schema
     for _, row in ipairs(NS2.Schema) do
         local l = rows[row.path]

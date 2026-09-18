@@ -9,9 +9,9 @@ local NS, mocks = T.NS, T.mocks
 local fresh = dofile("tests/fresh_env.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
--- Pages, by key and tree label. Filters, Layout, Bars and Icons are sub-pages of Containers (N-2):
--- their KEY stays plain (D6 — the mark is a label prefix, never a second hierarchy), but the tree
--- label Blizzard registers them under carries NS.SubPageLabel's mark.
+-- Pages, by key and tree label. Filters, Layout, Bars, Icons and Text are sub-pages of Containers
+-- (N-2): their KEY stays plain (D6 — the mark is a label prefix, never a second hierarchy), but the
+-- tree label Blizzard registers them under carries NS.SubPageLabel's mark.
 local PAGES = {
     { key = "general",    label = "General" },
     { key = "containers", label = "Containers" },
@@ -19,6 +19,7 @@ local PAGES = {
     { key = "layout",     label = NS.SubPageLabel("Layout") },
     { key = "bars",       label = NS.SubPageLabel("Bars") },
     { key = "icons",      label = NS.SubPageLabel("Icons") },
+    { key = "text",       label = NS.SubPageLabel("Text") },
 }
 
 test("options: NS.Helpers IS the library instance", function()

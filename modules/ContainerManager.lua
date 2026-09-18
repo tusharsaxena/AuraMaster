@@ -441,7 +441,7 @@ end
 
 -- What "copy settings from" copies. Identity (name), placement (position, attach) and the registry's
 -- own id are never copied: copying a container onto another is about how it looks and what it shows.
-CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons" }
+CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons", "text" }
 -- What "everything" copies: what the container IS, then every section. Identity first, because the
 -- Style row's onChange resets Fill (B5, settings/Containers.lua): the copied layout lands after that
 -- reset, so the copy keeps the source's Fill.

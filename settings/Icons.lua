@@ -112,5 +112,10 @@ NS.RegisterSchemaRows({
 -- about it, and names the page the style lives on rather than parenthesizing it.
 NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "icons" end,
-    disabledNotice = L["Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings."],
+    disabledNotice = function(cfg)
+        if cfg.style == "text" then
+            return L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]
+        end
+        return L["Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings."]
+    end,
 })

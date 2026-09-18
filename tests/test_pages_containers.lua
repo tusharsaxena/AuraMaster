@@ -315,13 +315,16 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     assertFalse(hasOverridesTab(), "redrawn for a weapon-enchant container")
 end)
 
-test("containers: the Style dropdown offers bars and icons and writes the selected container", function()
+test("containers: the Style dropdown offers bars, icons and text and writes the selected container", function()
     local NS, _, P, ws = containers()
     local dd = P.row(ws, "container.style")
-    assertEqual(table.concat(dd.order, ","), "bars,icons")
+    -- red under: C.STYLES without "text" (the Text page would be unreachable)
+    assertEqual(table.concat(dd.order, ","), "bars,icons,text")
     dd:__fire("OnValueChanged", "icons")
     -- red under: the style row writing the wrong path
     assertEqual(NS.Database.FindContainer(1).style, "icons")
+    dd:__fire("OnValueChanged", "text")
+    assertEqual(NS.Database.FindContainer(1).style, "text")
 end)
 
 -- ── B5: changing Style resets Fill ─────────────────────────────────────────────────────────
@@ -336,6 +339,9 @@ test("containers: a new Style resets Fill to the one it suits and leaves the gro
     assertEqual(c1.layout.axis, "horizontal", "bars -> icons: Rows")
     dd:__fire("OnValueChanged", "bars")
     assertEqual(c1.layout.axis, "vertical", "icons -> bars: Columns")
+    dd:__fire("OnValueChanged", "icons")
+    dd:__fire("OnValueChanged", "text")
+    assertEqual(c1.layout.axis, "vertical", "icons -> text: Columns")
     -- red under: a reset table that also rewrites the grow directions
     assertEqual(c1.layout.growH, "left")
     assertEqual(c1.layout.growV, "up")
@@ -434,7 +440,7 @@ test("containers: the copy block offers every other container and copies only th
     local what = P.find(ws, "Dropdown", NS.L["What to copy"])
     -- red under: the source list including the selected container (a copy onto itself)
     assertEqual(table.concat(source.order, ","), "2,3")
-    assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons")
+    assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons,text")
     source:__fire("OnValueChanged", 2)
     what:__fire("OnValueChanged", "bars")
     P.find(ws, "Button", NS.L["Copy onto this container"]):__fire("OnClick")

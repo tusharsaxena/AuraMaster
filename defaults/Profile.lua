@@ -91,22 +91,24 @@ NS.defaults.global = {
     minimap = { hide = false },
 }
 
---- The font block every text element carries: the six canonical leaves (options-ui-§16), then where
---- the text sits.
-local function text(show, size, point, x, y, justify)
+--- The six canonical font leaves (options-ui-§16): white, outlined, no shadow, at `size`.
+local function font(size)
     return {
-        show              = show,
         font              = "Friz Quadrata TT",
         fontSize          = size,
         fontColor         = color(1, 1, 1, 1),
         useClassColorFont = false,
         fontFlags         = "OUTLINE",
         fontShadow        = false,
-        point             = point,
-        x                 = x,
-        y                 = y,
-        justify           = justify,
     }
+end
+
+--- The font block every Bars and Icons text element carries: the six font leaves, then where the
+--- text sits.
+local function text(show, size, point, x, y, justify)
+    local t = font(size)
+    t.show, t.point, t.x, t.y, t.justify = show, point, x, y, justify
+    return t
 end
 
 NS.CONTAINER_TEMPLATE = {
@@ -204,6 +206,25 @@ NS.CONTAINER_TEMPLATE = {
         expiringColorOn = false, expiringThreshold = 5, expiringColor = color(1, 0.25, 0.25, 1),
 
         pandemic = false, pandemicColor = color(1, 0.85, 0.10, 1),
+    },
+
+    -- The text style (issue #2): each aura one line, built from `template` by
+    -- modules/TextTemplate.lua and drawn as a chain of font strings (modules/Style_Text.lua).
+    text = {
+        width = 220, height = 16,
+        template = "$spellname$[ x$stacks$][ - $remainingduration$]",
+        justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,
+        font = font(12),
+        timeFormat = "blizzard",
+
+        icon = "NONE", iconSize = 0, iconGap = 2, iconZoom = 0.08,
+        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderSize = 1,
+        iconBorderColor = color(0, 0, 0, 1), useClassColorIconBorder = false,
+
+        anim = "none", animSpeed = 1.0, animIntensity = 0.3, animBounce = 3,
+
+        expiringColorOn = false, expiringThreshold = 5, expiringColor = color(1, 0.25, 0.25, 1),
+        expiringBlink = false,
     },
 }
 

@@ -45,9 +45,9 @@ C.UNIT_LABELS = { player = "Player", target = "Target", focus = "Focus", pet = "
 C.AURA_TYPES = { "HELPFUL", "HARMFUL", "ENCHANT" }
 C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs", ENCHANT = "Weapon enchants" }
 
--- Container styles. Text is a tracked enhancement.
-C.STYLES = { "bars", "icons" }
-C.STYLE_LABELS = { bars = "Bars", icons = "Icons" }
+-- Container styles.
+C.STYLES = { "bars", "icons", "text" }
+C.STYLE_LABELS = { bars = "Bars", icons = "Icons", text = "Text" }
 
 -- The Fill (layout.axis) each style suits, written when a container's Style changes (B5,
 -- settings/Containers.lua): bars and text stack in a column, icons in a row.

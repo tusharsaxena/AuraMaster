@@ -438,3 +438,14 @@ function TT.Validate(template)
     if r.ok then return true end
     return false, r.err
 end
+
+--- What a STORED template draws: its own compile, or the default template's when the stored one is
+--- refused (a hand-edited SavedVariables file, a token a later version removed), and whether it fell
+--- back. modules/Style_Text.lua draws with it and settings/Text.lua explains with it, so the page
+--- and the element never disagree about the pieces.
+--- @return table compiled, boolean fellBack
+function TT.ForDraw(template)
+    local r = TT.Compile(template)
+    if r.ok then return r, false end
+    return TT.Compile(NS.CONTAINER_TEMPLATE.text.template), true
+end

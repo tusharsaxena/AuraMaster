@@ -53,7 +53,7 @@ NS.COMMANDS = {
         function() runContainers() end},
     {"select",        L["Choose the container settings apply to — /am select id or name"],
         function(rest) runSelect(rest) end},
-    {"new",           L["Create a container — /am new [player|target|focus|pet] [buffs|debuffs|enchants] [bars|icons]"],
+    {"new",           L["Create a container — /am new [player|target|focus|pet] [buffs|debuffs|enchants] [bars|icons|text]"],
         function(rest) runNew(rest) end},
     {"delete",        L["Delete a container — /am delete id or name"],
         function(rest) runDelete(rest) end},
@@ -234,6 +234,7 @@ local NEW_WORDS = {
     enchant = { auraType = "ENCHANT" }, enchants = { auraType = "ENCHANT" },
     bars = { style = "bars" }, bar = { style = "bars" },
     icons = { style = "icons" }, icon = { style = "icons" },
+    text = { style = "text" },
 }
 
 function runNew(rest)
@@ -435,9 +436,12 @@ cli = SlashLib:New({
     -- The schema seams. SetByPath rather than a bare write, so a CLI change takes the path a panel
     -- change takes — the [Set] line, the row's onChange, CONFIG_CHANGED and the panel re-sync.
     get          = function(path) return NS.GetSetting(path) end,
+    -- A refusal with its row's reason (the Text template's parser) prints the reason indented
+    -- under it, the shape slash-commands-§6 gives a failed parse.
     set          = function(path, v)
-        local ok, err = NS.SetByPath(path, v)
+        local ok, err, why = NS.SetByPath(path, v)
         if not ok and err then print(err) end
+        if not ok and why then print("  " .. why) end
     end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
     -- A row with no meaningful default (the container name's `noReset`) is refused with a reason:

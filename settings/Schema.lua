@@ -438,6 +438,7 @@ local SECTIONS = {
     ["container.position"] = "layout",
     ["container.bars"]     = "bars",
     ["container.icons"]    = "icons",
+    ["container.text"]     = "text",
 }
 
 --- Whether `path` is one of the whole-section paths (a test seam: tests/test_schema.lua).
@@ -586,8 +587,9 @@ end
 --- write targets (nil for a global or session row, or when no container resolves), so a row can
 --- check or rewrite a value against ITS container: the attach row refuses a loop from the container
 --- written, the name row makes a name unique. A bad value is refused before a missing container, so
---- the refusal names the value. It returns ok, err|nil, the container id, the value as stored
---- (what onChange and the announcement see), and the value it replaced.
+--- the refusal names the value. A `validate` may answer false AND a reason (the Text template's
+--- parser does); the reason travels on as the refusal's third return. It returns ok, err|nil, the
+--- container id or the reason, and the value as stored (what onChange and the announcement see).
 --- Inside a bulk bracket it tallies the row here, once stored, so an onChange that raises
 --- afterwards cannot drop a stored write from the count.
 local function writeRow(row, path, value, containerId)
@@ -596,8 +598,9 @@ local function writeRow(row, path, value, containerId)
         parts = splitPath(path)
         root, first, id = resolveRoot(parts, containerId)
     end
-    if row.validate and not row.validate(value, id) then
-        return false, L["Invalid value for %s"]:format(path)
+    if row.validate then
+        local ok, why = row.validate(value, id)
+        if not ok then return false, L["Invalid value for %s"]:format(path), why end
     end
     if parts and not root then return false, NO_CONTAINER end
     if row.normalize then value = row.normalize(value, id) end
@@ -622,7 +625,10 @@ end
 --- Order is load-bearing: resolve, validate against the resolved container, normalize, write, react,
 --- log once, announce. A bad value is refused before a missing container. Reacting before the write
 --- would hand a reactor the old value; logging in the reactor would log it once per subscriber.
---- @return boolean ok, string|nil err
+--- A refused row write may carry a third return, the row's own reason (the Text template's parser
+--- message), which the panel and `/am set` print under `err` (settings/OptionsSetup.lua,
+--- settings/Slash.lua).
+--- @return boolean ok, string|nil err, string|nil why
 function NS.SetByPath(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
     if path == MINIMAP_PATH then return writeMinimap(value) end
@@ -633,7 +639,7 @@ function NS.SetByPath(path, value, containerId)
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
     local ok, err, id, stored, old = writeRow(row, path, value, containerId)
-    if not ok then return false, err end
+    if not ok then return false, err, id end
 
     if row.onChange then row.onChange(stored, id, old) end
     announceWrite(row.page, id, path, stored, row.sessionOnly, false)
@@ -659,8 +665,9 @@ local function checkRow(path, value, containerId)
         local _
         root, _, id = resolveRoot(splitPath(path), containerId)
     end
-    if row.validate and not row.validate(value, id) then
-        return false, L["Invalid value for %s"]:format(path)
+    if row.validate then
+        local ok, why = row.validate(value, id)
+        if not ok then return false, L["Invalid value for %s"]:format(path), why end
     end
     if not row.sessionOnly and not root then return false, NO_CONTAINER end
     return true
@@ -717,7 +724,7 @@ end
 
 local VALID_PAGES = {
     general = true, containers = true, filters = true, layout = true, bars = true, icons = true,
-    profiles = true,
+    text = true, profiles = true,
 }
 local VALID_TYPES = { bool = true, number = true, string = true, color = true }
 
