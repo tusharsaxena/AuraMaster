@@ -135,6 +135,8 @@ test("template: an odd run of [ opens with its first, an even run is all escapes
     assertEqual(shape("[[[$stacks$]]]"), "stacks <[> <]> <[%d]>")
     assertEqual(shape("[[$spellname$]]"), "literal <[> | name | literal <]>")
     assertEqual(shape("[[[[$spellname$]] x"), "literal <[[> | name | literal <] x>")
+    -- an even run of [ opens no group, so a lone ] after it is unmatched (rule 4b)
+    assertEqual(refusal("$spellname$[[ x$stacks$]"), L["Unmatched [ or ]."])
 end)
 
 test("template: tokens are case-insensitive", function()
