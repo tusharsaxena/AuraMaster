@@ -26,6 +26,25 @@ table key, index it or run `#` on it.
 - Every chat and debug line goes through `NS.SafeToString` (LibKa0s-Core), so a secret can never
   reach `table.concat` or `string.format`.
 
+**Measured in-game, client 12.1.0 (120100), 2026-09-18** (a throwaway probe for issue #8, run in
+open-world combat, on a target dummy, on dungeon trash and during a boss encounter):
+- `ShouldAurasBeSecret()` answered true in **every** combat context, the open world included, not
+  only in instances.
+- In combat, `C_UnitAuras.GetAuraDataByIndex`, `GetUnitAuras` and `GetAuraSlots` **raised on every
+  call** (7,500 calls, 0 readable ids) with *"Auras cannot be accessed when secret while tainted by
+  '<addon>'"*. Every addon is tainted, so no addon code reads an aura id in combat.
+- The `UNIT_AURA` payload table itself arrived plain, but its `addedAuras` was secret in combat, so no
+  id reaches addon code through the payload or `GetAuraDataByAuraInstanceID` either.
+- Out of combat every route read every id and name, inside a dungeon between pulls too.
+- `ADDON_RESTRICTION_STATE_CHANGED` carries `(type, active)`. Type `0` tracked combat and fired with
+  `PLAYER_REGEN_DISABLED` / `_ENABLED`. Types `1` and `5` went active together at
+  `ENCOUNTER_START` and cleared at `ENCOUNTER_END`. Type `4` went active on entering a dungeon
+  and did not clear, yet auras stayed readable there out of combat.
+
+So learning spell ids from auras can only happen out of combat: `modules/TimedSpells.lua`'s gate
+is the most any feature can have. A seen-aura cache that had to learn in combat (#8) was dropped
+for this reason.
+
 ## The display is Blizzard's AuraContainer
 
 **The restriction.** An addon that cannot read auras cannot decide what to draw. 12.1 supplies the
