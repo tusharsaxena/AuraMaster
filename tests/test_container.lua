@@ -358,6 +358,22 @@ test("container: switching style rebuilds the engine even when the filter plan k
     assertFalse(old.__enabled)
 end)
 
+test("container: a text template of a new shape rebuilds the engine; one of the same shape restyles it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    assertTrue(NS.SetByPath("container.style", "text", 1))
+    mocks.__fireTimers()
+    local e = inst.engine
+    assertTrue(NS.SetByPath("container.text.template", "$spellname$[ y$stacks$][ ~ $remainingduration$]", 1))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "the same shape: the same engine, restyled")
+    assertTrue(NS.SetByPath("container.text.template", "$spellname$", 1))
+    mocks.__fireTimers()
+    -- red under: the structure key without Style.StructureKey (a stale binding writes into a hidden string)
+    assertTrue(inst.engine ~= e, "a new shape gets new buttons")
+    assertFalse(e.__enabled)
+end)
+
 -- ── weapon enchants and engine refusals ──────────────────────────────────────────────────────
 
 test("container: a weapon-enchant container shows the player's enchants in the engine's three slots, whatever its unit", function()

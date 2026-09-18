@@ -349,3 +349,26 @@ test("preview: under lockdown a placed extent stands, and one never placed is pl
     NS2.Preview.Show(k)
     assertEqual(k.previewExtent:__count("SetSize"), 2, "out of combat it follows the block again")
 end)
+
+test("preview: a text container's placeholders read its template, each bracket's text hidden with its value", function()
+    local B = dofile("tests/region_builder.lua")
+    local NS2, m2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local c = cfg({ style = "text", text = { template = "$spellname$[ x$stacks$][ - $remainingduration$]" } }, NS2)
+    local made = {}
+    local k = container(c)
+    k.previewFactory = function() return B.new(made) end
+    B.during(m2, made, function() NS2.Preview.Show(k) end)
+    local lines = {}
+    -- red under: Preview.Show handing a text container the bars styler and pool
+    for i, f in ipairs(k.previewPools.text.active) do
+        local am = f.__am
+        local parts = {}
+        for j = 1, am.pieceCount do parts[j] = (am["piece" .. j]:__last("SetText") or {})[1] or "" end
+        lines[i] = table.concat(parts)
+    end
+    -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"
+    assertEqual(lines[1], "Power Word: Fortitude - 3540s")
+    assertEqual(lines[4], "Ignore Pain x3 - 11s", "stacks from two up, with their bracket text")
+    -- red under: the duration piece writing " - " for a timeless placeholder
+    assertEqual(lines[5], "Well Fed", "a timeless aura: the name alone")
+end)

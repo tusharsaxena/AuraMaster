@@ -6,8 +6,8 @@ local _, NS = ...
 -- WHY THESE ARE NOT ENGINE FRAMES. Blizzard's aura engine only ever shows real auras; there is no way
 -- to hand it a fake one. So preview elements are Buttons of our own, dressed by the SAME Style code the
 -- engine's buttons are (modules/Style*.lua, with `engine` false) and laid out by the same flow rules
--- the engine uses, with invented values filled in. Everything a player changes on the Bars or Icons
--- page therefore shows up here exactly as it will on a real aura.
+-- the engine uses, with invented values filled in. Everything a player changes on the Bars, Icons or
+-- Text page therefore shows up here exactly as it will on a real aura.
 --
 -- Preview is on whenever the addon is UNLOCKED, and only then; while it is, each
 -- container's engine is disabled so real auras do not draw on top of the placeholders.
@@ -106,10 +106,10 @@ function Preview.Show(container)
     local cfg = container:Cfg()
     if not cfg then return end
     if container.previewShown and not container.previewDirty then return end
-    local style = (cfg.style == "icons") and "icons" or "bars"
+    local style = NS.Style.StyleKey(cfg)
     local pool = poolFor(container, style)
     local count = placeholderCount(cfg)
-    local styler = (style == "icons") and NS.Style.Icons or NS.Style.Bars
+    local styler = NS.Style.Styler(cfg)
     local make = container.previewFactory or factory(container.anchor)
     container.previewFactory = make
     for i = 1, count do

@@ -356,7 +356,9 @@ function ContainerClass:Apply()
     self:SnapshotClass(cfg)
 
     if NS.Compat.HasAuraContainer() then
-        local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. tostring(cfg.style)
+        -- The style, and for a text container its template's shape (Style.StructureKey): a new
+        -- shape gets new buttons, so no engine binding is left in the old shape's font strings.
+        local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. NS.Style.StructureKey(cfg)
         if self.engine and self.structure == structure then
             self:Update(cfg, plan)
         else

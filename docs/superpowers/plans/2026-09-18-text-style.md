@@ -64,8 +64,8 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 5 | Constants + the template parser | done | 11f86ab, fixes 3d8ebbb + ec9a485; review clean after 2 fix rounds |
 | 6 | The Text settings surface (data block, page, refusal reasons, notices, sections, slash) | done | 936199d; review clean (5 minors deferred to the final wave) |
 | 7 | Style.lua shared helpers; Bars on the shared icon helpers | done | 6c3694f; review clean |
-| 8 | Style_Text: the chain, bindings, loops, icon, preview fill | in progress | |
-| 9 | Preview dispatch + the text shape in the engine's structure key | todo | |
+| 8 | Style_Text: the chain, bindings, loops, icon, preview fill | done | 53fc6a4; review clean |
+| 9 | Preview dispatch + the text shape in the engine's structure key | done | |
 | 10 | The fourth starter "Player cooldowns" + Cat.StatesShowing + test fallout | todo | |
 | 11 | Render coverage walks the Text page | todo | |
 | 12 | perf: a text restyle scenario | todo | |
