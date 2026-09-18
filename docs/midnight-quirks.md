@@ -223,7 +223,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:434`).
+  aura buttons (`modules/Container.lua:433`).
 
 ## Smaller API moves this addon absorbs
 

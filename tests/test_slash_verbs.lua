@@ -364,17 +364,31 @@ end)
 
 -- ── lock, unlock, pick ────────────────────────────────────────────────────────────────────────
 
-test("slash verbs: /am lock and /am unlock go through the seam, so the placeholders follow; /am unlock says how to drag", function()
+test("slash verbs: /am lock and /am unlock go through the seam: unlocked shows the handle, and live auras keep drawing (B1)", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     local inst = NS2.ContainerManager.instances[1]
     assertEqual(dump(slash(NS2, lines, "unlock")), "{Containers unlocked — drag a container by its handle}")
     assertFalse(NS2.db.profile.locked)
-    assertTrue(inst.previewShown, "unlocked: the placeholders show")
+    assertTrue(inst.handle:IsShown(), "unlocked: the handle shows")
+    -- red under: ShouldShow still reading the lock as the preview
+    assertFalse(inst.previewShown, "unlocked: no placeholders")
+    assertTrue(inst.engine.__enabled, "unlocked: real auras draw")
     assertEqual(dump(slash(NS2, lines, "lock")), "{Containers locked}")
     assertTrue(NS2.db.profile.locked)
     -- red under: runLock writing profile.locked around the seam (no CONFIG_CHANGED, no visibility pass)
-    assertFalse(inst.previewShown, "locked: they go")
+    assertFalse(inst.handle:IsShown(), "locked: the handle goes")
+end)
+
+test("slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    mocks.__lockdown = true
+    NS2.Slash:OnSlash("test")
+    -- red under: Preview.SetTestMode starting under lockdown
+    assertFalse(NS2.State.testMode)
+    assertEqual(#lines, 1, "one line")
+    assertTrue(lines[1]:find("|cff808080", 1, true) and lines[1]:find("Test mode can't start in combat.", 1, true) ~= nil, lines[1])
 end)
 
 --- Drive the frame picker's overlay the way the client would.

@@ -40,8 +40,9 @@ suite covers what only the client can show.
 
 ## C. Unlock, drag, preview
 
-14. `/am unlock` → every container shows a handle with its name and fills with placeholder auras;
-    real auras are hidden. The handle is a dark strip with a thin gold edge and a gold label, sitting
+14. `/am unlock` → every container shows a handle with its name and a faint outline one element in
+    size; real auras keep drawing. `/am test` → every container fills with placeholder auras and its
+    real auras are hidden, the outline giving way to them. The handle is a dark strip with a thin gold edge and a gold label, sitting
     outside the container: above it when the auras grow down, below when they grow up, lined up with
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
     Hovering the strip or the help mark at its right end shows, at the cursor, the name and "Drag to
@@ -50,15 +51,15 @@ suite covers what only the client can show.
     **Screen edge.** `/am unlock`, drag a container that grows down flush against the top of the
     screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
     its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
-    **Attached container.** Attach one container to another (Layout → Anchor) and unlock → the
+    **Attached container.** Attach one container to another (Layout → Anchor), unlock and `/am test` → the
     attached container's placeholders start just past the target's last placeholder, and its handle
     draws above the target's placeholders (check 41).
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
     the help mark moves it too. Right-click a handle → the settings open with that container selected.
-16. `/am lock` → handles and placeholders go; real auras return.
-17. **Unlocking is the test mode.** General → Master controls has no Test mode row (Lock frame,
-    Debug console, then the button pair). `/am test` and `/am preview` → an unknown-command line and
-    the help index; neither is listed in `/am help`.
+16. `/am test off` → the placeholders go and real auras return; `/am lock` → handles and outlines go.
+17. **Test mode has its own switch.** General → Master controls shows a **Test mode** row beside
+    Minimap button. `/am test` is listed in `/am help`; `/am preview` → an unknown-command line and
+    the help index.
 18. **Combat drag.** Unlock, enter combat, try to drag → the container does not move.
 
 ## D. Settings panel — every page and tab
@@ -191,9 +192,10 @@ suite covers what only the client can show.
 ## G. Attach
 
 41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
-    as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked, with
-    B attached to A → B's placeholders start just past A's last placeholder rather than on top of A,
-    and B's handle draws above A's placeholders; `/am lock` → B follows A's real auras again.
+    as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked and in
+    test mode, with B attached to A → B's placeholders start just past A's last placeholder rather
+    than on top of A, and B's handle draws above A's placeholders; `/am test off` → B follows A's real
+    auras again.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout
@@ -251,7 +253,7 @@ suite covers what only the client can show.
     **World tooltips (L-3).** Put a bar or icon container over a world unit (an NPC or a player).
     Hover an element → only the aura's tooltip shows, never the unit's tooltip beside it. A unit
     tooltip that was already up when the cursor entered the element fades rather than lingering.
-    Unlock and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
+    `/am test` and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
     **Click-through** on, the hover reaches the world by design → the unit's tooltip shows. A new
     container sits in the **Medium** strata (Layout → Frame → Strata).
 
@@ -355,7 +357,7 @@ listed here too, so the batch can be signed off in one pass.
 64. **World tooltips (L-3, question Q6).** Check 49's World tooltips paragraph: a live element with
     tooltips on holds the hover, so no unit tooltip appears beside the aura's; a placeholder over a
     unit shows no unit tooltip; a unit tooltip already up fades.
-65. **Placeholder time text (B-5, question Q7).** Unlock a bar container and switch Time text →
+65. **Placeholder time text (B-5, question Q7).** `/am test` on a bar container and switch Time text →
     **Countdown** between Blizzard, short and detailed → the placeholders' time text changes with it
     and reads as a live aura's does in the same format. Tick Highlights → **Running out** → the
     *Shield Wall* placeholder (4 s left) takes the running-out color.
@@ -413,7 +415,7 @@ listed here too, so the batch can be signed off in one pass.
     again → the unit's tooltip comes back, proving the blocker that closes the gap is gated off, not
     unconditional. Turn Click-through back off, then turn **Show tooltips** off instead and hover the
     gap once more → the unit's tooltip shows there too, for the same reason.
-    **Preview is exempt by design.** `/am unlock` and hover a gap between placeholders
+    **Preview is exempt by design.** `/am test` and hover a gap between placeholders
     → the unit's tooltip shows there, same as Click-through. Expected: the blocker is hidden whenever
     the engine is (real auras are hidden while previewing too), so this is not a regression to report.
 
@@ -527,12 +529,11 @@ nothing).
     shows **the addon's own logo**, not a blank square and not a Blizzard icon.
 87. **The button is there.** A round button wearing that same logo sits on the minimap ring. Drag it
     around the ring → it follows; `/reload` → it is still where you left it.
-88. **Left-click = unlock.** With containers locked, left-click the button → every container shows
-    its handle and its placeholder auras, exactly as `/am unlock` does, and General → Master
-    controls → **Lock frame** goes unticked. Left-click again → locked, handles and placeholders
-    gone, the checkbox ticked.
+88. **Left-click = test mode.** Left-click the button → every container shows its placeholder
+    auras without unlocking, and General → Master controls → **Test mode** ticks. Left-click again →
+    they go and the checkbox unticks.
 89. **Right-click = settings.** Right-click the button → Settings opens at **Ka0s Aura Master**, and
-    the lock does **not** change.
+    test mode does **not** change.
 90. **The checkbox and the button agree, both ways.** Untick General → Master controls → **Minimap
     button** → the button vanishes at once, no reload. Tick it → it comes back **at the same angle**.
     Now hide it from LibDBIcon's own right-click menu instead → reopen the settings and the checkbox
@@ -593,3 +594,8 @@ nothing).
      literal `%` between the two times, not a formatting artifact or an error.
 110. **Bracketed stacks.** Template `[[[$stacks$]]]`: on a stacked aura the line reads `[3]` (or
      however many stacks); on a non-stacking aura the brackets do not appear at all.
+111. **Unlock keeps live auras.** `/am unlock`: live auras keep drawing, and each container shows an
+     outline and its handle; an EMPTY container can still be dragged by its handle.
+112. **Test mode.** The Master controls checkbox and `/am test` show placeholders without unlocking.
+     Pull a mob: test mode ends and the checkbox unticks. `/am test` in combat prints one gray line
+     and starts nothing. The minimap left-click toggles it.

@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 203 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 235 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -10,7 +10,7 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
-| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the placeholder preview), debug console, the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
@@ -92,7 +92,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (19 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -103,14 +103,18 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | General visibility | `visibility` | string | `always` / `inCombat` / `outOfCombat` / `never`; combat read with `UnitAffectingCombat("player")` |
 | Master scale | `scale` | number | Multiplies each container's own Layout → Frame scale |
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
-| Lock frame | `locked` | bool | Unlocked shows every handle and the placeholder preview; locking ends it. The unlocked view is this addon's test mode, so Lock frame is its switch |
+| Lock frame | `locked` | bool | Unlocked shows every container's drag handle and a faint outline one element in size, and live auras keep drawing; an unlocked container shows whatever its visibility rule, so one set to *In combat* can still be found and moved. Locking hides them |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
 | Minimap button | `global.minimap.hide` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label says SHOWN and the stored key says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.hide` still restores it |
+| Test mode | `state.testMode` | bool, session | Every container shows its placeholder auras, without unlocking; never written to the profile (below) |
 
-There is **no Test mode row**. Unlocking already shows every container's placeholder auras, so under
-preview-mode's exception (standard v2.49.0) the unlocked view is the test mode: `testModePath` is not
-passed to the composer and there is no `/am test` verb. Minimap button therefore opens the fourth
-line alone, where an addon with a test mode would draw `[Minimap button] [Test mode]`.
+**Test mode** (`state.testMode`, bool, session) sits beside Minimap button, composed from
+`testModePath` (preview-mode, options-ui-§15). It shows every container's placeholder auras without
+unlocking, and each container's engine is disabled while it is on. It is bound to
+`NS.State.testMode` through `Preview.SetTestMode`, the one writer `/am test` and the minimap button's
+left click also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
+start in combat is refused with one gray line, the checkbox reading false again. Its default is
+false, so *Reset all settings* ends it too.
 
 **Reset all settings does not reach the Minimap button.** That control is a profile reset
 (options-ui-§12) and the row is global, which is the reason launcher-§3 puts it there: a button the

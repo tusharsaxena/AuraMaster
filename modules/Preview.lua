@@ -9,13 +9,35 @@ local _, NS = ...
 -- the engine uses, with invented values filled in. Everything a player changes on the Bars, Icons or
 -- Text page therefore shows up here exactly as it will on a real aura.
 --
--- Preview is on whenever the addon is UNLOCKED, and only then; while it is, each
--- container's engine is disabled so real auras do not draw on top of the placeholders.
+-- Preview is on while TEST MODE is (NS.State.testMode, switched only by Preview.SetTestMode below);
+-- while it is, each container's engine is disabled so real auras do not draw on top of the
+-- placeholders. Unlocking is separate: it makes containers draggable and leaves live auras drawing
+-- (B1, 2026-09-19).
 
 NS.Preview = NS.Preview or {}
 local Preview = NS.Preview
 
 local C = NS.Constants
+
+--- Turn test mode on or off: every container shows its placeholder auras while it is on
+--- (preview-mode, options-ui-§15). Session-only, never saved. A START in combat is refused with one
+--- gray line and changes nothing (the checkbox then reads false again); combat ending it is
+--- core/AuraMaster.lua's PLAYER_REGEN_DISABLED, which calls this with false. The Master controls
+--- checkbox, `/am test` and the launcher's left-click all come through here.
+--- @return boolean  whether test mode is now what was asked for
+function Preview.SetTestMode(on)
+    on = on and true or false
+    if on and InCombatLockdown() then
+        NS.Printf("|cff808080%s|r", NS.L["Test mode can't start in combat."])
+        return false
+    end
+    if NS.State.testMode ~= on then
+        NS.State.testMode = on
+        NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
+    end
+    if NS.Helpers and NS.Helpers.RefreshScalars then NS.Helpers.RefreshScalars() end
+    return true
+end
 
 --- Where preview element `index` (1-based) sits relative to the anchor, for `cfg`'s flow settings.
 --- Pure arithmetic, so the layout rules are testable headlessly. The axis and growth are the

@@ -83,6 +83,9 @@ function addon:OnEnterWorld()
 end
 
 function addon:OnCombatChanged(event)
+    -- Test mode ends when combat starts, while secure writes are still allowed (preview-mode): no
+    -- placeholder covers real auras in a fight.
+    if event == "PLAYER_REGEN_DISABLED" and NS.State.testMode then NS.Preview.SetTestMode(false) end
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if event == "PLAYER_REGEN_ENABLED" then
         -- "regen": the deferral notice never escalates on this edge (modules/ContainerManager.lua).

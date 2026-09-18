@@ -13,16 +13,15 @@ local addonName, NS = ...
 -- settings panel opens. The object, the click dispatch, the two LibStub lookups and the Show/Hide
 -- plumbing are the library's.
 --
--- RUNG (b) — THE PREVIEW SWITCH IS THE LOCK (launcher-§2). This addon has no primary window and no
--- Test mode row: unlocking already draws every container's placeholder auras, so under
--- preview-mode's exception the unlocked view IS the preview and `Lock frame` is its switch
--- (settings/General.lua says the same thing where the row is composed). Left-click therefore
--- toggles the lock, and it does so by calling the SAME host verb `/am lock` and `/am unlock` call,
--- which writes `locked` through NS.SetByPath — the addon's single write seam (architecture-§5). No
--- copy of the lock lives here; a second copy is the state that drifts on the next change.
+-- RUNG (b) — THE PREVIEW SWITCH IS THE TEST MODE (launcher-§2). This addon has no primary window;
+-- its preview has a switch of its own since unlocking stopped previewing (B1, 2026-09-19): the
+-- Master controls Test mode checkbox (settings/General.lua). Left-click therefore toggles test mode,
+-- and it does so by calling the SAME host verb a bare `/am test` calls, which switches it through
+-- modules/Preview.lua's Preview.SetTestMode — the one writer of NS.State.testMode. No copy of the
+-- mode lives here; a second copy is the state that drifts on the next change.
 --
 -- RIGHT-CLICK ALWAYS OPENS THE PANEL, on every addon in the collection, which is what lets the left
--- button be spent on the lock. Neither button is reassignable and there is no setting for either.
+-- button be spent on the test mode. Neither button is reassignable and there is no setting for either.
 --
 -- THE MINIMAP TABLE IS PASSED AS A FUNCTION, not as a table. `NS.db` does not exist at file load —
 -- core/Database.lua builds it in OnInitialize — and AceDB replaces whatever table was there, so a
@@ -106,8 +105,8 @@ NS.Launcher = Launcher:New({
     -- Right-click, always, on every addon in the collection.
     openSettings = function() NS.OpenOptionsPanel() end,
 
-    -- LEFT-CLICK, AND ITS PRESENCE IS THE RUNG. The same host verb `/am lock` and `/am unlock` run,
-    -- so the launcher, the two verbs and the Lock frame checkbox are three doors onto one write.
+    -- LEFT-CLICK, AND ITS PRESENCE IS THE RUNG. The same host verb a bare `/am test` runs, so the
+    -- launcher, the verb and the Test mode checkbox are three doors onto one switch.
     --
     -- AND IT IS REFUSED WHILE THE ADDON IS DISABLED (launcher-§2, slash-commands-§7). Rung (b)'s
     -- left-click drives the preview switch, which is a FEATURE, so a disabled addon answers the one
@@ -121,9 +120,7 @@ NS.Launcher = Launcher:New({
             if NS.Slash and NS.Slash.DisabledLine then NS.Print(NS.Slash.DisabledLine()) end
             return
         end
-        if NS.Slash and NS.Slash.SetLocked then
-            NS.Slash.SetLocked(not NS.GetSetting("locked"))
-        end
+        if NS.Slash and NS.Slash.ToggleTestMode then NS.Slash.ToggleTestMode() end
     end,
 
     -- CALL-TIME forwarders: core/CoreSetup.lua's printer is reclaimed from AceConsole's embed in

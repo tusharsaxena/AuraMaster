@@ -105,22 +105,45 @@ test("general: the Debug console checkbox shows the window and writes nothing to
     assertFalse(NS.DebugLog:IsShown(), "and closed again")
 end)
 
-test("general: Master controls has no Test mode row; Lock frame is the preview's switch", function()
-    -- preview-mode (standard v2.49.0): unlocking already shows every container's placeholder auras,
-    -- so the unlocked view is this addon's test mode and Lock frame its switch; no Test mode row.
+test("general: the Test mode checkbox shows the placeholders without unlocking, and reads the mode back (B1)", function()
     local NS, _, P, ws = general()
-    -- red under: settings/General.lua still handing MasterControls a testModePath
-    -- (with no row, the page can draw none: P.row itself refuses a path the schema lacks)
-    assertNil(NS.FindSchemaRow("state.preview"), "no state.preview row in the schema")
-    local lock = P.row(ws, "locked")
-    lock:__fire("OnValueChanged", false)
+    local box = P.row(ws, "state.testMode")
+    assertEqual(box.type, "CheckBox")
+    box:__fire("OnValueChanged", true)
     for id, inst in pairs(NS.ContainerManager.instances) do
-        assertTrue(inst.previewShown, "container " .. id .. " shows its placeholders while unlocked")
+        -- red under: the row's set not reaching Preview.SetTestMode
+        assertTrue(inst.previewShown, "container " .. id .. " shows its placeholders")
     end
-    lock:__fire("OnValueChanged", true)
+    assertTrue(NS.db.profile.locked, "without unlocking")
+    box:__fire("OnValueChanged", false)
     for id, inst in pairs(NS.ContainerManager.instances) do
-        assertFalse(inst.previewShown, "container " .. id .. " drops them when locked")
+        assertFalse(inst.previewShown, "container " .. id .. " drops them")
     end
+end)
+
+test("general: a Test mode start in combat is refused and the checkbox reads false again (B1)", function()
+    local NS, m, P, ws = general()
+    local box = P.row(ws, "state.testMode")
+    m.__lockdown = true
+    box:__fire("OnValueChanged", true)
+    -- red under: the row storing the value past Preview.SetTestMode's refusal
+    assertFalse(NS.State.testMode)
+    assertFalse(box.value and true or false, "the checkbox follows the refusal")
+end)
+
+test("general: combat starting ends test mode, and Reset all settings ends it too (B1)", function()
+    local NS, m, P, ws = general()
+    NS.Preview.SetTestMode(true)
+    NS.addon:OnCombatChanged("PLAYER_REGEN_DISABLED")
+    -- red under: OnCombatChanged not ending test mode (a placeholder covering real auras in a fight)
+    assertFalse(NS.State.testMode)
+    assertFalse(P.row(P.rerender("General"), "state.testMode").value and true or false)
+    m.__lockdown = false
+    NS.Preview.SetTestMode(true)
+    NS.Helpers.RestoreAllDefaults()
+    -- red under: the Test mode row without its default (options-ui-§12's reset leaves it on)
+    assertFalse(NS.State.testMode)
+    assertTrue(ws ~= nil)
 end)
 
 test("general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was", function()

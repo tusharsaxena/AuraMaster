@@ -144,24 +144,43 @@ test("container: the show ladder — suspend, the master switch, the container s
     assertFalse((inst:ShouldShow()))
 end)
 
-test("container: unlocking previews placeholders through the style code and disables the engine", function()
+test("container: test mode previews placeholders through the style code and disables the engine", function()
     local NS = fresh()
     local inst = NS.ContainerManager.instances[1]
-    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     local enabled = inst.engine:__callsTo("SetEnabled")
     assertEqual(enabled[#enabled][2], false, "real auras do not draw over the placeholders")
     local _, active = NS.Pool.Counts(inst.previewPools.bars)
     assertEqual(active, #NS.Constants.PREVIEW_AURAS)
     assertTrue(inst.previewPools.bars.active[1].__am ~= nil, "dressed by the same Style code")
-    NS.SetByPath("locked", true)
+    NS.Preview.SetTestMode(false)
     local _, after = NS.Pool.Counts(inst.previewPools.bars)
     assertEqual(after, 0)
+end)
+
+test("container: unlocked, a container shows whatever its visibility rule, its engine drawing, under an outline (B1)", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("visibility", "never")
+    assertFalse(inst.engine.__enabled, "locked and set to never: nothing draws")
+    NS.SetByPath("locked", false)
+    -- red under: ShouldShow applying the visibility rule while unlocked (an in-combat-only
+    -- container could never be found and moved out of combat)
+    assertTrue(inst.engine.__enabled, "unlocked: shown, its live auras drawing")
+    assertTrue(inst.handle:IsShown(), "and its handle")
+    -- red under: ApplyVisibility without the outline (an empty container has nothing to grab)
+    assertTrue(inst.outline ~= nil and inst.outline:IsShown(), "an outline marks even an empty container")
+    NS.Preview.SetTestMode(true)
+    assertFalse(inst.outline:IsShown(), "test mode: the placeholders are there instead")
+    NS.Preview.SetTestMode(false)
+    NS.SetByPath("locked", true)
+    assertFalse(inst.outline:IsShown(), "locked: no outline")
 end)
 
 test("container: a visibility pass re-dresses no preview element unless the settings changed", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
-    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     local dressed = 0
     local element = NS.Style.Element
@@ -206,7 +225,7 @@ test("container: on a client without the aura engine nothing is built and previe
     local NS, mocks = fresh({ before = function(m) m.AuraContainerSortMethod = nil end })
     assertEqual(#mocks.__engines, 0)
     assertNil(NS.ContainerManager.instances[1].engine)
-    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     local _, active = NS.Pool.Counts(NS.ContainerManager.instances[1].previewPools.bars)
     assertTrue(active > 0)
 end)

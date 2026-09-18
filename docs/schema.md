@@ -180,11 +180,12 @@ over the template:
 
 ## Session state (not persisted)
 
-`NS.State` (`core/State.lua`): `debug` (the console's logging flag) and `activeContainerId` (which
-container every `container.` path resolves against). Both reset at every `/reload`. There is no
-preview flag: the placeholders show while the addon is unlocked, and only then.
-The schema reaches the session state through one `sessionOnly` row, `state.debugConsole`, which
-writes nothing to the database.
+`NS.State` (`core/State.lua`): `debug` (the console's logging flag), `activeContainerId` (which
+container every `container.` path resolves against) and `testMode` (every container shows its
+placeholder auras; switched only by `Preview.SetTestMode`, ended when combat starts). All three reset
+at every `/reload`. Unlocking does not preview: it makes containers draggable while live auras keep
+drawing. The schema reaches the session state through two `sessionOnly` rows, `state.debugConsole`
+and `state.testMode`, which write nothing to the database.
 
 ## `AuraMasterPerfDB` — the capture ring
 

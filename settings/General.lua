@@ -7,7 +7,7 @@ local _, NS = ...
 --     Master controls  [Enable Aura Master]  [General visibility]
 --                      [Master scale]        [Master alpha]
 --                      [Lock frame]          [Debug console]
---                      [Minimap button]
+--                      [Minimap button]      [Test mode]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
 --     Display          -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
 --     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
@@ -24,11 +24,13 @@ local _, NS = ...
 -- omitted. Master scale and alpha MULTIPLY each container's own scale and alpha on the Layout page;
 -- the two are different settings and neither replaces the other.
 --
--- NO TEST MODE ROW. Unlocking already shows every container's placeholder auras, so under
--- preview-mode's exception (standard v2.49.0) the unlocked view is this addon's test mode and Lock
--- frame is its switch: no `testModePath` is passed, and there is no `/am test` verb. The fourth
--- line is therefore [Minimap button] alone, which is the shape the composer computes for an addon
--- that names one of the two paths.
+-- THE TEST MODE ROW (preview-mode, options-ui-§15, anti-pattern #80). Unlocking makes containers
+-- draggable and leaves their live auras drawing (B1, 2026-09-19), so the unlocked view is no longer a
+-- test mode and preview-mode's exception no longer applies: the placeholders have a switch of their
+-- own. The composer emits it from `testModePath` beside Minimap button; it is a SESSION row bound to
+-- NS.State.testMode through modules/Preview.lua's Preview.SetTestMode, the one writer `/am test` and
+-- the launcher's left-click also use. Off after a reload, ended when combat starts, refused in
+-- combat, and ended by Reset all settings (the row's default is false).
 --
 -- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.hide`, and that is not an
 -- oversight of the empty prefix above: the table is LibDBIcon's own and lives in the GLOBAL store,
@@ -41,6 +43,8 @@ local print = NS.Print
 local GS = NS.GeneralSpells
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
+-- Session state, like the console row: the path names no stored leaf.
+local TEST_MODE_PATH = "state.testMode"
 -- VERBATIM: the global store, outside the profile prefix (launcher-§3).
 local MINIMAP_PATH = "global.minimap.hide"
 
@@ -51,13 +55,14 @@ local masterRows, masterTail = H.MasterControls({
     frameless        = false,
     debugConsolePath = DEBUG_CONSOLE_PATH,
     minimapPath      = MINIMAP_PATH,
+    testModePath     = TEST_MODE_PATH,
     onResetPosition  = function() NS.ContainerManager.ResetPositions() end,
     onResetAll       = function() StaticPopup_Show("AURAMASTER_RESET_ALL") end,
 })
 
 -- The composer emits DATA; the host attaches behavior, keyed by PATH so an upstream reorder cannot
 -- move a handler onto the wrong row. Lock frame needs no onChange of its own: ContainerClass:ShouldShow
--- reads the lock, so its visibility pass alone shows or drops the placeholders.
+-- reads the lock, so its visibility pass alone shows or drops the handles and outlines.
 --
 -- What each master row changes, read by modules/ContainerManager.lua off CONFIG_CHANGED's `path`.
 -- These four change only whether and how brightly containers show, which is a visibility pass: legal
@@ -97,6 +102,14 @@ for _, row in ipairs(masterRows) do
         -- names the debug console among the session rows a reset MUST restore.
         row.default = false
         -- Explicitly nothing: toggling a window re-applies no container.
+        row.onChange = function() end
+    end
+    if row.path == TEST_MODE_PATH then
+        -- Bound to the one switch, which refuses a start in combat, sends the visibility pass
+        -- itself and re-syncs this checkbox (a refused start reads false again).
+        row.get = function() return NS.State.testMode end
+        row.set = function(v) NS.Preview.SetTestMode(v) end
+        row.default = false
         row.onChange = function() end
     end
 end

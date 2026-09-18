@@ -79,15 +79,16 @@ end)
 test("options: the General page leads with Master controls, in canonical order", function()
     local rows = NS.SchemaForPage("general")
     local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole",
-                   "global.minimap.hide" }
+                   "global.minimap.hide", "state.testMode" }
     for i, path in ipairs(want) do
         assertEqual(rows[i].path, path)
         assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)
     end
-    -- red under: an eighth composed row. Standard v2.49.0 (preview-mode): unlocking already shows the
-    -- placeholder preview, so Lock frame is the test mode's switch and no Test mode row is composed;
-    -- the minimap row closes the set, in the first column of the line the Test mode row would share.
-    assertTrue(rows[8] == nil or rows[8].group ~= NS.Helpers.MASTER_GROUP, "Master controls has seven rows")
+    -- red under: settings/General.lua without its testModePath (B1: unlocking no longer previews,
+    -- so the test mode has a row of its own, beside Minimap button: options-ui-§15, anti-pattern #80)
+    assertTrue(rows[9] == nil or rows[9].group ~= NS.Helpers.MASTER_GROUP, "Master controls has eight rows")
+    assertTrue(rows[8].sessionOnly, "Test mode is session state")
+    assertNil(rows[8].startsLine, "it pairs beside Minimap button")
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 

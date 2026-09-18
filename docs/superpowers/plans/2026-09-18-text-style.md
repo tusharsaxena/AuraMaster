@@ -69,8 +69,8 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 10 | The fourth starter "Player cooldowns" + Cat.StatesShowing + test fallout | done | 7b4754e; review clean |
 | 11 | Render coverage walks the Text page | done | 9eae306; review clean |
 | 12 | perf: a text restyle scenario | done | 115e927; review clean |
-| 13 | Part A docs | in progress | |
-| 14 | B1 unlock keeps live auras; a standard session-only test mode | todo | |
+| 13 | Part A docs | done | a3faa4c (with owner README edits), fix 045daa6; review clean |
+| 14 | B1 unlock keeps live auras; a standard session-only test mode | in progress | implemented (1042 pass, luacheck 0/0, lizard max CCN 12 in Container.lua); awaiting commit + review |
 | 15 | B2a LibKa0s v1.44.0 `removeStyle = "icon"` (STOP before tag/push) | todo | |
 | 16 | B2b re-vendor LibKa0s v1.44.0 into Aura Master | todo | needs the owner's go-ahead on 15 |
 | 17 | B2c spell lists adopt the X icon; Restore moves to the top | todo | needs 16 |

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1038%2F1038_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1042%2F1042_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -15,8 +15,9 @@ anywhere on screen or attach to another container or any in-game frame.
 Aura Master is built on top of the new Aura Container APIs introduced in 12.1. The game hides aura details from addons during combat, so Aura Master never reads your auras at all. It tells the game's own aura display what to show and how to style it, and the game handles the rest, in combat and out of it.
 
 Everything is set up from the addon's page under Settings → AddOns, from the button on your
-minimap, or from chat with `/am`. Left-clicking the minimap button unlocks your containers so you
-can see and move them, and clicking it again locks them; right-clicking it opens the settings.
+minimap, or from chat with `/am`. Left-clicking the minimap button turns test mode on, filling
+every container with sample auras, and clicking it again turns it off; right-clicking it opens the
+settings.
 If you would rather not have the button, the Minimap button checkbox under General → Master
 controls turns it off, and it stays off — resetting your settings does not put it back, any more
 than it drags the button to a different spot on the ring. The same addon appears as *Ka0s Aura
@@ -32,14 +33,17 @@ container, an icon container, an unlocked container with its handle, and each se
 Your first login gives you four containers to start from: your buffs as bars near the top right of
 the screen, your debuffs as a row of icons just above them, the debuffs you've put on your target as
 icons a little below the middle of the screen, and your offensive cooldowns and defensives as a line
-of text near the middle of the screen. They start locked. Type `/am unlock` and each one
-fills with sample auras. It also gets a gold-edged handle with its name, placed just outside the
-first bar or icon so it never covers one. Drag the handles where you want them and type
-`/am lock`. Right-clicking a handle opens the settings with that container already selected.
+of text near the middle of the screen. They start locked. Type `/am unlock` and each one gets a
+gold-edged handle with its name, placed just outside the first bar or icon so it never covers one,
+and a faint outline, so even an empty container can be found. Your live auras keep drawing while
+you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
+opens the settings with that container already selected.
 
-Those sample auras are the preview, and unlocking is how you see them. It's the quickest way to try
-textures, fonts and sizes before a real buff turns up. Real auras stay hidden while you're unlocked,
-and `/am lock` brings them back.
+Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
+waiting for a real buff to turn up. Turn it on with the Test mode checkbox under General → Master
+controls, with `/am test`, or with a left-click on the minimap button; you don't have to unlock
+first. Real auras stay hidden while it's on. It ends by itself when combat starts, and it can't be
+started during combat.
 
 Containers is where you create, rename, duplicate and delete containers, change a
 container's unit, aura type or style, or copy another container's settings onto it. Its own Container
@@ -122,7 +126,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | Symptom | Fix |
 |---------|-----|
 | Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on Containers. |
-| I only see the sample auras | You're unlocked. Type `/am lock`. |
+| I only see the sample auras | Test mode is on. Type `/am test off`, or untick **Test mode** under General → Master controls. |
 | A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |
 | I can't drag a container | Only containers attached to the screen can be dragged, and not during combat. An attached container follows its target; move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |

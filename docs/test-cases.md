@@ -39,8 +39,8 @@ badge and any count quoted in the docs must agree with it.
 - launcher: Register is idempotent, so a second call builds no second button
 - launcher: the icon is this addon's own 128 logo — the file ## IconTexture names
 - launcher: the icon file ships as an uncompressed 32-bit 128x128 TGA
-- launcher: rung (b) — the LEFT click toggles the lock, through the addon's own write seam
-- launcher: the left click holds no copy of the lock — it writes the path the checkbox writes
+- launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)
+- launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses
 - launcher: the RIGHT click opens the settings panel, whatever the left button does
 - minimap row: composed, stored not session, default SHOWN, in its canonical position
 - minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
@@ -50,7 +50,7 @@ badge and any count quoted in the docs must agree with it.
 - minimap row: /am set and /am reset reach it through the same seam, inverted the same way
 - verbs: /am enable and /am disable are aliases of the Enable row's path, holding no state
 - verbs: the dispatcher answers while the addon is disabled, or the pair is one-way
-- verbs: the launcher's click, the two verbs and the checkbox are three doors onto one write
+- verbs: the launcher's click, /am test and the Test mode checkbox are three doors onto one switch
 - launcher: a host with neither broker library does not raise, and still records the choice
 - launcher: with LibDataBroker but no LibDBIcon, the broker plugin still exists
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
@@ -273,7 +273,7 @@ badge and any count quoted in the docs must agree with it.
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 
-### test_container.lua (42)
+### test_container.lua (43)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -284,7 +284,8 @@ badge and any count quoted in the docs must agree with it.
 - container: a restyle re-dresses every button the engine has made
 - container: nothing touches the engine while auras are secret, and it catches up after
 - container: the show ladder — suspend, the master switch, the container switch, visibility
-- container: unlocking previews placeholders through the style code and disables the engine
+- container: test mode previews placeholders through the style code and disables the engine
+- container: unlocked, a container shows whatever its visibility rule, its engine drawing, under an outline (B1)
 - container: a visibility pass re-dresses no preview element unless the settings changed
 - container: a new target refreshes only the containers tracking the target
 - container: Blizzard's load-on-demand aura container is loaded before the first engine
@@ -415,7 +416,7 @@ badge and any count quoted in the docs must agree with it.
 ### test_state.lua (2)
 
 - state: the session flags start off, are never saved, and a reload starts them clean
-- state: there is no preview flag and no preview toggle; unlocking is the preview
+- state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)
 
 ### test_lifecycle.lua (10)
 
@@ -492,8 +493,8 @@ badge and any count quoted in the docs must agree with it.
 - anchors: detaching a container restores its own stored flow at the next apply
 - anchors: a write that moves a container's flow re-applies every container following it
 - anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
-- anchors: locking re-anchors an attached container to its parent's engine, and unlocking back to the extent (L-4)
-- anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)
+- anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
+- anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 
 ### test_texttemplate.lua (24)
@@ -721,7 +722,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
 - preview: switching a previewed container from bars to icons re-dresses without error
 - preview: switching a previewed container from icons to bars re-dresses without error
-- preview: a bar container duplicated while unlocked, then switched to icons, re-dresses (the owner's steps)
+- preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
 - preview: each style keeps its own pool, and a switch parks the other style's placeholders
 - preview: a placeholder holds the mouse's hover as its container's buttons do, so no world tooltip shows through (L-3)
 - preview: the extent covers the placeholder block from the corner it starts at, sized by Preview.Offset (L-4)
@@ -786,8 +787,8 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am select takes an id or a name; /am containers marks the selection
 - slash: /am set writes the selected container through the seam
 - slash: lock and unlock drive the same setting the panel does
-- slash: /am test and /am preview are unknown verbs; each prints the help index and changes nothing
-- slash: /am help and the landing page list neither test nor preview
+- slash: /am preview is an unknown verb; /am test switches test mode and leaves the lock alone (B1)
+- slash: /am help and the landing page list test, and not preview (B1)
 - slash: /am disable and /am enable write the master switch through the seam and say so
 - slash: /am disable in combat is not refused; the master switch is a visibility write
 - slash: /am enable prints the seam's error instead of the success line
@@ -803,7 +804,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (40)
+### test_slash_verbs.lua (41)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -827,7 +828,8 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am resetall resets the profile once, with no popup, and says so
 - slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
 - slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
-- slash verbs: /am lock and /am unlock go through the seam, so the placeholders follow; /am unlock says how to drag
+- slash verbs: /am lock and /am unlock go through the seam: unlocked shows the handle, and live auras keep drawing (B1)
+- slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
 - slash verbs: /am set on a free-text row stores every word typed after the path
@@ -911,13 +913,15 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (35)
+### test_pages_general.lua (37)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
 - general: the visibility dropdown offers the four states in order and stores the one chosen
 - general: the Debug console checkbox shows the window and writes nothing to the profile
-- general: Master controls has no Test mode row; Lock frame is the preview's switch
+- general: the Test mode checkbox shows the placeholders without unlocking, and reads the mode back (B1)
+- general: a Test mode start in combat is refused and the checkbox reads false again (B1)
+- general: combat starting ends test mode, and Reset all settings ends it too (B1)
 - general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
@@ -1208,7 +1212,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 75 |
-| test_container.lua | 42 |
+| test_container.lua | 43 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
@@ -1228,11 +1232,11 @@ badge and any count quoted in the docs must agree with it.
 | test_framepicker.lua | 13 |
 | test_disabled.lua | 12 |
 | test_slash.lua | 23 |
-| test_slash_verbs.lua | 40 |
+| test_slash_verbs.lua | 41 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 35 |
+| test_pages_general.lua | 37 |
 | test_pages_containers.lua | 28 |
 | test_pages_filters.lua | 42 |
 | test_pages_layout.lua | 22 |
@@ -1252,4 +1256,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1038** |
+| **Total** | **1042** |

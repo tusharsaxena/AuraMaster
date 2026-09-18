@@ -1013,12 +1013,14 @@ end)
 -- only its provisional 1x1 rect (Container:Build's SetSize(1, 1); no layout pass replaces it), and 2
 -- hung TOPLEFT → BOTTOMLEFT from that engine: on 1's first placeholder, 2's handle among them.
 
---- Container 2 attached to container 1, unlocked and flushed: 1 previews, its engine off.
+--- Container 2 attached to container 1, unlocked (the handles show), in test mode and flushed: 1
+--- previews, its engine off.
 local function previewPair()
     local NS, mocks = fresh()
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
     NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     return NS, mocks, NS.ContainerManager
 end
@@ -1049,28 +1051,28 @@ test("anchors: while its parent previews, an attached container hangs from the p
     assertTrue(two.previewExtent ~= nil and lastTarget(rec3) == two.previewExtent, "a chain: 3 hangs from 2's extent")
 end)
 
-test("anchors: locking re-anchors an attached container to its parent's engine, and unlocking back to the extent (L-4)", function()
+test("anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)", function()
     local NS, mocks, CM = previewPair()
     local one, two = CM.instances[1], CM.instances[2]
     local rec = recordAnchor(two)
-    NS.SetByPath("locked", true)
+    NS.Preview.SetTestMode(false)
     mocks.__fireTimers()
     -- red under: ApplyVisibility leaving the followers where the preview put them
-    assertTrue(lastTarget(rec) == one.engine, "locked: the engine, which lays out the real auras again")
-    NS.SetByPath("locked", false)
+    assertTrue(lastTarget(rec) == one.engine, "test mode off: the engine, which lays out the real auras again")
+    NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
-    assertTrue(lastTarget(rec) == one.previewExtent, "unlocked: the extent again")
+    assertTrue(lastTarget(rec) == one.previewExtent, "test mode on: the extent again")
     local placed = #rec.points
     CM.ApplyVisibility()
     -- red under: re-placing the followers on every visibility pass (a pass that changes nothing moves nothing)
     assertEqual(#rec.points, placed)
 end)
 
-test("anchors: under lockdown a preview toggle leaves an attached container where it is; the pass after combat moves it (L-4)", function()
+test("anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)", function()
     local NS, mocks, CM = previewPair()
     local rec = recordAnchor(CM.instances[2])
     mocks.__lockdown = true
-    NS.SetByPath("locked", true)
+    NS.Preview.SetTestMode(false)
     mocks.__fireTimers()
     -- red under: re-placing a follower under lockdown (its anchor parents an aura engine:
     -- events-frames-taint-§2)

@@ -30,7 +30,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:340
+ 4  Container:Apply                                            modules/Container.lua:343
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style
@@ -128,17 +128,20 @@ signatures differ (`modules/Container.lua:289-290`), because the engine clears a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:260`).
+`SetUnit` last (`modules/Container.lua:263`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:397`) answers, in order — perf suspend, profile and
-container `enabled`, preview (unlocked), then General visibility against
-`UnitAffectingCombat("player")`. `ApplyVisibility` enables or disables the **engine** (never
+`Container:ShouldShow` (`modules/Container.lua:400`) answers, in order — perf suspend, profile and
+container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
+unlocked container skips so one that shows only in combat can still be found and moved; it also
+answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
+not the lock. `ApplyVisibility` enables or disables the **engine** (never
 `Show`/`Hide` on its ancestry), sets the anchor alpha (container alpha × master alpha), draws or
-clears the preview, and shows the drag handle while unlocked. `ApplyVisibility` runs after every
-apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end) and whenever a row whose
+clears the preview, and shows the drag handle while unlocked, with a faint outline one element in
+size unless test mode's placeholders are there. `ApplyVisibility` runs after every
+apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test mode switch) and whenever a row whose
 `effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
 container's own enable). The handle
 (`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into, so it
@@ -146,7 +149,7 @@ covers no element and nothing moves to make room for it.
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:104`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:126`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
 `engine = false`, fills in invented names, times and stacks, and positions it with
 `Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders
