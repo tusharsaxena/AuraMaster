@@ -121,6 +121,63 @@ function Style.ApplyText(fs, t, anchorTo, tdef, boxWidth)
     fs:SetWordWrap(false)
 end
 
+-- ---------------------------------------------------------------------------
+-- Measuring a time text (B4)
+-- ---------------------------------------------------------------------------
+-- A bar's time text beside the name needs a box of its own, and the engine writes it secret, so its
+-- width cannot be read back. It CAN be measured beforehand: the formatter the engine is handed writes
+-- plain numbers too, so the widest strings a format produces are set on one hidden FontString of ours
+-- (never secret) and measured. The ems budget (C.TIME_TEXT_EMS) guessed, and guessed short: 2.5 ems
+-- of an 11pt font cut a Blizzard-format "59 m" to "59...".
+
+-- The seconds sampled: the largest value before each unit or digit count changes.
+local TIME_SAMPLES = { 59, 599, 3599, 35999, 86399, 863999 }
+local measureFS             -- the hidden FontString, built on first use
+local measuredWidths = {}   -- ["path|size|flags|format"] = width, or false when it cannot be measured
+
+--- The FontString time texts are measured on: one hidden, addon-owned string, built on first use. A
+--- test replaces this function to measure on a recorder.
+function Style.__measurer()
+    if measureFS == nil then
+        local host = CreateFrame("Frame", nil, UIParent)
+        host:Hide()
+        measureFS = host:CreateFontString(nil, "OVERLAY")
+    end
+    return measureFS
+end
+
+--- The widest of the sample strings `fmt` writes, in one font; nil when the string cannot be measured.
+local function widestSample(path, size, flags, fmt)
+    local fs = Style.__measurer()
+    if not fs then return nil end
+    fs:SetFont(path, size, flags)
+    local most
+    for _, seconds in ipairs(TIME_SAMPLES) do
+        fs:SetText(Style.PreviewSeconds(seconds, fmt))
+        local w = fs:GetStringWidth()
+        if type(w) ~= "number" then return nil end
+        if not most or w > most then most = w end
+    end
+    return most
+end
+
+--- The width, in pixels, a time text in font block `t` needs for the widest string format `fmt`
+--- writes, plus 2 for the outline and shadow; nil when it cannot be measured (the caller keeps its
+--- ems budget then). Cached per font path, size, flags and format.
+function Style.TimeTextWidth(t, tdef, fmt)
+    local size = tonumber(t.fontSize) or tdef.fontSize
+    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
+    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local key = ("%s|%s|%s|%s"):format(path, size, flags, tostring(fmt))
+    local w = measuredWidths[key]
+    if w == nil then
+        local most = widestSample(path, size, flags, fmt)
+        w = most and (most + 2) or false
+        measuredWidths[key] = w
+    end
+    return w or nil
+end
+
 --- Dress a BackdropTemplate frame as an element border.
 function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     if not frame then return end
@@ -398,6 +455,17 @@ function Style.BindDurationText(frame, fs, s, sdef)
     Style.Bind(frame, "SetDurationText", fs, opts)
 end
 
+--- `seconds` written as a live button's time text reads (B-5), for a placeholder: through the
+--- formatter the engine is handed for the same format (formatterFor). A placeholder's seconds are a
+--- plain number, so the formatter's own Format answers here (research notes Q7); a client without
+--- the formatter, or one that refuses, writes whole seconds.
+function Style.PreviewSeconds(seconds, timeFormat)
+    local f = formatterFor(timeFormat)
+    local ok, text = false, nil
+    if f and f.Format then ok, text = pcall(f.Format, f, seconds) end
+    return (ok and type(text) == "string") and text or ("%ds"):format(seconds)
+end
+
 --- A placeholder's time text, written as a live button's reads (B-5): the remaining seconds through
 --- the formatter the engine is handed for the same format (formatterFor). A placeholder's seconds
 --- are a plain number, so the formatter's own Format answers here (research notes Q7). A client
@@ -410,10 +478,7 @@ function Style.PreviewTime(fs, aura, s, sdef)
         fs:SetText("")
         return
     end
-    local f = formatterFor(s.timeFormat)
-    local ok, text = false, nil
-    if f and f.Format then ok, text = pcall(f.Format, f, aura.remaining) end
-    fs:SetText((ok and type(text) == "string") and text or ("%ds"):format(aura.remaining))
+    fs:SetText(Style.PreviewSeconds(aura.remaining, s.timeFormat))
     if s.expiringColorOn and aura.remaining < (tonumber(s.expiringThreshold) or sdef.expiringThreshold) then
         fs:SetTextColor(Style.Color(s.expiringColor or sdef.expiringColor, false))
     end

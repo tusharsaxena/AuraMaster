@@ -455,6 +455,46 @@ test("bars: beside the name the time is boxed to its format's widest string, so 
     assertEqual(am.time:__last("SetWidth")[1], 40 - 18 - 1 - 4, "held to the bar area less the offset")
 end)
 
+-- ── the measured time box (B4) ──────────────────────────────────────────────────────────────────
+
+--- A fresh environment whose time texts are measured on a recorder answering half the font size per
+--- character of the last string set, so a longer string or a bigger font measures wider.
+local function measuring()
+    local ns = dofile("tests/fresh_env.lua")()
+    local fs = R()
+    fs.__answer.GetStringWidth = function(self)
+        local font, text = self:__last("SetFont"), self:__last("SetText")
+        return #text[1] * font[2] * 0.5
+    end
+    ns.Style.__measurer = function() return fs end
+    return ns, fs
+end
+
+test("bars: beside the name the time is boxed to the measured width of its format's widest string (B4)", function()
+    local ns, fs = measuring()
+    -- No formatter headlessly: the samples are written as whole seconds, the widest "863999s".
+    local _, am = dressed(cfg(), false, nil, ns)
+    -- red under: timeBoxWidth keeping the ems budget (2.5 ems of 11pt, 28px: "59 m" cut to "59...")
+    assertEqual(am.time:__last("SetWidth")[1], math.ceil(7 * 11 * 0.5 + 2))
+    _, am = dressed(cfg({ bars = { time = { fontSize = 20 } } }), false, nil, ns)
+    assertEqual(am.time:__last("SetWidth")[1], 7 * 20 * 0.5 + 2, "a bigger font, a wider box")
+    -- red under: the offset taken out of the box (moving the text would clip it)
+    _, am = dressed(cfg({ bars = { time = { x = -15 } } }), false, nil, ns)
+    assertEqual(am.time:__last("SetWidth")[1], math.ceil(7 * 11 * 0.5 + 2), "the offset moves the box, never narrows it")
+    local measured = fs:__count("SetText")
+    dressed(cfg(), false, nil, ns)
+    -- red under: TimeTextWidth measuring on every dress
+    assertEqual(fs:__count("SetText"), measured, "cached per font and format")
+    dressed(cfg({ bars = { time = { fontFlags = "NONE" } } }), false, nil, ns)
+    assertTrue(fs:__count("SetText") > measured, "a new font measures again")
+end)
+
+test("bars: where nothing can be measured the time keeps its ems budget", function()
+    -- The shared environment's measuring string is the kit's, whose GetStringWidth answers no number.
+    local _, am = dressed(cfg())
+    assertEqual(am.time:__last("SetWidth")[1], 28, "2.5 ems of 11pt")
+end)
+
 -- ── engine bindings ───────────────────────────────────────────────────────────────────────────
 
 test("bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on", function()

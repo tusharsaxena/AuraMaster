@@ -157,7 +157,7 @@ preview reads its placeholders' durations and hides the spark directly.
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:156`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:213`), and then adds again
 (`modules/Style_Bars.lua:299`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after

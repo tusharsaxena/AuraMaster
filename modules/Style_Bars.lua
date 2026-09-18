@@ -242,14 +242,19 @@ local function textShown(t)
     return t == nil or t.show ~= false
 end
 
---- The box a time text takes beside the name: the widest string its format writes at its font size
---- (C.TIME_TEXT_EMS), plus its offset, which Style.ApplyText takes back off; never wider than the bar
---- area. A format this build does not know gets the widest budget.
+--- The box a time text takes beside the name: the measured width of the widest string its format
+--- writes in its font (Style.TimeTextWidth, B4), or, where nothing can be measured, the ems budget
+--- (C.TIME_TEXT_EMS; a format this build does not know gets the widest). Plus its offset, which
+--- Style.ApplyText takes back off, so an offset moves the text and never narrows its box; never wider
+--- than the bar area.
 local function timeBoxWidth(b, area)
     local t = b.time or {}
-    local size = tonumber(t.fontSize) or D.bars.time.fontSize
-    local ems = C.TIME_TEXT_EMS[b.timeFormat] or C.TIME_TEXT_EMS.long
-    return math.min(area, math.ceil(size * ems) + math.abs(tonumber(t.x) or 0))
+    local width = Style.TimeTextWidth(t, D.bars.time, b.timeFormat)
+    if not width then
+        local size = tonumber(t.fontSize) or D.bars.time.fontSize
+        width = size * (C.TIME_TEXT_EMS[b.timeFormat] or C.TIME_TEXT_EMS.long)
+    end
+    return math.min(area, math.ceil(width) + math.abs(tonumber(t.x) or 0))
 end
 
 --- Dress the name, time and stack texts, each boxed to its host so its justification shows, and show

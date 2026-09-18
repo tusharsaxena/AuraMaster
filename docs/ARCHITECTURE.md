@@ -446,7 +446,7 @@ return value.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:382-384`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:439-441`).
 
 ## Known Limitations
 
