@@ -23,7 +23,7 @@ end
 local NOTICE = "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."
 local GOLD = "|c" .. T.NS.Constants.NOTICE_COLOR
 
-test("bars: every tab of an icons container carries the gray note; a bars container's carry none", function()
+test("bars: every tab of an icons container carries the muted-gold note; a bars container's carry none", function()
     local NS, _, P, ws = bars()
     local notice = GOLD .. NS.L[NOTICE] .. "|r"
     assertFalse(P.hasText(ws, notice), "container 1 is drawn as bars")

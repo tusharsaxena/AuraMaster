@@ -173,6 +173,24 @@ test("containers: New container creates a container and selects it", function()
     assertEqual(id, NS.db.profile.containerOrder[#NS.STARTER_CONTAINERS + 1])
 end)
 
+test("containers: New container takes the Fill its style suits (B5)", function()
+    local NS, _, P, ws = containers()
+    P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
+    local c = NS.ActiveContainer()
+    -- red under: newContainerData leaving the Fill out of the style rule
+    assertEqual(c.layout.axis, NS.Constants.STYLE_FILL_AXIS[c.style])
+end)
+
+test("containers: a created container with its own Fill keeps it; Create with only a style takes the style's", function()
+    local NS = containers()
+    local CM = NS.ContainerManager
+    local id = CM.Create({ style = "icons", layout = { axis = "vertical" } })
+    -- red under: the style rule overwriting a Fill the caller gave
+    assertEqual(NS.Database.FindContainer(id).layout.axis, "vertical")
+    id = CM.Create({ style = "icons" })
+    assertEqual(NS.Database.FindContainer(id).layout.axis, "horizontal")
+end)
+
 test("containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)", function()
     local NS, m, P = containers()
     local popups = P.popups()

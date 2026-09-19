@@ -180,7 +180,9 @@ selected) on one line. With no container, that line and one sentence are all the
 | Style | `container.style` | string | Bars / Icons / Text; structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
-re-choosing the same style keeps a Fill set by hand (B5).
+re-choosing the same style keeps a Fill set by hand (B5). A new container (**New container**, or
+`/am new … icons`) starts with the Fill its style suits by the same rule; a duplicate keeps its
+source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,

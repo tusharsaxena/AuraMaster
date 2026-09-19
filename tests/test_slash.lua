@@ -52,6 +52,27 @@ test("slash: /am new creates the described container and selects it", function()
     assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
 end)
 
+test("slash: /am new text creates a text-style container", function()
+    local NS2 = fresh()
+    NS2.Slash:OnSlash("new player buffs text")
+    local _, id = NS2.ActiveContainer()
+    local c = NS2.Database.FindContainer(id)
+    -- red under: NEW_WORDS without "text" (the verb refuses the word and creates nothing)
+    assertEqual(c.style, "text")
+    assertEqual(c.auraType, "HELPFUL")
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+end)
+
+test("slash: /am new gives the new container the Fill its style suits (B5)", function()
+    local NS2 = fresh()
+    for word, axis in pairs({ icons = "horizontal", bars = "vertical", text = "vertical" }) do
+        NS2.Slash:OnSlash("new target debuffs " .. word)
+        local _, id = NS2.ActiveContainer()
+        -- red under: CM.Create keeping the template's Fill whatever the style (an icon row in Columns)
+        assertEqual(NS2.Database.FindContainer(id).layout.axis, axis, word)
+    end
+end)
+
 test("slash: /am new with a word it does not know creates nothing and says why", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)

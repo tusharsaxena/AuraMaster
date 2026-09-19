@@ -599,7 +599,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (52)
+### test_style_bars.lua (54)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -636,6 +636,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: each text is boxed to its host less its offset: the bar area, or the icon for the stacks on it
 - bars: beside the name the time is boxed to its format's widest string, so its justify shows and the name keeps its room
 - bars: beside the name the time is boxed to the measured width of its format's widest string (B4)
+- bars: a measurer answering no width, refusing the font or raising gives the ems budget and caches nothing
 - bars: where nothing can be measured the time keeps its ems budget
 - bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on
 - bars: a hidden region is never handed to the engine
@@ -645,6 +646,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: back to static on a button holding no aura, the fill the engine hid shows again
 - bars: in dispel mode the engine's tint stays the fill's last color
 - bars: the refresh-window highlight is bound only when turned on, and always cleared first
+- bars: with the time's class color on, the running-out curve returns to the class color, one curve per container
 - bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
 - bars: a preview with a missing icon gap measures the template's gap, as the layout does
 - bars: a missing icon size is the template's, in the layout and in the preview alike
@@ -682,7 +684,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (25)
+### test_style_text.lua (30)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -695,6 +697,11 @@ badge and any count quoted in the docs must agree with it.
 - text style: dispel type binds a text map of every type in the bracket text, nothing without a type
 - text style: the duration run binds its format, components and a prebuilt binding that writes nothing when timeless
 - text style: blink binds the blinking curve and a 0.1 s refresh; off, neither
+- text style: with the font's class color on, the running-out curves return to the class color, one curve per container
+- text style: a class snapshot that changes in place builds a new curve, never reuses the old class's
+- text style: a loop setter that raises cannot cost the engine bindings: the fields are bound first
+- text style: two buttons of one container get distinct prebuilt duration bindings
+- text style: a live re-dress for a new shape binds the new chain's strings, not the parked chain's
 - text style: a template without a duration token binds no duration text
 - text style: a preview dress binds nothing
 - text style: the three loops are built once, looping as each effect needs, and None plays none
@@ -780,11 +787,13 @@ badge and any count quoted in the docs must agree with it.
 - disabled: releasing one hold does not stand up an addon the other still holds down
 - disabled: a profile switch to an enabled profile stands the addon back up
 
-### test_slash.lua (23)
+### test_slash.lua (25)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
 - slash: /am new creates the described container and selects it
+- slash: /am new text creates a text-style container
+- slash: /am new gives the new container the Fill its style suits (B5)
 - slash: /am new with a word it does not know creates nothing and says why
 - slash: /am select takes an id or a name; /am containers marks the selection
 - slash: /am set writes the selected container through the seam
@@ -955,7 +964,7 @@ badge and any count quoted in the docs must agree with it.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_containers.lua (28)
+### test_pages_containers.lua (30)
 
 - containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
@@ -964,6 +973,8 @@ badge and any count quoted in the docs must agree with it.
 - containers: the tab body opens with the Container picker and New container on one line
 - containers: the picker retargets the tab and every page
 - containers: New container creates a container and selects it
+- containers: New container takes the Fill its style suits (B5)
+- containers: a created container with its own Fill keeps it; Create with only a style takes the style's
 - containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
 - containers: with no containers the page draws the picker, New container and one line instead of the rows
 - containers: the Name box renames the selected container, trimmed, and no other
@@ -1058,7 +1069,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_bars.lua (11)
 
-- bars: every tab of an icons container carries the gray note; a bars container's carry none
+- bars: every tab of an icons container carries the muted-gold note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
 - bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
@@ -1072,7 +1083,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_icons.lua (7)
 
-- icons: a bars container's tabs carry the gray note; an icons container's carry none
+- icons: a bars container's tabs carry the muted-gold note; an icons container's carry none
 - icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
 - icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - icons: the six tabs are drawn in order
@@ -1225,21 +1236,21 @@ badge and any count quoted in the docs must agree with it.
 | test_texttemplate.lua | 24 |
 | test_style.lua | 48 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 52 |
+| test_style_bars.lua | 54 |
 | test_style_icons.lua | 25 |
-| test_style_text.lua | 25 |
+| test_style_text.lua | 30 |
 | test_preview.lua | 19 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_disabled.lua | 12 |
-| test_slash.lua | 23 |
+| test_slash.lua | 25 |
 | test_slash_verbs.lua | 41 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 37 |
-| test_pages_containers.lua | 28 |
+| test_pages_containers.lua | 30 |
 | test_pages_filters.lua | 42 |
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 11 |
@@ -1258,4 +1269,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1044** |
+| **Total** | **1055** |

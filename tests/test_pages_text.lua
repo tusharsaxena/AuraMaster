@@ -81,6 +81,8 @@ test("text page: General holds Size, the Template box, the cheat sheet, then Pla
         assertTrue(joined:find("$" .. def.key .. "$", 1, true) ~= nil, "cheat sheet names $" .. def.key .. "$")
     end
     assertTrue(P.hasText(ws, L["To write a literal [, ] or $, type it twice: [[, ]] or $$."]))
+    -- red under: the cheat sheet leaving out how an odd run of [ combines an escape and a bracket
+    assertTrue(P.hasText(ws, L["Escapes and brackets combine: [[[$stacks$]]] shows [3] only when stacked."]))
     -- The cheat sheet sits between the Template box and the Placement rows.
     local at = {}
     for i, w in ipairs(ws) do

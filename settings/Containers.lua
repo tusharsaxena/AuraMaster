@@ -85,7 +85,8 @@ local ROWS = {
         -- B5: a new style resets Fill (Layout -> Growth) to the one it suits, through the one write
         -- seam and for the same container, then the panel rebuilds once. Only on a real change: the
         -- seam hands onChange the value it replaced. A duplicate, a copy-from's own layout, a profile
-        -- switch and the starter seeding never come through here, so their stored Fill stands.
+        -- switch and the starter seeding never come through here, so their stored Fill stands. A new
+        -- container takes the same rule at creation (modules/ContainerManager.lua's newContainerData).
         onChange = function(v, id, old)
             local axis = C.STYLE_FILL_AXIS[v]
             if axis and old ~= v then NS.SetByPath("container.layout.axis", axis, id) end

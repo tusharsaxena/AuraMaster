@@ -29,7 +29,8 @@ local _, NS = ...
 -- ANIMATIONS ARE SET UP AT DRESS TIME ONLY. In combat every call on a button's objects is refused
 -- (AnimationGroup:Play/Stop included), but an animation started at dress time keeps running through
 -- combat. All three loops are built once with the regions; a dress configures them, stops them all
--- and plays the chosen one. A change made in combat waits for the deferred restyle
+-- and plays the chosen one, AFTER the engine bindings, so a refused call on a button built in combat
+-- cannot leave its fields unbound. A change made in combat waits for the deferred restyle
 -- (ContainerManager.MustDefer), like every other setting.
 --
 -- LOAD-BEARING POSITION: after modules/Style.lua, whose NS.Style this decorates at file scope, and
@@ -223,8 +224,9 @@ end
 -- The loops, each the group a dress plays for its `anim` value.
 local LOOPS = { { "pulse", "pulseGroup" }, { "blink", "blinkGroup" }, { "bounce", "bounceGroup" } }
 
---- Time the three loops from the settings, stop them all, and play the chosen one. Calls on a live
---- button's objects go through Style.Bind, so a refusal costs the call and is logged, never the dress.
+--- Time the three loops from the settings, stop them all, and play the chosen one. Only Play and Stop
+--- go through Style.Bind (a refusal costs the call and is logged); the timing setters are called raw,
+--- so a refusal there raises, which is why Text.Apply runs this after the engine bindings.
 local function applyLoops(am, s)
     local half = number(s.animSpeed, D.animSpeed) / 2
     local low = number(s.animIntensity, D.animIntensity)
@@ -293,7 +295,8 @@ local BINDERS = {
     duration = function(frame, fs, piece, s, am)
         local font = s.font or D.font
         Style.BindDurationFormat(frame, fs, Style.DurationTextFormat(piece, s.timeFormat),
-            bindingFor(am, s.expiringBlink and true or false), s, D, font.fontColor)
+            bindingFor(am, s.expiringBlink and true or false), s, D,
+            Style.CurveColor(font.fontColor, font.useClassColorFont))
     end,
 }
 
@@ -336,9 +339,8 @@ function Text.Apply(frame, cfg, engine)
     layoutIconAndArea(am, s, h)
     dressPieces(am, s, compiled)
     layoutChain(am, s, compiled)
-    applyLoops(am, s)
-
     if engine then Text.Bind(frame, am, cfg, s, compiled) end
+    applyLoops(am, s)
 end
 
 -- ---------------------------------------------------------------------------

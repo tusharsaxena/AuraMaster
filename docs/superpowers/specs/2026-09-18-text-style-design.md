@@ -588,6 +588,9 @@ entry.
 - It runs for every route that writes the style row: the dropdown, `/am set container.style …`, and
   the page's Defaults (a style reset to the template's `bars` resets Fill to Columns, which is
   consistent).
+- **Creating a container applies the same rule** (owner decision, 2026-09-19): the panel's New and
+  `/am new <name> <style>` give the new container the Fill that suits its style (Icons → Rows;
+  Bars and Text → Columns).
 - It does **not** run for a duplicate, a copy-from, a profile switch or the starter seeding, because
   those don't go through the row's `onChange`. Their stored axis is kept as copied or seeded. The
   §7.1 Text starter is seeded `vertical`, and the Icons starters `horizontal`, as today.

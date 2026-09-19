@@ -193,7 +193,7 @@ end
 -- The seconds sampled: the largest value before each unit or digit count changes.
 local TIME_SAMPLES = { 59, 599, 3599, 35999, 86399, 863999 }
 local measureFS             -- the hidden FontString, built on first use
-local measuredWidths = {}   -- ["path|size|flags|format"] = width, or false when it cannot be measured
+local measuredWidths = {}   -- ["path|size|flags|format"] = width; a failed measure is never cached
 
 --- The FontString time texts are measured on: one hidden, addon-owned string, built on first use. A
 --- test replaces this function to measure on a recorder.
@@ -206,11 +206,13 @@ function Style.__measurer()
     return measureFS
 end
 
---- The widest of the sample strings `fmt` writes, in one font; nil when the string cannot be measured.
+--- The widest of the sample strings `fmt` writes, in one font; nil when the string cannot be measured:
+--- no measurer, a font the client refuses (the fallback font too, as Style.ApplyFont falls back), or
+--- a width that is not a number. Called guarded (Style.TimeTextWidth), so a raise costs the measure.
 local function widestSample(path, size, flags, fmt)
     local fs = Style.__measurer()
     if not fs then return nil end
-    fs:SetFont(path, size, flags)
+    if not fs:SetFont(path, size, flags) and not fs:SetFont(C.FALLBACK_FONT, size, flags) then return nil end
     local most
     for _, seconds in ipairs(TIME_SAMPLES) do
         fs:SetText(Style.PreviewSeconds(seconds, fmt))
@@ -223,19 +225,21 @@ end
 
 --- The width, in pixels, a time text in font block `t` needs for the widest string format `fmt`
 --- writes, plus 2 for the outline and shadow; nil when it cannot be measured (the caller keeps its
---- ems budget then). Cached per font path, size, flags and format.
+--- ems budget then). Cached per font path, size, flags and format. Only a width is cached: a measure
+--- that raised, found no width or found none above 0 (a string the client has not laid out yet) is
+--- not, so the ems budget stands for this dress and a later one measures again.
 function Style.TimeTextWidth(t, tdef, fmt)
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
     local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
     local key = ("%s|%s|%s|%s"):format(path, size, flags, tostring(fmt))
     local w = measuredWidths[key]
-    if w == nil then
-        local most = widestSample(path, size, flags, fmt)
-        w = most and (most + 2) or false
-        measuredWidths[key] = w
-    end
-    return w or nil
+    if w then return w end
+    local ok, most = pcall(widestSample, path, size, flags, fmt)
+    if not (ok and most and most > 0) then return nil end
+    w = most + 2
+    measuredWidths[key] = w
+    return w
 end
 
 --- Dress a BackdropTemplate frame as an element border.
@@ -339,6 +343,38 @@ local function blinkCurveFor(threshold, blink, normal)
         slot[threshold] = tc
     end
     return tc
+end
+
+-- A curve's `normal` for a class-colored font: { r, g, b, a } with the class's channels and the
+-- stored alpha, memoized per class source (the dress's snapshot, or PLAYER_CLASS for a player
+-- container) and stored color, so every button of one container hands the curve memos the SAME
+-- table and shares one curve. The snapshot is reused in place across unit swaps
+-- (modules/Container.lua's ResolveUnitClass), so an entry is checked against the channels resolved
+-- now and replaced, never edited, when they moved: a new table misses the curve memos.
+local classNormals = setmetatable({}, WEAK_KEYS)
+local PLAYER_CLASS = {}
+
+--- The color a running-out curve returns to above its threshold, as a table stable across the
+--- buttons of one look: `stored` itself when the class color is off or does not resolve, else the
+--- class color with the stored alpha (Style.Color), memoized as above.
+function Style.CurveColor(stored, useClass)
+    stored = stored or NO_COLOR
+    if not useClass then return stored end
+    local r, g, b, a = Style.Color(stored, true)
+    local sr, sg, sb = NS.ResolveColor(stored, false)
+    if r == sr and g == sg and b == sb then return stored end
+    local source = dressClass or PLAYER_CLASS
+    local byStored = classNormals[source]
+    if not byStored then
+        byStored = setmetatable({}, WEAK_KEYS)
+        classNormals[source] = byStored
+    end
+    local c = byStored[stored]
+    if not (c and c.r == r and c.g == g and c.b == b and c.a == a) then
+        c = { r = r, g = g, b = b, a = a }
+        byStored[stored] = c
+    end
+    return c
 end
 
 --- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now.
@@ -538,13 +574,15 @@ function Style.ApplyBehavior(frame, cfg)
 end
 
 --- Bind the duration text with the configured formatter and expiring color, both shared across every
---- button of the same look (formatterFor, curveFor). `sdef` is the template's style block (`bars` or
+--- button of the same look (formatterFor, curveFor). Above the threshold the curve returns to the
+--- time's font color through its class-color companion (Style.CurveColor). `sdef` is the template's style block (`bars` or
 --- `icons`) that `s` was copied from, which the threshold falls back to.
 function Style.BindDurationText(frame, fs, s, sdef)
     local opts = { textFormatter = formatterFor(s.timeFormat) }
     if s.expiringColorOn then
+        local t = s.time or NO_COLOR
         opts.textColor = curveFor(tonumber(s.expiringThreshold) or sdef.expiringThreshold, s.expiringColor or NO_COLOR,
-            (s.time and s.time.fontColor) or NO_COLOR)
+            Style.CurveColor(t.fontColor, t.useClassColorFont))
     end
     Style.Bind(frame, "SetDurationText", fs, opts)
 end
@@ -604,7 +642,7 @@ end
 --- Bind a Text style's duration run: `textFormat` (Style.DurationTextFormat) through the prebuilt
 --- `binding` (Compat.CreateDurationBinding, nil on a client without one), recolored by the
 --- running-out curve or the blinking one (runTextColor). `normal` is the line's font color, which a
---- curve returns to above the threshold. `sdef` is the template's block the threshold falls back to.
+--- curve returns to above the threshold, resolved through Style.CurveColor so it is stable per look. `sdef` is the template's block the threshold falls back to.
 function Style.BindDurationFormat(frame, fs, textFormat, binding, s, sdef, normal)
     Style.Bind(frame, "SetDurationText", fs, {
         textFormat = textFormat, binding = binding, textColor = runTextColor(s, sdef, normal or NO_COLOR),

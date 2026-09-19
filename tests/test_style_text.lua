@@ -205,6 +205,89 @@ test("text style: blink binds the blinking curve and a 0.1 s refresh; off, neith
     assertEqual(opts.textColor.curve:__count("AddPoint"), 2, "the plain running-out step")
 end)
 
+--- Two buttons of one container dressed live for `c` with the container's class snapshot `class`.
+local function twoButtons(c, class)
+    local NS, m = E()
+    local made = {}
+    local a, b = B.new(made), B.new(made)
+    B.during(m, made, function()
+        NS.Style.Element(a, c, true, class)
+        NS.Style.Element(b, c, true, class)
+    end)
+    return a, b
+end
+
+test("text style: with the font's class color on, the running-out curves return to the class color, one curve per container", function()
+    local class = { r = 0.2, g = 0.4, b = 0.6 }
+    local c = text({ template = "$spellname$[ - $remainingduration$]", expiringColorOn = true, expiringThreshold = 2,
+        font = { fontColor = { r = 1, g = 1, b = 1, a = 0.8 }, useClassColorFont = true } })
+    local a, b = twoButtons(c, class)
+    local curve = a:__last("SetDurationText")[2].textColor
+    local normal = curve.curve:__last("AddPoint")[2]
+    -- red under: the curve's normal read from the raw font color (white above the threshold)
+    assertEqual(("%s,%s,%s,%s"):format(normal.r, normal.g, normal.b, normal.a), "0.2,0.4,0.6,0.8")
+    -- red under: a fresh color table per dress (one curve built per button)
+    assertTrue(b:__last("SetDurationText")[2].textColor == curve, "two buttons of one container share one curve")
+    c.text.expiringColorOn, c.text.expiringBlink = false, true
+    a = twoButtons(c, class)
+    local blink = a:__last("SetDurationText")[2].textColor.curve
+    -- red under: a blink with the recolor off blinking the raw font color
+    local firstPoint
+    for _, call in ipairs(blink.calls) do
+        if call.name == "AddPoint" and not firstPoint then firstPoint = call end
+    end
+    assertEqual(firstPoint[2].r, 0.2, "the blink itself in the class color")
+    assertEqual(blink:__last("AddPoint")[2].g, 0.4, "and back to the class color above the threshold")
+end)
+
+test("text style: a class snapshot that changes in place builds a new curve, never reuses the old class's", function()
+    local class = { r = 0.2, g = 0.4, b = 0.6 }
+    local c = text({ template = "$spellname$[ - $remainingduration$]", expiringColorOn = true,
+        font = { useClassColorFont = true } })
+    local first = twoButtons(c, class):__last("SetDurationText")[2].textColor
+    class.r, class.g, class.b = 0.9, 0.8, 0.7
+    local second = twoButtons(c, class):__last("SetDurationText")[2].textColor
+    -- red under: the snapshot table itself used as the memo key (Container reuses it across unit swaps)
+    assertTrue(second ~= first)
+    assertEqual(second.curve:__last("AddPoint")[2].r, 0.9)
+end)
+
+test("text style: a loop setter that raises cannot cost the engine bindings: the fields are bound first", function()
+    local NS, m = E()
+    local made = {}
+    local frame = B.new(made)
+    B.during(m, made, function() NS.Style.Element(frame, text({}), false) end)
+    frame.__am.pulse.__raise.SetToAlpha = true
+    local ok = pcall(B.during, m, made, function() NS.Style.Element(frame, text({}), true) end)
+    frame.__am.pulse.__raise.SetToAlpha = nil
+    assertFalse(ok, "the raise still reaches the dress's caller")
+    -- red under: applyLoops run before Text.Bind (a button built in combat would be left unbound)
+    assertTrue(frame:__last("SetSpellName")[1] == frame.__am.piece1)
+    assertEqual(frame:__count("SetDurationText"), 1)
+end)
+
+test("text style: two buttons of one container get distinct prebuilt duration bindings", function()
+    local a, b = twoButtons(text({ template = "$spellname$[ - $remainingduration$]" }))
+    local ba, bb = a:__last("SetDurationText")[2].binding, b:__last("SetDurationText")[2].binding
+    -- red under: bindingFor memoized across buttons (one binding shared by two buttons)
+    assertTrue(ba ~= nil and bb ~= nil)
+    assertTrue(ba ~= bb)
+    assertTrue(ba == a.__am.binding and bb == b.__am.binding)
+end)
+
+test("text style: a live re-dress for a new shape binds the new chain's strings, not the parked chain's", function()
+    local made = {}
+    local frame = B.new(made)
+    local _, am = dressed(text({ template = "$spellname$[ - $remainingduration$]" }), true, frame, made)
+    local oldName, oldTime = am.piece1, am.piece2
+    dressed(text({ template = "$spellname$[ x$stacks$][ - $remainingduration$]" }), true, frame, made)
+    -- red under: useChain keeping the old shape's strings, or Bind reading a stale piece key
+    assertTrue(am.piece1 ~= oldName and am.piece3 ~= oldTime)
+    assertTrue(frame:__last("SetSpellName")[1] == am.piece1)
+    assertTrue(frame:__last("SetApplicationCount")[1] == am.piece2)
+    assertTrue(frame:__last("SetDurationText")[1] == am.piece3)
+end)
+
 test("text style: a template without a duration token binds no duration text", function()
     local frame = dressed(text({ template = "$spellname$[ x$stacks$]" }), true)
     -- red under: Bind binding a duration text the template does not use

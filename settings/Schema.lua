@@ -588,8 +588,9 @@ end
 --- check or rewrite a value against ITS container: the attach row refuses a loop from the container
 --- written, the name row makes a name unique. A bad value is refused before a missing container, so
 --- the refusal names the value. A `validate` may answer false AND a reason (the Text template's
---- parser does); the reason travels on as the refusal's third return. It returns ok, err|nil, the
---- container id or the reason, and the value as stored (what onChange and the announcement see).
+--- parser does); the reason travels on as the refusal's third return. It returns ok, err|nil, a third
+--- slot that is the container id on success and the row's refusal reason (or nil) on a refusal, then
+--- the value as stored and the value it replaced (what onChange and the announcement see).
 --- Inside a bulk bracket it tallies the row here, once stored, so an onChange that raises
 --- afterwards cannot drop a stored write from the count.
 local function writeRow(row, path, value, containerId)
@@ -676,8 +677,9 @@ end
 --- Whether NS.SetByPath(path, value, containerId) would store the value: the same checks, run on a
 --- copy, with nothing stored, no onChange and nothing announced. Not a second write seam — it
 --- writes nothing. It lets a caller that writes several paths as one act (ContainerManager.CopyFrom)
---- refuse all of them when any one would be refused.
---- @return boolean ok, string|nil err
+--- refuse all of them when any one would be refused. A refused row check carries the row's own
+--- reason as the third return, as NS.SetByPath's does.
+--- @return boolean ok, string|nil err, string|nil why
 function NS.CheckWrite(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
     -- Stored once the database exists; the value is a bool and nothing about it can be refused.

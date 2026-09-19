@@ -354,9 +354,13 @@ function CM.UniqueName(base, exceptId)
 end
 
 --- A new container's stored data: the template plus `overrides`, with a unique name. Returns the
---- data and its id.
+--- data and its id. Its Fill is the one its style suits (B5, C.STYLE_FILL_AXIS), as switching the
+--- Style row sets it, unless `overrides` carries a Fill of its own: a duplicate does (the source's
+--- whole layout), so it keeps the source's.
 local function newContainerData(overrides)
     local c, id = NS.Database.NewContainerData(overrides)
+    local axis = NS.Constants.STYLE_FILL_AXIS[c.style]
+    if axis and not (overrides and overrides.layout and overrides.layout.axis ~= nil) then c.layout.axis = axis end
     c.name = CM.UniqueName(c.name ~= "Container" and c.name or L["Container %d"]:format(id))
     -- Offset a new container from the center by its id, so two new ones are not stacked exactly.
     if not (overrides and overrides.position) then

@@ -610,4 +610,5 @@ nothing).
 116. **Changing Style resets Fill, keeps grow directions.** On the Containers page switch a
      container's Style: to Icons, Layout → Growth → Fill reads Rows; to Bars or Text, it reads
      Columns. Whatever Grow horizontally/Grow vertically were set to before the switch are unchanged
-     by it.
+     by it. `/am new target debuffs icons` makes a container whose Fill reads Rows; `/am new text`
+     makes one whose Fill reads Columns.
