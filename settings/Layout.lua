@@ -10,6 +10,7 @@ local _, NS = ...
 --             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
 --
+-- A container attaches to the screen, to another container (following it as it grows) or to any
 -- named frame (modules/Anchors.lua). Only the subsections the chosen mode reads are DRAWN (feedback
 -- #4, LibKa0s v1.45.0's `shownWhen`): Screen for the screen; Another container, or Named frame, and
 -- Offset for an attachment. The rows stay in the schema, so `/am set` and the resets reach every one
