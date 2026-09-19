@@ -174,17 +174,22 @@ local function isCustom(cfg, id)
 end
 
 --- Choose built-in `key` for container `id`: its template, then the justify it needs (Center for the
---- centered one; Left for any other when the stored justify is Center), each through the write seam.
+--- centered one; Left for any other when the stored justify is Center), each through the write seam,
+--- both under one `NS.Bulk.Run` bracket (final review) so a pick that touches both -- Centered picked
+--- from a Left template, or the reverse -- applies once, as Show all / Hide all already do
+--- (`settings/Filters.lua`'s `setGrid`), rather than drawing an intermediate mismatched frame.
 local function pickBuiltin(cfg, id, key)
     local def = C.TEXT_BUILTINS[key]
     customOpen[id] = nil
-    NS.SetByPath(P .. "template", def.template, id)
-    local justify = (cfg.text and cfg.text.justifyH) or D.justifyH
-    if def.justifyH and justify ~= def.justifyH then
-        NS.SetByPath(P .. "justifyH", def.justifyH, id)
-    elseif not def.justifyH and justify == "CENTER" then
-        NS.SetByPath(P .. "justifyH", "LEFT", id)
-    end
+    NS.Bulk.Run("pick built-in", ("template of container %s"):format(id), function()
+        NS.SetByPath(P .. "template", def.template, id)
+        local justify = (cfg.text and cfg.text.justifyH) or D.justifyH
+        if def.justifyH and justify ~= def.justifyH then
+            NS.SetByPath(P .. "justifyH", def.justifyH, id)
+        elseif not def.justifyH and justify == "CENTER" then
+            NS.SetByPath(P .. "justifyH", "LEFT", id)
+        end
+    end)
 end
 
 --- The Template dropdown: the container's built-ins, then Custom. A bespoke cell (not a schema row:
@@ -236,11 +241,20 @@ end
 --- the whole line wrapped in the container's own font color (`Style.ApplyFont`'s own call) so the box
 --- reads as the live line would -- with a Task 12 colored dispel word still riding inside it, since a
 --- WoW `|r` restores the wrapping color it is nested in, not just white.
+---
+--- `PreviewLine` joins a Center-stacked template's rows with `"\n"`, which suited the old Preview
+--- LABEL (it wraps), but a single-line WoW EditBox does not lay a `\n` out as a break (final review,
+--- Task 20/8 interaction). Controller ruling: join stacked rows with a visible `" / "` instead, inside
+--- the same font-color wrap, so "Centered: name over time" reads "Ignore Pain / 11s".
 local function previewText(cfg, sample)
-    local raw = escapeStrayPipes(NS.Style.Text.PreviewLine(cfg.text, sample))
+    local raw = (NS.Style.Text.PreviewLine(cfg.text, sample):gsub("\n", " / "))
+    raw = escapeStrayPipes(raw)
     local font = (cfg.text and cfg.text.font) or D.font
     local r, g, b = NS.Style.Color(font.fontColor, font.useClassColorFont)
-    return ("|cff%02x%02x%02x%s|r"):format((r or 1) * 255, (g or 1) * 255, (b or 1) * 255, raw)
+    -- Rounded, not truncated, and clamped (Style_Text.lua's own `hex`): a stored 196/255 can float
+    -- back to 195.999..., which %x truncates to 0xc3 instead of 0xc4.
+    local function hex(v) return math.floor(math.max(0, math.min(1, v or 1)) * 255 + 0.5) end
+    return ("|cff%02x%02x%02x%s|r"):format(hex(r), hex(g), hex(b), raw)
 end
 
 --- The Preview box (owner, 2026-09-19: "more like PrettyChat"): a disabled EditBox, `SetLabel`,

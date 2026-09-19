@@ -575,7 +575,7 @@ local function durationText(piece, aura, s)
 end
 
 -- What each kind of piece reads for a placeholder aura, as the engine would write it. Shared by the
--- placeholders (Text.FillPreview) and the Text page's Preview line (Text.PreviewLine).
+-- placeholders (Text.FillPreview) and the Text page's Preview box (Text.PreviewLine).
 local PIECE_TEXT = {
     literal = function(piece) return piece.text end,
     name = function(_, aura) return aura.name end,
@@ -635,7 +635,8 @@ function Text.FillPreview(frame, aura, cfg)
 end
 
 --- The line text block `s` draws for a sample `aura`, as one plain string: the Text page's Preview
---- (feedback #5). The same compile and the same fill as the placeholders, so the two cannot disagree.
+--- box (feedback #5). The same compile and the same fill as the placeholders, so the two cannot
+--- disagree.
 --- A stacked line (feedback #1) previews as its field rows, one per line, its literals left out.
 function Text.PreviewLine(s, aura)
     s = s or {}

@@ -253,7 +253,7 @@ C.TEXT_BUILTIN_SETS = {
     HARMFUL = { "name", "nameTime", "nameStacksTime", "timeOfMax", "nameType", "nameTypeTime", "centered" },
 }
 
--- The sample aura the Text page's Preview line renders a template against, per aura type: readable,
+-- The sample aura the Text page's Preview box renders a template against, per aura type: readable,
 -- invented values (preview-mode). The buff has stacks and no dispel type; the debuff a type and none.
 C.TEXT_SAMPLE_AURAS = {
     HELPFUL = { name = "Ignore Pain", icon = 1377132, remaining = 11, duration = 12, stacks = 3 },

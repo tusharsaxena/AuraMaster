@@ -110,7 +110,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Tasks 1–19 done; Task 20 in review; the whole-branch final review is running; then merge and push.
+**Current position:** COMPLETE: all 20 tasks done, both reviews passed and their fixes committed; merged to master and pushed. The owner still owes the in-game checks (smoke section T, 117–139).
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
@@ -133,7 +133,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 17 | #4d — re-vendor v1.45.0 into the other ten consumers; the adoption sweep | 10 repos | done | 9 consumers merged+pushed; PFE c2577a5 on its chore branch (Task 18 builds on it); LibKa0s docs 2b32ee8 pushed |
 | 18 | #4e — Party Frame Enhanced adopts `shownWhen` on Size & Position | PartyFrameEnhanced | done | PFE ea6f8ff, merged 8315f4c and pushed |
 | 19 | Final gate, smoke items, inventory — hand back to the owner | AuraMaster | done | this commit: smoke T 117–138, inventory 1105, 1105/1105, lint 0/0, lizard clean, perf green |
-| 20 | Owner follow-up: the Text Template section (renamed, a PrettyChat-style Preview box, a readable cheat sheet); the Not in use notice in muted red | AuraMaster | in review |  |
+| 20 | Owner follow-up: the Text Template section (renamed, a PrettyChat-style Preview box, a readable cheat sheet); the Not in use notice in muted red | AuraMaster | done | 8aa7a35 + final fix round |
 
 ---
 

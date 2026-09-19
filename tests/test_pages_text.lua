@@ -27,6 +27,22 @@ local function pick(NS, m, P, ws, key)
     return P.rerender("Text")
 end
 
+--- Record every [Set] and [Apply] line, rendered `[Tag] text`, with debug on (final review; the
+--- same shape as test_pages_filters.lua's captureLog, which the bulk-bracket "one line, one apply"
+--- convention already tests on Show all/Hide all).
+local function captureLog(NS)
+    NS.State.debug = true
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag ~= "Set" and tag ~= "Apply" then return end
+        local args = { ... }
+        for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+        local n = #lines
+        lines[n + 1] = ("[%s] %s"):format(tag, fmt:format(unpack(args)))
+    end
+    return lines
+end
+
 --- The Animation tab as the current settings draw it: a structural re-render, then a click on the
 --- tab unless it is already the active one (a click on the active tab draws nothing).
 local function animationTab(NS, P)
@@ -212,8 +228,11 @@ test("text page: Center on a multi-piece template draws the note naming its rows
     local ws = P.rerender("Text")
     -- red under: centerNote still saying Center lines a multi-piece template up Left
     assertTrue(P.hasText(ws, note:format(3)), "the default template has three fields")
-    -- red under: the Preview not showing the stack it will draw
-    assertTrue(preview(NS, P, ws).text:find("Ignore Pain\n x3\n - 11s", 1, true) ~= nil)
+    -- red under: the Preview not showing the stack it will draw, or joining its rows with a raw
+    -- "\n" (final review: a single-line EditBox does not lay a newline out as a break) instead of a
+    -- visible " / " separator
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain /  x3 /  - 11s", 1, true) ~= nil, preview(NS, P, ws).text)
+    assertFalse(preview(NS, P, ws).text:find("\n", 1, true) ~= nil, "no raw newline reaches the EditBox")
     NS.SetByPath(P_ .. "template", "$spellname$ :: $stacks$", 1)
     ws = P.rerender("Text")
     assertTrue(P.hasText(ws, note:format(2)), "a literal is not a row")
@@ -339,6 +358,28 @@ test("text page: picking a built-in writes its template, and the centered one Ce
     assertEqual(picker(NS, P, ws).value, "name")
 end)
 
+test("text page: picking a built-in that also moves Justify writes and applies once (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "timeOfMax")   -- Left; picking Centered next must also move justifyH
+    local lines = captureLog(NS)
+    local inst = NS.ContainerManager.instances[1]
+    local applies = 0
+    local apply = inst.Apply
+    inst.Apply = function(...) applies = applies + 1; return apply(...) end
+    picker(NS, P, ws):__fire("OnValueChanged", "centered")
+    m.__fireTimers()
+    inst.Apply = apply
+    local s = NS.Database.FindContainer(1).text
+    assertEqual(s.template, "$spellname$[$remainingduration$]")
+    assertEqual(s.justifyH, "CENTER")
+    -- red under: the template and justify writes each queuing their own apply pass (two, not one)
+    assertEqual(applies, 1, "one apply pass for both writes")
+    -- red under: no NS.Bulk.Run bracket, so each write logs its own [Set] line
+    assertEqual(#lines, 2, "one [Set] line and one [Apply] line: " .. table.concat(lines, " | "))
+    assertTrue(lines[1]:find("^%[Set%] pick built%-in", 1) ~= nil, lines[1])
+    assertTrue(lines[2]:find("^%[Apply%] applied", 1) ~= nil, lines[2])
+end)
+
 test("text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)", function()
     local NS, m, P, ws = textPage()
     ws = pick(NS, m, P, ws, "custom")
@@ -358,7 +399,7 @@ test("text page: Custom reveals the box with the current template; an unmatched 
     assertTrue(P.row(ws, P_ .. "template") ~= nil, "and its box is drawn")
 end)
 
-test("text page: the Preview line renders the sample aura, brackets filled and empty ones hidden (feedback #5)", function()
+test("text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)", function()
     local NS, m, P, ws = textPage()
     local L = NS.L
     -- The buff sample: Ignore Pain, 3 stacks, 11 of 12 s, no dispel type. The harness has no seconds
@@ -379,6 +420,56 @@ test("text page: the Preview line renders the sample aura, brackets filled and e
     assertTrue(preview(NS, P, ws).text:find("Shadow Word: Pain (" .. L["Magic"] .. ") - 11s", 1, true) ~= nil)
     ws = pick(NS, m, P, ws, "nameStacksTime")
     assertTrue(preview(NS, P, ws).text:find("Shadow Word: Pain - 11s", 1, true) ~= nil, "no stacks, so no ' x'")
+end)
+
+test("text page: the centered built-in's Preview joins its two rows with a visible separator (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "centered")
+    -- red under: the stacked rows still joined by a raw "\n" (a single-line EditBox swallows it)
+    -- instead of the controller's " / " separator
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain / 11s", 1, true) ~= nil, preview(NS, P, ws).text)
+    assertFalse(preview(NS, P, ws).text:find("\n", 1, true) ~= nil, "no raw newline reaches the EditBox")
+end)
+
+-- ── escapeStrayPipes (final review: no direct test existed) ──────────────────────────────────────
+
+test("text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
+    local box = P.row(ws, P_ .. "template")
+    box:__fire("OnEnterPressed", "$spellname$|extra")
+    ws = P.rerender("Text")
+    -- red under: escapeStrayPipes leaving a lone "|" from the player's own template text undoubled
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain||extra", 1, true) ~= nil, preview(NS, P, ws).text)
+end)
+
+test("text page: an already-doubled || in a custom template still doubles each pipe (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
+    local box = P.row(ws, P_ .. "template")
+    box:__fire("OnEnterPressed", "$spellname$||extra")
+    ws = P.rerender("Text")
+    -- red under: escapeStrayPipes treating an existing "||" as already-escaped and leaving it alone
+    -- (each of the two literal pipes must double on its own, to "||||")
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain||||extra", 1, true) ~= nil, preview(NS, P, ws).text)
+end)
+
+test("text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)", function()
+    local NS, m, P = textPage()
+    NS.SetByPath("container.style", "text", 2)
+    NS.Helpers.SelectContainer(2)
+    local ws = P.rerender("Text")
+    pick(NS, m, P, ws, "nameType")
+    NS.SetByPath(P_ .. "dispelTypeColor", true, 2)
+    ws = P.rerender("Text")
+    local sample = NS.Constants.TEXT_SAMPLE_AURAS.HARMFUL
+    local raw = NS.Style.Text.PreviewLine(NS.Database.FindContainer(2).text, sample)
+    local run = raw:match("|cff%x%x%x%x%x%x.-|r")
+    assertTrue(run ~= nil, raw)
+    -- red under: escapeStrayPipes doubling the protected color run instead of restoring it whole
+    assertTrue(preview(NS, P, ws).text:find(run, 1, true) ~= nil, preview(NS, P, ws).text)
+    -- red under: a naive blind-double leaving a doubled copy of the run in the box instead
+    assertFalse(preview(NS, P, ws).text:find((run:gsub("|", "||")), 1, true) ~= nil)
 end)
 
 -- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────

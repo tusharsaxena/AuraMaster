@@ -715,7 +715,7 @@ test("text style: an Enrage aura shows no visible backdrop or edge, live or in t
     assertFalse(am.edgeTop:IsShown(), "Enrage: no palette color, no visible edge")
 end)
 
-test("text style: a placeholder's and the Preview line's dispel word take its palette color when the option is on (feedback #7)", function()
+test("text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)", function()
     local NS = E()
     local s = { template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true }
     local out = filled(s, AURA)

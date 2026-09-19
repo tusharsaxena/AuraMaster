@@ -656,7 +656,7 @@ debuff container on the target, in a party or with a target dummy.
      means H2 (the binding's zero-duration text); `[ ($remainingpercent$%)]` shows nothing there.
 124. **Built-in templates and the Preview (#5b).** Text → General → **Template**: the list names the
      built-ins (Name, Name + time, …; the debuff container adds Name (type), Name, type, time) and
-     **Custom template**. Pick each → the read-only **Preview** box under it changes with it and the
+     **Custom**. Pick each → the read-only **Preview** box under it changes with it and the
      live auras follow; Centered: name over time also sets Justify to Center and previews the
      built-in's own template, `$spellname$[$remainingduration$]` (no separator before the time).
      Custom → the template box appears.
@@ -742,4 +742,6 @@ debuff container on the target, in a party or with a target dummy.
      and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
      showing), each rule's example on its own indented line in the token gold. On a bars or icons
      container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
-     muted red, not the earlier muted gold.
+     muted red, not the earlier muted gold. A Center template's Preview shows its stacked rows joined
+     by " / " (Centered: name over time reads "Ignore Pain / 11s"), never a raw line break, while the
+     live container itself still shows them stacked, each on its own row (final review).

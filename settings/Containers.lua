@@ -246,6 +246,17 @@ local function header(ctx) H.ContainerHeader(ctx, HEADER) end
 --- Hand the previous render's chrome widgets back to AceGUI. AFTER the render, never before: the
 --- render is usually running inside one of their callbacks (the picker's, New's), and a widget
 --- released on the way in could be handed straight back out, re-initialized, under its own callback.
+---
+--- Final review, Minor #1 (this file duplicates `Helpers.ContainerHeader`'s own swap-and-release):
+--- kept on purpose. `ContainerHeader` swaps `ctx.__chromeWidgets` too, but by the time it runs here
+--- it is swapping the EMPTY table this wrapper just installed (line below), so its own release is a
+--- no-op on this path -- the widgets this function actually frees are the ones captured before that
+--- swap. Only the tab-strip's own `onSelect` (`Helpers.RenderTabbedPage`'s direct call to `header`,
+--- bypassing this wrapper) relies on `ContainerHeader`'s release doing the real work. No test in the
+--- suite targets the three paths (first build, a `renderPage` redraw, tab `onSelect`) individually
+--- for a leak or a double-release, only the whole-suite live-heap gate, which is indirect evidence
+--- rather than proof. Removing this wrapper's capture without that proof risks a widget leak on the
+--- `renderPage` path the first time `ContainerHeader`'s internals change, so it stays.
 local function releaseStale(stale)
     local AceGUI = NS.AceGUI
     if not (AceGUI and AceGUI.Release and stale) then return end

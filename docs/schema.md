@@ -419,8 +419,11 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   exactly what "shows only Weapon enchants" rules out. One extra `[Migrate]` line names the container
   and how many ids were dropped. `filter.hidePermanentEnchants`, the name, the style, every styling
   block and the position carry over untouched. Such a container compiles to the enchant slots and no
-  aura group, and `FC.Compile` does not call it one that can never match. The v3 and v4 steps keep
-  their `ENCHANT` handling, because an old profile climbs them before it reaches v5.
+  aura group, and `FC.Compile` does not call it one that can never match. The step also clears the
+  profile's `dispelColors.None` leaf, if present (`core/Database.lua:725`): an aura with no dispel
+  type takes the surface's own color now (feedback #7), so nothing reads a None swatch any longer.
+  The v3 and v4 steps keep their `ENCHANT` handling, because an old profile climbs them before it
+  reaches v5.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

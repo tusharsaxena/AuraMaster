@@ -753,7 +753,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: the dispel edge is four strips of its thickness around the text area, each tinted through the engine (feedback #7)
 - text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)
 - text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)
-- text style: a placeholder's and the Preview line's dispel word take its palette color when the option is on (feedback #7)
+- text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
 
 ### test_preview.lua (21)
 
@@ -1136,7 +1136,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Cooldown rows write the selected container's swipe
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (20)
+### test_pages_text.lua (25)
 
 - text page: the four tabs are drawn in order
 - text page: a bars or icons container sees every row disabled under the note naming its style
@@ -1155,8 +1155,13 @@ badge and any count quoted in the docs must agree with it.
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
 - text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
+- text page: picking a built-in that also moves Justify writes and applies once (final review)
 - text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)
-- text page: the Preview line renders the sample aura, brackets filled and empty ones hidden (feedback #5)
+- text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)
+- text page: the centered built-in's Preview joins its two rows with a visible separator (final review)
+- text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
+- text page: an already-doubled || in a custom template still doubles each pipe (final review)
+- text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
 - text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)
 
 ### test_pages_about.lua (3)
@@ -1309,7 +1314,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 12 |
 | test_pages_icons.lua | 7 |
-| test_pages_text.lua | 20 |
+| test_pages_text.lua | 25 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1323,4 +1328,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1109** |
+| **Total** | **1114** |
