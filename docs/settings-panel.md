@@ -235,7 +235,10 @@ for them; the tab is bespoke
 `Show · Hide · Category` and then a line of two cells (an ordinary checkbox check on the lit one,
 LibKa0s v1.36.0's `O.ChoiceGrid`, the yellow fill withdrawn in v1.36.2) and the category's label
 (hover it for its description). A grid
-with no row for the aura type is not drawn.
+with no row for the aura type is not drawn. The **Blizzard Categories** and **Spell Categories**
+sections open with **Show all** and **Hide all** (feedback #10): each writes every category of that
+section, and only that section, for the selected container, as one bulk act (`NS.Bulk.Run`: one
+`[Set] show all|hide all <grid> categories of container <id>: N rows` line, one apply pass).
 
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|

@@ -769,3 +769,92 @@ test("filters: a whitelisted spell no category claims, on a buff container, name
     assertTrue(P.hasText(ws, "overriding Uncategorized (set to Hide)"),
         "the counterfactual is rank 4 (Uncategorized itself says Hide), not the generic rank-5 case")
 end)
+
+-- ── Show all / Hide all (feedback #10) ────────────────────────────────────────────────────────
+
+--- The category keys `auraType` draws in grid `grid` ("blizzard" | "custom"), in declaration order.
+local function gridKeys(NS, auraType, grid)
+    local out = {}
+    for _, def in ipairs(NS.Categories.For(auraType)) do
+        local row = NS.FindSchemaRow("container.filter.categories." .. def.key)
+        if row.grid == grid then
+            local n = #out
+            out[n + 1] = def.key
+        end
+    end
+    return out
+end
+
+--- Record every [Set] and [Apply] line, rendered `[Tag] text`, with debug on.
+local function captureLog(NS)
+    NS.State.debug = true
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag ~= "Set" and tag ~= "Apply" then return end
+        local args = { ... }
+        for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+        local n = #lines
+        lines[n + 1] = ("[%s] %s"):format(tag, fmt:format(unpack(args)))
+    end
+    return lines
+end
+
+test("filters: Show all and Hide all head the Blizzard and Spell Categories sections, and no other (feedback #10)", function()
+    for _, id in ipairs({ 1, 2 }) do   -- the player's buffs, then the player's debuffs
+        local NS, _, _, ws = categories(id)
+        local L = NS.L
+        local at = {}
+        for i, w in ipairs(ws) do
+            local key = (w.type == "Heading" and w.text) or (w.type == "Button" and w.text) or nil
+            if key then
+                at[key] = at[key] or {}
+                table.insert(at[key], i)
+            end
+        end
+        local shows, hides = at[L["Show all"]] or {}, at[L["Hide all"]] or {}
+        local showCount, hideCount = #shows, #hides
+        -- red under: no bulk buttons, or a pair on Dispel Types / Who Cast It as well
+        assertEqual(showCount, 2, "container " .. id .. ": one Show all per section")
+        assertEqual(hideCount, 2, "container " .. id .. ": one Hide all per section")
+        local blizz, spells = at[L["Blizzard Categories"]][1], at[L["Spell Categories"]][1]
+        assertTrue(blizz < shows[1] and shows[1] < spells, "the first pair heads Blizzard Categories")
+        assertTrue(spells < shows[2], "the second pair heads Spell Categories")
+    end
+end)
+
+test("filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)", function()
+    local NS, m, P, ws = categories()
+    local c = NS.Database.FindContainer(1)
+    local blizzard, custom = gridKeys(NS, "HELPFUL", "blizzard"), gridKeys(NS, "HELPFUL", "custom")
+    local blizzardCount, customCount = #blizzard, #custom
+    assertTrue(blizzardCount > 1 and customCount > 1, "both sections have rows")
+    m.__fireTimers()
+    local lines = captureLog(NS)
+    P.all(ws, "Button", NS.L["Hide all"])[1]:__fire("OnClick")
+    m.__fireTimers()
+    for _, key in ipairs(blizzard) do
+        -- red under: a key of the section left out of the write
+        assertEqual(c.filter.categories[key], "hide", key)
+    end
+    for _, key in ipairs(custom) do
+        -- red under: the button writing every category of the aura type, not its own section's
+        assertEqual(c.filter.categories[key], "show", key .. " is another section's")
+    end
+    -- red under: one [Set] line per row (no bulk bracket), or one apply pass per row
+    assertEqual(table.concat(lines, " | "),
+        ("[Set] hide all blizzard categories of container 1: %d rows | [Apply] applied 1 container(s)"):format(blizzardCount))
+end)
+
+test("filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)", function()
+    local NS, _, P, ws = categories()
+    local c = NS.Database.FindContainer(1)
+    local blizzard, custom = gridKeys(NS, "HELPFUL", "blizzard"), gridKeys(NS, "HELPFUL", "custom")
+    P.all(ws, "Button", NS.L["Hide all"])[1]:__fire("OnClick")    -- Blizzard Categories: all Hide
+    P.all(ws, "Button", NS.L["Hide all"])[2]:__fire("OnClick")    -- Spell Categories: all Hide
+    P.all(ws, "Button", NS.L["Show all"])[2]:__fire("OnClick")    -- Spell Categories: all Show
+    for _, key in ipairs(custom) do assertEqual(c.filter.categories[key], "show", key) end
+    for _, key in ipairs(blizzard) do
+        -- red under: Show all reaching past its own section
+        assertEqual(c.filter.categories[key], "hide", key .. " stays hidden")
+    end
+end)

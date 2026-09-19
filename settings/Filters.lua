@@ -5,8 +5,10 @@ local _, NS = ...
 --     band          [Container ▾]
 --     [ What to show ][ Categories ][ Overrides ][ Sorting ]
 --     What to show  the rows, then the priority block (spec §6) at the foot of the tab
---     Categories    Blizzard Categories   Show · Hide · Category, plus an info icon (N-5)
---                   Spell Categories      (buffs)        the same grid, plus a `See spells` link
+--     Categories    Blizzard Categories   [Show all][Hide all], then Show · Hide · Category, plus an
+--                                         info icon (N-5)
+--                   Spell Categories      (buffs)        [Show all][Hide all], the same grid, plus a
+--                                                         `See spells` link
 --                                                         and hidePermanentEnchants beneath it
 --                   Dispel Types · Who Cast It  (debuffs)
 --     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
@@ -384,6 +386,27 @@ end
 -- does not always put weaponEnchants directly above it.
 local WEAPON_ENCHANT_TIE = L["A sub-option of the Weapon enchants row above:"]
 
+--- Show all / Hide all (feedback #10): every category row of one grid, for the selected container, as
+--- ONE bulk act (settings/Schema.lua's bracket): each row still goes through the write seam — its
+--- validation, CONFIG_CHANGED and the in-place grid refresh — but the log is one `[Set] <act> <scope>:
+--- N rows` line, and the writes' CONFIG_CHANGEDs coalesce into one apply pass.
+local function setGrid(rows, state, gridKey)
+    local _, id = NS.ActiveContainer()
+    if not id then return end
+    NS.Bulk.Run(state == "show" and "show all" or "hide all", ("%s categories of container %s"):format(gridKey, id), function()
+        for _, row in ipairs(rows) do NS.SetByPath(row.path, state, id) end
+    end)
+end
+
+--- The two buttons at the top of a grid's section, acting on exactly that grid's rows.
+local function bulkButtons(ctx, rows, gridKey)
+    H.InlineButtonPair(ctx,
+        { text = L["Show all"], tooltip = L["Set every category in this section to Show, for this container."],
+          onClick = function() setGrid(rows, "show", gridKey) end },
+        { text = L["Hide all"], tooltip = L["Set every category in this section to Hide, for this container."],
+          onClick = function() setGrid(rows, "hide", gridKey) end })
+end
+
 --- The Categories tab: a grid each (the priority blurb is the What to show tab's now, F-4). The Spell Categories grid (kind
 --- `custom`) carries F-2's blurb AND `UNCATEGORIZED_NOTE` (both conditionally — T-2 fix round 4 and
 --- the review fix wave, only when the grid holds an editable list, i.e. a buff container — a debuff
@@ -404,6 +427,7 @@ local function renderCategories(ctx, _, rows)
         if mine[1] then
             if g.key == "custom" then
                 H.Section(ctx, g.heading)
+                bulkButtons(ctx, mine, g.key)
                 if customGridHasEditableList(mine) then
                     H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
                 end
@@ -416,16 +440,18 @@ local function renderCategories(ctx, _, rows)
                 if customGridHasEditableList(mine) then
                     H.TextRow(ctx, UNCATEGORIZED_NOTE)
                 end
+            elseif g.key == "blizzard" then
+                -- Its heading drawn here rather than by ChoiceGrid, so Show all / Hide all sit
+                -- between the heading and the grid (feedback #10). N-5: only this grid gets the
+                -- extra column.
+                H.Section(ctx, g.heading)
+                bulkButtons(ctx, mine, g.key)
+                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
             else
-                -- N-5: only the Blizzard Categories grid gets the extra column here — Dispel Types
-                -- and Who Cast It stay exactly as wide as before. A grid with no extraColumn at all
-                -- draws no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
-                -- every cell() call answer nil), which is what keeps those two grids' rows the
-                -- width they always were.
-                H.ChoiceGrid(ctx, {
-                    heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"],
-                    extraColumn = (g.key == "blizzard") and CATEGORY_EXTRA or nil,
-                })
+                -- Dispel Types and Who Cast It: no bulk buttons, and no extraColumn at all, so they
+                -- draw no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
+                -- every cell() call answer nil), which keeps their rows the width they always were.
+                H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
             end
         end
     end
