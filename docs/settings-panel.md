@@ -145,11 +145,12 @@ every category's starters, every spell the profile's categories edit, every spel
 container's whitelist or blacklist, and the timed buffs Aura Master has learned. A name two of
 them share is refused until one is picked ("pick one from the list, or use the id"), never
 resolved to one rank; a name neither knows adds nothing, and the line under the box says where
-names come from (the library's spell hint, localized, which the tooltip quotes too). Then one line
-per starter spell with a checkbox
-(untick to leave it out) and one per added spell with **Remove**, then **Restore this category's
-starter list**. Writes the whole set to `categorySpells` (a carve-out, so every container re-applies).
-The page's Defaults does not touch these lists; each category's restore does.
+names come from (the library's spell hint, localized, which the tooltip quotes too). Every entry —
+starter or added — carries an X at the left of every entry (a starter's X hides it, stored `false`;
+an added spell's X forgets it), and **Restore this category's starter list** at the top, under the
+Category dropdown and above Add a spell. Writes the whole set to `categorySpells` (a carve-out, so
+every container re-applies). The page's Defaults does not touch these lists; each category's restore
+does.
 
 Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
 (Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
@@ -269,7 +270,7 @@ the other half of the same decision, and Sorting is last) — bespoke: a **White
 section, each the library's `IdList` in spell mode over `container.filter.whitelist` /
 `container.filter.blacklist`, adding by spell id, link or name with the same suggestions,
 candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
-words, `NS.GeneralSpells`), each entry with **Remove**. Each set is written whole through the seam's carve-out;
+words, `NS.GeneralSpells`), each entry with an X at the left of each entry. Each set is written whole through the seam's carve-out;
 the lists are not schema rows, so the page's Defaults leaves them alone. Each entry also carries a
 trailing **note** under its name (LibKa0s v1.36.0's `O.IdList` `note`, `K-3`), built from
 `FC.ExplainSpell` sparingly: it fires only when a category genuinely disagrees with the list's

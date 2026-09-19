@@ -5,19 +5,21 @@ local _, NS = ...
 --
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
 --     Spell Categories  [Category ▾]  -- one of the nine spell-list categories, or Weapon enchants
---                       [Add a spell ____________________________][ Add ]
---                       <icon> Ironbark (102342)                   [x]       <- a starter: ticked unless removed
---                       <icon> A spell you added (424242)          [Remove]
 --                       [Restore this category's starter list]
+--                       [Add a spell ____________________________][ Add ]
+--                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
+--                       (X) <icon> A spell you added (424242)
 --                    -- OR, when the category is Weapon enchants --
 --                       [x] Main hand   [x] Off hand   [x] Ranged
 --     Dispel Colors     one swatch per dispel type, Magic … None
 --
--- SPELL CATEGORIES is bespoke: the category dropdown, then the library's IdList over that category's
--- edits, then the restore. The edits live at the ABSOLUTE path `categorySpells`
+-- SPELL CATEGORIES is bespoke: the category dropdown, the restore, then the library's IdList over that
+-- category's edits, drawn with an X at the left of every entry (`removeStyle = "icon"`, LibKa0s
+-- v1.44.0; B2, 2026-09-19). The edits live at the ABSOLUTE path `categorySpells`
 -- ({ [categoryKey] = { [spellId] = true | false } }), a carve-out written whole through the seam
--- (settings/Schema.lua), so an edit here re-applies every container. A starter the player unticks is
--- stored `false` (nil would let the shipped list bring it back), a spell the player adds `true`, and
+-- (settings/Schema.lua), so an edit here re-applies every container. A starter the player removes is
+-- stored `false` (nil would let the shipped list bring it back) and drops out of the list until
+-- Restore (or typing it back in) returns it; a spell the player adds is stored `true`, and
 -- the carve-out's normalizer stores no category left with no edits. The lists are not schema rows, so
 -- the page's Defaults leaves them alone, as the Filters page's leaves its Overrides lists; each
 -- category has its own restore.
@@ -114,12 +116,15 @@ local function editCategory(key, fn)
     NS.SetByPath("categorySpells", all)
 end
 
---- The list's entries: the starters in id order, each a toggle ticked unless removed, then the
---- spells the player added, each removable.
+--- The list's entries: the starters the player has not removed, in id order, then the spells the
+--- player added. Every one carries the X (removeStyle = "icon"); none is a toggle.
 local function entriesFor(def)
     local mine, starters, out = editsOf(def.key), def.spells or {}, {}
     for _, id in ipairs(sortedIds(starters)) do
-        out[#out + 1] = { id = id, toggle = true, on = mine[id] ~= false }
+        if mine[id] ~= false then
+            local n = #out
+            out[n + 1] = { id = id }
+        end
     end
     for _, id in ipairs(sortedIds(mine)) do
         if mine[id] == true and not starters[id] then
@@ -267,10 +272,23 @@ local function renderSpells(ctx)
         H.RenderGrid(ctx, { categoryCell(defs, def) })
         return renderEnchant(ctx)
     end
-    H.TextRow(ctx, L["The spells each category matches, shared by every container. Untick one to leave it out, or add your own. Blizzard only honors spell lists for buffs on friendly units."])
+    H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units."])
     H.RenderGrid(ctx, { categoryCell(defs, def) })
+    -- At the top, under the dropdown (B2): with the checkboxes gone, a removed starter is off the
+    -- list, and this is how it comes back.
+    H.InlineButtonPair(ctx, {
+        text    = L["Restore this category's starter list"],
+        tooltip = L["Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."],
+        onClick = function()
+            editCategory(key, function(mine)
+                for id in pairs(mine) do mine[id] = nil end
+            end)
+            rerender()
+        end,
+    }, nil)
     H.IdList(ctx, {
         kind       = "spell",
+        removeStyle = "icon",
         label      = L["Add a spell"],
         tooltip    = ID_TOOLTIP,
         strings    = ID_STRINGS,
@@ -282,25 +300,14 @@ local function renderSpells(ctx)
                 if def.spells and def.spells[id] then mine[id] = nil else mine[id] = true end
             end)
         end,
+        -- A starter is hidden (`false`, so the shipped list does not bring it back); an added spell
+        -- is forgotten.
         onRemove = function(id)
-            editCategory(key, function(mine) mine[id] = nil end)
-        end,
-        onToggle = function(id, on)
             editCategory(key, function(mine)
-                if on then mine[id] = nil else mine[id] = false end
+                if def.spells and def.spells[id] then mine[id] = false else mine[id] = nil end
             end)
         end,
     })
-    H.InlineButtonPair(ctx, {
-        text    = L["Restore this category's starter list"],
-        tooltip = L["Forget every edit to this category: its starter spells are ticked again and the spells you added are removed. Other categories keep theirs."],
-        onClick = function()
-            editCategory(key, function(mine)
-                for id in pairs(mine) do mine[id] = nil end
-            end)
-            rerender()
-        end,
-    }, nil)
 end
 
 -- ---------------------------------------------------------------------------

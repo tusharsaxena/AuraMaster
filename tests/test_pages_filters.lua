@@ -56,14 +56,15 @@ local function lastLine(lines)
     return lines[count] or ""
 end
 
---- The line an IdList drew for spell `id`: its label, and the Remove beside it.
+--- The line an IdList drew for spell `id`: its label, and the X at the line's left
+--- (`removeStyle = "icon"`, B2).
 local function entry(ws, id)
     for _, w in ipairs(ws) do
-        local lbl = w.children and w.children[1]
+        local lbl = w.children and w.children[2]
         if lbl and lbl.type == "InteractiveLabel" then
             local t = lbl.text or ""
             if t:find("(" .. id .. ")|r", 1, true) or t == "Unknown spell " .. id then
-                return lbl, w.children[2]
+                return lbl, w.children[1]
             end
         end
     end
@@ -576,7 +577,8 @@ test("filters: Overrides adds to one list at a time by id or by name, and Remove
     local lbl, remove = entry(ws, 774)
     assertTrue(lbl ~= nil and lbl.text:find("Rejuvenation", 1, true) ~= nil, "listed by name")
     assertTrue(entry(ws, 12345) ~= nil, "an unknown id is listed by id")
-    assertEqual(remove.text, NS.L["Remove"])
+    -- red under: the Overrides list without removeStyle = "icon" (a Remove button on the right)
+    assertEqual(remove.type, "Icon")
     remove:__fire("OnClick")
     assertNil(next(NS.Database.FindContainer(1).filter.whitelist), "the whitelist is empty again")
     assertEqual(NS.Database.FindContainer(1).filter.blacklist[12345], true, "the blacklist is not")

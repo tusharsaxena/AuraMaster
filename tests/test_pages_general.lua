@@ -284,15 +284,15 @@ local function spells(opts)
     return NS, m, P, tab(NS.L["Spell Categories"])
 end
 
---- The line an IdList drew for spell `id`: its label, and the widget beside it (the starter's
---- checkbox, or an added spell's Remove).
+--- The line an IdList drew for spell `id`: its label, and the X at the line's left
+--- (`removeStyle = "icon"`, B2).
 local function entry(ws, id)
     for _, w in ipairs(ws) do
-        local lbl = w.children and w.children[1]
+        local lbl = w.children and w.children[2]
         if lbl and lbl.type == "InteractiveLabel" then
             local t = lbl.text or ""
             if t:find("(" .. id .. ")|r", 1, true) or t == "Unknown spell " .. id then
-                return lbl, w.children[2]
+                return lbl, w.children[1]
             end
         end
     end
@@ -340,22 +340,20 @@ test("general → spell categories: a dropdown of the nine spell categories plus
     assertEqual(dd.value, "defensives")
 end)
 
-test("general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet", function()
+test("general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)", function()
     local NS, _, P, ws = spells()
     local want = starterIds(NS, "defensives")
     for _, id in ipairs(want) do
-        local _, act = entry(ws, id)
-        -- red under: the starters drawn as removable entries (Remove would forget a shipped spell
-        -- rather than switch it off)
-        assertTrue(act ~= nil and act.type == "CheckBox", "a checkbox beside starter " .. id)
-        assertTrue(act.value == true, "ticked: " .. id)
+        local _, x = entry(ws, id)
+        -- red under: the list without removeStyle = "icon", or starters sent as toggle entries
+        assertTrue(x ~= nil and x.type == "Icon", "an X beside starter " .. id)
     end
-    assertEqual(#P.all(ws, "CheckBox"), #want, "one checkbox per starter")
-    assertEqual(#P.all(ws, "Button", NS.L["Remove"]), 0)
+    assertEqual(#P.all(ws, "CheckBox"), 0, "no checkboxes")
+    assertEqual(#P.all(ws, "Button", NS.L["Remove"]), 0, "no Remove buttons")
     assertTrue(P.find(ws, "EditBox", NS.L["Add a spell"]) ~= nil, "the add line is drawn")
 end)
 
-test("general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off", function()
+test("general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off", function()
     local NS, _, P, ws = spells()
     NS.SetByPath("categorySpells", { raidCDs = { [99] = true } })
     local paths = spyPaths(NS)
@@ -367,12 +365,11 @@ test("general → spell categories: adding by id writes categorySpells whole thr
     assertEqual(edits.raidCDs[99], true, "another category's edits are kept")
     assertNil(NS.Database.FindContainer(1).filter.categorySpells, "no container keeps its own copy")
     ws = P.rerender("General")
-    local lbl, act = entry(ws, 424242)
+    local lbl, x = entry(ws, 424242)
     assertTrue(lbl ~= nil, "the added spell is listed")
     assertEqual(lbl.text, "Unknown spell 424242", "by id where the client cannot name it")
-    assertTrue(act ~= nil and act.type == "Button" and act.text == NS.L["Remove"], "with Remove")
-    act:__fire("OnClick")
-    -- red under: onRemove leaving the id in the set
+    x:__fire("OnClick")
+    -- red under: onRemove storing false for an added spell (it would linger as an edit)
     assertNil(NS.db.profile.categorySpells.defensives, "no edit left to store")
 end)
 
@@ -507,20 +504,16 @@ test("general → spell categories: the add line's tooltip and its refusal say w
     assertTrue(P.hasText(ws, "No spell named 'No Such Spell' in your spellbook. " .. hint))
 end)
 
-test("general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit", function()
+test("general → spell categories: a starter's X stores false and drops it from the list; adding it again drops the edit (B2)", function()
     local NS, _, P, ws = spells()
     local id = starterIds(NS, "defensives")[1]
-    local _, cb = entry(ws, id)
-    cb:__fire("OnValueChanged", false)
-    -- red under: a starter's untick storing nil (the starter list would put it straight back)
+    local _, x = entry(ws, id)
+    x:__fire("OnClick")
+    -- red under: a starter's X storing nil (the starter list would put it straight back)
     assertEqual(NS.db.profile.categorySpells.defensives[id], false)
     ws = P.rerender("General")
-    _, cb = entry(ws, id)
-    assertFalse(cb.value, "drawn unticked")
-    cb:__fire("OnValueChanged", true)
-    assertNil(NS.db.profile.categorySpells.defensives, "ticking it drops the edit")
-    NS.SetByPath("categorySpells", { defensives = { [id] = false } })
-    ws = P.rerender("General")
+    -- red under: entriesFor still listing a removed starter
+    assertNil(entry(ws, id), "a removed starter is off the list")
     P.find(ws, "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", tostring(id))
     -- red under: onAdd storing `true` for a starter (an addition that duplicates the shipped spell)
     assertNil(NS.db.profile.categorySpells.defensives, "adding a removed starter back includes it again")
@@ -538,11 +531,19 @@ test("general → spell categories: choosing another category lists its starters
     assertNil(entry(ws, starterIds(NS, "defensives")[1]), "the defensives are not")
 end)
 
-test("general → spell categories: Restore this category's starter list clears that category's edits and no other's", function()
+test("general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)", function()
     local NS, _, P = spells()
     NS.SetByPath("categorySpells", { defensives = { [118038] = false, [424242] = true }, raidCDs = { [99] = true } })
     local ws = P.rerender("General")
-    P.find(ws, "Button", NS.L["Restore this category's starter list"]):__fire("OnClick")
+    local restore = P.find(ws, "Button", NS.L["Restore this category's starter list"])
+    local at = {}
+    for i, w in ipairs(ws) do
+        if w == restore then at.restore = i end
+        if w.type == "EditBox" and w.labelText == NS.L["Add a spell"] then at.add = i end
+    end
+    -- red under: the restore still drawn under the list (a removed starter has no way back in view)
+    assertTrue(at.restore < at.add, "Restore above Add a spell")
+    restore:__fire("OnClick")
     local edits = NS.db.profile.categorySpells
     -- red under: the restore writing an empty set for every category
     assertNil(edits.defensives)

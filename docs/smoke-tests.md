@@ -599,3 +599,7 @@ nothing).
 112. **Test mode.** The Master controls checkbox and `/am test` show placeholders without unlocking.
      Pull a mob: test mode ends and the checkbox unticks. `/am test` in combat prints one gray line
      and starts nothing. The minimap left-click toggles it.
+113. **Spell lists.** General → Spell Categories: an X on the left of every row and no checkboxes.
+     X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
+     the X too, and it removes the spell. Check the X row's height and vertical alignment against the
+     spell name — the library's Icon widget is 26 px tall.
