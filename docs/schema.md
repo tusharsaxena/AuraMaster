@@ -292,7 +292,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:758`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:778`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -403,10 +403,17 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   `weaponEnchants` only. Every container with `auraType == "ENCHANT"` becomes an **enchant-only buff
   container** — `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever the player's), and
   `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hide but Weapon enchants,
-  Uncategorized included). `filter.hidePermanentEnchants`, the name, the style, every styling block and
-  the position carry over untouched. Such a container compiles to the enchant slots and no aura group,
-  and `FC.Compile` does not call it one that can never match. The v3 and v4 steps keep their `ENCHANT`
-  handling, because an old profile climbs them before it reaches v5.
+  Uncategorized included) — the whole category map is REPLACED, not merged, so any debuff-category
+  state the container held resets to its default (harmless on a buff container; it only matters if the
+  container is later switched to Debuffs). A non-empty `filter.whitelist` is CLEARED too (fix round 1):
+  `FC.Compile`'s "Always shown" group draws a whitelist's spells regardless of category state, and did
+  nothing under the old `ENCHANT` aura type only because the compiler returned before any list was
+  read, so keeping it would have the migrated container draw those buffs alongside its enchants —
+  exactly what "shows only Weapon enchants" rules out. One extra `[Migrate]` line names the container
+  and how many ids were dropped. `filter.hidePermanentEnchants`, the name, the style, every styling
+  block and the position carry over untouched. Such a container compiles to the enchant slots and no
+  aura group, and `FC.Compile` does not call it one that can never match. The v3 and v4 steps keep
+  their `ENCHANT` handling, because an old profile climbs them before it reaches v5.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

@@ -1093,6 +1093,28 @@ test("v5: an ENCHANT container becomes a player buff container showing only Weap
     assertEqual(c.position.x, 12); assertEqual(c.name, "My enchants")
 end)
 
+test("v5: a whitelist on the ENCHANT container is cleared, so the migrated container draws no buffs (fix round 1, review Important #1)", function()
+    local NS = fresh()
+    local c = enchantContainer()
+    c.filter.whitelist = { [500] = true, [600] = true }
+    local p = { containers = { [9] = c } }
+    NS.Database.MigrateV5(p)
+    -- red under: the whitelist kept, so FC.Compile's addWhitelistGroup still draws those buffs
+    assertTrue(p.containers[9].filter.whitelist == nil, "the whitelist is cleared, not merely left empty")
+    local plan = NS.FilterCompiler.Compile(p.containers[9], NS.FilterCompiler.ProfileContext())
+    assertEqual(#plan.groups, 0, "no group at all -- only the enchant slots")
+end)
+
+test("v5: a container with no filter table at all still converts cleanly (review Minor #2)", function()
+    local NS = fresh()
+    local p = { containers = { [1] = { name = "Bare", unit = "target", auraType = "ENCHANT" } } }
+    -- red under: MigrateV5 indexing a nil filter instead of building one
+    assertEqual(NS.Database.MigrateV5(p), 1)
+    local c = p.containers[1]
+    assertEqual(c.auraType, "HELPFUL"); assertEqual(c.unit, "player")
+    assertEqual(c.filter.categories.weaponEnchants, "show")
+end)
+
 test("v5: only ENCHANT containers are touched, and a second run changes nothing (feedback #6)", function()
     local NS = fresh()
     local buff = { name = "Buffs", unit = "target", auraType = "HELPFUL", filter = { categories = { defensives = "hide" } } }
@@ -1103,6 +1125,7 @@ test("v5: only ENCHANT containers are touched, and a second run changes nothing 
     assertTrue(buff.filter.categories.weaponEnchants == nil, "a buff container's categories are its own")
     local Sig = NS.FilterCompiler.Signature
     local once = Sig(p)
+    -- red under: a second run re-stamping categories or re-counting a container it already converted
     assertEqual(NS.Database.MigrateV5(p), 0, "nothing left to convert")
     assertEqual(Sig(p), once)
 end)

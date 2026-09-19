@@ -707,9 +707,17 @@ end
 --- and enchants are a buff category only. Every stored container with `auraType == "ENCHANT"` becomes
 --- an ENCHANT-ONLY buff container: `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever
 --- the player's), and `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hidden but
---- Weapon enchants, Uncategorized included). `filter.hidePermanentEnchants` and every other key —
---- name, style, styling, position — carry over untouched. One [Migrate] line per converted container,
---- in key order. A test seam as well as the step's body, like MigrateV2..V4.
+--- Weapon enchants, Uncategorized included, the whole map replaced rather than merged). A stored
+--- `filter.whitelist` is CLEARED too (fix round 1, review Important #1): `FC.Compile`'s
+--- `addWhitelistGroup` draws a whitelist's spells regardless of category state, and did nothing under
+--- the old `ENCHANT` aura type only because `compileEnchant` returned before any list was read — kept
+--- as-is it would draw those buffs after v5, when the container never drew anything but enchants
+--- before. Nothing else on `filter` (blacklist, castBy, duration) is touched: those only narrow a
+--- group and add none, so they cannot make the container draw more than its enchant slots.
+--- `filter.hidePermanentEnchants` and every other key — name, style, styling, position — carry over
+--- untouched. One [Migrate] line per converted container, in key order, plus one more when a
+--- non-empty whitelist was cleared, naming the container and how many ids it held. A test seam as
+--- well as the step's body, like MigrateV2..V4.
 --- @return number  the containers converted
 function Database.MigrateV5(p)
     if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
@@ -725,6 +733,18 @@ function Database.MigrateV5(p)
             c.auraType, c.unit = "HELPFUL", "player"
             if type(c.filter) ~= "table" then c.filter = {} end
             c.filter.categories = NS.Categories.EnchantOnlyStates()
+            if type(c.filter.whitelist) == "table" then
+                local whitelistCount = 0
+                for _ in pairs(c.filter.whitelist) do
+                    whitelistCount = whitelistCount + 1
+                end
+                if whitelistCount > 0 then
+                    c.filter.whitelist = nil
+                    if NS.Debug then
+                        NS.Debug("Migrate", "v5 container '%s' (%s): cleared a %s-entry whitelist so it draws only Weapon enchants", tostring(key), tostring(c.name), whitelistCount)
+                    end
+                end
+            end
             converted = converted + 1
             if NS.Debug then
                 NS.Debug("Migrate", "v5 container '%s' (%s): now a player buff container showing only Weapon enchants", tostring(key), tostring(c.name))
