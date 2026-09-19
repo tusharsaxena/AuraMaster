@@ -6,6 +6,7 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
+local BS = dofile("tests/border_strips.lua")
 
 --- A frame another addon would have created, planted under a global name.
 local function plant(mocks, name, parent)
@@ -28,6 +29,7 @@ local function picking(opts)
     mocks.CreateFrame = function(...)
         local f = real(...)
         made[#made + 1] = f
+        if opts.textures then BS.recorderTextures(f) end
         return f
     end
     local state = { picked = nil, canceled = 0 }
@@ -136,6 +138,29 @@ test("picker: a frame the outline may not anchor to hides the outline instead of
     -- red under: SetAllPoints called unguarded (an error every frame, for as long as the cursor stays)
     assertTrue(ok, tostring(err))
     assertFalse(s.outline:IsShown())
+end)
+
+test("picker: the outline over a frame of secret size draws strips and never raises", function()
+    local _, mocks, s = picking({ textures = true })
+    local o = s.outline
+    -- red under: a BackdropTemplate outline (2px WHITE8X8 edge, SetBackdropBorderColor 0.2,0.8,1,1)
+    assertNil(o.backdropInfo, "no backdrop")
+    assertTrue(o.__template:find("BackdropTemplate,", 1, true) == nil, o.__template)
+    assertFalse(o:IsShown(), "built hidden")
+    -- Covering a frame whose size reads secret (an aura container, a laid-out button) makes the
+    -- outline's own size secret; the client then runs its OnSizeChanged.
+    local target = plant(mocks, "SomeAddonAuraFrame")
+    mocks.__layOut(target)
+    mocks.__layOut(o)
+    mocks.__foci = { target }
+    local ok, err = pcall(s.overlay.__fire, s.overlay, "OnUpdate")
+    assertTrue(ok, tostring(err))
+    assertTrue(o:IsShown(), "it outlines the frame")
+    BS.assertSolid(o, 2, "0.2,0.8,1,1", "the picker outline")
+    -- red under: BackdropTemplate's size script (Backdrop.lua:226 on the secret size)
+    assertNil(o:GetScript("OnSizeChanged"), "no size script on the outline")
+    local fired, ferr = pcall(o.__fire, o, "OnSizeChanged")
+    assertTrue(fired, tostring(ferr))
 end)
 
 test("picker: the outline carries the template that lets it outline an aura container", function()

@@ -104,12 +104,13 @@ local function build()
     overlay:Hide()
 
     -- The outline anchors to arbitrary frames — including another addon's aura container, which only
-    -- accepts anchors from a frame carrying DisableUntrustedLayoutScriptsTemplate.
-    outline = CreateFrame("Frame", nil, overlay, "BackdropTemplate,DisableUntrustedLayoutScriptsTemplate")
-    if outline.SetBackdrop then
-        outline:SetBackdrop({ edgeFile = NS.Constants.WHITE_TEXTURE, edgeSize = 2 })
-        outline:SetBackdropBorderColor(0.2, 0.8, 1, 1)
-    end
+    -- accepts anchors from a frame carrying DisableUntrustedLayoutScriptsTemplate. Covering one (or a
+    -- laid-out aura button) makes the outline's own size read secret, so it is a plain frame with its
+    -- 2px edge drawn as strips (Style.DrawEdge), never a BackdropTemplate, whose OnSizeChanged does
+    -- arithmetic on the size (docs/midnight-quirks.md, "A backdrop on an engine button reads a secret
+    -- size").
+    outline = CreateFrame("Frame", nil, overlay, "DisableUntrustedLayoutScriptsTemplate")
+    NS.Style.DrawEdge(outline, 2, 0.2, 0.8, 1, 1)
     outline:Hide()
 
     label = overlay:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")

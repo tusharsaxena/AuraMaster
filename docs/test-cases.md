@@ -280,7 +280,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
 
-### test_container.lua (50)
+### test_container.lua (51)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -293,6 +293,7 @@ badge and any count quoted in the docs must agree with it.
 - container: the show ladder — suspend, the master switch, the container switch, visibility
 - container: test mode previews placeholders through the style code and disables the engine
 - container: unlocked, a container shows whatever its visibility rule, its engine drawing, under an outline (B1)
+- container: the unlocked outline under a secret anchor size draws strips and never raises
 - container: test mode shows the placeholders while locked, whatever the visibility rule (B1)
 - container: test mode off, a locked container set to never is hidden again (B1)
 - container: a visibility pass re-dresses no preview element unless the settings changed
@@ -445,7 +446,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (72)
+### test_anchors.lua (73)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -456,7 +457,8 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - anchors: a drag saves the position in one write
-- handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark
+- handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark
+- handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic
 - handle: above the anchor when auras grow down, below when up, edge-aligned where they start
 - handle: at least as wide as its container's element, and as its label with room for the help mark
 - handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
@@ -827,7 +829,7 @@ badge and any count quoted in the docs must agree with it.
 - blizzard: in combat nothing moves and Apply says it has to wait; with no profile, nothing is waiting
 - blizzard: a profile switch applies the new profile's choice
 
-### test_framepicker.lua (13)
+### test_framepicker.lua (14)
 
 - picker: the screen and the world are never a target, and the walk ends there
 - picker: the walk climbs past one of this addon's own frames to a named frame above it
@@ -836,6 +838,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: the label follows the cursor at the UI's scale
 - picker: over nothing named the outline hides and the label says what to do
 - picker: a frame the outline may not anchor to hides the outline instead of raising
+- picker: the outline over a frame of secret size draws strips and never raises
 - picker: the outline carries the template that lets it outline an aura container
 - picker: a right-click cancels, and nothing is picked
 - picker: a left-click over nothing named keeps the pick going
@@ -1327,14 +1330,14 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
-| test_container.lua | 50 |
+| test_container.lua | 51 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 72 |
+| test_anchors.lua | 73 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 59 |
 | test_timedspells.lua | 19 |
@@ -1344,7 +1347,7 @@ badge and any count quoted in the docs must agree with it.
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
-| test_framepicker.lua | 13 |
+| test_framepicker.lua | 14 |
 | test_disabled.lua | 12 |
 | test_slash.lua | 25 |
 | test_slash_verbs.lua | 42 |
@@ -1371,4 +1374,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1157** |
+| **Total** | **1160** |

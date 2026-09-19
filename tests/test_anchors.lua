@@ -175,13 +175,17 @@ local RECORDED = {
     "RegisterForDrag",
 }
 
+local BS = dofile("tests/border_strips.lua")
+
 --- Rebuild container `inst`'s handle under a CreateFrame that records every frame it makes.
---- Font strings and textures come back as their frame from the kit stub, so a label's or an icon's
---- setters land on the frame that made it.
+--- Font strings come back as their frame from the kit stub, so a label's setters land on the frame
+--- that made it. The strip's own textures (its fill and its edge strips) are region recorders
+--- (BS.recorderTextures), so each is read apart; the help mark's icon lands on the help frame.
 local function recordedHandle(mocks, NS, inst)
     local real = mocks.CreateFrame
     mocks.CreateFrame = function(...)
         local f = real(...)
+        if select(3, ...) == inst.anchor then BS.recorderTextures(f) end
         f.__rec = {}
         for _, m in ipairs(RECORDED) do
             rawset(f, m, function(self, ...)
@@ -212,18 +216,26 @@ local function measureAs(NS, width)
     end
 end
 
-test("handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark", function()
+test("handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
-    assertEqual(h.__template, "BackdropTemplate")
+    -- red under: a BackdropTemplate strip (its OnSizeChanged runs Backdrop.lua:226 on a secret size)
+    assertNil(h.__template, "a plain button, never a BackdropTemplate")
+    assertNil(h.__rec.SetBackdrop, "no backdrop")
     assertEqual(last(h, "SetHeight")[1], 18)
-    local bd = last(h, "SetBackdrop")[1]
-    assertEqual(bd.bgFile, [[Interface\Buttons\WHITE8X8]])
-    assertEqual(bd.edgeFile, [[Interface\Buttons\WHITE8X8]])
-    assertEqual(bd.edgeSize, 1)
-    assertEqual(table.concat(last(h, "SetBackdropColor"), ","), "0,0,0,0.75")
-    assertEqual(table.concat(last(h, "SetBackdropBorderColor"), ","), "1,0.82,0,0.6")
+    -- The fill: one texture under everything, covering the strip, black at 0.75 (the old backdrop's
+    -- bgFile and SetBackdropColor).
+    local bg = h.bg
+    assertTrue(bg ~= nil and bg ~= h, "a fill texture of its own")
+    assertEqual(bg.__layer, "BACKGROUND")
+    assertTrue(bg:__last("SetAllPoints")[1] == h, "the fill covers the strip")
+    assertEqual(bg:__joined("SetColorTexture"), "0,0,0,0.75")
+    -- The edge: Style.ApplyBorder's four Solid strips, 1px, gold at 0.6 (the old edgeFile, edgeSize
+    -- and SetBackdropBorderColor), read once the strip shows.
+    measureAs(NS, 60)
+    NS.Anchors.UpdateHandle(inst, true)
+    BS.assertSolid(h, 1, "1,0.82,0,0.6", "the handle's edge")
     assertEqual(table.concat(last(h, "SetTextColor"), ","), "1,0.82,0")
     local help = h.help
     assertEqual(table.concat(last(help, "SetSize"), ","), "14,14")
@@ -235,6 +247,35 @@ test("handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the c
     local _, covers = last(h, "SetAllPoints")
     -- red under: restoring SetAllPoints(anchor) in BuildHandle
     assertEqual(covers, 0, "the handle never covers the anchor")
+end)
+
+test("handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = NS.Database.FindContainer(1)
+    -- A container attached to another frame (or container) inherits that frame's secret geometry,
+    -- and so does every frame of ours built under its anchor (tests/wow_mock.lua's __layOut).
+    mocks.__layOut(inst.anchor)
+    local built, berr = pcall(NS.Anchors.BuildHandle, inst)
+    -- red under: SetBackdrop on the strip (arithmetic on the secret size, Backdrop.lua:226)
+    assertTrue(built, tostring(berr))
+    local ok, h = pcall(recordedHandle, mocks, NS, inst)
+    assertTrue(ok, tostring(h))
+    assertTrue(h.__secretRect, "the strip's own size reads secret")
+    measureAs(NS, 60)
+    local placed, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    assertTrue(placed, tostring(err))
+    assertTrue(h:IsShown())
+    -- The client runs the strip's OnSizeChanged when UpdateHandle resizes it.
+    -- red under: BackdropTemplate's size script (it re-runs the arithmetic on every resize)
+    assertNil(h:GetScript("OnSizeChanged"), "no size script on the strip")
+    local fired, ferr = pcall(h.__fire, h, "OnSizeChanged")
+    assertTrue(fired, tostring(ferr))
+    cfg.layout.growV = "up"
+    placed, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    assertTrue(placed, tostring(err))
+    BS.assertSolid(h, 1, "1,0.82,0,0.6", "a secret strip's edge")
+    assertEqual(h.bg:__joined("SetColorTexture"), "0,0,0,0.75")
 end)
 
 test("handle: above the anchor when auras grow down, below when up, edge-aligned where they start", function()

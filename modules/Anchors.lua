@@ -309,9 +309,8 @@ end
 -- The drag handle
 -- ---------------------------------------------------------------------------
 
--- A labeled strip OUTSIDE the anchor, on the side the auras do not grow into: a dark WHITE8X8
--- backdrop with a 1px gold edge, a gold label, and the media catalog's help mark inside its far
--- end. Outside, because
+-- A labeled strip OUTSIDE the anchor, on the side the auras do not grow into: a dark fill with a 1px
+-- gold edge, a gold label, and the media catalog's help mark inside its far end. Outside, because
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
@@ -320,7 +319,6 @@ local HANDLE_GAP   = 2    -- gap between the strip and the anchor
 local HANDLE_PAD   = 24   -- horizontal padding around the label
 local HANDLE_HELP  = 14   -- the help mark's edge, inside the strip's far end
 local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
-local BACKDROP_TEX = [[Interface\Buttons\WHITE8X8]]
 -- The LAST rung of the help mark's ladder: the catalog's `help` icon through NS.Icon first, and this
 -- Blizzard texture only when the media library is absent or stops carrying that name.
 local HELP_TEXTURE = [[Interface\FriendsFrame\InformationIcon]]
@@ -407,14 +405,21 @@ end
 --- The one exception is the screen edge: while the handle shows, the anchor's clamp rect takes the
 --- strip in (clampToHandle), so a container flush with the edge on the handle's side is pushed in by
 --- the strip while unlocked and returns when locked. Its stored position does not change.
+--- A PLAIN button, never a BackdropTemplate: under an anchor attached to another frame or container
+--- its size can read secret, and the Backdrop does arithmetic on the size on every SetBackdrop and
+--- resize (docs/midnight-quirks.md, "A backdrop on an engine button reads a secret size"). So the fill
+--- is one texture of its own and the edge is Style.DrawEdge's strips, both drawn before the strip is
+--- hidden: neither reads a size.
 function Anchors.BuildHandle(container)
     local anchor = container.anchor
-    local handle = CreateFrame("Button", nil, anchor, "BackdropTemplate")
+    local handle = CreateFrame("Button", nil, anchor)
     handle:SetHeight(HANDLE_H)
     handle:SetFrameLevel(NS.Secrets.NumberOr(anchor:GetFrameLevel(), 0) + HANDLE_LEVEL)
-    handle:SetBackdrop({ bgFile = BACKDROP_TEX, edgeFile = BACKDROP_TEX, edgeSize = 1 })
-    handle:SetBackdropColor(0, 0, 0, 0.75)
-    handle:SetBackdropBorderColor(1, 0.82, 0, 0.6)
+    local bg = handle:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints(handle)
+    bg:SetColorTexture(0, 0, 0, 0.75)
+    handle.bg = bg
+    NS.Style.DrawEdge(handle, 1, 1, 0.82, 0, 0.6)
     handle:EnableMouse(true)
     handle:RegisterForDrag("LeftButton")
     handle:RegisterForClicks("RightButtonUp")

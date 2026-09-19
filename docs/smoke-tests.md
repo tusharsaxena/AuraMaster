@@ -920,3 +920,13 @@ detail, the step points at it rather than repeating it.
      its color → the live buttons recolor at once. Hover Border style: the tooltip says Solid redraws at
      once and any other texture after a `/reload`. Back to Solid → the strips draw at once and no
      texture edge is left under them.
+162. **The outline and the handle on an attached container (follow-up).** `/console scriptErrors 1`.
+     Attach a container to another frame (Layout → Anchor → Another container, or a frame picked with
+     the frame picker, an aura container of another addon if one is at hand), then `/am unlock`. Change
+     that container's Width and its growth direction, and move the container it is attached to → **no
+     Lua error** (none naming `Backdrop.lua`), and the outline and the handle look as before: a faint
+     1px white outline one element in size at the corner the flow starts from, and a dark strip with a
+     1px gold edge, the gold name label (with the orange TEST tag in test mode) and the "?" mark at its
+     far end. Right-click the strip → the Containers page opens on that container; a screen-attached
+     container still drags by it. While picking a frame, move the cursor across several frames,
+     aura buttons included → the blue 2px outline follows each, no Lua error.

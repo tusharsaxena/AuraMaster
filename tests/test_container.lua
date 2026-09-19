@@ -177,6 +177,44 @@ test("container: unlocked, a container shows whatever its visibility rule, its e
     assertFalse(inst.outline:IsShown(), "locked: no outline")
 end)
 
+local BS = dofile("tests/border_strips.lua")
+
+test("container: the unlocked outline under a secret anchor size draws strips and never raises", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    -- The outline is built on first unlock, under the anchor: give it recorder textures to read.
+    local real = mocks.CreateFrame
+    mocks.CreateFrame = function(...)
+        local f = real(...)
+        if select(3, ...) == inst.anchor then BS.recorderTextures(f) end
+        return f
+    end
+    -- A container attached to another frame (or container) inherits that frame's secret geometry,
+    -- and so does every frame of ours built under its anchor (tests/wow_mock.lua's __layOut).
+    mocks.__layOut(inst.anchor)
+    local ok, err = pcall(NS.SetByPath, "locked", false)
+    mocks.CreateFrame = real
+    assertTrue(ok, tostring(err))
+    local o = inst.outline
+    -- red under: a BackdropTemplate outline (SetBackdrop runs Backdrop.lua:226 on the secret size)
+    assertTrue(o ~= nil and o:IsShown(), "the outline shows")
+    assertTrue(o.__secretRect, "its own size reads secret")
+    assertNil(o.__template, "a plain frame, never a BackdropTemplate")
+    assertNil(o.backdropInfo, "no backdrop")
+    -- The old look: a 1px white edge at OUTLINE_ALPHA (0.35), no fill.
+    BS.assertSolid(o, 1, "1,1,1,0.35", "the outline")
+    -- The client runs its OnSizeChanged when a change resizes it.
+    -- red under: BackdropTemplate's size script (it re-runs the arithmetic on every resize)
+    assertNil(o:GetScript("OnSizeChanged"), "no size script on the outline")
+    local fired, ferr = pcall(o.__fire, o, "OnSizeChanged")
+    assertTrue(fired, tostring(ferr))
+    ok, err = pcall(NS.SetByPath, "container.bars.width", 240, 1)
+    assertTrue(ok, tostring(err))
+    mocks.__fireTimers()
+    assertTrue(inst.outline == o and o:IsShown(), "the same outline, still shown")
+    BS.assertSolid(o, 1, "1,1,1,0.35", "the outline after a resize")
+end)
+
 test("container: test mode shows the placeholders while locked, whatever the visibility rule (B1)", function()
     local NS = fresh()
     local inst = NS.ContainerManager.instances[1]

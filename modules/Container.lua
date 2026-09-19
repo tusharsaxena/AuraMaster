@@ -23,7 +23,6 @@ ContainerClass.__index = ContainerClass
 local Perf = NS.Perf
 local D = NS.CONTAINER_TEMPLATE
 local HUGE = math.huge
-local C = NS.Constants
 -- The unlocked outline's opacity: faint enough to read as a guide, never as a border (B1).
 local OUTLINE_ALPHA = 0.35
 
@@ -457,7 +456,11 @@ end
 --- The unlocked container's OUTLINE (B1): a faint one-pixel box, one element's size, at the corner
 --- its flow starts from, so an EMPTY container can still be seen and grabbed while unlocked. A frame
 --- of ours under the anchor, never the engine's; hidden when locked, and in test mode (the
---- placeholders are there then). It takes no mouse: the drag handle does the grabbing.
+--- placeholders are there then). It takes no mouse: the drag handle does the grabbing. A PLAIN frame
+--- with its edge drawn as strips (Style.DrawEdge), never a BackdropTemplate: under an anchor attached
+--- to another frame or container its size can read secret, and the Backdrop does arithmetic on the
+--- size on every SetBackdrop and resize (docs/midnight-quirks.md, "A backdrop on an engine button
+--- reads a secret size").
 function ContainerClass:ApplyOutline(cfg, on)
     local o = self.outline
     if not on then
@@ -465,9 +468,8 @@ function ContainerClass:ApplyOutline(cfg, on)
         return
     end
     if not o then
-        o = CreateFrame("Frame", nil, self.anchor, "BackdropTemplate")
-        o:SetBackdrop({ edgeFile = C.WHITE_TEXTURE, edgeSize = 1 })
-        o:SetBackdropBorderColor(1, 1, 1, OUTLINE_ALPHA)
+        o = CreateFrame("Frame", nil, self.anchor)
+        NS.Style.DrawEdge(o, 1, 1, 1, 1, OUTLINE_ALPHA)
         o:EnableMouse(false)
         self.outline = o
     end

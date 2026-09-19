@@ -6,9 +6,14 @@
 --
 --     local BS = dofile("tests/border_strips.lua")
 --     BS.assertSolid(am.border, 2, "1,0,0,1", "the icon border")
+--
+-- The unlocked outline, the drag handle and the frame picker's outline draw their edges the same way
+-- (Style.DrawEdge). They are kit frames, whose CreateTexture hands back the frame itself, so a test
+-- gives such a frame recorder textures first (BS.recorderTextures) to read its strips apart.
 
 local T = _G.AM_TEST
 local BS = {}
+local newRegion = dofile("tests/region_recorder.lua")
 
 --- The four strips of a Solid border, in order, or an empty list when none was ever built.
 function BS.strips(border)
@@ -29,6 +34,17 @@ function BS.assertSolid(border, size, color, what)
     T.assertEqual(s[2]:__last("SetHeight")[1], size, what .. ": bottom thickness")
     T.assertEqual(s[3]:__last("SetWidth")[1], size, what .. ": left thickness")
     T.assertEqual(s[4]:__last("SetWidth")[1], size, what .. ": right thickness")
+end
+
+--- Make `frame`'s CreateTexture hand back a new region recorder (tests/region_recorder.lua) each
+--- call, its draw layer kept on `__layer`, instead of the kit's frame itself. Returns the frame.
+function BS.recorderTextures(frame)
+    rawset(frame, "CreateTexture", function(self, _, layer)
+        local tex = newRegion()
+        tex.parent, tex.__layer = self, layer
+        return tex
+    end)
+    return frame
 end
 
 return BS

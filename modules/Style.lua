@@ -309,7 +309,9 @@ end
 --     when the edge or size changed; otherwise the backdrop last applied stays and is recolored
 --     (SetBackdropBorderColor does no arithmetic). A live button therefore shows a new edge or size
 --     after its next rebuild or /reload.
--- The border frame itself is a plain frame too (Style.NewBorder), never a BackdropTemplate.
+-- The border frame itself is a plain frame too (Style.NewBorder), never a BackdropTemplate. The other
+-- frames of ours that hang under geometry that can read secret (the unlocked outline, the drag
+-- handle, the frame picker's outline) draw their edges with the same strips (Style.DrawEdge).
 
 -- The four strips: the two corners each runs between, the setter its thickness goes through, and
 -- whether it is a side, which stops a thickness short of each end so no corner is drawn twice.
@@ -371,6 +373,15 @@ local function drawStrips(frame, show, size, r, g, b, a)
         strip:SetColorTexture(r, g, b, a)
         strip:Show()
     end
+end
+
+--- Draw a Solid edge `size` thick in (r, g, b, a) on any plain frame of ours, with the same four
+--- strips as Style.ApplyBorder's Solid path: no size is read, so the frame may sit under secret
+--- geometry. The unlocked outline (modules/Container.lua), the drag handle (modules/Anchors.lua) and
+--- the frame picker's outline (modules/FramePicker.lua) draw their edges with it, once, when built:
+--- the strips hang from the frame's corners and follow every later resize on their own.
+function Style.DrawEdge(frame, size, r, g, b, a)
+    drawStrips(frame, true, size, r, g, b, a)
 end
 
 --- Whether `f`'s width and height both read as plain numbers now (a laid-out button's do not).
