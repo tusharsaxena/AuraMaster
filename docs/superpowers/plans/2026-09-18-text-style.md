@@ -75,6 +75,7 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 16 | B2b re-vendor LibKa0s v1.44.0 into Aura Master | todo | needs the owner's go-ahead on 15 |
 | 17 | B2c spell lists adopt the X icon; Restore moves to the top | todo | needs 16 |
 | 18 | Final gate, inventory, lizard; hand back to the owner | todo | |
+| 19 | Re-vendor LibKa0s v1.44.0 into the other ten consumers + adoption pass | todo | added 2026-09-19 at the owner's request; after 18 |
 
 **Dependency order:** 1–3 are independent of everything and of each other. 4 → 5 → 6 → 7 → 8 → 9 →
 10 → 11 → 12 → 13 are sequential. 14 needs 9 (both change `modules/Container.lua` and
@@ -6238,3 +6239,45 @@ Report, in this order, and stop:
 4. The owner's decisions: whether and how to commit (this plan never commits — CLAUDE.md), when to close issue #2, and whether to cut a release (the version is **not** bumped).
 
 ---
+
+
+### Task 19: Re-vendor LibKa0s v1.44.0 into every other consumer, with an adoption pass
+
+Added 2026-09-19 at the owner's request. LibKa0s's own release procedure (`docs/releasing.md` step 8)
+makes re-vendoring **every** consumer part of the release, not a follow-up; this plan had only
+Aura Master's (Task 16). Step 9 (re-sweep the Consumers table) rides along.
+
+**Repos** (siblings of this one; `docs/releasing.md` step 9's loop minus AuraMaster): AbsorbTracker,
+BankLedger, ConsumableMaster, KickCD, LootHistory, MultiMeters, PanelMaster, PartyFrameEnhanced,
+PrettyChat, WhatGroup.
+
+**Per repo** (independent of each other, so they may run in parallel, one agent per repo):
+1. Preflight: `git status --short` must be clean apart from files the owner is known to be editing
+   (report anything else and skip that repo rather than touch it); record the branch.
+2. Create branch `chore/libka0s-v1.44.0` from the repo's default branch. No merge, push or tag
+   without the owner.
+3. Copy both payloads **from the tag**, whole: `libs/LibKa0s/` from `v1.44.0:LibKa0s/` and
+   `tests/_kit/` from `v1.44.0:testkit/` (`git -C ../LibKa0s archive v1.44.0 LibKa0s testkit`),
+   removing any file the tag no longer has. Keep `tests/_kit/run-automated-tests.sh` at mode `100755` in the
+   index. In the same change, move the repo's `CLAUDE.md` provenance line to `v1.44.0` and any live
+   doc that quotes the bundled version (exclude frozen `docs/audits/`, `docs/reviews/`,
+   `docs/automated-tests/`).
+4. **The no-breakage proof:** the repo's full battery through the bounded runner: its headless suite
+   (vendor-sync must run for real, not SKIP, and pass), its lint at 0/0, lizard with no NEW function
+   above CCN 15, and its `tests/perf.lua` if it has one. Any degradation-stub surface-parity case
+   (`Kit.assertSurfaceParity`) must stay green against the new `members-21.21.1.7.3.json`.
+5. **Adoption pass (report, don't adopt):** the only new surface in v1.44.0 is the opt-in
+   `removeStyle = "icon"` on `O.IdList` (OptionsWidgets minor 21). List every `IdList` call in the
+   repo outside `libs/`, note whether its entries use `toggle` or Remove, and recommend adopt / don't
+   adopt with a one-line reason. Also note any contract change under an unchanged signature that
+   affects the repo (expected: none; the default path is byte-identical to v1.43.0).
+6. One commit on the branch: "Re-vendor LibKa0s v1.44.0" + body (what arrived, the battery result),
+   with the session's two trailer lines.
+
+**Then, in LibKa0s:** re-sweep the Consumers table per step 9, and update Aura Master's Options cell
+(Test mode is back as `state.testMode` since unlocking no longer previews, so the unlock-as-preview
+exemption no longer applies to it), as one post-release docs commit on LibKa0s `master` (no push).
+
+**Then, the owner:** one consolidated table of the ten repos (branch, commit, battery result,
+adoption recommendation) to decide adoption per repo and approve merges and pushes. Nothing is
+adopted, merged or pushed by this task.
