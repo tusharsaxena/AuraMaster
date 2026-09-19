@@ -73,9 +73,9 @@ review or fix round finished; a row `in progress` may have uncommitted work in t
 | 14 | B1 unlock keeps live auras; a standard session-only test mode | done | f7af87b, fix b4d7a6e; review clean after 1 fix round |
 | 15 | B2a LibKa0s v1.44.0 `removeStyle = "icon"` (STOP before tag/push) | done | LibKa0s 04221d5 + 7ae5b3b, tag v1.44.0 (local, not pushed; owner chose controller commit+tag) |
 | 16 | B2b re-vendor LibKa0s v1.44.0 into Aura Master | done | b66b21b; review clean |
-| 17 | B2c spell lists adopt the X icon; Restore moves to the top | done | tests + luacheck green; report written |
-| 18 | Final gate, inventory, lizard; hand back to the owner | todo | |
-| 19 | Re-vendor LibKa0s v1.44.0 into the other ten consumers + adoption pass | todo | added 2026-09-19 at the owner's request; after 18 |
+| 17 | B2c spell lists adopt the X icon; Restore moves to the top | done | b7832c6; review clean |
+| 18 | Final gate, inventory, lizard; hand back to the owner | done | 1044/1044, lint 0/0, lizard 0 warnings (strict), perf green |
+| 19 | Re-vendor LibKa0s v1.44.0 into the other ten consumers + adoption pass | done | 10 repos on chore/libka0s-v1.44.0, all green; LibKa0s d68aeab consumers table |
 
 **Dependency order:** 1–3 are independent of everything and of each other. 4 → 5 → 6 → 7 → 8 → 9 →
 10 → 11 → 12 → 13 are sequential. 14 needs 9 (both change `modules/Container.lua` and

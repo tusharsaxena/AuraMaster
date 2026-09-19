@@ -934,17 +934,17 @@ badge and any count quoted in the docs must agree with it.
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
 - general → spell categories: a dropdown of the nine spell categories plus Weapon enchants, opening on the first
-- general → spell categories: every starter is a toggle entry, ticked; nothing is removable yet
-- general → spell categories: adding by id writes categorySpells whole through the seam, and Remove takes it off
+- general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
+- general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
 - general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
 - general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides
 - general → spell categories: picking a suggestion adds it through the one writer, exactly once
 - general → spell categories: a name two ranks share lists both, labeled; Enter without a pick adds neither
 - general → spell categories: the add line's tooltip and its refusal say where a name can come from
-- general → spell categories: unticking a starter stores false; ticking it or adding it again drops the edit
+- general → spell categories: a starter's X stores false and drops it from the list; adding it again drops the edit (B2)
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
-- general → spell categories: Restore this category's starter list clears that category's edits and no other's
+- general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
 - general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
 - general → spell categories: the Weapon enchants entry explains the all-slots fallback
 - general → spell categories: unticking a weapon slot writes the profile, one row at a time

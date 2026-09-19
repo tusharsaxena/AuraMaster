@@ -603,3 +603,11 @@ nothing).
      X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
      the X too, and it removes the spell. Check the X row's height and vertical alignment against the
      spell name — the library's Icon widget is 26 px tall.
+114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted gold, not gray, on a
+     container drawn in another style.
+115. **A 59-minute buff's time on a bar.** A 59-minute Power Word: Fortitude on a default bar reads
+     `59 m` in full, not `59...`, and still does with the time text's X offset at -15.
+116. **Changing Style resets Fill, keeps grow directions.** On the Containers page switch a
+     container's Style: to Icons, Layout → Growth → Fill reads Rows; to Bars or Text, it reads
+     Columns. Whatever Grow horizontally/Grow vertically were set to before the switch are unchanged
+     by it.
