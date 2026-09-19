@@ -11,7 +11,7 @@ local _, NS = ...
 --                       (X) <icon> A spell you added (424242)
 --                    -- OR, when the category is Weapon enchants --
 --                       [x] Main hand   [x] Off hand   [x] Ranged
---     Dispel Colors     one swatch per dispel type, Magic … None
+--     Dispel Colors     one swatch per dispel type, Magic … Bleed
 --
 -- SPELL CATEGORIES is bespoke: the category dropdown, the restore, then the library's IdList over that
 -- category's edits, drawn with an X at the left of every entry (`removeStyle = "icon"`, LibKa0s
@@ -36,12 +36,13 @@ local _, NS = ...
 -- active tab. A key this tab cannot draw (a token or flag category, say) is ignored, so a stale link
 -- can never leave the tab showing an empty list.
 --
--- DISPEL COLORS are six plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
--- no `effect`, so a write re-applies every container. Only bars read them, a bar colored by dispel
--- type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua, owner
--- 2026-09-13). They are palette
--- definitions, one color per dispel type, and carry no class-color companion: the one exemption
--- options-ui-§17 makes.
+-- DISPEL COLORS are five plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
+-- no `effect`, so a write re-applies every container. Only bars read them, a bar's fill or background
+-- colored by dispel type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,
+-- owner 2026-09-13). There is no None swatch (feedback #7): an aura with no dispel type keeps the
+-- surface's own color, so a None color would be read by nothing; schema v5 clears the stored leaf.
+-- They are palette definitions, one color per dispel type, and carry no class-color companion: the
+-- one exemption options-ui-§17 makes.
 --
 -- This file registers nothing. settings/General.lua registers ENCHANT_ROWS then DISPEL_ROWS after
 -- the Containers rows, so Spell Categories takes the fourth strip position and Dispel Colors the
@@ -329,14 +330,14 @@ local DISPEL_ROWS = {}
 for _, name in ipairs(C.DISPEL_TYPES) do
     local row = {
         path = "dispelColors." .. name, page = PAGE, group = DISPEL, type = "color", label = L[name],
-        desc = L["This dispel type's color for a bar's fill when Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."],
+        desc = L["This dispel type's color for a bar's fill or background when its Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."],
     }
     DISPEL_ROWS[#DISPEL_ROWS + 1] = row
 end
 
---- The Dispel Colors tab: one line saying who reads the colors, then the group's six rows.
+--- The Dispel Colors tab: one line saying who reads the colors, then the group's five rows.
 local function renderDispel(ctx, _, rows)
-    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type. An icon's dispel border keeps Blizzard's own colors."])
+    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type. An aura with no dispel type keeps the bar's own color. An icon's dispel border keeps Blizzard's own colors."])
     H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
 end
 

@@ -395,8 +395,9 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     -- red under: BindDurationText calling Compat directly
     assertEqual(built.formatters - f0, 1, "one formatter for two buttons of one look")
     assertEqual(built.curves - c0, 1, "one curve for two buttons of one look")
-    -- red under: Style.DispelColorMap without its memo
-    assertEqual(built.colors - k0, dispelLeaves + 2, "one dispel map and one curve's two colors")
+    -- red under: Style.DispelColorMap without its memo (a map is the palette's colors plus the None
+    -- fallback, feedback #7)
+    assertEqual(built.colors - k0, dispelLeaves + 1 + 2, "one dispel map and one curve's two colors")
     assertTrue(last(b1, "AddDispelTypeTexture")[3].customDispelColorMap
         == last(b2, "AddDispelTypeTexture")[3].customDispelColorMap, "the two buttons share one map")
     assertTrue(last(b1, "SetDurationText")[3].textColor == last(b2, "SetDurationText")[3].textColor)
@@ -410,7 +411,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     NS2.db.profile.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
     local k1 = built.colors
     NS2.Style.Element(b1, c, true)
-    assertEqual(built.colors - k1, dispelLeaves, "a new dispel color rebuilds the map")
+    assertEqual(built.colors - k1, dispelLeaves + 1, "a new dispel color rebuilds the map, its None fallback included")
 end)
 
 -- ── Style.lua: media, text, borders, bindings, behavior ───────────────────────────────────────
@@ -654,6 +655,21 @@ test("style: a dispel color map holds a color per stored type, and nothing for a
     assertNil(map.Poison, "a type with no stored color")
     assertTrue(NS.Style.DispelColorMap(stored) == map, "unchanged leaves: the same map")
     assertEqual(next(NS.Style.DispelColorMap(nil)), nil, "no stored colors: an empty map")
+end)
+
+test("style: a dispel color map's None entry is the surface's own color, and every entry its alpha (feedback #7)", function()
+    local stored = { Magic = { r = 0.1, g = 0.2, b = 0.3, a = 1 } }
+    local bar = { r = 0.9, g = 0.5, b = 0.1, a = 0.6 }
+    local map = NS.Style.DispelColorMap(stored, bar)
+    -- red under: None left to the palette (or to Blizzard's own tint) for an aura with no type
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","), "0.9,0.5,0.1,0.6")
+    -- red under: a dispel-colored surface drawn opaque over a translucent one's own alpha
+    assertEqual(map.Magic.a, 0.6)
+    assertTrue(NS.Style.DispelColorMap(stored, bar) == map, "one map per palette and fallback")
+    local bg = { r = 0, g = 0, b = 0, a = 0.5 }
+    assertTrue(NS.Style.DispelColorMap(stored, bg) ~= map, "another surface's fallback, another map")
+    bar.r = 0.2   -- a class-colored fallback is updated in place
+    assertEqual(NS.Style.DispelColorMap(stored, bar).None.r, 0.2, "a moved fallback rebuilds")
 end)
 
 test("style: tooltips and click-through decide whether a button takes the mouse at all", function()

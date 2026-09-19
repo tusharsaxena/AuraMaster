@@ -46,7 +46,7 @@ NS.RegisterSchemaRows(H.BarGroup({
     prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors)."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). An aura with no dispel type keeps the bar color: a buff, or a debuff nothing can dispel, such as Mystic Touch."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
@@ -108,12 +108,18 @@ local bg = H.BarGroup({
     prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = UNIT,
     keys = { barTexture = "bgTexture", barAlpha = "bgAlpha", barColor = "bgColor", useClassColorBar = "useClassColorBg" },
     labels = { barTexture = L["Background texture"], barAlpha = L["Background opacity"], barColor = L["Background color"] },
+    -- feedback #7: the background colors by dispel type as the fill does, from the same palette.
+    extra = {
+        { path = P .. "bgColorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
+          label = L["Color by"] },
+    },
 })
 local BG_TOOLTIPS = {
     [P .. "bgTexture"] = L["The texture drawn behind the fill."],
     [P .. "bgAlpha"] = L["How opaque the background texture is."],
     [P .. "bgColor"] = L["The background color."] .. (H.CLASS_COLOR_NOTE and (" " .. H.CLASS_COLOR_NOTE) or ""),
     [P .. "useClassColorBg"] = L["Draw the background in the class color instead of the swatch beside it."],
+    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). An aura with no dispel type keeps the background color: a buff, or a debuff nothing can dispel, such as Mystic Touch."],
 }
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
 NS.RegisterSchemaRows(bg)

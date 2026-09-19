@@ -168,6 +168,7 @@ NS.CONTAINER_TEMPLATE = {
         drain = "left", smooth = false,
 
         bgTexture = "Blizzard", bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
+        bgColorMode = "static",   -- "dispel" tints the background as colorMode does the fill (feedback #7)
 
         borderShow = false, borderStyle = "Solid", borderSize = 1,
         borderColor = color(0, 0, 0, 1), useClassColorBorder = false,

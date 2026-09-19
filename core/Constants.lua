@@ -163,15 +163,15 @@ C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "S
 -- harness. The engine writes the live text secret, so its width is never read back.
 C.TIME_TEXT_EMS = { blizzard = 2.5, short = 2.5, long = 4.5 }
 
--- The dispel types the engine names, plus "None" for an aura without one.
-C.DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "None" }
+-- The dispel types the engine names. An aura with none (the engine keys it "None") takes the surface's
+-- own color, not a palette color (feedback #7, modules/Style.lua's DispelColorMap).
+C.DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed" }
 C.DEFAULT_DISPEL_COLORS = {
     Magic   = { r = 0.20, g = 0.60, b = 1.00, a = 1 },
     Curse   = { r = 0.60, g = 0.00, b = 1.00, a = 1 },
     Disease = { r = 0.60, g = 0.40, b = 0.00, a = 1 },
     Poison  = { r = 0.00, g = 0.60, b = 0.00, a = 1 },
     Bleed   = { r = 0.80, g = 0.10, b = 0.10, a = 1 },
-    None    = { r = 0.80, g = 0.00, b = 0.00, a = 1 },
 }
 
 -- ---------------------------------------------------------------------------

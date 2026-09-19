@@ -188,6 +188,23 @@ test("preview: switching Color by from dispel type back to static leaves no disp
     for i, got in ipairs(fills()) do assertEqual(got, own, "static: placeholder " .. i .. " paints the bar color") end
 end)
 
+test("preview: a background colored by dispel type stands in with Magic, keeping its own alpha (feedback #7)", function()
+    local c = cfg({ style = "bars", bars = { bgColorMode = "dispel", useClassColorBg = false,
+        bgColor = { r = 0, g = 0, b = 0, a = 0.5 } } })
+    local k = container(c)
+    NS.Preview.Show(k)
+    for _, f in ipairs(k.frames) do
+        for key in pairs(f.__am) do f.__am[key] = R() end
+    end
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local m = NS.db.profile.dispelColors.Magic
+    for i, f in ipairs(k.previewPools.bars.active) do
+        -- red under: the preview painting the background its static color whatever its Color by
+        assertEqual(f.__am.bg:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 0.5 }, ","), "placeholder " .. i)
+    end
+end)
+
 -- ── a style switch while previewing (C-4) ───────────────────────────────────────────────────────
 
 --- Switch container `id`'s style while previewing and flush the apply, returning whether it raised.

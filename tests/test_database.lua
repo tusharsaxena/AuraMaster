@@ -1164,3 +1164,13 @@ test("v5: MigrateV5 logs one [Migrate] line per converted container, naming it (
     assertEqual(table.concat(lines, " | "), "v5 container '3' (My enchants): now a player buff container showing only Weapon enchants"
         .. " | v5 container '5' (My enchants): now a player buff container showing only Weapon enchants")
 end)
+
+test("v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)", function()
+    local NS = fresh()
+    local p = { dispelColors = { Magic = { r = 0.2, g = 0.6, b = 1, a = 1 }, None = { r = 0.8, g = 0, b = 0, a = 1 } },
+        containers = {} }
+    NS.Database.MigrateV5(p)
+    -- red under: MigrateV5 leaving a color nothing reads in every old profile
+    assertEqual(p.dispelColors.None, nil)
+    assertEqual(p.dispelColors.Magic.r, 0.2, "the palette's colors stay")
+end)

@@ -715,12 +715,15 @@ end
 --- before. Nothing else on `filter` (blacklist, castBy, duration) is touched: those only narrow a
 --- group and add none, so they cannot make the container draw more than its enchant slots.
 --- `filter.hidePermanentEnchants` and every other key — name, style, styling, position — carry over
---- untouched. One [Migrate] line per converted container, in key order, plus one more when a
---- non-empty whitelist was cleared, naming the container and how many ids it held. A test seam as
---- well as the step's body, like MigrateV2..V4.
+--- untouched. One [Migrate] line per converted container, plus one more when a non-empty whitelist
+--- was cleared, naming the container and how many ids it held, in key order. The profile's
+--- `dispelColors.None` is cleared too: an aura with no dispel type takes the surface's own color now
+--- (feedback #7), so nothing reads it. A test seam as well as the step's body, like MigrateV2..V4.
 --- @return number  the containers converted
 function Database.MigrateV5(p)
-    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    if type(p) ~= "table" then return 0 end
+    if type(p.dispelColors) == "table" then p.dispelColors.None = nil end
+    if type(p.containers) ~= "table" then return 0 end
     local keys = {}
     for key in pairs(p.containers) do
         keys[#keys + 1] = key

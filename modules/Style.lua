@@ -377,14 +377,14 @@ function Style.CurveColor(stored, useClass)
     return c
 end
 
---- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now.
-local function dispelMapCurrent(entry, stored)
-    local types, src = C.DISPEL_TYPES, entry.src
-    local count = #types
-    for i = 1, count do
-        if stored[types[i]] ~= src[types[i]] then return false end
+--- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now, and from
+--- the fallback color's channels as they are now (a class-colored fallback is reused in place).
+local function dispelMapCurrent(entry, stored, fallback)
+    local src = entry.src
+    for _, name in ipairs(C.DISPEL_TYPES) do
+        if stored[name] ~= src[name] then return false end
     end
-    return true
+    return entry.r == fallback.r and entry.g == fallback.g and entry.b == fallback.b and entry.a == fallback.a
 end
 
 --- The profile's dispel palette (profile-wide since schema v2; bars colored by dispel type read it,
@@ -394,20 +394,40 @@ function Style.ProfileDispelColors()
     return p and p.dispelColors
 end
 
---- A color map for AddDispelTypeTexture's `customDispelColorMap`, from a stored { Magic = {r,g,b,a} }.
---- Built once per set of color leaves and shared by every button that shows it.
-function Style.DispelColorMap(stored)
-    if type(stored) ~= "table" or not _G.CreateColor then return {} end
-    local entry = dispelMaps[stored]
-    if entry and dispelMapCurrent(entry, stored) then return entry.map end
+--- A new dispel map entry for DispelColorMap: the map, and what it was built from.
+local function buildDispelMap(stored, fallback)
+    local a = fallback.a or 1
     local map, src = {}, {}
     for _, name in ipairs(C.DISPEL_TYPES) do
         local c = stored[name]
         src[name] = c
-        if type(c) == "table" then map[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1) end
+        if type(c) == "table" then map[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1, a) end
     end
-    dispelMaps[stored] = { map = map, src = src }
-    return map
+    map.None = _G.CreateColor(fallback.r or 1, fallback.g or 1, fallback.b or 1, a)
+    return { map = map, src = src, r = fallback.r, g = fallback.g, b = fallback.b, a = fallback.a }
+end
+
+--- A color map for AddDispelTypeTexture's `customDispelColorMap`, from a stored { Magic = {r,g,b,a} }
+--- and the surface's own color `fallback` ({ r, g, b, a }, stable per look: Style.CurveColor). Each
+--- dispel type takes its palette color; an aura with NO dispel type — the engine keys it "None"
+--- (GetDispelTypeMapKey) — takes `fallback`, so it keeps the surface's normal color rather than
+--- Blizzard's own "none" tint (feedback #7, owner decision: no type means the normal color). Every
+--- entry carries the fallback's alpha, so a dispel-colored surface keeps its own transparency.
+--- Built once per set of color leaves and fallback, and shared by every button that shows it.
+function Style.DispelColorMap(stored, fallback)
+    if type(stored) ~= "table" or not _G.CreateColor then return {} end
+    fallback = fallback or NO_COLOR
+    local byFallback = dispelMaps[stored]
+    if not byFallback then
+        byFallback = setmetatable({}, WEAK_KEYS)
+        dispelMaps[stored] = byFallback
+    end
+    local entry = byFallback[fallback]
+    if not (entry and dispelMapCurrent(entry, stored, fallback)) then
+        entry = buildDispelMap(stored, fallback)
+        byFallback[fallback] = entry
+    end
+    return entry.map
 end
 
 --- The size one element occupies, from the container's style settings — what the engine's flow layout

@@ -92,7 +92,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (19 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -159,8 +159,9 @@ Categories row, with a link back. Unticking every slot here does not turn enchan
 container reads all three anyway — because the container-level Hide on Filters → Categories is the
 one switch for that; the tab says so.
 
-**Dispel Colors** — one line saying who reads the colors, then six swatches, `dispelColors.Magic`,
-`.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type. They
+**Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
+`.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type. An
+aura with no dispel type keeps the surface's own color (feedback #7), so there is no None swatch. They
 drive bars only; an icon's dispel border keeps Blizzard's own colored art (owner, 2026-09-13), and
 the tab line and each row's tooltip say so. Profile-wide, so a write re-applies every container.
 
@@ -355,7 +356,7 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (71 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Bars (72 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 When the selected container is drawn as icons, a small muted-gold note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
@@ -368,7 +369,7 @@ The tabs and the container picker stay live.
 |---|---|
 | General (14) | *Size:* `width` 40–600, `height` 6–80; *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark`, `sparkTimeless` (show the spark on auras without a duration) |
 | Icon (9) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` / `iconBorderColor` · `useClassColorIconBorder` |
-| Background & border (9) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
+| Background & border (10) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`, then `bgColorMode` (one color / by dispel type); *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
@@ -379,7 +380,10 @@ a permanent aura draws full and `drain` picks which end empties (`modules/Style_
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
-as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors); every `timeFormat` hands the engine a
+as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors), and
+`bgColorMode = dispel` the background the same way (feedback #7); an aura with no dispel type — a buff,
+or a debuff nothing can dispel, such as Mystic Touch — keeps the surface's own color (the map's
+`None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
 (`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the running-out color is a step color curve over
 remaining time (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
@@ -470,7 +474,7 @@ With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `f
 
 **Palette-definition swatches carry no companion** — they identify a state or a dispel type, not a
 player, which is the one exemption options-ui-§17 makes: `expiringColor` and `pandemicColor` on both
-pages, and the six `dispelColors.*` on General → Dispel Colors.
+pages, and the five `dispelColors.*` on General → Dispel Colors.
 
 ## The degraded panel
 

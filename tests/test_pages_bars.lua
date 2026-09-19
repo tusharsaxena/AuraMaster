@@ -195,6 +195,27 @@ test("bars: Highlights carries no dispel swatches, and Color by points at Genera
     -- red under: the tooltip still sending the player to the Highlights tab
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
     assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
+    -- red under: the tooltip silent on why Mystic Touch keeps the bar color (feedback #7)
+    assertTrue(desc:find("Mystic Touch", 1, true) ~= nil, desc)
+end)
+
+test("bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)", function()
+    local NS, _, P = bars()
+    P.show("Bars")
+    local ws = P.tab("bars", NS.L["Background & border"])
+    local row = NS.FindSchemaRow("container.bars.bgColorMode")
+    -- red under: no bgColorMode row
+    assertTrue(row ~= nil and row.subgroup == NS.L["Background"], "a Background row")
+    local dd
+    for _, w in ipairs(P.rowWidgets(ws, "bars", NS.L["Background & border"])) do
+        if w.type == "Dropdown" and w.labelText == row.label then dd = w end
+    end
+    assertTrue(dd ~= nil, "drawn on the tab")
+    assertEqual(table.concat(dd.order, ","), "static,dispel")
+    dd:__fire("OnValueChanged", "dispel")
+    assertEqual(NS.Database.FindContainer(1).bars.bgColorMode, "dispel")
+    assertTrue((row.tooltip or row.desc):find("Mystic Touch", 1, true) ~= nil, "the tooltip says why a typeless debuff keeps its color")
+    assertEqual(NS.CONTAINER_TEMPLATE.bars.bgColorMode, "static", "one color by default")
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()

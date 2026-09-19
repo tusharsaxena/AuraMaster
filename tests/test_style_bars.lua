@@ -572,12 +572,36 @@ test("bars: dispel coloring tints the fill through the engine with the stored di
     -- red under: the bar asking for the Border style, which paints Blizzard's debuff art over the bar
     assertEqual(add[2].style, 32, "PreserveAsset keeps our texture")
     assertTrue(add[2].showAlways and add[2].showWithoutDispelType, "shown for every aura")
-    -- red under: the bar still reading a per-container bars.dispelColors (schema v2 lifted it)
-    assertTrue(add[2].customDispelColorMap == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors), "the profile's colors")
+    -- red under: the bar still reading a per-container bars.dispelColors (schema v2 lifted it), or the
+    -- map built without the bar's own color for an aura with no type (feedback #7)
+    assertTrue(add[2].customDispelColorMap
+        == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors, NS2.Style.CurveColor(c.bars.barColor, false)), "the profile's colors")
     c.bars.colorMode = "static"
     frame = dressed(c, true, nil, NS2)
     assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
     assertEqual(frame:__count("ClearDispelTypeTextures"), 1, "and an earlier tint is cleared")
+end)
+
+-- ── the background by dispel type (feedback #7) ───────────────────────────────────────────────
+
+test("bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)", function()
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = { bgColorMode = "dispel" } })
+    local frame, am = dressed(c, true, nil, NS2)
+    local add = frame:__last("AddDispelTypeTexture")
+    -- red under: no background binding at all
+    assertTrue(add ~= nil and add[1] == am.bg, "the background carries the tint")
+    assertEqual(frame:__count("AddDispelTypeTexture"), 1, "the fill, on one color, carries none")
+    assertEqual(add[2].style, 32, "PreserveAsset keeps our texture")
+    assertTrue(add[2].showAlways and add[2].showWithoutDispelType, "shown for every aura")
+    local map = add[2].customDispelColorMap
+    local bgc = c.bars.bgColor
+    -- red under: the background's map built with the bar color's fallback
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","),
+        table.concat({ bgc.r, bgc.g, bgc.b, bgc.a }, ","))
+    c.bars.bgColorMode = "static"
+    frame = dressed(c, true, nil, NS2)
+    assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
 end)
 
 -- ── Color by: dispel type lets go (B-4) ──────────────────────────────────────────────────────────
