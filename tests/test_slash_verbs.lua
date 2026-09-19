@@ -748,4 +748,8 @@ test("slash verbs: /am new enchants makes a player buff container showing only W
     assertEqual(c.filter.categories.weaponEnchants, "show")
     assertEqual(c.filter.categories.defensives, "hide")
     assertEqual(c.filter.categories.uncategorized, "hide")
+    NS2.Slash:OnSlash("new debuffs enchants")
+    _, id = NS2.ActiveContainer()
+    -- red under: an aura-type word beating the enchants word (a debuff container cannot show enchants)
+    assertEqual(NS2.Database.FindContainer(id).auraType, "HELPFUL", "enchants are the player's buffs")
 end)

@@ -93,14 +93,14 @@ the addon is actually inert is `tests/test_disabled.lua` steps 1–6.
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:228`):
+(`NEW_WORDS`, `settings/Slash.lua:231`):
 
 | Words | Field |
 |---|---|
 | `player`, `target`, `focus`, `pet` | `unit` |
 | `buff`, `buffs` / `debuff`, `debuffs` | `auraType` (`HELPFUL` / `HARMFUL`) |
-| `enchant`, `enchants` | a player buff container showing only the Weapon enchants category: `auraType = HELPFUL`, `unit = player`, `filter.categories = Cat.EnchantOnlyStates()` (schema v5; a unit word is overridden) |
-| `bar`, `bars` / `icon`, `icons` | `style` |
+| `enchant`, `enchants` | a player buff container showing only the Weapon enchants category: `auraType = HELPFUL`, `unit = player`, `filter.categories = Cat.EnchantOnlyStates()` (schema v5; a unit or aura-type word is overridden, so `/am new debuffs enchants` still makes a player buff container: enchants are only ever the player's buffs) |
+| `bar`, `bars` / `icon`, `icons` / `text` | `style` |
 
 An unknown word prints `Unknown word 'x' — try /am new target debuffs icons` and creates nothing.
 

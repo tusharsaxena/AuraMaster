@@ -106,11 +106,21 @@ local function poolFor(container, style)
     return pool
 end
 
---- How many placeholders `cfg` shows: every placeholder aura, under the per-group cap.
+--- How many placeholders `cfg` shows: every placeholder aura, under the per-group cap, and no more
+--- than its enchant slots for a container whose plan has no aura group (one showing only Weapon
+--- enchants, schema v5: the engine draws those slots and nothing else). The plan is compiled here,
+--- not read off the container: Show runs only when the preview is dirty, and a container that has
+--- never built an engine has no plan to read.
 local function placeholderCount(cfg)
     local count = #C.PREVIEW_AURAS
     local cap = tonumber(cfg.filter and cfg.filter.maxAuras) or 0
     if cap > 0 and cap < count then count = cap end
+    local FC = NS.FilterCompiler
+    local plan = FC.Compile(cfg, FC.ProfileContext())
+    if plan.enchants and not plan.groups[1] then
+        local slots = #plan.enchants.slots
+        if slots < count then count = slots end
+    end
     return count
 end
 

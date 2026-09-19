@@ -61,6 +61,28 @@ test("preview: the per-group cap limits the placeholders", function()
     assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "0 means no cap")
 end)
 
+test("preview: a container showing only Weapon enchants previews one placeholder per enchant slot, and its extent agrees (feedback #6)", function()
+    local enchantsOnly = { style = "bars", layout = { axis = "vertical", spacing = 3 },
+        filter = { categories = NS.Categories.EnchantOnlyStates() } }
+    local k = container(cfg(enchantsOnly))
+    k.previewExtent = R()   -- Preview keeps an extent it is handed, so its size can be read
+    NS.Preview.Show(k)
+    -- red under: placeholderCount ignoring the plan (five buff placeholders for three weapon slots)
+    assertEqual(active(k), 3, "main hand, off hand, ranged")
+    local want = container(cfg(enchantsOnly))
+    want.previewExtent = R()
+    NS.Preview.Extent(want, 3)
+    local got, expected = k.previewExtent:__last("SetSize"), want.previewExtent:__last("SetSize")
+    -- red under: Preview.Extent sized for every placeholder aura rather than the slots drawn
+    assertEqual(got[1], expected[1]); assertEqual(got[2], expected[2])
+    k = container(cfg({ filter = { maxAuras = 2, categories = NS.Categories.EnchantOnlyStates() } }))
+    NS.Preview.Show(k)
+    assertEqual(active(k), 2, "the per-group cap still applies")
+    k = container(cfg({ unit = "player", filter = { categories = { weaponEnchants = "show" } } }))
+    NS.Preview.Show(k)
+    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "a buff container that also has enchants keeps every placeholder")
+end)
+
 test("preview: a shown preview with nothing applied is left alone; an applied one is dressed again in the same frames", function()
     local k = container(cfg())
     NS.Preview.Show(k)

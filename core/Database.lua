@@ -455,7 +455,7 @@ end
 -- gone: the compiler now does that job itself, on every run, not just at migration time.
 --
 -- Only recognized aura types are touched. `Cat.For(nil)` and `Cat.For("garbage")` both fall back to
--- an empty list (as ENCHANT always did), so liftCategoryWhitelist is already a no-op for them — but the string
+-- an empty list, as ENCHANT's did, so liftCategoryWhitelist is a no-op for them — but the string
 -- compare `auraType == "ENCHANT"` that used to gate liftEnchantFlag does NOT catch nil or garbage, so
 -- a container with a missing or corrupt auraType could still get a weaponEnchants row written with no
 -- corresponding category list. `Database.MigrateV3` itself gates both lifts on a known aura type, so

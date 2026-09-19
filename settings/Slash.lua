@@ -234,7 +234,8 @@ local NEW_WORDS = {
     buff = { auraType = "HELPFUL" }, buffs = { auraType = "HELPFUL" },
     debuff = { auraType = "HARMFUL" }, debuffs = { auraType = "HARMFUL" },
     -- Weapon enchants are a buff category (schema v5, feedback #6): the word makes a player buff
-    -- container showing only that category (runNew builds its states).
+    -- container showing only that category (runNew builds its states), whatever unit or aura-type
+    -- word came with it: enchants are only ever the player's buffs.
     enchant = { enchantOnly = true }, enchants = { enchantOnly = true },
     bars = { style = "bars" }, bar = { style = "bars" },
     icons = { style = "icons" }, icon = { style = "icons" },
