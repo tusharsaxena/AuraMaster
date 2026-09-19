@@ -37,7 +37,7 @@ of text near the middle of the screen. They start locked. Type `/am unlock` and 
 gold-edged handle with its name, placed just outside the first bar or icon so it never covers one,
 and a faint outline, so even an empty container can be found. Your live auras keep drawing while
 you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
-opens the settings with that container already selected.
+(or its **?**) opens the Containers page with that container already selected.
 
 Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
 waiting for a real buff to turn up. Turn it on with the Test mode checkbox under General → Master

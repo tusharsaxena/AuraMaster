@@ -393,11 +393,15 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     h.help:__fire("OnEnter")
     assertEqual(lines[1], NS.Database.FindContainer(2).name)
     assertEqual(lines[2], NS.L["Drag to move. Right-click for settings."])
-    local opened = 0
-    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    local opened = {}
+    NS.OpenOptionsPage = function(key)
+        local n = #opened
+        opened[n + 1] = key
+    end
     NS.State.SetActiveContainer(1)
     h.help:__fire("OnClick", "RightButton")
-    assertEqual(opened, 1)
+    -- red under: the right-click opening the main panel, not the Containers page (feedback #9)
+    assertEqual(table.concat(opened, ","), "containers")
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
@@ -821,7 +825,7 @@ test("handle: a left click on the strip opens nothing; a right click opens this 
     local inst = NS.ContainerManager.instances[3]
     local h = recordedHandle(mocks, NS, inst)
     local opened = 0
-    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    NS.OpenOptionsPage = function() opened = opened + 1 end
     h:__fire("OnClick", "LeftButton")
     -- red under: the strip's OnClick ignoring the button (every drag's click would open the panel)
     assertEqual(opened, 0)
@@ -1228,4 +1232,50 @@ test("handle: while test mode is on the label carries an orange TEST tag after t
     mocks.__fireTimers()
     -- red under: a tag left behind once test mode ends
     assertEqual(texts[#texts], name, "the tag goes when test mode does")
+end)
+
+-- ── right-click the "?" → the Containers page (feedback #9) ──────────────────────────────────────────────
+
+test("handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)", function()
+    local opened = {}
+    local NS, mocks = fresh({ before = function(m)
+        m.Settings.OpenToCategory = function(id)
+            local n = #opened
+            opened[n + 1] = id
+        end
+    end })
+    local P = dofile("tests/page_helpers.lua")(NS, mocks)
+    P.show("Containers")                          -- built once, on container 1
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    h.help:__fire("OnClick", "RightButton")
+    -- red under: the click reaching the main panel's open (no category switch at all)
+    assertEqual(#opened, 1, "one category switch")
+    assertEqual(NS.State.activeContainerId, 2)
+    P.show("Containers")
+    -- red under: the Containers page opening on the container it was last drawn for
+    assertEqual(NS.Helpers.__pageCtx.containers.__bannerWidget.value, 2, "the band's picker names container 2")
+end)
+
+test("handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)", function()
+    local opened = 0
+    local NS, mocks = fresh({ before = function(m)
+        m.Settings.OpenToCategory = function() opened = opened + 1 end
+    end })
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        local n = #lines
+        lines[n + 1] = tostring(msg)
+    end)
+    NS.State.SetActiveContainer(1)
+    mocks.__lockdown = true
+    h.help:__fire("OnClick", "RightButton")
+    mocks.__lockdown = false
+    -- red under: the category switch called under lockdown (it taints the panel for the session)
+    assertEqual(opened, 0)
+    -- red under: the selection moved by a click that opened nothing
+    assertEqual(NS.State.activeContainerId, 1)
+    assertTrue(table.concat(lines, "\n"):find("cannot open settings during combat", 1, true) ~= nil, table.concat(lines, " | "))
 end)

@@ -55,7 +55,9 @@ suite covers what only the client can show.
     attached container's placeholders start just past the target's last placeholder, and its handle
     draws above the target's placeholders (check 41).
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
-    the help mark moves it too. Right-click a handle → the settings open with that container selected.
+    the help mark moves it too. Right-click a handle, then its **?** → each time the settings open on
+    the **Containers** page with that container selected in the band's picker (feedback #9); in combat
+    the right-click prints the gray "cannot open settings during combat" line and changes nothing.
 16. `/am test off` → the placeholders go and real auras return; `/am lock` → handles and outlines go.
 17. **Test mode has its own switch.** General → Master controls shows a **Test mode** row beside
     Minimap button. `/am test` is listed in `/am help`; `/am preview` → an unknown-command line and

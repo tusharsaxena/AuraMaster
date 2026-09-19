@@ -325,10 +325,17 @@ local BACKDROP_TEX = [[Interface\Buttons\WHITE8X8]]
 -- Blizzard texture only when the media library is absent or stops carrying that name.
 local HELP_TEXTURE = [[Interface\FriendsFrame\InformationIcon]]
 
---- Right-click: the settings, on this container.
+--- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
+--- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
+--- selection is left where it was: a refused click moves nothing. NS.OpenOptionsPage is the one
+--- panel-open seam that carries the refusal; the panels are redrawn first, so a Containers page built
+--- earlier shows the new subject when it opens.
 local function openSettings(container)
-    if NS.State then NS.State.SetActiveContainer(container.id) end
-    if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
+    if not InCombatLockdown() then
+        if NS.State then NS.State.SetActiveContainer(container.id) end
+        if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+    end
+    if NS.OpenOptionsPage then NS.OpenOptionsPage("containers") end
 end
 
 --- One tooltip for the strip and its help mark: the container's name, then how to use the handle.
