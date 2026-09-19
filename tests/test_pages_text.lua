@@ -265,7 +265,8 @@ test("text page: picking a built-in writes its template, and the centered one Ce
     assertEqual(s.justifyH, "LEFT")
     ws = pick(NS, m, P, ws, "centered")
     -- red under: the centered built-in writing its template and leaving Justify alone
-    assertEqual(s.template, "$spellname$[ - $remainingduration$]")
+    -- (fix round 1: no " - " separator — the stacked second row would read " - 11s")
+    assertEqual(s.template, "$spellname$[$remainingduration$]")
     assertEqual(s.justifyH, "CENTER")
     assertEqual(picker(NS, P, ws).value, "centered", "Name + time with Center reads as the centered one")
     ws = pick(NS, m, P, ws, "name")

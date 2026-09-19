@@ -108,12 +108,17 @@ local function cheatSheet(ctx)
 end
 
 --- Under Placement: what Center does to a template of more than one piece (feedback #1): it stacks
---- the fields in rows and leaves plain text out (modules/Style_Text.lua's layoutStack).
+--- the fields in rows and leaves plain text out (modules/Style_Text.lua's layoutStack). One row reads
+--- singular (fix round 1): a literal-plus-one-field template (`Buff: $spellname$`) is Stacked but has
+--- only one field row.
 local function centerNote(ctx, cfg)
     local s = cfg.text or {}
     local compiled = TT.ForDraw(s.template)
     if not NS.Style.Text.Stacked(s, compiled) then return end
-    H.TextRow(ctx, GRAY:format(L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]:format(NS.Style.Text.FieldCount(compiled))), SMALL)
+    local n = NS.Style.Text.FieldCount(compiled)
+    local msg = n == 1 and L["Center stacks this template in 1 row; text outside [ ] is not drawn."]
+        or L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]:format(n)
+    H.TextRow(ctx, GRAY:format(msg), SMALL)
 end
 
 -- ── The built-in templates (feedback #5) ──────────────────────────────────────────────────────

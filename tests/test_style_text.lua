@@ -406,6 +406,20 @@ test("text style: an icon on the left sits on the animated frame and the text ar
     assertTrue(frame:__last("SetIcon")[1] == am.icon)
 end)
 
+test("text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)", function()
+    local _, am = dressed(text({ template = STACKED, justifyH = "CENTER", height = 16, icon = "LEFT", iconSize = 0 }))
+    -- red under: layoutIconAndArea handing the stack's full height to IconSizeFor (the icon grows to
+    -- the whole stack, "16,16" from the old un-grown box, or "40,40" from the grown one, not "12,12")
+    assertEqual(am.icon:__joined("SetSize"), "12,12", "size 0 is one row's height (the 12pt font)")
+    -- a taller font's row is still one row, not the two- or three-row stack
+    _, am = dressed(text({ template = STACKED, justifyH = "CENTER", height = 16, icon = "LEFT", iconSize = 0,
+        font = { fontSize = 20 } }))
+    assertEqual(am.icon:__joined("SetSize"), "20,20")
+    -- unstacked (Left), size 0 is still the box's own height, exactly as before
+    _, am = dressed(text({ template = STACKED, justifyH = "LEFT", height = 16, icon = "LEFT", iconSize = 0 }))
+    assertEqual(am.icon:__joined("SetSize"), "16,16")
+end)
+
 test("text style: an icon on the right insets the area's right edge; none hides it and binds nothing", function()
     local _, am = dressed(text({ icon = "RIGHT", iconSize = 12, iconGap = 2 }), true)
     local a = am.area:__calls("SetPoint")

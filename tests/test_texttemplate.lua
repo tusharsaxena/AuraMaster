@@ -234,8 +234,13 @@ test("template: a stored template matches a built-in by its text and its justify
     local nameTime = "$spellname$[ - $remainingduration$]"
     assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "LEFT"), "nameTime")
     assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "RIGHT"), "nameTime")
-    -- red under: the justify rule ignored (Name + time centered would read as Name + time)
-    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "CENTER"), "centered")
+    -- red under: nameTime's own text (with its " - " separator) reading as the centered built-in,
+    -- whose template has no separator (fix round 1: a clean second row when Center stacks it)
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "CENTER"), nil)
+    -- red under: the justify rule ignored (the centered built-in's own text, centered, is not itself)
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[$remainingduration$]", "CENTER"), "centered")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[$remainingduration$]", "LEFT"), nil,
+        "the centered built-in's text, left-justified, is Custom")
     assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[ x$stacks$][ - $remainingduration$]", "CENTER"), nil,
         "a built-in other than the centered one, centered, is Custom")
     assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[ ($dispeltype$)]", "LEFT"), nil, "a debuff built-in on a buff container")

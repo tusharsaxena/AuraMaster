@@ -61,6 +61,11 @@ local function number(v, default)
     return tonumber(v) or default
 end
 
+--- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height").
+local function fontSize(s)
+    return number((s.font or D.font).fontSize, D.font.fontSize)
+end
+
 -- ---------------------------------------------------------------------------
 -- Regions
 -- ---------------------------------------------------------------------------
@@ -154,8 +159,10 @@ end
 -- ---------------------------------------------------------------------------
 
 --- The icon at `pos` ("LEFT" | "RIGHT") of the animated frame, and the text area beside it; with no
---- icon the area is the whole element.
-local function layoutIconAndArea(am, s, h)
+--- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (fix round 1,
+--- feedback #1): a stacked Center's box holds several rows, and "line height" is one of them, not the
+--- whole stack.
+local function layoutIconAndArea(am, s, compiled, h)
     local pos = s.icon or D.icon
     am.icon:ClearAllPoints()
     am.area:ClearAllPoints()
@@ -165,7 +172,8 @@ local function layoutIconAndArea(am, s, h)
         am.area:SetAllPoints(am.anim)
         return
     end
-    local size = Style.IconSizeFor(s, D, h)
+    local lineHeight = Text.Stacked(s, compiled) and fontSize(s) or h
+    local size = Style.IconSizeFor(s, D, lineHeight)
     Style.LayoutIcon(am.anim, am, s, D, pos, size)
     local inset = size + number(s.iconGap, D.iconGap)
     am.area:SetPoint("TOPLEFT", am.anim, "TOPLEFT", pos == "LEFT" and inset or 0, 0)
@@ -192,11 +200,6 @@ function Text.FieldCount(compiled)
         if piece.kind ~= "literal" then n = n + 1 end
     end
     return n
-end
-
---- The line's font size, which is a stacked row's height.
-local function fontSize(s)
-    return number((s.font or D.font).fontSize, D.font.fontSize)
 end
 
 --- The height a stacked line's rows take: one font size per field row and C.TEXT_ROW_GAP between two;
@@ -390,7 +393,7 @@ function Text.Apply(frame, cfg, engine)
     frame:SetSize(w, h)
     local compiled = Text.Compiled(s)
     useChain(frame, am, compiled)
-    layoutIconAndArea(am, s, h)
+    layoutIconAndArea(am, s, compiled, h)
     dressPieces(am, s, compiled)
     layoutChain(am, s, compiled, h)
     if engine then Text.Bind(frame, am, cfg, s, compiled) end

@@ -287,8 +287,8 @@ end
 local GATES = {
     bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true },
     icons = { borderShow = true, expiringColorOn = true },
-    -- Right, so Center (a multi-piece template lines up Left) still moves the chain; an icon, so
-    -- its rows reach one.
+    -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
+    -- an icon, so its rows reach one.
     text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT" },
 }
 

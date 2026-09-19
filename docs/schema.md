@@ -148,8 +148,9 @@ The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constant
 
 The Text style (issue #2). `width` (220), `height` (16); `template`
 (`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
-refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` only for a one-piece
-template), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, size
+refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` on a template of more
+than one piece STACKS it, one centered row per field, text outside `[ ]` not drawn — feedback #1,
+`Style.Text.Stacked`), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, size
 12); `timeFormat` (`"blizzard"`); the icon — `icon` (`"NONE"`), `iconSize` (0 = the line's height),
 `iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
 `iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
