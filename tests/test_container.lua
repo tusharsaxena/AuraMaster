@@ -552,6 +552,41 @@ test("container: a restyle dresses every group button and every enchant frame, a
     assertEqual(inst:Restyle(cfg), 3)
 end)
 
+test("container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)", function()
+    local reported, lines = {}, {}
+    local NS, mocks = fresh({ before = function(m)
+        m.geterrorhandler = function() return function(err)
+            local n = #reported
+            reported[n + 1] = tostring(err)
+        end end
+    end })
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = "[" .. tag .. "] " .. fmt:format(...)
+    end
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = inst:Cfg()
+    inst.engine.__frames.g1 = { mocks.__stubFrame(), mocks.__stubFrame() }
+    local element, message = NS.Style.Element, "dress refused"
+    NS.Style.Element = function() error(message, 0) end
+    local count = inst:Restyle(cfg)
+    inst:Restyle(cfg)
+    message = "another refusal"
+    inst:Restyle(cfg)
+    NS.Style.Element = element
+    assertEqual(count, 5, "every frame is still attempted")
+    local dress = 0
+    for _, l in ipairs(lines) do
+        if l:find("[Style]", 1, true) and l:find("refus", 1, true) then dress = dress + 1 end
+    end
+    -- red under: Restyle's bare pcall dropping the error (the owner's blank rows named nothing)
+    assertEqual(dress, 15, "one debug line per failed dress")
+    -- red under: the handler called per button (a restyle floods BugSack), or never
+    assertEqual(#reported, 2, "the client's error handler once per distinct message")
+    assertEqual(reported[1], "dress refused")
+    assertEqual(reported[2], "another refusal")
+end)
+
 test("container: an instance whose container is gone applies nothing and touches no engine", function()
     local NS = fresh()
     local inst = NS.ContainerManager.instances[2]

@@ -186,7 +186,7 @@ its loops are Alpha and Translation only, built and played at dress time.
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:277`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:294`), and then adds again
 (`modules/Style_Bars.lua:310`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -224,7 +224,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:440`).
+  aura buttons (`modules/Container.lua:447`).
 
 ## Smaller API moves this addon absorbs
 

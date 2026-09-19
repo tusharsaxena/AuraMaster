@@ -576,7 +576,12 @@ nothing).
 98. **Running out.** Recolor on, then Blink on: the duration run turns the color, then blinks, in the
     last N seconds; the rest of the line keeps the font color.
 99. **The icon.** Icon Left, then Right, with a border: the text starts after the icon and its gap,
-    and a long line is cut at its box rather than drawn under the icon.
+    and a long line is cut at its box rather than drawn under the icon. Then, with `/am debug` and
+    `/console scriptErrors 1`, and auras showing, change Text settings one after another (font, size,
+    template, icon size, the border): every line keeps its text. Rows that go blank, or become empty
+    bordered squares, must now come with a `[Style] … failed:` line in the debug console and one Lua
+    error naming it; copy both (smoke batch 2, item 7). A refused icon call costs the icon alone,
+    the text still drawing.
 100. **Refusals.** In the Template box and with `/am set container.text.template $spellname$ $bogus$`
      (no quotes): chat prints `Invalid value for container.text.template` and, indented, the rule
      that broke; the stored template does not change. Try each rule of spec §3.2 once.

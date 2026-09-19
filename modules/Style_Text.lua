@@ -188,26 +188,43 @@ end
 -- Layout
 -- ---------------------------------------------------------------------------
 
+--- The icon and its border: hidden with no `size` (no icon), else the `size` box at `pos` of the
+--- animated frame (Style.LayoutIcon). Every call here is an icon or border call, run guarded.
+local function placeIcon(am, s, pos, size)
+    am.icon:ClearAllPoints()
+    if not size then
+        am.icon:Hide()
+        am.iconBorder:Hide()
+        return
+    end
+    Style.LayoutIcon(am.anim, am, s, D, pos, size)
+end
+
 --- The icon at `pos` ("LEFT" | "RIGHT") of the animated frame, and the text area beside it; with no
 --- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (fix round 1,
 --- feedback #1): a stacked Center's box holds several rows, and "line height" is one of them, not the
---- whole stack.
+--- whole stack. The text area is anchored FIRST, from plain arithmetic, and the icon block after it,
+--- guarded as Style.Bind guards a binding (smoke batch 2, item 7): a client call the icon or its
+--- border refuses costs the icon alone (hidden, and reported through Style.ReportError), never the
+--- text, which was left unanchored between the icon's error and the re-anchoring that followed it.
 local function layoutIconAndArea(am, s, compiled, h)
     local pos = s.icon or D.icon
-    am.icon:ClearAllPoints()
+    local size
     am.area:ClearAllPoints()
-    if pos ~= "LEFT" and pos ~= "RIGHT" then
-        am.icon:Hide()
-        am.iconBorder:Hide()
+    if pos == "LEFT" or pos == "RIGHT" then
+        local lineHeight = Text.Stacked(s, compiled) and fontSize(s) or h
+        size = Style.IconSizeFor(s, D, lineHeight)
+        local inset = size + number(s.iconGap, D.iconGap)
+        am.area:SetPoint("TOPLEFT", am.anim, "TOPLEFT", pos == "LEFT" and inset or 0, 0)
+        am.area:SetPoint("BOTTOMRIGHT", am.anim, "BOTTOMRIGHT", pos == "RIGHT" and -inset or 0, 0)
+    else
         am.area:SetAllPoints(am.anim)
-        return
     end
-    local lineHeight = Text.Stacked(s, compiled) and fontSize(s) or h
-    local size = Style.IconSizeFor(s, D, lineHeight)
-    Style.LayoutIcon(am.anim, am, s, D, pos, size)
-    local inset = size + number(s.iconGap, D.iconGap)
-    am.area:SetPoint("TOPLEFT", am.anim, "TOPLEFT", pos == "LEFT" and inset or 0, 0)
-    am.area:SetPoint("BOTTOMRIGHT", am.anim, "BOTTOMRIGHT", pos == "RIGHT" and -inset or 0, 0)
+    local ok, err = pcall(placeIcon, am, s, pos, size)
+    if ok then return end
+    Style.ReportError("text icon", err)
+    pcall(am.icon.Hide, am.icon)
+    pcall(am.iconBorder.Hide, am.iconBorder)
 end
 
 -- The anchor-point prefix for each vertical justify: TOPLEFT / LEFT / BOTTOMLEFT and the right-hand

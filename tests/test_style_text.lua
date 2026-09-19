@@ -433,6 +433,113 @@ test("text style: an icon on the right insets the area's right edge; none hides 
     assertEqual(frame:__count("SetIcon"), 0)
 end)
 
+-- ── a refused icon call on a live re-dress (smoke batch 2, item 7) ─────────────────────────────
+
+--- A live Text element with a bordered left icon, dressed once, then re-dressed live with `region`'s
+--- `method` raising (am.iconBorder:SetBackdrop, am.icon:SetSize), in a fresh environment whose client
+--- error handler and debug log record. Every log is emptied before the re-dress, so they hold it alone.
+--- `times` re-dresses that many times (default 1).
+local function refusedRedress(region, method, times)
+    local reported, lines = {}, {}
+    local NS, m = dofile("tests/fresh_env.lua")({ before = function(mocks)
+        dofile("tests/text_apis.lua")(mocks)
+        mocks.geterrorhandler = function() return function(err)
+            local n = #reported
+            reported[n + 1] = tostring(err)
+        end end
+    end })
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = tag .. ":" .. fmt:format(...)
+    end
+    local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
+        icon = "LEFT", iconSize = 14, iconGap = 2, iconBorderShow = true, iconBorderStyle = "Solid",
+        iconBorderSize = 2 } })
+    local made = {}
+    local frame = B.new(made)
+    B.during(m, made, function() NS.Style.Element(frame, c, true) end)
+    local am = frame.__am
+    am[region].__raise[method] = true
+    frame.__log = {}
+    for _, r in ipairs(made) do r.__log = {} end
+    local ok, err = true, nil
+    for _ = 1, times or 1 do
+        ok, err = pcall(B.during, m, made, function() NS.Style.Element(frame, c, true) end)
+        if not ok then break end
+    end
+    am[region].__raise[method] = nil
+    return { ok = ok, err = err, frame = frame, am = am, reported = reported, lines = lines }
+end
+
+--- The anchor points `r` took after its last ClearAllPoints, in order.
+local function anchorsSinceClear(r)
+    local out = {}
+    for _, e in ipairs(r.__log) do
+        if e.name == "ClearAllPoints" then out = {} end
+        if e.name == "SetPoint" then
+            local n = #out
+            out[n + 1] = e.args[1]
+        end
+    end
+    return out
+end
+
+--- The earliest call order stamp across `regions`' logs (nil when none was called).
+local function firstSeq(regions)
+    local low
+    for _, r in ipairs(regions) do
+        for _, e in ipairs(r.__log) do
+            if not low or e.seq < low then low = e.seq end
+        end
+    end
+    return low
+end
+
+--- How many of `lines` carry `needle`.
+local function matching(lines, needle)
+    local n = 0
+    for _, l in ipairs(lines) do
+        if l:find(needle, 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+--- The item-7 assertions shared by both refusals: the text survives, the icon alone is lost.
+local function assertTextSurvives(got, needle)
+    local am = got.am
+    -- red under: the refusal escaping the icon block (Text.Apply stops, the caller's pcall drops it)
+    assertTrue(got.ok, tostring(got.err))
+    -- red under: the area's anchors cleared and laid after the icon (a raise leaves an unanchored area)
+    assertEqual(table.concat(anchorsSinceClear(am.area), ","), "TOPLEFT,BOTTOMRIGHT", "the text area keeps both anchors")
+    assertEqual(am.area:__calls("SetPoint")[1][4], 14 + 2, "still beside the icon's box")
+    -- red under: the icon block run before the text area is anchored
+    assertTrue(am.area:__lastSeq("SetPoint") < firstSeq({ am.icon, am.iconBorder }), "the area is anchored first")
+    local head = am.piece1:__last("SetPoint")
+    assertTrue(head ~= nil and head[2] == am.area, "the chain head is anchored in the area")
+    assertTrue(got.frame:__last("SetSpellName")[1] == am.piece1, "the text binding is still bound")
+    assertFalse(am.icon:IsShown(), "the icon is what the refusal costs")
+    -- red under: the refusal swallowed (Style.Bind's pattern without the report)
+    assertEqual(#got.reported, 1, "handed to the client's error handler")
+    assertTrue(got.reported[1]:find(needle, 1, true) ~= nil, got.reported[1])
+    assertEqual(matching(got.lines, needle), 1, "one debug line: " .. table.concat(got.lines, " | "))
+end
+
+test("text style: an icon border whose SetBackdrop is refused on a live re-dress costs the icon, never the text, and is reported", function()
+    assertTextSurvives(refusedRedress("iconBorder", "SetBackdrop"), "SetBackdrop refused")
+end)
+
+test("text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported", function()
+    assertTextSurvives(refusedRedress("icon", "SetSize"), "SetSize refused")
+end)
+
+test("text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time", function()
+    local got = refusedRedress("iconBorder", "SetBackdrop", 3)
+    assertTrue(got.ok, tostring(got.err))
+    -- red under: geterrorhandler called on every re-dress (a restyle of 40 buttons floods BugSack)
+    assertEqual(#got.reported, 1)
+    assertEqual(matching(got.lines, "SetBackdrop refused"), 3)
+end)
+
 -- ── the template ───────────────────────────────────────────────────────────────────────────────
 
 test("text style: a refused stored template draws the default one and logs it once", function()

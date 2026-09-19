@@ -279,7 +279,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
 
-### test_container.lua (49)
+### test_container.lua (50)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -315,6 +315,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an enchant slot the engine refuses costs that slot, not the build
 - container: an engine call that raises is traced, and the build carries on to the unit
 - container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses
+- container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)
 - container: an instance whose container is gone applies nothing and touches no engine
 - container: the anchor's scale is the container's times the master's, never below a tenth
 - container: the anchor's alpha is the container's times the master's
@@ -714,7 +715,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (45)
+### test_style_text.lua (48)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -743,6 +744,9 @@ badge and any count quoted in the docs must agree with it.
 - text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
 - text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
 - text style: an icon on the right insets the area's right edge; none hides it and binds nothing
+- text style: an icon border whose SetBackdrop is refused on a live re-dress costs the icon, never the text, and is reported
+- text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
+- text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time
 - text style: a refused stored template draws the default one and logs it once
 - text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
 - text style: the structure key carries the template's shape, so a live shape change gets new buttons
@@ -1296,7 +1300,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
-| test_container.lua | 49 |
+| test_container.lua | 50 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
@@ -1309,7 +1313,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 60 |
 | test_style_icons.lua | 25 |
-| test_style_text.lua | 45 |
+| test_style_text.lua | 48 |
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -1340,4 +1344,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1126** |
+| **Total** | **1130** |

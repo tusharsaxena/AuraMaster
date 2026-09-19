@@ -317,6 +317,13 @@ function ContainerClass:Update(cfg, plan)
     self:Restyle(cfg)
 end
 
+--- Re-dress one live button, guarded: a dress that raises costs that button and is reported
+--- (Style.ReportError, smoke batch 2 item 7), never swallowed and never the rest of the restyle.
+local function redress(frame, cfg, classColor)
+    local ok, err = pcall(NS.Style.Element, frame, cfg, true, classColor)
+    if not ok then NS.Style.ReportError("restyle", err) end
+end
+
 --- Re-dress every button the engine has created, from the current settings.
 function ContainerClass:Restyle(cfg)
     local engine = self.engine
@@ -327,13 +334,13 @@ function ContainerClass:Restyle(cfg)
         for i = 1, (ok and n or 0) do
             local okF, frame = pcall(engine.GetAuraGroupFrame, engine, g.key, i)
             if okF and frame then
-                pcall(NS.Style.Element, frame, cfg, true, self.classColor)
+                redress(frame, cfg, self.classColor)
                 count = count + 1
             end
         end
     end
     for _, frame in ipairs(self.enchantFrames) do
-        pcall(NS.Style.Element, frame, cfg, true, self.classColor)
+        redress(frame, cfg, self.classColor)
         count = count + 1
     end
     return count

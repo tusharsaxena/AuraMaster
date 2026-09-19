@@ -419,7 +419,7 @@ return value.
   (`modules/ContainerManager.lua:161`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:440`).
+  button's ancestry (`modules/Container.lua:447`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
@@ -454,12 +454,15 @@ return value.
 - **A profile switch, copy or reset in combat may create anchor frames.** Those are plain frames,
   which is combat-legal; their engines are built by the deferred apply once combat ends.
 - **Every engine and button binding is `pcall`-guarded** (`callEngine`, `Style.Bind`), so a binding
-  the client rejects costs that binding, never the engine's frame batch.
+  the client rejects costs that binding, never the engine's frame batch. A live re-dress is guarded
+  per button (`Container:Restyle`), and a Text line's icon block per dress, so a refusal there costs
+  the button, or only the icon; neither is silent: `Style.ReportError` writes a `[Style]` debug line
+  every time and hands the error to the client's error handler once per session per message.
 - **Secret values never reach a string operation.** Only `modules/TimedSpells.lua` reads aura data,
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:610-612`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:627-629`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

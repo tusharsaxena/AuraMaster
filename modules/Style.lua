@@ -269,6 +269,23 @@ function Style.Bind(frame, method, ...)
     return ok
 end
 
+-- The first line of every error already handed to the client's error handler this session.
+local reportedErrors = {}
+
+--- Report an error a guarded dress call caught (smoke batch 2, item 7): one "Style" debug line with its
+--- first line every time, and the whole error (a stack attached, Style.WithStack) to the client's
+--- error handler ONCE per session per distinct first line, so `/console scriptErrors 1` or BugSack
+--- names it without a restyle of forty buttons raising forty times. A client without a handler (the
+--- headless harness) keeps the debug line. `what` names the guarded call.
+function Style.ReportError(what, err)
+    local first = tostring(err):match("^[^\n]*")
+    if NS.Debug then NS.Debug("Style", "%s failed: %s", what, first) end
+    if reportedErrors[first] then return end
+    reportedErrors[first] = true
+    local handler = type(geterrorhandler) == "function" and geterrorhandler()
+    if handler then handler(err) end
+end
+
 --- Empty the engine's two ADDITIVE binding lists (AddDispelTypeTexture and AddPandemicRegion append,
 --- so a restyle that re-added them would stack a second tint and a second highlight). Called FIRST in
 --- a live dress, before any other binding: every Set* / Add* binding re-runs the engine's whole apply
