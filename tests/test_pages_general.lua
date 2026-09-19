@@ -649,7 +649,7 @@ test("general → dispel colors: five profile-wide swatches, no None, no class-c
     -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13:
     -- keep Blizzard's own dispel colors), or silent on the Text style's word, backdrop and edge
     -- (feedback #7)
-    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."]))
+    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Font). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep a bar's own color and show no type word, backdrop or edge. An icon's dispel border keeps Blizzard's own colors."]))
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
         local desc = NS.FindSchemaRow("dispelColors." .. name).desc
         -- red under: a row desc still naming the tint on an icon's dispel border

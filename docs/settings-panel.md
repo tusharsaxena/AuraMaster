@@ -162,8 +162,9 @@ one switch for that; the tab says so.
 **Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
 `.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
 a Text line's dispel type word, backdrop and edge when those are on (Text → Font → Dispel type,
-feedback #7). An aura with no dispel type keeps a bar's own color and draws no text backdrop or edge,
-so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
+feedback #7). An aura with no dispel type — every buff and many debuffs, class debuffs such as
+Judgment or Consecration included (`docs/midnight-quirks.md`) — keeps a bar's own color and draws no
+text type word, backdrop or edge, so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
 colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
 write re-applies every container.
 
@@ -394,7 +395,8 @@ a permanent aura draws full and `drain` picks which end empties (`modules/Style_
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
 as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors), and
 `bgColorMode = dispel` the background the same way (feedback #7); an aura with no dispel type — a buff,
-or a debuff nothing can dispel, such as Mystic Touch — keeps the surface's own color (the map's
+or one of the many debuffs that carry none, class debuffs such as Judgment or Consecration included —
+keeps the surface's own color (the map's
 `None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
 (`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the running-out color is a step color curve over

@@ -196,8 +196,10 @@ test("bars: Highlights carries no dispel swatches, and Color by points at Genera
     -- red under: the tooltip still sending the player to the Highlights tab
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
     assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
-    -- red under: the tooltip silent on why Mystic Touch keeps the bar color (feedback #7)
-    assertTrue(desc:find("Mystic Touch", 1, true) ~= nil, desc)
+    -- red under: the tooltip implying a typeless debuff is rare, citing Mystic Touch alone (feedback #7,
+    -- smoke batch 2 item 2: many class debuffs have no dispel type)
+    assertTrue(desc:find("many debuffs have no dispel type", 1, true) ~= nil, desc)
+    assertTrue(desc:find("Judgment or Consecration", 1, true) ~= nil, desc)
 end)
 
 test("bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)", function()
@@ -215,7 +217,9 @@ test("bars: Background & border offers Color by beside the background, writing b
     assertEqual(table.concat(dd.order, ","), "static,dispel")
     dd:__fire("OnValueChanged", "dispel")
     assertEqual(NS.Database.FindContainer(1).bars.bgColorMode, "dispel")
-    assertTrue((row.tooltip or row.desc):find("Mystic Touch", 1, true) ~= nil, "the tooltip says why a typeless debuff keeps its color")
+    local tip = row.tooltip or row.desc
+    assertTrue(tip:find("many debuffs have no dispel type", 1, true) ~= nil, "the tooltip says typeless debuffs are common")
+    assertTrue(tip:find("Judgment or Consecration", 1, true) ~= nil, tip)
     assertEqual(NS.CONTAINER_TEMPLATE.bars.bgColorMode, "static", "one color by default")
 end)
 

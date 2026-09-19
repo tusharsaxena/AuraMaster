@@ -338,7 +338,7 @@ end
 
 --- The Dispel Colors tab: one line saying who reads the colors, then the group's five rows.
 local function renderDispel(ctx, _, rows)
-    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."])
+    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Font). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep a bar's own color and show no type word, backdrop or edge. An icon's dispel border keeps Blizzard's own colors."])
     H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
 end
 

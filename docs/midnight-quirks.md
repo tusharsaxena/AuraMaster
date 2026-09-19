@@ -332,3 +332,32 @@ the gap is that empty string's own width.
 **The in-game check** (docs/smoke-tests.md section T) runs three `/run` probes that tell these apart:
 the rule formatter on `45.5` and `45`, the binding's zero-duration text, and an empty font string's
 width.
+
+## Many debuffs carry no dispel type (smoke batch 2, item 2; owner's output pending)
+
+**What was seen.** A bar container on the target's debuffs, colored by dispel type, drew a Paladin's
+Consecration, Judgment, Empyrean Hammer, Seal of Reprisal and Blessed Hammer in blue, and a Text line's
+`$dispeltype$` showed nothing for them. Text and bars read the same engine key, the aura's `dispelName`
+or `"None"`, so they cannot disagree about one aura: those debuffs almost certainly carry no dispel
+type (a Magic, Curse, Disease or Poison type is what a player can dispel, and a class's own damage
+debuffs usually have none; bleeds carry `Bleed`). The blue is most likely the bar's default fill,
+close to the Magic swatch, which a typeless aura keeps.
+
+**What this addon does.** Nothing changes in code: a typeless aura keeps the surface's own color and
+draws no type word, backdrop or edge. The Bars page's Color by tooltips and General -> Dispel Colors
+say that buffs and many debuffs have no type, rather than citing one rare debuff.
+
+**The probe.** Out of combat, with a target carrying the debuffs, paste the three lines one at a time.
+They print, per harmful aura: its index, name, `auraInstanceID`, `isFromPlayerOrPlayerPet`,
+`dispelName`, and the red channel of the color a curve returns for its dispel type (the curve maps the
+type's enum `x` to red `x/15`, so the enum is `red * 15`). Every value goes through an `issecretvalue`
+guard and every call through `pcall`.
+
+```
+/run S=function(v)return issecretvalue and issecretvalue(v)and"SECRET"or tostring(v)end K=C_CurveUtil.CreateColorCurve()K:SetType(1)for x=0,15 do K:AddPoint(x,CreateColor(x/15,0,0,1))end
+/run R=function(i,a)local k,c=pcall(C_UnitAuras.GetAuraDispelTypeColor,"target",a.auraInstanceID,K)print(i,S(a.name),S(a.auraInstanceID),S(a.isFromPlayerOrPlayerPet),S(a.dispelName),k and c and S(c.r)or S(c))end
+/run for i=1,40 do local o,a=pcall(C_UnitAuras.GetAuraDataByIndex,"target",i,"HARMFUL")if not(o and a)then print("end",i,S(a))break end R(i,a)end
+```
+
+**Result:** owner's output pending. A typeless debuff is expected to print `nil` for `dispelName`;
+the lines are recorded here when they come back.

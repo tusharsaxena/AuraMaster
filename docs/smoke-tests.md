@@ -779,3 +779,8 @@ debuff container on the target, in a party or with a target dummy.
      centers a one-piece template only, stacks several fields in rows (text outside `[ ]` not drawn,
      the box growing, rows kept when a field is empty, an icon at size 0 one row tall) and that aura
      text is secret so its width cannot be measured. Each of those claims holds on a live container.
+142. **Typeless debuffs (smoke batch 2, item 2).** Out of combat, target a dummy carrying your class's
+     debuffs (a Paladin's Judgment and Consecration) and run the three `/run` lines in
+     `docs/midnight-quirks.md` → "Many debuffs carry no dispel type"; copy the output there. The Bars
+     page's Color by tooltips and General → Dispel Colors say buffs and many debuffs have no dispel
+     type (Judgment, Consecration), and the Dispel Colors line points at Text → Font.
