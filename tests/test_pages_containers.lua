@@ -1,7 +1,7 @@
 -- tests/test_pages_containers.lua — settings/Containers.lua, driven through its widgets: the
--- top-level Containers page (N-1, batch 7) — its own Blizzard category, its one tab's picker and New
--- container inside the tab body (the options-ui-§14 deviation, docs/ARCHITECTURE.md), the identity
--- rows and what each writes, and the acts on the selected container (Duplicate, Delete, Copy
+-- top-level Containers page (N-1, batch 7) — its own Blizzard category, its picker and New container
+-- in the chrome block above the strip (feedback #2, options-ui-§14), its one tab, General, with the
+-- identity rows and what each writes, and the acts on the selected container (Duplicate, Delete, Copy
 -- settings from). This page used to be General's third tab; tests/test_pages_general.lua covers what
 -- is left of General after the split. The registry behavior under Duplicate/Delete/Copy is
 -- tests/test_containermanager.lua's; this suite proves the page reaches it, on the right container.
@@ -39,16 +39,17 @@ local function inScroll(NS, w)
     return walk(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.containers))
 end
 
-test("containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)", function()
+test("containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)", function()
     local NS, m, P = containers()
     local keys = P.tabKeys("containers")
-    -- red under: the page drawing more than its one tab, or the tab not named Containers
-    assertEqual(table.concat(keys, ","), NS.L["Containers"])
+    -- red under: the page drawing more than its one tab, or the tab not named General (options-ui-§14
+    -- names the tab holding a page's acts, under a band carrying its picker)
+    assertEqual(table.concat(keys, ","), NS.L["General"])
     assertTrue(m.__subcategories.Containers ~= nil, "the page registers its own category")
     for _, path in ipairs({ "container.name", "container.enabled", "container.unit", "container.auraType", "container.style" }) do
         local row = NS.FindSchemaRow(path)
         assertEqual(row.page, "containers", path)
-        assertEqual(row.group, NS.L["Containers"], path)
+        assertEqual(row.group, NS.L["General"], path)
     end
 end)
 
@@ -133,23 +134,38 @@ test("containers: NS.OpenOptionsPage('containers') opens its own category, not t
     assertEqual(opened[2], NS.L["Containers"], "N-3: Containers opens its own category, not the main panel")
 end)
 
-test("containers: the tab body opens with the Container picker and New container on one line", function()
-    local NS, _, _, ws = containers()
+--- The chrome block's two controls, as the last render drew them: the picker and New container.
+local function headerWidgets(NS)
+    local ctx = NS.Helpers.__pageCtx.containers
     local picker, new
-    for _, w in ipairs(ws) do
+    for _, w in ipairs(ctx.__chromeWidgets or {}) do
         if w.type == "Dropdown" and w.labelText == NS.L["Container"] then picker = w end
         if w.type == "Button" and w.text == NS.L["New container"] then new = w end
     end
-    -- red under: the picker line not drawn, or drawn in a chrome block above the strip (D1)
-    assertTrue(picker ~= nil and new ~= nil, "both drawn")
-    assertTrue(inScroll(NS, picker) and inScroll(NS, new), "inside the tab body")
-    local line
-    for _, row in ipairs(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.containers).children) do
-        for _, c in ipairs(row.children or {}) do
-            if c == picker then line = row end
+    return picker, new
+end
+
+test("containers: the picker and New container sit in the band above the strip, drawn before it (feedback #2)", function()
+    local NS, _, P = containers()
+    local H = NS.Helpers
+    local order, real = {}, {}
+    for _, name in ipairs({ "PageHeader", "TabStrip" }) do
+        real[name] = H[name]
+        H[name] = function(...)
+            local n = #order
+            order[n + 1] = name
+            return real[name](...)
         end
     end
-    assertTrue(line ~= nil and line.children[2] == new, "New sits beside the picker, on the first line")
+    P.rerender("Containers")
+    H.PageHeader, H.TabStrip = real.PageHeader, real.TabStrip
+    -- red under: the page drawing no chrome block, or drawing it after the strip (its band unreserved)
+    assertEqual(table.concat(order, ","), "PageHeader,TabStrip", "the band, then the tabs")
+    local picker, new = headerWidgets(NS)
+    -- red under: the picker and New still drawn in the tab body (the retired options-ui-§14 deviation)
+    assertTrue(picker ~= nil and new ~= nil, "both drawn in the band")
+    assertFalse(inScroll(NS, picker) or inScroll(NS, new), "neither in the tab body")
+    assertTrue(H.__pageCtx.containers.__bannerWidget == picker, "the picker is the page's banner widget")
     assertEqual(table.concat(picker.order, ","), "1,2,3,4")
     assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])
 end)
@@ -191,7 +207,7 @@ test("containers: a created container with its own Fill keeps it; Create with on
     assertEqual(NS.Database.FindContainer(id).layout.axis, "horizontal")
 end)
 
-test("containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)", function()
+test("containers: Delete keeps the band's picker and New through both refreshes, and the picker lists what remains (C-3)", function()
     local NS, m, P = containers()
     local popups = P.popups()
     NS.Helpers.SelectContainer(2)
@@ -210,43 +226,29 @@ test("containers: Delete keeps the picker and New through both refreshes, and th
     end)
     assertEqual(ids(NS), "1,3,4")
     assertEqual(renders, 2, "the popup's own refresh, then the registry change's")
-    -- What the scroll holds now, after both renders: the kit's scroll drops its children without
-    -- marking them released, so "live" here means "parented in the tab body".
-    local function drawn(wtype, label)
-        local out = {}
-        for _, w in ipairs(P.all(after, wtype, label)) do
-            if inScroll(NS, w) then
-                out[#out + 1] = w
-            end
-        end
-        return out
+    -- red under: the block drawn only on a first render, or its widgets released by the render that
+    -- drew them (the reported loss: no picker and no New after a delete)
+    local picker, new = headerWidgets(NS)
+    assertTrue(picker ~= nil and not picker.__released, "the band's picker is live after both renders")
+    assertTrue(new ~= nil and not new.__released, "and so is New container")
+    assertEqual(table.concat(picker.order, ","), "1,3,4", "the picker lists the remaining containers")
+    local live = 0
+    for _, w in ipairs(P.all(after, "Dropdown", NS.L["Container"])) do
+        if not w.__released then live = live + 1 end
     end
-    local pickers = drawn("Dropdown", NS.L["Container"])
-    local news = drawn("Button", NS.L["New container"])
-    -- red under: the picker line drawn only on a first render, or into a chrome ledger the second
-    -- refresh releases (the reported loss: no picker and no New after a delete)
-    assertEqual(#pickers, 1, "one picker in the tab body")
-    assertEqual(#news, 1, "one New container in the tab body")
-    assertEqual(table.concat(pickers[1].order, ","), "1,3,4", "the picker lists the remaining containers")
-    -- red under: the second refresh drawing New on a line of its own, or dropping it from the
-    -- picker's line (the pair must survive both renders together, as the first render drew it)
-    local line
-    for _, row in ipairs(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.containers).children) do
-        for _, c in ipairs(row.children or {}) do
-            if c == pickers[1] then line = row end
-        end
-    end
-    assertTrue(line ~= nil and line.children[2] == news[1], "New still sits beside the picker")
+    -- red under: the stale block's widgets never handed back to AceGUI (one more per render)
+    assertEqual(live, 1, "the first render's picker was released; one picker is left")
 end)
 
-test("containers: with no containers the page draws the picker, New container and one line instead of the rows", function()
+test("containers: with no containers the page draws the band's picker and New, and one line instead of the rows", function()
     local NS, _, P = containers()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     local ws = P.rerender("Containers")
     -- red under: collectTabs dropping the page's one tab when no container exists
-    assertEqual(P.tabKeys("containers")[1], NS.L["Containers"])
-    assertTrue(P.find(ws, "Button", NS.L["New container"]) ~= nil, "New is still offered")
-    assertTrue(P.find(ws, "Dropdown", NS.L["Container"]) ~= nil, "the picker is drawn, empty")
+    assertEqual(P.tabKeys("containers")[1], NS.L["General"])
+    local picker, new = headerWidgets(NS)
+    assertTrue(new ~= nil, "New is still offered")
+    assertTrue(picker ~= nil and picker.order[1] == nil, "the picker is drawn, empty")
     assertNil(P.row(ws, "container.name"), "no row edits a container that does not exist")
     assertTrue(P.hasText(ws, NS.L["No containers yet. Click New container, or type /am new."]))
 end)

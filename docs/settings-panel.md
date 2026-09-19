@@ -60,12 +60,12 @@ band holds **the picker itself** (options-ui-§14):
 - **Filters, Layout, Bars, Icons** draw `Helpers.ContainerBanner` — a Container dropdown built through
   the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
   page's only picker.
-- **Containers** is the one exception, an accepted deviation from options-ui-§14
-  (`docs/ARCHITECTURE.md` → Documented deviations). Its one tab edits the selected container, but its
-  Container picker and **New container** sit on the first line of the tab body
-  (`settings/Containers.lua`), and every act on the selected container (Duplicate, Delete,
-  Copy settings from) follows its rows. The Containers page draws no banner. Drawn in the body, the
-  picker and New are redrawn with the scroll, so a Delete's two refreshes cannot lose them.
+- **Containers** carries the page's identity controls in the band, as options-ui-§14 asks: its Container
+  picker and **New container** on one row, drawn by `Helpers.ContainerHeader` through the library's
+  `PageHeader` chrome block (feedback #2, 2026-09-19; `PageBanner` draws exactly one dropdown). The acts
+  on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
+  one tab, which §14 then names **General**. The block is drawn on every render, so a Delete's two
+  refreshes cannot lose it, and the widgets of the render before are released after each render.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
@@ -166,9 +166,9 @@ the tab line and each row's tooltip say so. Profile-wide, so a write re-applies 
 
 ### Containers (5 rows, `settings/Containers.lua`)
 
-A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **Containers**. The tab
-body opens with the Container picker and **New container** (a player-buff bar container, then
-selected) on one line. With no container, that line and one sentence are all the tab draws.
+A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **General**. The band above
+the strip holds the Container picker and **New container** (a player-buff bar container, then
+selected) on one row. With no container, the band and one sentence are all the page draws.
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
@@ -469,7 +469,7 @@ With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-comp
 `MasterControls`) and `MASTER_GROUP` (every member a page file touches at file load), and a real
 `RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`), so
 every row still registers and `/am list|get|set` and the defaults keep working. Every other function
-member of the live instance, this addon's decorations (`SelectContainer`, `ContainerPickerCell`,
+member of the live instance, this addon's decorations (`SelectContainer`, `ContainerHeader`,
 `RenderTabbedPage`, …) included, is carried as a no-op, so no call site finds a member missing
 (testing-§8); the library's layout and composer constants, `AceGUI` and `LSMValues` are not copied.
 The panel itself (`CreateOptionsPanel`, `OpenOptionsPanel`) answers one line naming the missing

@@ -171,7 +171,7 @@ test("options: the Containers page's New button creates and selects a container"
         if w.type == "Button" and w.text == "New container" and not w.__released then newButton = w end
     end
     -- red under: the Containers page not drawing its create control
-    assertTrue(newButton ~= nil, "the tab body carries the create control")
+    assertTrue(newButton ~= nil, "the band carries the create control")
     newButton:__fire("OnClick")
     assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
     local _, id = NS2.ActiveContainer()

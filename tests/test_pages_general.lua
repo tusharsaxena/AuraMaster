@@ -270,7 +270,7 @@ test("general: the tab strip reads Master controls, Display, Spell Categories, D
     for _, path in ipairs({ "container.name", "container.enabled", "container.unit", "container.auraType", "container.style" }) do
         local row = NS.FindSchemaRow(path)
         assertEqual(row.page, "containers", path)
-        assertEqual(row.group, NS.L["Containers"], path)
+        assertEqual(row.group, NS.L["General"], path)
     end
     -- The Containers page now registers its OWN Blizzard category (N-1), not a General tab.
     assertTrue(m.__subcategories.Containers ~= nil, "the Containers page registers on its own")

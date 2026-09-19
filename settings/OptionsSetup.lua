@@ -310,7 +310,7 @@ if not lib then
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "UnnamedCandidates", "SelectTab",
         -- this addon's decorations on the live instance (defined below the `return`)
-        "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderWarnings",
+        "SelectContainer", "ContainerBanner", "ContainerHeader", "RenderWarnings",
         "RenderTabbedPage", "RenderContainerPage",
     }) do
         Helpers[name] = function() end
@@ -444,24 +444,69 @@ function Helpers.ContainerBanner(ctx)
     return dd
 end
 
---- The picker as a plain AceGUI Dropdown in a page's BODY: a `make` for Helpers.RenderGrid, so it
---- is released with the scroll like every other body widget. The Containers page draws it on the
---- tab's first line beside New container (the options-ui-§14 deviation, docs/ARCHITECTURE.md).
-function Helpers.ContainerPickerCell(_, parent, rel)
+-- The Containers page's CHROME BLOCK (options-ui-§14, feedback #2): the picker and New container on
+-- one row above the tab strip. Not Helpers.PageBanner, which draws exactly one Dropdown: a page with
+-- a picker AND a create control puts both in the library's PageHeader frame, and the host places
+-- what it draws inside it. Its widgets are recorded on ctx.__chromeWidgets, which settings/Containers.lua
+-- releases after the NEXT render: a render is usually running inside one of their own callbacks.
+local HEADER_CONTROL_H = 24   -- AceGUI's Button frame height
+local HEADER_PAIR_GAP  = 4    -- half the gutter between the block's two halves
+
+--- Anchor one AceGUI widget's frame inside the block, on its LEFT or RIGHT half.
+local function placeInHeader(widget, frame, y, height, half)
+    local f = widget and widget.frame
+    if not f then return end
+    f:SetParent(frame)
+    f:ClearAllPoints()
+    if half == "LEFT" then
+        f:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
+        f:SetPoint("TOPRIGHT", frame, "TOP", -HEADER_PAIR_GAP, -y)
+    else
+        f:SetPoint("TOPLEFT", frame, "TOP", HEADER_PAIR_GAP, -y)
+        f:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -y)
+    end
+    f:SetHeight(height)
+    f:Show()
+end
+
+--- The block's two controls, built into the frame PageHeader hands over.
+local function buildContainerHeader(ctx, frame, spec)
+    local kids = ctx.__chromeWidgets
     local list, order = containerList()
     local _, activeId = NS.ActiveContainer()
     local dd = NS.AceGUI:Create("Dropdown")
+    kids[#kids + 1] = dd
     dd:SetLabel(L["Container"])
     dd:SetList(list, order)
     dd:SetValue(activeId)
-    dd:SetRelativeWidth(rel or 0.5)
     dd:SetCallback("OnValueChanged", function(_, _, id)
         if id == nil or id == activeId then return end
         Helpers.SelectContainer(id)
     end)
-    Helpers.AttachTooltip(dd, L["Container"], L["Which container this tab, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."])
-    parent:AddChild(dd)
-    return dd
+    Helpers.AttachTooltip(dd, L["Container"], L["Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."])
+    placeInHeader(dd, frame, 0, Helpers.BANNER_H, "LEFT")
+    ctx.__bannerWidget = dd
+
+    local btn = NS.AceGUI:Create("Button")
+    kids[#kids + 1] = btn
+    btn:SetText(L["New container"])
+    btn:SetCallback("OnClick", function() if spec.onNew then spec.onNew() end end)
+    Helpers.AttachTooltip(btn, L["New container"], L["Create a container showing the player's buffs as bars. Change what it shows below."])
+    -- Level with the dropdown's control, not its label: the labeled dropdown is BANNER_H tall with
+    -- the control at its foot.
+    placeInHeader(btn, frame, Helpers.BANNER_H - HEADER_CONTROL_H - 1, HEADER_CONTROL_H, "RIGHT")
+end
+
+--- The Containers page's chrome: the picker and New container, one row above the strip. Called as
+--- RenderTabbedPage's `chrome`, so it is drawn before the strip reserves its band. `spec.onNew` is
+--- the page's own create act.
+function Helpers.ContainerHeader(ctx, spec)
+    ctx.__chromeWidgets = ctx.__chromeWidgets or {}
+    ctx.__bannerWidget = nil
+    return Helpers.PageHeader(ctx, {
+        height = Helpers.BANNER_H,
+        build  = function(_, frame) buildContainerHeader(ctx, frame, spec or {}) end,
+    })
 end
 
 --- One orange line per thing the aura engine will silently not do for this container, above the

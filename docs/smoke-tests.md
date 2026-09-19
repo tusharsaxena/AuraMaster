@@ -78,8 +78,9 @@ suite covers what only the client can show.
     they take effect immediately (visibility is legal in combat).
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
-23. **Containers** (its own top-level page, one tab) → the tab body's first line holds the Container picker and **New
-    container**, side by side and aligned. Below: Name and Enabled, then the subsection heading
+23. **Containers** (its own top-level page, one tab, **General**) → the band above the tab strip holds the
+    Container picker and **New container**, side by side and aligned. In the tab: Name and Enabled,
+    then the subsection heading
     **What it shows, and how** with Unit, Aura type and Style under it (batch 8 — there is no heading
     above Name, and the three rows are visibly one block apart from the two), then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
