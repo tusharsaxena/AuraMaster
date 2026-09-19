@@ -400,7 +400,7 @@ The tabs and the container picker stay live.
 | Pandemic (5) | *Time color:* `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` 1–60 (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color); *Highlight:* `pandemic` (Highlight the pandemic window), `pandemicColor` (Pandemic-window highlight color). Once the Highlights tab's *Running out* and *Refresh window* (smoke batch 2, B2-1: labels only, paths unchanged). The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:161`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:163`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
@@ -421,6 +421,13 @@ background texture, and `bgColor`'s own alpha still applies, so the default look
 surface colored by dispel type keeps both too: the engine paints its tint's RGB at alpha 1, so the
 map's entries are opaque and the region carries `bgAlpha × bgColor.a` (the fill `barAlpha ×
 barColor.a`) through `SetAlpha` (`paintSurface`, smoke batch 2 item 4).
+
+Every Border style row (Bars' Border and Icon border, Icons' Border, Text's Icon border) replaces the
+composer's tooltip with one that says when a change shows: Solid, the default, redraws at once, while
+any other texture, and a new thickness for one, reaches the aura buttons already on screen after a
+`/reload`. Solid is drawn with four strips; another texture is a backdrop, which cannot redraw on a
+laid-out button because its size reads secret (`Style.ApplyBorder`, B2-3, docs/midnight-quirks.md).
+Its color still changes at once.
 
 ### Icons (42 rows, `settings/Icons.lua`) — sub-page of Containers (`N-2`, `D6`)
 

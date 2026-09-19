@@ -38,13 +38,19 @@ NS.RegisterSchemaRows({
       label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 
-NS.RegisterSchemaRows(H.BorderGroup({
+local border = H.BorderGroup({
     prefix = P, page = PAGE, group = G_BORDER, subgroup = L["Border"], show = true, classColor = UNIT,
     extra = {
         { path = P .. "dispelBorder", type = "bool", label = L["Color the border by dispel type"],
           desc = L["Where a debuff has a dispel type, this border replaces yours in the dispel color."] },
     },
-}))
+})
+-- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
+-- (modules/Style.lua's ApplyBorder, B2-3): the tooltip says when it shows.
+for _, row in ipairs(border) do
+    if row.path == P .. "borderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
+end
+NS.RegisterSchemaRows(border)
 
 NS.RegisterSchemaRows({
     { path = P .. "cooldown", page = PAGE, group = G_CD, type = "bool",

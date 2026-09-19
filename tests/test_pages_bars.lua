@@ -264,6 +264,18 @@ test("bars: Background & border offers Color by beside the background, writing b
     assertEqual(NS.CONTAINER_TEMPLATE.bars.bgColorMode, "static", "one color by default")
 end)
 
+test("pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)", function()
+    local NS = T.NS
+    local tip = NS.L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."]
+    for _, path in ipairs({ "container.bars.borderStyle", "container.bars.iconBorderStyle",
+        "container.icons.borderStyle", "container.text.iconBorderStyle" }) do
+        local row = NS.FindSchemaRow(path)
+        -- red under: the library's own "The border texture." (a live button keeps its old backdrop
+        -- until a rebuild, modules/Style.lua's ApplyBorder, and nothing said so)
+        assertEqual(row and (row.tooltip or row.desc), tip, path)
+    end
+end)
+
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()
     local NS, _ = bars()
     NS.SetByPath("container.bars.width", 300, 1)

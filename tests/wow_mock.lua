@@ -10,6 +10,8 @@
 --     A test hands it frames to restyle through `engine.__frames[groupKey]`.
 --   * The engine's enums, so Compat.HasAuraContainer answers true as it does on a 12.1 client.
 --   * C_Secrets, driven by `M.__aurasSecret`, so the defer-while-secret path is reachable.
+--   * Secret geometry and Blizzard's backdrop (B2-3): a sentinel secret number, `M.__layOut` to make
+--     a frame's size read it, and BackdropTemplateMixin's arithmetic on that size.
 --   * The frame picker's cursor, buttons and focus stack.
 
 local base = dofile("tests/_kit/mock_base.lua")
@@ -117,10 +119,70 @@ return function()
         end)
     end
 
+    -- ── secret geometry and the backdrop (B2-3) ─────────────────────────────────────────────
+    -- Once the engine has laid a button out, its rect reads SECRET, and so does every frame anchored
+    -- to it: GetWidth answers a secret number, and arithmetic on one raises ("attempt to perform
+    -- arithmetic on local 'width' (a secret number value ...)", Blizzard_SharedXML/Backdrop.lua:226).
+    -- Lua cannot make a number raise, so the secret is a sentinel TABLE whose arithmetic and
+    -- comparison metamethods raise the client's error, and which the planted issecretvalue names.
+    local function refuse() error("attempt to perform arithmetic on a secret number value", 2) end
+    M.__SECRET = setmetatable({}, {
+        __add = refuse, __sub = refuse, __mul = refuse, __div = refuse, __mod = refuse, __pow = refuse,
+        __unm = refuse, __lt = refuse, __le = refuse, __concat = refuse,
+        __tostring = function() return "<secret number>" end,
+    })
+    local function secretSize() return M.__SECRET end
+
+    --- The engine has laid `f` out: its GetWidth and GetHeight answer the secret from now on (a
+    --- recorder through `__answer`, a kit frame by rawset), and so does every frame CreateFrame makes
+    --- under it later. Plants issecretvalue, so NS.Secrets names the sentinel as the client would.
+    function M.__layOut(f)
+        f.__secretRect = true
+        if type(f.__answer) == "table" then
+            f.__answer.GetWidth, f.__answer.GetHeight = secretSize, secretSize
+        else
+            rawset(f, "GetWidth", secretSize)
+            rawset(f, "GetHeight", secretSize)
+        end
+        M.issecretvalue = M.issecretvalue or function(v) return v == M.__SECRET end
+    end
+
+    -- Blizzard's BackdropTemplateMixin, reduced to its arithmetic: SetBackdrop runs
+    -- SetupTextureCoordinates (width / edgeSize, Backdrop.lua:226) on the frame's size, and so does
+    -- the template's OnSizeChanged script while a backdrop is applied. SetBackdropBorderColor does no
+    -- arithmetic; it records the color. Each apply is counted on `__backdropApplies`.
+    local function setupTextureCoordinates(self)
+        local edge = tonumber(self.backdropInfo.edgeSize) or 1
+        local _ = self:GetWidth() / edge + self:GetHeight() / edge
+    end
+    M.BackdropTemplateMixin = {
+        SetBackdrop = function(self, info)
+            self.backdropInfo = info
+            self.__backdropApplies = (self.__backdropApplies or 0) + 1
+            if info then setupTextureCoordinates(self) end
+        end,
+        SetBackdropBorderColor = function(self, r, g, b, a) self.__borderColor = { r, g, b, a } end,
+        OnBackdropSizeChanged = function(self)
+            if self.backdropInfo then setupTextureCoordinates(self) end
+        end,
+    }
+    M.Mixin = function(object, ...)
+        for i = 1, select("#", ...) do
+            for k, v in pairs((select(i, ...))) do object[k] = v end
+        end
+        return object
+    end
+
     local baseCreate = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreate(frameType, name, parent, template)
         if M.__armGeometry then armGeometry(f) end
+        -- The template carries the mixin and the size script, as BackdropTemplate's XML does.
+        if M.BackdropTemplateMixin and type(template) == "string" and template:find("BackdropTemplate", 1, true) then
+            M.Mixin(f, M.BackdropTemplateMixin)
+            f:SetScript("OnSizeChanged", f.OnBackdropSizeChanged)
+        end
+        if type(parent) == "table" and parent.__secretRect then M.__layOut(f) end
         -- Frame level is arithmetic in production (the drag handle sits 50 above its anchor), so it
         -- answers a real number (fidelity rule 2) and records what was set. The default below — a
         -- frame with no explicit level sits one above its parent's CURRENT level at creation — is

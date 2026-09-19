@@ -164,14 +164,21 @@ end
 
 --- Place the icon's `size` box at `side` ("LEFT" | "RIGHT") of `host`: the icon border (am.iconBorder)
 --- takes the whole box and the art (am.icon) sits inside it, inset by the border's thickness, as
---- modules/Style_Icons.lua's layoutIcon does, so a thick border never hides the art.
-function Style.LayoutIcon(host, am, s, sdef, side, size)
+--- modules/Style_Icons.lua's layoutIcon does, so a thick border never hides the art. `guard` names the
+--- border for Style.GuardedBorder, so a refused border costs the border alone; without it a refusal
+--- raises to the caller, whose own guard decides what it costs (modules/Style_Text.lua's icon block).
+function Style.LayoutIcon(host, am, s, sdef, side, size, guard)
     local inset = Style.IconInset(s, sdef)
     am.iconBorder:ClearAllPoints()
     am.iconBorder:SetSize(size, size)
     am.iconBorder:SetPoint(side, host, side, 0, 0)
-    Style.ApplyBorder(am.iconBorder, inset > 0, Style.OrTemplate(s.iconBorderStyle, sdef.iconBorderStyle), inset,
-        s.iconBorderColor or sdef.iconBorderColor, s.useClassColorIconBorder)
+    local style = Style.OrTemplate(s.iconBorderStyle, sdef.iconBorderStyle)
+    local color = s.iconBorderColor or sdef.iconBorderColor
+    if guard then
+        Style.GuardedBorder(guard, am.iconBorder, inset > 0, style, inset, color, s.useClassColorIconBorder)
+    else
+        Style.ApplyBorder(am.iconBorder, inset > 0, style, inset, color, s.useClassColorIconBorder)
+    end
 
     local art = math.max(0, size - 2 * inset)
     am.icon:Show()
@@ -286,19 +293,153 @@ function Style.PiecePadding(t, tdef)
     return got
 end
 
---- Dress a BackdropTemplate frame as an element border.
+-- ---------------------------------------------------------------------------
+-- Element borders (B2-3)
+-- ---------------------------------------------------------------------------
+-- A border frame covers an aura button (or its icon's box), and once the engine has laid the button
+-- out, its size and every size anchored to it read SECRET. Blizzard's Backdrop does arithmetic on the
+-- frame's size (Blizzard_SharedXML/Backdrop.lua:226, SetupTextureCoordinates), on every SetBackdrop
+-- and, from BackdropTemplate's OnSizeChanged script, on every resize, so a restyle of a live button
+-- raised there (docs/midnight-quirks.md, "A backdrop on an engine button reads a secret size"). So:
+--   * Solid (the default, WHITE8X8) is drawn with four strip textures of our own, each anchored
+--     between two corners of the border frame, its thickness a plain config number: no size is read.
+--   * Any other style keeps a backdrop, on a frame of its own (`__amBackdrop`): a PLAIN frame with
+--     BackdropTemplateMixin mixed in, so no OnSizeChanged script exists to run the arithmetic on a
+--     resize. SetBackdrop is applied only while that frame's size reads as a plain number, and only
+--     when the edge or size changed; otherwise the backdrop last applied stays and is recolored
+--     (SetBackdropBorderColor does no arithmetic). A live button therefore shows a new edge or size
+--     after its next rebuild or /reload.
+-- The border frame itself is a plain frame too (Style.NewBorder), never a BackdropTemplate.
+
+-- The four strips: the two corners each runs between, the setter its thickness goes through, and
+-- whether it is a side, which stops a thickness short of each end so no corner is drawn twice.
+local BORDER_STRIPS = {
+    { "TOPLEFT", "TOPRIGHT", "SetHeight" },
+    { "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+    { "TOPLEFT", "BOTTOMLEFT", "SetWidth", true },
+    { "TOPRIGHT", "BOTTOMRIGHT", "SetWidth", true },
+}
+
+local SOLID_EDGE = C.WHITE_TEXTURE:lower()
+
+--- The four strip textures of `frame`'s Solid border, built on first use.
+local function borderStrips(frame)
+    local strips = frame.__amStrips
+    if strips then return strips end
+    strips = {}
+    for i in ipairs(BORDER_STRIPS) do
+        local strip = frame:CreateTexture(nil, "BORDER")
+        strip:Hide()
+        strips[i] = strip
+    end
+    frame.__amStrips = strips
+    return strips
+end
+
+--- A border frame on `parent`: a plain frame, never a BackdropTemplate (whose OnSizeChanged script
+--- reads the size), with its Solid strips built now, with the element's other regions.
+function Style.NewBorder(parent)
+    local border = CreateFrame("Frame", nil, parent)
+    borderStrips(border)
+    return border
+end
+
+--- Whether a border style draws as Solid: the style this addon registers, or any key whose media is
+--- the same flat texture.
+local function isSolid(styleKey, edge)
+    return styleKey == "Solid" or (type(edge) == "string" and edge:lower() == SOLID_EDGE)
+end
+
+--- Lay `frame`'s strips at thickness `size` and paint them (r, g, b, a), or hide them (`show` false).
+local function drawStrips(frame, show, size, r, g, b, a)
+    local strips = frame.__amStrips
+    if not show then
+        if strips then
+            for _, strip in ipairs(strips) do strip:Hide() end
+        end
+        return
+    end
+    strips = borderStrips(frame)
+    for i, e in ipairs(BORDER_STRIPS) do
+        local strip = strips[i]
+        local from, to = 0, 0
+        if e[4] then from, to = -size, size end
+        strip:ClearAllPoints()
+        strip:SetPoint(e[1], frame, e[1], 0, from)
+        strip:SetPoint(e[2], frame, e[2], 0, to)
+        strip[e[3]](strip, size)
+        strip:SetColorTexture(r, g, b, a)
+        strip:Show()
+    end
+end
+
+--- Whether `f`'s width and height both read as plain numbers now (a laid-out button's do not).
+local function sizeReadable(f)
+    local okW, w = pcall(f.GetWidth, f)
+    local okH, h = pcall(f.GetHeight, f)
+    return okW and okH and NS.Secrets.IsReadableNumber(w) and NS.Secrets.IsReadableNumber(h)
+end
+
+--- The frame `frame`'s backdrop is drawn on, built on first use: a plain frame covering it, with
+--- BackdropTemplateMixin mixed in (no template, so no OnSizeChanged script), at the border's own
+--- level when that level reads plain. Without the mixin it draws nothing.
+local function backdropHost(frame)
+    local host = frame.__amBackdrop
+    if host then return host end
+    host = CreateFrame("Frame", nil, frame)
+    local mixin, mix = _G.BackdropTemplateMixin, _G.Mixin
+    if mixin and mix then mix(host, mixin) end
+    host:SetAllPoints(frame)
+    local ok, level = pcall(frame.GetFrameLevel, frame)
+    if ok and NS.Secrets.IsReadableNumber(level) then host:SetFrameLevel(level) end
+    frame.__amBackdrop = host
+    return host
+end
+
+--- Draw `frame`'s backdrop in `edge` at `size`, colored (r, g, b, a), or hide it (`show` false). The
+--- backdrop is (re)applied only when the edge or size changed and the host's size reads plain.
+local function drawBackdrop(frame, show, edge, size, r, g, b, a)
+    local host = frame.__amBackdrop
+    if not show then
+        if host then host:Hide() end
+        return
+    end
+    host = backdropHost(frame)
+    if not host.SetBackdrop then return end
+    if (host.__amEdge ~= edge or host.__amEdgeSize ~= size) and sizeReadable(host) then
+        host:SetBackdrop({ edgeFile = edge, edgeSize = size })
+        host.__amEdge, host.__amEdgeSize = edge, size
+    end
+    host:SetBackdropBorderColor(r, g, b, a)
+    host:Show()
+end
+
+--- Dress a border frame (Style.NewBorder) as an element border: hidden when off, styled None or
+--- without a positive size; Solid as four strips; any other style as a guarded backdrop. The other
+--- drawing is hidden, so a switch between Solid and another style never shows both.
 function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     if not frame then return end
-    if not show or styleKey == "None" or (tonumber(size) or 0) <= 0 then
+    size = tonumber(size) or 0
+    if not show or styleKey == "None" or size <= 0 then
         frame:Hide()
         return
     end
     local edge = Style.Fetch("border", styleKey, C.FALLBACK_BORDER)
-    if frame.SetBackdrop then
-        frame:SetBackdrop({ edgeFile = edge, edgeSize = tonumber(size) or 1 })
-        frame:SetBackdropBorderColor(Style.Color(stored, useClass))
-    end
+    local r, g, b, a = Style.Color(stored, useClass)
+    local solid = isSolid(styleKey, edge)
+    drawStrips(frame, solid, size, r, g, b, a)
+    drawBackdrop(frame, not solid, edge, size, r, g, b, a)
     frame:Show()
+end
+
+--- Style.ApplyBorder, guarded: a border the client refuses costs the border alone (hidden, and
+--- reported through Style.ReportError as `what`), never the rest of the dress, whose engine bindings
+--- come after it (B2-3).
+function Style.GuardedBorder(what, frame, ...)
+    local ok, err = pcall(Style.ApplyBorder, frame, ...)
+    if ok then return end
+    Style.ReportError(what, err)
+    if frame then pcall(frame.Hide, frame) end
 end
 
 --- Call one engine binding, guarded. A binding that raises — an option this client does not know, an

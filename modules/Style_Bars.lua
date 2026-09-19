@@ -32,12 +32,14 @@ local function build(frame)
     frame.__am = am
     am.style = "bars"
 
-    am.border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    -- Plain frames, never BackdropTemplates: their sizes read secret once the engine lays the button
+    -- out (Style.NewBorder, B2-3).
+    am.border = Style.NewBorder(frame)
     am.border:SetAllPoints(frame)
 
     am.icon = frame:CreateTexture(nil, "ARTWORK")
     -- The icon's own border, around the icon's box; the art is inset inside it (layoutIcon).
-    am.iconBorder = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    am.iconBorder = Style.NewBorder(frame)
     am.bg = frame:CreateTexture(nil, "BACKGROUND")
 
     -- The engine's StatusBar, invisible on purpose (see the file header).
@@ -100,11 +102,11 @@ local function layout(frame, am, b, h)
         am.iconBorder:Hide()
         am.bar:SetAllPoints(frame)
     elseif iconPos == "RIGHT" then
-        Style.LayoutIcon(frame, am, b, D.bars, "RIGHT", iconSize)
+        Style.LayoutIcon(frame, am, b, D.bars, "RIGHT", iconSize, "bar icon border")
         am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
         am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(iconSize + gap), 0)
     else
-        Style.LayoutIcon(frame, am, b, D.bars, "LEFT", iconSize)
+        Style.LayoutIcon(frame, am, b, D.bars, "LEFT", iconSize, "bar icon border")
         am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", iconSize + gap, 0)
         am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     end
@@ -215,8 +217,9 @@ local function applySurfaces(am, b, preview)
         tonumber(b.bgAlpha) or D.bars.bgAlpha)
     am.bg:Show()
 
-    Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, tonumber(b.borderSize) or D.bars.borderSize,
-        b.borderColor, b.useClassColorBorder)
+    -- Guarded (B2-3): a refused border costs the border, never Bars.Bind after it.
+    Style.GuardedBorder("bar border", am.border, b.borderShow, b.borderStyle,
+        tonumber(b.borderSize) or D.bars.borderSize, b.borderColor, b.useClassColorBorder)
 
     am.spark:SetShown(b.spark ~= false)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))

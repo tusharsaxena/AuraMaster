@@ -12,8 +12,13 @@
 -- Any PascalCase method exists, is logged in call order on `__log`, and answers the region itself, as
 -- the kit's stub does. The few answers production branches on are real: IsShown tracks Show, Hide and
 -- SetShown; SetFont answers true (a font the client accepted); GetStatusBarTexture answers one
--- recorder of its own (the bar's moving edge). Per instance, `__answer[name]` replaces an answer,
--- `__absent[name]` makes a method missing, and `__raise[name]` makes it raise.
+-- recorder of its own (the bar's moving edge); CreateTexture answers a new recorder each call, so a
+-- border's four strips (modules/Style.lua's ApplyBorder) are four regions; GetWidth and GetHeight
+-- answer 0, a real number (fidelity rule 2). SetBackdrop does what Blizzard's does to a frame's size
+-- (Blizzard_SharedXML/Backdrop.lua:226, SetupTextureCoordinates): arithmetic on GetWidth and
+-- GetHeight, so a recorder whose size reads secret (tests/wow_mock.lua's __layOut) raises there as
+-- the client does (B2-3). Per instance, `__answer[name]` replaces an answer, `__absent[name]` makes a
+-- method missing, and `__raise[name]` makes it raise.
 
 local new
 
@@ -29,6 +34,20 @@ local ANSWERS = {
     GetStatusBarTexture = function(self)
         self.__edge = self.__edge or new()
         return self.__edge
+    end,
+    CreateTexture = function(self)
+        local tex = new()
+        tex.parent = self
+        return tex
+    end,
+    GetWidth = function() return 0 end,
+    GetHeight = function() return 0 end,
+    SetBackdrop = function(self, info)
+        if type(info) == "table" then
+            local edge = tonumber(info.edgeSize) or 1
+            local _ = self:GetWidth() / edge + self:GetHeight() / edge
+        end
+        return self
     end,
 }
 

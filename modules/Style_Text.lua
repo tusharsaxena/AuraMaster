@@ -135,7 +135,7 @@ local function build(frame)
     am.anim:SetAllPoints(am.clip)
 
     am.icon = am.anim:CreateTexture(nil, "ARTWORK")
-    am.iconBorder = CreateFrame("Frame", nil, am.anim, "BackdropTemplate")
+    am.iconBorder = Style.NewBorder(am.anim)   -- a plain frame, never a BackdropTemplate (B2-3)
     am.area = CreateFrame("Frame", nil, am.anim)
     am.area:SetClipsChildren(true)
     buildDispelTints(am)

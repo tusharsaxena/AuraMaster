@@ -11,6 +11,7 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local B = dofile("tests/region_builder.lua")
+local BS = dofile("tests/border_strips.lua")
 
 local env
 local function E()
@@ -522,16 +523,11 @@ test("text style: an icon on the right insets the area's right edge; none hides 
 end)
 
 test("text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)", function()
-    local NS = E()
     local _, am = dressed(text({ height = 20, icon = "LEFT", iconSize = 20, iconBorderShow = true,
         iconBorderStyle = "Solid", iconBorderSize = 3, iconBorderColor = { r = 1, g = 0, b = 0, a = 1 },
         useClassColorIconBorder = false }), true)
     -- red under: nothing painting am.iconBorder on a Text line (the Icon border rows reach no region)
-    assertTrue(am.iconBorder:IsShown(), "the border shows")
-    local bd = am.iconBorder:__last("SetBackdrop")[1]
-    assertEqual(bd.edgeSize, 3)
-    assertEqual(bd.edgeFile, NS.Style.Fetch("border", "Solid", NS.Constants.FALLBACK_BORDER))
-    assertEqual(am.iconBorder:__joined("SetBackdropBorderColor"), "1,0,0,1")
+    BS.assertSolid(am.iconBorder, 3, "1,0,0,1", "the icon border")
     assertEqual(am.iconBorder:__joined("SetSize"), "20,20", "the border takes the icon's whole box")
     local b = am.iconBorder:__last("SetPoint")
     assertEqual(b[1], "LEFT"); assertTrue(b[2] == am.anim)
@@ -544,7 +540,7 @@ end)
 -- ── a refused icon call on a live re-dress (smoke batch 2, item 7) ─────────────────────────────
 
 --- A live Text element with a bordered left icon, dressed once, then re-dressed live with `region`'s
---- `method` raising (am.iconBorder:SetBackdrop, am.icon:SetSize), in a fresh environment whose client
+--- `method` raising (am.iconBorder:Show, am.icon:SetSize), in a fresh environment whose client
 --- error handler and debug log record. Every log is emptied before the re-dress, so they hold it alone.
 --- `times` re-dresses that many times (default 1).
 local function refusedRedress(region, method, times)
@@ -632,8 +628,8 @@ local function assertTextSurvives(got, needle)
     assertEqual(matching(got.lines, needle), 1, "one debug line: " .. table.concat(got.lines, " | "))
 end
 
-test("text style: an icon border whose SetBackdrop is refused on a live re-dress costs the icon, never the text, and is reported", function()
-    assertTextSurvives(refusedRedress("iconBorder", "SetBackdrop"), "SetBackdrop refused")
+test("text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported", function()
+    assertTextSurvives(refusedRedress("iconBorder", "Show"), "Show refused")
 end)
 
 test("text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported", function()
@@ -641,11 +637,52 @@ test("text style: an icon whose SetSize is refused on a live re-dress costs the 
 end)
 
 test("text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time", function()
-    local got = refusedRedress("iconBorder", "SetBackdrop", 3)
+    local got = refusedRedress("iconBorder", "Show", 3)
     assertTrue(got.ok, tostring(got.err))
     -- red under: geterrorhandler called on every re-dress (a restyle of 40 buttons floods BugSack)
     assertEqual(#got.reported, 1)
-    assertEqual(matching(got.lines, "SetBackdrop refused"), 3)
+    assertEqual(matching(got.lines, "Show refused"), 3)
+end)
+
+-- ── the icon border on a live button (B2-3) ────────────────────────────────────────────────────
+-- Last batch's empty boxes: with the icon border on, a live re-dress (a Width change) raised in
+-- Backdrop.lua:226 on the border's secret size, and the icon block's guard hid the icon. The border is
+-- strips now, and reads no size.
+
+test("text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)", function()
+    local reported, lines = {}, {}
+    local NS, m = dofile("tests/fresh_env.lua")({ before = function(mocks)
+        dofile("tests/text_apis.lua")(mocks)
+        mocks.geterrorhandler = function() return function(err)
+            local n = #reported
+            reported[n + 1] = tostring(err)
+        end end
+    end })
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = tag .. ":" .. fmt:format(...)
+    end
+    local function c(width)
+        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
+            width = width, icon = "LEFT", iconSize = 14, iconBorderShow = true, iconBorderStyle = "Solid",
+            iconBorderSize = 2, iconBorderColor = { r = 0, g = 1, b = 0, a = 1 } } })
+    end
+    local made = {}
+    local frame = B.new(made)
+    B.during(m, made, function() NS.Style.Element(frame, c(200), true) end)
+    local am = frame.__am
+    m.__layOut(frame)
+    for _, r in ipairs(made) do m.__layOut(r) end
+    frame.__log = {}
+    for _, r in ipairs(made) do r.__log = {} end
+    local ok, err = pcall(B.during, m, made, function() NS.Style.Element(frame, c(260), true) end)
+    assertTrue(ok, tostring(err))
+    -- red under: SetBackdrop on the laid-out icon border (the raise the icon block's guard reported)
+    assertEqual(#reported, 0, table.concat(reported, " | "))
+    assertEqual(matching(lines, "text icon"), 0, table.concat(lines, " | "))
+    assertTrue(am.icon:IsShown(), "the icon shows")
+    BS.assertSolid(am.iconBorder, 2, "0,1,0,1", "the icon border")
+    assertTrue(frame:__last("SetSpellName")[1] == am.piece1, "the text is bound")
 end)
 
 -- ── the template ───────────────────────────────────────────────────────────────────────────────

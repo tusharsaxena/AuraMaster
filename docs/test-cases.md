@@ -549,7 +549,7 @@ badge and any count quoted in the docs must agree with it.
 - template: every built-in compiles, and each aura type's list is the pinned one
 - template: a stored template matches a built-in by its text and its justify rule, else none
 
-### test_style.lua (51)
+### test_style.lua (59)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -580,7 +580,15 @@ badge and any count quoted in the docs must agree with it.
 - style: a text's color is its own swatch, or the dress's class when its companion is on
 - style: a missing color paints opaque white rather than raising
 - style: a border is hidden when off, styled None, or without a positive size
-- style: a shown border takes the media edge, its size and its color
+- style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
+- style: a Solid border takes the class color through its companion (B2-3)
+- style: a Solid border under a secret size draws and never raises (B2-3)
+- style: another style draws a backdrop on a frame of its own, with its edge, size and color (B2-3)
+- style: another style applies its backdrop once per edge and size, and again when either moves (B2-3)
+- style: another style under a secret size keeps its last backdrop and only recolors (B2-3)
+- style: a backdrop frame first made under a secret size applies nothing until its size reads plain (B2-3)
+- style: switching between Solid and another style hides the other drawing (B2-3)
+- style: another style on a client without the backdrop mixin draws nothing and never raises
 - style: a binding the client lacks is skipped, and one it refuses costs that binding alone
 - style: a class color is looked for only in the active style's block, text blocks included
 - style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color
@@ -625,7 +633,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (60)
+### test_style_bars.lua (62)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -679,6 +687,8 @@ badge and any count quoted in the docs must agree with it.
 - bars: back to static on a button holding no aura, the background the engine hid shows again (feedback #7)
 - bars: the refresh-window highlight is bound only when turned on, and always cleared first
 - bars: with the time's class color on, the running-out curve returns to the class color, one curve per container
+- bars: a live re-dress with both borders on under secret geometry draws them and re-binds everything (B2-3)
+- bars: a border the client refuses costs that border alone: every binding still runs, and it is reported (B2-3)
 - bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
 - bars: a preview with a missing icon gap measures the template's gap, as the layout does
 - bars: a missing icon size is the template's, in the layout and in the preview alike
@@ -688,7 +698,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: a dispel-colored preview paints the Magic color, since no real aura names a type
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (25)
+### test_style_icons.lua (28)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -712,11 +722,14 @@ badge and any count quoted in the docs must agree with it.
 - icons: the refresh-window highlight is bound only when on, in the pandemic color
 - icons: an icon's buttons get the shared mouse behavior
 - icons: a restyle re-dresses the regions it built, and builds none
+- icons: a live re-dress with the border on under secret geometry re-binds the highlight and the time color (B2-3)
+- icons: a border the client refuses costs the border alone: every binding still runs, and it is reported (B2-3)
+- icons: a live resize under secret geometry runs no backdrop arithmetic (B2-3)
 - icons: a preview icon's cooldown starts as long ago as its placeholder has run
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (53)
+### test_style_text.lua (54)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -750,9 +763,10 @@ badge and any count quoted in the docs must agree with it.
 - text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
 - text style: an icon on the right insets the area's right edge; none hides it and binds nothing
 - text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
-- text style: an icon border whose SetBackdrop is refused on a live re-dress costs the icon, never the text, and is reported
+- text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported
 - text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
 - text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time
+- text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)
 - text style: a refused stored template draws the default one and logs it once
 - text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
 - text style: the structure key carries the template's shape, so a live shape change gets new buttons
@@ -1134,7 +1148,7 @@ badge and any count quoted in the docs must agree with it.
 - layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
 - layout: choosing a facing Point redraws the tab with the hint on the next frame
 
-### test_pages_bars.lua (13)
+### test_pages_bars.lua (14)
 
 - bars: every tab of an icons container carries the muted-red note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
@@ -1148,6 +1162,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
 - bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
+- pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
 ### test_pages_icons.lua (8)
@@ -1321,11 +1336,11 @@ badge and any count quoted in the docs must agree with it.
 | test_lifecycle.lua | 10 |
 | test_anchors.lua | 72 |
 | test_texttemplate.lua | 26 |
-| test_style.lua | 51 |
+| test_style.lua | 59 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 60 |
-| test_style_icons.lua | 25 |
-| test_style_text.lua | 53 |
+| test_style_bars.lua | 62 |
+| test_style_icons.lua | 28 |
+| test_style_text.lua | 54 |
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -1340,7 +1355,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 43 |
 | test_pages_layout.lua | 27 |
-| test_pages_bars.lua | 13 |
+| test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 28 |
 | test_pages_about.lua | 3 |
@@ -1356,4 +1371,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1142** |
+| **Total** | **1157** |

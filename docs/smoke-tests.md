@@ -901,3 +901,22 @@ detail, the step points at it rather than repeating it.
      Icons and Text lists Alpha, beta, zeta — capitals do not sort first — each still followed by its
      gray "(unit, aura type, style)"; Containers → Copy settings from's source and Layout → Anchor →
      Another container (None first) list in the same order. `/am containers` keeps the creation order.
+158. **The owner's repro: an icon border and the pandemic settings (B2-3).** `/console scriptErrors 1`,
+     an Icons container with auras showing, Icons → Border → Show border on (Solid, thickness 2). Then,
+     out of combat, change Icons → Pandemic one row at a time: Highlight the pandemic window off and on,
+     the highlight color, Recolor the time in the pandemic window, the window's seconds → **no Lua
+     error** (none naming `Backdrop.lua`), the border keeps drawing, and an aura inside its pandemic
+     window still highlights and recolors its time. Repeat with the border off: the same.
+159. **A Text icon border and Width (B2-3).** The Text container with Icon position Left and its icon
+     border on (thickness 2, red). Change Text → General → **Width (px)** several times, by slider and
+     typed → every line keeps its text, its icon and the red border; no empty rows, no `[Style] text
+     icon failed` debug line, no Lua error.
+160. **A bar border (B2-3).** A bar container with Background & border → Show border on, and Icon →
+     Icon border on. Change the bar's Width, then its Pandemic rows → both borders keep drawing at their
+     thickness and color, no Lua error, and the pandemic highlight still shows.
+161. **A border style other than Solid (B2-3).** On any of the three, pick another Border style (a
+     media pack's edge, or "Blizzard Tooltip") → no Lua error; the preview (test mode) draws it at once,
+     while the aura buttons already on screen keep their old look until `/reload`, then draw it. Change
+     its color → the live buttons recolor at once. Hover Border style: the tooltip says Solid redraws at
+     once and any other texture after a `/reload`. Back to Solid → the strips draw at once and no
+     texture edge is left under them.

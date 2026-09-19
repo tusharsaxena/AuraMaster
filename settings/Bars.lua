@@ -95,8 +95,11 @@ local iconBorder = H.BorderGroup({
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
+-- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
+-- (modules/Style.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
 for _, row in ipairs(iconBorder) do
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
+    if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
 end
 NS.RegisterSchemaRows(iconBorder)
 
@@ -124,9 +127,13 @@ local BG_TOOLTIPS = {
 }
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
 NS.RegisterSchemaRows(bg)
-NS.RegisterSchemaRows(H.BorderGroup({
+local border = H.BorderGroup({
     prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = UNIT,
-}))
+})
+for _, row in ipairs(border) do
+    if row.path == P .. "borderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
+end
+NS.RegisterSchemaRows(border)
 
 -- ── Text ──────────────────────────────────────────────────────────────────────────────────────
 

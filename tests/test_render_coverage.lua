@@ -132,14 +132,25 @@ local function isRecorder(v)
     return type(v) == "table" and rawget(v, "__log") ~= nil
 end
 
---- Every recorder that belongs to one dressed element: the element, its regions, a bar's edge.
+--- The recorders a region owns beside itself, each with the suffix it is named by: a bar's moving
+--- edge, and a border's four Solid strips (modules/Style.lua's ApplyBorder, B2-3).
+local function ownedBy(r)
+    local out = {}
+    local edge = rawget(r, "__edge")
+    if edge then push(out, { ".edge", edge }) end
+    for i, strip in ipairs(rawget(r, "__amStrips") or {}) do
+        if isRecorder(strip) then push(out, { ".strip" .. i, strip }) end
+    end
+    return out
+end
+
+--- Every recorder that belongs to one dressed element: the element, its regions and what they own.
 local function recordersOf(frame)
     local list = { frame }
     for _, r in pairs(frame.__am or {}) do
         if isRecorder(r) then
             push(list, r)
-            local edge = rawget(r, "__edge")
-            if edge then push(list, edge) end
+            for _, o in ipairs(ownedBy(r)) do push(list, o[2]) end
         end
     end
     return list
@@ -164,8 +175,9 @@ local function signature(frame, names)
     for k, v in pairs(frame.__am or {}) do
         if isRecorder(v) then
             push(keys, k)
-            local edge = rawget(v, "__edge")
-            if edge and not names[edge] then names[edge] = names[v] .. ".edge" end
+            for _, o in ipairs(ownedBy(v)) do
+                if not names[o[2]] then names[o[2]] = names[v] .. o[1] end
+            end
         end
     end
     table.sort(keys)
@@ -173,8 +185,7 @@ local function signature(frame, names)
     for _, k in ipairs(keys) do
         local r = frame.__am[k]
         push(parts, k .. ":" .. serLog(r, names))
-        local edge = rawget(r, "__edge")
-        if edge then push(parts, k .. ".edge:" .. serLog(edge, names)) end
+        for _, o in ipairs(ownedBy(r)) do push(parts, k .. o[1] .. ":" .. serLog(o[2], names)) end
     end
     return table.concat(parts, "\n")
 end

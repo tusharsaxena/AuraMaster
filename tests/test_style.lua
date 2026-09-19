@@ -586,25 +586,133 @@ test("style: a border is hidden when off, styled None, or without a positive siz
         local f = R()
         f:Show()
         NS.Style.ApplyBorder(f, c[1], c[2], c[3], { r = 1, g = 1, b = 1, a = 1 }, false)
-        -- red under: ApplyBorder drawing a backdrop it was told not to
+        -- red under: ApplyBorder drawing a border it was told not to
         assertFalse(f:IsShown(), c[4])
         assertEqual(f:__count("SetBackdrop"), 0, c[4])
+        assertNil(f.__amBackdrop, c[4] .. ": no backdrop frame")
     end
 end)
 
-test("style: a shown border takes the media edge, its size and its color", function()
+-- ── borders never read a secret size (B2-3) ───────────────────────────────────────────────────
+-- An aura button's border fills the button, and once the engine has laid the button out its size
+-- reads secret; Blizzard's Backdrop does arithmetic on that size (Backdrop.lua:226), so a restyle
+-- raised. Solid is drawn with four strips of our own and reads no size; any other style keeps a
+-- backdrop, applied only while its size reads plain (tests/wow_mock.lua's __layOut, __SECRET).
+
+local BS = dofile("tests/border_strips.lua")
+local strips, assertSolid = BS.strips, BS.assertSolid
+
+test("style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)", function()
+    local f = R()
+    NS.Style.ApplyBorder(f, true, "Solid", 3, { r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, false)
+    assertTrue(f:IsShown())
+    -- red under: ApplyBorder drawing Solid with SetBackdrop (arithmetic on a size that may be secret)
+    assertSolid(f, 3, "0.1,0.2,0.3,0.4", "solid")
+    assertEqual(f:__count("SetBackdrop"), 0, "no backdrop on the border")
+    assertNil(f.__amBackdrop, "and no backdrop frame")
+    local s = strips(f)
+    local top = s[1]:__calls("SetPoint")
+    assertEqual(top[1][1], "TOPLEFT"); assertTrue(top[1][2] == f); assertEqual(top[2][1], "TOPRIGHT")
+    local left = s[3]:__calls("SetPoint")
+    -- red under: the sides running the full height (the corners drawn twice, darker at any alpha)
+    assertEqual(left[1][1], "TOPLEFT"); assertEqual(left[1][5], -3, "the left side starts below the top")
+    assertEqual(left[2][1], "BOTTOMLEFT"); assertEqual(left[2][5], 3, "and stops above the bottom")
+end)
+
+test("style: a Solid border takes the class color through its companion (B2-3)", function()
+    local f = R()
+    NS.Style.ApplyBorder(f, true, "Solid", 1, { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, true)
+    local r, g, b, a = NS.ResolveColor({ r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, true, "player")
+    assertTrue(r ~= 0.1, "the harness's player has a class color")
+    -- red under: the strips painted from the swatch whatever the companion says
+    assertEqual(strips(f)[1]:__joined("SetColorTexture"), table.concat({ r, g, b, a }, ","))
+end)
+
+test("style: a Solid border under a secret size draws and never raises (B2-3)", function()
+    local NS2, m2 = fresh()
+    local f = R()
+    m2.__layOut(f)
+    local ok, err = pcall(NS2.Style.ApplyBorder, f, true, "Solid", 2, { r = 1, g = 0, b = 0, a = 1 }, false)
+    -- red under: SetBackdrop on the border (the reported Backdrop.lua:226 raise)
+    assertTrue(ok, tostring(err))
+    assertSolid(f, 2, "1,0,0,1", "secret")
+end)
+
+test("style: another style draws a backdrop on a frame of its own, with its edge, size and color (B2-3)", function()
     local f = R()
     NS.Style.ApplyBorder(f, true, "Uninstalled", 2, { r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, false)
     assertTrue(f:IsShown())
-    local bd = f:__last("SetBackdrop")[1]
+    local host = f.__amBackdrop
+    -- red under: the backdrop set on the border frame itself (its template's OnSizeChanged reads the size)
+    assertTrue(host ~= nil, "a backdrop frame")
+    assertTrue(host:IsShown())
     -- red under: ApplyBorder without the fallback edge (a missing media key draws no border)
-    assertEqual(bd.edgeFile, C.FALLBACK_BORDER)
-    assertEqual(bd.edgeSize, 2)
-    assertEqual(f:__joined("SetBackdropBorderColor"), "0.1,0.2,0.3,0.4")
-    f = R()
-    f.__absent.SetBackdrop = true
-    local ok = pcall(NS.Style.ApplyBorder, f, true, "Solid", 1, {}, false)
-    assertTrue(ok, "a frame without the backdrop mixin")
+    assertEqual(host.backdropInfo.edgeFile, C.FALLBACK_BORDER)
+    assertEqual(host.backdropInfo.edgeSize, 2)
+    assertEqual(table.concat(host.__borderColor, ","), "0.1,0.2,0.3,0.4")
+    for i, strip in ipairs(strips(f)) do assertFalse(strip:IsShown(), "strip " .. i .. " hidden") end
+    -- red under: the backdrop frame given the template's size script (arithmetic on every resize)
+    assertNil(host:GetScript("OnSizeChanged"), "no size script on the backdrop frame")
+end)
+
+test("style: another style applies its backdrop once per edge and size, and again when either moves (B2-3)", function()
+    local f = R()
+    NS.Style.ApplyBorder(f, true, "Uninstalled", 2, { r = 1, g = 1, b = 1, a = 1 }, false)
+    NS.Style.ApplyBorder(f, true, "Uninstalled", 2, { r = 1, g = 0, b = 0, a = 1 }, false)
+    local host = f.__amBackdrop
+    -- red under: SetBackdrop on every dress (the arithmetic re-run for a recolor)
+    assertEqual(host.__backdropApplies, 1, "unchanged: applied once")
+    assertEqual(table.concat(host.__borderColor, ","), "1,0,0,1", "and recolored")
+    NS.Style.ApplyBorder(f, true, "Uninstalled", 4, { r = 1, g = 0, b = 0, a = 1 }, false)
+    assertEqual(host.__backdropApplies, 2, "a new size applies again")
+    assertEqual(host.backdropInfo.edgeSize, 4)
+end)
+
+test("style: another style under a secret size keeps its last backdrop and only recolors (B2-3)", function()
+    local NS2, m2 = fresh()
+    local f = R()
+    NS2.Style.ApplyBorder(f, true, "Uninstalled", 2, { r = 1, g = 1, b = 1, a = 1 }, false)
+    local host = f.__amBackdrop
+    m2.__layOut(f)
+    m2.__layOut(host)
+    local ok, err = pcall(NS2.Style.ApplyBorder, f, true, "Uninstalled", 5, { r = 0, g = 1, b = 0, a = 1 }, false)
+    -- red under: SetBackdrop re-run on a size that reads secret (the reported raise)
+    assertTrue(ok, tostring(err))
+    assertEqual(host.__backdropApplies, 1, "not re-applied")
+    assertEqual(host.backdropInfo.edgeSize, 2, "the last applied backdrop stands")
+    assertEqual(table.concat(host.__borderColor, ","), "0,1,0,1", "recolored")
+    assertTrue(host:IsShown())
+end)
+
+test("style: a backdrop frame first made under a secret size applies nothing until its size reads plain (B2-3)", function()
+    local NS2, m2 = fresh()
+    local f = R()
+    m2.__layOut(f)
+    local ok, err = pcall(NS2.Style.ApplyBorder, f, true, "Uninstalled", 2, { r = 1, g = 1, b = 1, a = 1 }, false)
+    assertTrue(ok, tostring(err))
+    -- a frame made under a laid-out one reads secret too (tests/wow_mock.lua's CreateFrame)
+    assertNil(f.__amBackdrop.__backdropApplies, "no backdrop applied on a secret size")
+end)
+
+test("style: switching between Solid and another style hides the other drawing (B2-3)", function()
+    local f = R()
+    local color = { r = 1, g = 1, b = 1, a = 1 }
+    NS.Style.ApplyBorder(f, true, "Solid", 1, color, false)
+    NS.Style.ApplyBorder(f, true, "Uninstalled", 1, color, false)
+    -- red under: the strips left drawn under the backdrop
+    for i, strip in ipairs(strips(f)) do assertFalse(strip:IsShown(), "to another: strip " .. i .. " hidden") end
+    assertTrue(f.__amBackdrop:IsShown(), "the backdrop shows")
+    NS.Style.ApplyBorder(f, true, "Solid", 1, color, false)
+    -- red under: the backdrop frame left shown over the strips
+    assertFalse(f.__amBackdrop:IsShown(), "back to Solid: the backdrop hidden")
+    assertSolid(f, 1, "1,1,1,1", "back to Solid")
+end)
+
+test("style: another style on a client without the backdrop mixin draws nothing and never raises", function()
+    local NS2 = fresh({ before = function(m) m.BackdropTemplateMixin = nil end })
+    local f = R()
+    local ok, err = pcall(NS2.Style.ApplyBorder, f, true, "Uninstalled", 1, {}, false)
+    assertTrue(ok, tostring(err))
     assertTrue(f:IsShown())
 end)
 

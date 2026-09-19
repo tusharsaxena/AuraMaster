@@ -468,11 +468,20 @@ return value.
   per button (`Container:Restyle`), and a Text line's icon block per dress, so a refusal there costs
   the button, or only the icon; neither is silent: `Style.ReportError` writes a `[Style]` debug line
   every time and hands the error to the client's error handler once per session per message.
+- **No aura-button border reads its size** (B2-3). A laid-out engine button's size reads secret, and
+  so does every frame anchored to it, while Blizzard's Backdrop does arithmetic on the frame's size on
+  every `SetBackdrop` and from `BackdropTemplate`'s `OnSizeChanged` (line 226 of Blizzard's
+  `Backdrop.lua`). Every border frame is a plain frame (`Style.NewBorder`); Solid, the default, is
+  drawn with four strip textures, and any other style with a backdrop on a plain frame that mixes in
+  `BackdropTemplateMixin` without the template's size script, applied only while its size reads plain
+  and recolored otherwise (`Style.ApplyBorder`). The Icons and Bars border steps run through
+  `Style.GuardedBorder`, so a refused border never costs the engine bindings after it
+  (docs/midnight-quirks.md).
 - **Secret values never reach a string operation.** Only `modules/TimedSpells.lua` reads aura data,
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:671-673`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:812-814`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is
@@ -495,6 +504,11 @@ return value.
   button in combat. The Text page offers three opt-in stand-ins instead (Font → Dispel type,
   feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
   backdrop and an edge the engine tints (`modules/Style_Text.lua`).
+- **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
+  backdrop does arithmetic on the button's size, which reads secret once the engine has laid the button
+  out, so a new texture or thickness is applied on a new button, a rebuild or a `/reload`; its color
+  changes at once, and Solid redraws at once (`Style.ApplyBorder`, B2-3). The Border style tooltip says
+  so.
 - **A Text token can be used once, the duration tokens must sit together, and there is no caster
   token.** The engine has one binding per field (one spell name, one stack count, one dispel type, one
   duration text whose format holds every duration value); it has none for the caster

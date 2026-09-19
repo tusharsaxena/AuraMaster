@@ -135,7 +135,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:158`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:160`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -146,7 +146,7 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:145`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:147`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
@@ -196,8 +196,8 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:338`), and then adds again
-(`modules/Style_Bars.lua:310`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:479`), and then adds again
+(`modules/Style_Bars.lua:313`, `modules/Style_Icons.lua:153`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -306,9 +306,46 @@ handle's label is measured on a detached font string of ours (`Anchors.__labelMe
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
-readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:64`
-and `modules/Style_Icons.lua:59`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
+readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:66`
+and `modules/Style_Icons.lua:61`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
 created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
+
+## A backdrop on an engine button reads a secret size (B2-3)
+
+**What was seen.** With an Icons container's border on, a change to its pandemic-window settings
+raised "attempt to perform arithmetic on local 'width' (a secret number value, while execution
+tainted by 'AuraMaster')" at line 226 of Blizzard's `Blizzard_SharedXML/Backdrop.lua`, from
+`SetBackdrop` in `Style.ApplyBorder`, and the icons stopped highlighting while bars kept theirs. A Text
+line with its icon border on drew empty rows after a Width change (smoke batch 2, item 7), most likely
+for the same reason.
+
+**The restriction.** Once the engine has laid a button out, the button's size reads secret, and so
+does the size of every frame anchored to it: the border frame covering the button, a bar's icon box, a
+Text line's icon border. Blizzard's Backdrop does arithmetic on the frame's size
+(`SetupTextureCoordinates`, width divided by the edge size) on every `SetBackdrop`, and again from
+`BackdropTemplate`'s own `OnSizeChanged` script whenever the frame is resized. A button's first dress
+runs before the layout, which is why a border first drawn looked right and only a restyle raised.
+The restyle stopped at the border, after `Style.ClearAdditiveBindings` had emptied the pandemic list
+and before `Icons.Bind` could add it back: that is the lost highlight.
+
+**What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
+`modules/Style.lua:420`):
+- **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
+  two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
+  read, so a Solid border redraws on every restyle.
+- **Any other style** keeps a backdrop, on a frame of its own: a plain frame with
+  `BackdropTemplateMixin` mixed in, never a `BackdropTemplate`, so no `OnSizeChanged` script exists to
+  run the arithmetic on a resize. `SetBackdrop` runs only when the edge or thickness changed and the
+  frame's width and height both read as plain numbers (`pcall` plus `NS.Secrets.IsReadableNumber`);
+  otherwise the backdrop last applied stays and is only recolored (`SetBackdropBorderColor` does no
+  arithmetic). A new texture or thickness therefore reaches a live button when it is next built: a new
+  button, a rebuild (a style change) or a `/reload`. The Border style tooltip says so.
+- Every border frame is a plain frame (`Style.NewBorder`). Switching between Solid and another style
+  hides the other drawing.
+- **Defense in depth.** The border steps of `Icons.Apply` and `Bars.Apply` (the bar border and the icon
+  border) run through `Style.GuardedBorder`: a border the client still refuses costs the border
+  (hidden, and reported through `Style.ReportError`), never the engine bindings after it. A Text line's
+  icon border stays inside its icon block's guard.
 
 ## An empty duration run still takes a space (open, feedback #5)
 
