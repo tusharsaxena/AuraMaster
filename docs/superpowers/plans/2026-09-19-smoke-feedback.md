@@ -110,15 +110,15 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Tasks 1, 2 done; Task 3 in fix round 1; Task 5 in review; next Task 4.
+**Current position:** Tasks 1, 2, 5 done; Task 3 in fix round 1; Task 4 committed, in review; next Task 6.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
 | 1 | E — secret geometry: the handle label measured detached; every geometry read guarded | AuraMaster | done | 0af5c7a + fix round |
 | 2 | #3 — Restore beside the Category dropdown | AuraMaster | done | 2a5181f |
 | 3 | #2 — the Containers page's picker and New in the band above the strip | AuraMaster | in review |  |
-| 4 | #8 — a TEST marker on the handle while test mode is on | AuraMaster | todo | |
-| 5 | #10 — Show all / Hide all on Filters → Categories | AuraMaster | in review |  |
+| 4 | #8 — a TEST marker on the handle while test mode is on | AuraMaster | in review |  |
+| 5 | #10 — Show all / Hide all on Filters → Categories | AuraMaster | done | 5900198 |
 | 6 | #5a — token output: bare percents, no stray whitespace, the `( )` probe | AuraMaster | todo | |
 | 7 | #5b — built-in templates, Custom, and the Preview line | AuraMaster | todo | |
 | 8 | #1 — Center lays a multi-piece line out as stacked rows | AuraMaster | todo | |

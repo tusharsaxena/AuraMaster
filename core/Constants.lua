@@ -149,6 +149,11 @@ C.TOOLTIP_ANCHOR_LABELS = {
 -- than the title gold. The AARRGGBB body of a "|c" escape.
 C.NOTICE_COLOR = "ffc8a85a"
 
+-- The TEST tag on a container's drag handle while test mode is on (feedback #8, modules/Anchors.lua's
+-- handleText): orange, so the placeholders cannot be mistaken for live auras. The AARRGGBB body of a
+-- "|c" escape.
+C.TEST_TAG_COLOR = "ffff8000"
+
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "Short (1 unit)",

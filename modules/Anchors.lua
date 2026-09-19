@@ -531,6 +531,15 @@ local function clampToHandle(container, cfg, overhang)
     setClamp(container, left, right, top, bottom)
 end
 
+--- The handle's label: the container's name, and while test mode is on an orange TEST tag after it
+--- (feedback #8), so the placeholders on screen read as placeholders.
+local function handleText(cfg)
+    if not cfg then return "" end
+    local name = cfg.name or ""
+    if not (NS.State and NS.State.testMode) then return name end
+    return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
+end
+
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
 --- name sets its width and the layout's growth sets its side. Placing the strip and clamping the
 --- anchor are layout work beside an aura engine's parent, so neither runs under lockdown: the handle
@@ -543,7 +552,7 @@ function Anchors.UpdateHandle(container, show)
     if not handle then return end
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
-    local text = cfg and cfg.name or ""
+    local text = handleText(cfg)
     handle.label:SetText(text)
     if not InCombatLockdown() then
         clampToHandle(container, cfg, show and placeHandle(container, cfg, text) or nil)

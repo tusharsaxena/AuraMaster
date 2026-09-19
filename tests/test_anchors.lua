@@ -1204,3 +1204,28 @@ test("anchors: a drag whose offsets read secret saves nothing (E)", function()
     assertEqual(writes, 0)
     assertEqual(NS.Database.FindContainer(1).position.x, NS.STARTER_CONTAINERS[1].position.x)
 end)
+
+-- ── the TEST marker (feedback #8) ─────────────────────────────────────────────────────────────
+
+test("handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local texts = {}
+    rawset(h, "SetText", function(_, s)
+        local n = #texts
+        texts[n + 1] = s
+    end)
+    local name = NS.Database.FindContainer(1).name
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], name, "no tag outside test mode")
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    -- red under: UpdateHandle writing the bare name whatever the mode (no marker on the placeholders)
+    assertEqual(texts[#texts], name .. "  |c" .. NS.Constants.TEST_TAG_COLOR .. NS.L["TEST"] .. "|r")
+    assertEqual(NS.Constants.TEST_TAG_COLOR, "ffff8000", "orange")
+    NS.Preview.SetTestMode(false)
+    mocks.__fireTimers()
+    -- red under: a tag left behind once test mode ends
+    assertEqual(texts[#texts], name, "the tag goes when test mode does")
+end)

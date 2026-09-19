@@ -584,3 +584,6 @@ L["Show all"] = "Show all"
 L["Hide all"] = "Hide all"
 L["Set every category in this section to Show, for this container."] = "Set every category in this section to Show, for this container."
 L["Set every category in this section to Hide, for this container."] = "Set every category in this section to Hide, for this container."
+
+-- The smoke-test feedback batch (2026-09-19).
+L["TEST"] = "TEST"
