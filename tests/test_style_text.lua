@@ -110,6 +110,94 @@ test("text style: the vertical justify picks the top, middle or bottom anchor po
     assertEqual(pieces(am)[2]:__last("SetPoint")[1], "TOPRIGHT")
 end)
 
+-- ── the padding between pieces (smoke batch 2, item 8) ─────────────────────────────────────────
+
+--- How many characters the measuring string was last given.
+local function chars(fs)
+    return fs:__last("SetText")[1]:len()
+end
+
+--- A fresh environment whose padding is measured on a recorder answering 6 per character plus 2 of
+--- padding per string, so W("a") + W("b") - W("ab") is 2; `answer` replaces the width it answers.
+local function padded(answer)
+    local NS, m = dofile("tests/fresh_env.lua")({ before = dofile("tests/text_apis.lua") })
+    local fs = dofile("tests/region_recorder.lua")()
+    fs.__answer.GetStringWidth = answer or function(self)
+        return chars(self) * 6 + 2
+    end
+    NS.Style.__measurer = function() return fs end
+    local function dress(c)
+        local made = {}
+        local frame = B.new(made)
+        B.during(m, made, function() NS.Style.Element(frame, c) end)
+        return frame.__am
+    end
+    local function textCfg(over)
+        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = over })
+    end
+    return NS, fs, dress, textCfg
+end
+
+test("text style: each chained piece is pulled back over the previous one by the measured padding (item 8)", function()
+    local _, _, dress, textCfg = padded()
+    local am = dress(textCfg({ template = "$spellname$-$stacks$", justifyH = "LEFT", x = 0 }))
+    local p = pieces(am)
+    -- red under: layoutChain chaining at offset 0 (the client's padding between every two pieces)
+    assertEqual(p[1]:__last("SetPoint")[4], 0, "the head keeps the line's x")
+    for i = 2, 3 do assertEqual(p[i]:__last("SetPoint")[4], -2, "piece " .. i) end
+    am = dress(textCfg({ template = "$spellname$-$stacks$", justifyH = "RIGHT" }))
+    p = pieces(am)
+    -- a Right line is laid from its last piece back: each earlier piece moves right by the padding
+    for i = 1, 2 do assertEqual(p[i]:__last("SetPoint")[4], 2, "piece " .. i) end
+end)
+
+test("text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)", function()
+    local width = 0
+    local NS, fs = padded(function(self)
+        if width > 0 then return chars(self) * width + 3 end
+        return width
+    end)
+    local t, tdef = { fontSize = 12 }, NS.CONTAINER_TEMPLATE.text.font
+    -- red under: a string not yet laid out (every width 0) cached as a padding of 0 for good
+    assertEqual(NS.Style.PiecePadding(t, tdef), 0)
+    width = 5
+    assertEqual(NS.Style.PiecePadding(t, tdef), 3, "measured once it answers")
+    fs.__answer.GetStringWidth = function() return nil end
+    assertEqual(NS.Style.PiecePadding({ fontSize = 13 }, tdef), 0, "no number: 0")
+    fs.__raise.GetStringWidth = true
+    -- red under: measurePadding unguarded (the raise aborts the dress)
+    assertEqual(NS.Style.PiecePadding({ fontSize = 14 }, tdef), 0, "a raise: 0")
+    fs.__raise.GetStringWidth = nil
+    fs.__answer.GetStringWidth = function(self) return chars(self) * 6 - 1 end
+    assertEqual(NS.Style.PiecePadding({ fontSize = 15 }, tdef), 0, "kerned tighter than its parts: never negative")
+end)
+
+test("text style: the padding is measured once per font, size and flags (item 8)", function()
+    local NS, fs = padded()
+    local tdef = NS.CONTAINER_TEMPLATE.text.font
+    assertEqual(NS.Style.PiecePadding({ fontSize = 12 }, tdef), 2)
+    local measured = fs:__count("SetText")
+    NS.Style.PiecePadding({ fontSize = 12 }, tdef)
+    -- red under: PiecePadding measuring on every dress
+    assertEqual(fs:__count("SetText"), measured, "cached")
+    NS.Style.PiecePadding({ fontSize = 12, fontFlags = "OUTLINE" }, tdef)
+    assertTrue(fs:__count("SetText") > measured, "new flags measure again")
+end)
+
+test("text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)", function()
+    for side, want in pairs({ LEFT = "LEFT", RIGHT = "RIGHT", CENTER = "CENTER" }) do
+        local _, am = dressed(text({ template = "$spellname$-$stacks$", justifyH = side }))
+        -- red under: pieces left at the client's default justify (padding on both sides of each)
+        for i, fs in ipairs(pieces(am)) do
+            local j = fs:__last("SetJustifyH")
+            assertEqual(j and j[1], want, side .. " piece " .. i)
+        end
+    end
+    local _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER" }))
+    local j = pieces(am)[1]:__last("SetJustifyH")
+    assertEqual(j and j[1], "CENTER", "a one-piece Center line")
+end)
+
 test("text style: Center centers a one-piece template as one line, exactly as before (feedback #1)", function()
     local _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER", justifyV = "MIDDLE" }))
     local pt = pieces(am)[1]:__last("SetPoint")

@@ -278,6 +278,7 @@ local function layoutStack(am, s, compiled, h)
     for i, piece in ipairs(compiled.pieces) do
         local fs = am[PIECE[i]]
         fs:ClearAllPoints()
+        fs:SetJustifyH("CENTER")
         if piece.kind == "literal" then
             fs:Hide()
         else
@@ -296,6 +297,9 @@ end
 --- Anchor the chain in the text area: the head piece at the justified edge, nudged by x/y, and each
 --- next piece against the previous one's far edge (LEFT to the previous RIGHT, or the mirror for a
 --- Right-justified line, laid from the last piece back). A stacked line is laid out by layoutStack.
+--- Every piece is justified to the chain's side, and each chained piece is pulled back over the one
+--- before by the font's measured padding (Style.PiecePadding, smoke batch 2 item 8), so two pieces
+--- sit flush instead of showing the client's padding on both sides of each.
 local function layoutChain(am, s, compiled, h)
     if Text.Stacked(s, compiled) then return layoutStack(am, s, compiled, h) end
     local side = s.justifyH or D.justifyH
@@ -304,13 +308,16 @@ local function layoutChain(am, s, compiled, h)
     local n = am.pieceCount
     local first, last, step, near, far = 1, n, 1, "LEFT", "RIGHT"
     if side == "RIGHT" then first, last, step, near, far = n, 1, -1, "RIGHT", "LEFT" end
+    local pull = -step * Style.PiecePadding(s.font or D.font, D.font)
     local head = am[PIECE[first]]
     head:ClearAllPoints()
     head:SetPoint(pointAt(v, side), am.area, pointAt(v, side), x, y)
+    head:SetJustifyH(side)
     for i = first + step, last, step do
         local fs = am[PIECE[i]]
         fs:ClearAllPoints()
-        fs:SetPoint(pointAt(v, near), am[PIECE[i - step]], pointAt(v, far), 0, 0)
+        fs:SetPoint(pointAt(v, near), am[PIECE[i - step]], pointAt(v, far), pull, 0)
+        fs:SetJustifyH(side)
     end
 end
 

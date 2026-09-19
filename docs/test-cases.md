@@ -715,12 +715,16 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (49)
+### test_style_text.lua (53)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
 - text style: Right lays the last piece at the area's right and each earlier piece against the next
 - text style: the vertical justify picks the top, middle or bottom anchor points
+- text style: each chained piece is pulled back over the previous one by the measured padding (item 8)
+- text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)
+- text style: the padding is measured once per font, size and flags (item 8)
+- text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)
 - text style: Center centers a one-piece template as one line, exactly as before (feedback #1)
 - text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)
 - text style: a stacked line's element grows to its rows; Left and Right keep the stored height (feedback #1)
@@ -1315,7 +1319,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 60 |
 | test_style_icons.lua | 25 |
-| test_style_text.lua | 49 |
+| test_style_text.lua | 53 |
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -1346,4 +1350,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1132** |
+| **Total** | **1136** |

@@ -759,8 +759,16 @@ debuff container on the target, in a party or with a target dummy.
      riding live inside it when that option is on. Under it, the cheat sheet reads as two headed,
      bulleted lists with a gap before each heading — **Tokens** (one gold `$token$` bullet per token)
      and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
-     showing), each rule's example on its own indented line in the token gold. On a bars or icons
+     showing, a separator inside the brackets of the field it leads), each rule's example on its own indented line in the token gold. On a bars or icons
      container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
      muted red, not the earlier muted gold. A Center template's Preview shows its stacked rows joined
      by " / " (Centered: name over time reads "Ignore Pain / 11s"), never a raw line break, while the
      live container itself still shows them stacked, each on its own row (final review).
+140. **No gap between template pieces (smoke batch 2, item 8).** A target-debuff Text container,
+     Justify Left, template
+     `$spellname$-$stacks$-$dispeltype$-$remainingduration$-$maxduration$-$elapsedduration$-$remainingpercent$-$elapsedpercent$`,
+     on a typed debuff with stacks: the line reads `Fire Breath-3-Magic-6 s-…` with no space either
+     side of any `-` wherever the field beside it is non-empty. Then Justify Right: the same, laid from
+     the right. A field that is empty (one stack, no dispel type) still leaves its `-` and a small gap:
+     rewrite it as `$spellname$[-$stacks$][-$dispeltype$]...` and the empty field's separator goes
+     with it. A gap that remains between two non-empty fields is a defect: report the font and size.

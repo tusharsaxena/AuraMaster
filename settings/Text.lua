@@ -139,8 +139,10 @@ end
 
 --- The token cheat sheet, under the Template box: a **Tokens** list (one gold `$token$` bullet each,
 --- its meaning in plain text), then a **Rules** list (bracket hiding, the two escapes, how an odd run
---- of [ combines with one, and why a duration belongs in brackets -- feedback #5: text outside them
---- shows on a timeless aura too), each rule's example on its own indented, gold continuation line.
+--- of [ combines with one, why a duration belongs in brackets -- feedback #5: text outside them
+--- shows on a timeless aura too -- and why a separator does -- smoke batch 2 item 8: an empty field's
+--- width is secret, so only a bracket takes its separator away), each rule's example on its own
+--- indented, gold continuation line.
 --- Read-only text (owner, 2026-09-19: "split it into keywords and guidelines - use bullet points").
 local function cheatSheet(ctx)
     heading(ctx, L["Tokens"])
@@ -156,6 +158,8 @@ local function cheatSheet(ctx)
     example(ctx, L["[[[$stacks$]]] shows [3] only when stacked."])
     bullet(ctx, L["Text outside [ ] always shows, even on an aura with no duration:"])
     example(ctx, L["($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."])
+    bullet(ctx, L["Put a separator inside the brackets of the field it leads, so an empty field takes it along:"])
+    example(ctx, L["$spellname$[-$stacks$] drops the - with the stacks; $spellname$-$stacks$ leaves it."])
 end
 
 --- Under Placement: what Center does to a template of more than one piece (feedback #1): it stacks

@@ -190,6 +190,8 @@ test("text page: the cheat sheet has a Tokens heading, a Rules heading and one b
     assertEqual(tokenBullets, #NS.Constants.TEXT_TOKENS)
     assertTrue(P.hasText(ws, NS.L["Tokens"]))
     assertTrue(P.hasText(ws, NS.L["Rules"]))
+    -- red under: the Rules list without the separator advice (smoke batch 2, item 8)
+    assertTrue(P.hasText(ws, NS.L["Put a separator inside the brackets of the field it leads, so an empty field takes it along:"]))
 end)
 
 test("text page: a valid template is stored; a refused one is not, and the panel prints why", function()

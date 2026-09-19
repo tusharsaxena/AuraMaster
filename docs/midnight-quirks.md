@@ -181,12 +181,22 @@ buttons each, for issue #2):
 So a Text line is a chain of single-anchored, auto-sized font strings (`modules/Style_Text.lua`),
 its loops are Alpha and Translation only, built and played at dress time.
 
+**The gap between pieces (smoke batch 2, item 8).** The client pads an auto-sized font string on both
+sides, so pieces chained edge to edge showed gaps no template asked for (`Fire Breath - Magic - 6 s`
+for `$spellname$-$dispeltype$-...`), while the duration run, one engine string, had none. The padding
+belongs to the font, not the text, so it is measured on the addon's own hidden, never-secret string:
+`W("a") + W("b") - W("ab")`, never below 0, once per font, size and flags (`Style.PiecePadding`), and
+each chained piece is anchored that far back over the one before, every piece justified to the
+chain's side. A font it cannot measure chains at 0, as before. An empty field still has a width no
+addon code can read, so its separator cannot be dropped by measuring: a separator written inside the
+field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text page's Rules list says so.
+
 ## Additive bindings stack
 
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:294`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:338`), and then adds again
 (`modules/Style_Bars.lua:310`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after

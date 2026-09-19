@@ -448,8 +448,10 @@ aura (`C.TEXT_SAMPLE_AURAS`, through the placeholders' own fill, `Style.Text.Pre
 the container's own font color with a stray `|` doubled so it cannot break the box, and a Task 12
 colored dispel word riding live inside it — then the **Tokens** / **Rules** cheat sheet (Task 20, owner:
 "split it into keywords and guidelines - use bullet points"): one gold `$token$` bullet per token, then
-a bulleted rule per bracket-hiding, the two escapes, how they combine, and text outside `[ ]` always
-showing, each rule's example on its own indented gold continuation line. The centering note sits under
+a bulleted rule per bracket-hiding, the two escapes, how they combine, text outside `[ ]` always
+showing, and a separator belonging inside the brackets of the field it leads (`$spellname$[-$stacks$]`:
+an empty field takes its separator with it; smoke batch 2, item 8), each rule's example on its own
+indented gold continuation line. The centering note sits under
 Placement. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
 the write seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel,
 `/am set`, Defaults and the resets all reach them through the one write seam.

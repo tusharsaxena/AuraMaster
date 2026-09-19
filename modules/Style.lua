@@ -242,6 +242,50 @@ function Style.TimeTextWidth(t, tdef, fmt)
     return w
 end
 
+-- ---------------------------------------------------------------------------
+-- Measuring a string's padding (smoke batch 2, item 8)
+-- ---------------------------------------------------------------------------
+-- A Text line is a chain of auto-sized font strings, each anchored to the previous one's edge, and the
+-- client pads every string on both sides, so two pieces show a gap no template asked for. The padding
+-- belongs to the font, not to the (secret) text: W("a") + W("b") - W("ab") on our own hidden measuring
+-- string is the padding that sits between two pieces, and each chained piece is pulled back by it.
+
+local paddings = {}   -- ["path|size|flags"] = padding; a failed measure is never cached
+
+--- The padding between two strings in one font, or nil when a width cannot be read (not a number, or
+--- a string the client has not laid out yet). Called guarded (Style.PiecePadding).
+local function measurePadding(path, size, flags)
+    local fs = Style.__measurer()
+    if not fs then return nil end
+    if not fs:SetFont(path, size, flags) and not fs:SetFont(C.FALLBACK_FONT, size, flags) then return nil end
+    local w = {}
+    for _, s in ipairs({ "a", "b", "ab" }) do
+        fs:SetText(s)
+        local width = fs:GetStringWidth()
+        if not NS.Secrets.IsReadableNumber(width) then return nil end
+        w[s] = width
+    end
+    if w.ab <= 0 then return nil end
+    return math.max(0, w.a + w.b - w.ab)
+end
+
+--- How far, in pixels, each chained piece of a Text line in font block `t` is pulled back over the
+--- previous one so the two sit flush: the client's padding between two strings, never negative, and
+--- 0 when it cannot be measured (the pieces keep the client's gap then). Cached per font path, size
+--- and flags; a failed measure is not cached, so a later dress measures again.
+function Style.PiecePadding(t, tdef)
+    local size = tonumber(t.fontSize) or tdef.fontSize
+    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
+    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local key = ("%s|%s|%s"):format(path, size, flags)
+    local pad = paddings[key]
+    if pad then return pad end
+    local ok, got = pcall(measurePadding, path, size, flags)
+    if not (ok and got) then return 0 end
+    paddings[key] = got
+    return got
+end
+
 --- Dress a BackdropTemplate frame as an element border.
 function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     if not frame then return end

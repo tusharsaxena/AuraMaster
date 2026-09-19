@@ -592,6 +592,8 @@ L["Set every category in this section to Hide, for this container."] = "Set ever
 -- The smoke-test feedback batch (2026-09-19).
 L["TEST"] = "TEST"
 L["Text outside [ ] always shows, even on an aura with no duration:"] = "Text outside [ ] always shows, even on an aura with no duration:"
+L["Put a separator inside the brackets of the field it leads, so an empty field takes it along:"] = "Put a separator inside the brackets of the field it leads, so an empty field takes it along:"
+L["$spellname$[-$stacks$] drops the - with the stacks; $spellname$-$stacks$ leaves it."] = "$spellname$[-$stacks$] drops the - with the stacks; $spellname$-$stacks$ leaves it."
 L["($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."] = "($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."
 L["Custom template"] = "Custom template"
 L["Custom"] = "Custom"
