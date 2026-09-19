@@ -4,8 +4,8 @@ local _, NS = ...
 -- every container shares (schema v2 made both the profile's).
 --
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
---     Spell Categories  [Category ▾]  -- one of the nine spell-list categories, or Weapon enchants
---                       [Restore this category's starter list]
+--     Spell Categories  [Category ▾]  [Restore this category's starter list]
+--                       -- one of the nine spell-list categories, or Weapon enchants
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
 --                       (X) <icon> A spell you added (424242)
@@ -216,6 +216,27 @@ local function categoryCell(defs, def)
     end }
 end
 
+--- The Restore button, as the Category dropdown's right half (a RenderGrid cell, feedback #3): on
+--- the same line, so the list's one reset sits beside the control that picks the list. A
+--- cell-filling button, so it takes the library's inset width (options-ui-§6), never a flush half.
+local function restoreCell(key)
+    return { make = function(_, parent)
+        local btn = NS.AceGUI:Create("Button")
+        btn:SetText(L["Restore this category's starter list"])
+        btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
+        btn:SetCallback("OnClick", function()
+            editCategory(key, function(mine)
+                for id in pairs(mine) do mine[id] = nil end
+            end)
+            rerender()
+        end)
+        H.AttachTooltip(btn, L["Restore this category's starter list"],
+            L["Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."])
+        parent:AddChild(btn)
+        return btn
+    end }
+end
+
 -- ---------------------------------------------------------------------------
 -- Weapon enchants (the Spell Categories tab's non-list entry)
 -- ---------------------------------------------------------------------------
@@ -273,19 +294,9 @@ local function renderSpells(ctx)
         return renderEnchant(ctx)
     end
     H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units."])
-    H.RenderGrid(ctx, { categoryCell(defs, def) })
-    -- At the top, under the dropdown (B2): with the checkboxes gone, a removed starter is off the
-    -- list, and this is how it comes back.
-    H.InlineButtonPair(ctx, {
-        text    = L["Restore this category's starter list"],
-        tooltip = L["Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."],
-        onClick = function()
-            editCategory(key, function(mine)
-                for id in pairs(mine) do mine[id] = nil end
-            end)
-            rerender()
-        end,
-    }, nil)
+    -- Restore on the dropdown's line (feedback #3): with the checkboxes gone (B2) a removed starter is
+    -- off the list, and this is how it comes back.
+    H.RenderGrid(ctx, { categoryCell(defs, def), restoreCell(key) })
     H.IdList(ctx, {
         kind       = "spell",
         removeStyle = "icon",

@@ -550,6 +550,20 @@ test("general → spell categories: Restore sits above the Add line and clears t
     assertEqual(edits.raidCDs[99], true)
 end)
 
+test("general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)", function()
+    local NS, _, P, ws = spells()
+    local dd = P.find(ws, "Dropdown", NS.L["Category"])
+    local restore = P.find(ws, "Button", NS.L["Restore this category's starter list"])
+    local line
+    for _, w in ipairs(ws) do
+        if w.children and w.children[1] == dd then line = w end
+    end
+    -- red under: Restore still drawn by InlineButtonPair on a line of its own under the dropdown
+    assertTrue(line ~= nil, "the dropdown heads a grid line")
+    assertTrue(line.children[2] == restore, "Restore is the same line's second cell")
+    assertEqual(restore.relativeWidth, NS.Helpers.BUTTON_PAIR_REL, "a cell-filling button takes the inset width")
+end)
+
 -- ── the Weapon enchants entry, and the Select seam (B7) ──────────────────────────────────────
 
 test("general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list", function()

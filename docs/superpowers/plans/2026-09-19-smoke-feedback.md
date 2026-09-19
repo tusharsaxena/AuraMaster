@@ -100,8 +100,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
      finish or discard that work before re-dispatching, never both.
    - `in review`: its commit(s) exist; finish the review or its fix round, then mark `done`.
    - `blocked`: waiting on the owner (the Notes say for what). Do not work around it.
-5. **Owner stop points — never passed without the owner:** Task 12 (the Text-colour research gate
-   hands back its evidence and waits for a choice; the other tasks carry on meanwhile); any version
+5. **Owner stop points — never passed without the owner:** any version
    bump of an addon. **One-off approval for this batch (owner, 2026-09-19):** the controller
    builds without a plan review, and tags, merges and pushes on its own. That covers LibKa0s
    `v1.45.0` (Task 14 Step 9 is done by the controller, not the owner), the ten consumers'
@@ -111,12 +110,12 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Task 1 committed, in review; next Task 2.
+**Current position:** Task 1 in fix round 1; Task 2 committed, in review; next Task 3.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
 | 1 | E — secret geometry: the handle label measured detached; every geometry read guarded | AuraMaster | in review |  |
-| 2 | #3 — Restore beside the Category dropdown | AuraMaster | todo | |
+| 2 | #3 — Restore beside the Category dropdown | AuraMaster | in review |  |
 | 3 | #2 — the Containers page's picker and New in the band above the strip | AuraMaster | todo | |
 | 4 | #8 — a TEST marker on the handle while test mode is on | AuraMaster | todo | |
 | 5 | #10 — Show all / Hide all on Filters → Categories | AuraMaster | todo | |
@@ -126,7 +125,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 9 | #6a — schema v5: every ENCHANT container becomes an enchant-only buff container | AuraMaster | todo | |
 | 10 | #6b — the Weapon enchants aura type is removed everywhere | AuraMaster | todo | |
 | 11 | #7a — bars' background colored by dispel type; no type falls back to the surface's color | AuraMaster | todo | |
-| 12 | #7b — text colored by dispel type: STOP and report | AuraMaster | todo | owner chose all three fallbacks, opt-in, off by default; re-planned as a build |
+| 12 | #7b — text colored by dispel type: three opt-in stand-ins (word color, backdrop, edge) | AuraMaster | todo |  |
 | 13 | #9 — right-click the handle's "?" → the Containers page on that container | AuraMaster | todo | |
 | 14 | #4a — LibKa0s v1.45.0: `shownWhen` switched sections (STOP before tag/push) | LibKa0s | todo | owner stop |
 | 15 | #4b — re-vendor LibKa0s v1.45.0 into Aura Master | AuraMaster | todo | needs the tag |
@@ -316,6 +315,9 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
     is then read by nothing, so its row is retired from General → Dispel Colors (the stored leaf stays,
     harmless); flagged in the hand-back. The preview's Magic stand-in covers the background as it does
     the fill.
+  - **Owner ruling (2026-09-19), superseding the stop below:** build all three options (a)–(c), each
+    opt-in and off by default ("DO all of #1,2,3 - all opt -in - all turned off by default"). Task 12
+    is now that build.
   - **Text (Task 12 is a STOP):** **there is no engine path that colors a font string by the aura's
     dispel type.** Evidence: `Blizzard_CustomAuraButton.lua` — `SetDispelTypeText` adds only the
     `Text` and `Shown` secret aspects and writes text through `customDispelTextMap` (`stringView`
@@ -3994,89 +3996,720 @@ Row 11 → `done` with the SHA, Notes "None swatch retired (D-7, owner to confir
 
 ---
 
-### Task 12: #7b — text colored by dispel type: STOP and report (owner decision)
+### Task 12: #7b — text by dispel type: the colored word, a tinted backdrop, a tinted edge (each opt-in, all off)
 
-The spec (§7): "If there is no engine path to colour text by dispel type in combat, stop and report.
-Offer a dispel-coloured backdrop or edge on the Text box instead." This plan's research (D-7) found no
-such path. This task writes **no code**: it re-checks the evidence against the live client source,
-hands the owner the finding and the options, and marks the row `blocked` until the owner chooses. The
-Text half of #7 is then planned as its own follow-up from the owner's answer; nothing in Tasks 13–19
-depends on it.
+The spec (§7) asked for the Text style's text colored by the aura's dispel type, and a stop-and-report
+if the engine has no path for it. It has none for the whole line (D-7). The owner then chose, 2026-09-19:
+"DO all of #1,2,3 - all opt -in - all turned off by default". So this task builds three stand-ins, each
+its own setting and all off by default:
+- (c) the `$dispeltype$` word in its type's color;
+- (a) a tinted backdrop behind the line;
+- (b) a tinted edge around it.
 
-**Files:** none in any repo but this plan's ledger row.
+They live in a new **Dispel type** subsection on Text → Animation, between Loop and Running out. That
+tab is the Text page's counterpart of Bars → Highlights: it already holds the running-out color.
+
+**The evidence for (c)** is the Blizzard source in the scratchpad `ui/` folder, fetched 2026-09-19:
+- `Blizzard_CustomAuraButton.lua:485-503`: `ApplyDispelTypeText` looks the aura up in
+  `options.customDispelTextMap[auraData.dispelName or "None"]` and writes the hit with
+  `fontString:SetText(customText)` (line 499). The map's value reaches `SetText` unchanged.
+- `AuraContainerUtilDocumentation.lua:250`: the map's values are `stringView`, the same plain-string
+  type as `StringUtilDocumentation.lua`'s text arguments. Nothing strips escapes from them.
+- `SimpleFontStringAPIDocumentation.lua:664-672`: `SetText(text: cstring)`, and a font string renders
+  a `|cffRRGGBB…|r` escape.
+
+So an escape inside each map value colors only that word. The engine writes it per aura, in combat,
+with no addon code running. This is the one real engine path, and it applies to that one piece only.
+Whether the engine's options processing (`ProcessCustomAuraButtonDispelTypeTextOptions`,
+C side) keeps the `|` bytes can only be seen in game: smoke item 130 checks it.
+
+**The evidence for (a) and (b):**
+- `AddDispelTypeTexture` accepts a Texture only (`Blizzard_CustomAuraButton.lua:85`,
+  `RequireObjectType("Texture")`).
+- It tints the texture from `customDispelColorMap[dispelName or "None"]` with
+  `texture:SetVertexColor(color:GetRGBA())` (line 463). It shows or hides the texture per aura
+  (`ShouldShowDispelTypeForAura`, 372–392).
+
+Every stand-in is wired at dress time, before the button locks
+(`docs/midnight-quirks.md`, "Aura buttons lock while auras are secret"). Nothing runs in combat.
+
+**Files** (line numbers are on the tree after Tasks 1–11 and 13):
+- Modify: `defaults/Profile.lua` — the `text` block gains five leaves, after
+  `expiringBlink = false,` (line 228).
+- Modify: `modules/Style_Text.lua`:
+  - a header paragraph;
+  - `EDGES` after `number` (60–62);
+  - `buildDispelTints`, called from `build`;
+  - `dressDispelTints`, called from `Text.Apply`;
+  - `hex`, `wordPalette`, `dispelWord` and `paletteCurrent`, plus `dispelOptionsFor(piece, s)`, which
+    replaces `dispelOptionsFor(piece)` (320–334);
+  - `tintOptionsFor` and `dispelTints`, called from `Text.Bind`;
+  - `BINDERS.dispel` and `PIECE_TEXT.dispel`;
+  - `previewTints`, called from `Text.FillPreview`.
+- Modify: `modules/TextTemplate.lua` — `TT.Compile`'s result gains `hasDispel` (413, 425–426).
+- Modify: `settings/Text.lua`:
+  - the header diagram;
+  - `S_DISPEL`;
+  - the `noDispel` and `unlessOn` predicates;
+  - five rows between `animBounce` and `expiringColorOn`.
+- Modify: `settings/GeneralSpells.lua` — the DISPEL COLORS header paragraph (39–45), the
+  `DISPEL_ROWS` desc (333) and `renderDispel`'s line (340).
+- Modify: `locales/enUS.lua` — two keys replaced (113, 117) and eleven appended.
+- Modify: `docs/settings-panel.md` (19, 162–166, 420, 439–442, 454), `docs/schema.md` (160–161),
+  `docs/ARCHITECTURE.md` (105–107 and Known Limitations) and `README.md` (81). Also the citations
+  the docs suite reports.
+- Test:
+  - `tests/test_style_text.lua` (six cases appended);
+  - `tests/test_pages_text.lua` (one appended);
+  - `tests/test_texttemplate.lua` (the case "the name alone is one piece, and single", extended);
+  - `tests/test_pages_general.lua` (the Dispel Colors case at 633, renamed and re-keyed);
+  - `tests/test_render_coverage.lua` (the Text baseline carries a `$dispeltype$` piece and is applied
+    before priming).
 
 **Interfaces:**
-- Consumes: the Blizzard UI source (Gethe/wow-ui-source, branch `live`): `Interface/AddOns/Blizzard_AuraContainer/Blizzard_CustomAuraButton.lua`
-  and `Interface/AddOns/Blizzard_APIDocumentationGenerated/AuraContainerUtilDocumentation.lua`,
-  `DurationTextBindingSharedDocumentation.lua`, `DurationTextBindingObjectAPIDocumentation.lua`. A copy of
-  each sits in this session's scratchpad `ui/` folder (fetched 2026-09-19).
-- Produces: a report to the owner; the ledger row `blocked` with "awaiting owner: text-by-dispel option".
+- Consumes:
+  - `Style.DispelColorMap(stored, fallback)` from Task 11. With no fallback its `None` entry is white
+    and every entry has alpha 1; `None` is never drawn here, because `showWithoutDispelType` is false.
+  - `Style.ProfileDispelColors()`, `NS.Compat.DispelStyle("PreserveAsset")`, `C.WHITE_TEXTURE`,
+    `C.TEXT_DISPEL_TYPES` / `C.TEXT_DISPEL_LABELS` and `TT.ForDraw`.
+- Produces:
+  - Five `container.text.*` leaves, all under Text → Animation → Dispel type:
 
-- [ ] **Step 1: Re-check the evidence on the live source**
+    | Leaf | Default |
+    |---|---|
+    | `dispelTypeColor` | `false` |
+    | `dispelBackdrop` | `false` |
+    | `dispelBackdropAlpha` | `0.35` |
+    | `dispelEdge` | `false` |
+    | `dispelEdgeSize` | `1` |
 
-Fetch the four files at `live` (or use the scratchpad copies) and confirm each point still holds:
+  - The regions `am.backdrop`, `am.edgeTop`, `am.edgeBottom`, `am.edgeLeft` and `am.edgeRight`: textures
+    of `am.area`, each its own key so the style suites can see it.
+  - `TT.Compile(...).hasDispel`.
+  - No schema-version bump: the ordinary backfill adds the leaves.
+  - The schema grows from 235 to **240** rows, and the Text page from 31 to **36**.
 
-```bash
-U=https://raw.githubusercontent.com/Gethe/wow-ui-source/live/Interface/AddOns
-curl -fsSL "$U/Blizzard_AuraContainer/Blizzard_CustomAuraButton.lua" -o /tmp/cab.lua
-curl -fsSL "$U/Blizzard_APIDocumentationGenerated/AuraContainerUtilDocumentation.lua" -o /tmp/acu.lua
-curl -fsSL "$U/Blizzard_APIDocumentationGenerated/DurationTextBindingSharedDocumentation.lua" -o /tmp/dtbs.lua
-grep -n "function CustomAuraButtonSharedMixin:SetDispelTypeText" -A12 /tmp/cab.lua
-grep -n "local function ApplyCustomDispelTypeTextureColor\|function CustomAuraButtonPrivateMixin:ApplyDispelTypeText" -A16 /tmp/cab.lua
-grep -n "CustomAuraButtonDispelTypeTextOptions\|CustomAuraButtonDispelTypeTextureOptions" -A10 /tmp/acu.lua
-grep -n "DurationTextBindingProperty" -A12 /tmp/dtbs.lua
+- [ ] **Step 1: Write the failing tests**
+
+`tests/test_style_text.lua`, append:
+
+```lua
+
+-- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
+
+-- The default Magic color (C.DEFAULT_DISPEL_COLORS: 0.2, 0.6, 1) as a font-string escape.
+local MAGIC_CODE = "|cff3399ff"
+
+test("text style: Color the dispel type writes each word in its palette color inside the bracket text (feedback #7)", function()
+    local NS = E()
+    local frame = dressed(text({ template = "$spellname$[ <$dispeltype$>]", dispelTypeColor = true }), true)
+    local opts = frame:__last("SetDispelTypeText")[2]
+    local map = opts.customDispelTextMap
+    -- red under: the words left plain (the escape inside the map's text is the one engine path that
+    -- colors a font string by dispel type)
+    assertEqual(map.Magic, " <" .. MAGIC_CODE .. NS.L["Magic"] .. "|r>")
+    -- Enrage has no palette color: its word keeps the font color
+    assertEqual(map.Enrage, " <" .. NS.L["Enrage"] .. ">")
+    assertNil(map.None)
+    assertFalse(opts.showWithoutDispelType)
+    local off = dressed(text({ template = "$spellname$[ <$dispeltype$>]" }), true)
+    assertEqual(off:__last("SetDispelTypeText")[2].customDispelTextMap.Magic, " <" .. NS.L["Magic"] .. ">", "off: plain")
+end)
+
+test("text style: a colored dispel map is built once per look, and a new palette color rebuilds it (feedback #7)", function()
+    local NS = E()
+    local c = text({ template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true })
+    local first = dressed(c, true):__last("SetDispelTypeText")[2]
+    assertTrue(dressed(c, true):__last("SetDispelTypeText")[2] == first, "one options table per look")
+    local dc = NS.db.profile.dispelColors
+    local old = dc.Curse
+    dc.Curse = { r = 1, g = 0, b = 0, a = 1 }   -- a settings write stores a new table (Style.lua's memo note)
+    local again = dressed(c, true):__last("SetDispelTypeText")[2]
+    dc.Curse = old
+    -- red under: the memo keyed by the bracket text alone (a new Curse color never reaches the line)
+    assertEqual(again.customDispelTextMap.Curse, " (|cffff0000" .. NS.L["Curse"] .. "|r)")
+end)
+
+test("text style: the dispel backdrop fills the text area and is tinted through the engine, for a typed aura only (feedback #7)", function()
+    local NS = E()
+    local frame, am = dressed(text({ dispelBackdrop = true, dispelBackdropAlpha = 0.4 }), true)
+    -- red under: no backdrop region
+    assertTrue(am.backdrop ~= nil and am.backdrop.parent == am.area, "in the text area, under the chain")
+    assertTrue(am.backdrop:__last("SetAllPoints")[1] == am.area)
+    assertEqual(am.backdrop:__joined("SetTexture"), NS.Constants.WHITE_TEXTURE)
+    assertEqual(am.backdrop:__joined("SetAlpha"), "0.4")
+    local add = frame:__last("AddDispelTypeTexture")
+    -- red under: no backdrop binding
+    assertTrue(add ~= nil and add[1] == am.backdrop, "the backdrop is the engine's to tint")
+    assertEqual(frame:__count("AddDispelTypeTexture"), 1, "no edge while it is off")
+    local o = add[2]
+    assertTrue(o.showWhenHarmful and o.showWhenHelpful, "buffs and debuffs, as the word")
+    assertFalse(o.showAlways)
+    assertFalse(o.showWithoutDispelType)
+    assertTrue(o.customDispelColorMap == NS.Style.DispelColorMap(NS.db.profile.dispelColors), "the profile's palette")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < frame:__lastSeq("AddDispelTypeTexture"), "cleared first")
+    am.backdrop:Show()   -- the engine showed it for a typed aura
+    local off = dressed(text({}), true, frame)
+    assertEqual(off:__count("AddDispelTypeTexture"), 1, "off by default: no second binding")
+    -- red under: a dress leaving a switched-off backdrop as the engine last drew it (the Clear
+    -- restores nothing)
+    assertFalse(am.backdrop:IsShown())
+end)
+
+test("text style: the dispel edge is four strips of its thickness around the text area, each tinted through the engine (feedback #7)", function()
+    local frame, am = dressed(text({ dispelEdge = true, dispelEdgeSize = 2 }), true)
+    local adds = frame:__calls("AddDispelTypeTexture")
+    -- red under: no edge
+    assertEqual(#adds, 4, "one binding per strip")
+    local want = {
+        edgeTop = { "TOPLEFT", "TOPRIGHT", "SetHeight" }, edgeBottom = { "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+        edgeLeft = { "TOPLEFT", "BOTTOMLEFT", "SetWidth" }, edgeRight = { "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+    }
+    local bound = {}
+    for _, a in ipairs(adds) do bound[a[1]] = a[2] end
+    for key, w in pairs(want) do
+        local strip = am[key]
+        assertTrue(strip ~= nil and strip.parent == am.area, key)
+        local pts = strip:__calls("SetPoint")
+        assertEqual(pts[1][1] .. "," .. pts[2][1], w[1] .. "," .. w[2], key)
+        assertTrue(pts[1][2] == am.area and pts[2][2] == am.area, key .. " on the area's edge")
+        assertEqual(strip:__joined(w[3]), "2", key)
+        assertTrue(bound[strip] ~= nil and bound[strip] == adds[1][2], key .. " bound with the backdrop's options")
+    end
+end)
+
+test("text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)", function()
+    local NS = E()
+    local m = NS.db.profile.dispelColors.Magic
+    local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
+    local _, am = filled({ dispelBackdrop = true, dispelEdge = true }, AURA)
+    -- red under: FillPreview leaving the tints to an engine a placeholder does not have
+    assertTrue(am.backdrop:IsShown())
+    assertEqual(am.backdrop:__joined("SetVertexColor"), magic)
+    for _, key in ipairs({ "edgeTop", "edgeBottom", "edgeLeft", "edgeRight" }) do
+        assertTrue(am[key]:IsShown(), key)
+        assertEqual(am[key]:__joined("SetVertexColor"), magic, key)
+    end
+    local _, typeless = filled({ dispelBackdrop = true, dispelEdge = true },
+        { name = "Well Fed", icon = 1, remaining = 0, duration = 0, stacks = 0 })
+    assertFalse(typeless.backdrop:IsShown(), "no type, no backdrop")
+    assertFalse(typeless.edgeTop:IsShown(), "no type, no edge")
+    local _, off = filled({}, AURA)
+    assertFalse(off.backdrop:IsShown(), "off: nothing, even for a typed aura")
+end)
+
+test("text style: a placeholder's and the Preview line's dispel word take its palette color when the option is on (feedback #7)", function()
+    local NS = E()
+    local s = { template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true }
+    local out = filled(s, AURA)
+    -- red under: the preview fill ignoring the option (the live line colored, the placeholder not)
+    assertEqual(out[2], " (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
+    assertEqual(NS.Style.Text.PreviewLine(s, AURA), "Bloodlust (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
+end)
 ```
 
-Expected, point by point (this is the evidence the report quotes):
-1. `SetDispelTypeText(fontString, options)` adds only the `Text` and `Shown` secret aspects to the font
-   string, and `ApplyDispelTypeText` only calls `fontString:SetText(customText)` (or
-   `AuraUtil.SetAuraSymbol`) — no color is ever applied to it.
-2. `CustomAuraButtonDispelTypeTextOptions` has `showWhenHarmful`, `showWhenHelpful`,
-   `showWithoutDispelType` and `customDispelTextMap` (`stringView` values) — no color field.
-3. `customDispelColorMap` and `customDispelColorCurve` are fields of
-   `CustomAuraButtonDispelTypeTextureOptions` only, and `ApplyCustomDispelTypeTextureColor` applies
-   them with `texture:SetVertexColor(color:GetRGBA())` — a **Texture**; `AddDispelTypeTexture`
-   validates its argument with `RequireObjectType("Texture")`, so a FontString is refused.
-4. `SetDurationText`'s `textColor` is `{ curve, property }` with `property` a
-   `DurationTextBindingProperty` (RemainingDuration, RemainingPercent, ElapsedDuration, ElapsedPercent,
-   TotalDuration, StartTime, EndTime) — a curve over time, never over the dispel type.
-5. `SetSpellName(fontString)` and `SetApplicationCount(fontString, options)` take no color option.
-6. Addon Lua cannot do it itself: in combat every call on a button's objects raises ("Attempt to access
-   forbidden object from code tainted by an AddOn", docs/midnight-quirks.md, measured 2026-09-18), and
-   the aura's dispel type is secret.
+`tests/test_pages_text.lua`, append:
 
-If any point no longer holds (a new color field, a new binding), STOP here and report THAT instead:
-the text path may exist after all, and the owner decides whether to plan it.
+```lua
 
-- [ ] **Step 2: Report to the owner and stop**
+-- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
 
-Hand the owner, verbatim or close to it:
+test("text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)", function()
+    local NS, _, P = textPage()
+    local L = NS.L
+    local D = NS.CONTAINER_TEMPLATE.text
+    -- red under: any of the three on by default (owner, 2026-09-19: all opt-in, all off)
+    assertFalse(D.dispelTypeColor)
+    assertFalse(D.dispelBackdrop)
+    assertFalse(D.dispelEdge)
+    local ws = animationTab(NS, P)
+    for _, key in ipairs({ "dispelTypeColor", "dispelBackdrop", "dispelBackdropAlpha", "dispelEdge", "dispelEdgeSize" }) do
+        local row = NS.FindSchemaRow(P_ .. key)
+        -- red under: no row
+        assertTrue(row ~= nil and row.group == L["Animation"] and row.subgroup == L["Dispel type"], key)
+        assertTrue(P.row(ws, P_ .. key) ~= nil, key .. " is drawn")
+    end
+    -- The default template has no $dispeltype$, so there is no word to color.
+    assertTrue(P.row(ws, P_ .. "dispelTypeColor").disabled, "the word needs the token")
+    assertTrue(P.row(ws, P_ .. "dispelBackdropAlpha").disabled, "the opacity waits for the backdrop")
+    assertTrue(P.row(ws, P_ .. "dispelEdgeSize").disabled, "the thickness waits for the edge")
+    NS.SetByPath(P_ .. "template", "$spellname$[ ($dispeltype$)]", 1)
+    NS.SetByPath(P_ .. "dispelBackdrop", true, 1)
+    NS.SetByPath(P_ .. "dispelEdge", true, 1)
+    ws = animationTab(NS, P)
+    for _, key in ipairs({ "dispelTypeColor", "dispelBackdropAlpha", "dispelEdgeSize" }) do
+        -- red under: a predicate reading the wrong leaf
+        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live")
+    end
+end)
+```
 
-> **Text colored by dispel type (#7) has no engine path; the Bars half is done (Task 11).** Every
-> binding that writes text (`SetSpellName`, `SetApplicationCount`, `SetDispelTypeText`,
-> `SetDurationText`) either takes no color or colors by a *time* curve; the only dispel-keyed color
-> (`customDispelColorMap` / `customDispelColorCurve`) exists for `AddDispelTypeTexture`, which accepts a
-> Texture only. Lua cannot color the text itself in combat. Options, pick one (or none):
-> - **(a) A dispel-tinted backdrop** behind each Text line: one `WHITE8X8` texture filling the line's
->   `clip` frame, added with `AddDispelTypeTexture` + `customDispelColorMap` (the same palette and the
->   same "no type → a color you choose" fallback), at a player-set opacity; a Text → Animation-style
->   subsection "Backdrop" with Color by / Opacity.
-> - **(b) A dispel-tinted edge**: four 1px textures around the line (or one side, e.g. a left stripe),
->   each added the same way. Cheaper to read than a full backdrop; four bindings per button.
-> - **(c) The `$dispeltype$` piece's own text in its type's color**: each `customDispelTextMap` value
->   written as `|cAARRGGBB<name>|r` from the palette — a real engine path, but for that one piece only;
->   the name and the time keep the font color.
-> - **(d) Nothing**: record it as a Known Limitation in docs/ARCHITECTURE.md and close #7's text half.
+`tests/test_texttemplate.lua`: in "template: the name alone is one piece, and single", after
+`    assertFalse(r.hasDuration)`, add:
 
-Then STOP: do not implement any option.
+```lua
+    -- red under: no hasDispel (the Text page dims Color the dispel type on it, feedback #7)
+    assertFalse(r.hasDispel)
+    assertTrue(TT.Compile("$spellname$[ ($dispeltype$)]").hasDispel)
+```
 
-- [ ] **Step 3: Update the Status ledger row for this task (status, commit SHAs, repo) and the resume guide's "Current position" line; commit the plan file with the task's commit**
+`tests/test_pages_general.lua`, the case at line 633:
+- Its name: `…under a line saying they drive bars only` → `…under a line saying they drive bars and text`.
+- The comment
+  `-- keep Blizzard's own dispel colors, so the palette drives bars only)` becomes the two lines
+  `-- keep Blizzard's own dispel colors), or silent on the Text style's word, backdrop and edge` and
+  `-- (feedback #7)`.
+- The two quoted keys become:
+  - `"One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."`
+  - `"This dispel type's color for a bar's fill or background colored by dispel type, and for a text line's dispel type word, backdrop or edge when those are on. An icon's dispel border keeps Blizzard's own colors."`
 
-Row 12 → `blocked`, Notes "awaiting owner: text-by-dispel option (a/b/c/d)"; Current position → "Next:
-Task 13 — not started; Tasks 1–11 done; Task 12 blocked on the owner." This task's commit is the plan
-file alone: `T12: text colored by dispel type has no engine path; reported to the owner (feedback #7)`.
+`tests/test_render_coverage.lua` has two edits. Without them the new rows are walked on a template
+with no `$dispeltype$`, so `dispelTypeColor` reaches nothing. Changing the template's shape in the
+baseline alone rebuilds the engine, and the suite refuses a rebuild ("the engine was updated, not
+rebuilt", measured).
 
----
+1. `SAMPLES` and its comment become:
+
+```lua
+-- A free-text row has no list to pick from, so it names the value it is walked with: the Text
+-- baseline's template (GATES below), with its bracket text changed and its shape kept (a new shape
+-- builds a new chain of font strings, which a recorder swapped in by `adopt` would never see).
+local SAMPLES = { ["container.text.template"] = "$spellname$[ y$stacks$][ <$dispeltype$>][ ~ $remainingduration$]" }
+```
+
+   and `GATES.text` with its comment becomes:
+
+```lua
+    -- Right, so Center (a multi-piece template lines up Left) still moves the chain; an icon, so
+    -- its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color (feedback #7).
+    text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
+        template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
+```
+
+2. In `gaps`, between the `local baseline = …` line and `prime(k)`, insert:
+
+```lua
+    -- Primed on the baseline, applied once first: a baseline template of another shape than the
+    -- stored one rebuilds the engine (Style.StructureKey), which prime's apply would refuse.
+    k.c[page] = NS.Database.DeepCopy(baseline)
+    NS.ContainerManager.RequestApply(k.c.id)
+    NS.ContainerManager.FlushPending()
+```
+
+- [ ] **Step 2: Run them and see them fail**
+
+Run: `/home/tushar/.claude/wow-addon/bin/ka0s-bounded lua tests/run.lua 2>&1 | grep -A2 FAIL`
+
+Expected (measured): `1087 passed, 9 failed, 0 skipped, 1096 total`. The failures:
+- `template: the name alone is one piece, and single`: `assertTrue failed` (no `hasDispel`).
+- `Color the dispel type writes each word…`: `expected  <|cff3399ffMagic|r>, got  <Magic>`.
+- `a colored dispel map is built once per look…`: `expected  (|cffff0000Curse|r), got  (Curse)`.
+- `the dispel backdrop fills the text area…`: `in the text area, under the chain`.
+- `the dispel edge is four strips…`: `one binding per strip (expected 4, got 0)`.
+- `a placeholder with a dispel type shows the backdrop…`: `attempt to index field 'backdrop' (a nil value)`.
+- `a placeholder's and the Preview line's dispel word…`: `expected  (|cff3399ffMagic|r), got  (Magic)`.
+- `general → dispel colors: … drive bars and text`: `assertTrue failed` (the old line is drawn).
+- `text page: Animation carries the three dispel-type options…`: `dispelTypeColor` (no row).
+
+The coverage case stays green at this point: it is the guard that walks the five new rows once
+they exist.
+
+- [ ] **Step 3: Implement**
+
+`defaults/Profile.lua`, in the `text` block, after `        expiringBlink = false,` add:
+
+```lua
+
+        -- Color by dispel type (feedback #7): each opt-in, all off (owner, 2026-09-19).
+        dispelTypeColor = false,
+        dispelBackdrop = false, dispelBackdropAlpha = 0.35,
+        dispelEdge = false, dispelEdgeSize = 1,
+```
+
+`modules/TextTemplate.lua`, `TT.Compile`:
+- Its `@return` line becomes
+  `--- @return table  { ok = true, pieces, single, shape, hasDuration, hasDispel } or { ok = false, err }`.
+- `            hasDuration = hasKind(pieces, "duration") }` becomes
+  `            hasDuration = hasKind(pieces, "duration"), hasDispel = hasKind(pieces, "dispel") }`.
+
+`modules/Style_Text.lua`:
+
+1. In the header, directly above `-- ANIMATIONS ARE SET UP AT DRESS TIME ONLY.`, insert:
+
+```lua
+-- COLOR BY DISPEL TYPE (feedback #7). No engine binding colors a font string by the aura's dispel type,
+-- and no addon code may read the type or touch a button's objects in combat. Three opt-in stand-ins,
+-- each wired at dress time: the $dispeltype$ word colored by a |c escape written into the engine's own
+-- text map (dispelOptionsFor), and a backdrop and a four-strip edge in the text area, textures the
+-- engine tints and shows per aura (AddDispelTypeTexture, dispelTints).
+--
+```
+
+2. After `local function number(v, default) … end`, add:
+
+```lua
+
+-- The dispel edge's four strips (feedback #7): each region key, the two corners of the text area it
+-- runs between, and the setter its thickness goes through.
+local EDGES = {
+    { "edgeTop", "TOPLEFT", "TOPRIGHT", "SetHeight" },
+    { "edgeBottom", "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+    { "edgeLeft", "TOPLEFT", "BOTTOMLEFT", "SetWidth" },
+    { "edgeRight", "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+}
+```
+
+3. Directly above `--- Build the regions once (Style.RegionsFor).`, add:
+
+```lua
+--- The dispel backdrop and edge (feedback #7): textures of the text area, so they sit under the chain
+--- (a child frame) and move with the loops. Each is its own key on `am`: a region never hides in a
+--- list the style suites cannot see.
+local function buildDispelTints(am)
+    am.backdrop = am.area:CreateTexture(nil, "BACKGROUND")
+    am.backdrop:SetAllPoints(am.area)
+    for _, e in ipairs(EDGES) do
+        local strip = am.area:CreateTexture(nil, "BORDER")
+        strip:SetPoint(e[2], am.area, e[2])
+        strip:SetPoint(e[3], am.area, e[3])
+        am[e[1]] = strip
+    end
+end
+
+```
+
+   In `build`, after `    am.area:SetClipsChildren(true)`, add `    buildDispelTints(am)`.
+
+4. Directly above `-- The loops, each the group a dress plays for its \`anim\` value.`, add:
+
+```lua
+--- The dispel backdrop and edge (feedback #7): white, the backdrop at its opacity, each strip its
+--- thickness, and every one HIDDEN. A live one is shown and tinted by the engine for an aura with a
+--- dispel type (Text.Bind); a placeholder's by Text.FillPreview. Hidden on every dress, because the
+--- engine's Clear restores nothing: a switched-off tint would stay as the engine last drew it.
+local function dressDispelTints(am, s)
+    am.backdrop:SetTexture(C.WHITE_TEXTURE)
+    am.backdrop:SetAlpha(number(s.dispelBackdropAlpha, D.dispelBackdropAlpha))
+    am.backdrop:Hide()
+    local size = number(s.dispelEdgeSize, D.dispelEdgeSize)
+    for _, e in ipairs(EDGES) do
+        local strip = am[e[1]]
+        strip:SetTexture(C.WHITE_TEXTURE)
+        strip[e[4]](strip, size)
+        strip:Hide()
+    end
+end
+
+```
+
+5. Replace `dispelOptionsFor` and its three-line doc comment with:
+
+```lua
+--- One color channel as two hex digits.
+local function hex(v)
+    return ("%02x"):format(math.floor(math.max(0, math.min(1, tonumber(v) or 1)) * 255 + 0.5))
+end
+
+--- The palette `s` colors the dispel type word from: the profile's, when Color the dispel type is on
+--- (feedback #7), else nil.
+local function wordPalette(s)
+    return s and s.dispelTypeColor and Style.ProfileDispelColors() or nil
+end
+
+--- Dispel type `t`'s word inside a piece's bracket text, in `palette`'s color for `t` when it has one:
+--- a |cffRRGGBB escape the font string renders, closed before the bracket text, which keeps the font
+--- color. A type the palette lacks (Enrage) keeps the font color.
+local function dispelWord(piece, t, palette)
+    local word = L[C.TEXT_DISPEL_LABELS[t]]
+    local c = palette and palette[t]
+    if type(c) == "table" then word = "|cff" .. hex(c.r) .. hex(c.g) .. hex(c.b) .. word .. "|r" end
+    return piece.pre .. word .. piece.post
+end
+
+--- Whether a memoized dispel entry was built from exactly the palette leaves `palette` holds now (a
+--- settings write stores a new leaf table, modules/Style.lua's memo note).
+local function paletteCurrent(entry, palette)
+    for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+        if (palette and palette[t] or nil) ~= entry.src[t] then return false end
+    end
+    return true
+end
+
+--- SetDispelTypeText's options for a dispel piece: every type in C.TEXT_DISPEL_TYPES mapped to its
+--- localized name inside the piece's bracket text (colored when `s` asks, dispelWord), on harmful and
+--- helpful auras alike, nothing for an aura with no type. The map's values are the engine's own text
+--- (`stringView`, written by fontString:SetText), so the escape is the one path that colors text by
+--- dispel type in combat. Built once per bracket text, coloring and palette.
+local function dispelOptionsFor(piece, s)
+    local palette = wordPalette(s)
+    local key = (palette and "c" or "p") .. piece.pre .. "\0" .. piece.post
+    local entry = dispelOptions[key]
+    if not (entry and paletteCurrent(entry, palette)) then
+        local map, src = {}, {}
+        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+            map[t] = dispelWord(piece, t, palette)
+            src[t] = palette and palette[t] or nil
+        end
+        entry = { src = src, opts = { showWhenHarmful = true, showWhenHelpful = true,
+            showWithoutDispelType = false, customDispelTextMap = map } }
+        dispelOptions[key] = entry
+    end
+    return entry.opts
+end
+
+--- AddDispelTypeTexture's options for the backdrop and edge (feedback #7): shown for a buff or a debuff
+--- WITH a dispel type (as the word is), our white texture kept (PreserveAsset) and tinted from the
+--- profile's palette at full alpha (the backdrop's opacity is its own SetAlpha). Built once per map.
+local tintOptions
+local function tintOptionsFor()
+    local map = Style.DispelColorMap(Style.ProfileDispelColors())
+    if not (tintOptions and tintOptions.customDispelColorMap == map) then
+        tintOptions = { showWhenHarmful = true, showWhenHelpful = true, showWithoutDispelType = false,
+            style = NS.Compat.DispelStyle("PreserveAsset"), customDispelColorMap = map }
+    end
+    return tintOptions
+end
+
+--- Hand the backdrop and each edge strip that `s` turns on to the engine to tint (Style.Bind). The
+--- additive list was cleared at the head of the dress (Style.ClearAdditiveBindings).
+local function dispelTints(frame, am, s)
+    if not (s.dispelBackdrop or s.dispelEdge) then return end
+    local opts = tintOptionsFor()
+    if s.dispelBackdrop then Style.Bind(frame, "AddDispelTypeTexture", am.backdrop, opts) end
+    if not s.dispelEdge then return end
+    for _, e in ipairs(EDGES) do Style.Bind(frame, "AddDispelTypeTexture", am[e[1]], opts) end
+end
+```
+
+6. `BINDERS.dispel` becomes
+   `    dispel = function(frame, fs, piece, s) Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece, s)) end,`.
+   In `Text.Bind`, between the pieces loop's `end` and `    Style.ApplyBehavior(frame, cfg)`, add
+   `    dispelTints(frame, am, s)`.
+7. In `Text.Apply`, after `    layoutChain(am, s, compiled, h)`, add `    dressDispelTints(am, s)`. The
+   raw calls stay before the bindings, as `dressPieces`'s do; `applyLoops` stays last.
+8. `PIECE_TEXT.dispel` becomes:
+
+```lua
+    dispel = function(piece, aura, s)
+        if not (aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]) then return "" end
+        return dispelWord(piece, aura.dispel, wordPalette(s))
+    end,
+```
+
+9. Directly above `--- Fill a PREVIEW element with placeholder values`, add:
+
+```lua
+--- A placeholder's backdrop and edge (feedback #7): shown in the palette color of its aura's dispel
+--- type, as the engine tints a live one; left hidden (dressDispelTints) for an aura with no type or
+--- no palette color.
+local function previewTints(am, aura, s)
+    local dc = aura.dispel and Style.ProfileDispelColors()
+    local c = dc and dc[aura.dispel]
+    if type(c) ~= "table" then return end
+    local r, g, b = c.r or 1, c.g or 1, c.b or 1
+    if s.dispelBackdrop then
+        am.backdrop:SetVertexColor(r, g, b, 1)
+        am.backdrop:Show()
+    end
+    if not s.dispelEdge then return end
+    for _, e in ipairs(EDGES) do
+        am[e[1]]:SetVertexColor(r, g, b, 1)
+        am[e[1]]:Show()
+    end
+end
+
+```
+
+   and in `Text.FillPreview`, after the pieces loop's `end`, add `    previewTints(am, aura, s)`.
+
+`settings/Text.lua`:
+1. In the header diagram, after the General entry's last line (`--               sheet; then Placement and the centering note`), add:
+
+```lua
+--     Animation Loop, then Dispel type (feedback #7: the word's color, a backdrop, an edge, each
+--               opt-in and off), then Running out and its note
+```
+
+2. `local S_PLACEMENT = L["Placement"]` → `local S_PLACEMENT, S_DISPEL = L["Placement"], L["Dispel type"]`.
+3. After `noDuration`, add:
+
+```lua
+
+--- A `disabledIf` predicate: Color the dispel type needs a $dispeltype$ token to color (feedback #7).
+local function noDispel()
+    return not TT.ForDraw(textBlock().template).hasDispel
+end
+
+--- A `disabledIf` predicate: the row is dimmed while the selected container's toggle `key` is off.
+local function unlessOn(key)
+    return function() return not textBlock()[key] end
+end
+```
+
+4. In the Animation `RegisterSchemaRows`, between the `animBounce` row and the `expiringColorOn` row,
+   insert the five rows below. They go before Running out, so the Animation tab's `afterGroup` note,
+   which is about Running out, still sits under Running out.
+
+```lua
+    -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
+    -- colors a whole line by the aura's type (modules/Style_Text.lua's header).
+    { path = P .. "dispelTypeColor", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, disabledIf = noDispel,
+      label = L["Color the dispel type"],
+      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
+    { path = P .. "dispelBackdrop", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Backdrop in the dispel color"],
+      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
+      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
+      label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
+    { path = P .. "dispelEdge", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Edge in the dispel color"],
+      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelEdgeSize", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
+      min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
+      label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
+```
+
+`settings/GeneralSpells.lua`:
+1. In the DISPEL COLORS header paragraph, replace these two lines:
+   - `-- no \`effect\`, so a write re-applies every container. Only bars read them, a bar's fill or background`
+   - `-- colored by dispel type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,`
+
+   with these three:
+   - `-- no \`effect\`, so a write re-applies every container. Bars and text read them: a bar's fill or`
+   - `-- background colored by dispel type, and a text line's dispel type word, backdrop and edge (feedback`
+   - `-- #7, modules/Style_Text.lua); an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,`
+2. The `DISPEL_ROWS` desc and `renderDispel`'s line take the two new strings from Step 1's
+   `test_pages_general.lua` edit.
+
+`locales/enUS.lua`:
+- Replace the two lines keyed by the old Dispel Colors row desc and tab line with the new strings
+  (key == value).
+- Append, key == value:
+  - `Dispel type`
+  - `Color the dispel type`
+  - `Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template.`
+  - `Backdrop in the dispel color`
+  - `Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none.`
+  - `Backdrop opacity`
+  - `How strongly the backdrop shows behind the text.`
+  - `Edge in the dispel color`
+  - `Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none.`
+  - `Edge thickness (px)`
+  - `How thick the edge is.`
+
+Docs:
+
+`docs/settings-panel.md`:
+- Line 19, the Text row's last cell: `…its loop and running-out blink |` → `…its loop and running-out blink,
+  and its opt-in dispel type colors |`.
+- Lines 162–166, the Dispel Colors paragraph, from `` `.Curse`, `.Disease`, `.Poison`, `.Bleed`: `` to
+  `the tab line and each row's tooltip say so.`, become:
+
+```markdown
+`.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
+a Text line's dispel type word, backdrop and edge when those are on (Text → Animation → Dispel type,
+feedback #7). An aura with no dispel type keeps a bar's own color and draws no text backdrop or edge,
+so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
+colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so.
+```
+
+- `### Text (31 rows,` → `### Text (36 rows,`.
+- After the paragraph ending `…\`animBounce\` unless` / `Bounce).`, add:
+
+```markdown
+
+**Dispel type** (Animation, feedback #7) holds three opt-in stand-ins for "color the text by dispel
+type", all off by default, since no engine binding colors a font string by the aura's type
+(`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
+palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
+around the word, the bracket text keeping the font color (dimmed without a `$dispeltype$` token).
+`dispelBackdrop` fills the text area behind the chain with a white texture the engine tints and shows
+per aura (`AddDispelTypeTexture`, `PreserveAsset`, the profile's palette), at `dispelBackdropAlpha`;
+`dispelEdge` draws four strips `dispelEdgeSize` px thick around the text area the same way. The
+backdrop and the edge show only for an aura with a dispel type (buff or debuff), in the palette's
+color for it; a type the palette lacks (Enrage) takes Blizzard's own color. The opacity and the
+thickness are dimmed while their toggle is off. The preview draws all three from the placeholder's
+own type.
+```
+
+- The table's Animation row gains `Dispel type: \`dispelTypeColor\`, \`dispelBackdrop\`,
+  \`dispelBackdropAlpha\`, \`dispelEdge\`, \`dispelEdgeSize\`.` between its Loop and Running out parts.
+
+`docs/schema.md`, the `### \`text\`` paragraph's tail, from `` `expiringBlink` (false). An existing
+container `` to `schema-version bump.`, becomes:
+
+```markdown
+(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
+#7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
+`dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px).
+An existing container gains the block, and these leaves, by the ordinary backfill; there is no
+schema-version bump.
+```
+
+`docs/ARCHITECTURE.md`:
+- Lines 105–107 become the lines below. This also fixes Task 11's leftover General 19 / six / Bars 71;
+  the total 235 held then only because Task 11's −1 and +1 cancelled.
+
+```markdown
+`NS.Schema` holds **240** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
+out of General's own tab), Filters 41, Layout 26, Bars 72, Icons 42 and Text 36.
+```
+
+- In Known Limitations, before `- **A Text token can be used once,`, add:
+
+```markdown
+- **A Text line cannot be colored by its aura's dispel type.** No engine binding colors a font string by
+  dispel type (`SetDispelTypeText`, `SetSpellName`, `SetApplicationCount` take no color;
+  `SetDurationText`'s color curve runs over time), the dispel-keyed color map exists only on
+  `AddDispelTypeTexture`, which takes a Texture, and addon code can neither read the type nor touch a
+  button in combat. The Text page offers three opt-in stand-ins instead (Animation → Dispel type,
+  feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
+  backdrop and an edge the engine tints (`modules/Style_Text.lua`).
+```
+
+`README.md`, line 81, `can carry the aura's icon, pulse, blink or bounce, and blink its time in the
+last seconds. A new`, becomes the three lines:
+
+```markdown
+can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
+Animation tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
+tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. A new
+```
+
+- [ ] **Step 4: Run them and see them pass**
+
+Run: `/home/tushar/.claude/wow-addon/bin/ka0s-bounded lua tests/run.lua 2>&1 | grep -A4 FAIL`
+
+Expected: every case above passes, including `coverage: every Text row reaches a drawn region…`, which
+now walks the five new rows on both sides. One case stays red: the docs case
+`every file:line citation sits within 3 lines…`. Measured, it reports
+`docs/ARCHITECTURE.md` and `docs/schema.md` citing `defaults/Profile.lua:235` (`STARTER_CONTAINERS`
+moved down by five lines). Pipe the run into `/tmp/citefix.py`; it re-points both to `:240`. Run again:
+`1096 passed, 0 failed, 0 skipped, 1096 total`, which is **+7 cases** (1089 before).
+
+- [ ] **Step 5: Checkpoint — the green gate and complexity**
+
+Run: `/home/tushar/.claude/wow-addon/bin/ka0s-bounded lua tests/run.lua && /home/tushar/.claude/wow-addon/bin/ka0s-bounded luacheck . && /home/tushar/.claude/wow-addon/bin/ka0s-bounded lizard -l lua -x "./libs/*" -x "./tests/_kit/*" -C 15 -w .`
+
+Expected (measured):
+- 0 failed.
+- `0 warnings / 0 errors in 105 files`.
+- lizard prints nothing: the largest new function, `dispelOptionsFor`, stays well under 15.
+
+- [ ] **Step 6: Update the Status ledger row 12 and commit the plan with the task's commit**
+
+Update the plan file:
+- Row 12's Task cell → `#7b — text by dispel type: the colored word, a backdrop, an edge (opt-in, off)`.
+- Row 12's Status → `done`, with the SHA.
+- Row 12's Notes → `owner chose all three (a, b, c), 2026-09-19; the word's escape is checked in game (T item 130)`.
+- Resume-guide point 5: drop the Task 12 stop point.
+- The "Current position" line → the next row that is not `done`.
+
+Commit this task's changes with the plan file:
+`T12: text by dispel type — the colored word, a tinted backdrop and edge, each opt-in (feedback #7)`.
 
 ### Task 13: #9 — right-click the handle's "?" → the Containers page, that container selected
 
@@ -4229,7 +4862,7 @@ Expected: 0 failed; `0 warnings / 0 errors`.
 - [ ] **Step 6: Update the Status ledger row for this task (status, commit SHAs, repo) and the resume guide's "Current position" line; commit the plan file with the task's commit**
 
 Row 13 → `done` with the SHA. Current position → "Next: Task 14 — not started (LibKa0s); Tasks 1–11
-and 13 done; Task 12 blocked on the owner." Commit:
+and 13 done; Task 12 done." Commit:
 `T13: right-clicking a handle opens the Containers page on that container (feedback #9)`, with this plan file.
 
 ---
@@ -5485,7 +6118,7 @@ and any row the owner has explicitly deferred. A row still `todo`, `in progress`
 finished first.
 
 **Files:**
-- Modify: `docs/smoke-tests.md` (a new section **T** after S, items 117–129), `docs/test-cases.md`
+- Modify: `docs/smoke-tests.md` (a new section **T** after S, items 117–132), `docs/test-cases.md`
   (regenerated), `README.md:7` (the Tests badge)
 - Test: none new — this task runs everything
 
@@ -5571,6 +6204,26 @@ debuff container on the target, in a party or with a target dummy.
      Anchor, redrawn at once on a change, from the panel and from `/am set`.
 129. **Switched sections, Party Frame Enhanced (#4).** That addon's smoke item 31a on its
      `feat/switched-sections` build.
+130. **The dispel type word in color (#7).** A Text container on the target's debuffs, template Name,
+     type, time; Text → Animation → Dispel type → **Color the dispel type** on. A Magic debuff reads
+     `Name (Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the
+     brackets and the rest in the font color; a Curse in its color. Change the Magic swatch → the word
+     follows after the re-apply. In combat the word keeps its color as auras come and go (the engine
+     writes the text; nothing of ours runs). If the word shows the raw `|cff…` characters instead,
+     the engine's options processing stripped the escape: report it (option c then does not work, and
+     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed.
+131. **The dispel backdrop (#7).** Same container, **Backdrop in the dispel color** on: a typed debuff's
+     line has a Magic-blue (or Curse-purple, …) box behind its text, the text on top and readable; a
+     debuff with no type has no box. **Backdrop opacity** changes its strength (dimmed while the
+     backdrop is off). With a text icon on the left, the box covers the text area only, not the icon.
+     With Pulse or Bounce on, the box moves and fades with the line. Test mode: the Bloodlust
+     placeholder has a Magic box, the others none. Turn the backdrop off → every box goes at once, a
+     typed aura included.
+132. **The dispel edge (#7).** **Edge in the dispel color** on (backdrop off): a thin outline in the
+     type's color around a typed debuff's text area, none on a typeless one; **Edge thickness** 1–4
+     thickens it. Both on at once → the edge draws over the backdrop. On a buff container, a
+     Magic buff (Power Word: Fortitude, Arcane Intellect) is outlined too. `/reload` and
+     combat: nothing to fix up, no Lua error.
 ```
 
 - [ ] **Step 3: The inventory and the badge**
@@ -5607,8 +6260,9 @@ Report, in this order:
    **None** dispel swatch retired, a typeless aura now taking each surface's own color (D-7); the
    Layout → Anchor and PFE Size & Position switch from dimmed to hidden (D-4: no deviation and no
    standard change; an optional harvest sentence for options-ui-§6 is theirs to take upstream).
-3. **Task 12 is still open**: text colored by dispel type has no engine path; options (a)–(d).
-4. **The in-game checks**: smoke section T (117–129) and PFE's 31a; item 123's three probe outputs
+3. **Task 12 is built**: three opt-in stand-ins for text colored by dispel type (the dispel word
+   in color, a backdrop, an edge), all off by default; smoke items 130–132.
+4. **The in-game checks**: smoke section T (117–132) and PFE's 31a; item 123's three probe outputs
    decide whether the `( )` was H1, H2 or the empty-string width, and whether anything more is owed.
 5. **The battery numbers** of every repo, and any repo Task 17 skipped.
 
@@ -5616,7 +6270,7 @@ Do not merge, push, tag or bump a version.
 
 - [ ] **Step 6: Update the Status ledger row for this task (status, commit SHAs, repo) and the resume guide's "Current position" line; commit the plan file with the task's commit**
 
-Row 19 → `done` with the SHA. Current position → "Complete but for the owner: Task 12's choice, the
+Row 19 → `done` with the SHA. Current position → "Complete but for the owner: the
 merges and pushes (Task 19 Step 5), and the in-game checks (smoke section T)." Commit: `T19: final
-gate — smoke section T (117-129), inventory N, tests N/N, lint 0/0, lizard 0 warnings, perf green`,
+gate — smoke section T (117-132), inventory N, tests N/N, lint 0/0, lizard 0 warnings, perf green`,
 with this plan file.

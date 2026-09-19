@@ -147,10 +147,10 @@ them share is refused until one is picked ("pick one from the list, or use the i
 resolved to one rank; a name neither knows adds nothing, and the line under the box says where
 names come from (the library's spell hint, localized, which the tooltip quotes too). Every entry —
 starter or added — carries an X at the left of every entry (a starter's X hides it, stored `false`;
-an added spell's X forgets it), and **Restore this category's starter list** at the top, under the
-Category dropdown and above Add a spell. Writes the whole set to `categorySpells` (a carve-out, so
-every container re-applies). The page's Defaults does not touch these lists; each category's restore
-does.
+an added spell's X forgets it), and **Restore this category's starter list** on the Category
+dropdown's own line, to its right (feedback #3), above Add a spell. Writes the whole set to
+`categorySpells` (a carve-out, so every container re-applies). The page's Defaults does not touch
+these lists; each category's restore does.
 
 Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
 (Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
