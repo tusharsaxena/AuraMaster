@@ -110,7 +110,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Tasks 1–9, 13, 14 done; Task 15 in progress; Task 17 in progress (10 repos); next Task 11, then 10, 12, 16, 18, 19.
+**Current position:** Tasks 1–9, 13, 14, 17 done; Tasks 11 and 15 in progress; next Task 18 (PFE), then 16, 10, 12, 19.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
@@ -130,7 +130,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 14 | #4a — LibKa0s v1.45.0: `shownWhen` switched sections (STOP before tag/push) | LibKa0s | done | LibKa0s 6dbfc74 + a7053ca, tag v1.45.0 pushed |
 | 15 | #4b — re-vendor LibKa0s v1.45.0 into Aura Master | AuraMaster | todo | needs the tag |
 | 16 | #4c — Aura Master adopts `shownWhen` on Layout → Anchor | AuraMaster | todo | |
-| 17 | #4d — re-vendor v1.45.0 into the other ten consumers; the adoption sweep | 10 repos | todo | needs the tag |
+| 17 | #4d — re-vendor v1.45.0 into the other ten consumers; the adoption sweep | 10 repos | done | 9 consumers merged+pushed; PFE c2577a5 on its chore branch (Task 18 builds on it); LibKa0s docs 2b32ee8 pushed |
 | 18 | #4e — Party Frame Enhanced adopts `shownWhen` on Size & Position | PartyFrameEnhanced | todo | |
 | 19 | Final gate, smoke items, inventory — hand back to the owner | AuraMaster | todo | |
 
