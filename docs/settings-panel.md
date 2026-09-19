@@ -44,8 +44,8 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
   banner; Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:209`): the buff categories are not offered on a debuff container, and a
-  weapon-enchant container sees only the rows that mean something for it.
+  (`settings/Schema.lua:209`): the buff categories and Hide enchants without a duration are not
+  offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
   pages offer changes with it. Every `CONTAINERS_CHANGED` does the same.
@@ -177,7 +177,7 @@ selected) on one row. With no container, the band and one sentence are all the p
 | Enabled | `container.enabled` | bool | A disabled container keeps its settings |
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enabled's "which container is this". Name and Enabled carry no heading of their own — one above a tab's first row only repeats the tab |
 | Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
-| Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
+| Aura type | `container.auraType` | string | Buffs / Debuffs; structural (weapon enchants are a buff category, schema v5) |
 | Style | `container.style` | string | Bars / Icons / Text; structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
@@ -257,11 +257,9 @@ column: a **See spells** link (`K-2`) on every `spells`- or `enchant`-kind row, 
 category on General → Spell Categories, opens the General page and switches to its Spell Categories
 tab (`NS.GeneralSpells.Select`, `NS.OpenOptionsPage`, `H.SelectTab`). Right under that grid — ahead
 of the Uncategorized cost note below — sits **Hide enchants without a duration**
-(`container.filter.hidePermanentEnchants`, bool, buffs and enchants), behind a one-line tie naming
+(`container.filter.hidePermanentEnchants`, bool, buffs only), behind a one-line tie naming
 the `weaponEnchants` row it governs by name (batch 7, `T-3`: the grid draws its rows atomically and
-cannot host a plain bool inline, so the tie text is what keeps it from reading as floating); an
-`ENCHANT`-type container, which draws no Spell Categories grid at all, still sees the checkbox on its
-own, with no tie line (there is no row above to tie it to).
+cannot host a plain bool inline, so the tie text is what keeps it from reading as floating).
 
 **Sorting**
 
@@ -297,11 +295,9 @@ even if another of its categories says Hide; (4) in categories that all say Hide
 category at all — shown, nothing removed it. Full detail and how it compiles: `docs/ARCHITECTURE.md`
 → Filter priority.
 
-A weapon-enchant container drops **What to show** and **Overrides** entirely (neither has a row that
-means anything for it, and with What to show goes the priority block — it has no whitelist, no
-blacklist and no categories to rank) and sees only **Categories** — just **Hide enchants without a duration**,
-since it draws no Spell Categories grid (`Cat.For("ENCHANT")` is empty) — and **Sorting**, just
-**Direction**.
+A container that shows only weapon enchants is a buff container (schema v5): on its Categories tab
+every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
+it like any other.
 
 ### Layout (26 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 

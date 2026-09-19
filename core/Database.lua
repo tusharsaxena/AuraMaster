@@ -455,7 +455,7 @@ end
 -- gone: the compiler now does that job itself, on every run, not just at migration time.
 --
 -- Only recognized aura types are touched. `Cat.For(nil)` and `Cat.For("garbage")` both fall back to
--- the (empty) ENCHANT list, so liftCategoryWhitelist is already a no-op for them — but the string
+-- an empty list (as ENCHANT always did), so liftCategoryWhitelist is already a no-op for them — but the string
 -- compare `auraType == "ENCHANT"` that used to gate liftEnchantFlag does NOT catch nil or garbage, so
 -- a container with a missing or corrupt auraType could still get a weaponEnchants row written with no
 -- corresponding category list. `Database.MigrateV3` itself gates both lifts on a known aura type, so
@@ -657,12 +657,12 @@ end
 --- Fix round 3: both HELPFUL and HARMFUL now carry an `uncategorized` category (asymmetric —
 --- defaults/Categories.lua's KINDS doc — but Hide reproduces the retired toggle on either type, which
 --- is all this migration ever needed). `ENCHANT` is deliberately excluded, not merely absent: an
---- ENCHANT container compiles to no aura groups at all (`FC.Compile`'s `compileEnchant`), so its
---- `onlyShown` — however it got set — never did anything, and clearing it loses nothing worth
---- counting. Any other or unrecognized `auraType` returns nil, the "lost" case — reachable in
---- practice only for a corrupt or future `auraType` (`Database.MigrateV3`'s `KNOWN_AURA_TYPES` names
---- the same three this migration actually expects), not a common one: every real HELPFUL or HARMFUL
---- container converts.
+--- ENCHANT container compiled to no aura groups at all (`FC.Compile`'s `compileEnchant`, retired with
+--- the aura type at schema v5), so its `onlyShown` — however it got set — never did anything, and
+--- clearing it loses nothing worth counting. Any other or unrecognized `auraType` returns nil, the
+--- "lost" case — reachable in practice only for a corrupt or future `auraType`
+--- (`Database.MigrateV3`'s `KNOWN_AURA_TYPES` names the same three this migration actually expects),
+--- not a common one: every real HELPFUL or HARMFUL container converts.
 local function uncategorizedKeyFor(auraType)
     if auraType == "HELPFUL" then return "uncategorized" end
     if auraType == "HARMFUL" then return "uncategorizedDebuffs" end

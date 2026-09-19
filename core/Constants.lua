@@ -39,11 +39,11 @@ C.LOGO_ICON_PATH = "Interface\\AddOns\\" .. addonName .. "\\media\\logos\\aurama
 C.UNITS = { "player", "target", "focus", "pet" }
 C.UNIT_LABELS = { player = "Player", target = "Target", focus = "Focus", pet = "Pet" }
 
--- Aura types. HELPFUL and HARMFUL are the engine's own filter tokens; ENCHANT is this addon's name for
--- the player's temporary weapon enchants, which the engine draws through AddItemEnchantment rather
--- than through an aura group.
-C.AURA_TYPES = { "HELPFUL", "HARMFUL", "ENCHANT" }
-C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs", ENCHANT = "Weapon enchants" }
+-- Aura types: the engine's own filter tokens. The player's temporary weapon enchants are not an aura
+-- type (schema v5, feedback #6): they are the buff category `weaponEnchants`, which the engine draws
+-- through AddItemEnchantment beside a player buff container's aura groups.
+C.AURA_TYPES = { "HELPFUL", "HARMFUL" }
+C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs" }
 
 -- Container styles.
 C.STYLES = { "bars", "icons", "text" }

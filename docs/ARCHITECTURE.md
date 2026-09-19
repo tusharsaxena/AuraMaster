@@ -6,8 +6,8 @@ in the topic docs registered under [Documentation map](#documentation-map) (docu
 ## Overview
 
 Ka0s Aura Master draws player-built aura **containers**. A container is one unit (`player`,
-`target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL`, `HARMFUL`, or
-`ENCHANT` for the player's temporary weapon enchants — `:39`) and one style (`bars`, `icons` or
+`target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:39`;
+the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:48`), plus its filters, placement and look. A profile holds any number of them; a fresh
 profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:235`).
 
@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:515-516`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:522-523`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:233`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -459,7 +459,7 @@ return value.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:608-610`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:609-611`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is
@@ -484,7 +484,7 @@ return value.
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
-  (`identityWarning`, `modules/FilterCompiler.lua:558`), rendered in orange on the Filters page.
+  (`identityWarning`, `modules/FilterCompiler.lua:548`), rendered in orange on the Filters page.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;

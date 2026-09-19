@@ -497,17 +497,6 @@ end)
 
 -- ── weapon enchants ───────────────────────────────────────────────────────────────────────────
 
-test("filter: a weapon-enchant container has three slots and no aura groups", function()
-    local plan = compile({ auraType = "ENCHANT" })
-    assertEqual(#plan.groups, 0)
-    assertEqual(#plan.enchants.slots, 3)
-    assertTrue(plan.enchants.hidePermanent)
-end)
-
-test("filter: an enchant container on another unit still shows the player's, and says so", function()
-    assertTrue(hasWarning(compile({ auraType = "ENCHANT", unit = "target" }), "your own character"))
-end)
-
 test("filter: the weaponEnchants row decides the enchant slots, and adds no group", function()
     -- red under: the enchant row being read as a category (an extra group) or ignored (no enchants)
     local on = compile({ unit = "player", filter = { categories = { weaponEnchants = "show" } } })
@@ -538,12 +527,12 @@ test("filter: the enchant slots the container draws are exactly the profile's, i
     assertEqual(table.concat(ordered.enchants.slots, ","), "mainHand,offHand,ranged", "declared slot order")
 end)
 
-test("filter: an enchant container's slots also come from the profile, falling back to all three", function()
-    local none = FC.Compile(cfg({ auraType = "ENCHANT" }),
-        { enchantSlots = { mainHand = false, offHand = false, ranged = false } })
+test("filter: an enchant-only buff container's slots also come from the profile, falling back to all three", function()
+    local enchantsOnly = { unit = "player", filter = { categories = NS.Categories.EnchantOnlyStates() } }
+    local none = FC.Compile(cfg(enchantsOnly), { enchantSlots = { mainHand = false, offHand = false, ranged = false } })
     assertEqual(#none.enchants.slots, 3, "every slot off falls back to all three")
-    local some = FC.Compile(cfg({ auraType = "ENCHANT" }),
-        { enchantSlots = { mainHand = true, offHand = false, ranged = false } })
+    assertTrue(none.enchants.hidePermanent, "hide-permanent is on by default")
+    local some = FC.Compile(cfg(enchantsOnly), { enchantSlots = { mainHand = true, offHand = false, ranged = false } })
     assertEqual(table.concat(some.enchants.slots, ","), "mainHand")
 end)
 
@@ -686,7 +675,7 @@ local RICH = {
     { { unit = "focus", auraType = "HELPFUL", filter = {
         durationMode = "timed", whitelist = { [500] = true }, categories = { bigDefensive = "show" },
     } }, { categories = only("HELPFUL", { "bigDefensive" }) } },
-    { { unit = "target", auraType = "ENCHANT" } },
+    { { unit = "player", auraType = "HELPFUL", filter = { categories = NS.Categories.EnchantOnlyStates() } } },
 }
 
 local RICH_SIGNATURES = {
@@ -730,9 +719,9 @@ local RICH_SIGNATURES = {
     .. "sortMethod=string:expirationOnly}},"
     .. "warnings={1=string:Spell lists only apply while the unit is friendly.}}",
 
+    -- An enchant-only buff container (schema v5): the three slots, no aura group, and no warning.
     "{enchants={hidePermanent=boolean:true,slots={1=string:mainHand,2=string:offHand,3=string:ranged}},groups={},"
-    .. "warnings={1=string:Weapon enchants only exist on your own character; this container shows the player's "
-    .. "enchants whatever its unit is set to.}}",
+    .. "warnings={}}",
 }
 
 test("filter: the whole plan for four rich containers is unchanged (characterization)", function()

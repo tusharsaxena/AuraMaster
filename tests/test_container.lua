@@ -419,24 +419,20 @@ end)
 
 -- ── weapon enchants and engine refusals ──────────────────────────────────────────────────────
 
-test("container: a weapon-enchant container shows the player's enchants in the engine's three slots, whatever its unit", function()
+test("container: a buff container showing only Weapon enchants draws the engine's three slots and no aura group (feedback #6)", function()
     local NS, mocks = fresh()
-    local id = NS.ContainerManager.Create({ auraType = "ENCHANT", unit = "target" })
+    local id = NS.ContainerManager.Create({ auraType = "HELPFUL", unit = "player",
+        filter = { categories = NS.Categories.EnchantOnlyStates() } })
     mocks.__fireTimers()
     local inst = NS.ContainerManager.instances[id]
     local e = inst.engine
+    -- red under: an enchant-only container still given an aura group (it would draw buffs too)
     assertEqual(sent(e, "AddAuraGroup"), 0)
     local slots = {}
     for i, c in ipairs(e:__callsTo("AddItemEnchantment")) do slots[i] = c[2] end
     local E = mocks.AuraContainerItemEnchantmentSlot
     assertEqual(table.concat(slots, ","), table.concat({ E.MainHand, E.OffHand, E.Ranged }, ","))
     assertEqual(#inst.enchantFrames, 3, "kept for the restyle")
-    -- red under: Build handing an enchant container's own unit to SetUnit
-    assertEqual(lastSent(e, "SetUnit")[2], "player")
-    assertTrue(NS.SetByPath("container.unit", "focus", id))
-    mocks.__fireTimers()
-    assertTrue(inst.engine == e)
-    -- red under: Update sending an enchant container's own unit
     assertEqual(lastSent(e, "SetUnit")[2], "player")
 end)
 
@@ -461,7 +457,7 @@ test("container: an enchant slot the engine refuses costs that slot, not the bui
     refusing(mocks, "AddItemEnchantment", function(slot)
         return slot == mocks.AuraContainerItemEnchantmentSlot.OffHand
     end)
-    local id = NS.ContainerManager.Create({ auraType = "ENCHANT" })
+    local id = NS.ContainerManager.Create({})   -- a player buff container: its enchant slots
     mocks.__fireTimers()
     local inst = NS.ContainerManager.instances[id]
     -- red under: Build calling AddItemEnchantment without pcall
@@ -572,12 +568,10 @@ local function freshWithPriestTarget()
     end })
 end
 
-test("container: the class snapshot is the tracked unit's, and nothing for the player or for enchants", function()
+test("container: the class snapshot is the tracked unit's, and nothing for the player", function()
     local NS, mocks = freshWithPriestTarget()
     local CM = NS.ContainerManager
-    local ench = CM.Create({ auraType = "ENCHANT", unit = "target", style = "icons" })
-    mocks.__fireTimers()
-    for _, id in ipairs({ 2, 3, ench }) do
+    for _, id in ipairs({ 2, 3 }) do
         assertTrue(NS.SetByPath("container.icons.useClassColorBorder", true, id))
     end
     mocks.__fireTimers()
@@ -586,9 +580,6 @@ test("container: the class snapshot is the tracked unit's, and nothing for the p
     -- red under: SnapshotClass resolving a class for the player's own container
     assertNil(CM.instances[2].classColor, "the player's container paints the player's class itself")
     assertFalse(CM.instances[2].usesClass, "so no unit swap re-applies it")
-    -- red under: SnapshotClass reading an enchant container's own unit
-    assertNil(CM.instances[ench].classColor, "enchants are the player's")
-    assertFalse(CM.instances[ench].usesClass)
 end)
 
 test("container: a class the client withholds resolves to no class instead of raising", function()

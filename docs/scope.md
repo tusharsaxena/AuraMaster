@@ -9,10 +9,12 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
   filters, placement and look (`defaults/Profile.lua:112`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:39`).
-- **Three aura types:** buffs (`HELPFUL`), debuffs (`HARMFUL`) and the player's temporary weapon
-  enchants (`ENCHANT`, drawn through the engine's `AddItemEnchantment`). A player-buff container also
-  appends the weapon enchants after its buffs, unless the `weaponEnchants` category
-  (`container.filter.categories.weaponEnchants`) is set to Hide.
+- **Two aura types:** buffs (`HELPFUL`) and debuffs (`HARMFUL`). The player's temporary weapon
+  enchants are a buff category, not an aura type (schema v5, feedback #6): a player-buff container
+  appends them after its buffs (drawn through the engine's `AddItemEnchantment`) unless its
+  `weaponEnchants` category (`container.filter.categories.weaponEnchants`) is set to Hide, and a
+  container that shows ONLY enchants is a player-buff container whose every other category is Hidden
+  (`Cat.EnchantOnlyStates`, `/am new enchants`).
 - **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
@@ -74,7 +76,7 @@ These are not declined; the game forbids them, and a request for one is answered
   so it cannot be filtered after the fact either. Requested 2026-09-14; declined with the rule.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
   friendly units and debuffs on hostile units. The addon warns per container
-  (`identityWarning`, `modules/FilterCompiler.lua:558`) rather than letting the filter look broken.
+  (`identityWarning`, `modules/FilterCompiler.lua:548`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
   (`CM.MustDefer`, `modules/ContainerManager.lua:161`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the

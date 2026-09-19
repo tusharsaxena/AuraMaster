@@ -321,13 +321,14 @@ test("schema paths: SchemaForPage keeps declaration order and drops hidden rows 
     end
     -- red under: SchemaForPage ignoring row.hidden
     assertFalse(has("container.filter.castBy"))
-    local id = NS2.ContainerManager.Create({ auraType = "ENCHANT" })
+    local id = NS2.ContainerManager.Create({ auraType = "HARMFUL" })
     NS2.State.SetActiveContainer(id)
     for _, r in ipairs(NS2.SchemaForPage("filters")) do
-        assertTrue(not r.auraTypes or r.auraTypes.ENCHANT, "an enchant container is offered " .. r.path)
+        assertTrue(not r.auraTypes or r.auraTypes.HARMFUL, "a debuff container is offered " .. r.path)
     end
-    assertTrue(has("container.filter.hidePermanentEnchants"), "a typed row that takes enchants")
-    assertFalse(has("container.filter.sortMethod"), "a buffs-and-debuffs row")
+    -- red under: rowApplies ignoring auraTypes (a buff-only row offered to a debuff container)
+    assertFalse(has("container.filter.hidePermanentEnchants"), "a buff-only row")
+    assertTrue(has("container.filter.sortMethod"), "a buffs-and-debuffs row")
     assertTrue(has("container.filter.sortDirection"), "an untyped row still applies")
     deleteAll(NS2)
     -- red under: rowApplies admitting a typed row when there is no container to read a type from

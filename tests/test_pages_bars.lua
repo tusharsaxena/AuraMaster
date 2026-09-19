@@ -130,9 +130,9 @@ test("bars: the seven tabs are drawn in order, whatever the container shows (S-1
     local want = table.concat({ L["General"], L["Icon"], L["Background & border"], L["Name text"],
         L["Time text"], L["Stack text"], L["Highlights"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
-    NS.SetByPath("container.auraType", "ENCHANT", 1)
+    NS.SetByPath("container.auraType", "HARMFUL", 1)
     P.rerender("Bars")
-    -- red under: a Bars row declaring `auraTypes` (an enchant container drawn as bars loses it)
+    -- red under: a Bars row declaring `auraTypes` (a debuff container drawn as bars loses it)
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
 end)
 

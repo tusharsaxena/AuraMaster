@@ -147,7 +147,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.filter.hidePermanentEnchants", page = PAGE, group = G_CATS,
         skipRender = true,
-        auraTypes = { HELPFUL = true, ENCHANT = true }, type = "bool", label = L["Hide enchants without a duration"],
+        auraTypes = { HELPFUL = true }, type = "bool", label = L["Hide enchants without a duration"],
         desc = L["Skip weapon enchants that never expire."],
     },
 })
@@ -416,7 +416,6 @@ end
 --- draws its rows atomically and cannot host it inline.
 local function renderCategories(ctx, _, rows)
     local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
-    local hideDrawn = false
     for _, g in ipairs(GRIDS) do
         local mine = {}
         for _, row in ipairs(rows or {}) do
@@ -435,7 +434,6 @@ local function renderCategories(ctx, _, rows)
                 if hideRow then
                     H.TextRow(ctx, WEAPON_ENCHANT_TIE)
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
-                    hideDrawn = true
                 end
                 if customGridHasEditableList(mine) then
                     H.TextRow(ctx, UNCATEGORIZED_NOTE)
@@ -454,11 +452,6 @@ local function renderCategories(ctx, _, rows)
                 H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
             end
         end
-    end
-    -- An ENCHANT container draws no Spell Categories grid at all (Cat.For("ENCHANT") is empty), so
-    -- hidePermanentEnchants — offered for HELPFUL and ENCHANT alike — would otherwise never draw.
-    if hideRow and not hideDrawn then
-        H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
     end
 end
 
@@ -609,27 +602,19 @@ local function renderOverrides(ctx, cfg)
         L["These spells are never shown in this container, unless the whitelist also names them — the whitelist wins."])
 end
 
--- The Categories tab now carries hidePermanentEnchants (auraTypes HELPFUL + ENCHANT), so its own
--- auraTypes has to reach ENCHANT too — otherwise the schema loop still opens the tab (the row makes
--- the group non-empty) but this bespoke render never claims it, and it falls through to the flow
--- engine, which draws nothing for a `skipRender` row.
-local CATS_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
-
 NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
     pairWith = {
         ["container.filter.maxDuration"] = maxDurationPresets,
     },
     -- The priority block is drawn after the last What to show row, not above the first (see
-    -- PRIORITY_RANKS). An enchant container has no What to show tab at all (every row in the group
-    -- is HELPFUL/HARMFUL only), and no Overrides tab either, so it is offered neither — which is
-    -- correct: it has no whitelist, no blacklist and no categories to rank.
+    -- PRIORITY_RANKS).
     afterGroup = {
         [G_SHOW] = renderPriorityBlurb,
     },
     tabs = {
         -- Keyed by its group, so it takes the group's place and is handed the group's rows.
-        { key = G_CATS, label = G_CATS, auraTypes = CATS_TYPES, render = renderCategories },
+        { key = G_CATS, label = G_CATS, auraTypes = BUFFS_DEBUFFS, render = renderCategories },
         -- `before` the Sorting group: Overrides is the other half of the Categories decision, so it
         -- sits next to it, and Sorting — which orders whatever survived — goes last (batch 8).
         { key = "overrides", label = L["Overrides"], auraTypes = BUFFS_DEBUFFS, before = G_SORT,

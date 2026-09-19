@@ -106,13 +106,11 @@ local function poolFor(container, style)
     return pool
 end
 
---- How many placeholders `cfg` shows: every placeholder aura, under the per-group cap, and at most
---- two (main hand and off hand) for a weapon-enchant container.
+--- How many placeholders `cfg` shows: every placeholder aura, under the per-group cap.
 local function placeholderCount(cfg)
     local count = #C.PREVIEW_AURAS
     local cap = tonumber(cfg.filter and cfg.filter.maxAuras) or 0
     if cap > 0 and cap < count then count = cap end
-    if cfg.auraType == "ENCHANT" then count = math.min(count, 2) end
     return count
 end
 

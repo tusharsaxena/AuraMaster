@@ -338,22 +338,34 @@ end)
 test("containers: changing the aura type redraws an open Filters page for the new type, on the next frame", function()
     local NS, m, P, ws = containers()
     P.show("Filters")
+    P.tab("filters", NS.L["Categories"])
     NS.Helpers.__pageCtx.filters.panel:Show()   -- on screen, so only a STRUCTURAL refresh re-renders it
-    -- Overrides is offered to buffs and debuffs only (a weapon-enchant container has no spell
-    -- whitelist/blacklist), so it disappearing is the redraw signal: the Categories tab itself stays
-    -- (schema v3: hidePermanentEnchants applies to ENCHANT too), so it cannot serve as one any more.
-    local function hasOverridesTab()
-        for _, k in ipairs(P.tabKeys("filters")) do if k == "overrides" then return true end end
+    -- The Categories tab is the redraw signal: a debuff container's grids include Dispel Types, a buff
+    -- container's do not.
+    local function drewDispelTypes(widgets)
+        for _, w in ipairs(widgets) do
+            if w.type == "Heading" and w.text == NS.L["Dispel Types"] then return true end
+        end
         return false
     end
-    assertTrue(hasOverridesTab(), "a buff container has the Overrides tab")
-    P.row(ws, "container.auraType"):__fire("OnValueChanged", "ENCHANT")
-    assertEqual(NS.Database.FindContainer(1).auraType, "ENCHANT")
-    assertTrue(hasOverridesTab(), "never inside the dropdown's own callback")
-    m.__fireTimers()
-    -- red under: the aura type row losing its structural onChange (the page keeps offering the
-    -- Overrides tab on a weapon-enchant container)
-    assertFalse(hasOverridesTab(), "redrawn for a weapon-enchant container")
+    local during = P.during(function() P.row(ws, "container.auraType"):__fire("OnValueChanged", "HARMFUL") end)
+    assertEqual(NS.Database.FindContainer(1).auraType, "HARMFUL")
+    assertFalse(drewDispelTypes(during), "never inside the dropdown's own callback")
+    local redrawn = P.during(function() m.__fireTimers() end)
+    -- red under: the aura type row losing its structural onChange (the tab keeps a buff container's grids)
+    assertTrue(drewDispelTypes(redrawn), "redrawn with the debuff container's Dispel Types")
+end)
+
+test("containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)", function()
+    local NS, _, P, ws = containers()
+    local dd = P.row(ws, "container.auraType")
+    -- red under: C.AURA_TYPES still listing ENCHANT
+    assertEqual(table.concat(dd.order, ","), "HELPFUL,HARMFUL")
+    local lines = P.chat()
+    NS.Slash:OnSlash("set container.auraType ENCHANT")
+    -- red under: /am set taking a value the row no longer lists
+    assertEqual(NS.Database.FindContainer(1).auraType, "HELPFUL")
+    assertTrue(table.concat(lines, "\n"):find("container.auraType", 1, true) ~= nil, "and says why")
 end)
 
 test("containers: the Style dropdown offers bars, icons and text and writes the selected container", function()

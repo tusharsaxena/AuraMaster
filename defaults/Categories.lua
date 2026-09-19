@@ -314,14 +314,16 @@ Cat.HARMFUL = {
     },
 }
 
--- Weapon enchants have no categories: the engine draws them per slot.
-Cat.ENCHANT = {}
+-- The list an aura type this build does not know gets: none (a stored ENCHANT container predates schema
+-- v5, which turns it into a buff container before anything reads its categories).
+local NONE = {}
 
 --- The ordered category list for an aura type, never nil.
---- @param auraType string  "HELPFUL" | "HARMFUL" | "ENCHANT"
+--- @param auraType string  "HELPFUL" | "HARMFUL"
 --- @return table
 function Cat.For(auraType)
-    return Cat[auraType] or Cat.ENCHANT
+    if auraType == "HELPFUL" or auraType == "HARMFUL" then return Cat[auraType] end
+    return NONE
 end
 
 --- One category definition by aura type and key, or nil.

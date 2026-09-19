@@ -570,13 +570,14 @@ function Style.Element(frame, cfg, engine, classColor)
 end
 
 --- Whether right-click cancels this element's aura. Only the player's own buffs and weapon enchants
---- can be canceled — a debuff or a target's buff cannot, and registering the click there would only
---- swallow it — and a click-through container takes no clicks at all.
+--- (a player buff container's enchant slots) can be canceled — a debuff or a target's buff cannot,
+--- and registering the click there would only swallow it — and a click-through container takes no
+--- clicks at all.
 local function cancelEnabled(cfg, b)
     if b.clickThrough or not Style.OrTemplate(b.cancelOnRightClick, D.behavior.cancelOnRightClick) then
         return false
     end
-    return cfg.unit == "player" and (cfg.auraType == "HELPFUL" or cfg.auraType == "ENCHANT")
+    return cfg.unit == "player" and cfg.auraType == "HELPFUL"
 end
 
 --- Whether `cfg`'s elements hold the mouse's hover: yes unless the container is click-through or

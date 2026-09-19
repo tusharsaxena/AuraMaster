@@ -939,7 +939,7 @@ end)
 
 test("v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost", function()
     -- red under: counting an ENCHANT container as `lost`, which docs/schema.md and the [Migrate]
-    -- line would then overstate — FC.Compile's compileEnchant never reads filter.onlyShown at all.
+    -- line would then overstate — FC.Compile's compileEnchant (retired at schema v5) never read filter.onlyShown at all.
     local NS = fresh()
     local p = { containers = { { auraType = "ENCHANT",
         filter = { onlyShown = true, categories = {} } } } }

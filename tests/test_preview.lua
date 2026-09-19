@@ -51,15 +51,11 @@ test("preview: every placeholder aura is drawn, each where Preview.Offset puts i
     end
 end)
 
-test("preview: the per-group cap limits the placeholders, and an enchant container shows at most two", function()
+test("preview: the per-group cap limits the placeholders", function()
     local k = container(cfg({ filter = { maxAuras = 2 } }))
     NS.Preview.Show(k)
     -- red under: Preview.Show ignoring filter.maxAuras
     assertEqual(active(k), 2, "capped")
-    k = container(cfg({ auraType = "ENCHANT" }))
-    NS.Preview.Show(k)
-    -- red under: an enchant preview drawing five placeholders for two weapon slots
-    assertEqual(active(k), 2, "main hand and off hand")
     k = container(cfg({ filter = { maxAuras = 0 } }))
     NS.Preview.Show(k)
     assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "0 means no cap")

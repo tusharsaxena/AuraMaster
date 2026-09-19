@@ -215,10 +215,10 @@ suite covers what only the client can show.
 44. Apply a temporary weapon enchant (an oil, a stone, a poison). The *Player buffs* starter shows it
     after the buffs, because its **Weapon enchants** row on Filters → Categories is Show (the
     default, schema v3). Set that row to **Hide** → the enchant drops out of that container; set it
-    back to **Show** → it returns. A container with aura type *Weapon enchants* shows it too, always
-    (that row has no bearing on it). **Hide enchants without a duration** hides a permanent one.
-45. Set a weapon-enchant container's unit to *target* → the Filters page warns that enchants are always
-    the player's, and it still shows yours.
+    back to **Show** → it returns. **Hide enchants without a duration** hides a permanent one.
+45. `/am new enchants` → a player buff container named *Container N* whose Filters → Categories are
+    all Hide but **Weapon enchants**: it shows your enchants and no buff. The Aura type dropdown on
+    Containers offers Buffs and Debuffs only (schema v5, feedback #6).
 
 ## I. Combat deferral
 
@@ -578,7 +578,7 @@ nothing).
      that broke; the stored template does not change. Try each rule of spec §3.2 once.
 101. **Style switching.** A container Bars → Text → Icons → Text, out of combat: each redraws cleanly,
      and Layout → Growth → Fill follows (Columns, Rows, Columns).
-102. **Weapon enchants.** A weapon-enchant container styled Text shows the enchant's name and time.
+102. **Weapon enchants.** An enchant-only buff container (`/am new enchants text`) shows the enchant's name and time.
 103. **The Player cooldowns starter.** On a NEW profile, the "Player cooldowns" Text container shows
      an offensive and a defensive cooldown when popped, and nothing else (no food, flask, mount or
      raid buffs).

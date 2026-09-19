@@ -693,13 +693,15 @@ test("style: tooltips and click-through decide whether a button takes the mouse 
     assertEqual(f:__joined("SetMouseClickEnabled"), "false")
 end)
 
-test("style: right-click cancel reaches weapon enchants, never the player's debuffs, and never when turned off", function()
+test("style: right-click cancel reaches the player's buffs and their enchant slots, never the player's debuffs, and never when turned off", function()
     local function cancelOf(over)
         local f = R()
         NS.Style.ApplyBehavior(f, cfg(over))
         return f:__last("SetCancelAuraButtons")[1]
     end
-    assertEqual(cancelOf({ unit = "player", auraType = "ENCHANT" }), "RightButtonUp", "a weapon enchant")
+    assertEqual(cancelOf({ unit = "player", auraType = "HELPFUL" }), "RightButtonUp", "a player buff, or its weapon enchants")
+    -- red under: cancelEnabled still reading the retired ENCHANT aura type (feedback #6)
+    assertNil(cancelOf({ unit = "player", auraType = "ENCHANT" }), "no aura type of that name any more")
     -- red under: cancelEnabled testing the unit alone (a debuff cannot be canceled, and the click is swallowed)
     assertNil(cancelOf({ unit = "player", auraType = "HARMFUL" }), "the player's debuffs")
     assertNil(cancelOf({ unit = "player", auraType = "HELPFUL", behavior = { cancelOnRightClick = false } }),

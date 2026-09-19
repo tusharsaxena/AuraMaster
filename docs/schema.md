@@ -53,7 +53,7 @@ path, never to a number restated in `modules/`.
 | `name` | `"Container"` (a new one becomes `"Container N"`) | any non-blank string, unique across the registry |
 | `enabled` | `true` | bool |
 | `unit` | `"player"` | `player`, `target`, `focus`, `pet` |
-| `auraType` | `"HELPFUL"` | `HELPFUL`, `HARMFUL`, `ENCHANT` |
+| `auraType` | `"HELPFUL"` | `HELPFUL`, `HARMFUL` (`ENCHANT` retired by schema v5) |
 | `style` | `"bars"` | `bars`, `icons` |
 
 ### `filter`
@@ -386,8 +386,8 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   - **HELPFUL or HARMFUL**: the matching `categories.<key>` is set `"hide"`, preserving the toggle's
     old effect — the container keeps drawing only what it categorized rather than silently widening
     the moment the toggle's own catch-all suppression disappears with the key.
-  - **ENCHANT**: neither converted nor counted as lost. An ENCHANT container compiles to no aura
-    groups at all (`FC.Compile`'s `compileEnchant`), so its `onlyShown` — however it got set — never
+  - **ENCHANT**: neither converted nor counted as lost. An ENCHANT container compiled to no aura
+    groups at all (`FC.Compile`'s `compileEnchant`, retired with the aura type at schema v5), so its `onlyShown` — however it got set — never
     did anything; the dead key is still cleared, just not narrated as a loss.
   - **Any other, unrecognized `auraType`**: there is no `uncategorized` category to migrate onto for
     a shape this migration does not know, so nothing can be invented to stand in for it. The

@@ -92,7 +92,7 @@ test("options: the General page leads with Master controls, in canonical order",
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 
-test("options: the Filters page offers the Overrides tab only for a buff or debuff container", function()
+test("options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type", function()
     local NS2 = fresh()
     local ctx = NS2.Helpers.__pageCtx.filters
     local function tabs()
@@ -103,7 +103,9 @@ test("options: the Filters page offers the Overrides tab only for a buff or debu
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
     assertTrue(tabs().overrides)
-    NS2.SetByPath("container.auraType", "ENCHANT", 1)
+    -- A stored aura type this build does not know (a hand-edited file; the retired ENCHANT, before
+    -- schema v5 runs): no write can store one, so it is planted.
+    NS2.Database.FindContainer(1).auraType = "BOGUS"
     -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
     NS2.Helpers.RefreshAllPanels()
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")

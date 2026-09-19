@@ -105,20 +105,6 @@ test("filters: a buff container's Categories tab offers the weapon-enchant rows;
     assertTrue(gridLine(NS, ws, "magic") ~= nil, "the debuff container keeps its own categories")
 end)
 
-test("filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean", function()
-    local NS, _, P = filters()
-    NS.SetByPath("container.auraType", "ENCHANT", 1)
-    local ws = P.rerender("Filters")
-    local cb = P.row(ws, "container.filter.hidePermanentEnchants")
-    -- red under: hidePermanentEnchants back on a `grid` — a weapon-enchant container reaches the
-    -- Categories tab too (its own auraTypes now includes ENCHANT), so the same bug would hit it
-    assertEqual(cb.type, "CheckBox")
-    cb:__fire("OnValueChanged", true)
-    local stored = NS.Database.FindContainer(1).filter.hidePermanentEnchants
-    assertEqual(stored, true)
-    assertEqual(type(stored), "boolean")
-end)
-
 -- T-3 (batch 7): hidePermanentEnchants used to sit alone below the grid, below the Uncategorized
 -- note too. It now draws directly under the Spell Categories grid, ahead of that note, behind a
 -- line naming the row it is a sub-option of — so it reads as tied to Weapon enchants, not floating.
@@ -137,23 +123,6 @@ test("filters: hidePermanentEnchants draws right under the Spell Categories grid
     assertTrue(tieIndex < noteIndex, "the tie (and the checkbox right after it) comes before the note, directly under the grid")
     local cb = P.row(ws, "container.filter.hidePermanentEnchants")
     assertEqual(cb.type, "CheckBox", "still a plain checkbox, not a grid cell (regression guard)")
-end)
-
-test("filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs", function()
-    local NS, _, P = filters()
-    NS.SetByPath("container.auraType", "ENCHANT", 1)
-    local ws = P.rerender("Filters")
-    -- red under: a Filters row that means nothing for enchants dropping its `auraTypes`, or the
-    -- bespoke Categories tab losing its `auraTypes` (it would stand alone with no rows to draw).
-    -- "What to show" has none of its own rows for an enchant container now that hidePermanentEnchants
-    -- lives in Categories, so it drops out and Categories takes its place.
-    assertEqual(table.concat(P.tabKeys("filters"), ","), NS.L["Categories"] .. "," .. NS.L["Sorting"])
-    assertTrue(P.row(ws, "container.filter.hidePermanentEnchants") ~= nil)
-    assertNil(P.row(ws, "container.filter.castBy"))
-    ws = P.tab("filters", NS.L["Sorting"])
-    assertTrue(P.row(ws, "container.filter.sortDirection") ~= nil, "direction orders the enchants too")
-    assertNil(P.row(ws, "container.filter.sortMethod"))
-    assertNil(P.row(ws, "container.filter.maxAuras"))
 end)
 
 test("filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container", function()
@@ -538,7 +507,7 @@ end)
 
 test("filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories", function()
     local NS, _, P = filters()
-    for _, auraType in ipairs({ "HELPFUL", "HARMFUL", "ENCHANT" }) do
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
         NS.SetByPath("container.auraType", auraType, 1)
         P.rerender("Filters")
         for _, k in ipairs(P.tabKeys("filters")) do
@@ -657,11 +626,11 @@ end)
 
 test("filters: every tab opens with what the engine will not honor here, in orange", function()
     local NS, _, P = filters()
-    local warning = "|cffffa040" .. NS.L[NS.FilterCompiler.WARN.ENCHANT_UNIT] .. "|r"
+    local warning = "|cffffa040" .. NS.L[NS.FilterCompiler.WARN.TIMELESS_BUFFS_ONLY] .. "|r"
     local ws = P.rerender("Filters")
     assertFalse(P.hasText(ws, "|cffffa040"), "a container the engine honors whole has no warning")
-    NS.SetByPath("container.auraType", "ENCHANT", 1)
-    NS.SetByPath("container.unit", "target", 1)
+    NS.SetByPath("container.auraType", "HARMFUL", 1)
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
     ws = P.rerender("Filters")
     -- red under: the page's intro not calling RenderWarnings
     assertTrue(P.hasText(ws, warning), "What to show")

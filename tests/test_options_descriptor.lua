@@ -367,11 +367,12 @@ test("options descriptor: RenderWarnings draws one orange line per thing the eng
         rows[#rows + 1] = text
     end
     local CM, Database = NS2.ContainerManager, NS2.Database
-    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "ENCHANT", unit = "player" })))
-    assertEqual(#rows, 0, "a player enchant container is fine")
-    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "ENCHANT", unit = "target" })))
+    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "HARMFUL", unit = "player" })))
+    assertEqual(#rows, 0, "a plain debuff container is fine")
+    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "HARMFUL", unit = "player",
+        filter = { durationMode = "timeless" } })))
     -- red under: RenderWarnings not wrapping the localized warning in the orange code
-    assertEqual(table.concat(rows, "|"), "|cffffa040" .. NS2.FilterCompiler.WARN.ENCHANT_UNIT .. "|r")
+    assertEqual(table.concat(rows, "|"), "|cffffa040" .. NS2.FilterCompiler.WARN.TIMELESS_BUFFS_ONLY .. "|r")
 end)
 
 -- ── refresh and open ──────────────────────────────────────────────────────────────────────────

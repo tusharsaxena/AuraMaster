@@ -77,7 +77,7 @@ local ROWS = {
     {
         path = "container.auraType", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS), label = L["Aura type"],
-        desc = L["Buffs, debuffs, or your temporary weapon enchants. The Filters page offers the categories of whichever you choose."],
+        desc = L["Buffs or debuffs. The Filters page offers the categories of whichever you choose; your temporary weapon enchants are a buff category there."],
         onChange = structural,
     },
     {
