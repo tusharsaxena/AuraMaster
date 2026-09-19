@@ -1132,7 +1132,7 @@ badge and any count quoted in the docs must agree with it.
 - layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
 - layout: choosing a facing Point redraws the tab with the hint on the next frame
 
-### test_pages_bars.lua (12)
+### test_pages_bars.lua (13)
 
 - bars: every tab of an icons container carries the muted-red note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
@@ -1143,11 +1143,12 @@ badge and any count quoted in the docs must agree with it.
 - bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
-- bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+- bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+- bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
-### test_pages_icons.lua (7)
+### test_pages_icons.lua (8)
 
 - icons: a bars container's tabs carry the muted-red note; an icons container's carry none
 - icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
@@ -1155,11 +1156,12 @@ badge and any count quoted in the docs must agree with it.
 - icons: the six tabs are drawn in order
 - icons: Width on the Icons page writes the icon width, never the bar width
 - icons: the Cooldown rows write the selected container's swipe
+- icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (27)
+### test_pages_text.lua (28)
 
-- text page: the four tabs are drawn in order
+- text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: a bars or icons container sees every row disabled under the note naming its style
 - text page: the Bars and Icons pages name the text style on a text container
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
@@ -1172,7 +1174,8 @@ badge and any count quoted in the docs must agree with it.
 - text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
 - text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
 - text page: each loop row is live only for the effects that use it
-- text page: without a duration token the running-out rows dim, except the swatch, under a note
+- text page: without a duration token the pandemic-window rows dim, except the swatch, under a note
+- text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)
 - text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
 - text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type
 - text page: Defaults restores the selected container's text look and nothing else
@@ -1335,9 +1338,9 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 43 |
 | test_pages_layout.lua | 27 |
-| test_pages_bars.lua | 12 |
-| test_pages_icons.lua | 7 |
-| test_pages_text.lua | 27 |
+| test_pages_bars.lua | 13 |
+| test_pages_icons.lua | 8 |
+| test_pages_text.lua | 28 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1351,4 +1354,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1137** |
+| **Total** | **1140** |

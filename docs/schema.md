@@ -158,7 +158,7 @@ than one piece STACKS it, one centered row per field, text outside `[ ]` not dra
 `iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
 `iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
 false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
-`animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); running out — `expiringColorOn`
+`animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); the pandemic window — `expiringColorOn`
 (false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
 #7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
 `dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px).

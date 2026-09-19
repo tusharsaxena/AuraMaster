@@ -123,7 +123,7 @@ suite covers what only the client can show.
     container.attach.mode screen` with the page open → it redraws to Screen alone; `/am get
     container.attach.x` still answers while Offset is hidden.
 26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Highlights ]**. On an icon container every tab carries the small gray "Not in use: this container
+    Pandemic ]**. On an icon container every tab carries the small gray "Not in use: this container
     is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
     quiet text, not a full-width orange banner, and not larger than the labels under it — a gap below it, and every control dimmed and unclickable; the tabs
     and the Container dropdown still work. **General** opens on its Size subsection (**Width**,
@@ -136,7 +136,7 @@ suite covers what only the client can show.
     **Background & border**, Background reads **Background texture** · **Background opacity** /
     **Background color** · **Use class color**; drag **Background opacity** down → the bars'
     background fades while the fill stays as it was.
-27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**. On
+27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Pandemic ]**. On
     Cooldown tick **Blizzard countdown numbers** → on a timed aura the countdown and the time text
     read the same whole second throughout, in each time format (both round a fraction up: 12.7 s
     reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
@@ -378,8 +378,8 @@ listed here too, so the batch can be signed off in one pass.
     unit shows no unit tooltip; a unit tooltip already up fades.
 65. **Placeholder time text (B-5, question Q7).** `/am test` on a bar container and switch Time text →
     **Countdown** between Blizzard, short and detailed → the placeholders' time text changes with it
-    and reads as a live aura's does in the same format. Tick Highlights → **Running out** → the
-    *Shield Wall* placeholder (4 s left) takes the running-out color.
+    and reads as a live aura's does in the same format. Tick Pandemic → **Recolor the time in the pandemic window** → the
+    *Shield Wall* placeholder (4 s left) takes the pandemic-window time color.
 66. **Text justify (B-5).** On Bars → Name text set **Justify** to Right → the name moves to the
     right end of its box and stops short of the time text. On Bars → Time text, with the name shown,
     set **Justify** to Left, then Right → the time moves across a box as wide as its format's longest
@@ -584,7 +584,7 @@ nothing).
     names; nothing (brackets included) on a typeless debuff.
 97. **Loops.** Pulse, Blink and Bounce, each through a pull: no piece overlaps another while it
     animates; a change made in combat starts when combat ends.
-98. **Running out.** Recolor on, then Blink on: the duration run turns the color, then blinks, in the
+98. **The pandemic window.** On the Pandemic tab, Recolor on, then Blink on: the duration run turns the color, then blinks, in the
     last N seconds; the rest of the line keeps the font color.
 99. **The icon.** On a new Text container (Icon position None), the Icon tab's rows are dimmed but
     Icon position and the border's color swatch, under a gray "Set Icon position to show the icon."
@@ -606,7 +606,7 @@ nothing).
 103. **The Player cooldowns starter.** On a NEW profile, the "Player cooldowns" Text container shows
      an offensive and a defensive cooldown when popped, and nothing else (no food, flask, mount or
      raid buffs).
-104. **The running-out blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
+104. **The pandemic-window blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
      in 0.01 s increments with delays under REPEAT, so it reads as a blink, not a flicker or a smooth
      fade.
 105. **Nested clipping.** A template wider than the box, on a narrow Text container: the line is cut
@@ -887,3 +887,12 @@ detail, the step points at it rather than repeating it.
      **empty part** (its background) is dark or blue. Dark confirms they are typeless (the background
      keeps its own color); blue means the engine reports a type for them, and the probe's `dispelName`
      column should say which.
+156. **The Pandemic tab (B2-1).** Bars, Icons and Text each draw a **Pandemic** tab: Bars and Icons
+     last (**Highlights** is gone), Text between Icon and Animation. On Bars and Icons it holds two
+     subsections, **Time color** (Recolor the time in the pandemic window, Pandemic window (seconds
+     left), Pandemic-window time color) and **Highlight** (Highlight the pandemic window,
+     Pandemic-window highlight color); on Text, Time color with those three and Blink in the pandemic
+     window, and the gray "The pandemic window needs a duration token, such as $remainingduration$, in
+     the template." note under them on a template without one. Text → Animation now holds the Loop
+     rows alone. Hover each row: no tooltip says "running out" or "refresh window". Values set before
+     the rename are kept (a threshold of 8 still reads 8), and `/am list` still names the same paths.

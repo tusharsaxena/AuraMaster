@@ -4,7 +4,7 @@ local _, NS = ...
 -- template language is modules/TextTemplate.lua's).
 --
 --     band   [Container ▾]
---     [ General ][ Font ][ Icon ][ Animation ]
+--     [ General ][ Font ][ Icon ][ Pandemic ][ Animation ]
 --     General   Size, then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
@@ -13,7 +13,9 @@ local _, NS = ...
 --               edge, each opt-in and off; moved here from Animation, smoke batch 2 item 5)
 --     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
 --               border swatch) dims while the position is None, under a note
---     Animation Loop, then Running out and its note
+--     Pandemic  Time color (the duration tokens' color and blink in the pandemic window, once
+--               "Running out" on Animation; smoke batch 2, B2-1) and its note
+--     Animation Loop
 --
 -- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and two
 -- read-only blocks between its rows: the token cheat sheet, and the centering note under Placement.
@@ -29,7 +31,7 @@ local _, NS = ...
 -- A container drawn as bars or icons sees every row here disabled, under a note naming where its
 -- style is changed (settings/OptionsSetup.lua's drawDisabledNotice). The font and icon-border blocks
 -- are composed (options-ui-§16) with class-color companions (§17) resolved to the tracked unit's
--- class, as on the Bars page; the running-out swatch is a palette color and carries none.
+-- class, as on the Bars page; the pandemic-window time swatch is a palette color and carries none.
 
 local L = NS.L
 local H = NS.Helpers
@@ -42,6 +44,7 @@ local P = "container.text."
 local UNIT = { source = "unit" }
 
 local G_GENERAL, G_FONT, G_ICON, G_ANIM = L["General"], L["Font"], L["Icon"], L["Animation"]
+local G_PANDEMIC, S_TIME = L["Pandemic"], L["Time color"]
 local S_PLACEMENT, S_DISPEL = L["Placement"], L["Dispel type"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local HEADING = { fontObject = "GameFontNormalSmall" }
@@ -73,7 +76,7 @@ local function unlessAnim(...)
     return function() return not wanted[textBlock().anim or D.anim] end
 end
 
---- A `disabledIf` predicate: the running-out rows need a duration token in the template (the blink
+--- A `disabledIf` predicate: the pandemic-window rows need a duration token in the template (the blink
 --- and the color ride the duration run's text).
 local function noDuration()
     return not TT.ForDraw(textBlock().template).hasDuration
@@ -392,12 +395,40 @@ local iconBorder = H.BorderGroup({
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
 -- Every border row dims with no icon (noIcon), except the swatch: a color row is never grayed
--- (anti-pattern #74, options-ui-§17), as the Running-out swatch stays live on the Animation tab.
+-- (anti-pattern #74, options-ui-§17), as the pandemic-window time swatch stays live on the Pandemic tab.
 for _, row in ipairs(iconBorder) do
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
     if row.type ~= "color" then row.disabledIf = noIcon end
 end
 NS.RegisterSchemaRows(iconBorder)
+
+-- ── Pandemic ──────────────────────────────────────────────────────────────────────────────────
+-- Smoke batch 2, B2-1 (the owner's call): once "Running out" on the Animation tab, named for the
+-- pandemic window as on the Bars and Icons pages, and registered ahead of Animation so its tab
+-- sits before it. Labels only: the paths and stored values are unchanged.
+
+NS.RegisterSchemaRows({
+    { path = P .. "expiringColorOn", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "bool",
+      startsLine = true, disabledIf = noDuration,
+      label = L["Recolor the time in the pandemic window"],
+      desc = L["Turn the duration tokens another color in the pandemic window: the last seconds, set below. The rest of the line keeps the font color."] },
+    { path = P .. "expiringThreshold", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "number",
+      min = 1, max = 60, step = 1, disabledIf = noDuration,
+      label = L["Pandemic window (seconds left)"], desc = L["The pandemic window starts this many seconds before the aura ends."] },
+    -- Palette definition (options-ui-§17 exemption): identifies a state, not a player.
+    -- Never dimmed, even without a duration token: a swatch is read for its alpha (anti-pattern #74,
+    -- tests/test_schema.lua).
+    { path = P .. "expiringColor", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "color",
+      startsLine = true,
+      label = L["Pandemic-window time color"], desc = L["The duration tokens' color in the pandemic window."] },
+    -- engine-only: the blink is a curve the engine steps on its own clock; a placeholder's time is a
+    -- fixed number, so the preview shows the pandemic-window color and never the blink
+    -- (tests/test_render_coverage.lua).
+    { path = P .. "expiringBlink", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "bool",
+      disabledIf = noDuration, coverage = "engine-only",
+      label = L["Blink in the pandemic window"],
+      desc = L["Blink the duration tokens in the pandemic window, in the pandemic-window time color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."] },
+})
 
 -- ── Animation ─────────────────────────────────────────────────────────────────────────────────
 
@@ -414,25 +445,6 @@ NS.RegisterSchemaRows({
     { path = P .. "animBounce", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
       min = 1, max = 10, step = 1, disabledIf = unlessAnim("bounce"),
       label = L["Bounce height (px)"], desc = L["How far the line moves up. The box clips it, so leave headroom."] },
-    { path = P .. "expiringColorOn", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "bool",
-      startsLine = true, disabledIf = noDuration,
-      label = L["Recolor the time when running out"], desc = L["Turn the duration tokens another color in the last seconds. The rest of the line keeps the font color."] },
-    { path = P .. "expiringThreshold", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "number",
-      min = 1, max = 60, step = 1, disabledIf = noDuration,
-      label = L["Running out below (sec)"], desc = L["When the time text changes color."] },
-    -- Palette definition (options-ui-§17 exemption): identifies a state, not a player.
-    -- Never dimmed, even without a duration token: a swatch is read for its alpha (anti-pattern #74,
-    -- tests/test_schema.lua).
-    { path = P .. "expiringColor", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "color",
-      startsLine = true,
-      label = L["Running-out color"], desc = L["The time text's color in the last seconds."] },
-    -- engine-only: the blink is a curve the engine steps on its own clock; a placeholder's time is a
-    -- fixed number, so the preview shows the running-out color and never the blink
-    -- (tests/test_render_coverage.lua).
-    { path = P .. "expiringBlink", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "bool",
-      disabledIf = noDuration, coverage = "engine-only",
-      label = L["Blink when running out"],
-      desc = L["Blink the duration tokens in the last seconds, in the running-out color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."] },
 })
 
 --- After the Icon tab's rows: why they are dimmed, when Icon position is None (smoke batch 2, item 6).
@@ -441,15 +453,15 @@ local function iconNote(ctx)
     H.TextRow(ctx, GRAY:format(L["Set Icon position to show the icon."]), SMALL)
 end
 
---- After the Animation tab's rows: why Running out is dimmed, when the template has no duration.
-local function animationNote(ctx)
+--- After the Pandemic tab's rows: why they are dimmed, when the template has no duration.
+local function pandemicNote(ctx)
     if not noDuration() then return end
-    H.TextRow(ctx, GRAY:format(L["Running out needs a duration token, such as $remainingduration$, in the template."]), SMALL)
+    H.TextRow(ctx, GRAY:format(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
 end
 
 NS.RegisterContainerPage(PAGE, L["Text"], "AuraMasterTextPanel", {
     tabs = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
-    afterGroup = { [G_ICON] = iconNote, [G_ANIM] = animationNote },
+    afterGroup = { [G_ICON] = iconNote, [G_PANDEMIC] = pandemicNote },
     disabledFor = function(cfg) return cfg.style ~= "text" end,
     disabledNotice = function(cfg)
         if cfg.style == "icons" then

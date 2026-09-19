@@ -51,6 +51,13 @@ local function animationTab(NS, P)
     return P.tab("text", NS.L["Animation"])
 end
 
+--- The Pandemic tab, drawn as animationTab draws the Animation tab.
+local function pandemicTab(NS, P)
+    local ws = P.rerender("Text")
+    if NS.Helpers.__pageCtx.text.activeTab == NS.L["Pandemic"] then return ws end
+    return P.tab("text", NS.L["Pandemic"])
+end
+
 --- The Text page drawn for container 1, switched to the text style first.
 local function textPage(opts)
     local NS, m = fresh(opts)
@@ -60,12 +67,12 @@ local function textPage(opts)
     return NS, m, P, P.show("Text")
 end
 
-test("text page: the four tabs are drawn in order", function()
+test("text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)", function()
     local NS, _, P = textPage()
     local L = NS.L
-    -- red under: a row registered in a group of its own (a stray fifth tab), or the tabs reordered
+    -- red under: a row registered in a group of its own (a stray sixth tab), or the tabs reordered
     assertEqual(table.concat(P.tabKeys("text"), ","),
-        table.concat({ L["General"], L["Font"], L["Icon"], L["Animation"] }, ","))
+        table.concat({ L["General"], L["Font"], L["Icon"], L["Pandemic"], L["Animation"] }, ","))
 end)
 
 test("text page: a bars or icons container sees every row disabled under the note naming its style", function()
@@ -291,23 +298,62 @@ test("text page: each loop row is live only for the effects that use it", functi
     assertEqual(states("bounce"), "animSpeed=false animIntensity=true animBounce=false")
 end)
 
-test("text page: without a duration token the running-out rows dim, except the swatch, under a note", function()
+test("text page: without a duration token the pandemic-window rows dim, except the swatch, under a note", function()
     local NS, _, P = textPage()
     local L = NS.L
-    local note = L["Running out needs a duration token, such as $remainingduration$, in the template."]
-    local ws = animationTab(NS, P)
+    local note = L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]
+    local ws = pandemicTab(NS, P)
     assertFalse(P.hasText(ws, note), "the default template has one")
     assertFalse(P.row(ws, P_ .. "expiringBlink").disabled and true or false)
     NS.SetByPath(P_ .. "template", "$spellname$[ x$stacks$]", 1)
-    ws = animationTab(NS, P)
-    -- red under: the Animation tab's afterGroup note not drawn
+    ws = pandemicTab(NS, P)
+    -- red under: the Pandemic tab's afterGroup note not drawn (still keyed to Animation)
     assertTrue(P.hasText(ws, note))
     for _, key in ipairs({ "expiringColorOn", "expiringThreshold", "expiringBlink" }) do
-        -- red under: a running-out row without the noDuration predicate
+        -- red under: a pandemic-window row without the noDuration predicate
         assertTrue(P.row(ws, P_ .. key).disabled, key)
     end
     -- anti-pattern #74: a color swatch is never grayed
     assertFalse(P.row(ws, P_ .. "expiringColor").disabled and true or false, "the swatch stays live")
+    -- red under: the note left on the Animation tab as well
+    assertFalse(P.hasText(animationTab(NS, P), note), "not on Animation")
+end)
+
+-- The owner's call (smoke batch 2, B2-1): Running out is named for the pandemic window, on a tab of
+-- its own ahead of Animation, as on the Bars and Icons pages. Labels only; paths unchanged.
+local PANDEMIC = {
+    { "expiringColorOn", "Recolor the time in the pandemic window" },
+    { "expiringThreshold", "Pandemic window (seconds left)" },
+    { "expiringColor", "Pandemic-window time color" },
+    { "expiringBlink", "Blink in the pandemic window" },
+}
+
+test("text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)", function()
+    local NS, _, P = textPage()
+    local ws = pandemicTab(NS, P)
+    local want = {}
+    for i, spec in ipairs(PANDEMIC) do
+        local row = NS.FindSchemaRow(P_ .. spec[1])
+        -- red under: the row still on Animation, under Running out, or its old label
+        assertEqual(row.group, "Pandemic", spec[1])
+        assertEqual(row.subgroup, "Time color", spec[1])
+        assertEqual(row.label, spec[2], spec[1])
+        local text = (row.label .. " " .. (row.desc or row.tooltip or "")):lower()
+        assertTrue(not text:find("running out", 1, true) and not text:find("running-out", 1, true), spec[1])
+        want[i] = spec[2]
+    end
+    local got = {}
+    for i, w in ipairs(P.rowWidgets(ws, "text", "Pandemic")) do got[i] = w.labelText end
+    assertEqual(table.concat(got, "|"), table.concat(want, "|"), "drawn in order on the Pandemic tab")
+    assertTrue(P.find(ws, "Heading", "Time color") ~= nil, "the time color subsection")
+    -- red under: the rows drawn on Animation too; Animation keeps its Loop rows
+    local anim = animationTab(NS, P)
+    assertTrue(P.row(anim, P_ .. "expiringColorOn") == nil, "not on Animation")
+    assertTrue(P.row(anim, P_ .. "anim") ~= nil, "Animation keeps the loop")
+    -- red under: a moved row writing a renamed path
+    ws = pandemicTab(NS, P)
+    P.row(ws, P_ .. "expiringThreshold"):__fire("OnMouseUp", 6)
+    assertEqual(NS.Database.FindContainer(1).text.expiringThreshold, 6)
 end)
 
 --- The Icon tab as the current settings draw it, as animationTab draws the Animation tab.

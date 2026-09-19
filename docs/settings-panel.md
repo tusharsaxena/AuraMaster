@@ -14,9 +14,9 @@ is a defect in this doc (documentation-§3).
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
-| - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
-| - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
-| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink, and its opt-in dispel type colors |
+| - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Pandemic | The look of a container drawn as bars |
+| - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
+| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
@@ -392,7 +392,7 @@ The tabs and the container picker stay live.
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
-| Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
+| Pandemic (5) | *Time color:* `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` 1–60 (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color); *Highlight:* `pandemic` (Highlight the pandemic window), `pandemicColor` (Pandemic-window highlight color). Once the Highlights tab's *Running out* and *Refresh window* (smoke batch 2, B2-1: labels only, paths unchanged). The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
 a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:161`);
@@ -405,9 +405,9 @@ or one of the many debuffs that carry none, class debuffs such as Judgment or Co
 keeps the surface's own color (the map's
 `None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
-(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the running-out color is a step color curve over
-remaining time (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
-shows only while the aura can be refreshed without loss.
+(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the pandemic-window time color is a step color curve over
+remaining time, at the player's own seconds threshold (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the pandemic-window highlight is an additive wash the engine
+shows only while the aura can be refreshed without loss, a window the game finds per spell (the threshold does not move it).
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
 surface with no texture a swatch and its companion and nothing else, and this background has a live
@@ -436,7 +436,7 @@ settings." — and every control is drawn disabled, as on the Bars page.
 | Cooldown (5) | `cooldown`, `cooldownReverse`, `cooldownEdge`, `swipeAlpha` 0–1, `blizzardNumbers` |
 | Time text (12) | *Font:* the composed font block on `time.`; *Placement:* `time.show`, `.justify`, `.point`, `.x`, `.y`; *Countdown:* `timeFormat` |
 | Stack text (11) | The same on `stacks.` without the countdown |
-| Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor` |
+| Pandemic (5) | *Time color:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Highlight:* `pandemic`, `pandemicColor` — the Bars page's labels (smoke batch 2, B2-1; once Highlights) |
 
 `dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
 harmful auras with a dispel type only. The art sits above your border and replaces it there; every
@@ -473,8 +473,10 @@ template is never stored, and its reason reaches the player through the write se
 (`settings/Schema.lua`), printed under "Invalid value for container.text.template" — in the panel and
 by `/am set` alike.
 
-Running out is dimmed (the running-out swatch excepted, since a swatch is read for its alpha even
-unused) when the template carries no duration token, with a note saying so; the Loop rows are dimmed
+The **Pandemic** tab (smoke batch 2, B2-1: once *Running out* on the Animation tab; labels only, paths
+unchanged) is dimmed (the Pandemic-window time color swatch excepted, since a swatch is read for its alpha even
+unused) when the template carries no duration token, with a note saying so ("The pandemic window needs a
+duration token, such as $remainingduration$, in the template."); on the Animation tab the Loop rows are dimmed
 per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
 Bounce).
 
@@ -508,7 +510,8 @@ disabled, as on the Bars and Icons pages.
 | General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
-| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
+| Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce` |
 
 ### Profiles (`settings/Profiles.lua`)
 
