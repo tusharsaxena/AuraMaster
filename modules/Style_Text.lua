@@ -27,6 +27,12 @@ local _, NS = ...
 -- Style.StructureKey), so no stale binding outlives it; the chains are what a PREVIEW frame, reused
 -- across templates, relies on.
 --
+-- COLOR BY DISPEL TYPE (feedback #7). No engine binding colors a font string by the aura's dispel type,
+-- and no addon code may read the type or touch a button's objects in combat. Three opt-in stand-ins,
+-- each wired at dress time: the $dispeltype$ word colored by a |c escape written into the engine's own
+-- text map (dispelOptionsFor), and a backdrop and a four-strip edge in the text area, textures the
+-- engine tints and shows per aura (AddDispelTypeTexture, dispelTints).
+--
 -- ANIMATIONS ARE SET UP AT DRESS TIME ONLY. In combat every call on a button's objects is refused
 -- (AnimationGroup:Play/Stop included), but an animation started at dress time keeps running through
 -- combat. All three loops are built once with the regions; a dress configures them, stops them all
@@ -61,6 +67,15 @@ local function number(v, default)
     return tonumber(v) or default
 end
 
+-- The dispel edge's four strips (feedback #7): each region key, the two corners of the text area it
+-- runs between, and the setter its thickness goes through.
+local EDGES = {
+    { "edgeTop", "TOPLEFT", "TOPRIGHT", "SetHeight" },
+    { "edgeBottom", "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+    { "edgeLeft", "TOPLEFT", "BOTTOMLEFT", "SetWidth" },
+    { "edgeRight", "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+}
+
 --- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height").
 local function fontSize(s)
     return number((s.font or D.font).fontSize, D.font.fontSize)
@@ -91,6 +106,20 @@ local function buildLoops(am)
     am.bounce:SetSmoothing("IN_OUT")
 end
 
+--- The dispel backdrop and edge (feedback #7): textures of the text area, so they sit under the chain
+--- (a child frame) and move with the loops. Each is its own key on `am`: a region never hides in a
+--- list the style suites cannot see.
+local function buildDispelTints(am)
+    am.backdrop = am.area:CreateTexture(nil, "BACKGROUND")
+    am.backdrop:SetAllPoints(am.area)
+    for _, e in ipairs(EDGES) do
+        local strip = am.area:CreateTexture(nil, "BORDER")
+        strip:SetPoint(e[2], am.area, e[2])
+        strip:SetPoint(e[3], am.area, e[3])
+        am[e[1]] = strip
+    end
+end
+
 --- Build the regions once (Style.RegionsFor). Every region is a descendant of the button, tagged
 --- "text"; the font strings are built per shape (useChain).
 local function build(frame)
@@ -109,6 +138,7 @@ local function build(frame)
     am.iconBorder = CreateFrame("Frame", nil, am.anim, "BackdropTemplate")
     am.area = CreateFrame("Frame", nil, am.anim)
     am.area:SetClipsChildren(true)
+    buildDispelTints(am)
 
     buildLoops(am)
     am.pieceCount = 0
@@ -278,6 +308,23 @@ local function dressPieces(am, s, compiled)
     end
 end
 
+--- The dispel backdrop and edge (feedback #7): white, the backdrop at its opacity, each strip its
+--- thickness, and every one HIDDEN. A live one is shown and tinted by the engine for an aura with a
+--- dispel type (Text.Bind); a placeholder's by Text.FillPreview. Hidden on every dress, because the
+--- engine's Clear restores nothing: a switched-off tint would stay as the engine last drew it.
+local function dressDispelTints(am, s)
+    am.backdrop:SetTexture(C.WHITE_TEXTURE)
+    am.backdrop:SetAlpha(number(s.dispelBackdropAlpha, D.dispelBackdropAlpha))
+    am.backdrop:Hide()
+    local size = number(s.dispelEdgeSize, D.dispelEdgeSize)
+    for _, e in ipairs(EDGES) do
+        local strip = am[e[1]]
+        strip:SetTexture(C.WHITE_TEXTURE)
+        strip[e[4]](strip, size)
+        strip:Hide()
+    end
+end
+
 -- The loops, each the group a dress plays for its `anim` value.
 local LOOPS = { { "pulse", "pulseGroup" }, { "blink", "blinkGroup" }, { "bounce", "bounceGroup" } }
 
@@ -320,20 +367,79 @@ local function stackOptionsFor(piece)
     return opts
 end
 
---- SetDispelTypeText's options for a dispel piece: every type in C.TEXT_DISPEL_TYPES mapped to its
---- localized name inside the piece's bracket text, on harmful and helpful auras alike, nothing for an
---- aura with no type. Built once per bracket text.
-local function dispelOptionsFor(piece)
-    local key = piece.pre .. "\0" .. piece.post
-    local opts = dispelOptions[key]
-    if not opts then
-        local map = {}
-        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do map[t] = piece.pre .. L[C.TEXT_DISPEL_LABELS[t]] .. piece.post end
-        opts = { showWhenHarmful = true, showWhenHelpful = true, showWithoutDispelType = false,
-            customDispelTextMap = map }
-        dispelOptions[key] = opts
+--- One color channel as two hex digits.
+local function hex(v)
+    return ("%02x"):format(math.floor(math.max(0, math.min(1, tonumber(v) or 1)) * 255 + 0.5))
+end
+
+--- The palette `s` colors the dispel type word from: the profile's, when Color the dispel type is on
+--- (feedback #7), else nil.
+local function wordPalette(s)
+    return s and s.dispelTypeColor and Style.ProfileDispelColors() or nil
+end
+
+--- Dispel type `t`'s word inside a piece's bracket text, in `palette`'s color for `t` when it has one:
+--- a |cffRRGGBB escape the font string renders, closed before the bracket text, which keeps the font
+--- color. A type the palette lacks (Enrage) keeps the font color.
+local function dispelWord(piece, t, palette)
+    local word = L[C.TEXT_DISPEL_LABELS[t]]
+    local c = palette and palette[t]
+    if type(c) == "table" then word = "|cff" .. hex(c.r) .. hex(c.g) .. hex(c.b) .. word .. "|r" end
+    return piece.pre .. word .. piece.post
+end
+
+--- Whether a memoized dispel entry was built from exactly the palette leaves `palette` holds now (a
+--- settings write stores a new leaf table, modules/Style.lua's memo note).
+local function paletteCurrent(entry, palette)
+    for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+        if (palette and palette[t] or nil) ~= entry.src[t] then return false end
     end
-    return opts
+    return true
+end
+
+--- SetDispelTypeText's options for a dispel piece: every type in C.TEXT_DISPEL_TYPES mapped to its
+--- localized name inside the piece's bracket text (colored when `s` asks, dispelWord), on harmful and
+--- helpful auras alike, nothing for an aura with no type. The map's values are the engine's own text
+--- (`stringView`, written by fontString:SetText), so the escape is the one path that colors text by
+--- dispel type in combat. Built once per bracket text, coloring and palette.
+local function dispelOptionsFor(piece, s)
+    local palette = wordPalette(s)
+    local key = (palette and "c" or "p") .. piece.pre .. "\0" .. piece.post
+    local entry = dispelOptions[key]
+    if not (entry and paletteCurrent(entry, palette)) then
+        local map, src = {}, {}
+        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+            map[t] = dispelWord(piece, t, palette)
+            src[t] = palette and palette[t] or nil
+        end
+        entry = { src = src, opts = { showWhenHarmful = true, showWhenHelpful = true,
+            showWithoutDispelType = false, customDispelTextMap = map } }
+        dispelOptions[key] = entry
+    end
+    return entry.opts
+end
+
+--- AddDispelTypeTexture's options for the backdrop and edge (feedback #7): shown for a buff or a debuff
+--- WITH a dispel type (as the word is), our white texture kept (PreserveAsset) and tinted from the
+--- profile's palette at full alpha (the backdrop's opacity is its own SetAlpha). Built once per map.
+local tintOptions
+local function tintOptionsFor()
+    local map = Style.DispelColorMap(Style.ProfileDispelColors())
+    if not (tintOptions and tintOptions.customDispelColorMap == map) then
+        tintOptions = { showWhenHarmful = true, showWhenHelpful = true, showWithoutDispelType = false,
+            style = NS.Compat.DispelStyle("PreserveAsset"), customDispelColorMap = map }
+    end
+    return tintOptions
+end
+
+--- Hand the backdrop and each edge strip that `s` turns on to the engine to tint (Style.Bind). The
+--- additive list was cleared at the head of the dress (Style.ClearAdditiveBindings).
+local function dispelTints(frame, am, s)
+    if not (s.dispelBackdrop or s.dispelEdge) then return end
+    local opts = tintOptionsFor()
+    if s.dispelBackdrop then Style.Bind(frame, "AddDispelTypeTexture", am.backdrop, opts) end
+    if not s.dispelEdge then return end
+    for _, e in ipairs(EDGES) do Style.Bind(frame, "AddDispelTypeTexture", am[e[1]], opts) end
 end
 
 --- The button's prebuilt duration binding, plain or with the blink's refresh, built on first use and
@@ -348,7 +454,7 @@ end
 local BINDERS = {
     name = function(frame, fs) Style.Bind(frame, "SetSpellName", fs) end,
     stacks = function(frame, fs, piece) Style.Bind(frame, "SetApplicationCount", fs, stackOptionsFor(piece)) end,
-    dispel = function(frame, fs, piece) Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece)) end,
+    dispel = function(frame, fs, piece, s) Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece, s)) end,
     duration = function(frame, fs, piece, s, am)
         local font = s.font or D.font
         Style.BindDurationFormat(frame, fs, Style.DurationTextFormat(piece, s.timeFormat),
@@ -364,6 +470,7 @@ function Text.Bind(frame, am, cfg, s, compiled)
         local bind = BINDERS[piece.kind]
         if bind then bind(frame, am[PIECE[i]], piece, s, am) end
     end
+    dispelTints(frame, am, s)
     Style.ApplyBehavior(frame, cfg)
 end
 
@@ -396,6 +503,7 @@ function Text.Apply(frame, cfg, engine)
     layoutIconAndArea(am, s, compiled, h)
     dressPieces(am, s, compiled)
     layoutChain(am, s, compiled, h)
+    dressDispelTints(am, s)
     if engine then Text.Bind(frame, am, cfg, s, compiled) end
     applyLoops(am, s)
 end
@@ -442,9 +550,9 @@ local PIECE_TEXT = {
     literal = function(piece) return piece.text end,
     name = function(_, aura) return aura.name end,
     stacks = function(piece, aura) return aura.stacks >= 2 and piece.format:format(aura.stacks) or "" end,
-    dispel = function(piece, aura)
-        local label = aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]
-        return label and (piece.pre .. L[label] .. piece.post) or ""
+    dispel = function(piece, aura, s)
+        if not (aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]) then return "" end
+        return dispelWord(piece, aura.dispel, wordPalette(s))
     end,
     duration = durationText,
 }
@@ -455,6 +563,25 @@ local function previewRunColor(fs, aura, s)
     if aura.duration <= 0 or not (s.expiringColorOn or s.expiringBlink) then return end
     if aura.remaining < number(s.expiringThreshold, D.expiringThreshold) then
         fs:SetTextColor(Style.Color(s.expiringColorOn and s.expiringColor or (s.font or D.font).fontColor, false))
+    end
+end
+
+--- A placeholder's backdrop and edge (feedback #7): shown in the palette color of its aura's dispel
+--- type, as the engine tints a live one; left hidden (dressDispelTints) for an aura with no type or
+--- no palette color.
+local function previewTints(am, aura, s)
+    local dc = aura.dispel and Style.ProfileDispelColors()
+    local c = dc and dc[aura.dispel]
+    if type(c) ~= "table" then return end
+    local r, g, b = c.r or 1, c.g or 1, c.b or 1
+    if s.dispelBackdrop then
+        am.backdrop:SetVertexColor(r, g, b, 1)
+        am.backdrop:Show()
+    end
+    if not s.dispelEdge then return end
+    for _, e in ipairs(EDGES) do
+        am[e[1]]:SetVertexColor(r, g, b, 1)
+        am[e[1]]:Show()
     end
 end
 
@@ -474,6 +601,7 @@ function Text.FillPreview(frame, aura, cfg)
             if piece.kind == "duration" then previewRunColor(fs, aura, s) end
         end
     end
+    previewTints(am, aura, s)
 end
 
 --- The line text block `s` draws for a sample `aura`, as one plain string: the Text page's Preview

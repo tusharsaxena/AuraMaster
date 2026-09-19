@@ -37,8 +37,9 @@ local _, NS = ...
 -- can never leave the tab showing an empty list.
 --
 -- DISPEL COLORS are five plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
--- no `effect`, so a write re-applies every container. Only bars read them, a bar's fill or background
--- colored by dispel type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,
+-- no `effect`, so a write re-applies every container. Bars and text read them: a bar's fill or
+-- background colored by dispel type, and a text line's dispel type word, backdrop and edge (feedback
+-- #7, modules/Style_Text.lua); an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,
 -- owner 2026-09-13). There is no None swatch (feedback #7): an aura with no dispel type keeps the
 -- surface's own color, so a None color would be read by nothing; schema v5 clears the stored leaf.
 -- They are palette definitions, one color per dispel type, and carry no class-color companion: the
@@ -330,14 +331,14 @@ local DISPEL_ROWS = {}
 for _, name in ipairs(C.DISPEL_TYPES) do
     local row = {
         path = "dispelColors." .. name, page = PAGE, group = DISPEL, type = "color", label = L[name],
-        desc = L["This dispel type's color for a bar's fill or background when its Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."],
+        desc = L["This dispel type's color for a bar's fill or background, and for a text line's dispel type word, backdrop or edge when those are on. An icon's dispel border keeps Blizzard's own colors."],
     }
     DISPEL_ROWS[#DISPEL_ROWS + 1] = row
 end
 
 --- The Dispel Colors tab: one line saying who reads the colors, then the group's five rows.
 local function renderDispel(ctx, _, rows)
-    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type. An aura with no dispel type keeps the bar's own color. An icon's dispel border keeps Blizzard's own colors."])
+    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."])
     H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
 end
 

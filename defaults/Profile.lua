@@ -226,6 +226,11 @@ NS.CONTAINER_TEMPLATE = {
 
         expiringColorOn = false, expiringThreshold = 5, expiringColor = color(1, 0.25, 0.25, 1),
         expiringBlink = false,
+
+        -- Color by dispel type (feedback #7): each opt-in, all off (owner, 2026-09-19).
+        dispelTypeColor = false,
+        dispelBackdrop = false, dispelBackdropAlpha = 0.35,
+        dispelEdge = false, dispelEdgeSize = 1,
     },
 }
 

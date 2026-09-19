@@ -316,3 +316,34 @@ test("text page: the Preview line renders the sample aura, brackets filled and e
     ws = pick(NS, m, P, ws, "nameStacksTime")
     assertTrue(P.hasText(ws, L["Preview: %s"]:format("Shadow Word: Pain - 11s")), "no stacks, so no ' x'")
 end)
+
+-- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
+
+test("text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)", function()
+    local NS, _, P = textPage()
+    local L = NS.L
+    local D = NS.CONTAINER_TEMPLATE.text
+    -- red under: any of the three on by default (owner, 2026-09-19: all opt-in, all off)
+    assertFalse(D.dispelTypeColor)
+    assertFalse(D.dispelBackdrop)
+    assertFalse(D.dispelEdge)
+    local ws = animationTab(NS, P)
+    for _, key in ipairs({ "dispelTypeColor", "dispelBackdrop", "dispelBackdropAlpha", "dispelEdge", "dispelEdgeSize" }) do
+        local row = NS.FindSchemaRow(P_ .. key)
+        -- red under: no row
+        assertTrue(row ~= nil and row.group == L["Animation"] and row.subgroup == L["Dispel type"], key)
+        assertTrue(P.row(ws, P_ .. key) ~= nil, key .. " is drawn")
+    end
+    -- The default template has no $dispeltype$, so there is no word to color.
+    assertTrue(P.row(ws, P_ .. "dispelTypeColor").disabled, "the word needs the token")
+    assertTrue(P.row(ws, P_ .. "dispelBackdropAlpha").disabled, "the opacity waits for the backdrop")
+    assertTrue(P.row(ws, P_ .. "dispelEdgeSize").disabled, "the thickness waits for the edge")
+    NS.SetByPath(P_ .. "template", "$spellname$[ ($dispeltype$)]", 1)
+    NS.SetByPath(P_ .. "dispelBackdrop", true, 1)
+    NS.SetByPath(P_ .. "dispelEdge", true, 1)
+    ws = animationTab(NS, P)
+    for _, key in ipairs({ "dispelTypeColor", "dispelBackdropAlpha", "dispelEdgeSize" }) do
+        -- red under: a predicate reading the wrong leaf
+        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live")
+    end
+end)

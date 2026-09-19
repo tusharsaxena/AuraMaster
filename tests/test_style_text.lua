@@ -574,3 +574,115 @@ test("text style: a placeholder running out takes the running-out color on its d
     assertEqual(am.piece2:__joined("SetTextColor"), "1,0,0,1")
     assertEqual(am.piece1:__count("SetTextColor"), 1, "the name keeps the font color the dress set")
 end)
+
+-- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
+
+-- The default Magic color (C.DEFAULT_DISPEL_COLORS: 0.2, 0.6, 1) as a font-string escape.
+local MAGIC_CODE = "|cff3399ff"
+
+test("text style: Color the dispel type writes each word in its palette color inside the bracket text (feedback #7)", function()
+    local NS = E()
+    local frame = dressed(text({ template = "$spellname$[ <$dispeltype$>]", dispelTypeColor = true }), true)
+    local opts = frame:__last("SetDispelTypeText")[2]
+    local map = opts.customDispelTextMap
+    -- red under: the words left plain (the escape inside the map's text is the one engine path that
+    -- colors a font string by dispel type)
+    assertEqual(map.Magic, " <" .. MAGIC_CODE .. NS.L["Magic"] .. "|r>")
+    -- Enrage has no palette color: its word keeps the font color
+    assertEqual(map.Enrage, " <" .. NS.L["Enrage"] .. ">")
+    assertNil(map.None)
+    assertFalse(opts.showWithoutDispelType)
+    local off = dressed(text({ template = "$spellname$[ <$dispeltype$>]" }), true)
+    assertEqual(off:__last("SetDispelTypeText")[2].customDispelTextMap.Magic, " <" .. NS.L["Magic"] .. ">", "off: plain")
+end)
+
+test("text style: a colored dispel map is built once per look, and a new palette color rebuilds it (feedback #7)", function()
+    local NS = E()
+    local c = text({ template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true })
+    local first = dressed(c, true):__last("SetDispelTypeText")[2]
+    assertTrue(dressed(c, true):__last("SetDispelTypeText")[2] == first, "one options table per look")
+    local dc = NS.db.profile.dispelColors
+    local old = dc.Curse
+    dc.Curse = { r = 1, g = 0, b = 0, a = 1 }   -- a settings write stores a new table (Style.lua's memo note)
+    local again = dressed(c, true):__last("SetDispelTypeText")[2]
+    dc.Curse = old
+    -- red under: the memo keyed by the bracket text alone (a new Curse color never reaches the line)
+    assertEqual(again.customDispelTextMap.Curse, " (|cffff0000" .. NS.L["Curse"] .. "|r)")
+end)
+
+test("text style: the dispel backdrop fills the text area and is tinted through the engine, for a typed aura only (feedback #7)", function()
+    local NS = E()
+    local frame, am = dressed(text({ dispelBackdrop = true, dispelBackdropAlpha = 0.4 }), true)
+    -- red under: no backdrop region
+    assertTrue(am.backdrop ~= nil and am.backdrop.parent == am.area, "in the text area, under the chain")
+    assertTrue(am.backdrop:__last("SetAllPoints")[1] == am.area)
+    assertEqual(am.backdrop:__joined("SetTexture"), NS.Constants.WHITE_TEXTURE)
+    assertEqual(am.backdrop:__joined("SetAlpha"), "0.4")
+    local add = frame:__last("AddDispelTypeTexture")
+    -- red under: no backdrop binding
+    assertTrue(add ~= nil and add[1] == am.backdrop, "the backdrop is the engine's to tint")
+    assertEqual(frame:__count("AddDispelTypeTexture"), 1, "no edge while it is off")
+    local o = add[2]
+    assertTrue(o.showWhenHarmful and o.showWhenHelpful, "buffs and debuffs, as the word")
+    assertFalse(o.showAlways)
+    assertFalse(o.showWithoutDispelType)
+    assertTrue(o.customDispelColorMap == NS.Style.DispelColorMap(NS.db.profile.dispelColors), "the profile's palette")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < frame:__lastSeq("AddDispelTypeTexture"), "cleared first")
+    am.backdrop:Show()   -- the engine showed it for a typed aura
+    local off = dressed(text({}), true, frame)
+    assertEqual(off:__count("AddDispelTypeTexture"), 1, "off by default: no second binding")
+    -- red under: a dress leaving a switched-off backdrop as the engine last drew it (the Clear
+    -- restores nothing)
+    assertFalse(am.backdrop:IsShown())
+end)
+
+test("text style: the dispel edge is four strips of its thickness around the text area, each tinted through the engine (feedback #7)", function()
+    local frame, am = dressed(text({ dispelEdge = true, dispelEdgeSize = 2 }), true)
+    local adds = frame:__calls("AddDispelTypeTexture")
+    -- red under: no edge
+    assertEqual(#adds, 4, "one binding per strip")
+    local want = {
+        edgeTop = { "TOPLEFT", "TOPRIGHT", "SetHeight" }, edgeBottom = { "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+        edgeLeft = { "TOPLEFT", "BOTTOMLEFT", "SetWidth" }, edgeRight = { "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+    }
+    local bound = {}
+    for _, a in ipairs(adds) do bound[a[1]] = a[2] end
+    for key, w in pairs(want) do
+        local strip = am[key]
+        assertTrue(strip ~= nil and strip.parent == am.area, key)
+        local pts = strip:__calls("SetPoint")
+        assertEqual(pts[1][1] .. "," .. pts[2][1], w[1] .. "," .. w[2], key)
+        assertTrue(pts[1][2] == am.area and pts[2][2] == am.area, key .. " on the area's edge")
+        assertEqual(strip:__joined(w[3]), "2", key)
+        assertTrue(bound[strip] ~= nil and bound[strip] == adds[1][2], key .. " bound with the backdrop's options")
+    end
+end)
+
+test("text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)", function()
+    local NS = E()
+    local m = NS.db.profile.dispelColors.Magic
+    local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
+    local _, am = filled({ dispelBackdrop = true, dispelEdge = true }, AURA)
+    -- red under: FillPreview leaving the tints to an engine a placeholder does not have
+    assertTrue(am.backdrop:IsShown())
+    assertEqual(am.backdrop:__joined("SetVertexColor"), magic)
+    for _, key in ipairs({ "edgeTop", "edgeBottom", "edgeLeft", "edgeRight" }) do
+        assertTrue(am[key]:IsShown(), key)
+        assertEqual(am[key]:__joined("SetVertexColor"), magic, key)
+    end
+    local _, typeless = filled({ dispelBackdrop = true, dispelEdge = true },
+        { name = "Well Fed", icon = 1, remaining = 0, duration = 0, stacks = 0 })
+    assertFalse(typeless.backdrop:IsShown(), "no type, no backdrop")
+    assertFalse(typeless.edgeTop:IsShown(), "no type, no edge")
+    local _, off = filled({}, AURA)
+    assertFalse(off.backdrop:IsShown(), "off: nothing, even for a typed aura")
+end)
+
+test("text style: a placeholder's and the Preview line's dispel word take its palette color when the option is on (feedback #7)", function()
+    local NS = E()
+    local s = { template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true }
+    local out = filled(s, AURA)
+    -- red under: the preview fill ignoring the option (the live line colored, the placeholder not)
+    assertEqual(out[2], " (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
+    assertEqual(NS.Style.Text.PreviewLine(s, AURA), "Bloodlust (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
+end)

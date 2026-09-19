@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:39`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:48`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:235`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:240`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -102,9 +102,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **235** rows across seven pages: General 19 (its Dispel Colors tab's six and its
+`NS.Schema` holds **240** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 41, Layout 26, Bars 71, Icons 42 and Text 31. The
+out of General's own tab), Filters 41, Layout 26, Bars 72, Icons 42 and Text 36. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:633`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
@@ -475,6 +475,13 @@ return value.
   centered row per field, its plain literal pieces not drawn, the rows fixed in place (an empty field
   keeps its row) and the box grown to fit them (`Style.Text.Stacked`, `Style.Text.StackHeight`;
   feedback #1). The Text page says so under Placement.
+- **A Text line cannot be colored by its aura's dispel type.** No engine binding colors a font string by
+  dispel type (`SetDispelTypeText`, `SetSpellName`, `SetApplicationCount` take no color;
+  `SetDurationText`'s color curve runs over time), the dispel-keyed color map exists only on
+  `AddDispelTypeTexture`, which takes a Texture, and addon code can neither read the type nor touch a
+  button in combat. The Text page offers three opt-in stand-ins instead (Animation → Dispel type,
+  feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
+  backdrop and an edge the engine tints (`modules/Style_Text.lua`).
 - **A Text token can be used once, the duration tokens must sit together, and there is no caster
   token.** The engine has one binding per field (one spell name, one stack count, one dispel type, one
   duration text whose format holds every duration value); it has none for the caster

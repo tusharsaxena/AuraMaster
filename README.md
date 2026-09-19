@@ -78,7 +78,9 @@ as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname
 `$elapsedpercent$` (a percent is a bare number: type the `%` yourself); text inside `[ ]` hides along
 with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s` only on an aura with a
 duration). The page lists them all, and a line
-can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. A new
+can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
+Animation tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
+tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. A new
 profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
 cooldowns.
 

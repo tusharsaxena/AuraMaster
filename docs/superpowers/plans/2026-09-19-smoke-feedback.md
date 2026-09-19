@@ -110,7 +110,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Tasks 1–11, 13–18 done; Task 12 in progress; next Task 19.
+**Current position:** Tasks 1–11, 13–18 done; Task 12 in review; next Task 19.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
@@ -125,7 +125,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 9 | #6a — schema v5: every ENCHANT container becomes an enchant-only buff container | AuraMaster | done | 65c8f45 + fix round |
 | 10 | #6b — the Weapon enchants aura type is removed everywhere | AuraMaster | done | 7d3ae28 + fix round |
 | 11 | #7a — bars' background colored by dispel type; no type falls back to the surface's color | AuraMaster | done | 844f268 + fix round |
-| 12 | #7b — text colored by dispel type: three opt-in stand-ins (word color, backdrop, edge) | AuraMaster | todo |  |
+| 12 | #7b — text colored by dispel type: three opt-in stand-ins (word color, backdrop, edge) | AuraMaster | in review |  |
 | 13 | #9 — right-click the handle's "?" → the Containers page on that container | AuraMaster | done | f11167d |
 | 14 | #4a — LibKa0s v1.45.0: `shownWhen` switched sections (STOP before tag/push) | LibKa0s | done | LibKa0s 6dbfc74 + a7053ca, tag v1.45.0 pushed |
 | 15 | #4b — re-vendor LibKa0s v1.45.0 into Aura Master | AuraMaster | done | 4ebdb4a (vendored OptionsWidgets.lua) + this commit (provenance) |

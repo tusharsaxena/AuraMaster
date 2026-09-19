@@ -16,7 +16,7 @@ is a defect in this doc (documentation-§3).
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
-| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink |
+| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
@@ -160,10 +160,12 @@ container reads all three anyway — because the container-level Hide on Filters
 one switch for that; the tab says so.
 
 **Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
-`.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type. An
-aura with no dispel type keeps the surface's own color (feedback #7), so there is no None swatch. They
-drive bars only; an icon's dispel border keeps Blizzard's own colored art (owner, 2026-09-13), and
-the tab line and each row's tooltip say so. Profile-wide, so a write re-applies every container.
+`.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
+a Text line's dispel type word, backdrop and edge when those are on (Text → Animation → Dispel type,
+feedback #7). An aura with no dispel type keeps a bar's own color and draws no text backdrop or edge,
+so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
+colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
+write re-applies every container.
 
 ### Containers (5 rows, `settings/Containers.lua`)
 
@@ -417,7 +419,7 @@ settings." — and every control is drawn disabled, as on the Bars page.
 harmful auras with a dispel type only. The art sits above your border and replaces it there; every
 other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
 
-### Text (31 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Text (36 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
 built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **What
@@ -441,6 +443,19 @@ unused) when the template carries no duration token, with a note saying so; the 
 per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
 Bounce).
 
+**Dispel type** (Animation, feedback #7) holds three opt-in stand-ins for "color the text by dispel
+type", all off by default, since no engine binding colors a font string by the aura's type
+(`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
+palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
+around the word, the bracket text keeping the font color (dimmed without a `$dispeltype$` token).
+`dispelBackdrop` fills the text area behind the chain with a white texture the engine tints and shows
+per aura (`AddDispelTypeTexture`, `PreserveAsset`, the profile's palette), at `dispelBackdropAlpha`;
+`dispelEdge` draws four strips `dispelEdgeSize` px thick around the text area the same way. The
+backdrop and the edge show only for an aura with a dispel type (buff or debuff), in the palette's
+color for it; a type the palette lacks (Enrage) takes Blizzard's own color. The opacity and the
+thickness are dimmed while their toggle is off. The preview draws all three from the placeholder's
+own type.
+
 When the selected container is drawn as bars or icons, the same small muted-gold note heads every tab
 — naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
 its Style to Text on the Containers page to use these settings.") — and every control is drawn
@@ -451,7 +466,7 @@ disabled, as on the Bars and Icons pages.
 | General | Size: `width`, `height`. What each line says: the Template dropdown, `template` (Custom only; + the Preview and the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
-| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
 
 ### Profiles (`settings/Profiles.lua`)
 

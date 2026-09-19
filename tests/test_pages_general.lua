@@ -630,7 +630,7 @@ end)
 
 -- ── the Dispel Colors tab (G-3) ───────────────────────────────────────────────────────────────
 
-test("general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars only", function()
+test("general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text", function()
     local NS, _, P, _, tab = general()
     local ws = tab(NS.L["Dispel Colors"])
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
@@ -646,13 +646,14 @@ test("general → dispel colors: five profile-wide swatches, no None, no class-c
     assertEqual(NS.FindSchemaRow("dispelColors.None"), nil, "no None row")
     -- red under: a class-color companion beside a palette swatch (options-ui-§17's exemption)
     assertEqual(#P.all(ws, "CheckBox"), 0)
-    -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13: icons
-    -- keep Blizzard's own dispel colors, so the palette drives bars only)
-    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type. An aura with no dispel type keeps the bar's own color. An icon's dispel border keeps Blizzard's own colors."]))
+    -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13:
+    -- keep Blizzard's own dispel colors), or silent on the Text style's word, backdrop and edge
+    -- (feedback #7)
+    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."]))
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
         local desc = NS.FindSchemaRow("dispelColors." .. name).desc
         -- red under: a row desc still naming the tint on an icon's dispel border
-        assertEqual(desc, NS.L["This dispel type's color for a bar's fill or background when its Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."], name)
+        assertEqual(desc, NS.L["This dispel type's color for a bar's fill or background, and for a text line's dispel type word, backdrop or edge when those are on. An icon's dispel border keeps Blizzard's own colors."], name)
     end
 end)
 

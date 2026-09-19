@@ -410,7 +410,7 @@ local cache = {}
 
 --- Compile one template.
 --- @param template any  the stored or typed template
---- @return table  { ok = true, pieces, single, shape, hasDuration } or { ok = false, err }
+--- @return table  { ok = true, pieces, single, shape, hasDuration, hasDispel } or { ok = false, err }
 function TT.Compile(template)
     if type(template) ~= "string" then return { ok = false, err = L["Use at least one $token$."] } end
     local hit = cache[template]
@@ -423,7 +423,7 @@ function TT.Compile(template)
         local pieces = compile(nodes, countDurations(items))
         local n = #pieces
         result = { ok = true, pieces = pieces, single = n == 1, shape = shapeOf(pieces),
-            hasDuration = hasKind(pieces, "duration") }
+            hasDuration = hasKind(pieces, "duration"), hasDispel = hasKind(pieces, "dispel") }
     else
         result = { ok = false, err = err }
     end

@@ -159,8 +159,11 @@ than one piece STACKS it, one centered row per field, text outside `[ ]` not dra
 `iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
 false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
 `animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); running out — `expiringColorOn`
-(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false). An existing container
-gains the block by the ordinary backfill; there is no schema-version bump.
+(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
+#7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
+`dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px).
+An existing container gains the block, and these leaves, by the ordinary backfill; there is no
+schema-version bump.
 
 ### The text block
 
@@ -172,7 +175,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:235`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:240`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |

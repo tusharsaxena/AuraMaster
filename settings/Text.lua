@@ -8,6 +8,8 @@ local _, NS = ...
 --     General   Size, then -- What each line says --: [Template ▾] (a built-in, or Custom), the
 --               Custom template box (Custom only), Preview: <the line on a sample aura>, the cheat
 --               sheet; then Placement and the centering note
+--     Animation Loop, then Dispel type (feedback #7: the word's color, a backdrop, an edge, each
+--               opt-in and off), then Running out and its note
 --
 -- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and two
 -- read-only blocks between its rows: the token cheat sheet, and the centering note under Placement.
@@ -36,7 +38,7 @@ local P = "container.text."
 local UNIT = { source = "unit" }
 
 local G_GENERAL, G_FONT, G_ICON, G_ANIM = L["General"], L["Font"], L["Icon"], L["Animation"]
-local S_PLACEMENT = L["Placement"]
+local S_PLACEMENT, S_DISPEL = L["Placement"], L["Dispel type"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local GRAY = "|cff808080%s|r"
 local CUSTOM = "custom"
@@ -68,6 +70,16 @@ end
 --- and the color ride the duration run's text).
 local function noDuration()
     return not TT.ForDraw(textBlock().template).hasDuration
+end
+
+--- A `disabledIf` predicate: Color the dispel type needs a $dispeltype$ token to color (feedback #7).
+local function noDispel()
+    return not TT.ForDraw(textBlock().template).hasDispel
+end
+
+--- A `disabledIf` predicate: the row is dimmed while the selected container's toggle `key` is off.
+local function unlessOn(key)
+    return function() return not textBlock()[key] end
 end
 
 -- ── General ───────────────────────────────────────────────────────────────────────────────────
@@ -262,6 +274,24 @@ NS.RegisterSchemaRows({
     { path = P .. "animBounce", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
       min = 1, max = 10, step = 1, disabledIf = unlessAnim("bounce"),
       label = L["Bounce height (px)"], desc = L["How far the line moves up. The box clips it, so leave headroom."] },
+    -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
+    -- colors a whole line by the aura's type (modules/Style_Text.lua's header).
+    { path = P .. "dispelTypeColor", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, disabledIf = noDispel,
+      label = L["Color the dispel type"],
+      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
+    { path = P .. "dispelBackdrop", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Backdrop in the dispel color"],
+      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
+      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
+      label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
+    { path = P .. "dispelEdge", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Edge in the dispel color"],
+      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelEdgeSize", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
+      min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
+      label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
     { path = P .. "expiringColorOn", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "bool",
       startsLine = true, disabledIf = noDuration,
       label = L["Recolor the time when running out"], desc = L["Turn the duration tokens another color in the last seconds. The rest of the line keeps the font color."] },
