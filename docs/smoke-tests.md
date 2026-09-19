@@ -609,7 +609,7 @@ nothing).
      X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
      the X too, and it removes the spell. Check the X row's height and vertical alignment against the
      spell name — the library's Icon widget is 26 px tall.
-114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted gold, not gray, on a
+114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted red, not gray, on a
      container drawn in another style.
 115. **A 59-minute buff's time on a bar.** A 59-minute Power Word: Fortitude on a default bar reads
      `59 m` in full, not `59...`, and still does with the time text's X offset at -15.
@@ -656,10 +656,10 @@ debuff container on the target, in a party or with a target dummy.
      means H2 (the binding's zero-duration text); `[ ($remainingpercent$%)]` shows nothing there.
 124. **Built-in templates and the Preview (#5b).** Text → General → **Template**: the list names the
      built-ins (Name, Name + time, …; the debuff container adds Name (type), Name, type, time) and
-     **Custom template**. Pick each → the Preview line under it changes with it and the live auras
-     follow; Centered: name over time also sets Justify to Center and previews the built-in's own
-     template, `$spellname$[$remainingduration$]` (no separator before the time). Custom → the
-     template box appears.
+     **Custom template**. Pick each → the read-only **Preview** box under it changes with it and the
+     live auras follow; Centered: name over time also sets Justify to Center and previews the
+     built-in's own template, `$spellname$[$remainingduration$]` (no separator before the time).
+     Custom → the template box appears.
 125. **Weapon enchants on a real profile (#6).** On a profile that had a Weapon enchants container
      with an "Always shown" list (back up `WTF/…/SavedVariables/AuraMaster.lua` first): log in → one
      `[Migrate]` line naming the converted container, plus a second `[Migrate]` line for the cleared
@@ -733,3 +733,13 @@ debuff container on the target, in a party or with a target dummy.
      Enrage-type buff (or any other type General → Dispel Colors does not list a swatch for) shows
      none of the three — plain font color, no backdrop, no edge — the same treatment a typeless aura
      gets, never a blank/invisible stand-in that still reserves space.
+139. **The Text Template section, PrettyChat's look (Task 20, owner follow-up).** Text → General: the
+     subsection is titled **Text Template**, not "What each line says". Under the Custom template box,
+     **Preview** is a disabled EditBox (PrettyChat's own shape), holding the same rendered line the old
+     Preview line showed, in the container's font color, with a Task 12 colored dispel word still
+     riding live inside it when that option is on. Under it, the cheat sheet reads as two headed,
+     bulleted lists with a gap before each heading — **Tokens** (one gold `$token$` bullet per token)
+     and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
+     showing), each rule's example on its own indented line in the token gold. On a bars or icons
+     container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
+     muted red, not the earlier muted gold.

@@ -587,7 +587,7 @@ local function settleActiveTab(ctx, tabs)
     ctx.activeTab = tabs[1].key
 end
 
---- The notice over a page drawn disabled: a quiet muted-gold note (C.NOTICE_COLOR) in the small
+--- The notice over a page drawn disabled: a quiet muted-red note (C.NOTICE_COLOR) in the small
 --- font, then the ordinary row gap before the first control.
 ---
 --- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
@@ -598,7 +598,8 @@ end
 --- it means everywhere else in the panel: RenderWarnings' "the game will not honor this", which can
 --- sit on the very same page and must still be the loudest thing on it. The owner then asked for it
 --- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
---- quieter than the title's is still no warning. The combat refusals keep their gray.
+--- quieter than the title's is still no warning. Later the same day the owner asked for muted red
+--- instead (Task 20), on bars, icons and text pages alike; the combat refusals keep their gray.
 local function drawDisabledNotice(ctx, text)
     Helpers.TextRow(ctx, "|c" .. C.NOTICE_COLOR .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
     local scroll = Helpers.EnsureScroll(ctx)

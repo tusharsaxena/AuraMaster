@@ -942,7 +942,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Background block is composed in canonical order, and its tooltips name the background
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
-- options: a page drawn for another style heads its tabs with the notice in muted gold (B3)
+- options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
 ### test_options_descriptor.lua (18)
 
@@ -1113,7 +1113,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_bars.lua (12)
 
-- bars: every tab of an icons container carries the muted-gold note; a bars container's carry none
+- bars: every tab of an icons container carries the muted-red note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
 - bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
@@ -1128,7 +1128,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_icons.lua (7)
 
-- icons: a bars container's tabs carry the muted-gold note; an icons container's carry none
+- icons: a bars container's tabs carry the muted-red note; an icons container's carry none
 - icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
 - icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - icons: the six tabs are drawn in order
@@ -1136,12 +1136,16 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Cooldown rows write the selected container's swipe
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (16)
+### test_pages_text.lua (20)
 
 - text page: the four tabs are drawn in order
 - text page: a bars or icons container sees every row disabled under the note naming its style
 - text page: the Bars and Icons pages name the text style on a text container
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
+- text page: the section is named Text Template (Task 20, owner: rename this section)
+- text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
+- text page: the Preview box refreshes after a template change (Task 20)
+- text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
 - text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
@@ -1305,7 +1309,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_layout.lua | 22 |
 | test_pages_bars.lua | 12 |
 | test_pages_icons.lua | 7 |
-| test_pages_text.lua | 16 |
+| test_pages_text.lua | 20 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1319,4 +1323,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1105** |
+| **Total** | **1109** |

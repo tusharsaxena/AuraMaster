@@ -5,9 +5,10 @@ local _, NS = ...
 --
 --     band   [Container ▾]
 --     [ General ][ Font ][ Icon ][ Animation ]
---     General   Size, then -- What each line says --: [Template ▾] (a built-in, or Custom), the
---               Custom template box (Custom only), Preview: <the line on a sample aura>, the cheat
---               sheet; then Placement and the centering note
+--     General   Size, then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
+--               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
+--               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
+--               note
 --     Animation Loop, then Dispel type (feedback #7: the word's color, a backdrop, an edge, each
 --               opt-in and off), then Running out and its note
 --
@@ -40,7 +41,10 @@ local UNIT = { source = "unit" }
 local G_GENERAL, G_FONT, G_ICON, G_ANIM = L["General"], L["Font"], L["Icon"], L["Animation"]
 local S_PLACEMENT, S_DISPEL = L["Placement"], L["Dispel type"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
+local HEADING = { fontObject = "GameFontNormalSmall" }
 local GRAY = "|cff808080%s|r"
+local GOLD = "|cffffd100%s|r"
+local BULLET = "- "
 local CUSTOM = "custom"
 
 -- Which containers have Custom chosen in the Template dropdown this session, by id. Page state, not a
@@ -89,7 +93,7 @@ NS.RegisterSchemaRows({
       label = L["Width (px)"], desc = L["The width of one line, icon included. Text past the edge is cut off."] },
     { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 8, max = 80, step = 1,
       label = L["Height (px)"], desc = L["The height of one line. Center stacks a line of several fields in rows, and the box grows to fit them."] },
-    { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["What each line says"], type = "string",
+    { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["Text Template"], type = "string",
       dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Custom template"],
       desc = L["What each line says, built from the tokens listed below. Press Enter to apply."],
       validate = TT.Validate, onChange = structural },
@@ -106,17 +110,44 @@ NS.RegisterSchemaRows({
       min = -100, max = 100, step = 1, label = L["Y offset"], desc = L["Vertical nudge, in pixels."] },
 })
 
---- The token cheat sheet, under the Template box: one line per token, then the bracket rule, the
---- escapes, how an odd run of [ combines the two, and why a duration belongs in brackets (feedback
---- #5: text outside them shows on a timeless aura too). Read-only text, drawn small.
+--- A small gap, then a heading line, in the same voice a subgroup heading reads in (owner,
+--- 2026-09-19: "hard to read - give it better formatting and spacing").
+local function heading(ctx, text)
+    local scroll = H.EnsureScroll(ctx)
+    if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
+    H.TextRow(ctx, text, HEADING)
+end
+
+--- One bullet, drawn small.
+local function bullet(ctx, text)
+    H.TextRow(ctx, BULLET .. text, SMALL)
+end
+
+--- A bullet's continuation line: an example, indented under it and in the token gold so it reads as
+--- template syntax rather than prose.
+local function example(ctx, text)
+    H.TextRow(ctx, ("    " .. GOLD):format(text), SMALL)
+end
+
+--- The token cheat sheet, under the Template box: a **Tokens** list (one gold `$token$` bullet each,
+--- its meaning in plain text), then a **Rules** list (bracket hiding, the two escapes, how an odd run
+--- of [ combines with one, and why a duration belongs in brackets -- feedback #5: text outside them
+--- shows on a timeless aura too), each rule's example on its own indented, gold continuation line.
+--- Read-only text (owner, 2026-09-19: "split it into keywords and guidelines - use bullet points").
 local function cheatSheet(ctx)
+    heading(ctx, L["Tokens"])
     for _, def in ipairs(C.TEXT_TOKENS) do
-        H.TextRow(ctx, ("|cffffd100$%s$|r  %s"):format(def.key, L[C.TEXT_TOKEN_LABELS[def.key]]), SMALL)
+        bullet(ctx, (GOLD .. "  %s"):format("$" .. def.key .. "$", L[C.TEXT_TOKEN_LABELS[def.key]]))
     end
-    H.TextRow(ctx, L["[ ] hides its text along with the token inside it: $spellname$[ x$stacks$] shows ' x3' only at 2 or more stacks."], SMALL)
-    H.TextRow(ctx, L["To write a literal [, ] or $, type it twice: [[, ]] or $$."], SMALL)
-    H.TextRow(ctx, L["Escapes and brackets combine: [[[$stacks$]]] shows [3] only when stacked."], SMALL)
-    H.TextRow(ctx, L["Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."], SMALL)
+    heading(ctx, L["Rules"])
+    bullet(ctx, L["[ ] hides its text along with the token inside it:"])
+    example(ctx, L["$spellname$[ x$stacks$] shows ' x3' only at 2 or more stacks."])
+    bullet(ctx, L["To write a literal [, ] or $, type it twice:"])
+    example(ctx, L["[[, ]] or $$."])
+    bullet(ctx, L["Escapes and brackets combine:"])
+    example(ctx, L["[[[$stacks$]]] shows [3] only when stacked."])
+    bullet(ctx, L["Text outside [ ] always shows, even on an aura with no duration:"])
+    example(ctx, L["($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."])
 end
 
 --- Under Placement: what Center does to a template of more than one piece (feedback #1): it stacks
@@ -185,6 +216,51 @@ local function templatePicker(cfg, id)
     end }
 end
 
+--- A literal `|` in the player's own template text would start a color escape it never asked for and
+--- can leave the box unable to render past it -- PrettyChat's convention (`settings/Panel.lua`) is to
+--- double it. The only LIVE codes in `Text.PreviewLine`'s own output are dispel's `|cffRRGGBB...|r`
+--- wraps (`Style_Text.lua`'s `dispelWord`), so those are pulled out and restored around the doubling,
+--- rather than doubled themselves.
+local function escapeStrayPipes(text)
+    local saved, n = {}, 0
+    local guarded = text:gsub("|cff%x%x%x%x%x%x.-|r", function(run)
+        n = n + 1
+        saved[n] = run
+        return "\1" .. n .. "\1"
+    end)
+    guarded = guarded:gsub("|", "||")
+    return (guarded:gsub("\1(%d+)\1", function(i) return saved[tonumber(i)] end))
+end
+
+--- The Preview box's text: `Text.PreviewLine` on the aura type's sample aura, a stray `|` doubled,
+--- the whole line wrapped in the container's own font color (`Style.ApplyFont`'s own call) so the box
+--- reads as the live line would -- with a Task 12 colored dispel word still riding inside it, since a
+--- WoW `|r` restores the wrapping color it is nested in, not just white.
+local function previewText(cfg, sample)
+    local raw = escapeStrayPipes(NS.Style.Text.PreviewLine(cfg.text, sample))
+    local font = (cfg.text and cfg.text.font) or D.font
+    local r, g, b = NS.Style.Color(font.fontColor, font.useClassColorFont)
+    return ("|cff%02x%02x%02x%s|r"):format((r or 1) * 255, (g or 1) * 255, (b or 1) * 255, raw)
+end
+
+--- The Preview box (owner, 2026-09-19: "more like PrettyChat"): a disabled EditBox, `SetLabel`,
+--- `SetFullWidth` and `SetDisabled` in that order, exactly PrettyChat's `previewInput`
+--- (`../PrettyChat/settings/Panel.lua`). A bespoke cell, not a schema row: it has no stored value of
+--- its own, and is rebuilt on every render, so it is never stale.
+local function previewBox(cfg)
+    return { wide = true, make = function(_, parent)
+        local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
+        local box = NS.AceGUI:Create("EditBox")
+        box:SetLabel(L["Preview"])
+        box:SetFullWidth(true)
+        box:SetDisabled(true)
+        box:SetText(previewText(cfg, sample))
+        H.AttachTooltip(box, L["Preview"], L["The line this template draws on a sample aura. Read-only."])
+        parent:AddChild(box)
+        return box
+    end }
+end
+
 --- A copy of `row` the flow engine draws nothing for but its subsection heading (RenderRows emits a
 --- subgroup's heading before it looks at skipRender).
 local function headingOnly(row)
@@ -194,15 +270,14 @@ local function headingOnly(row)
     return copy
 end
 
---- What each line says: the subsection heading, the Template dropdown, the Custom template box (Custom
---- only), the Preview line on the aura type's sample aura, then the cheat sheet.
+--- Text Template: the subsection heading, the Template dropdown, the Custom template box (Custom
+--- only), the Preview box on the aura type's sample aura, then the cheat sheet.
 local function renderTemplate(ctx, cfg, row)
     local _, id = NS.ActiveContainer()
     if row then H.RenderRows(ctx, { headingOnly(row) }, nil, nil, { noHeadings = true }) end
     H.RenderGrid(ctx, { templatePicker(cfg, id) })
     if row and isCustom(cfg, id) then H.RenderRows(ctx, { row }, nil, nil, { noHeadings = true }) end
-    local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
-    H.TextRow(ctx, L["Preview: %s"]:format(NS.Style.Text.PreviewLine(cfg.text, sample)))
+    H.RenderGrid(ctx, { previewBox(cfg) })
     cheatSheet(ctx)
 end
 

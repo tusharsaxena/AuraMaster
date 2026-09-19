@@ -17,15 +17,16 @@ end
 -- BATCH 8 (owner, from a screenshot): the wrong-style note was a full-width GameFontNormalLarge
 -- line in warning orange, which shouted for what is a quiet aside — nothing is wrong, the page is
 -- simply inert until the style changes. It is now the small default font in the addon's
--- muted notice gold (B3), reworded to lead with the condition and name the page that fixes it, and
+-- muted notice color, reworded to lead with the condition and name the page that fixes it, and
 -- followed by the ordinary row gap rather than a 12px one. Orange is left to RenderWarnings, which
--- can draw on this very page and must stay the loudest thing on it.
-local NOTICE = "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."
-local GOLD = "|c" .. T.NS.Constants.NOTICE_COLOR
+-- can draw on this very page and must stay the loudest thing on it. The color was gold (B3), then
+-- muted red the same day (Task 20).
+local MSG = "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."
+local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
 
-test("bars: every tab of an icons container carries the muted-gold note; a bars container's carry none", function()
+test("bars: every tab of an icons container carries the muted-red note; a bars container's carry none", function()
     local NS, _, P, ws = bars()
-    local notice = GOLD .. NS.L[NOTICE] .. "|r"
+    local notice = NOTICE .. NS.L[MSG] .. "|r"
     assertFalse(P.hasText(ws, notice), "container 1 is drawn as bars")
     NS.Helpers.SelectContainer(2)
     ws = P.show("Bars")
@@ -70,8 +71,8 @@ test("bars: the wrong-style note is drawn small and gray, then a spacer before t
     H.SelectContainer(2)
     P.show("Bars")
     H.TextRow = textRow
-    local notice = GOLD .. NS.L[NOTICE] .. "|r"
-    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the gold the addon reports in")
+    local notice = NOTICE .. NS.L[MSG] .. "|r"
+    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the color the addon reports notices in")
     -- red under: the note back in large orange, shouting over a page that is merely inert
     assertEqual(seen[notice] and seen[notice].fontObject, "GameFontHighlightSmall")
     local kids = H.EnsureScroll(H.__pageCtx.bars).children

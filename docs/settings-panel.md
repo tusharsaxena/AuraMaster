@@ -358,7 +358,7 @@ container), Click-through `container.behavior.clickThrough` (no tooltips and no 
 
 ### Bars (72 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-When the selected container is drawn as icons, a small muted-gold note heads every tab — "Not in use: this
+When the selected container is drawn as icons, a small muted-red note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
 and every control below it is drawn disabled (the spec's `disabledFor`,
 `settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
@@ -402,7 +402,7 @@ two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this p
 group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
 deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
-When the selected container is drawn as bars, the same small muted-gold note heads every tab — "Not in
+When the selected container is drawn as bars, the same small muted-red note heads every tab — "Not in
 use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these
 settings." — and every control is drawn disabled, as on the Bars page.
 
@@ -422,16 +422,22 @@ other icon shows your border. `blizzardNumbers` shows the cooldown frame's own c
 ### Text (36 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
-built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **What
-each line says**: a **Template** dropdown of the aura type's built-in templates (Name; Name + time;
-Name, stacks, time — the default; Time / max; and on debuffs Name (type) and Name, type, time;
-Centered: name over time, which also sets Justify to Center) plus **Custom**, then the **Custom
-template** box (drawn only for Custom: a template matching no built-in reads as Custom by itself), then
-**Preview:** the line rendered on a sample aura (`C.TEXT_SAMPLE_AURAS`, through the placeholders' own
-fill, `Style.Text.PreviewLine`), then the token cheat sheet; the centering note sits under Placement.
-Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through the write
-seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel, `/am set`,
-Defaults and the resets all reach them through the one write seam.
+built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **Text
+Template** (Task 20, owner: renamed from "What each line says"): a **Template** dropdown of the aura
+type's built-in templates (Name; Name + time; Name, stacks, time — the default; Time / max; and on
+debuffs Name (type) and Name, type, time; Centered: name over time, which also sets Justify to Center)
+plus **Custom**, then the **Custom template** box (drawn only for Custom: a template matching no
+built-in reads as Custom by itself), then a read-only **Preview** — an AceGUI EditBox, PrettyChat's own
+shape (`SetLabel`, `SetFullWidth(true)`, `SetDisabled(true)`), holding the line rendered on a sample
+aura (`C.TEXT_SAMPLE_AURAS`, through the placeholders' own fill, `Style.Text.PreviewLine`), wrapped in
+the container's own font color with a stray `|` doubled so it cannot break the box, and a Task 12
+colored dispel word riding live inside it — then the **Tokens** / **Rules** cheat sheet (Task 20, owner:
+"split it into keywords and guidelines - use bullet points"): one gold `$token$` bullet per token, then
+a bulleted rule per bracket-hiding, the two escapes, how they combine, and text outside `[ ]` always
+showing, each rule's example on its own indented gold continuation line. The centering note sits under
+Placement. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
+the write seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel,
+`/am set`, Defaults and the resets all reach them through the one write seam.
 
 The Template row's `validate` is the parser (`modules/TextTemplate.lua`'s `TT.Validate`): a refused
 template is never stored, and its reason reaches the player through the write seam's third return
@@ -456,14 +462,14 @@ a type it has no color for (Enrage) gets no visible tint at all, the same as a t
 round 1). The opacity and the thickness are dimmed while their toggle is off. The preview draws all
 three from the placeholder's own type.
 
-When the selected container is drawn as bars or icons, the same small muted-gold note heads every tab
+When the selected container is drawn as bars or icons, the same small muted-red note heads every tab
 — naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
 its Style to Text on the Containers page to use these settings.") — and every control is drawn
 disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. What each line says: the Template dropdown, `template` (Custom only; + the Preview and the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
+| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |

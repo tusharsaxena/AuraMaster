@@ -380,13 +380,14 @@ test("options: the degraded stub completes the load — every page's rows still 
     assertTrue(last:find("settings panel is unavailable", 1, true) ~= nil, last)
 end)
 
-test("options: a page drawn for another style heads its tabs with the notice in muted gold (B3)", function()
+test("options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)", function()
     local NS2, m2 = fresh()
     local P = dofile("tests/page_helpers.lua")(NS2, m2)
     NS2.State.SetActiveContainer(2)   -- the starter icon row
     local ws = P.show("Bars")
     local want = "|c" .. NS2.Constants.NOTICE_COLOR
-    assertEqual(NS2.Constants.NOTICE_COLOR, "ffc8a85a")
+    -- red under: the notice still pinned to the muted gold Task 20 replaced
+    assertEqual(NS2.Constants.NOTICE_COLOR, "ffcc6666")
     local hit
     for _, t in ipairs(P.texts(ws)) do
         if t:find("Not in use:", 1, true) then hit = t end

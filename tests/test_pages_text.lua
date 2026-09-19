@@ -11,10 +11,14 @@ local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
 local P_ = "container.text."
-local GOLD = "|c" .. T.NS.Constants.NOTICE_COLOR
+local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
 
 --- The Template dropdown (feedback #5): the built-ins and Custom. Not a schema row, found by label.
 local function picker(NS, P, ws) return P.find(ws, "Dropdown", NS.L["Template"]) end
+
+--- The Preview box (Task 20): a disabled EditBox labeled Preview, PrettyChat's own shape. Not a
+--- schema row, found by label like the Template dropdown.
+local function preview(NS, P, ws) return P.find(ws, "EditBox", NS.L["Preview"]) end
 
 --- Choose `key` in the Template dropdown and answer the page as it draws after the choice.
 local function pick(NS, m, P, ws, key)
@@ -52,7 +56,7 @@ test("text page: a bars or icons container sees every row disabled under the not
     local NS, _, P = textPage()
     local L = NS.L
     NS.Helpers.SelectContainer(2)
-    local notice = GOLD .. L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."]
+    local notice = NOTICE .. L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."]
     P.eachTab("Text", "text", function(key, tabWs)
         -- red under: the Text spec's disabledNotice answering the bars wording for an icons container
         assertTrue(P.hasText(tabWs, notice), key .. " carries the note")
@@ -66,15 +70,15 @@ test("text page: a bars or icons container sees every row disabled under the not
     end)
     NS.SetByPath("container.style", "bars", 2)
     local ws = P.rerender("Text")
-    assertTrue(P.hasText(ws, GOLD .. L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."]))
+    assertTrue(P.hasText(ws, NOTICE .. L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."]))
 end)
 
 test("text page: the Bars and Icons pages name the text style on a text container", function()
     local NS, _, P = textPage()
     local L = NS.L
     -- red under: the Bars notice still claiming every other container is drawn as icons
-    assertTrue(P.hasText(P.show("Bars"), GOLD .. L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."]))
-    assertTrue(P.hasText(P.show("Icons"), GOLD .. L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]))
+    assertTrue(P.hasText(P.show("Bars"), NOTICE .. L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."]))
+    assertTrue(P.hasText(P.show("Icons"), NOTICE .. L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]))
 end)
 
 test("text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement", function()
@@ -91,9 +95,14 @@ test("text page: General holds Size, the Template dropdown and box, the cheat sh
         -- red under: cheatSheet skipping a token
         assertTrue(joined:find("$" .. def.key .. "$", 1, true) ~= nil, "cheat sheet names $" .. def.key .. "$")
     end
-    assertTrue(P.hasText(ws, L["To write a literal [, ] or $, type it twice: [[, ]] or $$."]))
+    -- red under: the Tokens/Rules cheat sheet (Task 20) without either heading
+    assertTrue(P.hasText(ws, L["Tokens"]))
+    assertTrue(P.hasText(ws, L["Rules"]))
+    assertTrue(P.hasText(ws, L["To write a literal [, ] or $, type it twice:"]))
+    assertTrue(P.hasText(ws, L["[[, ]] or $$."]))
     -- red under: the cheat sheet leaving out how an odd run of [ combines an escape and a bracket
-    assertTrue(P.hasText(ws, L["Escapes and brackets combine: [[[$stacks$]]] shows [3] only when stacked."]))
+    assertTrue(P.hasText(ws, L["Escapes and brackets combine:"]))
+    assertTrue(P.hasText(ws, L["[[[$stacks$]]] shows [3] only when stacked."]))
     -- red under: the cheat sheet without the bracketed-duration example (feedback #5)
     assertTrue(P.hasText(ws, "[ ($remainingpercent$%)] hides with the time"))
     -- The cheat sheet sits between the Template box and the Placement rows.
@@ -110,6 +119,61 @@ test("text page: General holds Size, the Template dropdown and box, the cheat sh
     end
     -- red under: the dropdown drawn under the box (the spec puts it above the template box)
     assertTrue(at.picker < at.box, "the Template dropdown, then the box")
+end)
+
+test("text page: the section is named Text Template (Task 20, owner: rename this section)", function()
+    local NS, _, P, ws = textPage()
+    -- red under: the subgroup still reading "What each line says"
+    assertEqual(NS.FindSchemaRow(P_ .. "template").subgroup, NS.L["Text Template"])
+    -- the subgroup heading is an AceGUI Heading, not a Label, so P.hasText (Label-only) misses it
+    assertTrue(P.find(ws, "Heading", NS.L["Text Template"]) ~= nil, "the heading reads Text Template")
+    assertTrue(P.find(ws, "Heading", "What each line says") == nil, "the old heading is gone")
+end)
+
+test("text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)", function()
+    local NS, _, P, ws = textPage()
+    local box = preview(NS, P, ws)
+    -- red under: no Preview EditBox, or a Label in its place
+    assertTrue(box ~= nil, "the Preview box is drawn")
+    assertEqual(box.type, "EditBox")
+    assertEqual(box.labelText, NS.L["Preview"])
+    -- red under: an editable Preview (PrettyChat's previewInput is SetDisabled(true))
+    assertTrue(box.disabled, "the Preview is read-only")
+    assertTrue(box.fullWidth, "the Preview spans the pane")
+    -- red under: the Preview showing anything but Text.PreviewLine's own rendering
+    local sample = NS.Constants.TEXT_SAMPLE_AURAS.HELPFUL
+    local raw = NS.Style.Text.PreviewLine(NS.Database.FindContainer(1).text, sample)
+    assertTrue(box.text:find(raw, 1, true) ~= nil, box.text)
+end)
+
+test("text page: the Preview box refreshes after a template change (Task 20)", function()
+    local NS, m, P, ws = textPage()
+    -- red under: the box seeded once and never rebuilt (nothing to refresh FROM)
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain x3", 1, true) ~= nil, "the default template's line")
+    NS.SetByPath(P_ .. "template", "$spellname$", 1)
+    m.__fireTimers()
+    ws = P.rerender("Text")
+    local sample = NS.Constants.TEXT_SAMPLE_AURAS.HELPFUL
+    local raw = NS.Style.Text.PreviewLine(NS.Database.FindContainer(1).text, sample)
+    -- red under: the Preview box built once and never rebuilt on a structural refresh
+    assertTrue(preview(NS, P, ws).text:find(raw, 1, true) ~= nil, preview(NS, P, ws).text)
+    assertFalse(preview(NS, P, ws).text:find("x3", 1, true) ~= nil, "the stacks field is gone from the new template")
+end)
+
+test("text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)", function()
+    local NS, _, P, ws = textPage()
+    local tokenBullets = 0
+    for _, t in ipairs(P.texts(ws)) do
+        for _, def in ipairs(NS.Constants.TEXT_TOKENS) do
+            if t:find("$" .. def.key .. "$", 1, true) and t:sub(1, 2) == "- " then
+                tokenBullets = tokenBullets + 1
+            end
+        end
+    end
+    -- red under: a token folded onto another's line, or drawn twice
+    assertEqual(tokenBullets, #NS.Constants.TEXT_TOKENS)
+    assertTrue(P.hasText(ws, NS.L["Tokens"]))
+    assertTrue(P.hasText(ws, NS.L["Rules"]))
 end)
 
 test("text page: a valid template is stored; a refused one is not, and the panel prints why", function()
@@ -149,7 +213,7 @@ test("text page: Center on a multi-piece template draws the note naming its rows
     -- red under: centerNote still saying Center lines a multi-piece template up Left
     assertTrue(P.hasText(ws, note:format(3)), "the default template has three fields")
     -- red under: the Preview not showing the stack it will draw
-    assertTrue(P.hasText(ws, NS.L["Preview: %s"]:format("Ignore Pain\n x3\n - 11s")))
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain\n x3\n - 11s", 1, true) ~= nil)
     NS.SetByPath(P_ .. "template", "$spellname$ :: $stacks$", 1)
     ws = P.rerender("Text")
     assertTrue(P.hasText(ws, note:format(2)), "a literal is not a row")
@@ -299,22 +363,22 @@ test("text page: the Preview line renders the sample aura, brackets filled and e
     local L = NS.L
     -- The buff sample: Ignore Pain, 3 stacks, 11 of 12 s, no dispel type. The harness has no seconds
     -- formatter, so a time reads as whole seconds ("11s").
-    -- red under: no Preview line, or one not filled from the sample
-    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Ignore Pain x3 - 11s")))
+    -- red under: no Preview box, or one not filled from the sample
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain x3 - 11s", 1, true) ~= nil)
     NS.SetByPath(P_ .. "template", "$spellname$[ ($remainingpercent$%)][ ($dispeltype$)]", 1)
     m.__fireTimers()
     ws = P.rerender("Text")
     -- red under: an empty bracket drawn (the dispel type of a typeless aura), or a percent carrying
     -- its own "%" beside the one typed
-    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Ignore Pain (92%)")))
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain (92%)", 1, true) ~= nil)
     -- The debuff sample: Shadow Word: Pain, no stacks, a Magic type.
     NS.SetByPath("container.style", "text", 2)
     NS.Helpers.SelectContainer(2)
     ws = P.rerender("Text")
     ws = pick(NS, m, P, ws, "nameTypeTime")
-    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Shadow Word: Pain (" .. L["Magic"] .. ") - 11s")))
+    assertTrue(preview(NS, P, ws).text:find("Shadow Word: Pain (" .. L["Magic"] .. ") - 11s", 1, true) ~= nil)
     ws = pick(NS, m, P, ws, "nameStacksTime")
-    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Shadow Word: Pain - 11s")), "no stacks, so no ' x'")
+    assertTrue(preview(NS, P, ws).text:find("Shadow Word: Pain - 11s", 1, true) ~= nil, "no stacks, so no ' x'")
 end)
 
 -- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
