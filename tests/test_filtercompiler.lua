@@ -956,3 +956,17 @@ test("filter: the Player cooldowns starter draws one group per list it shows and
     -- A buff on neither list has no Show to draw it.
     assertEqual(FC.ExplainSpell(c, 999999).verdict, "hidden")
 end)
+
+test("filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)", function()
+    local c = cfg({ auraType = "HELPFUL", unit = "player" })
+    c.filter.categories = NS.Categories.EnchantOnlyStates()
+    local plan = FC.Compile(c, {})
+    local slotCount, groupCount = #plan.enchants.slots, #plan.groups
+    assertEqual(slotCount, 3)
+    assertEqual(groupCount, 0)
+    -- red under: NEVER_MATCHES raised for a container whose whole point is its enchant slots
+    assertTrue(not hasWarning(plan, "never match"))
+    -- The same states on another unit draw nothing at all, and say so.
+    c.unit = "target"
+    assertTrue(hasWarning(FC.Compile(c, {}), "never match"))
+end)

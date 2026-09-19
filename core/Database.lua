@@ -703,6 +703,37 @@ function Database.MigrateV4(p)
     return converted, lost, lostList
 end
 
+--- Schema v5 over one profile table (feedback #6, 2026-09-19): the Weapon enchants AURA TYPE retires,
+--- and enchants are a buff category only. Every stored container with `auraType == "ENCHANT"` becomes
+--- an ENCHANT-ONLY buff container: `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever
+--- the player's), and `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hidden but
+--- Weapon enchants, Uncategorized included). `filter.hidePermanentEnchants` and every other key —
+--- name, style, styling, position — carry over untouched. One [Migrate] line per converted container,
+--- in key order. A test seam as well as the step's body, like MigrateV2..V4.
+--- @return number  the containers converted
+function Database.MigrateV5(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local keys = {}
+    for key in pairs(p.containers) do
+        keys[#keys + 1] = key
+    end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    local converted = 0
+    for _, key in ipairs(keys) do
+        local c = p.containers[key]
+        if type(c) == "table" and c.auraType == "ENCHANT" then
+            c.auraType, c.unit = "HELPFUL", "player"
+            if type(c.filter) ~= "table" then c.filter = {} end
+            c.filter.categories = NS.Categories.EnchantOnlyStates()
+            converted = converted + 1
+            if NS.Debug then
+                NS.Debug("Migrate", "v5 container '%s' (%s): now a player buff container showing only Weapon enchants", tostring(key), tostring(c.name))
+            end
+        end
+    end
+    return converted
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 local function eachProfile(db, fn)
@@ -762,6 +793,14 @@ local SCHEMA_STEPS = {
         if lostCount > 0 and NS.Print then
             NS.Print(NS.L["The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."]:format(table.concat(allLost, ", ")))
         end
+    end },
+    { to = 5, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV5(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v5 profile '%s': the Weapon enchants aura type retired -- %s container(s) now show only the Weapon enchants category", name, n)
+            end
+        end)
     end },
 }
 

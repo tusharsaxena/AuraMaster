@@ -292,7 +292,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:727`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:758`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -396,6 +396,17 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   `NS.CONTAINER_TEMPLATE` no longer carries it. A container where the toggle was already off or
   absent is untouched entirely, not even the dead-key clear (idempotent: nothing at `true` to act on
   on a second run either).
+- **Schema v5** (`Database.MigrateV5`, `core/Database.lua`, feedback #6, 2026-09-19) runs over
+  **every** stored profile and logs one `[Migrate] v5 profile '<name>'` line each, plus one
+  `[Migrate] v5 container '<key>' (<name>)` line per container it converts; `Database.CurrentSchemaVersion()`
+  answers `5`. The **Weapon enchants aura type retires**: weapon enchants are the buff category
+  `weaponEnchants` only. Every container with `auraType == "ENCHANT"` becomes an **enchant-only buff
+  container** — `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever the player's), and
+  `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hide but Weapon enchants,
+  Uncategorized included). `filter.hidePermanentEnchants`, the name, the style, every styling block and
+  the position carry over untouched. Such a container compiles to the enchant slots and no aura group,
+  and `FC.Compile` does not call it one that can never match. The v3 and v4 steps keep their `ENCHANT`
+  handling, because an old profile climbs them before it reaches v5.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

@@ -366,3 +366,12 @@ function Cat.StatesShowing(keys)
     for _, key in ipairs(keys) do out[key] = "show" end
     return out
 end
+
+--- The states of an ENCHANT-ONLY buff container (schema v5, feedback #6): every buff category Hidden
+--- but Weapon enchants, Uncategorized included, so the container draws the player's temporary weapon
+--- enchants and no aura at all. The v5 migration (core/Database.lua) and `/am new enchants`
+--- (settings/Slash.lua) both build one from this.
+--- @return table
+function Cat.EnchantOnlyStates()
+    return Cat.StatesShowing({ "weaponEnchants" })
+end

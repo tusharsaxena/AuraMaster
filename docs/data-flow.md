@@ -72,7 +72,7 @@ Blizzard-frame toggle made under lockdown is not queued (`BlizzardFrames.Apply` 
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:580`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:582`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority `docs/ARCHITECTURE.md` → Filter
 priority states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 

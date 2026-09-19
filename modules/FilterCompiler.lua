@@ -560,8 +560,10 @@ local function finishWarnings(plan, unit, auraType, usesSpellIds)
             warn(plan, w)
         end
     end
+    -- A buff container showing only Weapon enchants (schema v5) draws its enchant slots and no aura
+    -- group: that is what it is for, not a filter that can never match.
     local groupCount = #plan.groups
-    if groupCount == 0 then
+    if groupCount == 0 and not plan.enchants then
         warn(plan, FC.WARN.NEVER_MATCHES)
     end
 end
