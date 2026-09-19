@@ -419,12 +419,42 @@ local function dispelOptionsFor(piece, s)
     return entry.opts
 end
 
+-- A single fully transparent color, shared by every dispel type the profile's palette does not cover
+-- (Enrage): the engine still calls Show for it (it has a dispelName, and showWithoutDispelType is
+-- false only for a TYPELESS aura), so nothing but a transparent tint keeps it invisible (fix round 1,
+-- controller ruling: an out-of-palette type gets no visible tint, the same as a typeless aura).
+local invisible
+
+--- The backdrop and edge's color map (feedback #7, fix round 1): every type in C.TEXT_DISPEL_TYPES the
+--- profile's palette colors takes that color at full alpha (the backdrop's own opacity is
+--- `dispelBackdropAlpha`'s SetAlpha, not this alpha); a type it does not cover (Enrage) takes
+--- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), every entry here does NOT share one
+--- alpha from a surface fallback: a Text tint has no surface color of its own to fall back to, so "no
+--- color" IS the fallback. No `None` entry: showWithoutDispelType is false, so the engine never looks
+--- a typeless aura up. Built once per set of palette leaves, and read by the live dress
+--- (tintOptionsFor) and the preview (previewTints) alike, so the two cannot disagree.
+local tintMapEntry
+local function tintColorMap()
+    local palette = Style.ProfileDispelColors()
+    if not (tintMapEntry and paletteCurrent(tintMapEntry, palette)) then
+        invisible = invisible or (_G.CreateColor and _G.CreateColor(1, 1, 1, 0))
+        local map, src = {}, {}
+        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+            local c = palette and palette[t]
+            src[t] = palette and palette[t] or nil
+            map[t] = (type(c) == "table" and _G.CreateColor) and _G.CreateColor(c.r or 1, c.g or 1, c.b or 1, 1) or invisible
+        end
+        tintMapEntry = { src = src, map = map }
+    end
+    return tintMapEntry.map
+end
+
 --- AddDispelTypeTexture's options for the backdrop and edge (feedback #7): shown for a buff or a debuff
---- WITH a dispel type (as the word is), our white texture kept (PreserveAsset) and tinted from the
---- profile's palette at full alpha (the backdrop's opacity is its own SetAlpha). Built once per map.
+--- WITH a dispel type (as the word is), our white texture kept (PreserveAsset) and tinted from
+--- tintColorMap. Built once per map.
 local tintOptions
 local function tintOptionsFor()
-    local map = Style.DispelColorMap(Style.ProfileDispelColors())
+    local map = tintColorMap()
     if not (tintOptions and tintOptions.customDispelColorMap == map) then
         tintOptions = { showWhenHarmful = true, showWhenHelpful = true, showWithoutDispelType = false,
             style = NS.Compat.DispelStyle("PreserveAsset"), customDispelColorMap = map }
@@ -566,13 +596,13 @@ local function previewRunColor(fs, aura, s)
     end
 end
 
---- A placeholder's backdrop and edge (feedback #7): shown in the palette color of its aura's dispel
---- type, as the engine tints a live one; left hidden (dressDispelTints) for an aura with no type or
---- no palette color.
+--- A placeholder's backdrop and edge (feedback #7): shown in tintColorMap's color for its aura's
+--- dispel type -- the SAME map the live engine is handed (fix round 1), so the preview and a live
+--- button cannot disagree -- left hidden (dressDispelTints) for an aura with no type, and for a type
+--- the palette does not cover (Enrage: invisible, not shown, controller ruling).
 local function previewTints(am, aura, s)
-    local dc = aura.dispel and Style.ProfileDispelColors()
-    local c = dc and dc[aura.dispel]
-    if type(c) ~= "table" then return end
+    local c = aura.dispel and tintColorMap()[aura.dispel]
+    if not (c and c ~= invisible) then return end
     local r, g, b = c.r or 1, c.g or 1, c.b or 1
     if s.dispelBackdrop then
         am.backdrop:SetVertexColor(r, g, b, 1)

@@ -610,6 +610,21 @@ test("text style: a colored dispel map is built once per look, and a new palette
     assertEqual(again.customDispelTextMap.Curse, " (|cffff0000" .. NS.L["Curse"] .. "|r)")
 end)
 
+test("text style: the dispel tint map is built once per look, and a new palette color rebuilds it too (feedback #7, fix round 1)", function()
+    local NS = E()
+    local c = text({ dispelBackdrop = true })
+    local first = dressed(c, true):__last("AddDispelTypeTexture")[2].customDispelColorMap
+    assertTrue(dressed(c, true):__last("AddDispelTypeTexture")[2].customDispelColorMap == first, "one map per look")
+    local dc = NS.db.profile.dispelColors
+    local old = dc.Curse
+    dc.Curse = { r = 1, g = 0, b = 0, a = 1 }   -- a settings write stores a new table (Style.lua's memo note)
+    local again = dressed(c, true):__last("AddDispelTypeTexture")[2].customDispelColorMap
+    dc.Curse = old
+    -- red under: the tint memo ignoring a palette write (a memo keyed on something other than the map)
+    assertTrue(again ~= first, "a new palette leaf rebuilds the tint map")
+    assertEqual(table.concat({ again.Curse.r, again.Curse.g, again.Curse.b, again.Curse.a }, ","), "1,0,0,1")
+end)
+
 test("text style: the dispel backdrop fills the text area and is tinted through the engine, for a typed aura only (feedback #7)", function()
     local NS = E()
     local frame, am = dressed(text({ dispelBackdrop = true, dispelBackdropAlpha = 0.4 }), true)
@@ -626,7 +641,13 @@ test("text style: the dispel backdrop fills the text area and is tinted through 
     assertTrue(o.showWhenHarmful and o.showWhenHelpful, "buffs and debuffs, as the word")
     assertFalse(o.showAlways)
     assertFalse(o.showWithoutDispelType)
-    assertTrue(o.customDispelColorMap == NS.Style.DispelColorMap(NS.db.profile.dispelColors), "the profile's palette")
+    local map = o.customDispelColorMap
+    local m = NS.db.profile.dispelColors.Magic
+    assertEqual(table.concat({ map.Magic.r, map.Magic.g, map.Magic.b, map.Magic.a }, ","),
+        table.concat({ m.r, m.g, m.b, 1 }, ","), "the profile's palette, at full alpha")
+    -- red under: Enrage taking the fallback's opaque white instead of no visible tint at all (fix
+    -- round 1, controller ruling: an out-of-palette type shows nothing, like a typeless aura)
+    assertEqual(map.Enrage.a, 0, "no palette color for Enrage: fully transparent, not Blizzard's white")
     assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < frame:__lastSeq("AddDispelTypeTexture"), "cleared first")
     am.backdrop:Show()   -- the engine showed it for a typed aura
     local off = dressed(text({}), true, frame)
@@ -676,6 +697,22 @@ test("text style: a placeholder with a dispel type shows the backdrop and edge i
     assertFalse(typeless.edgeTop:IsShown(), "no type, no edge")
     local _, off = filled({}, AURA)
     assertFalse(off.backdrop:IsShown(), "off: nothing, even for a typed aura")
+end)
+
+test("text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)", function()
+    E()
+    local ENRAGE = { name = "Enrage Effect", icon = 1, remaining = 10, duration = 10, stacks = 0, dispel = "Enrage" }
+    -- Live: Enrage has a dispelName, so the engine still shows the texture; only a transparent tint
+    -- keeps it invisible.
+    local frame = dressed(text({ dispelBackdrop = true, dispelEdge = true }), true)
+    local map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
+    -- red under: Enrage mapped to the fallback's opaque white (a visible white box and edge in game)
+    assertEqual(map.Enrage.a, 0, "Enrage: no palette color, so no visible tint")
+    -- Preview: previewTints must read the SAME map the engine gets, so the two cannot disagree.
+    local _, am = filled({ dispelBackdrop = true, dispelEdge = true }, ENRAGE)
+    -- red under: the preview showing a white backdrop/edge for Enrage where the live button would too
+    assertFalse(am.backdrop:IsShown(), "Enrage: no palette color, no visible backdrop")
+    assertFalse(am.edgeTop:IsShown(), "Enrage: no palette color, no visible edge")
 end)
 
 test("text style: a placeholder's and the Preview line's dispel word take its palette color when the option is on (feedback #7)", function()

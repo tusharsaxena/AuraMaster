@@ -287,8 +287,9 @@ end
 local GATES = {
     bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true },
     icons = { borderShow = true, expiringColorOn = true },
-    -- Right, so Center (a multi-piece template lines up Left) still moves the chain; an icon, so
-    -- its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color (feedback #7).
+    -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
+    -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
+    -- (feedback #7).
     text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }

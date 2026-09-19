@@ -451,10 +451,10 @@ around the word, the bracket text keeping the font color (dimmed without a `$dis
 `dispelBackdrop` fills the text area behind the chain with a white texture the engine tints and shows
 per aura (`AddDispelTypeTexture`, `PreserveAsset`, the profile's palette), at `dispelBackdropAlpha`;
 `dispelEdge` draws four strips `dispelEdgeSize` px thick around the text area the same way. The
-backdrop and the edge show only for an aura with a dispel type (buff or debuff), in the palette's
-color for it; a type the palette lacks (Enrage) takes Blizzard's own color. The opacity and the
-thickness are dimmed while their toggle is off. The preview draws all three from the placeholder's
-own type.
+backdrop and the edge show only for an aura with a dispel type (buff or debuff) the palette colors;
+a type it has no color for (Enrage) gets no visible tint at all, the same as a typeless aura (fix
+round 1). The opacity and the thickness are dimmed while their toggle is off. The preview draws all
+three from the placeholder's own type.
 
 When the selected container is drawn as bars or icons, the same small muted-gold note heads every tab
 — naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
