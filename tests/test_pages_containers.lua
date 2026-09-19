@@ -148,23 +148,44 @@ end
 test("containers: the picker and New container sit in the band above the strip, drawn before it (feedback #2)", function()
     local NS, _, P = containers()
     local H = NS.Helpers
-    local order, real = {}, {}
+    local order, real, headerFrame = {}, {}, nil
     for _, name in ipairs({ "PageHeader", "TabStrip" }) do
         real[name] = H[name]
         H[name] = function(...)
             local n = #order
             order[n + 1] = name
-            return real[name](...)
+            local ret = real[name](...)
+            if name == "PageHeader" then headerFrame = ret end
+            return ret
         end
+    end
+    -- A widget's frame is a fresh table per Create (tests/_kit's own spy convention: rawset a
+    -- method to record, rawset nil to restore), so shadowing SetParent right after Create catches
+    -- placeInHeader's call on it, made moments later inside the same build.
+    local AceGUI = NS.AceGUI
+    local realCreate = AceGUI.Create
+    local parents = {}
+    AceGUI.Create = function(self, wtype)
+        local w = realCreate(self, wtype)
+        if w.frame then
+            w.frame.SetParent = function(f, p) parents[w] = p; return f end
+        end
+        return w
     end
     P.rerender("Containers")
     H.PageHeader, H.TabStrip = real.PageHeader, real.TabStrip
+    AceGUI.Create = realCreate
     -- red under: the page drawing no chrome block, or drawing it after the strip (its band unreserved)
     assertEqual(table.concat(order, ","), "PageHeader,TabStrip", "the band, then the tabs")
     local picker, new = headerWidgets(NS)
     -- red under: the picker and New still drawn in the tab body (the retired options-ui-§14 deviation)
     assertTrue(picker ~= nil and new ~= nil, "both drawn in the band")
     assertFalse(inScroll(NS, picker) or inScroll(NS, new), "neither in the tab body")
+    -- red under: the pair drawn but never actually anchored into the band (placeInHeader not run,
+    -- or run against some other frame) -- "neither in the tab body" alone is trivially true of a
+    -- widget parented nowhere at all
+    assertTrue(headerFrame ~= nil and parents[picker] == headerFrame and parents[new] == headerFrame,
+        "both parented into the header frame PageHeader returned")
     assertTrue(H.__pageCtx.containers.__bannerWidget == picker, "the picker is the page's banner widget")
     assertEqual(table.concat(picker.order, ","), "1,2,3,4")
     assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])

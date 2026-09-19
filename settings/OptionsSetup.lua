@@ -450,6 +450,13 @@ end
 -- what it draws inside it. Its widgets are recorded on ctx.__chromeWidgets, which settings/Containers.lua
 -- releases after the NEXT render: a render is usually running inside one of their own callbacks.
 local HEADER_CONTROL_H = 24   -- AceGUI's Button frame height
+-- AceGUI's labeled Dropdown anchors its CONTROL 14px below the frame's top
+-- (AceGUIWidget-DropDown.lua's SetLabel: `dropdown:SetPoint("TOPLEFT", frame, "TOPLEFT", -15, -14)`),
+-- not centered or foot-aligned in the 44-tall band Helpers.BANNER_H reserves for the frame -- that
+-- SetHeight(40) call runs before this file's own f:SetHeight(BANNER_H) stretches the frame further,
+-- and the control never re-anchors off the new height. New container levels with THIS y, not the
+-- band's foot.
+local HEADER_DROPDOWN_CONTROL_Y = 14
 local HEADER_PAIR_GAP  = 4    -- half the gutter between the block's two halves
 
 --- Anchor one AceGUI widget's frame inside the block, on its LEFT or RIGHT half.
@@ -492,21 +499,35 @@ local function buildContainerHeader(ctx, frame, spec)
     btn:SetText(L["New container"])
     btn:SetCallback("OnClick", function() if spec.onNew then spec.onNew() end end)
     Helpers.AttachTooltip(btn, L["New container"], L["Create a container showing the player's buffs as bars. Change what it shows below."])
-    -- Level with the dropdown's control, not its label: the labeled dropdown is BANNER_H tall with
-    -- the control at its foot.
-    placeInHeader(btn, frame, Helpers.BANNER_H - HEADER_CONTROL_H - 1, HEADER_CONTROL_H, "RIGHT")
+    -- Level with the dropdown's control, not its label or the band's foot (see HEADER_DROPDOWN_CONTROL_Y).
+    placeInHeader(btn, frame, HEADER_DROPDOWN_CONTROL_Y, HEADER_CONTROL_H, "RIGHT")
 end
 
 --- The Containers page's chrome: the picker and New container, one row above the strip. Called as
 --- RenderTabbedPage's `chrome`, so it is drawn before the strip reserves its band. `spec.onNew` is
 --- the page's own create act.
+---
+--- Swaps in a fresh ctx.__chromeWidgets before building and releases the PREVIOUS render's kids only
+--- after PageHeader returns -- never before: this may be reached from inside the picker's or New's
+--- own callback, and a widget released on the way in could be handed straight back out, re-
+--- initialized, under its own callback. This covers every caller, not only settings/Containers.lua's
+--- own renderPage wrapper: RenderTabbedPage's tab-strip `onSelect` re-renders through
+--- Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome) directly, calling this again without going
+--- through that wrapper, and without this the swap here that path would leak one picker and one
+--- button per click once the page ever grows a second tab.
 function Helpers.ContainerHeader(ctx, spec)
-    ctx.__chromeWidgets = ctx.__chromeWidgets or {}
+    local stale = ctx.__chromeWidgets
+    ctx.__chromeWidgets = {}
     ctx.__bannerWidget = nil
-    return Helpers.PageHeader(ctx, {
+    local headerFrame = Helpers.PageHeader(ctx, {
         height = Helpers.BANNER_H,
-        build  = function(_, frame) buildContainerHeader(ctx, frame, spec or {}) end,
+        build  = function(_, hframe) buildContainerHeader(ctx, hframe, spec or {}) end,
     })
+    local AceGUI = NS.AceGUI
+    if AceGUI and AceGUI.Release and stale then
+        for _, w in ipairs(stale) do AceGUI:Release(w) end
+    end
+    return headerFrame
 end
 
 --- One orange line per thing the aura engine will silently not do for this container, above the

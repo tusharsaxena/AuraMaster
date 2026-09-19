@@ -2,10 +2,10 @@
 -- through their widgets: what each Master control and Display row writes, what each one's effect is,
 -- the two buttons the composer adds, the page's Defaults, the Spell Categories ID list and its
 -- restore, and the Dispel Colors rows. The top-level Containers page — its picker and New container
--- inside the tab body (the options-ui-§14 deviation, docs/ARCHITECTURE.md), the identity rows and the
--- acts on the selected container (Duplicate, Delete, Copy settings from) — moved out to its own page
--- (N-1, batch 7) and is tests/test_pages_containers.lua's now. Every case builds a fresh environment,
--- because every case clicks something.
+-- in the band above the strip (options-ui-§14), its identity rows and the acts on the selected
+-- container (Duplicate, Delete, Copy settings from) — moved out to its own page (N-1, batch 7) and is
+-- tests/test_pages_containers.lua's now. Every case builds a fresh environment, because every case
+-- clicks something.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
