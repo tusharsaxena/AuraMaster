@@ -16,7 +16,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## AceDB setup
 
-`NS.InitDB` (`core/Database.lua:230`), called from `OnInitialize`:
+`NS.InitDB` (`core/Database.lua:243`), called from `OnInitialize`:
 
 - `AceDB:New("AuraMasterDB", NS.defaults, true)` — `true` puts every character on the shared
   `Default` profile until the player picks a per-character, per-class or per-realm one.

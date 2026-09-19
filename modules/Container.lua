@@ -6,10 +6,11 @@ local _, NS = ...
 -- BUILD, UPDATE OR REBUILD. A container's settings compile (modules/FilterCompiler.lua) into a plan of
 -- aura groups. The engine lets most of a group change live — filter string, candidate filters,
 -- sorting, cap, layout — so a plan with the same SHAPE as the last one (same number of groups, same
--- enchant slots and hide-permanent flag, same style) is applied in place and every existing button is
--- restyled. A plan of a different shape needs a new engine: groups are add-only and a frame once
--- created is never destroyed, so the old engine is disabled, hidden and set aside, and a fresh one is
--- built. That only happens on a settings change, never in play.
+-- enchant slots and hide-permanent flag, same style, same growth corner) is applied in place and
+-- every existing button is restyled. A plan of a different shape needs a new engine: groups are
+-- add-only, the engine is pinned at its growth corner before its first group and never again, and a
+-- frame once created is never destroyed, so the old engine is disabled, hidden and set aside, and a
+-- fresh one is built. That only happens on a settings change, never in play.
 --
 -- NEVER WHILE AURAS ARE SECRET. Building, updating and restyling all touch aura buttons, which the
 -- engine locks while auras are secret. modules/ContainerManager.lua holds every apply until secrecy
@@ -316,6 +317,13 @@ function ContainerClass:Update(cfg, plan)
     self:Restyle(cfg)
 end
 
+--- Re-dress one live button, guarded: a dress that raises costs that button and is reported
+--- (Style.ReportError, smoke batch 2 item 7), never swallowed and never the rest of the restyle.
+local function redress(frame, cfg, classColor)
+    local ok, err = pcall(NS.Style.Element, frame, cfg, true, classColor)
+    if not ok then NS.Style.ReportError("restyle", err) end
+end
+
 --- Re-dress every button the engine has created, from the current settings.
 function ContainerClass:Restyle(cfg)
     local engine = self.engine
@@ -326,13 +334,13 @@ function ContainerClass:Restyle(cfg)
         for i = 1, (ok and n or 0) do
             local okF, frame = pcall(engine.GetAuraGroupFrame, engine, g.key, i)
             if okF and frame then
-                pcall(NS.Style.Element, frame, cfg, true, self.classColor)
+                redress(frame, cfg, self.classColor)
                 count = count + 1
             end
         end
     end
     for _, frame in ipairs(self.enchantFrames) do
-        pcall(NS.Style.Element, frame, cfg, true, self.classColor)
+        redress(frame, cfg, self.classColor)
         count = count + 1
     end
     return count
@@ -361,7 +369,11 @@ function ContainerClass:Apply()
     if NS.Compat.HasAuraContainer() then
         -- The style, and for a text container its template's shape (Style.StructureKey): a new
         -- shape gets new buttons, so no engine binding is left in the old shape's font strings.
+        -- The growth corner too (the effective one, a follower's inherited): Build pins the engine
+        -- there and it can never be re-anchored after its first group, so a new corner needs a new
+        -- engine. An axis, spacing or per-line change keeps the corner and stays in place.
         local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. NS.Style.StructureKey(cfg)
+            .. ":" .. NS.Container.FlowSettings(cfg).anchorPoint
         if self.engine and self.structure == structure then
             self:Update(cfg, plan)
         else

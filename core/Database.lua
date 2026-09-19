@@ -88,6 +88,19 @@ function Database.GetContainers()
     return out
 end
 
+--- Every container sorted for a picker (smoke batch 2, B2-2): by name, case-insensitively, the id
+--- breaking a tie. A new array: the display order (`containerOrder`) is never touched.
+--- @return table
+function Database.GetContainersByName()
+    local out = Database.GetContainers()
+    table.sort(out, function(a, b)
+        local an, bn = tostring(a.name):lower(), tostring(b.name):lower()
+        if an ~= bn then return an < bn end
+        return a.id < b.id
+    end)
+    return out
+end
+
 --- One container's stored table by id, or nil.
 function Database.FindContainer(id)
     local p = profile()

@@ -8,6 +8,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local NS = T.NS
 local R = dofile("tests/region_recorder.lua")
 local fresh = dofile("tests/fresh_env.lua")
+local BS = dofile("tests/border_strips.lua")
 local D = NS.CONTAINER_TEMPLATE
 
 local function cfg(over)
@@ -68,10 +69,8 @@ test("icons: the border takes its style, size and color, and the dress's class w
     local _, am = dressed(cfg({ icons = { borderShow = true, borderStyle = "Solid", borderSize = 2,
         borderColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, useClassColorBorder = true } }), false,
         { r = 0.9, g = 0.8, b = 0.7 })
-    assertTrue(am.border:IsShown())
-    assertEqual(am.border:__last("SetBackdrop")[1].edgeSize, 2)
     -- red under: Icons.Apply dropping useClassColorBorder
-    assertEqual(am.border:__joined("SetBackdropBorderColor"), "0.9,0.8,0.7,0.4")
+    BS.assertSolid(am.border, 2, "0.9,0.8,0.7,0.4", "the class-colored border")
 end)
 
 test("icons: a missing border size paints the template's, so the border and the art's inset still show", function()
@@ -79,8 +78,7 @@ test("icons: a missing border size paints the template's, so the border and the 
     c.icons.borderSize = nil
     local frame, am = dressed(c)
     -- red under: Icons.Apply handing ApplyBorder the raw borderSize (a missing size hides the template's border)
-    assertTrue(am.border:IsShown(), "the template's border shows")
-    assertEqual(am.border:__last("SetBackdrop")[1].edgeSize, D.icons.borderSize)
+    BS.assertSolid(am.border, D.icons.borderSize, "0,0,0,1", "the template's border")
     local p = am.icon:__calls("SetPoint")
     -- red under: layoutIcon's inset falling back to 0 rather than the template's size
     assertTrue(p[1][2] == frame)
@@ -309,6 +307,93 @@ test("icons: a restyle re-dresses the regions it built, and builds none", functi
     assertEqual(made, built, "no new frames on a restyle")
     assertTrue(frame.__am == am, "the same regions")
     assertEqual(frame:__joined("SetSize"), "50,32", "and the new look reached them")
+end)
+
+-- ── the border on a live button (B2-3) ────────────────────────────────────────────────────────
+-- The owner's report: pandemic settings changed on an icon container with its border on, and
+-- Backdrop.lua:226 raised on the border's secret size ("attempt to perform arithmetic on local
+-- 'width' (a secret number value ...)"), and the highlight stopped: the dress stopped before
+-- Icons.Bind, after the additive bindings were cleared. tests/wow_mock.lua's __layOut is the engine's
+-- layout: every region's size reads secret from then on.
+
+--- An icon element dressed live for `c1` in environment `ns`, its regions swapped for recorders,
+--- laid out by the engine (every size secret), its logs emptied, and dressed live again for `c2`.
+--- Returns whether the re-dress raised, its error, the button and its regions.
+local function liveSecretRedress(ns, m, c1, c2)
+    local frame = R()
+    ns.Style.Element(frame, c1, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    m.__layOut(frame)
+    for _, region in pairs(frame.__am) do m.__layOut(region) end
+    frame.__log = {}
+    local ok, err = pcall(ns.Style.Element, frame, c2, true)
+    return ok, err, frame, frame.__am
+end
+
+test("icons: a live re-dress with the border on under secret geometry re-binds the highlight and the time color (B2-3)", function()
+    local NS2, m2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local function c(over)
+        local t = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), over)
+        t.style = "icons"
+        return t
+    end
+    local border = { borderShow = true, borderStyle = "Solid", borderSize = 2,
+        borderColor = { r = 1, g = 0, b = 0, a = 1 } }
+    local after = NS2.Database.Merge(NS2.Database.DeepCopy(border), { pandemic = true, expiringColorOn = true })
+    local ok, err, frame, am = liveSecretRedress(NS2, m2, c({ icons = border }), c({ icons = after }))
+    -- red under: Style.ApplyBorder's SetBackdrop on the laid-out border (the reported raise)
+    assertTrue(ok, tostring(err))
+    BS.assertSolid(am.border, 2, "1,0,0,1", "the border")
+    -- red under: a border step that stops the dress before Icons.Bind
+    assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic, "the pandemic highlight is bound again")
+    local opts = frame:__last("SetDurationText")[2]
+    assertTrue(opts.textColor ~= nil, "the time text keeps its pandemic-window color")
+end)
+
+test("icons: a border the client refuses costs the border alone: every binding still runs, and it is reported (B2-3)", function()
+    local reported = {}
+    local NS2 = fresh({ before = function(m)
+        m.geterrorhandler = function() return function(e)
+            local n = #reported
+            reported[n + 1] = tostring(e)
+        end end
+    end })
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+        icons = { borderShow = true, borderStyle = "Solid", pandemic = true } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    local am = frame.__am
+    am.border.__raise.Show = true
+    frame.__log = {}
+    local ok, err = pcall(NS2.Style.Element, frame, c, true)
+    -- red under: Icons.Apply calling ApplyBorder unguarded (the raise takes the whole dress)
+    assertTrue(ok, tostring(err))
+    assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic, "the highlight is bound")
+    assertTrue(frame:__last("SetDurationText")[1] == am.time, "the time text is bound")
+    assertTrue(frame:__last("SetIcon")[1] == am.icon, "the icon is bound")
+    assertEqual(#reported, 1, "handed to the client's error handler")
+    assertTrue(reported[1]:find("Show refused", 1, true) ~= nil, reported[1])
+end)
+
+test("icons: a live resize under secret geometry runs no backdrop arithmetic (B2-3)", function()
+    local NS2, m2 = fresh()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+        icons = { borderShow = true, borderStyle = "Uninstalled", borderSize = 2 } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    local am = frame.__am
+    local host = am.border.__amBackdrop
+    m2.__layOut(frame)
+    m2.__layOut(am.border)
+    if host then m2.__layOut(host) end
+    -- The client runs each frame's OnSizeChanged when the button is resized.
+    local ok, err = pcall(am.border.__fire, am.border, "OnSizeChanged")
+    -- red under: a BackdropTemplate border (its OnSizeChanged re-runs Backdrop.lua:226 on the size)
+    assertTrue(ok, "the border: " .. tostring(err))
+    assertTrue(host ~= nil and host.backdropInfo ~= nil, "a backdrop applied on the fresh button")
+    ok, err = pcall(host.__fire, host, "OnSizeChanged")
+    assertTrue(ok, "the backdrop frame: " .. tostring(err))
 end)
 
 -- ── preview fill ──────────────────────────────────────────────────────────────────────────────

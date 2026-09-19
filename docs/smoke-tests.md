@@ -45,6 +45,9 @@ suite covers what only the client can show.
     real auras are hidden, the outline giving way to them. The handle is a dark strip with a thin gold edge and a gold label, sitting
     outside the container: above it when the auras grow down, below when they grow up, lined up with
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
+    Flip Grow vertically without reloading (Layout → Growth, Down → Up): the bars stack up from the
+    anchor, the handle moves below them, and nothing hangs below the anchor; flip it back and they
+    stack down again. Grow horizontally (Right → Left) likewise, on an icons container.
     Hovering the strip or the help mark at its right end shows, at the cursor, the name and "Drag to
     move. Right-click for settings.", with no Lua error. Run this after a `/reload` and again after
     Profiles → Reset Profile.
@@ -120,7 +123,7 @@ suite covers what only the client can show.
     container.attach.mode screen` with the page open → it redraws to Screen alone; `/am get
     container.attach.x` still answers while Offset is hidden.
 26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Highlights ]**. On an icon container every tab carries the small gray "Not in use: this container
+    Pandemic ]**. On an icon container every tab carries the small gray "Not in use: this container
     is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
     quiet text, not a full-width orange banner, and not larger than the labels under it — a gap below it, and every control dimmed and unclickable; the tabs
     and the Container dropdown still work. **General** opens on its Size subsection (**Width**,
@@ -133,7 +136,7 @@ suite covers what only the client can show.
     **Background & border**, Background reads **Background texture** · **Background opacity** /
     **Background color** · **Use class color**; drag **Background opacity** down → the bars'
     background fades while the fill stays as it was.
-27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Highlights ]**. On
+27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Pandemic ]**. On
     Cooldown tick **Blizzard countdown numbers** → on a timed aura the countdown and the time text
     read the same whole second throughout, in each time format (both round a fraction up: 12.7 s
     reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
@@ -222,10 +225,10 @@ suite covers what only the client can show.
 
 ## I. Combat deferral
 
-46. **Enter combat** (a training dummy) and change a container's bar width or a filter → chat prints
-    once: `[AM] Aura Master settings changes will apply when combat ends.`; nothing changes on screen.
-    Leave combat → the change lands with no reload and no error. In combat, `/am lock` and a rename
-    print no notice. With a target container's border on class color, target a player
+46. **Enter combat** (a training dummy) and change a container's bar width or a filter with `/am set`
+    (the settings window is locked in combat, item 46a) → chat prints once: `[AM] Aura Master settings
+    changes will apply when combat ends.`; nothing changes on screen. Leave combat → the change lands
+    with no reload and no error. In combat, `/am lock` and a `/am set` rename print no notice. With a target container's border on class color, target a player
     of another class and pull at once → no notice prints (you changed no setting), and the border
     takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →
     the change waits until the key or encounter ends, even if you drop combat between pulls. A change
@@ -234,20 +237,31 @@ suite covers what only the client can show.
     there prints the combat line; nothing more prints the moment combat ends, and the next change
     still held after the pull prints the restriction line once.
 47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
-    warning, and the panel does not pop open when combat ends. `/am resetall`, and General → **Reset
-    all settings** → **Yes**, reset the profile in combat just as Profiles → Reset Profile does: the
-    acknowledgment prints and no gray line. After either reset, or a switch to a profile without one
+    warning, and the panel does not pop open when combat ends. `/am resetall`, and a General → **Reset
+    all settings** popup opened before the pull and answered **Yes** in combat, reset the profile in
+    combat: the acknowledgment prints and no gray line. The button itself, clicked in combat, is
+    refused by the settings lock (item 46a). After either reset, or a switch to a profile without one
     of your containers, in combat → that container stops drawing, is torn down when combat ends, and
     no taint warning appears. Point container 1 at focus first: after the reset (or a switch or copy)
     in combat it draws nothing, never focus auras under the reset container's name, and once combat
     ends it draws the new container 1 (player buffs).
 
+46a. **The settings lock (LibKa0s v1.46.1).** Open the settings on a Bars page, then pull a dummy:
+    the whole page, the container band and the tab strip included, goes under a gray "Settings are
+    locked during combat." cover. Clicking, dragging, typing, a tab, Defaults, Duplicate: nothing
+    changes, and one gray `settings are locked during combat — changes are refused until it ends`
+    line prints for the whole combat. Switch category in the AddOns sidebar in combat → the new page
+    shows covered; no error (`/console scriptErrors 1`), no `ADDON_ACTION_BLOCKED`, and the window
+    stays open. Change a value with `/am set` in combat, then leave combat → the covers lift and the
+    page shows the new value. A second combat prints the line once more.
+
 ## J. Blizzard frames
 
 48. General → Display → **Hide Blizzard buffs** → the default buff frame disappears (with its weapon
-    enchants); **Hide Blizzard debuffs** → the default debuff frame goes. Untick → both return. Tick one
-    in combat → chat prints `[AM] Aura Master settings changes will apply when combat ends.` once
-    (tick the other too: still one line), and it applies when combat ends. No taint warnings on any
+    enchants); **Hide Blizzard debuffs** → the default debuff frame goes. Untick → both return. Set one
+    in combat with `/am set hideBlizzardBuffs true` (the page itself is locked in combat, item 46a) →
+    chat prints `[AM] Aura Master settings changes will apply when combat ends.` once (set the other
+    too: still one line), and it applies when combat ends. No taint warnings on any
     of this.
 
 ## K. Mouse
@@ -364,8 +378,8 @@ listed here too, so the batch can be signed off in one pass.
     unit shows no unit tooltip; a unit tooltip already up fades.
 65. **Placeholder time text (B-5, question Q7).** `/am test` on a bar container and switch Time text →
     **Countdown** between Blizzard, short and detailed → the placeholders' time text changes with it
-    and reads as a live aura's does in the same format. Tick Highlights → **Running out** → the
-    *Shield Wall* placeholder (4 s left) takes the running-out color.
+    and reads as a live aura's does in the same format. Tick Pandemic → **Recolor the time in the pandemic window** → the
+    *Shield Wall* placeholder (4 s left) takes the pandemic-window time color.
 66. **Text justify (B-5).** On Bars → Name text set **Justify** to Right → the name moves to the
     right end of its box and stops short of the time text. On Bars → Time text, with the name shown,
     set **Justify** to Left, then Right → the time moves across a box as wide as its format's longest
@@ -374,7 +388,8 @@ listed here too, so the batch can be signed off in one pass.
 67. **Inherited flow (L-6).** Attach container B to A (Layout → Anchor → *Another container*) where A
     fills in columns growing down → B continues below A's last element, and the line beside the
     Container dropdown names the points. Set A's **Grow vertically** to up → B moves above A, with
-    none of B's own settings changed. On B's Growth tab, Fill, Grow horizontally and Grow vertically
+    none of B's own settings changed, and without a reload B's own auras stack up from its first
+    element too. On B's Growth tab, Fill, Grow horizontally and Grow vertically
     are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
     B's **Attach to** back to *Screen* → B's own flow returns.
 68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.
@@ -569,10 +584,19 @@ nothing).
     names; nothing (brackets included) on a typeless debuff.
 97. **Loops.** Pulse, Blink and Bounce, each through a pull: no piece overlaps another while it
     animates; a change made in combat starts when combat ends.
-98. **Running out.** Recolor on, then Blink on: the duration run turns the color, then blinks, in the
+98. **The pandemic window.** On the Pandemic tab, Recolor on, then Blink on: the duration run turns the color, then blinks, in the
     last N seconds; the rest of the line keeps the font color.
-99. **The icon.** Icon Left, then Right, with a border: the text starts after the icon and its gap,
-    and a long line is cut at its box rather than drawn under the icon.
+99. **The icon.** On a new Text container (Icon position None), the Icon tab's rows are dimmed but
+    Icon position and the border's color swatch, under a gray "Set Icon position to show the icon."
+    (smoke batch 2, item 6). Icon Left → the rows go live and the note goes at once; turn Show border
+    on at thickness 2 in red → a red border frames the icon, the art inside it. Then Right, with the
+    border: the text starts after the icon and its gap,
+    and a long line is cut at its box rather than drawn under the icon. Then, with `/am debug` and
+    `/console scriptErrors 1`, and auras showing, change Text settings one after another (font, size,
+    template, icon size, the border): every line keeps its text. Rows that go blank, or become empty
+    bordered squares, must now come with a `[Style] … failed:` line in the debug console and one Lua
+    error naming it; copy both (smoke batch 2, item 7). A refused icon call costs the icon alone,
+    the text still drawing.
 100. **Refusals.** In the Template box and with `/am set container.text.template $spellname$ $bogus$`
      (no quotes): chat prints `Invalid value for container.text.template` and, indented, the rule
      that broke; the stored template does not change. Try each rule of spec §3.2 once.
@@ -582,7 +606,7 @@ nothing).
 103. **The Player cooldowns starter.** On a NEW profile, the "Player cooldowns" Text container shows
      an offensive and a defensive cooldown when popped, and nothing else (no food, flask, mount or
      raid buffs).
-104. **The running-out blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
+104. **The pandemic-window blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
      in 0.01 s increments with delays under REPEAT, so it reads as a blink, not a flicker or a smooth
      fade.
 105. **Nested clipping.** A template wider than the box, on a narrow Text container: the line is cut
@@ -674,7 +698,13 @@ debuff container on the target, in a party or with a target dummy.
      with no type, and an Enrage-type buff (a type the palette does not cover), each keep the
      background's own color. Color by Static → the background color alone, including on an empty
      (currently-unused) button slot that had shown a dispel tint a moment before. General → Dispel
-     Colors lists the five types and no None swatch.
+     Colors lists the five types and no None swatch. Back on Dispel type, set Background opacity to
+     20% (and separately the background color's own alpha to 50%) → a typed and a typeless debuff's
+     background both go see-through, the fill's Bar opacity likewise on Color by Dispel type. Then
+     check it **in combat**, a debuff applied after the pull: the background keeps its 20%. If it
+     turns opaque in combat only, the engine refused the region alpha (`AddDispelTypeTexture` marks
+     the texture's alpha secret) — report it: the fix then moves the background onto its own child
+     frame, whose frame alpha carries the opacity (smoke batch 2, item 4).
 127. **Right-click the "?" (#9).** `/am unlock`; right-click container 2's handle **?** → the settings
      open on the **Containers** page with container 2 in the band's picker. In combat → the gray
      "cannot open settings during combat" line, nothing opens, the picker is unchanged afterwards.
@@ -683,14 +713,16 @@ debuff container on the target, in a party or with a target dummy.
 129. **Switched sections, Party Frame Enhanced (#4).** That addon's smoke item 31a on its
      `feat/switched-sections` build.
 130. **The dispel type word in color (#7).** A Text container on the target's debuffs, template Name,
-     type, time; Text → Animation → Dispel type → **Color the dispel type** on. A Magic debuff reads
+     type, time; Text → Font → Dispel type → **Color the dispel type** on. A Magic debuff reads
      `Name (Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the
      brackets and the rest in the font color; a Curse in its color; an Enrage-type buff (a type the
      palette does not cover) keeps the plain font color. Change the Magic swatch → the word
      follows after the re-apply. In combat the word keeps its color as auras come and go (the engine
      writes the text; nothing of ours runs). If the word shows the raw `|cff…` characters instead,
      the engine's options processing stripped the escape: report it (option c then does not work, and
-     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed.
+     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed. The
+     Dispel type subsection sits on the Font tab under Countdown, and no longer on Animation (smoke
+     batch 2, item 5); toggles set before the move keep their values.
 131. **The dispel backdrop (#7).** Same container, **Backdrop in the dispel color** on: a typed debuff's
      line has a Magic-blue (or Curse-purple, …) box behind its text, the text on top and readable; a
      debuff with no type, and an Enrage-type buff, each have no box. **Backdrop opacity** changes its
@@ -740,8 +772,151 @@ debuff container on the target, in a party or with a target dummy.
      riding live inside it when that option is on. Under it, the cheat sheet reads as two headed,
      bulleted lists with a gap before each heading — **Tokens** (one gold `$token$` bullet per token)
      and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
-     showing), each rule's example on its own indented line in the token gold. On a bars or icons
+     showing, a separator inside the brackets of the field it leads), each rule's example on its own indented line in the token gold. On a bars or icons
      container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
      muted red, not the earlier muted gold. A Center template's Preview shows its stacked rows joined
      by " / " (Centered: name over time reads "Ignore Pain / 11s"), never a raw line break, while the
      live container itself still shows them stacked, each on its own row (final review).
+140. **No gap between template pieces (smoke batch 2, item 8).** A target-debuff Text container,
+     Justify Left, template
+     `$spellname$-$stacks$-$dispeltype$-$remainingduration$-$maxduration$-$elapsedduration$-$remainingpercent$-$elapsedpercent$`,
+     on a typed debuff with stacks: the line reads `Fire Breath-3-Magic-6 s-…` with no space either
+     side of any `-` wherever the field beside it is non-empty. Then Justify Right: the same, laid from
+     the right. A field that is empty (one stack, no dispel type) still leaves its `-` and a small gap:
+     rewrite it as `$spellname$[-$stacks$][-$dispeltype$]...` and the empty field's separator goes
+     with it. A gap that remains between two non-empty fields is a defect: report the font and size.
+141. **The Justify note (smoke batch 2, item 3).** Text → General → Placement: a gray note sits under
+     Justify and Vertical justify, above the offsets, on Left, Center and Right alike. It says Center
+     centers a one-piece template only, stacks several fields in rows (text outside `[ ]` not drawn,
+     the box growing, rows kept when a field is empty, an icon at size 0 one row tall) and that aura
+     text is secret so its width cannot be measured. Each of those claims holds on a live container.
+142. **Typeless debuffs (smoke batch 2, item 2).** Out of combat, target a dummy carrying your class's
+     debuffs (a Paladin's Judgment and Consecration) and run the three `/run` lines in
+     `docs/midnight-quirks.md` → "Many debuffs carry no dispel type"; copy the output there. The Bars
+     page's Color by tooltips and General → Dispel Colors say buffs and many debuffs have no dispel
+     type (Judgment, Consecration), and the Dispel Colors line points at Text → Font.
+
+## U. The smoke-test feedback batch 2 (2026-09-19)
+
+Run with `/console scriptErrors 1` throughout, one bar container on the target's debuffs, one Text
+container on the player's buffs (an icon on the left, its border on), one icons container, and one
+container attached to `PlayerFrame`, near a target dummy. Where an earlier item already holds the
+detail, the step points at it rather than repeating it.
+
+143. **The settings lock covers every page (⚔).** Item 46a first, on a Bars page. Then, one combat
+     each (or one long pull), show every page in turn: General, Containers, Layout, Filters, Bars,
+     Icons, Text, Profiles and About → each is under the gray "Settings are locked during combat."
+     cover, the header band (the Container picker, New container, Duplicate) and the tab strip
+     included. On each: a click on a checkbox, a drag of a slider, typing in a box (Template, a
+     spell ID), Defaults and a tab click change nothing; the value on screen after combat is the one
+     from before the pull. A widget that moves, a tab that switches, or a value that lands after combat
+     is a defect.
+144. **Switching category in combat (⚔).** With the settings open, pull, then click other Aura Master
+     categories (and another addon's) in the Blizzard AddOns sidebar → each shows covered, the window
+     stays open, no Lua error, no `ADDON_ACTION_BLOCKED` and no "C stack overflow" in chat or the error
+     frame (`scriptErrors 1` stays silent). The gray `settings are locked during combat — changes are
+     refused until it ends` line prints **once** per combat however many pages you show or click; a
+     second pull prints it once more. Leave combat → the cover lifts on the page you are on, its
+     controls work at once, and it shows current values: a value changed with `/am set` during the pull
+     (item 46) is shown, with no reload and no re-open. A window that closes itself, or a page that stays
+     covered after combat, is a defect.
+145. **A Reset-all confirmation open at the pull (⚔, accepted).** General → **Reset all settings**, leave
+     the popup up, pull, then **Accept** in combat → the profile resets (item 47: the acknowledgment
+     prints, no gray line). The owner accepted this: the popup is Blizzard's, opened before combat, and
+     not part of the locked page. Clicking the button itself in combat stays refused (item 46a).
+146. **Growth flips without a reload (item 1).** Out of combat, and not in test mode:
+     - The screen-attached bar container, Layout → Growth, Grow vertically Down → Up → the bars stack up
+       from where the first one sat, nothing hangs below it, the handle (`/am unlock`) moves below the
+       block (item 14). Back to Down → they stack down again.
+     - The icons container, Grow horizontally Right → Left, then back → likewise, sideways.
+     - The container attached to `PlayerFrame`: the same two flips → the first aura keeps its attached
+       corner and the others grow the new way.
+     - A follower (item 67): container B attached to A; flip A's Grow vertically → B moves to A's other
+       side and its own auras follow A's new direction, B's own settings unchanged.
+     Every flip shows real auras at once, with no `/reload`. A block that hangs across its anchor until a
+     reload is the old bug.
+147. **The reworded Point rows and the facing-growth hint (item 1).** Layout → Anchor on the
+     `PlayerFrame`-attached container (Attach to: Named frame): Point's tooltip says it is the corner of
+     the container's **first aura** that is attached (its full size is secret), Relative point the
+     corner of the target that point is attached to. Set Point Bottom left, Grow vertically Down and
+     Grow horizontally Right → a hint under the tab's rows reads "Point is Bottom left and Grow
+     vertically is Down, so the auras grow back over the frame this container is attached to. Set Grow
+     vertically to Up on the Growth tab instead." Point Top left with Up → the same hint, suggesting
+     Down; a Left point with Grow horizontally Left (and a Right point with Right) → the horizontal
+     hint; Bottom left with Down and Left → both lines, the vertical one first. A pair that does not face
+     → no hint, and changing Point or the growth redraws it at once. On Screen and Another container
+     there is no hint at all (named-frame mode only); the Screen rows' tooltips speak of the first
+     aura too.
+148. **Dispel-mode bar opacity (item 4).** Item 126's last paragraph in full: Color by Dispel type,
+     Background opacity 20% → a typed (Magic, Curse) and a typeless debuff (a Paladin's Judgment) each
+     show a see-through background, and the fill likewise at 20% Bar opacity. Out of combat first; then
+     in combat, on debuffs applied after the pull. Report both, and whether the region alpha lands in
+     combat: a background that goes opaque in combat only means the engine refused `SetAlpha` on the
+     dispel texture (the child-frame fix is then owed).
+149. **The Text style's Enrage stays invisible (item 138 carry).** A Text container on the target's
+     buffs with Color the dispel type, Backdrop in the dispel color and Edge in the dispel color all on,
+     on a mob with an Enrage-type buff (an enraged dungeon mob) → the line has no tint on its type
+     word, no backdrop box and no edge, the same as a typeless aura. The code hands the engine a
+     transparent color for a type the palette does not cover; a box or edge that shows (white, or any
+     color) means the engine dropped that color's alpha: report it, with the mob and the buff's name.
+150. **The Text icon and its border (item 6).** Item 99's first paragraph: with Icon position None the
+     Icon tab's rows are dimmed under the gray "Set Icon position to show the icon." note, while Icon
+     position and the border's color swatch stay live (a color swatch never dims, options-ui-§17). Icon
+     Left → the rows go live, the note goes; Show border on, thickness 2, red → a red border frames
+     the icon on every line.
+151. **The moved Dispel type rows (item 5).** Item 130's last lines: Text → Font carries the Dispel
+     type subsection (Color the dispel type, Backdrop in the dispel color, Backdrop opacity, Edge in the
+     dispel color, Edge thickness) under Countdown; Text → Animation no longer does; values set before
+     the move are kept.
+152. **The Justify note (item 3).** Item 141.
+153. **Item 7's sequence, instrumented.** `/am debug` and `/console scriptErrors 1`, the Text container
+     with its icon on the left and its border on, auras showing. Change Text → General → **Width (px)**
+     several times (drag the slider, then type values), then the other Text settings one after another
+     as item 99 says → every line keeps its text and its icon. If rows go empty (bordered squares, no
+     text), copy the `[Style] … failed:` debug line and the one Lua error that names it, word for word:
+     that named line decides the next fix. Rows that go empty with no such line are a defect too:
+     report the exact steps.
+154. **The owner's all-tokens template (item 8).** Item 140 with the owner's own template, Justify Left
+     and then Right → no gap either side of a separator between two non-empty fields. If gaps remain,
+     report the font, size and flags: the measured padding came back about 0 (`GetStringWidth` on the
+     measurer did not see the padding), so the pull-back did nothing.
+155. **The item-2 probe and the Paladin bars.** Item 142: run the three `/run` lines from
+     `docs/midnight-quirks.md` → "Many debuffs carry no dispel type" on a dummy carrying a Paladin's
+     Judgment and Consecration, out of combat, and copy the output there. Then look at the bar container
+     (Color by Dispel type) for those debuffs: the blue is the default fill; say whether the bar's
+     **empty part** (its background) is dark or blue. Dark confirms they are typeless (the background
+     keeps its own color); blue means the engine reports a type for them, and the probe's `dispelName`
+     column should say which.
+156. **The Pandemic tab (B2-1).** Bars, Icons and Text each draw a **Pandemic** tab: Bars and Icons
+     last (**Highlights** is gone), Text between Icon and Animation. On Bars and Icons it holds two
+     subsections, **Time color** (Recolor the time in the pandemic window, Pandemic window (seconds
+     left), Pandemic-window time color) and **Highlight** (Highlight the pandemic window,
+     Pandemic-window highlight color); on Text, Time color with those three and Blink in the pandemic
+     window, and the gray "The pandemic window needs a duration token, such as $remainingduration$, in
+     the template." note under them on a template without one. Text → Animation now holds the Loop
+     rows alone. Hover each row: no tooltip says "running out" or "refresh window". Values set before
+     the rename are kept (a threshold of 8 still reads 8), and `/am list` still names the same paths.
+157. **The container pickers sort by name (B2-2).** Name three containers "zeta", "Alpha" and "beta"
+     (Containers → Name). The Container dropdown in the band of Containers, Filters, Layout, Bars,
+     Icons and Text lists Alpha, beta, zeta — capitals do not sort first — each still followed by its
+     gray "(unit, aura type, style)"; Containers → Copy settings from's source and Layout → Anchor →
+     Another container (None first) list in the same order. `/am containers` keeps the creation order.
+158. **The owner's repro: an icon border and the pandemic settings (B2-3).** `/console scriptErrors 1`,
+     an Icons container with auras showing, Icons → Border → Show border on (Solid, thickness 2). Then,
+     out of combat, change Icons → Pandemic one row at a time: Highlight the pandemic window off and on,
+     the highlight color, Recolor the time in the pandemic window, the window's seconds → **no Lua
+     error** (none naming `Backdrop.lua`), the border keeps drawing, and an aura inside its pandemic
+     window still highlights and recolors its time. Repeat with the border off: the same.
+159. **A Text icon border and Width (B2-3).** The Text container with Icon position Left and its icon
+     border on (thickness 2, red). Change Text → General → **Width (px)** several times, by slider and
+     typed → every line keeps its text, its icon and the red border; no empty rows, no `[Style] text
+     icon failed` debug line, no Lua error.
+160. **A bar border (B2-3).** A bar container with Background & border → Show border on, and Icon →
+     Icon border on. Change the bar's Width, then its Pandemic rows → both borders keep drawing at their
+     thickness and color, no Lua error, and the pandemic highlight still shows.
+161. **A border style other than Solid (B2-3).** On any of the three, pick another Border style (a
+     media pack's edge, or "Blizzard Tooltip") → no Lua error; the preview (test mode) draws it at once,
+     while the aura buttons already on screen keep their old look until `/reload`, then draw it. Change
+     its color → the live buttons recolor at once. Hover Border style: the tooltip says Solid redraws at
+     once and any other texture after a `/reload`. Back to Solid → the strips draw at once and no
+     texture edge is left under them.

@@ -135,7 +135,7 @@ local function build(frame)
     am.anim:SetAllPoints(am.clip)
 
     am.icon = am.anim:CreateTexture(nil, "ARTWORK")
-    am.iconBorder = CreateFrame("Frame", nil, am.anim, "BackdropTemplate")
+    am.iconBorder = Style.NewBorder(am.anim)   -- a plain frame, never a BackdropTemplate (B2-3)
     am.area = CreateFrame("Frame", nil, am.anim)
     am.area:SetClipsChildren(true)
     buildDispelTints(am)
@@ -188,26 +188,43 @@ end
 -- Layout
 -- ---------------------------------------------------------------------------
 
+--- The icon and its border: hidden with no `size` (no icon), else the `size` box at `pos` of the
+--- animated frame (Style.LayoutIcon). Every call here is an icon or border call, run guarded.
+local function placeIcon(am, s, pos, size)
+    am.icon:ClearAllPoints()
+    if not size then
+        am.icon:Hide()
+        am.iconBorder:Hide()
+        return
+    end
+    Style.LayoutIcon(am.anim, am, s, D, pos, size)
+end
+
 --- The icon at `pos` ("LEFT" | "RIGHT") of the animated frame, and the text area beside it; with no
 --- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (fix round 1,
 --- feedback #1): a stacked Center's box holds several rows, and "line height" is one of them, not the
---- whole stack.
+--- whole stack. The text area is anchored FIRST, from plain arithmetic, and the icon block after it,
+--- guarded as Style.Bind guards a binding (smoke batch 2, item 7): a client call the icon or its
+--- border refuses costs the icon alone (hidden, and reported through Style.ReportError), never the
+--- text, which was left unanchored between the icon's error and the re-anchoring that followed it.
 local function layoutIconAndArea(am, s, compiled, h)
     local pos = s.icon or D.icon
-    am.icon:ClearAllPoints()
+    local size
     am.area:ClearAllPoints()
-    if pos ~= "LEFT" and pos ~= "RIGHT" then
-        am.icon:Hide()
-        am.iconBorder:Hide()
+    if pos == "LEFT" or pos == "RIGHT" then
+        local lineHeight = Text.Stacked(s, compiled) and fontSize(s) or h
+        size = Style.IconSizeFor(s, D, lineHeight)
+        local inset = size + number(s.iconGap, D.iconGap)
+        am.area:SetPoint("TOPLEFT", am.anim, "TOPLEFT", pos == "LEFT" and inset or 0, 0)
+        am.area:SetPoint("BOTTOMRIGHT", am.anim, "BOTTOMRIGHT", pos == "RIGHT" and -inset or 0, 0)
+    else
         am.area:SetAllPoints(am.anim)
-        return
     end
-    local lineHeight = Text.Stacked(s, compiled) and fontSize(s) or h
-    local size = Style.IconSizeFor(s, D, lineHeight)
-    Style.LayoutIcon(am.anim, am, s, D, pos, size)
-    local inset = size + number(s.iconGap, D.iconGap)
-    am.area:SetPoint("TOPLEFT", am.anim, "TOPLEFT", pos == "LEFT" and inset or 0, 0)
-    am.area:SetPoint("BOTTOMRIGHT", am.anim, "BOTTOMRIGHT", pos == "RIGHT" and -inset or 0, 0)
+    local ok, err = pcall(placeIcon, am, s, pos, size)
+    if ok then return end
+    Style.ReportError("text icon", err)
+    pcall(am.icon.Hide, am.icon)
+    pcall(am.iconBorder.Hide, am.iconBorder)
 end
 
 -- The anchor-point prefix for each vertical justify: TOPLEFT / LEFT / BOTTOMLEFT and the right-hand
@@ -261,6 +278,7 @@ local function layoutStack(am, s, compiled, h)
     for i, piece in ipairs(compiled.pieces) do
         local fs = am[PIECE[i]]
         fs:ClearAllPoints()
+        fs:SetJustifyH("CENTER")
         if piece.kind == "literal" then
             fs:Hide()
         else
@@ -279,6 +297,9 @@ end
 --- Anchor the chain in the text area: the head piece at the justified edge, nudged by x/y, and each
 --- next piece against the previous one's far edge (LEFT to the previous RIGHT, or the mirror for a
 --- Right-justified line, laid from the last piece back). A stacked line is laid out by layoutStack.
+--- Every piece is justified to the chain's side, and each chained piece is pulled back over the one
+--- before by the font's measured padding (Style.PiecePadding, smoke batch 2 item 8), so two pieces
+--- sit flush instead of showing the client's padding on both sides of each.
 local function layoutChain(am, s, compiled, h)
     if Text.Stacked(s, compiled) then return layoutStack(am, s, compiled, h) end
     local side = s.justifyH or D.justifyH
@@ -287,13 +308,16 @@ local function layoutChain(am, s, compiled, h)
     local n = am.pieceCount
     local first, last, step, near, far = 1, n, 1, "LEFT", "RIGHT"
     if side == "RIGHT" then first, last, step, near, far = n, 1, -1, "RIGHT", "LEFT" end
+    local pull = -step * Style.PiecePadding(s.font or D.font, D.font)
     local head = am[PIECE[first]]
     head:ClearAllPoints()
     head:SetPoint(pointAt(v, side), am.area, pointAt(v, side), x, y)
+    head:SetJustifyH(side)
     for i = first + step, last, step do
         local fs = am[PIECE[i]]
         fs:ClearAllPoints()
-        fs:SetPoint(pointAt(v, near), am[PIECE[i - step]], pointAt(v, far), 0, 0)
+        fs:SetPoint(pointAt(v, near), am[PIECE[i - step]], pointAt(v, far), pull, 0)
+        fs:SetJustifyH(side)
     end
 end
 
@@ -428,9 +452,8 @@ local invisible
 --- The backdrop and edge's color map (feedback #7, fix round 1): every type in C.TEXT_DISPEL_TYPES the
 --- profile's palette colors takes that color at full alpha (the backdrop's own opacity is
 --- `dispelBackdropAlpha`'s SetAlpha, not this alpha); a type it does not cover (Enrage) takes
---- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), every entry here does NOT share one
---- alpha from a surface fallback: a Text tint has no surface color of its own to fall back to, so "no
---- color" IS the fallback. No `None` entry: showWithoutDispelType is false, so the engine never looks
+--- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), no entry here falls back to a surface
+--- color: a Text tint has no surface color of its own to fall back to, so "no color" IS the fallback. No `None` entry: showWithoutDispelType is false, so the engine never looks
 --- a typeless aura up. Built once per set of palette leaves, and read by the live dress
 --- (tintOptionsFor) and the preview (previewTints) alike, so the two cannot disagree.
 local tintMapEntry

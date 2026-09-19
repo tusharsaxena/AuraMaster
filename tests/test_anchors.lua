@@ -1020,6 +1020,33 @@ test("anchors: a write that moves a container's flow re-applies every container 
     assertEqual(engineAnchorPoint(NS, 3), "TOPRIGHT", "3 follows 2's rows growing left and down")
 end)
 
+test("anchors: a parent's growth flip rebuilds its follower's engine, pinned at the derived corner, and re-anchors it to the parent's new engine", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    mocks.__fireTimers()
+    local parentOld, childOld = CM.instances[1].engine, CM.instances[2].engine
+    local rec = recordAnchor(CM.instances[2])
+    NS.SetByPath("container.layout.growV", "up", 1)
+    mocks.__fireTimers()
+    local child = CM.instances[2].engine
+    -- red under: the structure key without the (inherited) growth corner: 2 keeps its engine, pinned
+    -- TOPLEFT while its auras now grow up
+    assertTrue(child ~= childOld, "the follower got a new engine")
+    assertFalse(childOld.__enabled, "and retired the old one")
+    local at = child:__firstCall("SetPoint")
+    -- 1 fills columns growing right and up, so 2 does too: its auras start at the bottom left.
+    assertEqual(child.__calls[at][2], "BOTTOMLEFT")
+    assertTrue(at < child:__firstCall("AddAuraGroup"), "pinned before the first group")
+    local parent = CM.instances[1].engine
+    assertTrue(parent ~= parentOld, "the parent was rebuilt too")
+    local p = rec.points[#rec.points]
+    -- red under: the follower left hanging from the parent's retired engine
+    assertTrue(p[2] == parent, "attached to the parent's new engine")
+    assertEqual(p[1], "BOTTOMLEFT"); assertEqual(p[3], "TOPLEFT")
+end)
+
 -- ── an attached container while its parent previews (L-4) ────────────────────────────────────
 -- The cause, confirmed with a recorder: while container 1 previews, its engine is disabled and holds
 -- only its provisional 1x1 rect (Container:Build's SetSize(1, 1); no layout pass replaces it), and 2

@@ -14,9 +14,9 @@ is a defect in this doc (documentation-§3).
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
-| - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
-| - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
-| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink, and its opt-in dispel type colors |
+| - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Pandemic | The look of a container drawn as bars |
+| - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
+| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
@@ -49,8 +49,14 @@ only the tree entry is marked.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
   pages offer changes with it. Every `CONTAINERS_CHANGED` does the same.
-- **A tab switch is not combat-guarded** (options-ui-§13); opening the window or a category is
-  refused under lockdown with the library's gray notice (options-ui-§2).
+- **In combat a page is locked, by the library alone** (LibKa0s v1.46.1, options-ui-§2, §13). A page
+  shown in combat, or open when combat starts, is covered whole, its bands and tab strip included,
+  by a gray "Settings are locked during combat." cover and is not rendered; writes, Defaults,
+  library-drawn buttons and tab switches are refused with one gray notice per combat
+  (`settings are locked during combat — changes are refused until it ends`); the window is never
+  closed. At `PLAYER_REGEN_ENABLED` the cover lifts and the page draws from current state, so a value
+  `/am set` changed in combat shows. This addon adds no page or tab guard of its own. Opening the
+  window or a category is refused under lockdown with the library's gray notice.
 
 ## The container banner and the one-row band
 
@@ -66,6 +72,11 @@ band holds **the picker itself** (options-ui-§14):
   on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
   one tab, which §14 then names **General**. The block is drawn on every render, so a Delete's two
   refreshes cannot lose it, and the widgets of the render before are released after each render.
+- **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
+  **Copy settings from**'s source and Layout's *Another container* all read
+  `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
+  regardless of case, so a tie needs a hand-edited store). The banner keeps its gray "(unit, aura type,
+  style)" suffix; the stored display order (`containerOrder`, `/am containers`) does not change.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
@@ -161,9 +172,10 @@ one switch for that; the tab says so.
 
 **Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
 `.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
-a Text line's dispel type word, backdrop and edge when those are on (Text → Animation → Dispel type,
-feedback #7). An aura with no dispel type keeps a bar's own color and draws no text backdrop or edge,
-so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
+a Text line's dispel type word, backdrop and edge when those are on (Text → Font → Dispel type,
+feedback #7). An aura with no dispel type — every buff and many debuffs, class debuffs such as
+Judgment or Consecration included (`docs/midnight-quirks.md`) — keeps a bar's own color and draws no
+text type word, backdrop or edge, so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
 colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
 write re-applies every container.
 
@@ -188,7 +200,7 @@ re-choosing the same style keeps a Fill set by hand (B5). A new container (**New
 source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
-from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
+from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
 ### Filters (41 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
@@ -311,11 +323,11 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | Row | Path | Type | Behavior |
 |---|---|---|---|
 | Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
-| *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | Used in screen mode; set by dragging |
+| *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
-| *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | Corner of this container / of the frame |
+| *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
 
 Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
@@ -326,6 +338,18 @@ them. Changing **Attach to** (from the panel, `/am set` or a reset) redraws the 
 frame, through the library's selector watch; the mode row needs no `onChange` of its own. **Pick a
 frame…** (closes the settings, starts the picker, reopens this page) is Frame name's `pairWith`
 partner, so it is drawn with Named frame; a pick still sets the mode to Named frame itself.
+
+**Point places the first aura (D-3).** The anchor is one element in size and the engine is pinned at
+its growth corner, because the container's full extent is secret and cannot be anchored; so both
+Point rows (screen and Named frame) name the corner of the **first aura**, and the other auras grow
+away from it as the Growth tab says. **The facing-growth hint.** After the tab's rows (`afterGroup`),
+in `frame` mode only, a small gray line appears when the Point's side faces the growth: a BOTTOM*
+point (the container sits above the frame) with Grow vertically Down, a TOP* point with Up, a LEFT*
+point (it sits right of the frame) with Grow horizontally Left, a RIGHT* point with Right. It reads
+"Point is *point* and Grow vertically is *growth*, so the auras grow back over the frame this
+container is attached to. Set Grow vertically to *opposite* on the Growth tab instead." (the
+horizontal line likewise; a corner point can draw both). The screen has no frame to grow over, and a
+follower's derived points never face its flow, so neither mode draws it.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow
@@ -373,26 +397,37 @@ The tabs and the container picker stay live.
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
-| Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
+| Pandemic (5) | *Time color:* `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` 1–60 (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color); *Highlight:* `pandemic` (Highlight the pandemic window), `pandemicColor` (Pandemic-window highlight color). Once the Highlights tab's *Running out* and *Refresh window* (smoke batch 2, B2-1: labels only, paths unchanged). The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:161`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:163`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
 as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors), and
 `bgColorMode = dispel` the background the same way (feedback #7); an aura with no dispel type — a buff,
-or a debuff nothing can dispel, such as Mystic Touch — keeps the surface's own color (the map's
+or one of the many debuffs that carry none, class debuffs such as Judgment or Consecration included —
+keeps the surface's own color (the map's
 `None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
-(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the running-out color is a step color curve over
-remaining time (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
-shows only while the aura can be refreshed without loss.
+(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the pandemic-window time color is a step color curve over
+remaining time, at the player's own seconds threshold (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the pandemic-window highlight is an additive wash the engine
+shows only while the aura can be refreshed without loss, a window the game finds per spell (the threshold does not move it).
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
 surface with no texture a swatch and its companion and nothing else, and this background has a live
 texture, so it takes the whole bar block with its own tooltips. `bgAlpha` multiplies onto the
-background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged.
+background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged. A
+surface colored by dispel type keeps both too: the engine paints its tint's RGB at alpha 1, so the
+map's entries are opaque and the region carries `bgAlpha × bgColor.a` (the fill `barAlpha ×
+barColor.a`) through `SetAlpha` (`paintSurface`, smoke batch 2 item 4).
+
+Every Border style row (Bars' Border and Icon border, Icons' Border, Text's Icon border) replaces the
+composer's tooltip with one that says when a change shows: Solid, the default, redraws at once, while
+any other texture, and a new thickness for one, reaches the aura buttons already on screen after a
+`/reload`. Solid is drawn with four strips; another texture is a backdrop, which cannot redraw on a
+laid-out button because its size reads secret (`Style.ApplyBorder`, B2-3, docs/midnight-quirks.md).
+Its color still changes at once.
 
 ### Icons (42 rows, `settings/Icons.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -413,7 +448,7 @@ settings." — and every control is drawn disabled, as on the Bars page.
 | Cooldown (5) | `cooldown`, `cooldownReverse`, `cooldownEdge`, `swipeAlpha` 0–1, `blizzardNumbers` |
 | Time text (12) | *Font:* the composed font block on `time.`; *Placement:* `time.show`, `.justify`, `.point`, `.x`, `.y`; *Countdown:* `timeFormat` |
 | Stack text (11) | The same on `stacks.` without the countdown |
-| Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor` |
+| Pandemic (5) | *Time color:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Highlight:* `pandemic`, `pandemicColor` — the Bars page's labels (smoke batch 2, B2-1; once Highlights) |
 
 `dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
 harmful auras with a dispel type only. The art sits above your border and replaces it there; every
@@ -433,9 +468,15 @@ aura (`C.TEXT_SAMPLE_AURAS`, through the placeholders' own fill, `Style.Text.Pre
 the container's own font color with a stray `|` doubled so it cannot break the box, and a Task 12
 colored dispel word riding live inside it — then the **Tokens** / **Rules** cheat sheet (Task 20, owner:
 "split it into keywords and guidelines - use bullet points"): one gold `$token$` bullet per token, then
-a bulleted rule per bracket-hiding, the two escapes, how they combine, and text outside `[ ]` always
-showing, each rule's example on its own indented gold continuation line. The centering note sits under
-Placement. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
+a bulleted rule per bracket-hiding, the two escapes, how they combine, text outside `[ ]` always
+showing, and a separator belonging inside the brackets of the field it leads (`$spellname$[-$stacks$]`:
+an empty field takes its separator with it; smoke batch 2, item 8), each rule's example on its own
+indented gold continuation line. Under Placement, a gray **Justify note** always sits between the
+justify pair and the offsets (smoke batch 2, item 3): Center centers a one-piece template only; with
+several fields each field (the duration tokens together) gets its own centered row, text outside `[ ]`
+is not drawn, the box grows to fit, rows keep their place when a field is empty, an icon at size 0 is
+one row tall, and the reason — aura text is secret, so its width cannot be measured. The centering
+note, naming this template's row count, sits under the offsets. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
 the write seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel,
 `/am set`, Defaults and the resets all reach them through the one write seam.
 
@@ -444,12 +485,21 @@ template is never stored, and its reason reaches the player through the write se
 (`settings/Schema.lua`), printed under "Invalid value for container.text.template" — in the panel and
 by `/am set` alike.
 
-Running out is dimmed (the running-out swatch excepted, since a swatch is read for its alpha even
-unused) when the template carries no duration token, with a note saying so; the Loop rows are dimmed
+The **Pandemic** tab (smoke batch 2, B2-1: once *Running out* on the Animation tab; labels only, paths
+unchanged) is dimmed (the Pandemic-window time color swatch excepted, since a swatch is read for its alpha even
+unused) when the template carries no duration token, with a note saying so ("The pandemic window needs a
+duration token, such as $remainingduration$, in the template."); on the Animation tab the Loop rows are dimmed
 per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
 Bounce).
 
-**Dispel type** (Animation, feedback #7) holds three opt-in stand-ins for "color the text by dispel
+The **Icon** tab's rows draw nothing while **Icon position** is None (the default): the Text style
+draws the icon and its border only on Left or Right. So every row but Icon position is dimmed then
+(`noIcon`), the icon border's swatch excepted for the same alpha reason, under a gray note, "Set Icon
+position to show the icon." (smoke batch 2, item 6). Icon position redraws the page on a change, so
+the note and the dimming follow it at once.
+
+**Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
+stored values did not change) holds three opt-in stand-ins for "color the text by dispel
 type", all off by default, since no engine binding colors a font string by the aura's type
 (`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
 palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
@@ -469,10 +519,11 @@ disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
-| Font | the composed font block under `font.`; Countdown: `timeFormat` |
+| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
+| Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
-| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
+| Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce` |
 
 ### Profiles (`settings/Profiles.lua`)
 

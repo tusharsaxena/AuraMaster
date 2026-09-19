@@ -417,6 +417,62 @@ test("container: a text template of a new shape rebuilds the engine; one of the 
     assertFalse(e.__enabled)
 end)
 
+-- ── the growth corner (smoke feedback 2, item 1) ─────────────────────────────────────────────
+-- The engine is pinned at its growth corner once, in Build: after its first group it can never be
+-- re-anchored, so a growth that moves the corner needs a new engine.
+
+--- The point of `e`'s first SetPoint, and where that call sits in its log.
+local function firstPoint(e)
+    local at = e:__firstCall("SetPoint")
+    return at and e.__calls[at][2], at
+end
+
+--- A fresh environment with one growth row of container `id` written and applied: the instance and
+--- the engine it had before.
+local function flip(key, value, id)
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[id]
+    local old = inst.engine
+    assertTrue(NS.SetByPath("container.layout." .. key, value, id))
+    mocks.__fireTimers()
+    return inst, old
+end
+
+test("container: flipping Grow vertically retires the engine and pins the new one at the new corner, before its first group", function()
+    -- Player buffs: columns growing right and down, pinned TOPLEFT.
+    local inst, old = flip("growV", "up", 1)
+    assertEqual((firstPoint(old)), "TOPLEFT", "the starter's pin")
+    -- red under: the structure key without the growth corner (updated in place, still pinned TOPLEFT)
+    assertTrue(inst.engine ~= old, "a new corner gets a new engine")
+    assertFalse(old.__enabled, "the old engine is disabled")
+    assertEqual(#inst.retired, 1)
+    local point, at = firstPoint(inst.engine)
+    assertEqual(point, "BOTTOMLEFT", "auras growing up start at the bottom")
+    assertTrue(at < inst.engine:__firstCall("AddAuraGroup"), "pinned before the first group")
+end)
+
+test("container: flipping Grow horizontally retires the engine and pins the new one at the new corner, before its first group", function()
+    -- Player debuffs: rows growing left and down, pinned TOPRIGHT.
+    local inst, old = flip("growH", "right", 2)
+    assertEqual((firstPoint(old)), "TOPRIGHT", "the starter's pin")
+    -- red under: the structure key without the growth corner
+    assertTrue(inst.engine ~= old, "a new corner gets a new engine")
+    assertFalse(old.__enabled)
+    assertEqual(#inst.retired, 1)
+    local point, at = firstPoint(inst.engine)
+    assertEqual(point, "TOPLEFT", "auras growing right start at the left")
+    assertTrue(at < inst.engine:__firstCall("AddAuraGroup"), "pinned before the first group")
+end)
+
+test("container: a spacing, per-line or fill change keeps the corner and updates the engine in place", function()
+    for _, c in ipairs({ { "spacing", 9 }, { "perLine", 3 }, { "lineSpacing", 5 }, { "axis", "horizontal" } }) do
+        local inst, old = flip(c[1], c[2], 1)
+        -- red under: a structure key carrying the whole layout (every layout write would rebuild)
+        assertTrue(inst.engine == old, c[1] .. ": the same engine")
+        assertEqual(#inst.retired, 0, c[1] .. ": nothing retired")
+    end
+end)
+
 -- ── weapon enchants and engine refusals ──────────────────────────────────────────────────────
 
 test("container: a buff container showing only Weapon enchants draws the engine's three slots and no aura group (feedback #6)", function()
@@ -494,6 +550,41 @@ test("container: a restyle dresses every group button and every enchant frame, a
     rawset(inst.engine, "GetAuraGroupFrameCount", function() error("forbidden") end)
     -- red under: Restyle asking the engine for its frames without pcall
     assertEqual(inst:Restyle(cfg), 3)
+end)
+
+test("container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)", function()
+    local reported, lines = {}, {}
+    local NS, mocks = fresh({ before = function(m)
+        m.geterrorhandler = function() return function(err)
+            local n = #reported
+            reported[n + 1] = tostring(err)
+        end end
+    end })
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = "[" .. tag .. "] " .. fmt:format(...)
+    end
+    local inst = NS.ContainerManager.instances[1]
+    local cfg = inst:Cfg()
+    inst.engine.__frames.g1 = { mocks.__stubFrame(), mocks.__stubFrame() }
+    local element, message = NS.Style.Element, "dress refused"
+    NS.Style.Element = function() error(message, 0) end
+    local count = inst:Restyle(cfg)
+    inst:Restyle(cfg)
+    message = "another refusal"
+    inst:Restyle(cfg)
+    NS.Style.Element = element
+    assertEqual(count, 5, "every frame is still attempted")
+    local dress = 0
+    for _, l in ipairs(lines) do
+        if l:find("[Style]", 1, true) and l:find("refus", 1, true) then dress = dress + 1 end
+    end
+    -- red under: Restyle's bare pcall dropping the error (the owner's blank rows named nothing)
+    assertEqual(dress, 15, "one debug line per failed dress")
+    -- red under: the handler called per button (a restyle floods BugSack), or never
+    assertEqual(#reported, 2, "the client's error handler once per distinct message")
+    assertEqual(reported[1], "dress refused")
+    assertEqual(reported[2], "another refusal")
 end)
 
 test("container: an instance whose container is gone applies nothing and touches no engine", function()

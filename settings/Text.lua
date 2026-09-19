@@ -4,13 +4,18 @@ local _, NS = ...
 -- template language is modules/TextTemplate.lua's).
 --
 --     band   [Container ▾]
---     [ General ][ Font ][ Icon ][ Animation ]
+--     [ General ][ Font ][ Icon ][ Pandemic ][ Animation ]
 --     General   Size, then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
---     Animation Loop, then Dispel type (feedback #7: the word's color, a backdrop, an edge, each
---               opt-in and off), then Running out and its note
+--     Font      Font, Countdown, then Dispel type (feedback #7: the word's color, a backdrop, an
+--               edge, each opt-in and off; moved here from Animation, smoke batch 2 item 5)
+--     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
+--               border swatch) dims while the position is None, under a note
+--     Pandemic  Time color (the duration tokens' color and blink in the pandemic window, once
+--               "Running out" on Animation; smoke batch 2, B2-1) and its note
+--     Animation Loop
 --
 -- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and two
 -- read-only blocks between its rows: the token cheat sheet, and the centering note under Placement.
@@ -26,7 +31,7 @@ local _, NS = ...
 -- A container drawn as bars or icons sees every row here disabled, under a note naming where its
 -- style is changed (settings/OptionsSetup.lua's drawDisabledNotice). The font and icon-border blocks
 -- are composed (options-ui-§16) with class-color companions (§17) resolved to the tracked unit's
--- class, as on the Bars page; the running-out swatch is a palette color and carries none.
+-- class, as on the Bars page; the pandemic-window time swatch is a palette color and carries none.
 
 local L = NS.L
 local H = NS.Helpers
@@ -39,6 +44,7 @@ local P = "container.text."
 local UNIT = { source = "unit" }
 
 local G_GENERAL, G_FONT, G_ICON, G_ANIM = L["General"], L["Font"], L["Icon"], L["Animation"]
+local G_PANDEMIC, S_TIME = L["Pandemic"], L["Time color"]
 local S_PLACEMENT, S_DISPEL = L["Placement"], L["Dispel type"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local HEADING = { fontObject = "GameFontNormalSmall" }
@@ -70,7 +76,7 @@ local function unlessAnim(...)
     return function() return not wanted[textBlock().anim or D.anim] end
 end
 
---- A `disabledIf` predicate: the running-out rows need a duration token in the template (the blink
+--- A `disabledIf` predicate: the pandemic-window rows need a duration token in the template (the blink
 --- and the color ride the duration run's text).
 local function noDuration()
     return not TT.ForDraw(textBlock().template).hasDuration
@@ -79,6 +85,12 @@ end
 --- A `disabledIf` predicate: Color the dispel type needs a $dispeltype$ token to color (feedback #7).
 local function noDispel()
     return not TT.ForDraw(textBlock().template).hasDispel
+end
+
+--- A `disabledIf` predicate: the Icon tab's rows draw nothing while Icon position is None (smoke
+--- batch 2, item 6: the icon and its border draw only on Left or Right).
+local function noIcon()
+    return (textBlock().icon or D.icon) == "NONE"
 end
 
 --- A `disabledIf` predicate: the row is dimmed while the selected container's toggle `key` is off.
@@ -131,8 +143,10 @@ end
 
 --- The token cheat sheet, under the Template box: a **Tokens** list (one gold `$token$` bullet each,
 --- its meaning in plain text), then a **Rules** list (bracket hiding, the two escapes, how an odd run
---- of [ combines with one, and why a duration belongs in brackets -- feedback #5: text outside them
---- shows on a timeless aura too), each rule's example on its own indented, gold continuation line.
+--- of [ combines with one, why a duration belongs in brackets -- feedback #5: text outside them
+--- shows on a timeless aura too -- and why a separator does -- smoke batch 2 item 8: an empty field's
+--- width is secret, so only a bracket takes its separator away), each rule's example on its own
+--- indented, gold continuation line.
 --- Read-only text (owner, 2026-09-19: "split it into keywords and guidelines - use bullet points").
 local function cheatSheet(ctx)
     heading(ctx, L["Tokens"])
@@ -148,6 +162,8 @@ local function cheatSheet(ctx)
     example(ctx, L["[[[$stacks$]]] shows [3] only when stacked."])
     bullet(ctx, L["Text outside [ ] always shows, even on an aura with no duration:"])
     example(ctx, L["($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."])
+    bullet(ctx, L["Put a separator inside the brackets of the field it leads, so an empty field takes it along:"])
+    example(ctx, L["$spellname$[-$stacks$] drops the - with the stacks; $spellname$-$stacks$ leaves it."])
 end
 
 --- Under Placement: what Center does to a template of more than one piece (feedback #1): it stacks
@@ -162,6 +178,13 @@ local function centerNote(ctx, cfg)
     local msg = n == 1 and L["Center stacks this template in 1 row; text outside [ ] is not drawn."]
         or L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]:format(n)
     H.TextRow(ctx, GRAY:format(msg), SMALL)
+end
+
+--- Under Justify, always (smoke batch 2, item 3): what Center does to a template of several fields,
+--- and why it cannot center them on one line. The facts are modules/Style_Text.lua's: Text.Stacked,
+--- layoutStack's rows, Text.StackHeight's fixed rows, and an icon at size 0 taking one row's height.
+local function justifyNote(ctx)
+    H.TextRow(ctx, GRAY:format(L["Center centers the line only when the template is a single piece. With several fields, each field (name, stacks, dispel type, and the duration tokens together) gets its own centered row, text outside [ ] is not drawn, and the box grows to fit the rows. Rows keep their place even when a field is empty (one stack, no dispel type, no duration), and an icon at size 0 is one row tall. Aura text is secret, so its width cannot be measured to center several fields on one line."]), SMALL)
 end
 
 -- ── The built-in templates (feedback #5) ──────────────────────────────────────────────────────
@@ -295,21 +318,27 @@ local function renderTemplate(ctx, cfg, row)
     cheatSheet(ctx)
 end
 
---- The General tab: Size, then what each line says (renderTemplate), then Placement and the
---- centering note.
+-- The Placement rows drawn above the Justify note (the justify pair); the offsets follow it.
+local JUSTIFY_ROWS = { [P .. "justifyH"] = true, [P .. "justifyV"] = true }
+
+--- The General tab: Size, then what each line says (renderTemplate), then Placement: the justify
+--- pair, the Justify note (item 3), the offsets and the centering note.
 local function renderGeneral(ctx, cfg, rows)
-    local size, tail, templateRow = {}, {}, nil
+    local size, justify, tail, templateRow = {}, {}, {}, nil
     for _, row in ipairs(rows or {}) do
         if row.path == P .. "template" then
             templateRow = row
         else
-            local list = (row.subgroup == S_PLACEMENT) and tail or size
+            local list = size
+            if row.subgroup == S_PLACEMENT then list = JUSTIFY_ROWS[row.path] and justify or tail end
             local n = #list
             list[n + 1] = row
         end
     end
     H.RenderRows(ctx, size, nil, nil, { noHeadings = true })
     renderTemplate(ctx, cfg, templateRow)
+    H.RenderRows(ctx, justify, nil, nil, { noHeadings = true })
+    justifyNote(ctx)
     H.RenderRows(ctx, tail, nil, nil, { noHeadings = true })
     centerNote(ctx, cfg)
 end
@@ -323,6 +352,25 @@ NS.RegisterSchemaRows({
     { path = P .. "timeFormat", page = PAGE, group = G_FONT, subgroup = L["Countdown"], type = "string",
       values = NS.Choices(C.TIME_FORMATS, C.TIME_FORMAT_LABELS), label = L["Time format"],
       desc = L["How the duration tokens write a time."] },
+    -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
+    -- colors a whole line by the aura's type (modules/Style_Text.lua's header). On the Font tab since
+    -- smoke batch 2, item 5 (they color the text); paths and stored values unchanged.
+    { path = P .. "dispelTypeColor", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, disabledIf = noDispel,
+      label = L["Color the dispel type"],
+      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
+    { path = P .. "dispelBackdrop", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Backdrop in the dispel color"],
+      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
+      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
+      label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
+    { path = P .. "dispelEdge", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Edge in the dispel color"],
+      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelEdgeSize", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
+      min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
+      label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
 })
 
 -- ── Icon ──────────────────────────────────────────────────────────────────────────────────────
@@ -330,12 +378,15 @@ NS.RegisterSchemaRows({
 NS.RegisterSchemaRows({
     { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
       values = NS.Choices(C.TEXT_ICON_POSITIONS, C.TEXT_ICON_POSITION_LABELS), label = L["Icon position"],
-      desc = L["Where the aura's icon sits beside the text, or hide it."] },
+      desc = L["Where the aura's icon sits beside the text, or hide it."], onChange = structural },
     { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
+      disabledIf = noIcon,
       label = L["Icon size (0 = line height)"], desc = L["A square icon this many pixels wide."] },
     { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
+      disabledIf = noIcon,
       label = L["Icon gap (px)"], desc = L["Space between the icon and the text."] },
     { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
+      disabledIf = noIcon,
       label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 local iconBorder = H.BorderGroup({
@@ -343,10 +394,44 @@ local iconBorder = H.BorderGroup({
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
+-- Every border row dims with no icon (noIcon), except the swatch: a color row is never grayed
+-- (anti-pattern #74, options-ui-§17), as the pandemic-window time swatch stays live on the Pandemic tab.
 for _, row in ipairs(iconBorder) do
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
+    -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
+    -- (modules/Style.lua's ApplyBorder, B2-3): the tooltip says when it shows.
+    if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
+    if row.type ~= "color" then row.disabledIf = noIcon end
 end
 NS.RegisterSchemaRows(iconBorder)
+
+-- ── Pandemic ──────────────────────────────────────────────────────────────────────────────────
+-- Smoke batch 2, B2-1 (the owner's call): once "Running out" on the Animation tab, named for the
+-- pandemic window as on the Bars and Icons pages, and registered ahead of Animation so its tab
+-- sits before it. Labels only: the paths and stored values are unchanged.
+
+NS.RegisterSchemaRows({
+    { path = P .. "expiringColorOn", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "bool",
+      startsLine = true, disabledIf = noDuration,
+      label = L["Recolor the time in the pandemic window"],
+      desc = L["Turn the duration tokens another color in the pandemic window: the last seconds, set below. The rest of the line keeps the font color."] },
+    { path = P .. "expiringThreshold", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "number",
+      min = 1, max = 60, step = 1, disabledIf = noDuration,
+      label = L["Pandemic window (seconds left)"], desc = L["The pandemic window starts this many seconds before the aura ends."] },
+    -- Palette definition (options-ui-§17 exemption): identifies a state, not a player.
+    -- Never dimmed, even without a duration token: a swatch is read for its alpha (anti-pattern #74,
+    -- tests/test_schema.lua).
+    { path = P .. "expiringColor", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "color",
+      startsLine = true,
+      label = L["Pandemic-window time color"], desc = L["The duration tokens' color in the pandemic window."] },
+    -- engine-only: the blink is a curve the engine steps on its own clock; a placeholder's time is a
+    -- fixed number, so the preview shows the pandemic-window color and never the blink
+    -- (tests/test_render_coverage.lua).
+    { path = P .. "expiringBlink", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "bool",
+      disabledIf = noDuration, coverage = "engine-only",
+      label = L["Blink in the pandemic window"],
+      desc = L["Blink the duration tokens in the pandemic window, in the pandemic-window time color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."] },
+})
 
 -- ── Animation ─────────────────────────────────────────────────────────────────────────────────
 
@@ -363,54 +448,23 @@ NS.RegisterSchemaRows({
     { path = P .. "animBounce", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
       min = 1, max = 10, step = 1, disabledIf = unlessAnim("bounce"),
       label = L["Bounce height (px)"], desc = L["How far the line moves up. The box clips it, so leave headroom."] },
-    -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
-    -- colors a whole line by the aura's type (modules/Style_Text.lua's header).
-    { path = P .. "dispelTypeColor", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
-      startsLine = true, disabledIf = noDispel,
-      label = L["Color the dispel type"],
-      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
-    { path = P .. "dispelBackdrop", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
-      startsLine = true, label = L["Backdrop in the dispel color"],
-      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
-    { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
-      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
-      label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
-    { path = P .. "dispelEdge", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
-      startsLine = true, label = L["Edge in the dispel color"],
-      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
-    { path = P .. "dispelEdgeSize", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
-      min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
-      label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
-    { path = P .. "expiringColorOn", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "bool",
-      startsLine = true, disabledIf = noDuration,
-      label = L["Recolor the time when running out"], desc = L["Turn the duration tokens another color in the last seconds. The rest of the line keeps the font color."] },
-    { path = P .. "expiringThreshold", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "number",
-      min = 1, max = 60, step = 1, disabledIf = noDuration,
-      label = L["Running out below (sec)"], desc = L["When the time text changes color."] },
-    -- Palette definition (options-ui-§17 exemption): identifies a state, not a player.
-    -- Never dimmed, even without a duration token: a swatch is read for its alpha (anti-pattern #74,
-    -- tests/test_schema.lua).
-    { path = P .. "expiringColor", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "color",
-      startsLine = true,
-      label = L["Running-out color"], desc = L["The time text's color in the last seconds."] },
-    -- engine-only: the blink is a curve the engine steps on its own clock; a placeholder's time is a
-    -- fixed number, so the preview shows the running-out color and never the blink
-    -- (tests/test_render_coverage.lua).
-    { path = P .. "expiringBlink", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "bool",
-      disabledIf = noDuration, coverage = "engine-only",
-      label = L["Blink when running out"],
-      desc = L["Blink the duration tokens in the last seconds, in the running-out color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."] },
 })
 
---- After the Animation tab's rows: why Running out is dimmed, when the template has no duration.
-local function animationNote(ctx)
+--- After the Icon tab's rows: why they are dimmed, when Icon position is None (smoke batch 2, item 6).
+local function iconNote(ctx)
+    if not noIcon() then return end
+    H.TextRow(ctx, GRAY:format(L["Set Icon position to show the icon."]), SMALL)
+end
+
+--- After the Pandemic tab's rows: why they are dimmed, when the template has no duration.
+local function pandemicNote(ctx)
     if not noDuration() then return end
-    H.TextRow(ctx, GRAY:format(L["Running out needs a duration token, such as $remainingduration$, in the template."]), SMALL)
+    H.TextRow(ctx, GRAY:format(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
 end
 
 NS.RegisterContainerPage(PAGE, L["Text"], "AuraMasterTextPanel", {
     tabs = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
-    afterGroup = { [G_ANIM] = animationNote },
+    afterGroup = { [G_ICON] = iconNote, [G_PANDEMIC] = pandemicNote },
     disabledFor = function(cfg) return cfg.style ~= "text" end,
     disabledNotice = function(cfg)
         if cfg.style == "icons" then

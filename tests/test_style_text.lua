@@ -11,6 +11,7 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local B = dofile("tests/region_builder.lua")
+local BS = dofile("tests/border_strips.lua")
 
 local env
 local function E()
@@ -108,6 +109,94 @@ test("text style: the vertical justify picks the top, middle or bottom anchor po
     end
     local _, am = dressed(text({ template = "$spellname$ $stacks$", justifyH = "RIGHT", justifyV = "TOP" }))
     assertEqual(pieces(am)[2]:__last("SetPoint")[1], "TOPRIGHT")
+end)
+
+-- ── the padding between pieces (smoke batch 2, item 8) ─────────────────────────────────────────
+
+--- How many characters the measuring string was last given.
+local function chars(fs)
+    return fs:__last("SetText")[1]:len()
+end
+
+--- A fresh environment whose padding is measured on a recorder answering 6 per character plus 2 of
+--- padding per string, so W("a") + W("b") - W("ab") is 2; `answer` replaces the width it answers.
+local function padded(answer)
+    local NS, m = dofile("tests/fresh_env.lua")({ before = dofile("tests/text_apis.lua") })
+    local fs = dofile("tests/region_recorder.lua")()
+    fs.__answer.GetStringWidth = answer or function(self)
+        return chars(self) * 6 + 2
+    end
+    NS.Style.__measurer = function() return fs end
+    local function dress(c)
+        local made = {}
+        local frame = B.new(made)
+        B.during(m, made, function() NS.Style.Element(frame, c) end)
+        return frame.__am
+    end
+    local function textCfg(over)
+        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = over })
+    end
+    return NS, fs, dress, textCfg
+end
+
+test("text style: each chained piece is pulled back over the previous one by the measured padding (item 8)", function()
+    local _, _, dress, textCfg = padded()
+    local am = dress(textCfg({ template = "$spellname$-$stacks$", justifyH = "LEFT", x = 0 }))
+    local p = pieces(am)
+    -- red under: layoutChain chaining at offset 0 (the client's padding between every two pieces)
+    assertEqual(p[1]:__last("SetPoint")[4], 0, "the head keeps the line's x")
+    for i = 2, 3 do assertEqual(p[i]:__last("SetPoint")[4], -2, "piece " .. i) end
+    am = dress(textCfg({ template = "$spellname$-$stacks$", justifyH = "RIGHT" }))
+    p = pieces(am)
+    -- a Right line is laid from its last piece back: each earlier piece moves right by the padding
+    for i = 1, 2 do assertEqual(p[i]:__last("SetPoint")[4], 2, "piece " .. i) end
+end)
+
+test("text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)", function()
+    local width = 0
+    local NS, fs = padded(function(self)
+        if width > 0 then return chars(self) * width + 3 end
+        return width
+    end)
+    local t, tdef = { fontSize = 12 }, NS.CONTAINER_TEMPLATE.text.font
+    -- red under: a string not yet laid out (every width 0) cached as a padding of 0 for good
+    assertEqual(NS.Style.PiecePadding(t, tdef), 0)
+    width = 5
+    assertEqual(NS.Style.PiecePadding(t, tdef), 3, "measured once it answers")
+    fs.__answer.GetStringWidth = function() return nil end
+    assertEqual(NS.Style.PiecePadding({ fontSize = 13 }, tdef), 0, "no number: 0")
+    fs.__raise.GetStringWidth = true
+    -- red under: measurePadding unguarded (the raise aborts the dress)
+    assertEqual(NS.Style.PiecePadding({ fontSize = 14 }, tdef), 0, "a raise: 0")
+    fs.__raise.GetStringWidth = nil
+    fs.__answer.GetStringWidth = function(self) return chars(self) * 6 - 1 end
+    assertEqual(NS.Style.PiecePadding({ fontSize = 15 }, tdef), 0, "kerned tighter than its parts: never negative")
+end)
+
+test("text style: the padding is measured once per font, size and flags (item 8)", function()
+    local NS, fs = padded()
+    local tdef = NS.CONTAINER_TEMPLATE.text.font
+    assertEqual(NS.Style.PiecePadding({ fontSize = 12 }, tdef), 2)
+    local measured = fs:__count("SetText")
+    NS.Style.PiecePadding({ fontSize = 12 }, tdef)
+    -- red under: PiecePadding measuring on every dress
+    assertEqual(fs:__count("SetText"), measured, "cached")
+    NS.Style.PiecePadding({ fontSize = 12, fontFlags = "OUTLINE" }, tdef)
+    assertTrue(fs:__count("SetText") > measured, "new flags measure again")
+end)
+
+test("text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)", function()
+    for side, want in pairs({ LEFT = "LEFT", RIGHT = "RIGHT", CENTER = "CENTER" }) do
+        local _, am = dressed(text({ template = "$spellname$-$stacks$", justifyH = side }))
+        -- red under: pieces left at the client's default justify (padding on both sides of each)
+        for i, fs in ipairs(pieces(am)) do
+            local j = fs:__last("SetJustifyH")
+            assertEqual(j and j[1], want, side .. " piece " .. i)
+        end
+    end
+    local _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER" }))
+    local j = pieces(am)[1]:__last("SetJustifyH")
+    assertEqual(j and j[1], "CENTER", "a one-piece Center line")
 end)
 
 test("text style: Center centers a one-piece template as one line, exactly as before (feedback #1)", function()
@@ -431,6 +520,169 @@ test("text style: an icon on the right insets the area's right edge; none hides 
     assertTrue(am.area:__last("SetAllPoints")[1] == am.anim)
     -- red under: Bind binding the icon whatever its setting
     assertEqual(frame:__count("SetIcon"), 0)
+end)
+
+test("text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)", function()
+    local _, am = dressed(text({ height = 20, icon = "LEFT", iconSize = 20, iconBorderShow = true,
+        iconBorderStyle = "Solid", iconBorderSize = 3, iconBorderColor = { r = 1, g = 0, b = 0, a = 1 },
+        useClassColorIconBorder = false }), true)
+    -- red under: nothing painting am.iconBorder on a Text line (the Icon border rows reach no region)
+    BS.assertSolid(am.iconBorder, 3, "1,0,0,1", "the icon border")
+    assertEqual(am.iconBorder:__joined("SetSize"), "20,20", "the border takes the icon's whole box")
+    local b = am.iconBorder:__last("SetPoint")
+    assertEqual(b[1], "LEFT"); assertTrue(b[2] == am.anim)
+    -- red under: the art laid at the box's full size under a thick border
+    assertEqual(am.icon:__joined("SetSize"), "14,14")
+    local p = am.icon:__last("SetPoint")
+    assertEqual(p[1], "LEFT"); assertTrue(p[2] == am.anim); assertEqual(p[4], 3)
+end)
+
+-- ── a refused icon call on a live re-dress (smoke batch 2, item 7) ─────────────────────────────
+
+--- A live Text element with a bordered left icon, dressed once, then re-dressed live with `region`'s
+--- `method` raising (am.iconBorder:Show, am.icon:SetSize), in a fresh environment whose client
+--- error handler and debug log record. Every log is emptied before the re-dress, so they hold it alone.
+--- `times` re-dresses that many times (default 1).
+local function refusedRedress(region, method, times)
+    local reported, lines = {}, {}
+    local NS, m = dofile("tests/fresh_env.lua")({ before = function(mocks)
+        dofile("tests/text_apis.lua")(mocks)
+        mocks.geterrorhandler = function() return function(err)
+            local n = #reported
+            reported[n + 1] = tostring(err)
+        end end
+    end })
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = tag .. ":" .. fmt:format(...)
+    end
+    local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
+        icon = "LEFT", iconSize = 14, iconGap = 2, iconBorderShow = true, iconBorderStyle = "Solid",
+        iconBorderSize = 2 } })
+    local made = {}
+    local frame = B.new(made)
+    B.during(m, made, function() NS.Style.Element(frame, c, true) end)
+    local am = frame.__am
+    am[region].__raise[method] = true
+    frame.__log = {}
+    for _, r in ipairs(made) do r.__log = {} end
+    local ok, err = true, nil
+    for _ = 1, times or 1 do
+        ok, err = pcall(B.during, m, made, function() NS.Style.Element(frame, c, true) end)
+        if not ok then break end
+    end
+    am[region].__raise[method] = nil
+    return { ok = ok, err = err, frame = frame, am = am, reported = reported, lines = lines }
+end
+
+--- The anchor points `r` took after its last ClearAllPoints, in order.
+local function anchorsSinceClear(r)
+    local out = {}
+    for _, e in ipairs(r.__log) do
+        if e.name == "ClearAllPoints" then out = {} end
+        if e.name == "SetPoint" then
+            local n = #out
+            out[n + 1] = e.args[1]
+        end
+    end
+    return out
+end
+
+--- The earliest call order stamp across `regions`' logs (nil when none was called).
+local function firstSeq(regions)
+    local low
+    for _, r in ipairs(regions) do
+        for _, e in ipairs(r.__log) do
+            if not low or e.seq < low then low = e.seq end
+        end
+    end
+    return low
+end
+
+--- How many of `lines` carry `needle`.
+local function matching(lines, needle)
+    local n = 0
+    for _, l in ipairs(lines) do
+        if l:find(needle, 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+--- The item-7 assertions shared by both refusals: the text survives, the icon alone is lost.
+local function assertTextSurvives(got, needle)
+    local am = got.am
+    -- red under: the refusal escaping the icon block (Text.Apply stops, the caller's pcall drops it)
+    assertTrue(got.ok, tostring(got.err))
+    -- red under: the area's anchors cleared and laid after the icon (a raise leaves an unanchored area)
+    assertEqual(table.concat(anchorsSinceClear(am.area), ","), "TOPLEFT,BOTTOMRIGHT", "the text area keeps both anchors")
+    assertEqual(am.area:__calls("SetPoint")[1][4], 14 + 2, "still beside the icon's box")
+    -- red under: the icon block run before the text area is anchored
+    assertTrue(am.area:__lastSeq("SetPoint") < firstSeq({ am.icon, am.iconBorder }), "the area is anchored first")
+    local head = am.piece1:__last("SetPoint")
+    assertTrue(head ~= nil and head[2] == am.area, "the chain head is anchored in the area")
+    assertTrue(got.frame:__last("SetSpellName")[1] == am.piece1, "the text binding is still bound")
+    assertFalse(am.icon:IsShown(), "the icon is what the refusal costs")
+    -- red under: the refusal swallowed (Style.Bind's pattern without the report)
+    assertEqual(#got.reported, 1, "handed to the client's error handler")
+    assertTrue(got.reported[1]:find(needle, 1, true) ~= nil, got.reported[1])
+    assertEqual(matching(got.lines, needle), 1, "one debug line: " .. table.concat(got.lines, " | "))
+end
+
+test("text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported", function()
+    assertTextSurvives(refusedRedress("iconBorder", "Show"), "Show refused")
+end)
+
+test("text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported", function()
+    assertTextSurvives(refusedRedress("icon", "SetSize"), "SetSize refused")
+end)
+
+test("text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time", function()
+    local got = refusedRedress("iconBorder", "Show", 3)
+    assertTrue(got.ok, tostring(got.err))
+    -- red under: geterrorhandler called on every re-dress (a restyle of 40 buttons floods BugSack)
+    assertEqual(#got.reported, 1)
+    assertEqual(matching(got.lines, "Show refused"), 3)
+end)
+
+-- ── the icon border on a live button (B2-3) ────────────────────────────────────────────────────
+-- Last batch's empty boxes: with the icon border on, a live re-dress (a Width change) raised in
+-- Backdrop.lua:226 on the border's secret size, and the icon block's guard hid the icon. The border is
+-- strips now, and reads no size.
+
+test("text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)", function()
+    local reported, lines = {}, {}
+    local NS, m = dofile("tests/fresh_env.lua")({ before = function(mocks)
+        dofile("tests/text_apis.lua")(mocks)
+        mocks.geterrorhandler = function() return function(err)
+            local n = #reported
+            reported[n + 1] = tostring(err)
+        end end
+    end })
+    NS.Debug = function(tag, fmt, ...)
+        local n = #lines
+        lines[n + 1] = tag .. ":" .. fmt:format(...)
+    end
+    local function c(width)
+        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
+            width = width, icon = "LEFT", iconSize = 14, iconBorderShow = true, iconBorderStyle = "Solid",
+            iconBorderSize = 2, iconBorderColor = { r = 0, g = 1, b = 0, a = 1 } } })
+    end
+    local made = {}
+    local frame = B.new(made)
+    B.during(m, made, function() NS.Style.Element(frame, c(200), true) end)
+    local am = frame.__am
+    m.__layOut(frame)
+    for _, r in ipairs(made) do m.__layOut(r) end
+    frame.__log = {}
+    for _, r in ipairs(made) do r.__log = {} end
+    local ok, err = pcall(B.during, m, made, function() NS.Style.Element(frame, c(260), true) end)
+    assertTrue(ok, tostring(err))
+    -- red under: SetBackdrop on the laid-out icon border (the raise the icon block's guard reported)
+    assertEqual(#reported, 0, table.concat(reported, " | "))
+    assertEqual(matching(lines, "text icon"), 0, table.concat(lines, " | "))
+    assertTrue(am.icon:IsShown(), "the icon shows")
+    BS.assertSolid(am.iconBorder, 2, "0,1,0,1", "the icon border")
+    assertTrue(frame:__last("SetSpellName")[1] == am.piece1, "the text is bound")
 end)
 
 -- ── the template ───────────────────────────────────────────────────────────────────────────────

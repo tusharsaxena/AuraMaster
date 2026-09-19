@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:217`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:220`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -85,7 +85,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:219-223`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:224-228`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -102,9 +102,9 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 `SetAuraGroupCandidateFilters` clears and re-gathers the group's auras.
 
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
-hide-permanent flag, style —
+hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:289-290`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:292-300`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters are honored only on one side of the friend/foe line
@@ -135,7 +135,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:158`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:160`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -146,7 +146,7 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:145`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:147`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
@@ -181,13 +181,23 @@ buttons each, for issue #2):
 So a Text line is a chain of single-anchored, auto-sized font strings (`modules/Style_Text.lua`),
 its loops are Alpha and Translation only, built and played at dress time.
 
+**The gap between pieces (smoke batch 2, item 8).** The client pads an auto-sized font string on both
+sides, so pieces chained edge to edge showed gaps no template asked for (`Fire Breath - Magic - 6 s`
+for `$spellname$-$dispeltype$-...`), while the duration run, one engine string, had none. The padding
+belongs to the font, not the text, so it is measured on the addon's own hidden, never-secret string:
+`W("a") + W("b") - W("ab")`, never below 0, once per font, size and flags (`Style.PiecePadding`), and
+each chained piece is anchored that far back over the one before, every piece justified to the
+chain's side. A font it cannot measure chains at 0, as before. An empty field still has a width no
+addon code can read, so its separator cannot be dropped by measuring: a separator written inside the
+field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text page's Rules list says so.
+
 ## Additive bindings stack
 
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:277`), and then adds again
-(`modules/Style_Bars.lua:299`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:479`), and then adds again
+(`modules/Style_Bars.lua:313`, `modules/Style_Icons.lua:153`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -224,7 +234,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:433`).
+  aura buttons (`modules/Container.lua:447`).
 
 ## Smaller API moves this addon absorbs
 
@@ -272,7 +282,9 @@ Four client facts decide how `modules/Container.lua` builds an engine, each read
 - **Anchor first, groups second, unit last.** `AddAuraGroup` forbids untrusted layout work on the
   container, after which it can no longer be anchored — so the engine is anchored before its first
   group, and never re-anchored or cleared afterwards (a retired engine is disabled and hidden where it
-  stands). `SetUnit` comes last, once every group exists, so `UNIT_AURA` is registered for a container
+  stands). So the growth corner it is pinned at is part of its shape: a Grow vertically or Grow
+  horizontally change that moves the corner rebuilds the engine rather than sending the new flow
+  anchor point to one still pinned at the old corner. `SetUnit` comes last, once every group exists, so `UNIT_AURA` is registered for a container
   that already knows what it is looking for.
 - **A disabled engine draws nothing.** `SetEnabled(false)` unregisters its events and its next rebuild
   clears every button (`ManagedAuraContainerPrivateMixin:ParseAllAuras`), which is why preview and the
@@ -294,9 +306,46 @@ handle's label is measured on a detached font string of ours (`Anchors.__labelMe
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
-readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:64`
-and `modules/Style_Icons.lua:59`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
+readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:66`
+and `modules/Style_Icons.lua:61`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
 created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
+
+## A backdrop on an engine button reads a secret size (B2-3)
+
+**What was seen.** With an Icons container's border on, a change to its pandemic-window settings
+raised "attempt to perform arithmetic on local 'width' (a secret number value, while execution
+tainted by 'AuraMaster')" at line 226 of Blizzard's `Blizzard_SharedXML/Backdrop.lua`, from
+`SetBackdrop` in `Style.ApplyBorder`, and the icons stopped highlighting while bars kept theirs. A Text
+line with its icon border on drew empty rows after a Width change (smoke batch 2, item 7), most likely
+for the same reason.
+
+**The restriction.** Once the engine has laid a button out, the button's size reads secret, and so
+does the size of every frame anchored to it: the border frame covering the button, a bar's icon box, a
+Text line's icon border. Blizzard's Backdrop does arithmetic on the frame's size
+(`SetupTextureCoordinates`, width divided by the edge size) on every `SetBackdrop`, and again from
+`BackdropTemplate`'s own `OnSizeChanged` script whenever the frame is resized. A button's first dress
+runs before the layout, which is why a border first drawn looked right and only a restyle raised.
+The restyle stopped at the border, after `Style.ClearAdditiveBindings` had emptied the pandemic list
+and before `Icons.Bind` could add it back: that is the lost highlight.
+
+**What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
+`modules/Style.lua:420`):
+- **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
+  two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
+  read, so a Solid border redraws on every restyle.
+- **Any other style** keeps a backdrop, on a frame of its own: a plain frame with
+  `BackdropTemplateMixin` mixed in, never a `BackdropTemplate`, so no `OnSizeChanged` script exists to
+  run the arithmetic on a resize. `SetBackdrop` runs only when the edge or thickness changed and the
+  frame's width and height both read as plain numbers (`pcall` plus `NS.Secrets.IsReadableNumber`);
+  otherwise the backdrop last applied stays and is only recolored (`SetBackdropBorderColor` does no
+  arithmetic). A new texture or thickness therefore reaches a live button when it is next built: a new
+  button, a rebuild (a style change) or a `/reload`. The Border style tooltip says so.
+- Every border frame is a plain frame (`Style.NewBorder`). Switching between Solid and another style
+  hides the other drawing.
+- **Defense in depth.** The border steps of `Icons.Apply` and `Bars.Apply` (the bar border and the icon
+  border) run through `Style.GuardedBorder`: a border the client still refuses costs the border
+  (hidden, and reported through `Style.ReportError`), never the engine bindings after it. A Text line's
+  icon border stays inside its icon block's guard.
 
 ## An empty duration run still takes a space (open, feedback #5)
 
@@ -320,3 +369,46 @@ the gap is that empty string's own width.
 **The in-game check** (docs/smoke-tests.md section T) runs three `/run` probes that tell these apart:
 the rule formatter on `45.5` and `45`, the binding's zero-duration text, and an empty font string's
 width.
+
+## Many debuffs carry no dispel type (smoke batch 2, item 2)
+
+**What was seen.** A bar container on the target's debuffs, colored by dispel type, drew a Paladin's
+Consecration, Judgment, Empyrean Hammer, Seal of Reprisal and Blessed Hammer in blue, and a Text line's
+`$dispeltype$` showed nothing for them. Text and bars read the same engine key, the aura's `dispelName`
+or `"None"`, so they cannot disagree about one aura: those debuffs almost certainly carry no dispel
+type (a Magic, Curse, Disease or Poison type is what a player can dispel, and a class's own damage
+debuffs usually have none; bleeds carry `Bleed`). The blue is most likely the bar's default fill,
+close to the Magic swatch, which a typeless aura keeps.
+
+**What this addon does.** Nothing changes in code: a typeless aura keeps the surface's own color and
+draws no type word, backdrop or edge. The Bars page's Color by tooltips and General -> Dispel Colors
+say that buffs and many debuffs have no type, rather than citing one rare debuff.
+
+**The probe.** Out of combat, with a target carrying the debuffs, paste the three lines one at a time.
+They print, per harmful aura: its index, name, `auraInstanceID`, `isFromPlayerOrPlayerPet`,
+`dispelName`, and the red channel of the color a curve returns for its dispel type (the curve maps the
+type's enum `x` to red `x/15`, so the enum is `red * 15`). Every value goes through an `issecretvalue`
+guard and every call through `pcall`.
+
+```
+/run S=function(v)return issecretvalue and issecretvalue(v)and"SECRET"or tostring(v)end K=C_CurveUtil.CreateColorCurve()K:SetType(1)for x=0,15 do K:AddPoint(x,CreateColor(x/15,0,0,1))end
+/run R=function(i,a)local k,c=pcall(C_UnitAuras.GetAuraDispelTypeColor,"target",a.auraInstanceID,K)print(i,S(a.name),S(a.auraInstanceID),S(a.isFromPlayerOrPlayerPet),S(a.dispelName),k and c and S(c.r)or S(c))end
+/run for i=1,40 do local o,a=pcall(C_UnitAuras.GetAuraDataByIndex,"target",i,"HARMFUL")if not(o and a)then print("end",i,S(a))break end R(i,a)end
+```
+
+**Result (2026-09-19, out of combat, the owner's own debuffs on a target):**
+
+```
+1 Blood Plague    69 true Disease 0.20000001788139
+2 Insidious Chill 73 true nil     0
+3 Wave of Souls   77 true Magic   0.066666670143604
+4 Brittle         83 true nil     0
+5 Ratfang Toxin   13 true Poison  0.26666668057442
+end 6 nil
+```
+
+Every aura was applied by the player (`true`), and three of five carry a type: Disease (enum 3),
+Magic (1), Poison (4). Being cast by the player does not strip the type. The other two print
+`dispelName` `nil` and enum 0 ("None"). The engine itself reports those debuffs as typeless, so
+showing no `$dispeltype$` word and keeping the surface's color is correct. Out of combat none of the
+values was secret.

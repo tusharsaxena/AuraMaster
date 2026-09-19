@@ -158,7 +158,7 @@ local SECTION_LABELS = {
 local function sourceCell(_, parent, rel)
     local _, activeId = NS.ActiveContainer()
     local list, order = {}, {}
-    for _, c in ipairs(NS.Database.GetContainers()) do
+    for _, c in ipairs(NS.Database.GetContainersByName()) do   -- by name, as every picker (B2-2)
         if c.id ~= activeId then
             list[c.id] = tostring(c.name)
             order[#order + 1] = c.id

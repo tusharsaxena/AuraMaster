@@ -26,7 +26,7 @@ Example: a bar option.
    with a comment saying why.
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
-   the structure key (`FilterCompiler.StructureKey`) in `Container:Apply` (`modules/Container.lua:361`).
+   the structure key (`FilterCompiler.StructureKey`) in `Container:Apply` (`modules/Container.lua:375-376`).
 6. `NS.ValidateSchema` fails the load if the path does not resolve against the template. Update the
    row lists in `docs/settings-panel.md` and the defaults in `docs/schema.md`.
 
@@ -100,7 +100,7 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 5, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:778`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:791`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure

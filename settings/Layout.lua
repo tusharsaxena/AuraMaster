@@ -9,6 +9,7 @@ local _, NS = ...
 --             -- Another container -- [Container]
 --             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
+--             (Named frame only: a gray hint when Point faces the growth; growsBackNote, below)
 --
 -- A container attaches to the screen, to another container (following it as it grows) or to any
 -- named frame (modules/Anchors.lua). Only the subsections the chosen mode reads are DRAWN (feedback
@@ -54,11 +55,11 @@ local function inherited(key)
     end
 end
 
---- The containers the active one may attach to: every other one, plus "None".
+--- The containers the active one may attach to: "None", then every other one by name (B2-2).
 local function attachTargets()
     local _, activeId = NS.ActiveContainer()
     local out = { { value = 0, text = L["None"] } }
-    for _, c in ipairs(NS.Database.GetContainers()) do
+    for _, c in ipairs(NS.Database.GetContainersByName()) do
         if c.id ~= activeId then
             out[#out + 1] = { value = c.id, text = tostring(c.name) }
         end
@@ -97,11 +98,11 @@ NS.RegisterSchemaRows({
     {
         path = "container.position.point", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
         type = "string", values = POINTS, label = L["Point"],
-        desc = L["Used while attached to the screen. Dragging the container sets these for you."],
+        desc = L["The corner of the container's first aura that is placed on the screen. The other auras grow away from it as the Growth tab says. Dragging the container sets these for you."],
     },
     {
         path = "container.position.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
-        type = "string", values = POINTS, label = L["Relative point"], desc = L["The screen corner it is measured from."],
+        type = "string", values = POINTS, label = L["Relative point"], desc = L["The screen corner the first aura's point is measured from."],
     },
     {
         path = "container.position.x", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
@@ -133,11 +134,13 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.point", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", values = POINTS, startsLine = true, label = L["Point"],
-        desc = L["The corner of this container that is attached."],
+        desc = L["The corner of the container's first aura that is attached — the container's full size is secret, so it cannot be anchored itself. The other auras grow away from it as the Growth tab says."],
+        -- Structural: the facing-growth hint under the tab (growsBackNote) reads it.
+        onChange = structural,
     },
     {
         path = "container.attach.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
-        type = "string", values = POINTS, label = L["Relative point"], desc = L["The corner of the target it is attached to."],
+        type = "string", values = POINTS, label = L["Relative point"], desc = L["The corner of the target the first aura's point is attached to."],
     },
     {
         path = "container.attach.x", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
@@ -275,8 +278,68 @@ local function growthIntro(ctx, cfg)
     if root then H.TextRow(ctx, L["Fill and growth follow '%s'"]:format(tostring(root.name))) end
 end
 
+-- ---------------------------------------------------------------------------
+-- The facing-growth hint (smoke feedback 2, D-3)
+-- ---------------------------------------------------------------------------
+-- Point places the corner of the FIRST aura: the anchor is one element in size, because the
+-- container's full extent is secret and cannot be anchored, and the other auras grow away from it
+-- (modules/Container.lua pins the engine at the growth corner). So a Named frame container whose
+-- Point side faces the way its auras grow sits on one side of the frame and grows back across it: a
+-- BOTTOM* point (sitting above the frame) with Grow vertically Down, a TOP* point with Up, a LEFT*
+-- point (sitting right of the frame) with Grow horizontally Left, a RIGHT* point with Right. Named
+-- frame only: a screen container has no frame to grow over, and a follower's points are derived
+-- from its parent's flow so that they never face it.
+
+local SMALL = { fontObject = "GameFontHighlightSmall" }
+local GRAY = "|cff808080%s|r"
+local OPPOSITE = { up = "down", down = "up", left = "right", right = "left" }
+
+--- Whether a point's vertical side faces growth `growV` (its BOTTOM growing down, its TOP up).
+local function facesV(point, growV)
+    local side = point:match("^BOTTOM") and "down" or point:match("^TOP") and "up"
+    return side == growV
+end
+
+--- Whether a point's horizontal side faces growth `growH` (its LEFT growing left, its RIGHT right).
+local function facesH(point, growH)
+    local side = point:match("LEFT$") and "left" or point:match("RIGHT$") and "right"
+    return side == growH
+end
+
+--- The hint's lines for `cfg`, the vertical one first: none unless it is attached to a named frame
+--- by a Point that faces its growth.
+local function growsBackLines(cfg)
+    local out = {}
+    local at = cfg.attach
+    if not (at and at.mode == "frame" and C.POINT_LABELS[at.point]) then return out end
+    local point = at.point
+    local growH, growV = NS.Container.Growth(NS.Anchors.EffectiveLayout(cfg) or {})
+    local pointLabel = L[C.POINT_LABELS[point]]
+    if facesV(point, growV) then
+        out[1] = L["Point is %s and Grow vertically is %s, so the auras grow back over the frame this container is attached to. Set Grow vertically to %s on the Growth tab instead."]:format(
+            pointLabel, L[C.GROW_V_LABELS[growV]], L[C.GROW_V_LABELS[OPPOSITE[growV]]])
+    end
+    if facesH(point, growH) then
+        local n = #out
+        out[n + 1] = L["Point is %s and Grow horizontally is %s, so the auras grow back over the frame this container is attached to. Set Grow horizontally to %s on the Growth tab instead."]:format(
+            pointLabel, L[C.GROW_H_LABELS[growH]], L[C.GROW_H_LABELS[OPPOSITE[growH]]])
+    end
+    return out
+end
+
+--- After the Anchor tab's rows (afterGroup): the facing-growth hint, when it applies. Point's own
+--- onChange redraws the tab; a growth change is made on the Growth tab, and coming back draws it.
+local function growsBackNote(ctx)
+    local cfg = NS.ActiveContainer()
+    if not cfg then return end
+    for _, line in ipairs(growsBackLines(cfg)) do
+        H.TextRow(ctx, GRAY:format(line), SMALL)
+    end
+end
+
 NS.RegisterContainerPage(PAGE, L["Layout"], "AuraMasterLayoutPanel", {
     intro = growthIntro,
+    afterGroup = { [G_ANCHOR] = growsBackNote },
     pairWith = {
         ["container.attach.container"] = attachedLine,
         ["container.attach.frame"] = pickButton,

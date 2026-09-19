@@ -129,7 +129,7 @@ test("bars: the seven tabs are drawn in order, whatever the container shows (S-1
     local L = NS.L
     -- red under: Size still a tab of its own, or the icon rows registered after Background & border
     local want = table.concat({ L["General"], L["Icon"], L["Background & border"], L["Name text"],
-        L["Time text"], L["Stack text"], L["Highlights"] }, ",")
+        L["Time text"], L["Stack text"], L["Pandemic"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
     NS.SetByPath("container.auraType", "HARMFUL", 1)
     P.rerender("Bars")
@@ -184,20 +184,63 @@ test("bars: a confirmed fill color is stored on the selected container, as a tab
     assertEqual(NS.Database.FindContainer(2).bars.barColor.r, NS.CONTAINER_TEMPLATE.bars.barColor.r)
 end)
 
-test("bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)", function()
+test("bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)", function()
     local NS, _, P = bars()
     P.show("Bars")
-    local ws = P.tab("bars", NS.L["Highlights"])
+    local ws = P.tab("bars", NS.L["Pandemic"])
     -- red under: the dispel rows still registered on the Bars page (they are profile-wide, G-3)
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
         assertEqual(NS.FindSchemaRow("dispelColors." .. name).page, "general", name)
     end
-    assertEqual(#P.all(ws, "ColorPicker"), 2, "the running-out and refresh-window colors only")
-    -- red under: the tooltip still sending the player to the Highlights tab
+    assertEqual(#P.all(ws, "ColorPicker"), 2, "the pandemic-window time and highlight colors only")
+    -- red under: the tooltip sending the player to a tab rather than General -> Dispel Colors
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
     assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
-    -- red under: the tooltip silent on why Mystic Touch keeps the bar color (feedback #7)
-    assertTrue(desc:find("Mystic Touch", 1, true) ~= nil, desc)
+    -- red under: the tooltip implying a typeless debuff is rare, citing Mystic Touch alone (feedback #7,
+    -- smoke batch 2 item 2: many class debuffs have no dispel type)
+    assertTrue(desc:find("many debuffs have no dispel type", 1, true) ~= nil, desc)
+    assertTrue(desc:find("Judgment or Consecration", 1, true) ~= nil, desc)
+end)
+
+-- ── Pandemic (smoke batch 2, B2-1) ────────────────────────────────────────────────────────────
+-- The owner's call: "Running out" (the seconds-left time color) and "Refresh window" (the engine's
+-- wash) are both named for the pandemic window, on a tab of their own. Labels only: the paths and
+-- stored values are unchanged, so no migration.
+local PANDEMIC = {
+    { "expiringColorOn", "Time color", "Recolor the time in the pandemic window" },
+    { "expiringThreshold", "Time color", "Pandemic window (seconds left)" },
+    { "expiringColor", "Time color", "Pandemic-window time color" },
+    { "pandemic", "Highlight", "Highlight the pandemic window" },
+    { "pandemicColor", "Highlight", "Pandemic-window highlight color" },
+}
+
+test("bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)", function()
+    local NS, _, P = bars()
+    local want, keys = {}, P.tabKeys("bars")
+    for _, k in ipairs(keys) do
+        -- red under: the old tab still drawn beside the new one
+        assertTrue(k ~= "Highlights", "no Highlights tab")
+    end
+    local ws = P.tab("bars", "Pandemic")
+    for i, spec in ipairs(PANDEMIC) do
+        local row = NS.FindSchemaRow("container.bars." .. spec[1])
+        -- red under: the row still on Highlights, under Running out / Refresh window, or its old label
+        assertEqual(row.group, "Pandemic", spec[1])
+        assertEqual(row.subgroup, spec[2], spec[1])
+        assertEqual(row.label, spec[3], spec[1])
+        local text = (row.label .. " " .. (row.desc or row.tooltip or "")):lower()
+        assertTrue(not text:find("running out", 1, true) and not text:find("refresh window", 1, true)
+            and not text:find("running-out", 1, true) and not text:find("refresh-window", 1, true), spec[1])
+        want[i] = spec[3]
+    end
+    local got = {}
+    for i, w in ipairs(P.rowWidgets(ws, "bars", "Pandemic")) do got[i] = w.labelText end
+    assertEqual(table.concat(got, "|"), table.concat(want, "|"), "drawn in order on the Pandemic tab")
+    assertTrue(P.find(ws, "Heading", "Time color") ~= nil, "the time color subsection")
+    assertTrue(P.find(ws, "Heading", "Highlight") ~= nil, "the highlight subsection")
+    -- red under: a moved row writing a renamed path
+    P.row(ws, "container.bars.expiringThreshold"):__fire("OnMouseUp", 7)
+    assertEqual(NS.Database.FindContainer(1).bars.expiringThreshold, 7)
 end)
 
 test("bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)", function()
@@ -215,8 +258,22 @@ test("bars: Background & border offers Color by beside the background, writing b
     assertEqual(table.concat(dd.order, ","), "static,dispel")
     dd:__fire("OnValueChanged", "dispel")
     assertEqual(NS.Database.FindContainer(1).bars.bgColorMode, "dispel")
-    assertTrue((row.tooltip or row.desc):find("Mystic Touch", 1, true) ~= nil, "the tooltip says why a typeless debuff keeps its color")
+    local tip = row.tooltip or row.desc
+    assertTrue(tip:find("many debuffs have no dispel type", 1, true) ~= nil, "the tooltip says typeless debuffs are common")
+    assertTrue(tip:find("Judgment or Consecration", 1, true) ~= nil, tip)
     assertEqual(NS.CONTAINER_TEMPLATE.bars.bgColorMode, "static", "one color by default")
+end)
+
+test("pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)", function()
+    local NS = T.NS
+    local tip = NS.L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."]
+    for _, path in ipairs({ "container.bars.borderStyle", "container.bars.iconBorderStyle",
+        "container.icons.borderStyle", "container.text.iconBorderStyle" }) do
+        local row = NS.FindSchemaRow(path)
+        -- red under: the library's own "The border texture." (a live button keeps its old backdrop
+        -- until a rebuild, modules/Style.lua's ApplyBorder, and nothing said so)
+        assertEqual(row and (row.tooltip or row.desc), tip, path)
+    end
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()

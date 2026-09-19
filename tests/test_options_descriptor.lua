@@ -183,12 +183,13 @@ end)
 
 -- ── the banner, the picker, the page renderer ─────────────────────────────────────────────────
 
-test("options descriptor: the banner lists every container in display order and ignores a re-pick of the selection", function()
+test("options descriptor: the banner lists every container by name and ignores a re-pick of the selection", function()
     local NS2 = fresh()
     NS2.State.SetActiveContainer(2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local dd = NS2.Helpers.__pageCtx.bars.__bannerWidget
-    assertEqual(table.concat(dd.order, ","), table.concat(NS2.db.profile.containerOrder, ","))
+    -- Player buffs, Player cooldowns, Player debuffs, Target debuffs (mine): by name (B2-2)
+    assertEqual(table.concat(dd.order, ","), "1,4,2,3")
     assertEqual(dd.list[2], "Player debuffs  |cff888888(Player debuffs, icons)|r")
     assertEqual(dd.value, 2)
     local refreshes = counter(NS2.Helpers, "RefreshAllPanels")
@@ -211,10 +212,29 @@ test("options descriptor: Containers' picker sits in the chrome block above the 
     assertTrue(dd ~= nil and dd.type == "Dropdown", "the band carries the picker")
     assertEqual(dd.labelText, "Container")
     assertTrue((ctx.__bannerHeight or 0) > 0, "and reserves the band above the strip")
-    assertEqual(table.concat(dd.order, ","), "1,2,3,4")
+    assertEqual(table.concat(dd.order, ","), "1,4,2,3", "by name (B2-2)")
     dd:__fire("OnValueChanged", 2)
     -- red under: the header's callback not reaching SelectContainer
     assertEqual(NS2.State.activeContainerId, 2)
+end)
+
+-- smoke batch 2, B2-2: every page's Container picker lists by name, case-insensitively, the id
+-- breaking a tie (names differing only in case are refused by CM.UniqueName, so the tie is written
+-- straight to the store), with the gray "(unit, style)" suffix kept.
+test("options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)", function()
+    local NS2 = fresh()
+    local cs = NS2.db.profile.containers
+    cs[1].name, cs[2].name, cs[3].name, cs[4].name = "zeta", "Alpha", "beta", "ALPHA"
+    NS2.State.SetActiveContainer(1)
+    for _, page in ipairs({ "containers", "filters", "layout", "bars", "icons", "text" }) do
+        local ctx = NS2.Helpers.__pageCtx[page]
+        ctx.panel:__fire("OnShow")
+        local dd = ctx.__bannerWidget
+        -- red under: the picker in display order (1,2,3,4), or a byte sort (4,2,3,1: "ALPHA" < "Alpha")
+        assertEqual(table.concat(dd.order, ","), "2,4,3,1", page)
+        assertTrue(dd.list[2]:find("Alpha  |cff888888(", 1, true) == 1, page .. ": the gray suffix stays: " .. dd.list[2])
+    end
+    assertEqual(table.concat(NS2.db.profile.containerOrder, ","), "1,2,3,4", "the stored order untouched")
 end)
 
 test("options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits", function()

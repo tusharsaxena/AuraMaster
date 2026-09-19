@@ -3,7 +3,7 @@ local _, NS = ...
 -- settings/Bars.lua — how a container drawn as BARS looks (modules/Style_Bars.lua draws it).
 --
 --     band   [Container ▾]
---     [ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Highlights ]
+--     [ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Pandemic ]
 --
 -- A container drawn as icons sees every row here disabled, under a note naming where its style is
 -- changed (B-2; settings/OptionsSetup.lua's drawDisabledNotice, which draws it small and gray).
@@ -12,7 +12,7 @@ local _, NS = ...
 -- with anything extra appended after the block — and every color row has its class-color companion
 -- (options-ui-§17), declared `source = "unit"`: the class is that of the unit the container tracks,
 -- snapshotted once per apply (modules/Container.lua's SnapshotClass, modules/Style.lua's
--- Style.Color), so a player container reads the player's. The expiring and pandemic swatches are PALETTE
+-- Style.Color), so a player container reads the player's. The two pandemic-window swatches are PALETTE
 -- definitions — one color per state — and carry no companion, the one exemption §17 makes. The
 -- dispel type colors are the profile's, on General → Dispel Colors (settings/GeneralSpells.lua).
 
@@ -25,7 +25,8 @@ local P = "container.bars."
 local UNIT = { source = "unit" }
 
 local G_GENERAL, G_ICON, G_BG = L["General"], L["Icon"], L["Background & border"]
-local G_NAME, G_TIME, G_STACK, G_HI = L["Name text"], L["Time text"], L["Stack text"], L["Highlights"]
+local G_NAME, G_TIME, G_STACK, G_PANDEMIC = L["Name text"], L["Time text"], L["Stack text"], L["Pandemic"]
+local S_TIME, S_HIGHLIGHT = L["Time color"], L["Highlight"]
 
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 local JUSTIFY = NS.Choices(C.JUSTIFY, C.JUSTIFY_LABELS)
@@ -46,7 +47,7 @@ NS.RegisterSchemaRows(H.BarGroup({
     prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). An aura with no dispel type keeps the bar color: a buff, or a debuff nothing can dispel, such as Mystic Touch."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the bar color."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
@@ -94,8 +95,11 @@ local iconBorder = H.BorderGroup({
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
+-- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
+-- (modules/Style.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
 for _, row in ipairs(iconBorder) do
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
+    if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
 end
 NS.RegisterSchemaRows(iconBorder)
 
@@ -119,13 +123,17 @@ local BG_TOOLTIPS = {
     [P .. "bgAlpha"] = L["How opaque the background texture is."],
     [P .. "bgColor"] = L["The background color."] .. (H.CLASS_COLOR_NOTE and (" " .. H.CLASS_COLOR_NOTE) or ""),
     [P .. "useClassColorBg"] = L["Draw the background in the class color instead of the swatch beside it."],
-    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). An aura with no dispel type keeps the background color: a buff, or a debuff nothing can dispel, such as Mystic Touch."],
+    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the background color."],
 }
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
 NS.RegisterSchemaRows(bg)
-NS.RegisterSchemaRows(H.BorderGroup({
+local border = H.BorderGroup({
     prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = UNIT,
-}))
+})
+for _, row in ipairs(border) do
+    if row.path == P .. "borderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
+end
+NS.RegisterSchemaRows(border)
 
 -- ── Text ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -162,26 +170,32 @@ textRows("time", G_TIME, {
 })
 textRows("stacks", G_STACK)
 
--- ── Highlights ────────────────────────────────────────────────────────────────────────────────
+-- ── Pandemic ──────────────────────────────────────────────────────────────────────────────────
+-- Smoke batch 2, B2-1 (the owner's call): the seconds-left time color (once "Running out") and the
+-- engine's refresh-window wash (once "Refresh window", on a Highlights tab) are both named for the
+-- pandemic window, on this tab. Two subsections keep them apart: Time color is the player's own
+-- seconds threshold; Highlight is the window the game finds per spell. Labels only: the paths and
+-- stored values are unchanged.
 
-local HI = {
-    { path = P .. "expiringColorOn", page = PAGE, group = G_HI, subgroup = L["Running out"], type = "bool",
-      label = L["Recolor the time when running out"], desc = L["Turn the time text another color in the last seconds."] },
-    { path = P .. "expiringThreshold", page = PAGE, group = G_HI, subgroup = L["Running out"], type = "number",
-      min = 1, max = 60, step = 1, label = L["Running out below (sec)"], desc = L["When the time text changes color."] },
+NS.RegisterSchemaRows({
+    { path = P .. "expiringColorOn", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "bool",
+      label = L["Recolor the time in the pandemic window"],
+      desc = L["Turn the time text another color in the pandemic window: the last seconds, set below."] },
+    { path = P .. "expiringThreshold", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "number",
+      min = 1, max = 60, step = 1, label = L["Pandemic window (seconds left)"],
+      desc = L["The pandemic window starts this many seconds before the aura ends."] },
     -- Palette definition (options-ui-§17 exemption): identifies a state, not a player.
-    { path = P .. "expiringColor", page = PAGE, group = G_HI, subgroup = L["Running out"], type = "color",
-      startsLine = true, label = L["Running-out color"], desc = L["The time text's color in the last seconds."] },
-    -- engine-only: the refresh window is the engine's to find (CustomAuraButton's pandemic window, a
+    { path = P .. "expiringColor", page = PAGE, group = G_PANDEMIC, subgroup = S_TIME, type = "color",
+      startsLine = true, label = L["Pandemic-window time color"], desc = L["The time text's color in the pandemic window."] },
+    -- engine-only: the window is the engine's to find (CustomAuraButton's pandemic window, a
     -- per-spell rule Lua cannot read); a placeholder is a made-up aura with none (the color below
     -- still reaches the wash on both).
-    { path = P .. "pandemic", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "bool",
-      startsLine = true, label = L["Highlight the refresh window"], coverage = "engine-only",
-      desc = L["Wash the bar while the aura can be refreshed without losing any of its duration."] },
-    { path = P .. "pandemicColor", page = PAGE, group = G_HI, subgroup = L["Refresh window"], type = "color",
-      label = L["Refresh-window color"], desc = L["The highlight's color."] },
-}
-NS.RegisterSchemaRows(HI)
+    { path = P .. "pandemic", page = PAGE, group = G_PANDEMIC, subgroup = S_HIGHLIGHT, type = "bool",
+      startsLine = true, label = L["Highlight the pandemic window"], coverage = "engine-only",
+      desc = L["Wash the bar while the aura can be refreshed without losing any of its duration. The game finds this window for each spell; the seconds set above do not change it."] },
+    { path = P .. "pandemicColor", page = PAGE, group = G_PANDEMIC, subgroup = S_HIGHLIGHT, type = "color",
+      label = L["Pandemic-window highlight color"], desc = L["The highlight's color."] },
+})
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
     disabledFor = function(cfg) return cfg.style ~= "bars" end,

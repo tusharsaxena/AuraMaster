@@ -1174,3 +1174,19 @@ test("v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)"
     assertEqual(p.dispelColors.None, nil)
     assertEqual(p.dispelColors.Magic.r, 0.2, "the palette's colors stay")
 end)
+
+-- smoke batch 2, B2-2: the pickers list containers by name, case-insensitively, the id breaking a
+-- tie. Names are unique regardless of case (CM.UniqueName), so a tie is written straight to the store.
+test("database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)", function()
+    local NS = fresh()
+    local cs = NS.db.profile.containers
+    cs[1].name, cs[2].name, cs[3].name, cs[4].name = "zeta", "Alpha", "beta", "ALPHA"
+    local ids = {}
+    for i, c in ipairs(NS.Database.GetContainersByName()) do ids[i] = c.id end
+    -- red under: display order (1,2,3,4), or a byte sort (4,2,3,1: "ALPHA" sorts before "Alpha")
+    assertEqual(table.concat(ids, ","), "2,4,3,1")
+    ids = {}
+    for i, c in ipairs(NS.Database.GetContainers()) do ids[i] = c.id end
+    assertEqual(table.concat(ids, ","), "1,2,3,4", "GetContainers keeps the display order")
+    assertEqual(table.concat(NS.db.profile.containerOrder, ","), "1,2,3,4", "and the store is untouched")
+end)

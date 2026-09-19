@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:233`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:246`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -158,7 +158,7 @@ than one piece STACKS it, one centered row per field, text outside `[ ]` not dra
 `iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
 `iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
 false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
-`animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); running out — `expiringColorOn`
+`animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); the pandemic window — `expiringColorOn`
 (false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
 #7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
 `dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px).
@@ -299,7 +299,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:778`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:791`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -321,7 +321,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
-- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:639`) runs over **every** stored profile,
+- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:652`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
   stamps `global.schemaVersion` to `3`. Only a container whose `auraType` is a known one
   (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
@@ -420,11 +420,11 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   and how many ids were dropped. `filter.hidePermanentEnchants`, the name, the style, every styling
   block and the position carry over untouched. Such a container compiles to the enchant slots and no
   aura group, and `FC.Compile` does not call it one that can never match. The step also clears the
-  profile's `dispelColors.None` leaf, if present (`core/Database.lua:725`): an aura with no dispel
+  profile's `dispelColors.None` leaf, if present (`core/Database.lua:738`): an aura with no dispel
   type takes the surface's own color now (feedback #7), so nothing reads a None swatch any longer.
   The v3 and v4 steps keep their `ENCHANT` handling, because an old profile climbs them before it
   reaches v5.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`

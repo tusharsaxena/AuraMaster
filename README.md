@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1114%2F1114_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1157%2F1157_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -79,7 +79,7 @@ as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname
 with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s` only on an aura with a
 duration). The page lists them all, and a line
 can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
-Animation tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
+Font tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
 tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. A new
 profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
 cooldowns.

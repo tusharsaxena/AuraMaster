@@ -29,7 +29,9 @@ local function build(frame)
     am.cd:SetAllPoints(am.icon)
     am.cd:SetDrawBling(false)
 
-    am.border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    -- A plain frame, never a BackdropTemplate: its size reads secret once the engine lays the button
+    -- out (Style.NewBorder, B2-3).
+    am.border = Style.NewBorder(frame)
     am.border:SetAllPoints(frame)
 
     -- The dispel-type border: a texture the engine sets to Blizzard's own debuff border art for the
@@ -125,8 +127,10 @@ function Icons.Apply(frame, cfg, engine)
     frame:SetSize(w, h)
     local inset = layoutIcon(am, frame, ic, w, h)
     layoutDispel(am, w - 2 * inset, h - 2 * inset)
-    Style.ApplyBorder(am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow), ic.borderStyle,
-        borderSizeOf(ic), ic.borderColor, ic.useClassColorBorder)
+    -- Guarded (B2-3): a border the client refuses costs the border, never Icons.Bind below, which
+    -- re-adds the pandemic highlight and the time color the Clear above removed.
+    Style.GuardedBorder("icon border", am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow),
+        ic.borderStyle, borderSizeOf(ic), ic.borderColor, ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
 
     -- Each text is boxed to the icon's width, so its justification shows.

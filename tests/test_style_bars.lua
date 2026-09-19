@@ -7,6 +7,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local NS = T.NS
 local R = dofile("tests/region_recorder.lua")
+local BS = dofile("tests/border_strips.lua")
 local D = NS.CONTAINER_TEMPLATE
 
 local function cfg(over)
@@ -248,11 +249,7 @@ test("bars: a shown icon border frames the icon's box and the art insets by its 
         iconBorderShow = true, iconBorderStyle = "Solid", iconBorderSize = 3,
         iconBorderColor = { r = 1, g = 0, b = 0, a = 1 } } }))
     -- red under: nothing painting am.iconBorder (the icon-border rows reach no region)
-    assertTrue(am.iconBorder:IsShown())
-    local bd = am.iconBorder:__last("SetBackdrop")[1]
-    assertEqual(bd.edgeSize, 3)
-    assertEqual(bd.edgeFile, NS.Style.Fetch("border", "Solid", NS.Constants.FALLBACK_BORDER))
-    assertEqual(am.iconBorder:__joined("SetBackdropBorderColor"), "1,0,0,1")
+    BS.assertSolid(am.iconBorder, 3, "1,0,0,1", "the icon border")
     assertEqual(am.iconBorder:__joined("SetSize"), "20,20", "the border takes the icon's whole box")
     local b = am.iconBorder:__last("SetPoint")
     assertEqual(b[1], "LEFT"); assertTrue(b[2] == frame)
@@ -298,13 +295,13 @@ test("bars: the icon border takes the class color through its own companion, and
         iconBorderColor = { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, useClassColorIconBorder = true,
         useClassColorBorder = false } }), false, { r = 0.9, g = 0.8, b = 0.7 })
     -- red under: the icon border reading the bar border's companion
-    assertEqual(am.iconBorder:__joined("SetBackdropBorderColor"), "0.9,0.8,0.7,0.5")
+    assertEqual(BS.strips(am.iconBorder)[1]:__joined("SetColorTexture"), "0.9,0.8,0.7,0.5")
     local ns = ownTemplate("iconBorderSize", 5)
     local c = cfg({ bars = { iconBorderShow = true, iconBorderStyle = "Solid" } })
     c.bars.iconBorderSize = nil
     _, am = dressed(c, false, nil, ns)
     -- red under: a missing iconBorderSize read as nothing (no border) or a literal
-    assertEqual(am.iconBorder:__last("SetBackdrop")[1].edgeSize, 5)
+    BS.assertSolid(am.iconBorder, 5, "0,0,0,1", "the template's size")
 end)
 
 -- ── surfaces ──────────────────────────────────────────────────────────────────────────────────
@@ -321,7 +318,7 @@ test("bars: class colors paint the fill, background, spark and border with the d
     assertEqual(am.fill:__joined("SetVertexColor"), "0.9,0.8,0.7,0.5", "fill")
     assertEqual(am.bg:__joined("SetVertexColor"), "0.9,0.8,0.7,0.4", "background")
     assertEqual(am.spark:__joined("SetVertexColor"), "0.9,0.8,0.7,0.3", "spark")
-    assertEqual(am.border:__joined("SetBackdropBorderColor"), "0.9,0.8,0.7,0.2", "border")
+    assertEqual(BS.strips(am.border)[1]:__joined("SetColorTexture"), "0.9,0.8,0.7,0.2", "border")
 end)
 
 test("bars: the class companions left off paint every surface its stored swatch", function()
@@ -356,8 +353,7 @@ test("bars: a missing border size paints the template's, so a border turned on s
     c.bars.borderSize = nil
     local _, am = dressed(c)
     -- red under: applySurfaces handing ApplyBorder the raw borderSize (a missing size hides the border)
-    assertTrue(am.border:IsShown())
-    assertEqual(am.border:__last("SetBackdrop")[1].edgeSize, D.bars.borderSize)
+    BS.assertSolid(am.border, D.bars.borderSize, "0,0,0,1", "the template's size")
 end)
 
 test("bars: a bar border shows only when turned on, with its style, size and color", function()
@@ -365,12 +361,8 @@ test("bars: a bar border shows only when turned on, with its style, size and col
     assertFalse(am.border:IsShown(), "off by default for bars")
     _, am = dressed(cfg({ bars = { borderShow = true, borderStyle = "Solid", borderSize = 3,
         borderColor = { r = 1, g = 0, b = 0, a = 1 } } }))
-    assertTrue(am.border:IsShown())
-    local bd = am.border:__last("SetBackdrop")[1]
     -- red under: applySurfaces handing ApplyBorder the icon style's leaves
-    assertEqual(bd.edgeSize, 3)
-    assertEqual(bd.edgeFile, NS.Style.Fetch("border", "Solid", NS.Constants.FALLBACK_BORDER))
-    assertEqual(am.border:__joined("SetBackdropBorderColor"), "1,0,0,1")
+    BS.assertSolid(am.border, 3, "1,0,0,1", "the bar border")
 end)
 
 test("bars: the refresh-window highlight takes the pandemic color, never a class color", function()
@@ -597,11 +589,50 @@ test("bars: Color by dispel type on the background tints it through the engine, 
     local map = add[2].customDispelColorMap
     local bgc = c.bars.bgColor
     -- red under: the background's map built with the bar color's fallback
-    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","),
-        table.concat({ bgc.r, bgc.g, bgc.b, bgc.a }, ","))
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b }, ","),
+        table.concat({ bgc.r, bgc.g, bgc.b }, ","))
     c.bars.bgColorMode = "static"
     frame = dressed(c, true, nil, NS2)
     assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
+end)
+
+-- ── a dispel-colored surface keeps its opacity (smoke batch 2, item 4) ────────────────────────────
+
+test("bars: a dispel-colored background carries its opacity times its color's alpha on the region, the map opaque", function()
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = {
+        bgColorMode = "dispel", bgAlpha = 0.4, bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 } } })
+    local frame, am = dressed(c, true, nil, NS2)
+    -- red under: the region keeping bgAlpha alone while the engine's tint paints the color at alpha 1
+    assertEqual(am.bg:__last("SetAlpha")[1], 0.2, "0.4 x 0.5 rides the region")
+    assertEqual(am.bg:__last("SetVertexColor")[4], 1, "the color's alpha is not applied twice")
+    local map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
+    -- red under: map entries carrying the color's alpha (the engine drops it: colorRGB)
+    assertEqual(map.None.a, 1, "no type: opaque entry")
+    assertEqual(map.Magic.a, 1, "a palette type: opaque entry")
+end)
+
+test("bars: a dispel-colored fill carries its opacity times its color's alpha on the region", function()
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = {
+        colorMode = "dispel", barAlpha = 0.6, barColor = { r = 0.9, g = 0.5, b = 0.1, a = 0.5 },
+        useClassColorBar = false } })
+    local frame, am = dressed(c, true, nil, NS2)
+    -- red under: the fill keeping barAlpha alone in dispel mode
+    assertEqual(am.fill:__last("SetAlpha")[1], 0.3, "0.6 x 0.5 rides the region")
+    assertEqual(am.fill:__last("SetVertexColor")[4], 1)
+    assertEqual(frame:__last("AddDispelTypeTexture")[2].customDispelColorMap.None.a, 1)
+end)
+
+test("bars: a static background and fill keep the opacity on the region and the color's alpha on the color", function()
+    local _, am = dressed(cfg({ bars = { colorMode = "static", bgColorMode = "static",
+        bgAlpha = 0.4, bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 }, useClassColorBg = false,
+        barAlpha = 0.6, barColor = { r = 0.9, g = 0.5, b = 0.1, a = 0.5 }, useClassColorBar = false } }), true)
+    -- red under: the dispel-mode product applied to a static surface (its alpha then counted twice)
+    assertEqual(am.bg:__last("SetAlpha")[1], 0.4)
+    assertEqual(am.bg:__joined("SetVertexColor"), "0.1,0.2,0.3,0.5")
+    assertEqual(am.fill:__last("SetAlpha")[1], 0.6)
+    assertEqual(am.fill:__joined("SetVertexColor"), "0.9,0.5,0.1,0.5")
 end)
 
 -- ── Color by: dispel type lets go (B-4) ──────────────────────────────────────────────────────────
@@ -713,6 +744,70 @@ test("bars: with the time's class color on, the running-out curve returns to the
     assertEqual(("%s,%s,%s,%s"):format(normal.r, normal.g, normal.b, normal.a), "0.2,0.4,0.6,0.7")
     -- red under: a fresh color table per dress (one curve built per button)
     assertTrue(b:__last("SetDurationText")[2].textColor == curve, "two buttons of one container share one curve")
+end)
+
+-- ── borders on a live button (B2-3) ───────────────────────────────────────────────────────────
+-- Once the engine has laid a button out, every size under it reads secret (tests/wow_mock.lua's
+-- __layOut), and Blizzard's Backdrop raised on it (Backdrop.lua:226) on a restyle: the bar border and
+-- the icon border are drawn with strips now, and a border that still raises costs itself alone.
+
+test("bars: a live re-dress with both borders on under secret geometry draws them and re-binds everything (B2-3)", function()
+    local ns, m = dofile("tests/fresh_env.lua")({ before = dofile("tests/text_apis.lua") })
+    local function c(over) return ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), over) end
+    local borders = { icon = "LEFT", borderShow = true, borderStyle = "Solid", borderSize = 2,
+        borderColor = { r = 1, g = 0, b = 0, a = 1 }, iconBorderShow = true, iconBorderStyle = "Solid",
+        iconBorderSize = 1, iconBorderColor = { r = 0, g = 0, b = 1, a = 1 } }
+    local frame = R()
+    ns.Style.Element(frame, c({ bars = borders }), true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    local am = frame.__am
+    m.__layOut(frame)
+    for _, region in pairs(am) do m.__layOut(region) end
+    frame.__log = {}
+    local after = ns.Database.Merge(ns.Database.DeepCopy(borders), { pandemic = true, expiringColorOn = true })
+    local ok, err = pcall(ns.Style.Element, frame, c({ bars = after }), true)
+    -- red under: SetBackdrop on either laid-out border (the reported Backdrop.lua:226 raise)
+    assertTrue(ok, tostring(err))
+    BS.assertSolid(am.border, 2, "1,0,0,1", "the bar border")
+    BS.assertSolid(am.iconBorder, 1, "0,0,1,1", "the icon border")
+    assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic, "the pandemic highlight is bound again")
+    assertTrue(frame:__last("SetDurationText")[2].textColor ~= nil, "the time text keeps its pandemic-window color")
+end)
+
+--- A live bar re-dressed with `region`'s `method` raising, in an environment whose client error
+--- handler records. Returns whether the re-dress raised, its error, the button, its regions and the
+--- errors reported.
+local function refusedBorder(region, method)
+    local reported = {}
+    local ns = dofile("tests/fresh_env.lua")({ before = function(m)
+        m.geterrorhandler = function() return function(e)
+            local n = #reported
+            reported[n + 1] = tostring(e)
+        end end
+    end })
+    local c = ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), { bars = { icon = "LEFT",
+        borderShow = true, borderStyle = "Solid", iconBorderShow = true, iconBorderStyle = "Solid", pandemic = true } })
+    local frame = R()
+    ns.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    frame.__am[region].__raise[method] = true
+    frame.__log = {}
+    local ok, err = pcall(ns.Style.Element, frame, c, true)
+    return ok, err, frame, frame.__am, reported
+end
+
+test("bars: a border the client refuses costs that border alone: every binding still runs, and it is reported (B2-3)", function()
+    for _, region in ipairs({ "border", "iconBorder" }) do
+        local ok, err, frame, am, reported = refusedBorder(region, "Show")
+        -- red under: Bars.Apply calling ApplyBorder unguarded (the raise takes the whole dress)
+        assertTrue(ok, region .. ": " .. tostring(err))
+        assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic, region .. ": the highlight is bound")
+        assertTrue(frame:__last("SetDurationBar")[1] == am.bar, region .. ": the bar is bound")
+        assertTrue(frame:__last("SetDurationText")[1] == am.time, region .. ": the time text is bound")
+        assertTrue(am.icon:IsShown(), region .. ": the icon art still shows")
+        assertEqual(#reported, 1, region .. ": handed to the client's error handler")
+        assertTrue(reported[1]:find("Show refused", 1, true) ~= nil, reported[1])
+    end
 end)
 
 -- ── preview fill ──────────────────────────────────────────────────────────────────────────────

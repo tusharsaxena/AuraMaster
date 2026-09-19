@@ -187,7 +187,7 @@ test("containers: the picker and New container sit in the band above the strip, 
     assertTrue(headerFrame ~= nil and parents[picker] == headerFrame and parents[new] == headerFrame,
         "both parented into the header frame PageHeader returned")
     assertTrue(H.__pageCtx.containers.__bannerWidget == picker, "the picker is the page's banner widget")
-    assertEqual(table.concat(picker.order, ","), "1,2,3,4")
+    assertEqual(table.concat(picker.order, ","), "1,4,2,3", "by name (B2-2)")
     assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])
 end)
 
@@ -252,7 +252,7 @@ test("containers: Delete keeps the band's picker and New through both refreshes,
     local picker, new = headerWidgets(NS)
     assertTrue(picker ~= nil and not picker.__released, "the band's picker is live after both renders")
     assertTrue(new ~= nil and not new.__released, "and so is New container")
-    assertEqual(table.concat(picker.order, ","), "1,3,4", "the picker lists the remaining containers")
+    assertEqual(table.concat(picker.order, ","), "1,4,3", "the picker lists the remaining containers, by name")
     local live = 0
     for _, w in ipairs(P.all(after, "Dropdown", NS.L["Container"])) do
         if not w.__released then live = live + 1 end
@@ -438,18 +438,24 @@ test("containers: a duplicate and a copy-from keep the source's Fill (B5)", func
     assertEqual(NS.Database.FindContainer(1).layout.axis, "vertical")
 end)
 
-test("containers: New and Duplicate in combat refuse in gray and create nothing", function()
+test("containers: in combat the library refuses Duplicate; New reaches CM.Create's own gray refusal; nothing is created", function()
     local NS, m, P, ws = containers()
     local lines = P.chat()
     m.__lockdown = true
     P.find(ws, "Button", NS.L["Duplicate"]):__fire("OnClick")
+    -- LibKa0s v1.46.1 (options-ui-§2): a library-drawn button is refused by the settings combat lock
+    -- first, on its own gray line, once per combat; doDuplicate never runs.
+    -- red under: the library's write seam not refusing the button pair in combat
+    assertEqual(#lines, 1, "the lock's one notice")
+    assertTrue(lines[1]:find(m.LibStub("LibKa0s-Options-1.0").STRINGS.COMBAT_LOCKED_NOTICE, 1, true) ~= nil, lines[1])
+    -- New container is the host's own chrome button: in the client the lock's cover sits over it; a
+    -- click that still arrives meets CM.Create's gate, the one /am new meets (test_slash.lua pins
+    -- that path), since the create's apply cannot run until combat ends.
     P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
     -- red under: sayError printing a refusal plain, or a page act bypassing the combat refusal
+    assertEqual(#lines, 2, "one refusal from the create gate")
+    assertTrue(lines[2]:find("|cff808080cannot create a container during combat", 1, true) ~= nil, lines[2])
     assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS)
-    assertEqual(#lines, 2, "one refusal each")
-    for _, l in ipairs(lines) do
-        assertTrue(l:find("|cff808080cannot create a container during combat", 1, true) ~= nil, l)
-    end
 end)
 
 test("containers: Duplicate copies the selected container and selects the copy", function()
@@ -492,7 +498,8 @@ test("containers: the copy block offers every other container and copies only th
     local source = P.find(ws, "Dropdown", NS.L["Source container"])
     local what = P.find(ws, "Dropdown", NS.L["What to copy"])
     -- red under: the source list including the selected container (a copy onto itself)
-    assertEqual(table.concat(source.order, ","), "2,3,4")
+    -- by name (B2-2): Player cooldowns, Player debuffs, Target debuffs (mine)
+    assertEqual(table.concat(source.order, ","), "4,2,3")
     assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons,text")
     source:__fire("OnValueChanged", 2)
     what:__fire("OnValueChanged", "bars")
@@ -500,6 +507,11 @@ test("containers: the copy block offers every other container and copies only th
     local c1 = NS.Database.FindContainer(1)
     assertEqual(c1.bars.width, 123, "the chosen section came across")
     assertEqual(c1.layout.spacing, NS.CONTAINER_TEMPLATE.layout.spacing, "and nothing else did")
+    -- Mixed case (B2-2), written straight to the store: red under a byte sort (Zeta, alpha, beta)
+    local cs = NS.db.profile.containers
+    cs[2].name, cs[3].name, cs[4].name = "beta", "Zeta", "alpha"
+    source = P.find(P.rerender("Containers"), "Dropdown", NS.L["Source container"])
+    assertEqual(table.concat(source.order, ","), "4,2,3")
 end)
 
 test("containers: copying Everything takes what the source is, never its name or position", function()

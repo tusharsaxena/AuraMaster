@@ -401,10 +401,10 @@ ev:RegisterMessage(NS.MSG.CONTAINERS_CHANGED, function() NS.RequestPanelRefresh(
 
 local C = NS.Constants
 
---- The picker's entries: every container, labeled with what it shows.
+--- The picker's entries: every container, labeled with what it shows, by name (B2-2).
 local function containerList()
     local list, order = {}, {}
-    for _, c in ipairs(NS.Database.GetContainers()) do
+    for _, c in ipairs(NS.Database.GetContainersByName()) do
         list[c.id] = ("%s  |cff888888(%s %s, %s)|r"):format(tostring(c.name),
             L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
             L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)]:lower(),

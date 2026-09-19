@@ -206,7 +206,7 @@ test("preview: switching Color by from dispel type back to static leaves no disp
     for i, got in ipairs(fills()) do assertEqual(got, own, "static: placeholder " .. i .. " paints the bar color") end
 end)
 
-test("preview: a background colored by dispel type stands in with Magic, keeping its own alpha (feedback #7)", function()
+test("preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)", function()
     local c = cfg({ style = "bars", bars = { bgColorMode = "dispel", useClassColorBg = false,
         bgColor = { r = 0, g = 0, b = 0, a = 0.5 } } })
     local k = container(c)
@@ -219,7 +219,9 @@ test("preview: a background colored by dispel type stands in with Magic, keeping
     local m = NS.db.profile.dispelColors.Magic
     for i, f in ipairs(k.previewPools.bars.active) do
         -- red under: the preview painting the background its static color whatever its Color by
-        assertEqual(f.__am.bg:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 0.5 }, ","), "placeholder " .. i)
+        assertEqual(f.__am.bg:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 1 }, ","), "placeholder " .. i)
+        -- red under: the color's alpha dropped in dispel mode (it rides the region: item 4)
+        assertEqual(f.__am.bg:__last("SetAlpha")[1], NS.CONTAINER_TEMPLATE.bars.bgAlpha * 0.5, "placeholder " .. i .. " alpha")
     end
 end)
 

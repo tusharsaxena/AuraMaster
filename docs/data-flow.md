@@ -30,10 +30,10 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:343
+ 4  Container:Apply                                            modules/Container.lua:351
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
-        │  structure = #groups : enchant slots (hide-permanent) : style
+        │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
         │     same as the live engine → Update in place, then Restyle every button
         │     different              → Retire the old engine, Build a new one
         │  ApplyVisibility
@@ -43,7 +43,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:560
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:763
         │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -125,16 +125,16 @@ only when the direction moved), cap and layout can change on a live engine; hide
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
 `FilterCompiler.Signature` (`modules/FilterCompiler.lua:758`) and re-sent only when the two
-signatures differ (`modules/Container.lua:289-290`), because the engine clears and re-gathers a
+signatures differ (`modules/Container.lua:292-300`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:263`).
+`SetUnit` last (`modules/Container.lua:265`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:400`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:425`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),

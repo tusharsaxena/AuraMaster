@@ -56,7 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (72)
+### test_database.lua (73)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -130,6 +130,7 @@ badge and any count quoted in the docs must agree with it.
 - v5: RunMigrations converts every stored profile, and the result draws enchants only (feedback #6)
 - v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
+- database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
 
 ### test_schema.lua (29)
 
@@ -279,7 +280,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
 
-### test_container.lua (46)
+### test_container.lua (50)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -308,10 +309,14 @@ badge and any count quoted in the docs must agree with it.
 - container: a unit change is sent to the live engine once
 - container: switching style rebuilds the engine even when the filter plan keeps its shape
 - container: a text template of a new shape rebuilds the engine; one of the same shape restyles it
+- container: flipping Grow vertically retires the engine and pins the new one at the new corner, before its first group
+- container: flipping Grow horizontally retires the engine and pins the new one at the new corner, before its first group
+- container: a spacing, per-line or fill change keeps the corner and updates the engine in place
 - container: a buff container showing only Weapon enchants draws the engine's three slots and no aura group (feedback #6)
 - container: an enchant slot the engine refuses costs that slot, not the build
 - container: an engine call that raises is traced, and the build carries on to the unit
 - container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses
+- container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)
 - container: an instance whose container is gone applies nothing and touches no engine
 - container: the anchor's scale is the container's times the master's, never below a tenth
 - container: the anchor's alpha is the container's times the master's
@@ -440,7 +445,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (71)
+### test_anchors.lua (72)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -501,6 +506,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: the engine's flow, the placeholders and the handle all read the inherited flow
 - anchors: detaching a container restores its own stored flow at the next apply
 - anchors: a write that moves a container's flow re-applies every container following it
+- anchors: a parent's growth flip rebuilds its follower's engine, pinned at the derived corner, and re-anchors it to the parent's new engine
 - anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
 - anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
@@ -543,7 +549,7 @@ badge and any count quoted in the docs must agree with it.
 - template: every built-in compiles, and each aura type's list is the pinned one
 - template: a stored template matches a built-in by its text and its justify rule, else none
 
-### test_style.lua (51)
+### test_style.lua (59)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -574,11 +580,19 @@ badge and any count quoted in the docs must agree with it.
 - style: a text's color is its own swatch, or the dress's class when its companion is on
 - style: a missing color paints opaque white rather than raising
 - style: a border is hidden when off, styled None, or without a positive size
-- style: a shown border takes the media edge, its size and its color
+- style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
+- style: a Solid border takes the class color through its companion (B2-3)
+- style: a Solid border under a secret size draws and never raises (B2-3)
+- style: another style draws a backdrop on a frame of its own, with its edge, size and color (B2-3)
+- style: another style applies its backdrop once per edge and size, and again when either moves (B2-3)
+- style: another style under a secret size keeps its last backdrop and only recolors (B2-3)
+- style: a backdrop frame first made under a secret size applies nothing until its size reads plain (B2-3)
+- style: switching between Solid and another style hides the other drawing (B2-3)
+- style: another style on a client without the backdrop mixin draws nothing and never raises
 - style: a binding the client lacks is skipped, and one it refuses costs that binding alone
 - style: a class color is looked for only in the active style's block, text blocks included
 - style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color
-- style: a dispel color map's None entry is the surface's own color, and every entry its alpha (feedback #7)
+- style: a dispel color map's None entry is the surface's own color, and every entry opaque (feedback #7, item 4)
 - style: tooltips and click-through decide whether a button takes the mouse at all
 - style: right-click cancel reaches the player's buffs and their enchant slots, never the player's debuffs, and never when turned off
 - style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
@@ -619,7 +633,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (57)
+### test_style_bars.lua (62)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -663,6 +677,9 @@ badge and any count quoted in the docs must agree with it.
 - bars: every shown region is bound to its own engine field
 - bars: dispel coloring tints the fill through the engine with the stored dispel colors
 - bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)
+- bars: a dispel-colored background carries its opacity times its color's alpha on the region, the map opaque
+- bars: a dispel-colored fill carries its opacity times its color's alpha on the region
+- bars: a static background and fill keep the opacity on the region and the color's alpha on the color
 - bars: switching Color by from dispel type back to static paints the bar's own color again
 - bars: back to static on a button holding no aura, the fill the engine hid shows again
 - bars: in dispel mode the engine's tint stays the fill's last color
@@ -670,6 +687,8 @@ badge and any count quoted in the docs must agree with it.
 - bars: back to static on a button holding no aura, the background the engine hid shows again (feedback #7)
 - bars: the refresh-window highlight is bound only when turned on, and always cleared first
 - bars: with the time's class color on, the running-out curve returns to the class color, one curve per container
+- bars: a live re-dress with both borders on under secret geometry draws them and re-binds everything (B2-3)
+- bars: a border the client refuses costs that border alone: every binding still runs, and it is reported (B2-3)
 - bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
 - bars: a preview with a missing icon gap measures the template's gap, as the layout does
 - bars: a missing icon size is the template's, in the layout and in the preview alike
@@ -679,7 +698,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: a dispel-colored preview paints the Magic color, since no real aura names a type
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (25)
+### test_style_icons.lua (28)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -703,16 +722,23 @@ badge and any count quoted in the docs must agree with it.
 - icons: the refresh-window highlight is bound only when on, in the pandemic color
 - icons: an icon's buttons get the shared mouse behavior
 - icons: a restyle re-dresses the regions it built, and builds none
+- icons: a live re-dress with the border on under secret geometry re-binds the highlight and the time color (B2-3)
+- icons: a border the client refuses costs the border alone: every binding still runs, and it is reported (B2-3)
+- icons: a live resize under secret geometry runs no backdrop arithmetic (B2-3)
 - icons: a preview icon's cooldown starts as long ago as its placeholder has run
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (45)
+### test_style_text.lua (54)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
 - text style: Right lays the last piece at the area's right and each earlier piece against the next
 - text style: the vertical justify picks the top, middle or bottom anchor points
+- text style: each chained piece is pulled back over the previous one by the measured padding (item 8)
+- text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)
+- text style: the padding is measured once per font, size and flags (item 8)
+- text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)
 - text style: Center centers a one-piece template as one line, exactly as before (feedback #1)
 - text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)
 - text style: a stacked line's element grows to its rows; Left and Right keep the stored height (feedback #1)
@@ -736,6 +762,11 @@ badge and any count quoted in the docs must agree with it.
 - text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
 - text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
 - text style: an icon on the right insets the area's right edge; none hides it and binds nothing
+- text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
+- text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported
+- text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
+- text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time
+- text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)
 - text style: a refused stored template draws the default one and logs it once
 - text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
 - text style: the structure key carries the template's shape, so a live shape change gets new buttons
@@ -768,7 +799,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
-- preview: a background colored by dispel type stands in with Magic, keeping its own alpha (feedback #7)
+- preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)
 - preview: switching a previewed container from bars to icons re-dresses without error
 - preview: switching a previewed container from icons to bars re-dresses without error
 - preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
@@ -944,7 +975,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the degraded stub completes the load — every page's rows still register
 - options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
-### test_options_descriptor.lua (18)
+### test_options_descriptor.lua (19)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -952,8 +983,9 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Reset all writes only session rows through the seam and resets only the active profile
 - options descriptor: Reset all never writes a Profiles-page row, live or degraded
 - options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
-- options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
+- options descriptor: the banner lists every container by name and ignores a re-pick of the selection
 - options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)
+- options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
@@ -1031,7 +1063,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: re-choosing the same Style keeps a Fill set by hand (B5)
 - containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)
 - containers: a duplicate and a copy-from keep the source's Fill (B5)
-- containers: New and Duplicate in combat refuse in gray and create nothing
+- containers: in combat the library refuses Duplicate; New reaches CM.Create's own gray refusal; nothing is created
 - containers: Duplicate copies the selected container and selects the copy
 - containers: Delete asks first, naming the container, and deletes it only on Yes
 - containers: the copy block offers every other container and copies only the chosen section
@@ -1086,7 +1118,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (22)
+### test_pages_layout.lua (27)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
 - layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
@@ -1110,8 +1142,13 @@ badge and any count quoted in the docs must agree with it.
 - layout: a screen or frame container's growth rows are its own and live, with no follow line
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
+- layout: every Point and Relative point row places the first aura, since the container's full size is secret
+- layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
+- layout: the hint names the growth to pick instead, one line per facing axis
+- layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
+- layout: choosing a facing Point redraws the tab with the hint on the next frame
 
-### test_pages_bars.lua (12)
+### test_pages_bars.lua (14)
 
 - bars: every tab of an icons container carries the muted-red note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
@@ -1122,11 +1159,13 @@ badge and any count quoted in the docs must agree with it.
 - bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
-- bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+- bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+- bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
+- pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
-### test_pages_icons.lua (7)
+### test_pages_icons.lua (8)
 
 - icons: a bars container's tabs carry the muted-red note; an icons container's carry none
 - icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
@@ -1134,11 +1173,12 @@ badge and any count quoted in the docs must agree with it.
 - icons: the six tabs are drawn in order
 - icons: Width on the Icons page writes the icon width, never the bar width
 - icons: the Cooldown rows write the selected container's swipe
+- icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (25)
+### test_pages_text.lua (28)
 
-- text page: the four tabs are drawn in order
+- text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: a bars or icons container sees every row disabled under the note naming its style
 - text page: the Bars and Icons pages name the text style on a text container
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
@@ -1148,10 +1188,13 @@ badge and any count quoted in the docs must agree with it.
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
+- text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
 - text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
 - text page: each loop row is live only for the effects that use it
-- text page: without a duration token the running-out rows dim, except the swatch, under a note
-- text page: the blink row is engine-only, and the Font tab carries the composed font block and time format
+- text page: without a duration token the pandemic-window rows dim, except the swatch, under a note
+- text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)
+- text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
+- text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
 - text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
@@ -1162,7 +1205,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
 - text page: an already-doubled || in a custom template still doubles each pipe (final review)
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
-- text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)
+- text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
 
 ### test_pages_about.lua (3)
 
@@ -1280,24 +1323,24 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 20 |
-| test_database.lua | 72 |
+| test_database.lua | 73 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
-| test_container.lua | 46 |
+| test_container.lua | 50 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 71 |
+| test_anchors.lua | 72 |
 | test_texttemplate.lua | 26 |
-| test_style.lua | 51 |
+| test_style.lua | 59 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 57 |
-| test_style_icons.lua | 25 |
-| test_style_text.lua | 45 |
+| test_style_bars.lua | 62 |
+| test_style_icons.lua | 28 |
+| test_style_text.lua | 54 |
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -1307,14 +1350,14 @@ badge and any count quoted in the docs must agree with it.
 | test_slash_verbs.lua | 42 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
-| test_options_descriptor.lua | 18 |
+| test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 38 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 43 |
-| test_pages_layout.lua | 22 |
-| test_pages_bars.lua | 12 |
-| test_pages_icons.lua | 7 |
-| test_pages_text.lua | 25 |
+| test_pages_layout.lua | 27 |
+| test_pages_bars.lua | 14 |
+| test_pages_icons.lua | 8 |
+| test_pages_text.lua | 28 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1328,4 +1371,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1114** |
+| **Total** | **1157** |
