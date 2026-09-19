@@ -49,7 +49,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.45.0 | Ten modules wired, one setup file each — table below |
+| LibKa0s v1.46.1 | Ten modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -425,6 +425,16 @@ return value.
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
   `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:366`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
+- **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
+  page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header
+  band, the container band and the tab strip included — by the library's gray "Settings are locked
+  during combat." cover; nothing renders, and every write through the options surface (a control,
+  Defaults, a library-drawn button, a tab click) is refused with one gray notice per combat, until
+  `PLAYER_REGEN_ENABLED` lifts the cover and draws the page from current state. Nothing of ours
+  touches Blizzard's settings window in combat (closing it from addon code ran its commit path
+  tainted). This addon keeps no page-level lock of its own; its act-level gates stay, since each also
+  serves a slash verb: `CM.Create` (New, Duplicate, `/am new`), the Delete popup (`/am delete`) and
+  the frame picker (`/am pick`), which closes the settings window only out of combat.
 - **Teardown under lockdown is parked, never hidden.** A container that leaves the registry while
   `MustDefer` is true is parked (`Container:Park`): its engine is disabled through `SetEnabled`, its
   preview and handle (our own frames) are hidden, and the anchor and engine ancestry are left alone.

@@ -225,10 +225,10 @@ suite covers what only the client can show.
 
 ## I. Combat deferral
 
-46. **Enter combat** (a training dummy) and change a container's bar width or a filter → chat prints
-    once: `[AM] Aura Master settings changes will apply when combat ends.`; nothing changes on screen.
-    Leave combat → the change lands with no reload and no error. In combat, `/am lock` and a rename
-    print no notice. With a target container's border on class color, target a player
+46. **Enter combat** (a training dummy) and change a container's bar width or a filter with `/am set`
+    (the settings window is locked in combat, item 46a) → chat prints once: `[AM] Aura Master settings
+    changes will apply when combat ends.`; nothing changes on screen. Leave combat → the change lands
+    with no reload and no error. In combat, `/am lock` and a `/am set` rename print no notice. With a target container's border on class color, target a player
     of another class and pull at once → no notice prints (you changed no setting), and the border
     takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →
     the change waits until the key or encounter ends, even if you drop combat between pulls. A change
@@ -237,20 +237,31 @@ suite covers what only the client can show.
     there prints the combat line; nothing more prints the moment combat ends, and the next change
     still held after the pull prints the restriction line once.
 47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
-    warning, and the panel does not pop open when combat ends. `/am resetall`, and General → **Reset
-    all settings** → **Yes**, reset the profile in combat just as Profiles → Reset Profile does: the
-    acknowledgment prints and no gray line. After either reset, or a switch to a profile without one
+    warning, and the panel does not pop open when combat ends. `/am resetall`, and a General → **Reset
+    all settings** popup opened before the pull and answered **Yes** in combat, reset the profile in
+    combat: the acknowledgment prints and no gray line. The button itself, clicked in combat, is
+    refused by the settings lock (item 46a). After either reset, or a switch to a profile without one
     of your containers, in combat → that container stops drawing, is torn down when combat ends, and
     no taint warning appears. Point container 1 at focus first: after the reset (or a switch or copy)
     in combat it draws nothing, never focus auras under the reset container's name, and once combat
     ends it draws the new container 1 (player buffs).
 
+46a. **The settings lock (LibKa0s v1.46.1).** Open the settings on a Bars page, then pull a dummy:
+    the whole page, the container band and the tab strip included, goes under a gray "Settings are
+    locked during combat." cover. Clicking, dragging, typing, a tab, Defaults, Duplicate: nothing
+    changes, and one gray `settings are locked during combat — changes are refused until it ends`
+    line prints for the whole combat. Switch category in the AddOns sidebar in combat → the new page
+    shows covered; no error (`/console scriptErrors 1`), no `ADDON_ACTION_BLOCKED`, and the window
+    stays open. Change a value with `/am set` in combat, then leave combat → the covers lift and the
+    page shows the new value. A second combat prints the line once more.
+
 ## J. Blizzard frames
 
 48. General → Display → **Hide Blizzard buffs** → the default buff frame disappears (with its weapon
-    enchants); **Hide Blizzard debuffs** → the default debuff frame goes. Untick → both return. Tick one
-    in combat → chat prints `[AM] Aura Master settings changes will apply when combat ends.` once
-    (tick the other too: still one line), and it applies when combat ends. No taint warnings on any
+    enchants); **Hide Blizzard debuffs** → the default debuff frame goes. Untick → both return. Set one
+    in combat with `/am set hideBlizzardBuffs true` (the page itself is locked in combat, item 46a) →
+    chat prints `[AM] Aura Master settings changes will apply when combat ends.` once (set the other
+    too: still one line), and it applies when combat ends. No taint warnings on any
     of this.
 
 ## K. Mouse

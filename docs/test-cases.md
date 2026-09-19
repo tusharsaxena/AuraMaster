@@ -1047,7 +1047,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: re-choosing the same Style keeps a Fill set by hand (B5)
 - containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)
 - containers: a duplicate and a copy-from keep the source's Fill (B5)
-- containers: New and Duplicate in combat refuse in gray and create nothing
+- containers: in combat the library refuses Duplicate; New reaches CM.Create's own gray refusal; nothing is created
 - containers: Duplicate copies the selected container and selects the copy
 - containers: Delete asks first, naming the container, and deletes it only on Yes
 - containers: the copy block offers every other container and copies only the chosen section

@@ -49,8 +49,14 @@ only the tree entry is marked.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
   pages offer changes with it. Every `CONTAINERS_CHANGED` does the same.
-- **A tab switch is not combat-guarded** (options-ui-§13); opening the window or a category is
-  refused under lockdown with the library's gray notice (options-ui-§2).
+- **In combat a page is locked, by the library alone** (LibKa0s v1.46.1, options-ui-§2, §13). A page
+  shown in combat, or open when combat starts, is covered whole, its bands and tab strip included,
+  by a gray "Settings are locked during combat." cover and is not rendered; writes, Defaults,
+  library-drawn buttons and tab switches are refused with one gray notice per combat
+  (`settings are locked during combat — changes are refused until it ends`); the window is never
+  closed. At `PLAYER_REGEN_ENABLED` the cover lifts and the page draws from current state, so a value
+  `/am set` changed in combat shows. This addon adds no page or tab guard of its own. Opening the
+  window or a category is refused under lockdown with the library's gray notice.
 
 ## The container banner and the one-row band
 
