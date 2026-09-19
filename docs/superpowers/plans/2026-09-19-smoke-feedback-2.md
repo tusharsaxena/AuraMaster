@@ -62,14 +62,16 @@ Tag, push, merge and version bumps of addons still wait for the owner.
 
 ## Status ledger (update after every task)
 
+**Current position (2026-09-19):** all tasks done. Awaiting the owner's go-ahead to merge `feat/smoke-feedback-2` and push, and the in-game checks in `docs/smoke-tests.md` section U (143-155).
+
 Resume at the first row that is not `done`. `blocked` rows wait on the owner (the Notes say for what).
 Dependencies: 1 → 2 → owner tag → 11 → 12. Tasks 3–10 are independent of 1–2 but share Aura Master's
 tree, so they run one at a time. 13 is last.
 
 | # | Task (spec section) | Repo | Status | Notes |
 |---|---|---|---|---|
-| 1 | Standard v2.60.0 — options-ui-§2 combat lock, §13 tab rule, anti-pattern, ripple ("⚔ Standard") | WowAddonStandards | todo | stops before push |
-| 2 | LibKa0s v1.46.0 — the combat cover, refused writes, regen handling, tests, docs/api, CHANGELOG, release bundle ("⚔ Design") | LibKa0s | todo | stops before tag/push |
+| 1 | Standard v2.60.0 — options-ui-§2 combat lock, §13 tab rule, anti-pattern, ripple ("⚔ Standard") | WowAddonStandards | done | v2.60.0 5ffbf6d, then v2.60.1 4806a3b; pushed |
+| 2 | LibKa0s v1.46.0 — the combat cover, refused writes, regen handling, tests, docs/api, CHANGELOG, release bundle ("⚔ Design") | LibKa0s | done | v1.46.0 7ae1763+048edd1, tagged and pushed; v1.46.1 3c95cf0+6504429 (the stand-down fix), tagged and pushed |
 | 3 | Item 1 — growth corner in the structure key; Point rows reworded; facing-growth hint | AuraMaster | done | T3 commit: corner in Container:Apply structure key; Point rows = first aura; hint Named frame only; +9 tests (1123/1123), inventory + badge regenerated |
 | 4 | Item 4 — dispel-colored bar background / fill honour opacity | AuraMaster | done | T4 commit: dispel map entries opaque; dispel-mode region SetAlpha(opacity x color alpha), static unchanged; smoke 126 gains the in-combat alpha check (child-frame fallback not built); +3 tests (1126/1126) |
 | 5 | Item 7 — report swallowed re-dress errors; anchor text before the icon; guard the icon/border block | AuraMaster | done | T5 commit: Style.ReportError (a [Style] debug line each time, geterrorhandler once per session per first line) from Container:Restyle and the Text icon block; text area anchored before any icon call; icon block pcall-guarded, a refusal hides the icon; smoke 99 gains the debug re-run; +4 tests (1130/1130) |
@@ -78,6 +80,6 @@ tree, so they run one at a time. 13 is last.
 | 8 | Item 5 — Dispel type subsection moves to Text → Font | AuraMaster | done | T8 commit: the five rows (dispelTypeColor, dispelBackdrop, dispelBackdropAlpha, dispelEdge, dispelEdgeSize) move to G_FONT after Countdown; paths/values unchanged, no migration; two page tests follow; settings-panel, README, ARCHITECTURE, smoke 130; 1136/1136 |
 | 9 | Item 3 — the Justify Center note | AuraMaster | done | T9 commit: justifyNote (gray TextRow, always) between the justify pair and the offsets; the spec text kept, "can't" as "cannot"; renderGeneral splits Placement; smoke 141; +1 test (1137/1137) |
 | 10 | Item 2 — typeless-debuff wording; probe recorded in docs | AuraMaster | done | T10 commit: both Color by tooltips and the General -> Dispel Colors line say buffs and many debuffs (Judgment, Consecration) have no type (the Dispel Colors line also now points at Text -> Font, a T8 leftover); midnight-quirks "Many debuffs carry no dispel type" with the probe, output pending; smoke 142; 1137/1137. Probe output owed by owner |
-| 11 | Re-vendor LibKa0s v1.46.0 into Aura Master | AuraMaster | done | T11 commit: v1.46.1 vendored whole (Options, OptionsTabs, OptionsWidgets changed; kit rev 23 unchanged; both diffs empty); CLAUDE.md, DEPENDENCIES.md, ARCHITECTURE provenance rolled; the Containers combat test now expects the library's notice from Duplicate and CM.Create's gray line from the host chrome New (the /am new path pinned in test_slash.lua); no host page-level lock found; stand-down suite green without changes; taint note, settings-panel, smoke 46/46a/47/48; 1137/1137 |
-| 12 | Re-vendor LibKa0s v1.46.0 into the other ten consumers (`chore/libka0s-v1.46.0`) | 10 repos | todo | after owner tags |
-| 13 | Final gate (tests, lint, lizard, perf), smoke section U, test-case inventory | AuraMaster | todo | |
+| 11 | Re-vendor LibKa0s v1.46.1 into Aura Master | AuraMaster | done | T11 commit: v1.46.1 vendored whole (Options, OptionsTabs, OptionsWidgets changed; kit rev 23 unchanged; both diffs empty); CLAUDE.md, DEPENDENCIES.md, ARCHITECTURE provenance rolled; the Containers combat test now expects the library's notice from Duplicate and CM.Create's gray line from the host chrome New (the /am new path pinned in test_slash.lua); no host page-level lock found; stand-down suite green without changes; taint note, settings-panel, smoke 46/46a/47/48; 1137/1137 |
+| 12 | Re-vendor LibKa0s v1.46.1 into the other ten consumers (`chore/libka0s-v1.46.1`) | 10 repos | done | merged and pushed: PFE 1e37595, BankLedger 0edcff4, PanelMaster 31a7ee0, ConsumableMaster dd78f2b, KickCD cd8fb2a, PrettyChat 0fd4b19, LootHistory f059dd3, WhatGroup e250cce, AbsorbTracker def0af5, MultiMeters 565f9c4 |
+| 13 | Final gate (tests, lint, lizard, perf), smoke section U, test-case inventory | AuraMaster | done | T13 commit: 1137/1137, luacheck 0/0, lizard prints nothing, perf green (10 scenarios, applyPass 30.0 engine calls over 4 containers, 200 writes coalesced into 1 pass); smoke section U (143-155); inventory and badge already current (1137) |

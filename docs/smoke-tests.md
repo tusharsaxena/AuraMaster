@@ -795,3 +795,95 @@ debuff container on the target, in a party or with a target dummy.
      `docs/midnight-quirks.md` → "Many debuffs carry no dispel type"; copy the output there. The Bars
      page's Color by tooltips and General → Dispel Colors say buffs and many debuffs have no dispel
      type (Judgment, Consecration), and the Dispel Colors line points at Text → Font.
+
+## U. The smoke-test feedback batch 2 (2026-09-19)
+
+Run with `/console scriptErrors 1` throughout, one bar container on the target's debuffs, one Text
+container on the player's buffs (an icon on the left, its border on), one icons container, and one
+container attached to `PlayerFrame`, near a target dummy. Where an earlier item already holds the
+detail, the step points at it rather than repeating it.
+
+143. **The settings lock covers every page (⚔).** Item 46a first, on a Bars page. Then, one combat
+     each (or one long pull), show every page in turn: General, Containers, Layout, Filters, Bars,
+     Icons, Text, Profiles and About → each is under the gray "Settings are locked during combat."
+     cover, the header band (the Container picker, New container, Duplicate) and the tab strip
+     included. On each: a click on a checkbox, a drag of a slider, typing in a box (Template, a
+     spell ID), Defaults and a tab click change nothing; the value on screen after combat is the one
+     from before the pull. A widget that moves, a tab that switches, or a value that lands after combat
+     is a defect.
+144. **Switching category in combat (⚔).** With the settings open, pull, then click other Aura Master
+     categories (and another addon's) in the Blizzard AddOns sidebar → each shows covered, the window
+     stays open, no Lua error, no `ADDON_ACTION_BLOCKED` and no "C stack overflow" in chat or the error
+     frame (`scriptErrors 1` stays silent). The gray `settings are locked during combat — changes are
+     refused until it ends` line prints **once** per combat however many pages you show or click; a
+     second pull prints it once more. Leave combat → the cover lifts on the page you are on, its
+     controls work at once, and it shows current values: a value changed with `/am set` during the pull
+     (item 46) is shown, with no reload and no re-open. A window that closes itself, or a page that stays
+     covered after combat, is a defect.
+145. **A Reset-all confirmation open at the pull (⚔, accepted).** General → **Reset all settings**, leave
+     the popup up, pull, then **Accept** in combat → the profile resets (item 47: the acknowledgment
+     prints, no gray line). The owner accepted this: the popup is Blizzard's, opened before combat, and
+     not part of the locked page. Clicking the button itself in combat stays refused (item 46a).
+146. **Growth flips without a reload (item 1).** Out of combat, and not in test mode:
+     - The screen-attached bar container, Layout → Growth, Grow vertically Down → Up → the bars stack up
+       from where the first one sat, nothing hangs below it, the handle (`/am unlock`) moves below the
+       block (item 14). Back to Down → they stack down again.
+     - The icons container, Grow horizontally Right → Left, then back → likewise, sideways.
+     - The container attached to `PlayerFrame`: the same two flips → the first aura keeps its attached
+       corner and the others grow the new way.
+     - A follower (item 67): container B attached to A; flip A's Grow vertically → B moves to A's other
+       side and its own auras follow A's new direction, B's own settings unchanged.
+     Every flip shows real auras at once, with no `/reload`. A block that hangs across its anchor until a
+     reload is the old bug.
+147. **The reworded Point rows and the facing-growth hint (item 1).** Layout → Anchor on the
+     `PlayerFrame`-attached container (Attach to: Named frame): Point's tooltip says it is the corner of
+     the container's **first aura** that is attached (its full size is secret), Relative point the
+     corner of the target that point is attached to. Set Point Bottom left, Grow vertically Down and
+     Grow horizontally Right → a hint under the tab's rows reads "Point is Bottom left and Grow
+     vertically is Down, so the auras grow back over the frame this container is attached to. Set Grow
+     vertically to Up on the Growth tab instead." Point Top left with Up → the same hint, suggesting
+     Down; a Left point with Grow horizontally Left (and a Right point with Right) → the horizontal
+     hint; Bottom left with Down and Left → both lines, the vertical one first. A pair that does not face
+     → no hint, and changing Point or the growth redraws it at once. On Screen and Another container
+     there is no hint at all (named-frame mode only); the Screen rows' tooltips speak of the first
+     aura too.
+148. **Dispel-mode bar opacity (item 4).** Item 126's last paragraph in full: Color by Dispel type,
+     Background opacity 20% → a typed (Magic, Curse) and a typeless debuff (a Paladin's Judgment) each
+     show a see-through background, and the fill likewise at 20% Bar opacity. Out of combat first; then
+     in combat, on debuffs applied after the pull. Report both, and whether the region alpha lands in
+     combat: a background that goes opaque in combat only means the engine refused `SetAlpha` on the
+     dispel texture (the child-frame fix is then owed).
+149. **The Text style's Enrage stays invisible (item 138 carry).** A Text container on the target's
+     buffs with Color the dispel type, Backdrop in the dispel color and Edge in the dispel color all on,
+     on a mob with an Enrage-type buff (an enraged dungeon mob) → the line has no tint on its type
+     word, no backdrop box and no edge, the same as a typeless aura. The code hands the engine a
+     transparent color for a type the palette does not cover; a box or edge that shows (white, or any
+     color) means the engine dropped that color's alpha: report it, with the mob and the buff's name.
+150. **The Text icon and its border (item 6).** Item 99's first paragraph: with Icon position None the
+     Icon tab's rows are dimmed under the gray "Set Icon position to show the icon." note, while Icon
+     position and the border's color swatch stay live (a color swatch never dims, options-ui-§17). Icon
+     Left → the rows go live, the note goes; Show border on, thickness 2, red → a red border frames
+     the icon on every line.
+151. **The moved Dispel type rows (item 5).** Item 130's last lines: Text → Font carries the Dispel
+     type subsection (Color the dispel type, Backdrop in the dispel color, Backdrop opacity, Edge in the
+     dispel color, Edge thickness) under Countdown; Text → Animation no longer does; values set before
+     the move are kept.
+152. **The Justify note (item 3).** Item 141.
+153. **Item 7's sequence, instrumented.** `/am debug` and `/console scriptErrors 1`, the Text container
+     with its icon on the left and its border on, auras showing. Change Text → General → **Width (px)**
+     several times (drag the slider, then type values), then the other Text settings one after another
+     as item 99 says → every line keeps its text and its icon. If rows go empty (bordered squares, no
+     text), copy the `[Style] … failed:` debug line and the one Lua error that names it, word for word:
+     that named line decides the next fix. Rows that go empty with no such line are a defect too:
+     report the exact steps.
+154. **The owner's all-tokens template (item 8).** Item 140 with the owner's own template, Justify Left
+     and then Right → no gap either side of a separator between two non-empty fields. If gaps remain,
+     report the font, size and flags: the measured padding came back about 0 (`GetStringWidth` on the
+     measurer did not see the padding), so the pull-back did nothing.
+155. **The item-2 probe and the Paladin bars.** Item 142: run the three `/run` lines from
+     `docs/midnight-quirks.md` → "Many debuffs carry no dispel type" on a dummy carrying a Paladin's
+     Judgment and Consecration, out of combat, and copy the output there. Then look at the bar container
+     (Color by Dispel type) for those debuffs: the blue is the default fill; say whether the bar's
+     **empty part** (its background) is dark or blue. Dark confirms they are typeless (the background
+     keeps its own color); blue means the engine reports a type for them, and the probe's `dispelName`
+     column should say which.
