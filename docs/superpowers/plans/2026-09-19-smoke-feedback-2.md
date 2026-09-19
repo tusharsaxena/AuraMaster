@@ -73,7 +73,7 @@ tree, so they run one at a time. 13 is last.
 | 3 | Item 1 — growth corner in the structure key; Point rows reworded; facing-growth hint | AuraMaster | done | T3 commit: corner in Container:Apply structure key; Point rows = first aura; hint Named frame only; +9 tests (1123/1123), inventory + badge regenerated |
 | 4 | Item 4 — dispel-colored bar background / fill honour opacity | AuraMaster | done | T4 commit: dispel map entries opaque; dispel-mode region SetAlpha(opacity x color alpha), static unchanged; smoke 126 gains the in-combat alpha check (child-frame fallback not built); +3 tests (1126/1126) |
 | 5 | Item 7 — report swallowed re-dress errors; anchor text before the icon; guard the icon/border block | AuraMaster | done | T5 commit: Style.ReportError (a [Style] debug line each time, geterrorhandler once per session per first line) from Container:Restyle and the Text icon block; text area anchored before any icon call; icon block pcall-guarded, a refusal hides the icon; smoke 99 gains the debug re-run; +4 tests (1130/1130) |
-| 6 | Item 6 — Icon rows dim while Icon position is None; border drawn test | AuraMaster | todo | |
+| 6 | Item 6 — Icon rows dim while Icon position is None; border drawn test | AuraMaster | done | T6 commit: noIcon disabledIf on every Icon row but the position and the border swatch (anti-pattern #74, as Running out keeps its swatch live); afterGroup note; Icon position structural; border-drawn test; +2 tests (1132/1132) |
 | 7 | Item 8 — piece justify and measured padding; brackets advice in Rules and docs | AuraMaster | todo | |
 | 8 | Item 5 — Dispel type subsection moves to Text → Font | AuraMaster | todo | |
 | 9 | Item 3 — the Justify Center note | AuraMaster | todo | |

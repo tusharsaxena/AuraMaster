@@ -283,6 +283,41 @@ test("text page: without a duration token the running-out rows dim, except the s
     assertFalse(P.row(ws, P_ .. "expiringColor").disabled and true or false, "the swatch stays live")
 end)
 
+--- The Icon tab as the current settings draw it, as animationTab draws the Animation tab.
+local function iconTab(NS, P)
+    local ws = P.rerender("Text")
+    if NS.Helpers.__pageCtx.text.activeTab == NS.L["Icon"] then return ws end
+    return P.tab("text", NS.L["Icon"])
+end
+
+-- The Icon tab's rows that draw nothing while Icon position is None (smoke batch 2, item 6).
+local ICON_ROWS = { "iconSize", "iconGap", "iconZoom", "iconBorderShow", "iconBorderStyle", "iconBorderSize",
+    "useClassColorIconBorder" }
+
+test("text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)", function()
+    local NS, _, P = textPage()
+    local note = NS.L["Set Icon position to show the icon."]
+    assertEqual(NS.db.profile.containers[1].text.icon, "NONE", "the template's default: no icon")
+    local ws = iconTab(NS, P)
+    -- red under: the Icon tab's afterGroup note not drawn
+    assertTrue(P.hasText(ws, note), "the note")
+    assertFalse(P.row(ws, P_ .. "icon").disabled and true or false, "Icon position stays live")
+    for _, key in ipairs(ICON_ROWS) do
+        -- red under: an Icon row without the noIcon predicate (it looks live and draws nothing)
+        assertTrue(P.row(ws, P_ .. key).disabled, key)
+    end
+    -- anti-pattern #74: a color swatch is never grayed
+    assertFalse(P.row(ws, P_ .. "iconBorderColor").disabled and true or false, "the swatch stays live")
+    -- red under: Icon position without its structural redraw (the note and the dim outlive the change)
+    assertTrue(NS.FindSchemaRow(P_ .. "icon").onChange ~= nil, "a position change redraws the page")
+    NS.SetByPath(P_ .. "icon", "LEFT", 1)
+    ws = iconTab(NS, P)
+    assertFalse(P.hasText(ws, note), "no note with an icon")
+    for _, key in ipairs(ICON_ROWS) do
+        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live on Left")
+    end
+end)
+
 test("text page: the blink row is engine-only, and the Font tab carries the composed font block and time format", function()
     local NS = textPage()
     local L = NS.L

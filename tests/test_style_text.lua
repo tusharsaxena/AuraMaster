@@ -433,6 +433,26 @@ test("text style: an icon on the right insets the area's right edge; none hides 
     assertEqual(frame:__count("SetIcon"), 0)
 end)
 
+test("text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)", function()
+    local NS = E()
+    local _, am = dressed(text({ height = 20, icon = "LEFT", iconSize = 20, iconBorderShow = true,
+        iconBorderStyle = "Solid", iconBorderSize = 3, iconBorderColor = { r = 1, g = 0, b = 0, a = 1 },
+        useClassColorIconBorder = false }), true)
+    -- red under: nothing painting am.iconBorder on a Text line (the Icon border rows reach no region)
+    assertTrue(am.iconBorder:IsShown(), "the border shows")
+    local bd = am.iconBorder:__last("SetBackdrop")[1]
+    assertEqual(bd.edgeSize, 3)
+    assertEqual(bd.edgeFile, NS.Style.Fetch("border", "Solid", NS.Constants.FALLBACK_BORDER))
+    assertEqual(am.iconBorder:__joined("SetBackdropBorderColor"), "1,0,0,1")
+    assertEqual(am.iconBorder:__joined("SetSize"), "20,20", "the border takes the icon's whole box")
+    local b = am.iconBorder:__last("SetPoint")
+    assertEqual(b[1], "LEFT"); assertTrue(b[2] == am.anim)
+    -- red under: the art laid at the box's full size under a thick border
+    assertEqual(am.icon:__joined("SetSize"), "14,14")
+    local p = am.icon:__last("SetPoint")
+    assertEqual(p[1], "LEFT"); assertTrue(p[2] == am.anim); assertEqual(p[4], 3)
+end)
+
 -- ── a refused icon call on a live re-dress (smoke batch 2, item 7) ─────────────────────────────
 
 --- A live Text element with a bordered left icon, dressed once, then re-dressed live with `region`'s

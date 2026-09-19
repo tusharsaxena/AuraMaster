@@ -715,7 +715,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (48)
+### test_style_text.lua (49)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -744,6 +744,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
 - text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
 - text style: an icon on the right insets the area's right edge; none hides it and binds nothing
+- text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
 - text style: an icon border whose SetBackdrop is refused on a live re-dress costs the icon, never the text, and is reported
 - text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
 - text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time
@@ -1152,7 +1153,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Cooldown rows write the selected container's swipe
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (25)
+### test_pages_text.lua (26)
 
 - text page: the four tabs are drawn in order
 - text page: a bars or icons container sees every row disabled under the note naming its style
@@ -1167,6 +1168,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
 - text page: each loop row is live only for the effects that use it
 - text page: without a duration token the running-out rows dim, except the swatch, under a note
+- text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
 - text page: the blink row is engine-only, and the Font tab carries the composed font block and time format
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
@@ -1313,7 +1315,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 60 |
 | test_style_icons.lua | 25 |
-| test_style_text.lua | 48 |
+| test_style_text.lua | 49 |
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -1330,7 +1332,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 12 |
 | test_pages_icons.lua | 7 |
-| test_pages_text.lua | 25 |
+| test_pages_text.lua | 26 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1344,4 +1346,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1130** |
+| **Total** | **1132** |

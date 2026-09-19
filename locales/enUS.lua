@@ -575,6 +575,7 @@ L["Turn the duration tokens another color in the last seconds. The rest of the l
 L["Blink when running out"] = "Blink when running out"
 L["Blink the duration tokens in the last seconds, in the running-out color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."] = "Blink the duration tokens in the last seconds, in the running-out color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."
 L["Running out needs a duration token, such as $remainingduration$, in the template."] = "Running out needs a duration token, such as $remainingduration$, in the template."
+L["Set Icon position to show the icon."] = "Set Icon position to show the icon."
 L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."] = "Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."
 L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."] = "Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."
 L["Test mode can't start in combat."] = "Test mode can't start in combat."

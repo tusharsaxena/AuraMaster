@@ -464,6 +464,12 @@ unused) when the template carries no duration token, with a note saying so; the 
 per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
 Bounce).
 
+The **Icon** tab's rows draw nothing while **Icon position** is None (the default): the Text style
+draws the icon and its border only on Left or Right. So every row but Icon position is dimmed then
+(`noIcon`), the icon border's swatch excepted for the same alpha reason, under a gray note, "Set Icon
+position to show the icon." (smoke batch 2, item 6). Icon position redraws the page on a change, so
+the note and the dimming follow it at once.
+
 **Dispel type** (Animation, feedback #7) holds three opt-in stand-ins for "color the text by dispel
 type", all off by default, since no engine binding colors a font string by the aura's type
 (`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its

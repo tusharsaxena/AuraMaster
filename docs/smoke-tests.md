@@ -575,7 +575,11 @@ nothing).
     animates; a change made in combat starts when combat ends.
 98. **Running out.** Recolor on, then Blink on: the duration run turns the color, then blinks, in the
     last N seconds; the rest of the line keeps the font color.
-99. **The icon.** Icon Left, then Right, with a border: the text starts after the icon and its gap,
+99. **The icon.** On a new Text container (Icon position None), the Icon tab's rows are dimmed but
+    Icon position and the border's color swatch, under a gray "Set Icon position to show the icon."
+    (smoke batch 2, item 6). Icon Left → the rows go live and the note goes at once; turn Show border
+    on at thickness 2 in red → a red border frames the icon, the art inside it. Then Right, with the
+    border: the text starts after the icon and its gap,
     and a long line is cut at its box rather than drawn under the icon. Then, with `/am debug` and
     `/console scriptErrors 1`, and auras showing, change Text settings one after another (font, size,
     template, icon size, the border): every line keeps its text. Rows that go blank, or become empty

@@ -9,6 +9,8 @@ local _, NS = ...
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
+--     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
+--               border swatch) dims while the position is None, under a note
 --     Animation Loop, then Dispel type (feedback #7: the word's color, a backdrop, an edge, each
 --               opt-in and off), then Running out and its note
 --
@@ -79,6 +81,12 @@ end
 --- A `disabledIf` predicate: Color the dispel type needs a $dispeltype$ token to color (feedback #7).
 local function noDispel()
     return not TT.ForDraw(textBlock().template).hasDispel
+end
+
+--- A `disabledIf` predicate: the Icon tab's rows draw nothing while Icon position is None (smoke
+--- batch 2, item 6: the icon and its border draw only on Left or Right).
+local function noIcon()
+    return (textBlock().icon or D.icon) == "NONE"
 end
 
 --- A `disabledIf` predicate: the row is dimmed while the selected container's toggle `key` is off.
@@ -330,12 +338,15 @@ NS.RegisterSchemaRows({
 NS.RegisterSchemaRows({
     { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
       values = NS.Choices(C.TEXT_ICON_POSITIONS, C.TEXT_ICON_POSITION_LABELS), label = L["Icon position"],
-      desc = L["Where the aura's icon sits beside the text, or hide it."] },
+      desc = L["Where the aura's icon sits beside the text, or hide it."], onChange = structural },
     { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
+      disabledIf = noIcon,
       label = L["Icon size (0 = line height)"], desc = L["A square icon this many pixels wide."] },
     { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
+      disabledIf = noIcon,
       label = L["Icon gap (px)"], desc = L["Space between the icon and the text."] },
     { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
+      disabledIf = noIcon,
       label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 local iconBorder = H.BorderGroup({
@@ -343,8 +354,11 @@ local iconBorder = H.BorderGroup({
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
+-- Every border row dims with no icon (noIcon), except the swatch: a color row is never grayed
+-- (anti-pattern #74, options-ui-§17), as the Running-out swatch stays live on the Animation tab.
 for _, row in ipairs(iconBorder) do
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
+    if row.type ~= "color" then row.disabledIf = noIcon end
 end
 NS.RegisterSchemaRows(iconBorder)
 
@@ -402,6 +416,12 @@ NS.RegisterSchemaRows({
       desc = L["Blink the duration tokens in the last seconds, in the running-out color when that is on. Only the duration tokens blink. The preview shows the color, not the blink."] },
 })
 
+--- After the Icon tab's rows: why they are dimmed, when Icon position is None (smoke batch 2, item 6).
+local function iconNote(ctx)
+    if not noIcon() then return end
+    H.TextRow(ctx, GRAY:format(L["Set Icon position to show the icon."]), SMALL)
+end
+
 --- After the Animation tab's rows: why Running out is dimmed, when the template has no duration.
 local function animationNote(ctx)
     if not noDuration() then return end
@@ -410,7 +430,7 @@ end
 
 NS.RegisterContainerPage(PAGE, L["Text"], "AuraMasterTextPanel", {
     tabs = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
-    afterGroup = { [G_ANIM] = animationNote },
+    afterGroup = { [G_ICON] = iconNote, [G_ANIM] = animationNote },
     disabledFor = function(cfg) return cfg.style ~= "text" end,
     disabledNotice = function(cfg)
         if cfg.style == "icons" then
