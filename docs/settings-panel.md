@@ -13,7 +13,7 @@ is a defect in this doc (documentation-§3).
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
-| - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
+| - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
 | - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink |
@@ -320,12 +320,14 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | Corner of this container / of the frame |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
 
-Each subsection's rows carry a `disabledIf` predicate on the selected container's attach mode, so
-the ones the mode does not read are dimmed: in `screen` mode only Screen is live; in `container`
-mode Another container and Offset; in `frame` mode Named frame and Offset. Changing **Attach to**
-re-dims them on the same frame through the scalar refresh. **Pick a frame…** (closes the settings,
-starts the picker, reopens this page) is Frame name's `pairWith` partner and stays live in every
-mode, because a pick sets the mode to Named frame itself.
+Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
+feedback #4), so only the subsections the mode reads are drawn, each heading with its rows: in
+`screen` mode Screen; in `container` mode Another container and Offset; in `frame` mode Named frame
+and Offset. The hidden rows stay in the schema, so `/am set`, `/am get` and the resets still reach
+them. Changing **Attach to** (from the panel, `/am set` or a reset) redraws the tab once, on the next
+frame, through the library's selector watch; the mode row needs no `onChange` of its own. **Pick a
+frame…** (closes the settings, starts the picker, reopens this page) is Frame name's `pairWith`
+partner, so it is drawn with Named frame; a pick still sets the mode to Named frame itself.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow

@@ -112,11 +112,13 @@ suite covers what only the client can show.
     it naming General → Spell Categories); switch to Weapon enchants → the strip becomes
     **[ Categories ][ Sorting ]**, Categories holding only **Hide
     enchants without a duration** and Sorting only **Direction**.
-25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
-    **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
-    and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
-    row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
-    the same frame; → *Another container* → Another container and Offset are live.
+25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then only
+    the subsections that mode uses, and there is no Attach to the screen button (feedback #4). Set
+    **Attach to** → *Screen* → only **Screen** is drawn under it, no empty headings; → *Named frame* →
+    the tab redraws with **Named frame** (Frame name with **Pick a frame…** beside it) and **Offset**,
+    Screen gone; → *Another container* → **Another container** and **Offset**. Then `/am set
+    container.attach.mode screen` with the page open → it redraws to Screen alone; `/am get
+    container.attach.x` still answers while Offset is hidden.
 26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
     Highlights ]**. On an icon container every tab carries the small gray "Not in use: this container
     is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
@@ -376,8 +378,8 @@ listed here too, so the batch can be signed off in one pass.
     are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
     B's **Attach to** back to *Screen* → B's own flow returns.
 68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.
-69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections; check 26 for the Bars page on an icon
-    container, and the Icons page on a bar container the same way.
+69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections (now drawn by mode, not dimmed); check
+    26 for the Bars page on an icon container, and the Icons page on a bar container the same way.
 70. **ID lists take a link (X-1).** On General → Spell Categories click into **Add a spell** and
     shift-click a spell in your spellbook → its link lands in the box; press Enter → the spell is
     added with its icon and name. Do the same on Filters → Overrides → Whitelist. If the shift-click
@@ -448,7 +450,8 @@ one. None of this is reproducible headlessly; these checks are.
 78. **The Hide column reads as live, never dimmed (`K-1`, `R-10`).** On Filters → Categories, look at
     a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
     unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
-    with a genuinely disabled row on Layout → Anchor (a mode's dimmed fields) to see the difference.
+    with a genuinely disabled row on the Bars page of an icon container (check 26) to see
+    the difference.
     Set **Uncategorized** to **Hide** → every other row's Hide column still looks the same, still
     clickable, on every row, including one already set to Show; click a lit Show cell's Hide → it
     moves there, live, exactly as it did before Uncategorized was touched.
