@@ -592,20 +592,27 @@ end
 -- ---------------------------------------------------------------------------
 
 local textFormats = setmetatable({}, WEAK_KEYS)
-local PERCENT_BREAKPOINTS = { { threshold = 0, format = "%d%%" } }
+-- A percent is written as a BARE whole number (feedback #5, 2026-09-19): the rule is "%d" and the
+-- player types the % in the template, so no token adds text of its own. RemainingPercent arrives on a
+-- fractional 0-100 scale; `step = 1` rounds it to a whole number before "%d" sees it (the 12.1
+-- NumericRuleFormatBreakpoint's own field). A client that refuses `step` gets the plain rule.
+local PERCENT_BREAKPOINTS = { { threshold = 0, step = 1, format = "%d" } }
+local PERCENT_PLAIN = { { threshold = 0, format = "%d" } }
 local percentFormatter   -- nil until first asked for; false when the client cannot build one
 
---- The rule formatter every percent component shares: "%d%%", RemainingPercent being 0-100.
+--- The rule formatter every percent component shares: a whole number, 0-100, with no "%".
 local function percentFor()
     if percentFormatter == nil then
-        percentFormatter = NS.Compat.CreateRuleFormatter(PERCENT_BREAKPOINTS) or false
+        local Compat = NS.Compat
+        percentFormatter = Compat.CreateRuleFormatter(PERCENT_BREAKPOINTS)
+            or Compat.CreateRuleFormatter(PERCENT_PLAIN) or false
     end
     return percentFormatter or nil
 end
 
 --- The `textFormat` option for one compiled duration piece (modules/TextTemplate.lua) in one time
 --- format: the piece's format string, and one { property, formatter } component per {} in order, a
---- time through the look's seconds formatter (formatterFor) and a percent through "%d%%". Built once
+--- time through the look's seconds formatter (formatterFor) and a percent through "%d". Built once
 --- per piece and time format; the parser memoizes its pieces, so a hit allocates nothing.
 function Style.DurationTextFormat(piece, timeFormat)
     local byFormat = textFormats[piece]

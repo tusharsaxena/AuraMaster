@@ -213,8 +213,8 @@ C.TEXT_TOKEN_LABELS = {
     remainingduration = "The time left",
     maxduration       = "Its full duration",
     elapsedduration   = "The time since it was applied",
-    remainingpercent  = "How much of it is left, in percent",
-    elapsedpercent    = "How much of it has run, in percent",
+    remainingpercent  = "How much of it is left, 0 to 100 (type the % yourself)",
+    elapsedpercent    = "How much of it has run, 0 to 100 (type the % yourself)",
 }
 
 -- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry but

@@ -352,19 +352,20 @@ end
 local fillAura, fillSettings, fillPiece, fillIndex
 
 --- One duration component of a placeholder, as the engine would write it: a time through the look's
---- formatter (Style.PreviewSeconds), a percent as "NN%".
+--- formatter (Style.PreviewSeconds), a percent as a bare whole number, rounded to the nearest as the
+--- engine's `step = 1` rule rounds it (modules/Style.lua's PERCENT_BREAKPOINTS).
 local VALUES = {
     RemainingDuration = function(a) return a.remaining end,
     TotalDuration = function(a) return a.duration end,
     ElapsedDuration = function(a) return a.duration - a.remaining end,
-    RemainingPercent = function(a) return math.floor(a.remaining / a.duration * 100) end,
-    ElapsedPercent = function(a) return math.floor((a.duration - a.remaining) / a.duration * 100) end,
+    RemainingPercent = function(a) return math.floor(a.remaining / a.duration * 100 + 0.5) end,
+    ElapsedPercent = function(a) return math.floor((a.duration - a.remaining) / a.duration * 100 + 0.5) end,
 }
 local function componentText()
     fillIndex = fillIndex + 1
     local c = fillPiece.components[fillIndex]
     local value = VALUES[c.prop](fillAura)
-    if c.fmt == "percent" then return ("%d%%"):format(value) end
+    if c.fmt == "percent" then return ("%d"):format(value) end
     return Style.PreviewSeconds(value, fillSettings.timeFormat)
 end
 

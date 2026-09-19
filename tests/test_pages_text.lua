@@ -83,6 +83,8 @@ test("text page: General holds Size, the Template box, the cheat sheet, then Pla
     assertTrue(P.hasText(ws, L["To write a literal [, ] or $, type it twice: [[, ]] or $$."]))
     -- red under: the cheat sheet leaving out how an odd run of [ combines an escape and a bracket
     assertTrue(P.hasText(ws, L["Escapes and brackets combine: [[[$stacks$]]] shows [3] only when stacked."]))
+    -- red under: the cheat sheet without the bracketed-duration example (feedback #5)
+    assertTrue(P.hasText(ws, "[ ($remainingpercent$%)] hides with the time"))
     -- The cheat sheet sits between the Template box and the Placement rows.
     local at = {}
     for i, w in ipairs(ws) do

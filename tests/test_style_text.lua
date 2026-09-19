@@ -468,8 +468,15 @@ test("text style: a placeholder fills each piece as the engine would", function(
     -- red under: the stacks piece filled without its bracket text
     assertEqual(out[2], " x3")
     assertEqual(out[3], " (" .. NS.L["Magic"] .. ")")
-    -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"
-    assertEqual(out[4], " - 28s / 40s (70%)")
+    -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"; a percent is a bare number
+    -- (feedback #5: the player types the %)
+    assertEqual(out[4], " - 28s / 40s (70)")
+end)
+
+test("text style: a placeholder's percent is the nearest whole number, as the engine's step rule rounds it (feedback #5)", function()
+    local out = filled({ template = "$remainingpercent$" }, { name = "Ignore Pain", icon = 1, remaining = 11, duration = 12, stacks = 0 })
+    -- red under: math.floor truncating 91.67 to 91 (the live rule rounds to the nearest)
+    assertEqual(out[1], "92")
 end)
 
 test("text style: a placeholder hides a single stack, a missing dispel type and a timeless duration with their bracket text", function()

@@ -79,7 +79,8 @@ NS.RegisterSchemaRows({
 })
 
 --- The token cheat sheet, under the Template box: one line per token, then the bracket rule, the
---- escapes, and how an odd run of [ combines the two. Read-only text, drawn small.
+--- escapes, how an odd run of [ combines the two, and why a duration belongs in brackets (feedback
+--- #5: text outside them shows on a timeless aura too). Read-only text, drawn small.
 local function cheatSheet(ctx)
     for _, def in ipairs(C.TEXT_TOKENS) do
         H.TextRow(ctx, ("|cffffd100$%s$|r  %s"):format(def.key, L[C.TEXT_TOKEN_LABELS[def.key]]), SMALL)
@@ -87,6 +88,7 @@ local function cheatSheet(ctx)
     H.TextRow(ctx, L["[ ] hides its text along with the token inside it: $spellname$[ x$stacks$] shows ' x3' only at 2 or more stacks."], SMALL)
     H.TextRow(ctx, L["To write a literal [, ] or $, type it twice: [[, ]] or $$."], SMALL)
     H.TextRow(ctx, L["Escapes and brackets combine: [[[$stacks$]]] shows [3] only when stacked."], SMALL)
+    H.TextRow(ctx, L["Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."], SMALL)
 end
 
 --- Under Placement: why Center is not honored, when it is chosen and the template has more than one

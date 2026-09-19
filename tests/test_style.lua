@@ -953,7 +953,10 @@ test("style: a duration run's text format has its format string and one componen
     assertEqual(pf.kind, "rule")
     local bp = pf:__last("SetBreakpoints")[1]
     assertEqual(bp[1].threshold, 0)
-    assertEqual(bp[1].format, "%d%%")
+    -- red under: the old "%d%%" (a token adding a "%" the player did not type, feedback #5)
+    assertEqual(bp[1].format, "%d")
+    -- red under: a fractional 0-100 value handed to "%d" unrounded
+    assertEqual(bp[1].step, 1)
     -- red under: DurationTextFormat rebuilding on every dress
     assertTrue(NS2.Style.DurationTextFormat(piece, "short") == tf, "memoized per piece and format")
     assertTrue(NS2.Style.DurationTextFormat(piece, "long") ~= tf, "a new format builds its own")
@@ -996,4 +999,43 @@ test("style: a placeholder's seconds are written by the format's formatter, else
     assertEqual(NS2.Style.PreviewSeconds(28, "short"), "28s")
     -- red under: PreviewSeconds not falling back when the client has no formatter
     assertEqual(NS.Style.PreviewSeconds(28, "short"), "28s", "the shared environment has none")
+end)
+
+test("style: a client that refuses the percent rule's step gets the plain \"%d\" rule, never none (feedback #5)", function()
+    local NS2 = fresh({ before = function(m)
+        dofile("tests/text_apis.lua")(m)
+        local create = m.C_StringUtil.CreateNumericRuleFormatter
+        m.C_StringUtil.CreateNumericRuleFormatter = function()
+            local f = create()
+            f.SetBreakpoints = function(self, bps)
+                if bps[1].step ~= nil then error("unknown breakpoint field 'step'") end
+                self.given = bps
+                return self
+            end
+            return f
+        end
+    end })
+    local piece = NS2.TextTemplate.Compile("$remainingpercent$").pieces[1]
+    local pf = NS2.Style.DurationTextFormat(piece, "short").components[1].formatter
+    -- red under: percentFor giving up after the refused rule (the component would have no formatter)
+    assertTrue(pf ~= nil, "a formatter was built")
+    assertEqual(pf.given[1].format, "%d")
+    assertEqual(pf.given[1].step, nil)
+end)
+
+test("style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)", function()
+    local NS2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local TT = NS2.TextTemplate
+    local function trimmed(s) return s == s:match("^%s*(.-)%s*$") end
+    -- An unbracketed token's own format: the stacks rule and the duration run.
+    assertEqual(TT.Compile("$spellname$ $stacks$").pieces[3].format, "%d")
+    local run = TT.Compile("$remainingpercent$").pieces[1]
+    assertEqual(run.format, "{}")
+    local bp = NS2.Style.DurationTextFormat(run, "short").components[1].formatter:__last("SetBreakpoints")[1]
+    for _, b in ipairs(bp) do
+        -- red under: a percent rule writing " %" or a trailing space around its number
+        assertTrue(trimmed(b.format), ("%q is trimmed"):format(b.format))
+    end
+    -- Bracket text is the player's and is kept verbatim.
+    assertEqual(TT.Compile("$spellname$[ - $remainingduration$]").pieces[2].format, " - {}")
 end)

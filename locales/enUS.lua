@@ -532,8 +532,8 @@ L["Its dispel type (Magic, Curse, ...); nothing when it has none"] = "Its dispel
 L["The time left"] = "The time left"
 L["Its full duration"] = "Its full duration"
 L["The time since it was applied"] = "The time since it was applied"
-L["How much of it is left, in percent"] = "How much of it is left, in percent"
-L["How much of it has run, in percent"] = "How much of it has run, in percent"
+L["How much of it is left, 0 to 100 (type the % yourself)"] = "How much of it is left, 0 to 100 (type the % yourself)"
+L["How much of it has run, 0 to 100 (type the % yourself)"] = "How much of it has run, 0 to 100 (type the % yourself)"
 L["Enrage"] = "Enrage"
 L["Text"] = "Text"
 L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."] = "Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."
@@ -587,3 +587,4 @@ L["Set every category in this section to Hide, for this container."] = "Set ever
 
 -- The smoke-test feedback batch (2026-09-19).
 L["TEST"] = "TEST"
+L["Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."] = "Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."

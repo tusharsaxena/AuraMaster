@@ -296,3 +296,26 @@ goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or th
 readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:64`
 and `modules/Style_Icons.lua:59`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
 created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
+
+## An empty duration run still takes a space (open, feedback #5)
+
+**What was seen.** The owner's template `($remainingpercent$)` drew `( )`: the literal `(`, then the
+duration run, then the literal `)`, with a space where the number should be. The run is one
+single-anchored, auto-sized font string the engine writes into, so whatever it wrote was EMPTY, and
+the gap is that empty string's own width.
+
+**What could empty it**, and what this addon changed:
+- **H1: the rule formatter.** The percent rule was `"%d%%"`, and `RemainingPercent` arrives as a
+  fractional 0–100 value. If the client's `%d` writes nothing for a non-integer, the run is empty. Fixed
+  here either way: the rule is now `"%d"` with `step = 1` (`modules/Style.lua`'s `PERCENT_BREAKPOINTS`),
+  so `%d` only ever sees a whole number, and the player types the `%`.
+- **H2: a timeless aura.** The engine disables the duration binding for a zero duration
+  (`ApplyDurationText`: `binding:SetEnabled(not auraDuration:IsZero())`), and the binding's zero text is
+  `""` (`Compat.CreateDurationBinding`). Nothing to fix: this is text outside `[ ]` showing on a
+  timeless aura, by design. The Text page's cheat sheet now says to write `[ ($remainingpercent$%)]`.
+- **The gap itself** would then be the client laying an empty, single-anchored font string out with a
+  non-zero width, which no addon code can read (the string is engine-written and secret) or trim.
+
+**The in-game check** (docs/smoke-tests.md section T) runs three `/run` probes that tell these apart:
+the rule formatter on `45.5` and `45`, the binding's zero-duration text, and an empty font string's
+width.

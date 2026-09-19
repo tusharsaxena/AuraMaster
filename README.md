@@ -75,8 +75,9 @@ which.
 A **Text** container draws each aura as one line, from a template you write on its Text page, such
 as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname$`, `$stacks$`,
 `$dispeltype$`, `$remainingduration$`, `$maxduration$`, `$elapsedduration$`, `$remainingpercent$` and
-`$elapsedpercent$`; text inside `[ ]` hides along with the token it holds (so ` x3` shows only at two
-or more stacks, and ` - 12s` only on an aura with a duration). The page lists them all, and a line
+`$elapsedpercent$` (a percent is a bare number: type the `%` yourself); text inside `[ ]` hides along
+with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s` only on an aura with a
+duration). The page lists them all, and a line
 can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. A new
 profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
 cooldowns.
