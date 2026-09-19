@@ -150,7 +150,7 @@ test("containers: the tab body opens with the Container picker and New container
         end
     end
     assertTrue(line ~= nil and line.children[2] == new, "New sits beside the picker, on the first line")
-    assertEqual(table.concat(picker.order, ","), "1,2,3")
+    assertEqual(table.concat(picker.order, ","), "1,2,3,4")
     assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])
 end)
 
@@ -168,9 +168,27 @@ test("containers: New container creates a container and selects it", function()
     local NS, _, P, ws = containers()
     P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
     -- red under: doNew not reaching ContainerManager.Create, or not selecting the new container
-    assertEqual(#NS.Database.GetContainers(), 4)
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1)
     local _, id = NS.ActiveContainer()
-    assertEqual(id, NS.db.profile.containerOrder[4])
+    assertEqual(id, NS.db.profile.containerOrder[#NS.STARTER_CONTAINERS + 1])
+end)
+
+test("containers: New container takes the Fill its style suits (B5)", function()
+    local NS, _, P, ws = containers()
+    P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
+    local c = NS.ActiveContainer()
+    -- red under: newContainerData leaving the Fill out of the style rule
+    assertEqual(c.layout.axis, NS.Constants.STYLE_FILL_AXIS[c.style])
+end)
+
+test("containers: a created container with its own Fill keeps it; Create with only a style takes the style's", function()
+    local NS = containers()
+    local CM = NS.ContainerManager
+    local id = CM.Create({ style = "icons", layout = { axis = "vertical" } })
+    -- red under: the style rule overwriting a Fill the caller gave
+    assertEqual(NS.Database.FindContainer(id).layout.axis, "vertical")
+    id = CM.Create({ style = "icons" })
+    assertEqual(NS.Database.FindContainer(id).layout.axis, "horizontal")
 end)
 
 test("containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)", function()
@@ -190,7 +208,7 @@ test("containers: Delete keeps the picker and New through both refreshes, and th
         m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(popups[1], popups[1].data)
         m.__fireTimers()   -- CONTAINERS_CHANGED's coalesced next-frame refresh
     end)
-    assertEqual(ids(NS), "1,3")
+    assertEqual(ids(NS), "1,3,4")
     assertEqual(renders, 2, "the popup's own refresh, then the registry change's")
     -- What the scroll holds now, after both renders: the kit's scroll drops its children without
     -- marking them released, so "live" here means "parented in the tab body".
@@ -209,7 +227,7 @@ test("containers: Delete keeps the picker and New through both refreshes, and th
     -- refresh releases (the reported loss: no picker and no New after a delete)
     assertEqual(#pickers, 1, "one picker in the tab body")
     assertEqual(#news, 1, "one New container in the tab body")
-    assertEqual(table.concat(pickers[1].order, ","), "1,3", "the picker lists the remaining containers")
+    assertEqual(table.concat(pickers[1].order, ","), "1,3,4", "the picker lists the remaining containers")
     -- red under: the second refresh drawing New on a line of its own, or dropping it from the
     -- picker's line (the pair must survive both renders together, as the first render drew it)
     local line
@@ -315,13 +333,74 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     assertFalse(hasOverridesTab(), "redrawn for a weapon-enchant container")
 end)
 
-test("containers: the Style dropdown offers bars and icons and writes the selected container", function()
+test("containers: the Style dropdown offers bars, icons and text and writes the selected container", function()
     local NS, _, P, ws = containers()
     local dd = P.row(ws, "container.style")
-    assertEqual(table.concat(dd.order, ","), "bars,icons")
+    -- red under: C.STYLES without "text" (the Text page would be unreachable)
+    assertEqual(table.concat(dd.order, ","), "bars,icons,text")
     dd:__fire("OnValueChanged", "icons")
     -- red under: the style row writing the wrong path
     assertEqual(NS.Database.FindContainer(1).style, "icons")
+    dd:__fire("OnValueChanged", "text")
+    assertEqual(NS.Database.FindContainer(1).style, "text")
+end)
+
+-- ── B5: changing Style resets Fill ─────────────────────────────────────────────────────────
+
+test("containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)", function()
+    local NS, _, P, ws = containers()
+    local c1 = NS.Database.FindContainer(1)
+    c1.layout.growH, c1.layout.growV = "left", "up"
+    local dd = P.row(ws, "container.style")
+    dd:__fire("OnValueChanged", "icons")
+    -- red under: the Style row without its onChange (Fill stays Columns under an icon row)
+    assertEqual(c1.layout.axis, "horizontal", "bars -> icons: Rows")
+    dd:__fire("OnValueChanged", "bars")
+    assertEqual(c1.layout.axis, "vertical", "icons -> bars: Columns")
+    dd:__fire("OnValueChanged", "icons")
+    dd:__fire("OnValueChanged", "text")
+    assertEqual(c1.layout.axis, "vertical", "icons -> text: Columns")
+    -- red under: a reset table that also rewrites the grow directions
+    assertEqual(c1.layout.growH, "left")
+    assertEqual(c1.layout.growV, "up")
+end)
+
+test("containers: re-choosing the same Style keeps a Fill set by hand (B5)", function()
+    local NS = containers()
+    NS.SetByPath("container.layout.axis", "horizontal", 1)
+    NS.SetByPath("container.style", "bars", 1)
+    -- red under: onChange resetting Fill without comparing the replaced value
+    assertEqual(NS.Database.FindContainer(1).layout.axis, "horizontal")
+end)
+
+test("containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)", function()
+    local NS, m = containers()
+    local refreshes, applies = 0, 0
+    local refresh = NS.RequestPanelRefresh
+    NS.RequestPanelRefresh = function(...) refreshes = refreshes + 1; return refresh(...) end
+    local inst = NS.ContainerManager.instances[1]
+    local apply = inst.Apply
+    inst.Apply = function(...) applies = applies + 1; return apply(...) end
+    NS.Slash:OnSlash("set container.style icons")
+    m.__fireTimers()
+    assertEqual(NS.Database.FindContainer(1).layout.axis, "horizontal")
+    -- red under: the Fill write re-running the structural handler, or not coalescing with the style's
+    assertEqual(refreshes, 1, "one structural rebuild")
+    assertEqual(applies, 1, "one apply pass for both writes")
+    NS.RequestPanelRefresh = refresh
+end)
+
+test("containers: a duplicate and a copy-from keep the source's Fill (B5)", function()
+    local NS = containers()
+    local CM = NS.ContainerManager
+    NS.Database.FindContainer(2).layout.axis = "vertical"   -- an icon row set to Columns by hand
+    local dup = NS.Database.FindContainer(CM.Duplicate(2))
+    -- red under: Duplicate writing the style through the seam (its onChange would reset Fill)
+    assertEqual(dup.layout.axis, "vertical")
+    assertTrue(CM.CopyFrom(2, 1))
+    -- red under: COPY_ALL writing the layout before the style (the reset lands over the copy)
+    assertEqual(NS.Database.FindContainer(1).style, "icons")
+    assertEqual(NS.Database.FindContainer(1).layout.axis, "vertical")
 end)
 
 test("containers: New and Duplicate in combat refuse in gray and create nothing", function()
@@ -331,7 +410,7 @@ test("containers: New and Duplicate in combat refuse in gray and create nothing"
     P.find(ws, "Button", NS.L["Duplicate"]):__fire("OnClick")
     P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
     -- red under: sayError printing a refusal plain, or a page act bypassing the combat refusal
-    assertEqual(#NS.Database.GetContainers(), 3)
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS)
     assertEqual(#lines, 2, "one refusal each")
     for _, l in ipairs(lines) do
         assertTrue(l:find("|cff808080cannot create a container during combat", 1, true) ~= nil, l)
@@ -346,8 +425,8 @@ test("containers: Duplicate copies the selected container and selects the copy",
     P.find(ws, "Button", NS.L["Duplicate"]):__fire("OnClick")
     local _, id = NS.ActiveContainer()
     -- red under: doDuplicate copying something other than the selection, or not selecting the copy
-    assertEqual(#NS.Database.GetContainers(), 4)
-    assertTrue(id ~= 2 and id == NS.db.profile.containerOrder[4], "the copy is selected")
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1)
+    assertTrue(id ~= 2 and id == NS.db.profile.containerOrder[#NS.STARTER_CONTAINERS + 1], "the copy is selected")
     local copy = NS.Database.FindContainer(id)
     assertEqual(copy.name, "Player debuffs (copy)")
     assertEqual(copy.icons.width, 44, "every setting came with it")
@@ -364,9 +443,9 @@ test("containers: Delete asks first, naming the container, and deletes it only o
     assertEqual(popups[1].which, "AURAMASTER_DELETE_CONTAINER")
     assertEqual(popups[1].text, "Player debuffs", "the popup names what it will delete")
     assertEqual(popups[1].data, 2)
-    assertEqual(#NS.Database.GetContainers(), 3, "nothing deleted before the answer")
+    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS, "nothing deleted before the answer")
     m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(popups[1], popups[1].data)
-    assertEqual(ids(NS), "1,3")
+    assertEqual(ids(NS), "1,3,4")
     local _, active = NS.ActiveContainer()
     assertEqual(active, 1, "the selection falls back to the first container")
 end)
@@ -378,8 +457,8 @@ test("containers: the copy block offers every other container and copies only th
     local source = P.find(ws, "Dropdown", NS.L["Source container"])
     local what = P.find(ws, "Dropdown", NS.L["What to copy"])
     -- red under: the source list including the selected container (a copy onto itself)
-    assertEqual(table.concat(source.order, ","), "2,3")
-    assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons")
+    assertEqual(table.concat(source.order, ","), "2,3,4")
+    assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons,text")
     source:__fire("OnValueChanged", 2)
     what:__fire("OnValueChanged", "bars")
     P.find(ws, "Button", NS.L["Copy onto this container"]):__fire("OnClick")
@@ -406,6 +485,7 @@ test("containers: with one container the page offers Duplicate and Delete but no
     local NS, _, P = containers()
     NS.ContainerManager.Delete(2)
     NS.ContainerManager.Delete(3)
+    NS.ContainerManager.Delete(4)
     local ws = P.rerender("Containers")
     assertTrue(P.find(ws, "Button", NS.L["Duplicate"]) ~= nil)
     assertTrue(P.find(ws, "Button", NS.L["Delete"]) ~= nil)

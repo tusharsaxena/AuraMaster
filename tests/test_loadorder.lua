@@ -47,6 +47,8 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
+        { "modules/Style.lua", "modules/Style_Text.lua" },
+        { "modules/TextTemplate.lua", "modules/Style_Text.lua" },
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },
@@ -57,7 +59,8 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "settings/Filters.lua", "settings/Layout.lua" },
         { "settings/Layout.lua", "settings/Bars.lua" },
         { "settings/Bars.lua", "settings/Icons.lua" },
-        { "settings/Icons.lua", "settings/Profiles.lua" },
+        { "settings/Icons.lua", "settings/Text.lua" },
+        { "settings/Text.lua", "settings/Profiles.lua" },
     }
     for _, pr in ipairs(pairs_) do
         assertTrue(index[pr[1]] and index[pr[2]] and index[pr[1]] < index[pr[2]],

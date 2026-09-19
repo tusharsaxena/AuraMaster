@@ -937,3 +937,22 @@ test("explain: a token category is never named — only spells-kind categories a
     assertEqual(x.verdict, "shown")
     assertEqual(x.rank, 5)
 end)
+
+-- ── the Player cooldowns starter (text style, spec 7.1) ────────────────────────────────────────────────────────────────
+
+test("filter: the Player cooldowns starter draws one group per list it shows and no catch-all", function()
+    local c = cfg({ filter = { categories = NS.Categories.StatesShowing({ "offensiveCDs", "defensives" }) } })
+    local plan = FC.Compile(c)
+    local labels = {}
+    for i, g in ipairs(plan.groups) do labels[i] = g.label end
+    -- red under: StatesShowing leaving Uncategorized at Show (its group draws every unlisted buff)
+    assertEqual(#plan.groups, 2, table.concat(labels, ","))
+    local ids = 0
+    for _, g in ipairs(plan.groups) do
+        assertTrue(g.candidateFilters and g.candidateFilters.includeSpellIDs ~= nil, g.label .. " is an id list")
+        ids = ids + 1
+    end
+    assertEqual(ids, 2)
+    -- A buff on neither list has no Show to draw it.
+    assertEqual(FC.ExplainSpell(c, 999999).verdict, "hidden")
+end)

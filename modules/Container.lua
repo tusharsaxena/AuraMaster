@@ -22,6 +22,9 @@ ContainerClass.__index = ContainerClass
 local Perf = NS.Perf
 local D = NS.CONTAINER_TEMPLATE
 local HUGE = math.huge
+local C = NS.Constants
+-- The unlocked outline's opacity: faint enough to read as a guide, never as a border (B1).
+local OUTLINE_ALPHA = 0.35
 
 local function callEngine(engine, method, ...)
     local fn = engine and engine[method]
@@ -356,7 +359,9 @@ function ContainerClass:Apply()
     self:SnapshotClass(cfg)
 
     if NS.Compat.HasAuraContainer() then
-        local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. tostring(cfg.style)
+        -- The style, and for a text container its template's shape (Style.StructureKey): a new
+        -- shape gets new buttons, so no engine binding is left in the old shape's font strings.
+        local structure = NS.FilterCompiler.StructureKey(plan) .. ":" .. NS.Style.StructureKey(cfg)
         if self.engine and self.structure == structure then
             self:Update(cfg, plan)
         else
@@ -398,14 +403,68 @@ end
 --- The stored `enabled` path is NOT read again here: on a build with no LibKa0s the degraded
 --- NS.IsStoodDown answers from that path itself, so step 0 is the one question. A parked container (Park) shows nothing either: its engine may still be
 --- built for a container that no longer lives under its id.
+---
+--- PREVIEWING IS THE TEST MODE (NS.State.testMode), not the lock (B1): unlocking makes a container
+--- draggable and its live auras keep drawing. An UNLOCKED container shows whatever its visibility
+--- rule says, so one set to "in combat only" can still be found and moved out of combat. A container
+--- in TEST MODE shows too, locked or not: the mode shows the display without an unlock
+--- (options-ui-§15).
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
     if NS.IsStoodDown() or self.parked then return false, false end
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
     if not (p and cfg and cfg.enabled) then return false, false end
-    local previewing = not p.locked
-    return visibilityAllows(p.visibility), previewing
+    local previewing = NS.State.testMode and true or false
+    return (not p.locked) or previewing or visibilityAllows(p.visibility), previewing
+end
+
+--- The anchor's own half of a stand-down (see ApplyVisibility). Returns whether combat deferred it.
+function ContainerClass:ApplyAnchorShown()
+    if NS.IsStoodDown() then
+        if InCombatLockdown() then return true end
+        self.anchor:Hide()
+    elseif not self.anchor:IsShown() and not InCombatLockdown() then
+        self.anchor:Show()
+    end
+    return false
+end
+
+--- The engine's enable and the mouse blocker, which follow one rule: shown and not previewing.
+function ContainerClass:ApplyLive(on)
+    if self.engine then callEngine(self.engine, "SetEnabled", on) end
+    if self.blocker then self.blocker:SetShown(on) end
+end
+
+--- The anchor's alpha: the container's own times Master alpha.
+function ContainerClass:ApplyAlpha(cfg, p)
+    local L = cfg and cfg.layout or {}
+    self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
+end
+
+--- The unlocked container's OUTLINE (B1): a faint one-pixel box, one element's size, at the corner
+--- its flow starts from, so an EMPTY container can still be seen and grabbed while unlocked. A frame
+--- of ours under the anchor, never the engine's; hidden when locked, and in test mode (the
+--- placeholders are there then). It takes no mouse: the drag handle does the grabbing.
+function ContainerClass:ApplyOutline(cfg, on)
+    local o = self.outline
+    if not on then
+        if o then o:Hide() end
+        return
+    end
+    if not o then
+        o = CreateFrame("Frame", nil, self.anchor, "BackdropTemplate")
+        o:SetBackdrop({ edgeFile = C.WHITE_TEXTURE, edgeSize = 1 })
+        o:SetBackdropBorderColor(1, 1, 1, OUTLINE_ALPHA)
+        o:EnableMouse(false)
+        self.outline = o
+    end
+    local w, h = NS.Style.ElementSize(cfg)
+    local point = NS.Preview.Offset(cfg, 1)
+    o:ClearAllPoints()
+    o:SetPoint(point, self.anchor, point, 0, 0)
+    o:SetSize(w, h)
+    o:Show()
 end
 
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
@@ -425,22 +484,17 @@ function ContainerClass:ApplyVisibility()
     -- and an anchor left shown is a frame of ours still on screen. It is the aura engine's ancestry,
     -- though, so it must not be shown or hidden under combat lockdown (events-frames-taint-§2):
     -- that half waits for PLAYER_REGEN_ENABLED and is reported here as `deferred`.
-    local deferred = false
-    if NS.IsStoodDown() then
-        if InCombatLockdown() then deferred = true else self.anchor:Hide() end
-    elseif not self.anchor:IsShown() and not InCombatLockdown() then
-        self.anchor:Show()
-    end
-    if self.engine then callEngine(self.engine, "SetEnabled", show and not previewing) end
-    if self.blocker then self.blocker:SetShown(show and not previewing) end
-    local L = cfg and cfg.layout or {}
-    self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
-    if previewing and cfg then
+    local deferred = self:ApplyAnchorShown()
+    self:ApplyLive(show and not previewing)
+    self:ApplyAlpha(cfg, p)
+    if show and previewing and cfg then
         NS.Preview.Show(self)
     else
         NS.Preview.Hide(self)
     end
-    NS.Anchors.UpdateHandle(self, previewing and p and not p.locked)
+    local unlocked = (show and p and not p.locked) and true or false
+    self:ApplyOutline(cfg, unlocked and not previewing)
+    NS.Anchors.UpdateHandle(self, unlocked)
     -- Containers attached to this one hang from its preview extent while it previews (L-4).
     NS.Anchors.PlaceAttached(self)
     return show, previewing, deferred
@@ -459,6 +513,7 @@ end
 function ContainerClass:Park()
     if self.engine then callEngine(self.engine, "SetEnabled", false) end
     if self.blocker then self.blocker:Hide() end
+    if self.outline then self.outline:Hide() end
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
     self.parked = true
@@ -470,6 +525,7 @@ end
 function ContainerClass:Destroy()
     self:Retire()
     NS.Preview.Hide(self)
+    if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
     self.anchor:Hide()
     self.anchor:ClearAllPoints()

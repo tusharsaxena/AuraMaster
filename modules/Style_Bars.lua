@@ -78,39 +78,14 @@ local function build(frame)
     return am
 end
 
---- The icon's side: its stored size, or the template's when that is missing; zero means the bar's height.
+--- The icon's side: its stored size, or the template's when that is missing; zero means the bar's
+--- height (the shared helper in modules/Style.lua, on the bar's own leaves).
 local function iconSizeFor(b, h)
-    local size = tonumber(b.iconSize) or D.bars.iconSize
-    return size > 0 and size or h
+    return Style.IconSizeFor(b, D.bars, h)
 end
 
---- The icon border's thickness when it draws, else 0: how far the art is inset inside the icon's box.
-local function iconInset(b)
-    if not Style.OrTemplate(b.iconBorderShow, D.bars.iconBorderShow) then return 0 end
-    if Style.OrTemplate(b.iconBorderStyle, D.bars.iconBorderStyle) == "None" then return 0 end
-    return tonumber(b.iconBorderSize) or D.bars.iconBorderSize
-end
-
---- Place the icon's `size` box at `side` of the element: the icon border takes the whole box and the
---- art sits inside it, inset by the border's thickness, as modules/Style_Icons.lua's layoutIcon does,
---- so a thick border never hides the art.
-local function layoutIcon(frame, am, b, side, size)
-    local inset = iconInset(b)
-    am.iconBorder:ClearAllPoints()
-    am.iconBorder:SetSize(size, size)
-    am.iconBorder:SetPoint(side, frame, side, 0, 0)
-    Style.ApplyBorder(am.iconBorder, inset > 0, Style.OrTemplate(b.iconBorderStyle, D.bars.iconBorderStyle), inset,
-        b.iconBorderColor or D.bars.iconBorderColor, b.useClassColorIconBorder)
-
-    local art = math.max(0, size - 2 * inset)
-    am.icon:Show()
-    am.icon:SetSize(art, art)
-    am.icon:SetPoint(side, frame, side, side == "RIGHT" and -inset or inset, 0)
-    local z = tonumber(b.iconZoom) or D.bars.iconZoom
-    am.icon:SetTexCoord(z, 1 - z, z, 1 - z)
-end
-
---- Lay the icon and the bar area out inside the element.
+--- Lay the icon and the bar area out inside the element. The icon's box and its border are placed by
+--- modules/Style.lua's Style.LayoutIcon, which the Text style shares.
 local function layout(frame, am, b, h)
     local iconPos = b.icon or D.bars.icon
     local iconSize = iconSizeFor(b, h)
@@ -125,11 +100,11 @@ local function layout(frame, am, b, h)
         am.iconBorder:Hide()
         am.bar:SetAllPoints(frame)
     elseif iconPos == "RIGHT" then
-        layoutIcon(frame, am, b, "RIGHT", iconSize)
+        Style.LayoutIcon(frame, am, b, D.bars, "RIGHT", iconSize)
         am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
         am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(iconSize + gap), 0)
     else
-        layoutIcon(frame, am, b, "LEFT", iconSize)
+        Style.LayoutIcon(frame, am, b, D.bars, "LEFT", iconSize)
         am.bar:SetPoint("TOPLEFT", frame, "TOPLEFT", iconSize + gap, 0)
         am.bar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     end
@@ -242,14 +217,19 @@ local function textShown(t)
     return t == nil or t.show ~= false
 end
 
---- The box a time text takes beside the name: the widest string its format writes at its font size
---- (C.TIME_TEXT_EMS), plus its offset, which Style.ApplyText takes back off; never wider than the bar
---- area. A format this build does not know gets the widest budget.
+--- The box a time text takes beside the name: the measured width of the widest string its format
+--- writes in its font (Style.TimeTextWidth, B4), or, where nothing can be measured, the ems budget
+--- (C.TIME_TEXT_EMS; a format this build does not know gets the widest). Plus its offset, which
+--- Style.ApplyText takes back off, so an offset moves the text and never narrows its box; never wider
+--- than the bar area.
 local function timeBoxWidth(b, area)
     local t = b.time or {}
-    local size = tonumber(t.fontSize) or D.bars.time.fontSize
-    local ems = C.TIME_TEXT_EMS[b.timeFormat] or C.TIME_TEXT_EMS.long
-    return math.min(area, math.ceil(size * ems) + math.abs(tonumber(t.x) or 0))
+    local width = Style.TimeTextWidth(t, D.bars.time, b.timeFormat)
+    if not width then
+        local size = tonumber(t.fontSize) or D.bars.time.fontSize
+        width = size * (C.TIME_TEXT_EMS[b.timeFormat] or C.TIME_TEXT_EMS.long)
+    end
+    return math.min(area, math.ceil(width) + math.abs(tonumber(t.x) or 0))
 end
 
 --- Dress the name, time and stack texts, each boxed to its host so its justification shows, and show

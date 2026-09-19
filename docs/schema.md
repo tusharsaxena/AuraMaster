@@ -18,7 +18,7 @@ otherwise (`docs/profiles.md`).
 | `visibility` | string | `"always"` | General visibility: `always` / `inCombat` / `outOfCombat` / `never` |
 | `scale` | number | `1.0` | Master scale, multiplied into each container's own |
 | `alpha` | number | `1.0` | Master alpha, multiplied into each container's own |
-| `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and the preview |
+| `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and an outline; live auras keep drawing |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
 | `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
@@ -124,7 +124,7 @@ path, never to a number restated in `modules/`.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:154`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:163`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
 `{0.80, 0.00, 0.00}`, all alpha 1.
 
@@ -144,16 +144,31 @@ The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constant
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
+### `text`
+
+The Text style (issue #2). `width` (220), `height` (16); `template`
+(`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
+refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` only for a one-piece
+template), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, size
+12); `timeFormat` (`"blizzard"`); the icon — `icon` (`"NONE"`), `iconSize` (0 = the line's height),
+`iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
+`iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
+false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
+`animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); running out — `expiringColorOn`
+(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false). An existing container
+gains the block by the ordinary backfill; there is no schema-version bump.
+
 ### The text block
 
-Every text element (`bars.name`, `bars.time`, `bars.stacks`, `icons.time`, `icons.stacks`) has the
-six canonical font leaves (options-ui-§16) and then its placement: `show` (`true`), `font`
-(`"Friz Quadrata TT"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`), `useClassColorFont` (`false`),
-`fontFlags` (`"OUTLINE"`), `fontShadow` (`false`), `point`, `x`, `y`, `justify`.
+Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
+`icons.stacks`) has the six canonical font leaves (options-ui-§16) and then its placement: `show`
+(`true`), `font` (`"Friz Quadrata TT"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`),
+`useClassColorFont` (`false`), `fontFlags` (`"OUTLINE"`), `fontShadow` (`false`), `point`, `x`, `y`,
+`justify` (the Text style's `text.font` carries the six font leaves only).
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:213`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:235`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -161,14 +176,16 @@ over the template:
 | Player buffs | player | HELPFUL | bars | `TOPRIGHT` −240, −220; enchants draw by the `weaponEnchants` category's default (Show) |
 | Player debuffs | player | HARMFUL | icons | `TOPRIGHT` −240, −160; horizontal, grows left |
 | Target debuffs (mine) | target | HARMFUL | icons | `castBy = "mine"`; `CENTER` 0, −160; horizontal, grows right |
+| Player cooldowns | player | HELPFUL | text | `CENTER` −260, −40; vertical, grows right and down; `filter.categories` from `Cat.StatesShowing({ "offensiveCDs", "defensives" })`: every other buff category Hidden, Uncategorized included |
 
 ## Session state (not persisted)
 
-`NS.State` (`core/State.lua`): `debug` (the console's logging flag) and `activeContainerId` (which
-container every `container.` path resolves against). Both reset at every `/reload`. There is no
-preview flag: the placeholders show while the addon is unlocked, and only then.
-The schema reaches the session state through one `sessionOnly` row, `state.debugConsole`, which
-writes nothing to the database.
+`NS.State` (`core/State.lua`): `debug` (the console's logging flag), `activeContainerId` (which
+container every `container.` path resolves against) and `testMode` (every container shows its
+placeholder auras; switched only by `Preview.SetTestMode`, ended when combat starts). All three reset
+at every `/reload`. Unlocking does not preview: it makes containers draggable while live auras keep
+drawing. The schema reaches the session state through two `sessionOnly` rows, `state.debugConsole`
+and `state.testMode`, which write nothing to the database.
 
 ## `AuraMasterPerfDB` — the capture ring
 
@@ -229,7 +246,8 @@ A row's `validate(value, id)` and its optional `normalize(value, id)` hook are b
 the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`
 resolves that id first and then validates, so a bad value is still refused before a missing container
 is. `normalize` runs after both, just before the write. Whatever it returns is what gets stored, and
-it is also the value `onChange` and the announcement see. The `container.name` row uses it to store the
+it is also the value `onChange` and the announcement see. A row's `onChange(value, id, old)` receives
+the value the write replaced. The `container.name` row uses it to store the
 trimmed name made unique by `ContainerManager.UniqueName`, and that comparison ignores case (`buffs`
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
 `/am set`, `ContainerManager.Rename` or a reset.

@@ -45,9 +45,13 @@ C.UNIT_LABELS = { player = "Player", target = "Target", focus = "Focus", pet = "
 C.AURA_TYPES = { "HELPFUL", "HARMFUL", "ENCHANT" }
 C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs", ENCHANT = "Weapon enchants" }
 
--- Container styles. Text is a tracked enhancement.
-C.STYLES = { "bars", "icons" }
-C.STYLE_LABELS = { bars = "Bars", icons = "Icons" }
+-- Container styles.
+C.STYLES = { "bars", "icons", "text" }
+C.STYLE_LABELS = { bars = "Bars", icons = "Icons", text = "Text" }
+
+-- The Fill (layout.axis) each style suits, written when a container's Style changes (B5,
+-- settings/Containers.lua): bars and text stack in a column, icons in a row.
+C.STYLE_FILL_AXIS = { bars = "vertical", text = "vertical", icons = "horizontal" }
 
 -- Who applied the aura. "mine" and "others" compile to the PLAYER token and its negation.
 C.CAST_BY = { "any", "mine", "others" }
@@ -140,13 +144,18 @@ C.TOOLTIP_ANCHOR_LABELS = {
     ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right", ANCHOR_CURSOR = "At the cursor",
 }
 
+-- The "Not in use" notice over a container page drawn for another style (settings/OptionsSetup.lua's
+-- drawDisabledNotice): a muted gold, about (0.78, 0.66, 0.35), readable on the dark panel and quieter
+-- than the title gold. The AARRGGBB body of a "|c" escape.
+C.NOTICE_COLOR = "ffc8a85a"
+
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "Short (1 unit)",
     long = "Detailed (2 units, 1h 15m)" }
--- The width a Bars time text is boxed to beside the name, in ems of its font size: the widest string
--- each format writes ("59m" in one unit, "23h 59m" in two). The engine writes the text secret, so
--- its width cannot be read back; a fixed budget is what gives the time's Justify a box (B-5).
+-- The width a Bars time text is boxed to beside the name, in ems of its font size, used only where
+-- the widest string cannot be MEASURED (modules/Style.lua's Style.TimeTextWidth, B4): the headless
+-- harness. The engine writes the live text secret, so its width is never read back.
 C.TIME_TEXT_EMS = { blizzard = 2.5, short = 2.5, long = 4.5 }
 
 -- The dispel types the engine names, plus "None" for an aura without one.
@@ -160,10 +169,62 @@ C.DEFAULT_DISPEL_COLORS = {
     None    = { r = 0.80, g = 0.00, b = 0.00, a = 1 },
 }
 
+-- ---------------------------------------------------------------------------
+-- The text style (issue #2): each aura one line of text, built from a template
+-- ---------------------------------------------------------------------------
+
+-- Where the line sits in its box. Center is honored only for a one-piece template: the chain's width
+-- is never readable, so nothing longer can be centered (modules/Style_Text.lua).
+C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
+C.TEXT_JUSTIFY_V = { "TOP", "MIDDLE", "BOTTOM" }
+C.TEXT_JUSTIFY_V_LABELS = { TOP = "Top", MIDDLE = "Middle", BOTTOM = "Bottom" }
+
+C.TEXT_ICON_POSITIONS = { "NONE", "LEFT", "RIGHT" }
+C.TEXT_ICON_POSITION_LABELS = { NONE = "Hidden", LEFT = "Left of the text", RIGHT = "Right of the text" }
+
+-- The looping effect. No scale effect, on purpose: a Scale animation grows the glyphs past the boxes
+-- the chain is anchored to, and the pieces overlap (docs/midnight-quirks.md).
+C.TEXT_ANIMS = { "none", "pulse", "blink", "bounce" }
+C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce = "Bounce" }
+
+-- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
+-- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also
+-- names the Enum.DurationTextBindingProperty member it reads, and whether it is a time or a percent.
+C.TEXT_TOKENS = {
+    { key = "spellname",         kind = "name" },
+    { key = "stacks",            kind = "stacks" },
+    { key = "dispeltype",        kind = "dispel" },
+    { key = "remainingduration", kind = "duration", prop = "RemainingDuration", fmt = "time" },
+    { key = "maxduration",       kind = "duration", prop = "TotalDuration",     fmt = "time" },
+    { key = "elapsedduration",   kind = "duration", prop = "ElapsedDuration",   fmt = "time" },
+    { key = "remainingpercent",  kind = "duration", prop = "RemainingPercent",  fmt = "percent" },
+    { key = "elapsedpercent",    kind = "duration", prop = "ElapsedPercent",    fmt = "percent" },
+}
+-- What each token shows, one cheat-sheet line each.
+C.TEXT_TOKEN_LABELS = {
+    spellname         = "The aura's name",
+    stacks            = "Its stack count, hidden below 2",
+    dispeltype        = "Its dispel type (Magic, Curse, ...); nothing when it has none",
+    remainingduration = "The time left",
+    maxduration       = "Its full duration",
+    elapsedduration   = "The time since it was applied",
+    remainingpercent  = "How much of it is left, in percent",
+    elapsedpercent    = "How much of it has run, in percent",
+}
+
+-- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry but
+-- None, plus Enrage. A type this list lacks shows the engine's own text.
+C.TEXT_DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "Enrage" }
+C.TEXT_DISPEL_LABELS = { Magic = "Magic", Curse = "Curse", Disease = "Disease", Poison = "Poison",
+    Bleed = "Bleed", Enrage = "Enrage" }
+
+-- The longest template the parser accepts (modules/TextTemplate.lua, rule 8).
+C.TEXT_TEMPLATE_MAX = 200
+
 -- Placeholder auras for preview mode (preview-mode): real render path, invented data.
 C.PREVIEW_AURAS = {
     { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },
-    { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0 },
+    { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0, dispel = "Magic" },
     { name = "Shield Wall",           icon = 132362, remaining = 4,    duration = 8,    stacks = 0 },
     { name = "Ignore Pain",           icon = 1377132, remaining = 11,  duration = 12,   stacks = 3 },
     { name = "Well Fed",              icon = 136000, remaining = 0,    duration = 0,    stacks = 0 },

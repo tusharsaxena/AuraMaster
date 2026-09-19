@@ -19,7 +19,7 @@ marked as such rather than listed as a requirement.
   only. The addon needs the 12.1 aura container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:28`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:19`). On a client
-  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:564`) and draws
+  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:568`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
@@ -82,14 +82,14 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 ### Optional: a sibling `../LibKa0s` checkout
 
 `tests/test_vendor_sync.lua` hands the comparison to the vendored `tests/_kit/vendor_sync.lua`, which
-reads the tag named in root `CLAUDE.md` (`v1.42.0`) out of a checkout at `../LibKa0s` and compares
+reads the tag named in root `CLAUDE.md` (`v1.44.0`) out of a checkout at `../LibKa0s` and compares
 `libs/LibKa0s/` and `tests/_kit/` against it. Without that checkout the case records a **skip with
 its reason**, not a pass and not a failure (testing-§11). Clone it if you touch `libs/`, re-vendor,
 or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.42.0   # verify: prints a commit
+git -C ../LibKa0s rev-parse --short v1.44.0   # verify: prints a commit
 ```
 
 ### Not dependencies of this repo

@@ -336,7 +336,7 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
             refused[#refused + 1] = verb
         end
     end
-    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,pick,resetposition,forgettimed",
+    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,test,pick,resetposition,forgettimed",
         "exactly the feature verbs refuse")
 
     -- And `set` really wrote. The point of keeping the schema CLI live is repair, not politeness.

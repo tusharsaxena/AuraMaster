@@ -373,6 +373,95 @@ test("compat: no curve API, or a curve that refuses a point, gives no text color
     end)
 end)
 
+-- ── the text style (issue #2) ────────────────────────────────────────────────────────────────
+
+--- The Text style's client APIs as recording stand-ins (tests/text_apis.lua), planted on a scratch
+--- table and handed to `with` key by key.
+local function textApis()
+    local t = {}
+    dofile("tests/text_apis.lua")(t)
+    return t
+end
+
+test("compat: a duration property reads the engine enum by member, and nil without it", function()
+    local apis = textApis()
+    with({ { "Enum", apis.Enum } }, function(NS)
+        -- red under: DurationProperty answering the member name instead of the enum's value
+        assertEqual(NS.Compat.DurationProperty("TotalDuration"), apis.Enum.DurationTextBindingProperty.TotalDuration)
+        assertNil(NS.Compat.DurationProperty("NoSuchProperty"))
+    end)
+    with({ { "Enum", nil } }, function(NS)
+        assertNil(NS.Compat.DurationProperty("RemainingDuration"))
+    end)
+end)
+
+test("compat: a rule formatter is built with its breakpoints, and nil without the API or when refused", function()
+    local apis = textApis()
+    local breakpoints = { { threshold = 0, format = "" }, { threshold = 2, format = " x%d" } }
+    with({ { "C_StringUtil", apis.C_StringUtil } }, function(NS)
+        local f = NS.Compat.CreateRuleFormatter(breakpoints)
+        -- red under: CreateRuleFormatter never calling SetBreakpoints
+        assertTrue(f ~= nil and f.kind == "rule", "the client's formatter")
+        assertTrue(f:__last("SetBreakpoints")[1] == breakpoints)
+    end)
+    with({ { "C_StringUtil", nil } }, function(NS)
+        assertNil(NS.Compat.CreateRuleFormatter(breakpoints))
+    end)
+    local refusing = { CreateNumericRuleFormatter = function()
+        return { SetBreakpoints = function() error("bad breakpoints") end }
+    end }
+    with({ { "C_StringUtil", refusing } }, function(NS)
+        -- red under: SetBreakpoints called without pcall
+        assertNil(NS.Compat.CreateRuleFormatter(breakpoints))
+    end)
+end)
+
+test("compat: a duration binding writes nothing for a timeless or expired aura, and refreshes only when asked", function()
+    local apis = textApis()
+    with({ { "C_DurationUtil", apis.C_DurationUtil } }, function(NS)
+        local b = NS.Compat.CreateDurationBinding(nil)
+        assertEqual(b.kind, "binding")
+        -- red under: a timeless aura writing the engine's own zero text
+        assertEqual(b:__last("SetZeroDurationText")[1], "")
+        assertEqual(b:__last("SetExpiredText")[1], "")
+        -- red under: every binding paying a 0.1 s refresh, blink or not
+        assertEqual(b:__count("SetUpdateInterval"), 0)
+        local blink = NS.Compat.CreateDurationBinding(0.1)
+        assertEqual(blink:__last("SetUpdateInterval")[1], 0.1)
+    end)
+    with({ { "C_DurationUtil", nil } }, function(NS)
+        assertNil(NS.Compat.CreateDurationBinding(nil))
+    end)
+    local refusing = { CreateDurationTextBinding = function()
+        return { SetZeroDurationText = function() error("refused") end }
+    end }
+    with({ { "C_DurationUtil", refusing } }, function(NS)
+        assertNil(NS.Compat.CreateDurationBinding(nil))
+    end)
+end)
+
+test("compat: the blink curve alternates the running-out color's alpha every quarter second, then the normal color", function()
+    local apis = textApis()
+    with({ { "C_CurveUtil", apis.C_CurveUtil }, { "Enum", apis.Enum } }, function(NS)
+        local tc = NS.Compat.BlinkTextColor(1, { r = 1, g = 0.2, b = 0, a = 0.8 }, { r = 0.9, g = 0.9, b = 0.9, a = 1 })
+        assertEqual(tc.property, apis.Enum.DurationTextBindingProperty.RemainingDuration)
+        local curve = tc.curve
+        assertEqual(curve:__last("SetType")[1], apis.Enum.LuaCurveType.Step, "a step, not a blend")
+        local points = {}
+        for _, c in ipairs(curve.calls) do
+            if c.name == "AddPoint" then
+                local n = #points
+                points[n + 1] = c[1] .. "=" .. c[2].a
+            end
+        end
+        -- red under: a curve that dims from the threshold down instead of alternating
+        assertEqual(table.concat(points, ","), "0=0.8,0.25=0.1,0.5=0.8,0.75=0.1,1=1")
+    end)
+    with({ { "C_CurveUtil", nil }, { "Enum", apis.Enum } }, function(NS)
+        assertNil(NS.Compat.BlinkTextColor(5, {}, {}))
+    end)
+end)
+
 -- ── everything else ──────────────────────────────────────────────────────────────────────────
 
 test("compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global", function()

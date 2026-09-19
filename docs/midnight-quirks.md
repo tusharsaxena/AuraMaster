@@ -26,6 +26,25 @@ table key, index it or run `#` on it.
 - Every chat and debug line goes through `NS.SafeToString` (LibKa0s-Core), so a secret can never
   reach `table.concat` or `string.format`.
 
+**Measured in-game, client 12.1.0 (120100), 2026-09-18** (a throwaway probe for issue #8, run in
+open-world combat, on a target dummy, on dungeon trash and during a boss encounter):
+- `ShouldAurasBeSecret()` answered true in **every** combat context, the open world included, not
+  only in instances.
+- In combat, `C_UnitAuras.GetAuraDataByIndex`, `GetUnitAuras` and `GetAuraSlots` **raised on every
+  call** (7,500 calls, 0 readable ids) with *"Auras cannot be accessed when secret while tainted by
+  '<addon>'"*. Every addon is tainted, so no addon code reads an aura id in combat.
+- The `UNIT_AURA` payload table itself arrived plain, but its `addedAuras` was secret in combat, so no
+  id reaches addon code through the payload or `GetAuraDataByAuraInstanceID` either.
+- Out of combat every route read every id and name, inside a dungeon between pulls too.
+- `ADDON_RESTRICTION_STATE_CHANGED` carries `(type, active)`. Type `0` tracked combat and fired with
+  `PLAYER_REGEN_DISABLED` / `_ENABLED`. Types `1` and `5` went active together at
+  `ENCOUNTER_START` and cleared at `ENCOUNTER_END`. Type `4` went active on entering a dungeon
+  and did not clear, yet auras stayed readable there out of combat.
+
+So learning spell ids from auras can only happen out of combat: `modules/TimedSpells.lua`'s gate
+is the most any feature can have. A seen-aura cache that had to learn in combat (#8) was dropped
+for this reason.
+
 ## The display is Blizzard's AuraContainer
 
 **The restriction.** An addon that cannot read auras cannot decide what to draw. 12.1 supplies the
@@ -127,18 +146,46 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:170`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:145`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
 preview reads its placeholders' durations and hides the spark directly.
+
+## Text chains and animations on engine buttons
+
+**Measured in-game, client 12.1.0 (120100), 2026-09-18** (two throwaway probes, 40 player-buff
+buttons each, for issue #2):
+- Every binding the Text style uses was accepted: `SetSpellName`; `SetApplicationCount` with a
+  `C_StringUtil.CreateNumericRuleFormatter` whose breakpoints `{0: ""}, {2: " x%d"}` hide a single
+  stack; `SetDurationText` with `textFormat = { formatString, components }` (several `{}` in one
+  string) and a prebuilt `C_DurationUtil.CreateDurationTextBinding()` carrying
+  `SetZeroDurationText("")`, `SetExpiredText("")` and `SetUpdateInterval(0.1)`; a stepped
+  `C_CurveUtil` color curve on `RemainingDuration`. `RemainingPercent` arrives on a 0–100 scale.
+- A timeless aura writes nothing through that binding, so text folded into the duration's format
+  disappears with it.
+- A stepped curve with alternating alpha blinks the duration text in the last seconds, in and out of
+  combat.
+- AnimationGroups started at dress time keep playing through combat and after it. In combat every
+  call on the button's objects raises "Attempt to access forbidden object from code tainted by an
+  AddOn" (`AnimationGroup:IsPlaying/Play/Stop`, `Region:IsShown`, `IsAnchoringSecret`), so an
+  animation is set up at dress time only.
+- `FontString:IsAnchoringSecret()` answers true even out of combat for an engine-written name: no
+  width in a chain can be read, so a multi-piece line cannot be centered.
+- A **Scale** animation broke a left-justified chain (the glyphs grew about 8 % past their boxes and
+  overlapped the next piece); an Alpha animation did not. Round 2, four chains each piece boxed and
+  tinted, laid out cleanly in and out of combat: the client sizes an engine-written, single-anchored,
+  auto-sized font string to its secret text, and a chain anchored to it lays out right.
+
+So a Text line is a chain of single-anchored, auto-sized font strings (`modules/Style_Text.lua`),
+its loops are Alpha and Translation only, built and played at dress time.
 
 ## Additive bindings stack
 
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:156`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:277`), and then adds again
 (`modules/Style_Bars.lua:299`, `modules/Style_Icons.lua:149`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -176,7 +223,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:434`).
+  aura buttons (`modules/Container.lua:433`).
 
 ## Smaller API moves this addon absorbs
 

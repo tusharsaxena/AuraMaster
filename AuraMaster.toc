@@ -1,6 +1,6 @@
 ## Interface: 120100
 ## Title: Ka0s Aura Master
-## Notes: Build your own buff, debuff and weapon enchant displays for player, target, focus and pet, as bars or icons.
+## Notes: Build your own buff, debuff and weapon enchant displays for player, target, focus and pet, as bars, icons or lines of text.
 ## Author: add1kted2ka0s
 ## Version: 0.1.0
 ## IconTexture: Interface\AddOns\AuraMaster\media\logos\auramaster.logo.128.tga
@@ -83,10 +83,14 @@ defaults\Profile.lua
 # Conventional: TimedSpells and FilterCompiler resolve their peers at call time.
 modules\TimedSpells.lua
 modules\FilterCompiler.lua
-# LOAD-BEARING: Style before Style_Bars and Style_Icons, which decorate NS.Style at file scope.
+# LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.
+modules\TextTemplate.lua
+# LOAD-BEARING: Style before Style_Bars, Style_Icons and Style_Text, which decorate NS.Style at file
+# scope.
 modules\Style.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
+modules\Style_Text.lua
 # Conventional: the rest of the modules; peers resolved at call time.
 modules\Anchors.lua
 modules\Preview.lua
@@ -112,11 +116,12 @@ settings\General.lua
 # and before its sub-pages, is fixed by this load position (N-2).
 settings\Containers.lua
 # Conventional: the page files, each registering its rows and page at load. Filters, Layout,
-# Bars and Icons are sub-pages of Containers (N-2, D6): their tree label carries
+# Bars, Icons and Text are sub-pages of Containers (N-2, D6): their tree label carries
 # NS.SubPageLabel's mark, and this load position -- after Containers, before Profiles -- is
 # what fixes their place in the tree.
 settings\Filters.lua
 settings\Layout.lua
 settings\Bars.lua
 settings\Icons.lua
+settings\Text.lua
 settings\Profiles.lua

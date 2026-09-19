@@ -438,6 +438,7 @@ local SECTIONS = {
     ["container.position"] = "layout",
     ["container.bars"]     = "bars",
     ["container.icons"]    = "icons",
+    ["container.text"]     = "text",
 }
 
 --- Whether `path` is one of the whole-section paths (a test seam: tests/test_schema.lua).
@@ -492,7 +493,8 @@ local function fireSectionChanges(section, old, v, depth, id)
         if row.onChange and isUnder(row.path, section) then
             local parts = splitPath(row.path)
             local leaf = readFrom(v, parts, depth + 1)
-            if Sig(readFrom(old, parts, depth + 1)) ~= Sig(leaf) then row.onChange(leaf, id) end
+            local was = readFrom(old, parts, depth + 1)
+            if Sig(was) ~= Sig(leaf) then row.onChange(leaf, id, was) end
         end
     end
 end
@@ -572,13 +574,23 @@ local function writeSection(path, value, containerId, sec)
     return true
 end
 
+--- What `row` holds before a write: the stored leaf, or a session row's own get(). Handed to the
+--- row's `onChange` as its third argument, so a reaction can tell a real change from a re-write of
+--- the same value (the Style row's Fill reset, B5).
+local function previousValue(row, root, parts, first)
+    if row.sessionOnly then return row.get and row.get() end
+    return readFrom(root, parts, first)
+end
+
 --- A schema row's storage step: resolve the container, validate the raw value, normalize, store.
 --- `row.validate(value, id)` and the optional `row.normalize(value, id)` are both handed the id the
 --- write targets (nil for a global or session row, or when no container resolves), so a row can
 --- check or rewrite a value against ITS container: the attach row refuses a loop from the container
 --- written, the name row makes a name unique. A bad value is refused before a missing container, so
---- the refusal names the value. It returns ok, err|nil, the container id, and the value as stored
---- (what onChange and the announcement see).
+--- the refusal names the value. A `validate` may answer false AND a reason (the Text template's
+--- parser does); the reason travels on as the refusal's third return. It returns ok, err|nil, a third
+--- slot that is the container id on success and the row's refusal reason (or nil) on a refusal, then
+--- the value as stored and the value it replaced (what onChange and the announcement see).
 --- Inside a bulk bracket it tallies the row here, once stored, so an onChange that raises
 --- afterwards cannot drop a stored write from the count.
 local function writeRow(row, path, value, containerId)
@@ -587,12 +599,14 @@ local function writeRow(row, path, value, containerId)
         parts = splitPath(path)
         root, first, id = resolveRoot(parts, containerId)
     end
-    if row.validate and not row.validate(value, id) then
-        return false, L["Invalid value for %s"]:format(path)
+    if row.validate then
+        local ok, why = row.validate(value, id)
+        if not ok then return false, L["Invalid value for %s"]:format(path), why end
     end
     if parts and not root then return false, NO_CONTAINER end
     if row.normalize then value = row.normalize(value, id) end
     local changed = bulk.depth > 0 and rowChanges(row, root, parts, first, value)
+    local old = previousValue(row, root, parts, first)
     if row.sessionOnly then
         -- No database write by definition; the row's own set() IS its storage.
         if row.set then row.set(value) end
@@ -602,7 +616,7 @@ local function writeRow(row, path, value, containerId)
         writeInto(root, parts, first, copy(value))
     end
     if changed then tally(1) end
-    return true, nil, id, value
+    return true, nil, id, value, old
 end
 
 --- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
@@ -612,7 +626,10 @@ end
 --- Order is load-bearing: resolve, validate against the resolved container, normalize, write, react,
 --- log once, announce. A bad value is refused before a missing container. Reacting before the write
 --- would hand a reactor the old value; logging in the reactor would log it once per subscriber.
---- @return boolean ok, string|nil err
+--- A refused row write may carry a third return, the row's own reason (the Text template's parser
+--- message), which the panel and `/am set` print under `err` (settings/OptionsSetup.lua,
+--- settings/Slash.lua).
+--- @return boolean ok, string|nil err, string|nil why
 function NS.SetByPath(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
     if path == MINIMAP_PATH then return writeMinimap(value) end
@@ -622,10 +639,10 @@ function NS.SetByPath(path, value, containerId)
 
     local row = index[path]
     if not row then return false, L["Setting not found: %s"]:format(path) end
-    local ok, err, id, stored = writeRow(row, path, value, containerId)
-    if not ok then return false, err end
+    local ok, err, id, stored, old = writeRow(row, path, value, containerId)
+    if not ok then return false, err, id end
 
-    if row.onChange then row.onChange(stored, id) end
+    if row.onChange then row.onChange(stored, id, old) end
     announceWrite(row.page, id, path, stored, row.sessionOnly, false)
     return true
 end
@@ -649,8 +666,9 @@ local function checkRow(path, value, containerId)
         local _
         root, _, id = resolveRoot(splitPath(path), containerId)
     end
-    if row.validate and not row.validate(value, id) then
-        return false, L["Invalid value for %s"]:format(path)
+    if row.validate then
+        local ok, why = row.validate(value, id)
+        if not ok then return false, L["Invalid value for %s"]:format(path), why end
     end
     if not row.sessionOnly and not root then return false, NO_CONTAINER end
     return true
@@ -659,8 +677,9 @@ end
 --- Whether NS.SetByPath(path, value, containerId) would store the value: the same checks, run on a
 --- copy, with nothing stored, no onChange and nothing announced. Not a second write seam — it
 --- writes nothing. It lets a caller that writes several paths as one act (ContainerManager.CopyFrom)
---- refuse all of them when any one would be refused.
---- @return boolean ok, string|nil err
+--- refuse all of them when any one would be refused. A refused row check carries the row's own
+--- reason as the third return, as NS.SetByPath's does.
+--- @return boolean ok, string|nil err, string|nil why
 function NS.CheckWrite(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
     -- Stored once the database exists; the value is a bool and nothing about it can be refused.
@@ -707,7 +726,7 @@ end
 
 local VALID_PAGES = {
     general = true, containers = true, filters = true, layout = true, bars = true, icons = true,
-    profiles = true,
+    text = true, profiles = true,
 }
 local VALID_TYPES = { bool = true, number = true, string = true, color = true }
 

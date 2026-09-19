@@ -455,6 +455,76 @@ test("bars: beside the name the time is boxed to its format's widest string, so 
     assertEqual(am.time:__last("SetWidth")[1], 40 - 18 - 1 - 4, "held to the bar area less the offset")
 end)
 
+-- ── the measured time box (B4) ──────────────────────────────────────────────────────────────────
+
+--- A fresh environment whose time texts are measured on a recorder answering half the font size per
+--- character of the last string set, so a longer string or a bigger font measures wider.
+local function measuring()
+    local ns = dofile("tests/fresh_env.lua")()
+    local fs = R()
+    fs.__answer.GetStringWidth = function(self)
+        local font, text = self:__last("SetFont"), self:__last("SetText")
+        return #text[1] * font[2] * 0.5
+    end
+    ns.Style.__measurer = function() return fs end
+    return ns, fs
+end
+
+test("bars: beside the name the time is boxed to the measured width of its format's widest string (B4)", function()
+    local ns, fs = measuring()
+    -- No formatter headlessly: the samples are written as whole seconds, the widest "863999s".
+    local _, am = dressed(cfg(), false, nil, ns)
+    -- red under: timeBoxWidth keeping the ems budget (2.5 ems of 11pt, 28px: "59 m" cut to "59...")
+    assertEqual(am.time:__last("SetWidth")[1], math.ceil(7 * 11 * 0.5 + 2))
+    _, am = dressed(cfg({ bars = { time = { fontSize = 20 } } }), false, nil, ns)
+    assertEqual(am.time:__last("SetWidth")[1], 7 * 20 * 0.5 + 2, "a bigger font, a wider box")
+    -- red under: the offset taken out of the box (moving the text would clip it)
+    _, am = dressed(cfg({ bars = { time = { x = -15 } } }), false, nil, ns)
+    assertEqual(am.time:__last("SetWidth")[1], math.ceil(7 * 11 * 0.5 + 2), "the offset moves the box, never narrows it")
+    local measured = fs:__count("SetText")
+    dressed(cfg(), false, nil, ns)
+    -- red under: TimeTextWidth measuring on every dress
+    assertEqual(fs:__count("SetText"), measured, "cached per font and format")
+    dressed(cfg({ bars = { time = { fontFlags = "NONE" } } }), false, nil, ns)
+    assertTrue(fs:__count("SetText") > measured, "a new font measures again")
+end)
+
+test("bars: a measurer answering no width, refusing the font or raising gives the ems budget and caches nothing", function()
+    local ns, fs = measuring()
+    local t, tdef = { fontSize = 11 }, ns.CONTAINER_TEMPLATE.bars.time
+    local width = fs.__answer.GetStringWidth
+    fs.__answer.GetStringWidth = function() return 0 end
+    -- red under: a zero width cached as the time box (a string not yet laid out measures 0)
+    assertNil(ns.Style.TimeTextWidth(t, tdef, "blizzard"))
+    fs.__answer.GetStringWidth = width
+    -- red under: the failed measure cached, so a later dress never measures again
+    assertEqual(ns.Style.TimeTextWidth(t, tdef, "blizzard"), 7 * 11 * 0.5 + 2)
+    fs.__raise.GetStringWidth = true
+    -- red under: widestSample unguarded (the raise aborts the dress)
+    assertNil(ns.Style.TimeTextWidth({ fontSize = 12 }, tdef, "blizzard"))
+    fs.__raise.GetStringWidth = nil
+    assertEqual(ns.Style.TimeTextWidth({ fontSize = 12 }, tdef, "blizzard"), 7 * 12 * 0.5 + 2, "measured once it answers")
+    local refused = false
+    fs.__answer.SetFont = function()
+        if refused then return true end
+        refused = true
+        return false
+    end
+    local fonts = fs:__count("SetFont")
+    -- red under: the SetFont refusal ignored (the samples measured in whatever font was last set)
+    assertEqual(ns.Style.TimeTextWidth({ fontSize = 13 }, tdef, "blizzard"), 7 * 13 * 0.5 + 2)
+    assertEqual(fs:__count("SetFont") - fonts, 2, "a refused font falls back")
+    assertEqual(fs:__last("SetFont")[1], ns.Constants.FALLBACK_FONT, "measured in the fallback font")
+    fs.__answer.SetFont = function() return false end
+    assertNil(ns.Style.TimeTextWidth({ fontSize = 14 }, tdef, "blizzard"), "no font at all: nothing measured")
+end)
+
+test("bars: where nothing can be measured the time keeps its ems budget", function()
+    -- The shared environment's measuring string is the kit's, whose GetStringWidth answers no number.
+    local _, am = dressed(cfg())
+    assertEqual(am.time:__last("SetWidth")[1], 28, "2.5 ems of 11pt")
+end)
+
 -- ── engine bindings ───────────────────────────────────────────────────────────────────────────
 
 test("bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on", function()
@@ -568,6 +638,21 @@ test("bars: the refresh-window highlight is bound only when turned on, and alway
     -- red under: Bars.Bind adding the highlight whatever the setting
     assertEqual(frame:__count("AddPandemicRegion"), 0)
     assertEqual(frame:__count("ClearPandemicRegions"), 1, "a restyle that turned it off removes it")
+end)
+
+test("bars: with the time's class color on, the running-out curve returns to the class color, one curve per container", function()
+    local ns = dofile("tests/fresh_env.lua")({ before = dofile("tests/text_apis.lua") })
+    local class = { r = 0.2, g = 0.4, b = 0.6 }
+    local c = ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), { bars = { expiringColorOn = true,
+        time = { fontColor = { r = 1, g = 1, b = 1, a = 0.7 }, useClassColorFont = true } } })
+    local a = dressed(c, true, class, ns)
+    local b = dressed(c, true, class, ns)
+    local curve = a:__last("SetDurationText")[2].textColor
+    local normal = curve.curve:__last("AddPoint")[2]
+    -- red under: BindDurationText reading the raw time color (white above the threshold)
+    assertEqual(("%s,%s,%s,%s"):format(normal.r, normal.g, normal.b, normal.a), "0.2,0.4,0.6,0.7")
+    -- red under: a fresh color table per dress (one curve built per button)
+    assertTrue(b:__last("SetDurationText")[2].textColor == curve, "two buttons of one container share one curve")
 end)
 
 -- ── preview fill ──────────────────────────────────────────────────────────────────────────────

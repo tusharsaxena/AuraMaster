@@ -49,14 +49,35 @@ test("slash: /am new creates the described container and selects it", function()
     assertEqual(c.unit, "target")
     assertEqual(c.auraType, "HARMFUL")
     assertEqual(c.style, "icons")
-    assertEqual(#NS2.Database.GetContainers(), 4)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+end)
+
+test("slash: /am new text creates a text-style container", function()
+    local NS2 = fresh()
+    NS2.Slash:OnSlash("new player buffs text")
+    local _, id = NS2.ActiveContainer()
+    local c = NS2.Database.FindContainer(id)
+    -- red under: NEW_WORDS without "text" (the verb refuses the word and creates nothing)
+    assertEqual(c.style, "text")
+    assertEqual(c.auraType, "HELPFUL")
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+end)
+
+test("slash: /am new gives the new container the Fill its style suits (B5)", function()
+    local NS2 = fresh()
+    for word, axis in pairs({ icons = "horizontal", bars = "vertical", text = "vertical" }) do
+        NS2.Slash:OnSlash("new target debuffs " .. word)
+        local _, id = NS2.ActiveContainer()
+        -- red under: CM.Create keeping the template's Fill whatever the style (an icon row in Columns)
+        assertEqual(NS2.Database.FindContainer(id).layout.axis, axis, word)
+    end
 end)
 
 test("slash: /am new with a word it does not know creates nothing and says why", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("new target sparkles")
-    assertEqual(#NS2.Database.GetContainers(), 3)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
     assertTrue(said(lines, "sparkles"))
 end)
 
@@ -90,33 +111,36 @@ test("slash: lock and unlock drive the same setting the panel does", function()
     assertTrue(NS2.db.profile.locked)
 end)
 
-test("slash: /am test and /am preview are unknown verbs; each prints the help index and changes nothing", function()
-    -- Standard v2.49.0 (preview-mode): unlocking already shows the placeholder preview, so the
-    -- unlocked view is the test mode, Lock frame (`/am lock`, `/am unlock`) its switch, and no test verb.
-    for _, verb in ipairs({ "test", "preview" }) do
-        local NS2, mocks = fresh()
-        local lines = capture(mocks)
-        NS2.Slash:OnSlash(verb .. " on")
-        -- red under: NS.COMMANDS keeping a {"test", ...} entry
-        assertTrue(NS2.db.profile.locked, "/am " .. verb .. " unlocks nothing")
-        assertTrue(said(lines, "command '" .. verb .. "'"), lastLine(lines))
-        assertTrue(said(lines, "slash commands"), "the help index follows the unknown-command line")
-    end
+test("slash: /am preview is an unknown verb; /am test switches test mode and leaves the lock alone (B1)", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("preview on")
+    assertTrue(said(lines, "command 'preview'"), lastLine(lines))
+    NS2.Slash:OnSlash("test")
+    -- red under: NS.COMMANDS without its {"test", ...} entry
+    assertTrue(NS2.State.testMode, "/am test toggles it on")
+    assertTrue(said(lines, "Test mode on"), lastLine(lines))
+    NS2.Slash:OnSlash("test off")
+    assertFalse(NS2.State.testMode)
+    NS2.Slash:OnSlash("test on")
+    assertTrue(NS2.State.testMode)
+    assertTrue(NS2.db.profile.locked, "the lock is untouched")
+    NS2.Slash:OnSlash("test sideways")
+    assertTrue(said(lines, "Usage: /am test [on|off]"), lastLine(lines))
 end)
 
-test("slash: /am help and the landing page list neither test nor preview", function()
+test("slash: /am help and the landing page list test, and not preview (B1)", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("help")
     local help, rows = table.concat(lines, "\n"), table.concat(NS2.Slash.LandingRows(), "\n")
     -- The verb, then anything but a letter: a help row closes the verb's color code right after it.
     local function listed(text, verb) return text:find("/am " .. verb .. "[^%w]") ~= nil end
-    assertTrue(listed(help, "unlock") and listed(rows, "unlock"), "the matcher finds a listed verb")
-    for _, verb in ipairs({ "test", "preview" }) do
-        -- red under: NS.COMMANDS keeping a {"test", ...} row
-        assertFalse(listed(help, verb), "no help row for " .. verb)
-        assertFalse(listed(rows, verb), "no landing row for " .. verb)
-    end
+    -- red under: NS.COMMANDS without its {"test", ...} row
+    assertTrue(listed(help, "test") and listed(rows, "test"), "test is listed")
+    assertFalse(listed(help, "preview") or listed(rows, "preview"), "no preview verb")
+    -- red under: the unlock row still promising placeholder auras
+    assertFalse(help:find("shows placeholder auras", 1, true) ~= nil, "unlock no longer previews")
 end)
 
 local function grayLine(lines, fragment)
@@ -224,7 +248,7 @@ test("slash: /am delete removes a container by id", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("delete 3")
     assertNil(NS2.Database.FindContainer(3))
-    assertEqual(#NS2.Database.GetContainers(), 2)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
 end)
 
 test("slash: a name two containers share is refused, not guessed", function()
@@ -236,7 +260,7 @@ test("slash: a name two containers share is refused, not guessed", function()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("delete dup")
     -- red under: findContainer returning the first match
-    assertEqual(#NS2.Database.GetContainers(), 3, "both containers remain")
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "both containers remain")
     assertTrue(said(lines, "More than one container is called 'dup'"), lastLine(lines))
     NS2.Slash:OnSlash("select DUP")
     assertEqual(NS2.State.activeContainerId, 3, "the selection does not move")
@@ -250,7 +274,7 @@ test("slash: /am delete in combat refuses in gray and keeps the container", func
     NS2.Slash:OnSlash("delete 3")
     -- red under: runDelete without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(3) ~= nil, "the container survives")
-    assertEqual(#NS2.Database.GetContainers(), 3)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
     assertTrue(grayLine(lines, "cannot delete a container during combat"), lastLine(lines))
 end)
 
@@ -288,7 +312,7 @@ local function resetsUnderLockdown(surface)
     assertEqual(resets[1], 1, "db:ResetProfile(), once: the same act as Reset Profile")
     assertFalse(grayLine(lines, "during combat"), "no refusal: " .. lastLine(lines))
     assertTrue(said(lines, "All settings reset to defaults."), lastLine(lines))
-    assertEqual(#NS2.Database.GetContainers(), 3, "the shipped set is back")
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "the shipped set is back")
     -- red under: CM.Sync destroying instead of parking under MustDefer
     assertEqual(hides[1], 0)
     assertEqual(clears[1], 0)
@@ -315,7 +339,7 @@ test("slash: /am new in combat refuses in gray and creates nothing", function()
     local lines = capture(mocks)
     mocks.__lockdown = true
     NS2.Slash:OnSlash("new target debuffs icons")
-    assertEqual(#NS2.Database.GetContainers(), 3)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
     -- red under: runNew printing a refused err through the plain printer
     assertTrue(grayLine(lines,
         "cannot create a container during combat — it would not be drawn or placed until combat ends"),

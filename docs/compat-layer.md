@@ -1,10 +1,10 @@
 # Compat layer
 
-`core/Compat.lua` publishes **17** shims on `NS.Compat`, counted with the command documentation-§3
+`core/Compat.lua` publishes **21** shims on `NS.Compat`, counted with the command documentation-§3
 fixes:
 
 ```sh
-grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 17
+grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 21
 ```
 
 A shim is the one entry point a feature module calls in place of a new-in-12.x, version-variant or
@@ -35,6 +35,10 @@ metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`) and the secret-safe str
 | 15 | `GetMouseFocus()` | `GetMouseFoci()[1]`, then the pre-11.0 `GetMouseFocus` | `nil` | `GetMouseFocus` was removed in 11.0 | `modules/FramePicker.lua` |
 | 16 | `GetSpellInfo(id)` | `C_Spell.GetSpellInfo` → name, `iconID`; then the old global | `nil` | The spell list editor's labels | `settings/Filters.lua` |
 | 17 | `EnsureAuraContainer()` | `C_AddOns.LoadAddOn("Blizzard_AuraContainer")` when it is not loaded (pcall), then `HasAuraContainer()` | `HasAuraContainer()` | `Blizzard_AuraContainer` is load-on-demand: until it loads, neither `CustomAuraContainerTemplate` nor the enums shims 3–7 read exist (`docs/midnight-quirks.md`) | `modules/ContainerManager.lua` (`CM.Init`) |
+| 18 | `DurationProperty(member)` | `Enum.DurationTextBindingProperty[member]` | `nil` | Each `{}` of a Text-style duration run names the property it reads | `modules/Style.lua` |
+| 19 | `CreateRuleFormatter(breakpoints)` | `C_StringUtil.CreateNumericRuleFormatter` + `SetBreakpoints` (pcall) | `nil` | The Text style's stack count (hidden below 2) and its percent components (`%d%%`) | `modules/Style.lua`, `modules/Style_Text.lua` |
+| 20 | `CreateDurationBinding(interval)` | `C_DurationUtil.CreateDurationTextBinding` + `SetZeroDurationText("")`, `SetExpiredText("")`, `SetUpdateInterval` only for a blink (pcall) | `nil` | A timeless or expired aura writes no duration text, bracket text included | `modules/Style_Text.lua` |
+| 21 | `BlinkTextColor(threshold, blink, normal)` | `C_CurveUtil.CreateColorCurve` step curve over `RemainingDuration`, alternating alpha every 0.25 s | `nil` | Blink the Text style's duration run in the last seconds without reading a secret | `modules/Style.lua` |
 
 ## Rules for this file
 

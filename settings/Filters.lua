@@ -557,6 +557,8 @@ local function overrideList(ctx, cfg, key, heading, blurb)
     H.TextRow(ctx, blurb)
     H.IdList(ctx, {
         kind       = "spell",
+        -- Every spell list in the addon draws its remove control the same way (B2).
+        removeStyle = "icon",
         label      = L["Add a spell"],
         tooltip    = NS.GeneralSpells.ID_TOOLTIP,
         strings    = NS.GeneralSpells.ID_STRINGS,

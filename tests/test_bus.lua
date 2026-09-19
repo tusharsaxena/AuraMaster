@@ -115,7 +115,7 @@ test("bus: a CONFIG_CHANGED the receiver cannot read re-applies the container it
     NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED)
     mocks.__fireTimers()
     -- red under: the CONFIG_CHANGED receiver indexing a missing payload
-    assertEqual(total(by), 3, "no payload: every container re-applies")
+    assertEqual(total(by), #NS.STARTER_CONTAINERS, "no payload: every container re-applies")
     for k in pairs(by) do by[k] = nil end
     NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED, { containerId = 2, path = "no.such.row" })
     mocks.__fireTimers()

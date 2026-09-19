@@ -144,24 +144,67 @@ test("container: the show ladder — suspend, the master switch, the container s
     assertFalse((inst:ShouldShow()))
 end)
 
-test("container: unlocking previews placeholders through the style code and disables the engine", function()
+test("container: test mode previews placeholders through the style code and disables the engine", function()
     local NS = fresh()
     local inst = NS.ContainerManager.instances[1]
-    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     local enabled = inst.engine:__callsTo("SetEnabled")
     assertEqual(enabled[#enabled][2], false, "real auras do not draw over the placeholders")
     local _, active = NS.Pool.Counts(inst.previewPools.bars)
     assertEqual(active, #NS.Constants.PREVIEW_AURAS)
     assertTrue(inst.previewPools.bars.active[1].__am ~= nil, "dressed by the same Style code")
-    NS.SetByPath("locked", true)
+    NS.Preview.SetTestMode(false)
     local _, after = NS.Pool.Counts(inst.previewPools.bars)
     assertEqual(after, 0)
+end)
+
+test("container: unlocked, a container shows whatever its visibility rule, its engine drawing, under an outline (B1)", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("visibility", "never")
+    assertFalse(inst.engine.__enabled, "locked and set to never: nothing draws")
+    NS.SetByPath("locked", false)
+    -- red under: ShouldShow applying the visibility rule while unlocked (an in-combat-only
+    -- container could never be found and moved out of combat)
+    assertTrue(inst.engine.__enabled, "unlocked: shown, its live auras drawing")
+    assertTrue(inst.handle:IsShown(), "and its handle")
+    -- red under: ApplyVisibility without the outline (an empty container has nothing to grab)
+    assertTrue(inst.outline ~= nil and inst.outline:IsShown(), "an outline marks even an empty container")
+    NS.Preview.SetTestMode(true)
+    assertFalse(inst.outline:IsShown(), "test mode: the placeholders are there instead")
+    NS.Preview.SetTestMode(false)
+    NS.SetByPath("locked", true)
+    assertFalse(inst.outline:IsShown(), "locked: no outline")
+end)
+
+test("container: test mode shows the placeholders while locked, whatever the visibility rule (B1)", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("visibility", "never")
+    assertTrue(NS.db.profile.locked, "locked")
+    NS.Preview.SetTestMode(true)
+    -- red under: ShouldShow applying the visibility rule while previewing (options-ui-§15: test mode
+    -- shows the display without an unlock)
+    assertTrue(inst.previewShown, "test mode: the placeholders show")
+    assertTrue((inst:ShouldShow()), "shown")
+    assertFalse(inst.engine.__enabled, "and real auras do not draw over them")
+end)
+
+test("container: test mode off, a locked container set to never is hidden again (B1)", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.SetByPath("visibility", "never")
+    NS.Preview.SetTestMode(true)
+    NS.Preview.SetTestMode(false)
+    assertFalse(inst.previewShown, "the placeholders go")
+    assertFalse((inst:ShouldShow()), "hidden")
+    assertFalse(inst.engine.__enabled, "nothing draws")
 end)
 
 test("container: a visibility pass re-dresses no preview element unless the settings changed", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
-    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     local dressed = 0
     local element = NS.Style.Element
@@ -206,7 +249,7 @@ test("container: on a client without the aura engine nothing is built and previe
     local NS, mocks = fresh({ before = function(m) m.AuraContainerSortMethod = nil end })
     assertEqual(#mocks.__engines, 0)
     assertNil(NS.ContainerManager.instances[1].engine)
-    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
     local _, active = NS.Pool.Counts(NS.ContainerManager.instances[1].previewPools.bars)
     assertTrue(active > 0)
 end)
@@ -356,6 +399,22 @@ test("container: switching style rebuilds the engine even when the filter plan k
     -- red under: the structure key leaving out cfg.style (icon buttons would be redressed as bars)
     assertTrue(inst.engine ~= old, "a new style gets new buttons")
     assertFalse(old.__enabled)
+end)
+
+test("container: a text template of a new shape rebuilds the engine; one of the same shape restyles it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    assertTrue(NS.SetByPath("container.style", "text", 1))
+    mocks.__fireTimers()
+    local e = inst.engine
+    assertTrue(NS.SetByPath("container.text.template", "$spellname$[ y$stacks$][ ~ $remainingduration$]", 1))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "the same shape: the same engine, restyled")
+    assertTrue(NS.SetByPath("container.text.template", "$spellname$", 1))
+    mocks.__fireTimers()
+    -- red under: the structure key without Style.StructureKey (a stale binding writes into a hidden string)
+    assertTrue(inst.engine ~= e, "a new shape gets new buttons")
+    assertFalse(e.__enabled)
 end)
 
 -- ── weapon enchants and engine refusals ──────────────────────────────────────────────────────

@@ -354,9 +354,13 @@ function CM.UniqueName(base, exceptId)
 end
 
 --- A new container's stored data: the template plus `overrides`, with a unique name. Returns the
---- data and its id.
+--- data and its id. Its Fill is the one its style suits (B5, C.STYLE_FILL_AXIS), as switching the
+--- Style row sets it, unless `overrides` carries a Fill of its own: a duplicate does (the source's
+--- whole layout), so it keeps the source's.
 local function newContainerData(overrides)
     local c, id = NS.Database.NewContainerData(overrides)
+    local axis = NS.Constants.STYLE_FILL_AXIS[c.style]
+    if axis and not (overrides and overrides.layout and overrides.layout.axis ~= nil) then c.layout.axis = axis end
     c.name = CM.UniqueName(c.name ~= "Container" and c.name or L["Container %d"]:format(id))
     -- Offset a new container from the center by its id, so two new ones are not stacked exactly.
     if not (overrides and overrides.position) then
@@ -441,12 +445,14 @@ end
 
 -- What "copy settings from" copies. Identity (name), placement (position, attach) and the registry's
 -- own id are never copied: copying a container onto another is about how it looks and what it shows.
-CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons" }
--- What "everything" copies: every section, then what the container IS.
+CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons", "text" }
+-- What "everything" copies: what the container IS, then every section. Identity first, because the
+-- Style row's onChange resets Fill (B5, settings/Containers.lua): the copied layout lands after that
+-- reset, so the copy keeps the source's Fill.
 local COPY_ALL = { "unit", "auraType", "style" }
-local sectionCount = #CM.COPY_SECTIONS
-for i = sectionCount, 1, -1 do
-    table.insert(COPY_ALL, 1, CM.COPY_SECTIONS[i])
+for _, key in ipairs(CM.COPY_SECTIONS) do
+    local n = #COPY_ALL
+    COPY_ALL[n + 1] = key
 end
 
 --- Write each of `keys` from `src` onto container `dstId` through the write seam — all of them or

@@ -137,39 +137,34 @@ end)
 
 -- ── The rung ──────────────────────────────────────────────────────────────────────────────────
 
-test("launcher: rung (b) — the LEFT click toggles the lock, through the addon's own write seam",
+test("launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)",
 function()
     local NS2, rec = withBroker()
     local click = rec.objects.AuraMaster.OnClick
     assertTrue(type(click) == "function", "the object carries the one click implementation")
-
-    NS2.SetByPath("locked", true)
     click(rec.objects.AuraMaster, "LeftButton")
-    -- red under: an onClick that opened the settings panel instead (the panel is already on the
-    -- right button, so that is a skipped rule rather than a design — anti-pattern #81).
-    assertEqual(NS2.GetSetting("locked"), false, "unlocked, which IS this addon's preview")
+    -- red under: an onClick still toggling the lock (unlocking no longer previews)
+    assertTrue(NS2.State.testMode, "test mode on: the preview")
+    assertTrue(NS2.db.profile.locked, "the lock is untouched")
     click(rec.objects.AuraMaster, "LeftButton")
-    assertEqual(NS2.GetSetting("locked"), true)
+    assertFalse(NS2.State.testMode)
 end)
 
-test("launcher: the left click holds no copy of the lock — it writes the path the checkbox writes",
+test("launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses",
 function()
     local NS2, rec = withBroker()
-    local click = rec.objects.AuraMaster.OnClick
-    NS2.SetByPath("locked", true)
-
-    -- Everything the seam does for the checkbox, it does for the click: the row's onChange, the
-    -- CONFIG_CHANGED announcement, one [Set] line. Watch the bus, which is the observable one.
-    local seen = {}
-    NS2.bus:RegisterMessage(NS2.MSG.CONFIG_CHANGED, function(_, info)
-        seen[#seen + 1] = info.path
-    end)
-    click(rec.objects.AuraMaster, "LeftButton")
-    local sawLocked = false
-    for _, p in ipairs(seen) do if p == "locked" then sawLocked = true end end
-    assertTrue(sawLocked, "the click went through NS.SetByPath, not around it")
-    -- The one stored record: the profile's `locked`, and nothing beside it.
-    assertEqual(NS2.db.profile.locked, false)
+    local asked = {}
+    local set = NS2.Preview.SetTestMode
+    NS2.Preview.SetTestMode = function(on)
+        local n = #asked
+        asked[n + 1] = tostring(on)
+        return set(on)
+    end
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    NS2.Preview.SetTestMode = set
+    -- red under: core/LauncherSetup.lua writing NS.State.testMode itself
+    assertEqual(table.concat(asked, ","), "true", "one call to the switch")
+    assertNil(rawget(NS2.db.profile, "testMode"), "nothing stored")
 end)
 
 test("launcher: the RIGHT click opens the settings panel, whatever the left button does", function()
@@ -347,17 +342,18 @@ test("verbs: the dispatcher answers while the addon is disabled, or the pair is 
     assertEqual(NS2.db.profile.enabled, true)
 end)
 
-test("verbs: the launcher's click, the two verbs and the checkbox are three doors onto one write",
+test("verbs: the launcher's click, /am test and the Test mode checkbox are three doors onto one switch",
 function()
     local NS2, rec = withBroker()
-    -- The lock: the click and the two lock verbs.
-    NS2.SetByPath("locked", true)
     rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
-    assertEqual(NS2.db.profile.locked, false)
-    NS2.Slash:OnSlash("lock")
-    assertEqual(NS2.db.profile.locked, true)
-    -- red under: core/LauncherSetup.lua reaching past NS.Slash.SetLocked to write `locked` itself.
-    assertTrue(type(NS2.Slash.SetLocked) == "function", "published for exactly one caller")
+    assertTrue(NS2.State.testMode)
+    NS2.Slash:OnSlash("test off")
+    assertFalse(NS2.State.testMode)
+    NS2.SetByPath("state.testMode", true)
+    assertTrue(NS2.State.testMode)
+    -- red under: core/LauncherSetup.lua reaching past NS.Slash.ToggleTestMode
+    assertTrue(type(NS2.Slash.ToggleTestMode) == "function", "published for exactly one caller")
+    assertNil(NS2.Slash.SetLocked, "the lock is no longer the launcher's")
 end)
 
 -- ── The degraded install ──────────────────────────────────────────────────────────────────────

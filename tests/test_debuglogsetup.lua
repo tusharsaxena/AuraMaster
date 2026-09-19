@@ -25,14 +25,14 @@ test("debuglog: enabling logging writes the [Init] summary — name, version, sc
     NS2.DebugLog:SetEnabled(true)
     -- red under: initSummary dropping a field, or NS.SafeToString of a missing field answering "nil"
     assertEqual(unstamped(NS2.DebugLog:LastLine()),
-        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Default', 3 container(s)")
+        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Default', " .. #NS2.STARTER_CONTAINERS .. " container(s)")
     NS2.DebugLog:SetEnabled(false)
     NS2.db:SetProfile("Raid")
     NS2.ContainerManager.Create({})
     NS2.DebugLog:SetEnabled(true)
     -- red under: the summary built once at load rather than read at each enable
     assertEqual(unstamped(NS2.DebugLog:LastLine()),
-        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Raid', 4 container(s)")
+        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Raid', " .. #NS2.STARTER_CONTAINERS + 1 .. " container(s)")
     NS2.DebugLog:SetEnabled(false)
 end)
 

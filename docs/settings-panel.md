@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 203 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 235 rows) by loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -10,12 +10,13 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
-| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the placeholder preview), debug console, the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
+| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
@@ -91,7 +92,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (19 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -102,14 +103,18 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | General visibility | `visibility` | string | `always` / `inCombat` / `outOfCombat` / `never`; combat read with `UnitAffectingCombat("player")` |
 | Master scale | `scale` | number | Multiplies each container's own Layout → Frame scale |
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
-| Lock frame | `locked` | bool | Unlocked shows every handle and the placeholder preview; locking ends it. The unlocked view is this addon's test mode, so Lock frame is its switch |
+| Lock frame | `locked` | bool | Unlocked shows every container's drag handle and a faint outline one element in size, and live auras keep drawing; an unlocked container shows whatever its visibility rule, so one set to *In combat* can still be found and moved. Locking hides them |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
 | Minimap button | `global.minimap.hide` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label says SHOWN and the stored key says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.hide` still restores it |
+| Test mode | `state.testMode` | bool, session | Every container shows its placeholder auras, without unlocking; never written to the profile (below) |
 
-There is **no Test mode row**. Unlocking already shows every container's placeholder auras, so under
-preview-mode's exception (standard v2.49.0) the unlocked view is the test mode: `testModePath` is not
-passed to the composer and there is no `/am test` verb. Minimap button therefore opens the fourth
-line alone, where an addon with a test mode would draw `[Minimap button] [Test mode]`.
+**Test mode** (`state.testMode`, bool, session) sits beside Minimap button, composed from
+`testModePath` (preview-mode, options-ui-§15). It shows every container's placeholder auras without
+unlocking, and each container's engine is disabled while it is on. It is bound to
+`NS.State.testMode` through `Preview.SetTestMode`, the one writer `/am test` and the minimap button's
+left click also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
+start in combat is refused with one gray line, the checkbox reading false again. Its default is
+false, so *Reset all settings* ends it too.
 
 **Reset all settings does not reach the Minimap button.** That control is a profile reset
 (options-ui-§12) and the row is global, which is the reason launcher-§3 puts it there: a button the
@@ -140,11 +145,12 @@ every category's starters, every spell the profile's categories edit, every spel
 container's whitelist or blacklist, and the timed buffs Aura Master has learned. A name two of
 them share is refused until one is picked ("pick one from the list, or use the id"), never
 resolved to one rank; a name neither knows adds nothing, and the line under the box says where
-names come from (the library's spell hint, localized, which the tooltip quotes too). Then one line
-per starter spell with a checkbox
-(untick to leave it out) and one per added spell with **Remove**, then **Restore this category's
-starter list**. Writes the whole set to `categorySpells` (a carve-out, so every container re-applies).
-The page's Defaults does not touch these lists; each category's restore does.
+names come from (the library's spell hint, localized, which the tooltip quotes too). Every entry —
+starter or added — carries an X at the left of every entry (a starter's X hides it, stored `false`;
+an added spell's X forgets it), and **Restore this category's starter list** at the top, under the
+Category dropdown and above Add a spell. Writes the whole set to `categorySpells` (a carve-out, so
+every container re-applies). The page's Defaults does not touch these lists; each category's restore
+does.
 
 Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
 (Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
@@ -171,11 +177,16 @@ selected) on one line. With no container, that line and one sentence are all the
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enabled's "which container is this". Name and Enabled carry no heading of their own — one above a tab's first row only repeats the tab |
 | Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
 | Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
-| Style | `container.style` | string | Bars / Icons; structural (rebuilds the engine) |
+| Style | `container.style` | string | Bars / Icons / Text; structural (rebuilds the engine) |
+
+Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
+re-choosing the same style keeps a Fill set by hand (B5). A new container (**New container**, or
+`/am new … icons`) starts with the Fill its style suits by the same rule; a duplicate keeps its
+source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
-Bar style, Icon style) and **Copy onto this container**. Name and position are never copied.
+Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
 ### Filters (41 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -261,7 +272,7 @@ the other half of the same decision, and Sorting is last) — bespoke: a **White
 section, each the library's `IdList` in spell mode over `container.filter.whitelist` /
 `container.filter.blacklist`, adding by spell id, link or name with the same suggestions,
 candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
-words, `NS.GeneralSpells`), each entry with **Remove**. Each set is written whole through the seam's carve-out;
+words, `NS.GeneralSpells`), each entry with an X at the left of each entry. Each set is written whole through the seam's carve-out;
 the lists are not schema rows, so the page's Defaults leaves them alone. Each entry also carries a
 trailing **note** under its name (LibKa0s v1.36.0's `O.IdList` `note`, `K-3`), built from
 `FC.ExplainSpell` sparingly: it fires only when a category genuinely disagrees with the list's
@@ -343,7 +354,7 @@ container), Click-through `container.behavior.clickThrough` (no tooltips and no 
 
 ### Bars (71 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-When the selected container is drawn as icons, a small gray note heads every tab — "Not in use: this
+When the selected container is drawn as icons, a small muted-gold note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
 and every control below it is drawn disabled (the spec's `disabledFor`,
 `settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
@@ -361,7 +372,7 @@ The tabs and the container picker stay live.
 | Highlights (5) | *Running out:* `expiringColorOn`, `expiringThreshold` 1–60, `expiringColor`; *Refresh window:* `pandemic`, `pandemicColor`. The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:186`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:161`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
@@ -384,7 +395,7 @@ two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this p
 group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
 deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
-When the selected container is drawn as bars, the same small gray note heads every tab — "Not in
+When the selected container is drawn as bars, the same small muted-gold note heads every tab — "Not in
 use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these
 settings." — and every control is drawn disabled, as on the Bars page.
 
@@ -400,6 +411,35 @@ settings." — and every control is drawn disabled, as on the Bars page.
 `dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
 harmful auras with a dispel type only. The art sits above your border and replaces it there; every
 other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
+
+### Text (31 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+
+Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put two
+read-only blocks between its rows: the token cheat sheet under the Template box, and the centering
+note under Placement. Its rows are still ordinary schema rows — the panel, `/am set`, Defaults and the
+resets all reach them through the one write seam.
+
+The Template row's `validate` is the parser (`modules/TextTemplate.lua`'s `TT.Validate`): a refused
+template is never stored, and its reason reaches the player through the write seam's third return
+(`settings/Schema.lua`), printed under "Invalid value for container.text.template" — in the panel and
+by `/am set` alike.
+
+Running out is dimmed (the running-out swatch excepted, since a swatch is read for its alpha even
+unused) when the template carries no duration token, with a note saying so; the Loop rows are dimmed
+per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
+Bounce).
+
+When the selected container is drawn as bars or icons, the same small muted-gold note heads every tab
+— naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
+its Style to Text on the Containers page to use these settings.") — and every control is drawn
+disabled, as on the Bars and Icons pages.
+
+| Tab | Rows (all under `container.text.`) |
+|---|---|
+| General | Size: `width`, `height`. What each line says: `template` (+ the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
+| Font | the composed font block under `font.`; Countdown: `timeFormat` |
+| Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
 
 ### Profiles (`settings/Profiles.lua`)
 

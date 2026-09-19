@@ -9,9 +9,9 @@ local NS, mocks = T.NS, T.mocks
 local fresh = dofile("tests/fresh_env.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
--- Pages, by key and tree label. Filters, Layout, Bars and Icons are sub-pages of Containers (N-2):
--- their KEY stays plain (D6 — the mark is a label prefix, never a second hierarchy), but the tree
--- label Blizzard registers them under carries NS.SubPageLabel's mark.
+-- Pages, by key and tree label. Filters, Layout, Bars, Icons and Text are sub-pages of Containers
+-- (N-2): their KEY stays plain (D6 — the mark is a label prefix, never a second hierarchy), but the
+-- tree label Blizzard registers them under carries NS.SubPageLabel's mark.
 local PAGES = {
     { key = "general",    label = "General" },
     { key = "containers", label = "Containers" },
@@ -19,6 +19,7 @@ local PAGES = {
     { key = "layout",     label = NS.SubPageLabel("Layout") },
     { key = "bars",       label = NS.SubPageLabel("Bars") },
     { key = "icons",      label = NS.SubPageLabel("Icons") },
+    { key = "text",       label = NS.SubPageLabel("Text") },
 }
 
 test("options: NS.Helpers IS the library instance", function()
@@ -78,15 +79,16 @@ end)
 test("options: the General page leads with Master controls, in canonical order", function()
     local rows = NS.SchemaForPage("general")
     local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole",
-                   "global.minimap.hide" }
+                   "global.minimap.hide", "state.testMode" }
     for i, path in ipairs(want) do
         assertEqual(rows[i].path, path)
         assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)
     end
-    -- red under: an eighth composed row. Standard v2.49.0 (preview-mode): unlocking already shows the
-    -- placeholder preview, so Lock frame is the test mode's switch and no Test mode row is composed;
-    -- the minimap row closes the set, in the first column of the line the Test mode row would share.
-    assertTrue(rows[8] == nil or rows[8].group ~= NS.Helpers.MASTER_GROUP, "Master controls has seven rows")
+    -- red under: settings/General.lua without its testModePath (B1: unlocking no longer previews,
+    -- so the test mode has a row of its own, beside Minimap button: options-ui-§15, anti-pattern #80)
+    assertTrue(rows[9] == nil or rows[9].group ~= NS.Helpers.MASTER_GROUP, "Master controls has eight rows")
+    assertTrue(rows[8].sessionOnly, "Test mode is session state")
+    assertNil(rows[8].startsLine, "it pairs beside Minimap button")
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 
@@ -171,9 +173,9 @@ test("options: the Containers page's New button creates and selects a container"
     -- red under: the Containers page not drawing its create control
     assertTrue(newButton ~= nil, "the tab body carries the create control")
     newButton:__fire("OnClick")
-    assertEqual(#NS2.Database.GetContainers(), 4)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
     local _, id = NS2.ActiveContainer()
-    assertEqual(id, NS2.db.profile.containerOrder[4])
+    assertEqual(id, NS2.db.profile.containerOrder[#NS2.STARTER_CONTAINERS + 1])
 end)
 
 test("options: a page's Defaults button restores only the selected container", function()
@@ -206,7 +208,7 @@ test("options: Reset all settings resets the active profile whole, and nothing e
     for _, c in ipairs(NS2.Database.GetContainers()) do
         names[#names + 1] = c.name
     end
-    assertEqual(table.concat(names, "|"), "Player buffs|Player debuffs|Target debuffs (mine)",
+    assertEqual(table.concat(names, "|"), "Player buffs|Player debuffs|Target debuffs (mine)|Player cooldowns",
         "exactly the shipped set survives")
     assertEqual(table.concat(NS2.db:GetProfiles(), ","), profilesBefore, "the profile list is untouched")
     assertEqual(NS2.db:GetCurrentProfile(), "Default")
@@ -253,7 +255,7 @@ test("options: the Delete popup refuses in combat", function()
     m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(nil, 2)
     -- red under: the Delete popup's OnAccept without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(2) ~= nil, "the registry is intact")
-    assertEqual(#NS2.Database.GetContainers(), 3)
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
     assertEqual(#lines, 1, "one refusal")
     assertTrue(lines[1]:find("|cff808080", 1, true) and lines[1]:find("cannot delete a container during combat",
         1, true) ~= nil, lines[1] or "")
@@ -374,4 +376,19 @@ test("options: the degraded stub completes the load — every page's rows still 
     assertTrue(count >= 1 and count <= 2, "at most the one-time notice and the refusal")
     local last = lines[count] or ""
     assertTrue(last:find("settings panel is unavailable", 1, true) ~= nil, last)
+end)
+
+test("options: a page drawn for another style heads its tabs with the notice in muted gold (B3)", function()
+    local NS2, m2 = fresh()
+    local P = dofile("tests/page_helpers.lua")(NS2, m2)
+    NS2.State.SetActiveContainer(2)   -- the starter icon row
+    local ws = P.show("Bars")
+    local want = "|c" .. NS2.Constants.NOTICE_COLOR
+    assertEqual(NS2.Constants.NOTICE_COLOR, "ffc8a85a")
+    local hit
+    for _, t in ipairs(P.texts(ws)) do
+        if t:find("Not in use:", 1, true) then hit = t end
+    end
+    -- red under: drawDisabledNotice keeping the old gray |cff808080
+    assertTrue(hit ~= nil and hit:sub(1, #want) == want, tostring(hit))
 end)

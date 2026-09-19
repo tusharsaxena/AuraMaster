@@ -1,5 +1,5 @@
 -- tests/test_state.lua — core/State.lua: session-only runtime state. Nothing in it may reach
--- SavedVariables, a reload starts it clean, and there is no preview flag: unlocking is the preview.
+-- SavedVariables, a reload starts it clean, and test mode is session state apart from the lock.
 
 local T = _G.AM_TEST
 local test, assertTrue, assertFalse, assertNil =
@@ -30,17 +30,19 @@ test("state: the session flags start off, are never saved, and a reload starts t
     assertNil(NS2.State.activeContainerId, "a reload selects nothing")
 end)
 
-test("state: there is no preview flag and no preview toggle; unlocking is the preview", function()
-    -- The user removed test mode outright: nothing but the lock shows the placeholders.
+test("state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)", function()
     local NS = fresh()
-    -- red under: core/State.lua still declaring `preview`
-    assertNil(NS.State.preview, "no preview flag")
-    -- red under: modules/ContainerManager.lua still defining SetPreview
-    assertNil(NS.ContainerManager.SetPreview, "no preview toggle")
+    assertFalse(NS.State.testMode, "off at login")
+    -- red under: modules/ContainerManager.lua growing a second preview switch
+    assertNil(NS.ContainerManager.SetPreview, "one switch: Preview.SetTestMode")
     local e = NS.ContainerManager.instances[1].engine
     assertTrue(e.__enabled, "locked by default: real auras draw")
     assertTrue(NS.SetByPath("locked", false))
-    assertFalse(e.__enabled, "unlocked: the placeholders take the engine's place")
-    assertTrue(NS.SetByPath("locked", true))
-    assertTrue(e.__enabled, "locked again: real auras are back")
+    -- red under: ShouldShow still reading the lock as the preview
+    assertTrue(e.__enabled, "unlocked: real auras keep drawing")
+    NS.Preview.SetTestMode(true)
+    assertFalse(e.__enabled, "test mode: the placeholders take the engine's place")
+    NS.Preview.SetTestMode(false)
+    assertTrue(e.__enabled, "test mode off: real auras are back")
+    assertNil(rawget(NS.db.profile, "testMode"), "never saved")
 end)

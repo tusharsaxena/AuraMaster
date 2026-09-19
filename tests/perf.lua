@@ -137,6 +137,28 @@ inst1.engine.__frames.g1 = {}
 for i = 1, 10 do inst1.engine.__frames.g1[i] = mocks.__stubFrame() end
 measure("restyle", 200, function() inst1:Restyle(cfg1) end)
 
+-- 4b. A restyle of the text starter with ten live buttons: a same-shape re-dress, which builds no font
+--     string, no frame and no animation group, and re-binds each field once per button.
+local textCfg
+for _, c in ipairs(NS.Database.GetContainers()) do
+    if c.style == "text" then textCfg = c end
+end
+assert_(textCfg ~= nil, "restyleText: no text container among the starters")
+if textCfg then
+    local instText = CM.instances[textCfg.id]
+    local key = instText.plan.groups[1].key
+    instText.engine.__frames[key] = {}
+    for i = 1, 10 do instText.engine.__frames[key][i] = mocks.__stubFrame() end
+    instText:Restyle(textCfg)   -- the first dress builds the regions; the loop measures the re-dress
+    local frames = 0
+    local create = mocks.CreateFrame
+    mocks.CreateFrame = function(...) frames = frames + 1; return create(...) end
+    measure("restyleText", 200, function() instText:Restyle(textCfg) end)
+    mocks.CreateFrame = create
+    -- red under: useChain rebuilding the chain on every dress
+    assert_(frames == 0, ("restyleText: a same-shape re-dress built %d frame(s)"):format(frames))
+end
+
 -- 5. The visibility pass every combat transition runs.
 local visibility = measure("visibilityPass", 1000, function() CM.ApplyVisibility() end)
 assert_(visibility.apiPerIter == containers,

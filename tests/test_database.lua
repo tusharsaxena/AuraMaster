@@ -37,7 +37,7 @@ test("database: string ids, dangling order entries and orphans are repaired", fu
     NS.Database.PrepareProfile(p)
     assertTrue(p.containers[7] ~= nil, "a string id is normalized to a number")
     assertEqual(p.containers[7].id, 7)
-    assertEqual(table.concat(p.containerOrder, ","), "3,1,7",
+    assertEqual(table.concat(p.containerOrder, ","), "3,1,4,7",
         "dangling and duplicate ids dropped, the orphan appended")
     assertEqual(p.nextContainerId, 8, "the counter moves past the largest id")
 end)
@@ -270,19 +270,19 @@ test("database: a string id in the stored order keeps its place", function()
     p.containerOrder = { "2", 1 }
     NS.Database.PrepareProfile(p)
     -- red under: rebuildOrder dropping its tonumber (the "2" is taken for dangling and re-appended)
-    assertEqual(table.concat(p.containerOrder, ","), "2,1,3")
+    assertEqual(table.concat(p.containerOrder, ","), "2,1,3,4")
 end)
 
 test("database: a deleted id is never handed out again, not even after a reload", function()
     local NS, mocks = fresh()
     local CM = NS.ContainerManager
-    CM.Delete(3)
-    assertEqual(CM.Create({}), 4, "the counter does not rewind to the freed id")
-    mocks.__fireTimers()
     CM.Delete(4)
+    assertEqual(CM.Create({}), 5, "the counter does not rewind to the freed id")
+    mocks.__fireTimers()
+    CM.Delete(5)
     NS.Database.PrepareProfile(NS.db.profile)   -- what the next login runs
     -- red under: PrepareProfile setting the counter to the largest id kept plus one
-    assertEqual(CM.Create({}), 5)
+    assertEqual(CM.Create({}), 6)
 end)
 
 test("database: NewContainerData takes an id from the counter without registering the container", function()
@@ -1034,4 +1034,21 @@ test("v4: no notice is printed when nothing was lost", function()
     for _, l in ipairs(lines) do
         assertTrue(l:find("could not be carried over", 1, true) == nil, "no lost-capability notice: " .. l)
     end
+end)
+
+test("database: a fresh profile seeds the Player cooldowns text container last, showing only two buff lists", function()
+    local NS = fresh()
+    local list = NS.Database.GetContainers()
+    local n = #NS.STARTER_CONTAINERS
+    assertEqual(#list, n)
+    local c = list[n]
+    -- red under: the starter list without its fourth entry, or seeded in another style
+    assertEqual(c.name, "Player cooldowns")
+    assertEqual(c.style, "text")
+    assertEqual(c.unit, "player"); assertEqual(c.auraType, "HELPFUL")
+    assertEqual(c.filter.categories.offensiveCDs, "show")
+    assertEqual(c.filter.categories.defensives, "show")
+    assertEqual(c.filter.categories.uncategorized, "hide")
+    assertEqual(c.filter.categories.bigDefensive, "hide")
+    assertEqual(c.text.template, NS.CONTAINER_TEMPLATE.text.template, "the rest is the template's")
 end)

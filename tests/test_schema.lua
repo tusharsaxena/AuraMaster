@@ -352,3 +352,20 @@ test("schema: CheckWrite answers what SetByPath would, and stores and announces 
     assertTrue(c1.filter.whitelist == list)
     assertEqual(sent[1], 0, "and nothing is announced")
 end)
+
+test("schema: a row's own refusal reason travels as the third return of SetByPath and CheckWrite", function()
+    local NS2 = fresh()
+    local path = "container.text.template"
+    local ok, err, why = NS2.SetByPath(path, "$nope$", 1)
+    assertFalse(ok)
+    assertEqual(err, NS2.L["Invalid value for %s"]:format(path))
+    -- red under: writeRow calling validate for its first return only (the parser's reason dropped)
+    assertEqual(why:sub(1, 14), "Unknown token ")
+    local okCheck, _, whyCheck = NS2.CheckWrite(path, "$nope$", 1)
+    assertFalse(okCheck)
+    assertEqual(whyCheck:sub(1, 14), "Unknown token ")
+    -- A bare refusal carries no reason: the name row's validate answers false alone.
+    local okName, _, whyName = NS2.SetByPath("container.name", "   ", 1)
+    assertFalse(okName)
+    assertNil(whyName)
+end)

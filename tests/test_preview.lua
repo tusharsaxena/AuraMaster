@@ -1,4 +1,4 @@
--- tests/test_preview.lua — modules/Preview.lua: the placeholder auras shown while unlocked. How many
+-- tests/test_preview.lua — modules/Preview.lua: the placeholder auras shown in test mode. How many
 -- are drawn and where, the pool that keeps them, and when they are dressed again.
 
 local T = _G.AM_TEST
@@ -190,7 +190,7 @@ end)
 
 -- ── a style switch while previewing (C-4) ───────────────────────────────────────────────────────
 
---- Switch container `id`'s style while unlocked and flush the apply, returning whether it raised.
+--- Switch container `id`'s style while previewing and flush the apply, returning whether it raised.
 local function switchStyle(NS2, mocks, id, style)
     NS2.SetByPath("container.style", style, id)
     return pcall(mocks.__fireTimers)
@@ -198,7 +198,7 @@ end
 
 test("preview: switching a previewed container from bars to icons re-dresses without error", function()
     local NS2, mocks = fresh()
-    NS2.SetByPath("locked", false)
+    NS2.Preview.SetTestMode(true)
     mocks.__fireTimers()
     local inst = NS2.ContainerManager.instances[1]       -- Player buffs, bars
     assertTrue(inst.previewShown)
@@ -212,7 +212,7 @@ end)
 
 test("preview: switching a previewed container from icons to bars re-dresses without error", function()
     local NS2, mocks = fresh()
-    NS2.SetByPath("locked", false)
+    NS2.Preview.SetTestMode(true)
     mocks.__fireTimers()
     local inst = NS2.ContainerManager.instances[2]       -- Player debuffs, icons
     assertTrue(inst.previewShown)
@@ -224,10 +224,10 @@ test("preview: switching a previewed container from icons to bars re-dresses wit
     assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
 end)
 
-test("preview: a bar container duplicated while unlocked, then switched to icons, re-dresses (the owner's steps)", function()
+test("preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)", function()
     local NS2, mocks = fresh()
     local CM = NS2.ContainerManager
-    NS2.SetByPath("locked", false)
+    NS2.Preview.SetTestMode(true)
     mocks.__fireTimers()
     local id = CM.Duplicate(1)
     mocks.__fireTimers()
@@ -316,13 +316,13 @@ end)
 test("preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)", function()
     local NS2 = fresh()
     local inst = NS2.ContainerManager.instances[1]
-    NS2.SetByPath("locked", false)
+    NS2.Preview.SetTestMode(true)
     local extent = inst.previewExtent
     -- red under: Preview.Show without its Preview.Extent call
     assertTrue(extent ~= nil, "built on the first preview")
     assertEqual(extent.__frameType, "Frame"); assertTrue(extent.__parent == inst.anchor)
-    NS2.SetByPath("locked", true)
-    NS2.SetByPath("locked", false)
+    NS2.Preview.SetTestMode(false)
+    NS2.Preview.SetTestMode(true)
     -- red under: a new extent per preview (WoW never frees a frame)
     assertTrue(inst.previewExtent == extent, "the same frame")
 end)
@@ -348,4 +348,27 @@ test("preview: under lockdown a placed extent stands, and one never placed is pl
     k.previewDirty = true
     NS2.Preview.Show(k)
     assertEqual(k.previewExtent:__count("SetSize"), 2, "out of combat it follows the block again")
+end)
+
+test("preview: a text container's placeholders read its template, each bracket's text hidden with its value", function()
+    local B = dofile("tests/region_builder.lua")
+    local NS2, m2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local c = cfg({ style = "text", text = { template = "$spellname$[ x$stacks$][ - $remainingduration$]" } }, NS2)
+    local made = {}
+    local k = container(c)
+    k.previewFactory = function() return B.new(made) end
+    B.during(m2, made, function() NS2.Preview.Show(k) end)
+    local lines = {}
+    -- red under: Preview.Show handing a text container the bars styler and pool
+    for i, f in ipairs(k.previewPools.text.active) do
+        local am = f.__am
+        local parts = {}
+        for j = 1, am.pieceCount do parts[j] = (am["piece" .. j]:__last("SetText") or {})[1] or "" end
+        lines[i] = table.concat(parts)
+    end
+    -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"
+    assertEqual(lines[1], "Power Word: Fortitude - 3540s")
+    assertEqual(lines[4], "Ignore Pain x3 - 11s", "stacks from two up, with their bracket text")
+    -- red under: the duration piece writing " - " for a timeless placeholder
+    assertEqual(lines[5], "Well Fed", "a timeless aura: the name alone")
 end)

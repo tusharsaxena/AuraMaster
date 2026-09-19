@@ -1,12 +1,12 @@
 # Slash dispatch
 
-`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 21 commands, over the
+`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 22 commands, over the
 eight-or-more trigger (documentation-§3).
 
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:493`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:515`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -19,10 +19,10 @@ eight-or-more trigger (documentation-§3).
   same combat refusal `config` does (slash-commands-§4, LibKa0s Slash minor 11). `/am help` prints
   the list. An unknown verb prints the library's unknown-command line and then help.
 - **Aliases:** `options` → `config`.
-- **`lock` and `unlock` have a second caller.** Both run through `Sl.SetLocked`, published for
+- **`test` has a second caller.** A bare `/am test` runs through `Sl.ToggleTestMode`, published for
   the launcher's left click (`core/LauncherSetup.lua`, rung (b), launcher-§2), so the minimap
-  button, the two verbs and the General → Master controls *Lock frame* checkbox are three doors
-  onto one `NS.SetByPath("locked", …)` and print the same line.
+  button, the verb and the General → Master controls *Test mode* checkbox are three doors onto one
+  `Preview.SetTestMode` and print the same line.
 - **`NS.COMMANDS` is the addon's own**, an ordered array of positional triples `{name, desc, fn}`,
   passed *into* the library. The landing page renders the same table through `Slash.LandingRows`
   (`settings/About.lua`), so the page and `/am help` cannot drift.
@@ -45,14 +45,15 @@ eight-or-more trigger (documentation-§3).
 | 11 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
 | 12 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
 | 13 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
-| 14 | `lock` | host | `NS.SetByPath("locked", true)` — also ends preview |
-| 15 | `unlock` | host | `NS.SetByPath("locked", false)` — handles and placeholders; the unlocked view is the addon's test mode (no `test` verb, preview-mode's exception, standard v2.49.0) |
-| 16 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
-| 17 | `resetposition` | host | `ContainerManager.ResetPositions()` |
-| 18 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 19 | `debug [on\|off]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled` |
-| 20 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
-| 21 | `version` | host | `v` + `NS.Version()` |
+| 14 | `lock` | host | `NS.SetByPath("locked", true)` — hides the handles and outlines |
+| 15 | `unlock` | host | `NS.SetByPath("locked", false)` — each container's handle and a faint outline; live auras keep drawing |
+| 16 | `test [on\|off]` | host | Bare toggles test mode, `on`/`off` set it, through `Preview.SetTestMode`: placeholder auras on every container; a start in combat is refused on one gray line, and any other word prints `Usage: /am test [on\|off]` |
+| 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
+| 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
+| 19 | `forgettimed` | host | `TimedSpells.Forget()` |
+| 20 | `debug [on\|off]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled` |
+| 21 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
+| 22 | `version` | host | `v` + `NS.Version()` |
 
 The **Kind** column says who implements the verb, not who gates it — see below.
 
@@ -69,7 +70,7 @@ That wording is the **collection's**, not this addon's: `LibKa0s-Slash-1.0` buil
 descriptor's `brandName` and `slash`, so eleven addons say it the same way and none of it is an
 `L[]` key here.
 
-Refusing: `new`, `delete`, `lock`, `unlock`, `pick`, `resetposition`, `forgettimed`.
+Refusing: `new`, `delete`, `lock`, `unlock`, `test`, `pick`, `resetposition`, `forgettimed`.
 
 Still answering, always: `help`, `config`, `version`, `enable`, `disable`, `debug`, `perf` and the
 schema CLI (`get`, `set`, `list`, `reset`, `resetall`) — **and the bare `/am`, which opens the
@@ -123,7 +124,7 @@ changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:403`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:421`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -143,7 +144,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:325` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:343` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), a bare `/am` runs `config` as the library's does (the
 panel's own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print that they are unavailable and why. The stub copies none of the library's

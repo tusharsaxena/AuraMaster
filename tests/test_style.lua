@@ -911,3 +911,89 @@ test("style: hiding the other style's regions never hides the element itself", f
     -- a region handed the host in-game would hide the whole button)
     assertTrue(frame:IsShown(), "the element still draws")
 end)
+
+-- ── the text style's shared helpers (issue #2) ──────────────────────────────────────────────────
+
+test("style: a text element takes its size from its own block, and a missing leaf from the template", function()
+    local w, h = NS.Style.ElementSize(cfg({ style = "text", text = { width = 300, height = 20 } }))
+    -- red under: ElementSize answering the bar's size for every style but icons
+    assertEqual(w, 300)
+    assertEqual(h, 20)
+    local c = cfg({ style = "text" })
+    c.text.width = nil
+    w = NS.Style.ElementSize(c)
+    assertEqual(w, D.text.width)
+    assertEqual(NS.Style.StyleKey(cfg({ style = "text" })), "text")
+    assertEqual(NS.Style.StyleKey(cfg({ style = "nonsense" })), "bars", "an unknown style draws as bars")
+end)
+
+test("style: a text container's class color is looked for in its text block, the font included", function()
+    local U = NS.Style.UsesClassColor
+    assertFalse(U(cfg({ style = "text" })), "the template turns none on")
+    -- red under: UsesClassColor still reading the bar block for every style but icons
+    assertTrue(U(cfg({ style = "text", text = { font = { useClassColorFont = true } } })), "the line's font")
+    assertTrue(U(cfg({ style = "text", text = { useClassColorIconBorder = true } })), "the icon border")
+    assertFalse(U(cfg({ style = "text", bars = { useClassColorBar = true } })), "the inactive block")
+end)
+
+test("style: a duration run's text format has its format string and one component per token, built once", function()
+    local NS2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local piece = NS2.TextTemplate.Compile("$spellname$ $remainingduration$ / $maxduration$ ($remainingpercent$)").pieces[3]
+    local tf = NS2.Style.DurationTextFormat(piece, "short")
+    assertEqual(tf.formatString, "{} / {} ({}")
+    local P = NS2.Compat
+    -- red under: a component naming the token's key instead of the engine property
+    assertEqual(tf.components[1].property, P.DurationProperty("RemainingDuration"))
+    assertEqual(tf.components[2].property, P.DurationProperty("TotalDuration"))
+    assertEqual(tf.components[3].property, P.DurationProperty("RemainingPercent"))
+    assertEqual(tf.components[1].formatter.kind, "seconds")
+    assertTrue(tf.components[1].formatter == tf.components[2].formatter, "one seconds formatter per format")
+    -- red under: a percent written through the seconds formatter ("40s" for 40 %)
+    local pf = tf.components[3].formatter
+    assertEqual(pf.kind, "rule")
+    local bp = pf:__last("SetBreakpoints")[1]
+    assertEqual(bp[1].threshold, 0)
+    assertEqual(bp[1].format, "%d%%")
+    -- red under: DurationTextFormat rebuilding on every dress
+    assertTrue(NS2.Style.DurationTextFormat(piece, "short") == tf, "memoized per piece and format")
+    assertTrue(NS2.Style.DurationTextFormat(piece, "long") ~= tf, "a new format builds its own")
+end)
+
+test("style: a duration run binds its format and binding, recolored only when asked, blinking only when asked", function()
+    local NS2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local S = NS2.Style
+    local D2 = NS2.CONTAINER_TEMPLATE.text
+    local piece = NS2.TextTemplate.Compile("$remainingduration$").pieces[1]
+    local tf = S.DurationTextFormat(piece, "blizzard")
+    local white = { r = 1, g = 1, b = 1, a = 1 }
+    local function bind(s)
+        local b = R()
+        S.BindDurationFormat(b, "fs", tf, "binding", s, D2, white)
+        return b:__last("SetDurationText")[2]
+    end
+    local opts = bind({})
+    assertTrue(opts.textFormat == tf)
+    assertEqual(opts.binding, "binding")
+    assertNil(opts.textColor, "no curve unless turned on")
+    local red = { r = 1, g = 0, b = 0, a = 1 }
+    opts = bind({ expiringColorOn = true, expiringThreshold = 3, expiringColor = red })
+    local points = opts.textColor.curve:__count("AddPoint")
+    -- red under: runTextColor building the blink curve for the plain recolor
+    assertEqual(points, 2, "the plain step: the running-out color, then the font color")
+    opts = bind({ expiringColorOn = true, expiringBlink = true, expiringThreshold = 3, expiringColor = red })
+    -- red under: runTextColor ignoring expiringBlink
+    assertEqual(opts.textColor.curve:__count("AddPoint"), 3 / 0.25 + 1, "a point every quarter second, then the font color")
+    assertEqual(opts.textColor.curve:__last("AddPoint")[2].g, 1, "the font color from the threshold up")
+    assertEqual(opts.textColor.curve.calls[1].name, "SetType")
+    assertEqual(opts.textColor.curve.calls[2][2].r, 1, "the blink is in the running-out color")
+    opts = bind({ expiringBlink = true, expiringThreshold = 3, expiringColor = red })
+    assertEqual(opts.textColor.curve.calls[2][2].g, 1, "blink without the recolor blinks the font color")
+end)
+
+test("style: a placeholder's seconds are written by the format's formatter, else as whole seconds", function()
+    local NS2 = fresh({ before = dofile("tests/text_apis.lua") })
+    -- tests/text_apis.lua's formatter writes "<n>s"
+    assertEqual(NS2.Style.PreviewSeconds(28, "short"), "28s")
+    -- red under: PreviewSeconds not falling back when the client has no formatter
+    assertEqual(NS.Style.PreviewSeconds(28, "short"), "28s", "the shared environment has none")
+end)

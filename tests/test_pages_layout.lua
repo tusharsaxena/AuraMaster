@@ -160,7 +160,7 @@ test("layout: the Container dropdown offers None and every other container, neve
     local ws = P.show("Layout")
     local dd = targetDropdown(NS, P, ws)
     -- red under: attachTargets listing the selected container (a container attached to itself)
-    assertEqual(table.concat(dd.order, ","), "0,1,3")
+    assertEqual(table.concat(dd.order, ","), "0,1,3,4")
     assertEqual(dd.list[0], NS.L["None"])
     assertEqual(dd.list[3], "Target debuffs (mine)")
 end)

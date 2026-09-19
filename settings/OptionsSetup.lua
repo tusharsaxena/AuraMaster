@@ -119,7 +119,17 @@ local descriptor = {
     debug = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,
 
     get          = panelRead,
-    set          = function(path, value) NS.SetByPath(path, value) end,
+    -- A refusal that carries its row's own reason (the Text template's parser) is printed, the same
+    -- two lines `/am set` prints: the panel's EditBox re-reads the stored value on refresh, so the
+    -- reason is the only trace of why the typed one did not stick. A bare refusal stays silent, as it
+    -- always has.
+    set          = function(path, value)
+        local ok, err, why = NS.SetByPath(path, value)
+        if not ok and why then
+            print(err)
+            print("  " .. why)
+        end
+    end,
     -- THE PANEL'S ONE RESET SEAM, and therefore where the minimap veto lives (above).
     applyDefault = function(row)
         if vetoedFromPanelReset(row) then return end
@@ -245,10 +255,10 @@ if not lib then
         local omit = {}
         for k in pairs(spec.omit or {}) do omit[k] = true end
         if spec.frameless then omit.scale, omit.alpha, omit.locked = true, true, true end
-        -- No Test mode leaf: this addon passes no `testModePath` (its unlocked view is the preview).
-        -- The minimap leaf IS emitted, and STORED rather than session-only, because the live
-        -- composer emits it that way: a row this build left out is a row `/am set` and the
-        -- profile defaults would not know about, on the build whose panel will not open.
+        -- The minimap leaf is emitted STORED rather than session-only, and the Test mode leaf
+        -- session-only, because the live composer emits them that way: a row this build left out is
+        -- a row `/am set` and the profile defaults would not know about, on the build whose panel
+        -- will not open.
         local leaves = {
             { leaf = "enabled", type = "bool" }, { leaf = "visibility", type = "string" },
             { leaf = "scale", type = "number" }, { leaf = "alpha", type = "number" },
@@ -258,6 +268,9 @@ if not lib then
         }
         if spec.minimapPath then
             leaves[#leaves + 1] = { leaf = "minimap", type = "bool", path = spec.minimapPath }
+        end
+        if spec.testModePath then
+            leaves[#leaves + 1] = { leaf = "testMode", type = "bool", sessionOnly = true, path = spec.testModePath }
         end
         local rows = composeBlock(leaves,
             { prefix = spec.prefix, page = spec.page, group = spec.group or Helpers.MASTER_GROUP,
@@ -446,7 +459,7 @@ function Helpers.ContainerPickerCell(_, parent, rel)
         if id == nil or id == activeId then return end
         Helpers.SelectContainer(id)
     end)
-    Helpers.AttachTooltip(dd, L["Container"], L["Which container this tab, and the Filters, Layout, Bars and Icons pages, edit. The choice is shared by every page."])
+    Helpers.AttachTooltip(dd, L["Container"], L["Which container this tab, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."])
     parent:AddChild(dd)
     return dd
 end
@@ -508,8 +521,8 @@ local function settleActiveTab(ctx, tabs)
     ctx.activeTab = tabs[1].key
 end
 
---- The notice over a page drawn disabled: a quiet gray note in the small font, then the ordinary
---- row gap before the first control.
+--- The notice over a page drawn disabled: a quiet muted-gold note (C.NOTICE_COLOR) in the small
+--- font, then the ordinary row gap before the first control.
 ---
 --- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
 --- shouted a full-width warning for what is an informational aside — nothing is wrong, the page is
@@ -517,9 +530,11 @@ end
 --- the same voice the addon already uses for a line that reports rather than warns (the combat
 --- refusals in settings/Containers.lua print in this exact gray), and it leaves orange meaning what
 --- it means everywhere else in the panel: RenderWarnings' "the game will not honor this", which can
---- sit on the very same page and must still be the loudest thing on it.
+--- sit on the very same page and must still be the loudest thing on it. The owner then asked for it
+--- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
+--- quieter than the title's is still no warning. The combat refusals keep their gray.
 local function drawDisabledNotice(ctx, text)
-    Helpers.TextRow(ctx, "|cff808080" .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
+    Helpers.TextRow(ctx, "|c" .. C.NOTICE_COLOR .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
     local scroll = Helpers.EnsureScroll(ctx)
     if scroll then Helpers.AddSpacer(scroll, Helpers.ROW_VSPACER) end
 end
@@ -546,7 +561,9 @@ local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
     end
     local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false
     if cfg and spec.intro then spec.intro(ctx, cfg) end
-    if disabled and spec.disabledNotice then drawDisabledNotice(ctx, spec.disabledNotice) end
+    local notice = spec.disabledNotice
+    if type(notice) == "function" then notice = notice(cfg) end
+    if disabled and notice then drawDisabledNotice(ctx, notice) end
     local b = bespoke[ctx.activeTab]
     if b then
         renderBespoke(ctx, cfg, b, byGroup[ctx.activeTab], disabled)
@@ -568,7 +585,8 @@ end
 ---                        group's rows, and one with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
 ---   disabledFor(cfg)     true draws every control of every tab disabled (bespoke tabs through
----                        `ctx.__renderDisabled`), under `disabledNotice`, drawn as a small gray note
+---                        `ctx.__renderDisabled`), under `disabledNotice` (a string, or a function of
+---                        cfg answering one), drawn as a small note
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
 ---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
 function Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)
@@ -612,7 +630,7 @@ Helpers.__pageCtx = {}
 --- Register a per-container settings page: the Blizzard subcategory, the lazily-drawn body, and a
 --- page-wide Defaults button that restores the SELECTED container's rows on this page.
 ---
---- Every caller of this helper (Filters, Layout, Bars, Icons) is a sub-page of Containers (N-2), so
+--- Every caller of this helper (Filters, Layout, Bars, Icons, Text) is a sub-page of Containers (N-2), so
 --- the tree label it registers under always carries NS.SubPageLabel's mark. `title` itself stays
 --- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
 --- tree entry only, never the page's own name.
@@ -630,7 +648,7 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
         -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
         -- whatever this builder returns (N-3) — no need to set it here too.
         -- NS.SubPageLabel is applied unconditionally here, so EVERY container page nests under
-        -- Containers (true for all four callers today); a future container page that should NOT
+        -- Containers (true for all five callers today); a future container page that should NOT
         -- nest would need its own registration path, not a call through this helper.
         return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
     end)

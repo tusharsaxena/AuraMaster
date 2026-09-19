@@ -8,14 +8,17 @@ local _, NS = ...
 --                      (settings/Schema.lua). The settings banner moves it; nil means "the
 --                      first container in display order", which is what the CLI gets on a fresh
 --                      login where nothing has ever selected one.
---
--- There is no preview flag: the placeholders show while the addon is unlocked, and only then
--- (ContainerClass:ShouldShow reads the lock).
+--   testMode           the test mode (preview-mode, options-ui-§15): every container shows its
+--                      placeholder auras. Off at login, ended when combat starts, refused in combat;
+--                      written only by modules/Preview.lua's Preview.SetTestMode. Unlocking no
+--                      longer previews: it makes containers draggable while live auras keep drawing
+--                      (B1, 2026-09-19).
 NS.State = NS.State or {}
 local State = NS.State
 
 State.debug = false
 State.activeContainerId = nil
+State.testMode = false
 
 --- Point every container-relative settings path at `id` (or nil for "the first container").
 --- The ONE writer of the pointer: the settings banner, Containers' create/duplicate/delete

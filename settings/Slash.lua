@@ -28,7 +28,7 @@ local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 local cli
 
 local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPick
-local runResetPosition, runForgetTimed, runDebug, runPerf
+local runResetPosition, runForgetTimed, runDebug, runPerf, runTest
 
 NS.COMMANDS = {
     {"help",          L["List available commands"],
@@ -53,14 +53,16 @@ NS.COMMANDS = {
         function() runContainers() end},
     {"select",        L["Choose the container settings apply to — /am select id or name"],
         function(rest) runSelect(rest) end},
-    {"new",           L["Create a container — /am new [player|target|focus|pet] [buffs|debuffs|enchants] [bars|icons]"],
+    {"new",           L["Create a container — /am new [player|target|focus|pet] [buffs|debuffs|enchants] [bars|icons|text]"],
         function(rest) runNew(rest) end},
     {"delete",        L["Delete a container — /am delete id or name"],
         function(rest) runDelete(rest) end},
     {"lock",          L["Lock every container in place"],
         function() runLock(true) end},
-    {"unlock",        L["Unlock containers so they can be dragged (shows placeholder auras)"],
+    {"unlock",        L["Unlock containers so they can be dragged"],
         function() runLock(false) end},
+    {"test",          L["Toggle test mode: placeholder auras on every container — /am test [on|off]"],
+        function(rest) runTest(rest) end},
     {"pick",          L["Attach the selected container to a frame by clicking it"],
         function() runPick() end},
     {"resetposition", L["Move every container back to its default screen position"],
@@ -234,6 +236,7 @@ local NEW_WORDS = {
     enchant = { auraType = "ENCHANT" }, enchants = { auraType = "ENCHANT" },
     bars = { style = "bars" }, bar = { style = "bars" },
     icons = { style = "icons" }, icon = { style = "icons" },
+    text = { style = "text" },
 }
 
 function runNew(rest)
@@ -271,6 +274,22 @@ end
 function runLock(locked)
     NS.SetByPath("locked", locked)
     print(locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
+end
+
+-- `/am test` toggles; `on` / `off` set. Through Preview.SetTestMode, the switch the Master controls
+-- checkbox and the launcher use, which refuses a start in combat with its own line.
+local TEST_WORDS = { on = true, off = false }
+
+function runTest(rest)
+    local word = (rest or ""):match("^%s*(%S*)"):lower()
+    local want = TEST_WORDS[word]
+    if want == nil then
+        if word ~= "" then return print(L["Usage: /am test [on|off]"]) end
+        want = not NS.State.testMode
+    end
+    if NS.Preview.SetTestMode(want) then
+        print(want and L["Test mode on — every container shows placeholder auras"] or L["Test mode off"])
+    end
 end
 
 function runPick()
@@ -435,9 +454,12 @@ cli = SlashLib:New({
     -- The schema seams. SetByPath rather than a bare write, so a CLI change takes the path a panel
     -- change takes — the [Set] line, the row's onChange, CONFIG_CHANGED and the panel re-sync.
     get          = function(path) return NS.GetSetting(path) end,
+    -- A refusal with its row's reason (the Text template's parser) prints the reason indented
+    -- under it, the shape slash-commands-§6 gives a failed parse.
     set          = function(path, v)
-        local ok, err = NS.SetByPath(path, v)
+        local ok, err, why = NS.SetByPath(path, v)
         if not ok and err then print(err) end
+        if not ok and why then print("  " .. why) end
     end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
     -- A row with no meaningful default (the container name's `noReset`) is refused with a reason:
@@ -484,10 +506,10 @@ function Sl.LandingRows() return cli:LandingRows() end
 
 function Sl.OnSlash(_, msg) cli:OnSlash(msg) end
 
---- Lock or unlock every container -- what `/am lock` and `/am unlock` run, published so the
---- launcher's left click (core/LauncherSetup.lua, rung (b)) drives the SAME write and prints the
---- same line. The lock is stored once, by NS.SetByPath; nothing here holds a copy of it.
-function Sl.SetLocked(locked) runLock(locked) end
+--- Toggle test mode -- what a bare `/am test` runs, published so the launcher's left click
+--- (core/LauncherSetup.lua, rung (b)) drives the SAME switch and prints the same line. The mode lives
+--- once, in NS.State.testMode, written only by Preview.SetTestMode.
+function Sl.ToggleTestMode() runTest("") end
 
 function Sl.Register()
     NS.addon:RegisterChatCommand("am", function(msg) Sl:OnSlash(msg) end)
