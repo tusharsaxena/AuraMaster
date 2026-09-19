@@ -111,11 +111,11 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Next: Task 1 — not started. Nothing is committed beyond the spec (2b44b4f).
+**Current position:** Task 1 committed, in review; next Task 2.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
-| 1 | E — secret geometry: the handle label measured detached; every geometry read guarded | AuraMaster | todo | |
+| 1 | E — secret geometry: the handle label measured detached; every geometry read guarded | AuraMaster | in review |  |
 | 2 | #3 — Restore beside the Category dropdown | AuraMaster | todo | |
 | 3 | #2 — the Containers page's picker and New in the band above the strip | AuraMaster | todo | |
 | 4 | #8 — a TEST marker on the handle while test mode is on | AuraMaster | todo | |
@@ -126,7 +126,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 9 | #6a — schema v5: every ENCHANT container becomes an enchant-only buff container | AuraMaster | todo | |
 | 10 | #6b — the Weapon enchants aura type is removed everywhere | AuraMaster | todo | |
 | 11 | #7a — bars' background colored by dispel type; no type falls back to the surface's color | AuraMaster | todo | |
-| 12 | #7b — text colored by dispel type: STOP and report | AuraMaster | todo | owner stop |
+| 12 | #7b — text colored by dispel type: STOP and report | AuraMaster | todo | owner chose all three fallbacks, opt-in, off by default; re-planned as a build |
 | 13 | #9 — right-click the handle's "?" → the Containers page on that container | AuraMaster | todo | |
 | 14 | #4a — LibKa0s v1.45.0: `shownWhen` switched sections (STOP before tag/push) | LibKa0s | todo | owner stop |
 | 15 | #4b — re-vendor LibKa0s v1.45.0 into Aura Master | AuraMaster | todo | needs the tag |

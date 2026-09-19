@@ -206,7 +206,9 @@ function ContainerClass:ApplyBlocker(cfg)
         self.blocker = blocker
     end
     local ok, engineLevel = pcall(engine.GetFrameLevel, engine)
-    blocker:SetFrameLevel(math.max(0, (ok and engineLevel or 0) - 1))
+    -- Guarded (feedback E): an engine's level can read secret, and arithmetic on it raises.
+    local level = ok and NS.Secrets.NumberOr(engineLevel, 0) or 0
+    blocker:SetFrameLevel(math.max(0, level - 1))
     blocker:ClearAllPoints()
     blocker:SetAllPoints(engine)
     NS.Style.ApplyBlockerBehavior(blocker, cfg)

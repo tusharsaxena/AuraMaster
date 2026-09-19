@@ -57,6 +57,17 @@ function Secrets.IsReadableNumber(v)
     return type(v) == "number" and Secrets.CanAccess(v)
 end
 
+--- `v` when it is a plain, readable number, else `fallback`. The one guard in front of a GEOMETRY
+--- read (a width, a frame level, an offset): a region anchored to secret geometry answers secret
+--- numbers even out of combat, and arithmetic on one raises (modules/Anchors.lua, feedback E).
+--- @param v any
+--- @param fallback any
+--- @return any
+function Secrets.NumberOr(v, fallback)
+    if Secrets.IsReadableNumber(v) then return v end
+    return fallback
+end
+
 --- Whether `v` may be used as a TABLE KEY right now. The spell-id whitelist and blacklist are keyed
 --- tables, so a spell id is checked here before it is looked up; a caller that gets false treats the
 --- aura as "not on the list".

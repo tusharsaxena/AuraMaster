@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:215`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:217`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -279,3 +279,16 @@ Four client facts decide how `modules/Container.lua` builds an engine, each read
 
 The frame picker cancels itself if combat starts mid-pick: its overlay toggles keyboard propagation,
 which is protected under combat lockdown (`modules/FramePicker.lua`).
+
+## An attached anchor's geometry is secret
+
+**The restriction.** A frame anchored to an aura engine container — or to any frame anchored to one —
+inherits its secret geometry, and so does everything anchored under it. Its width, its points and its
+frame level (`FrameLevel` is a `SecretAspect`) can read back as secret numbers even out of combat, and
+arithmetic on a secret raises "attempt to perform arithmetic on a secret number value" (feedback E,
+2026-09-19: the drag handle's label, on a container attached to another).
+
+**What this addon does.** Nothing reads a measurement off a region that can be attached. The handle's
+label is measured on a detached font string of ours (`Anchors.__labelMeasurer`), and every frame level
+or offset read goes through `NS.Secrets.NumberOr`, which answers a fallback (the stored level, 0, or
+"do not save") for a value that is not a plain number.

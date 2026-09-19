@@ -217,7 +217,7 @@ local function widestSample(path, size, flags, fmt)
     for _, seconds in ipairs(TIME_SAMPLES) do
         fs:SetText(Style.PreviewSeconds(seconds, fmt))
         local w = fs:GetStringWidth()
-        if type(w) ~= "number" then return nil end
+        if not NS.Secrets.IsReadableNumber(w) then return nil end
         if not most or w > most then most = w end
     end
     return most

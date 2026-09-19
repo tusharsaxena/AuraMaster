@@ -738,3 +738,16 @@ test("container: on a client without the aura engine a container is deleted with
     assertFalse(inst.anchor:IsShown(), "torn down all the same")
     assertEqual(#mocks.__engines, 0)
 end)
+
+-- red under: ApplyBlocker's unguarded "engineLevel - 1" (feedback E): an engine attached to secret
+-- geometry can answer its frame level secret, and the client raises on the arithmetic.
+test("container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)", function()
+    local NS, mocks = fresh()
+    local SECRET = 41.5
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local inst = NS.ContainerManager.instances[1]
+    rawset(inst.engine, "GetFrameLevel", function() return SECRET end)
+    local ok, err = pcall(inst.ApplyBlocker, inst, inst:Cfg())
+    assertTrue(ok, tostring(err))
+    assertEqual(inst.blocker:GetFrameLevel(), 0)
+end)

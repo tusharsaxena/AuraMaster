@@ -204,6 +204,14 @@ local function last(f, method)
     return log[#log], #log
 end
 
+--- Measure every handle label as `width` wide: the handle sizes itself from a detached measuring
+--- string (Anchors.__labelMeasurer, feedback E), never from the label, whose width can read secret.
+local function measureAs(NS, width)
+    NS.Anchors.__labelMeasurer = function()
+        return { SetText = function() end, GetStringWidth = function() return width end }
+    end
+end
+
 test("handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
@@ -270,7 +278,7 @@ test("handle: at least as wide as its container's element, and as its label with
     local w = NS.Style.ElementSize(cfg)
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, w), "an empty label")
-    rawset(h, "GetStringWidth", function() return w + 100 end)   -- the label is the handle's font string
+    measureAs(NS, w + 100)
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "a label wider than the element")
 end)
@@ -283,7 +291,7 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     local insets
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b) insets = table.concat({ l, r, t, b }, ",") end)
     local w = NS.Style.ElementSize(cfg)
-    rawset(h, "GetStringWidth", function() return w + 100 end)
+    measureAs(NS, w + 100)
     local over = 100 + 24 + 14 * 2
     cfg.layout.growV, cfg.layout.growH = "down", "right"
     NS.Anchors.UpdateHandle(inst, true)
@@ -1099,4 +1107,82 @@ test("handle: an attached container's strip sits above every placeholder of the 
     mocks.__fireTimers()
     -- red under: the raise kept after a detach
     assertEqual(two.handle:GetFrameLevel(), two.anchor:GetFrameLevel() + 50, "detached: its own anchor's again")
+end)
+
+-- ── secret geometry (feedback E, 2026-09-19) ──────────────────────────────────────────────────
+-- An anchor attached to an engine container, or to a frame anchored to one, inherits its secret
+-- geometry, and so does everything anchored under it: the strip, its label. The client then answers
+-- a width or a frame level as a secret number, and arithmetic on one raises ("attempt to perform
+-- arithmetic on a secret number value", modules/Anchors.lua:452 before the fix). The harness cannot
+-- make a number raise, so a case plants the client's issecretvalue on a sentinel number, and makes
+-- the label's own GetStringWidth raise the client's error outright.
+
+local SECRET = 41.5
+
+--- A fresh environment whose client calls SECRET a secret number.
+local function secretEnv()
+    local NS, mocks = fresh()
+    mocks.issecretvalue = function(v) return v == SECRET end
+    return NS, mocks
+end
+
+test("handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
+    -- The label is the strip in the kit (a font string comes back as its frame).
+    rawset(h, "GetStringWidth", function() error("attempt to perform arithmetic on a secret number value") end)
+    local measured = {}
+    NS.Anchors.__labelMeasurer = function()
+        return {
+            SetText = function(_, s)
+                local n = #measured
+                measured[n + 1] = s
+            end,
+            GetStringWidth = function() return w + 100 end,
+        }
+    end
+    local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    -- red under: placeHandle reading handle.label:GetStringWidth() (the reported error)
+    assertTrue(ok, tostring(err))
+    assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "the measured width sizes the strip")
+    assertEqual(measured[#measured], NS.Database.FindContainer(1).name, "the label's own text is measured")
+end)
+
+test("handle: a measured width that reads secret falls back to the element's width, never raising (E)", function()
+    local NS, mocks = secretEnv()
+    local inst = NS.ContainerManager.instances[2]   -- a 32px icon row: the floor and the label differ
+    local h = recordedHandle(mocks, NS, inst)
+    NS.Anchors.__labelMeasurer = function()
+        return { SetText = function() end, GetStringWidth = function() return SECRET end }
+    end
+    NS.Anchors.UpdateHandle(inst, true)
+    -- red under: labelWidth without its NumberOr guard (41.5 + 52 = 93.5 in the harness; a raise in
+    -- the client)
+    assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, NS.Style.ElementSize(NS.Database.FindContainer(2))))
+end)
+
+test("handle: an anchor whose frame level reads secret places the strip from the stored level (E)", function()
+    local NS, mocks = secretEnv()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    rawset(inst.anchor, "GetFrameLevel", function() return SECRET end)
+    local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    assertTrue(ok, tostring(err))
+    -- red under: handleLevel adding HANDLE_LEVEL to the unguarded read (41.5 + 50)
+    assertEqual(h:GetFrameLevel(), NS.CONTAINER_TEMPLATE.layout.level + 50)
+end)
+
+test("anchors: a drag whose offsets read secret saves nothing (E)", function()
+    local NS = secretEnv()
+    local inst = NS.ContainerManager.instances[1]
+    inst.anchor.GetPoint = function() return "TOP", nil, "TOP", SECRET, -30 end
+    local writes = 0
+    NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
+    local ok, err = pcall(NS.Anchors.SavePosition, inst)
+    assertTrue(ok, tostring(err))
+    -- red under: SavePosition rounding and storing a secret offset
+    assertEqual(writes, 0)
+    assertEqual(NS.Database.FindContainer(1).position.x, NS.STARTER_CONTAINERS[1].position.x)
 end)
