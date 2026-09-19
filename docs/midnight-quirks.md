@@ -333,7 +333,7 @@ the gap is that empty string's own width.
 the rule formatter on `45.5` and `45`, the binding's zero-duration text, and an empty font string's
 width.
 
-## Many debuffs carry no dispel type (smoke batch 2, item 2; owner's output pending)
+## Many debuffs carry no dispel type (smoke batch 2, item 2)
 
 **What was seen.** A bar container on the target's debuffs, colored by dispel type, drew a Paladin's
 Consecration, Judgment, Empyrean Hammer, Seal of Reprisal and Blessed Hammer in blue, and a Text line's
@@ -359,5 +359,19 @@ guard and every call through `pcall`.
 /run for i=1,40 do local o,a=pcall(C_UnitAuras.GetAuraDataByIndex,"target",i,"HARMFUL")if not(o and a)then print("end",i,S(a))break end R(i,a)end
 ```
 
-**Result:** owner's output pending. A typeless debuff is expected to print `nil` for `dispelName`;
-the lines are recorded here when they come back.
+**Result (2026-09-19, out of combat, the owner's own debuffs on a target):**
+
+```
+1 Blood Plague    69 true Disease 0.20000001788139
+2 Insidious Chill 73 true nil     0
+3 Wave of Souls   77 true Magic   0.066666670143604
+4 Brittle         83 true nil     0
+5 Ratfang Toxin   13 true Poison  0.26666668057442
+end 6 nil
+```
+
+Every aura was applied by the player (`true`), and three of five carry a type: Disease (enum 3),
+Magic (1), Poison (4). Being cast by the player does not strip the type. The other two print
+`dispelName` `nil` and enum 0 ("None"). The engine itself reports those debuffs as typeless, so
+showing no `$dispeltype$` word and keeping the surface's color is correct. Out of combat none of the
+values was secret.
