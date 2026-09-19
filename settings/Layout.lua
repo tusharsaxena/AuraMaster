@@ -55,11 +55,11 @@ local function inherited(key)
     end
 end
 
---- The containers the active one may attach to: every other one, plus "None".
+--- The containers the active one may attach to: "None", then every other one by name (B2-2).
 local function attachTargets()
     local _, activeId = NS.ActiveContainer()
     local out = { { value = 0, text = L["None"] } }
-    for _, c in ipairs(NS.Database.GetContainers()) do
+    for _, c in ipairs(NS.Database.GetContainersByName()) do
         if c.id ~= activeId then
             out[#out + 1] = { value = c.id, text = tostring(c.name) }
         end

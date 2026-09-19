@@ -187,7 +187,7 @@ test("containers: the picker and New container sit in the band above the strip, 
     assertTrue(headerFrame ~= nil and parents[picker] == headerFrame and parents[new] == headerFrame,
         "both parented into the header frame PageHeader returned")
     assertTrue(H.__pageCtx.containers.__bannerWidget == picker, "the picker is the page's banner widget")
-    assertEqual(table.concat(picker.order, ","), "1,2,3,4")
+    assertEqual(table.concat(picker.order, ","), "1,4,2,3", "by name (B2-2)")
     assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])
 end)
 
@@ -252,7 +252,7 @@ test("containers: Delete keeps the band's picker and New through both refreshes,
     local picker, new = headerWidgets(NS)
     assertTrue(picker ~= nil and not picker.__released, "the band's picker is live after both renders")
     assertTrue(new ~= nil and not new.__released, "and so is New container")
-    assertEqual(table.concat(picker.order, ","), "1,3,4", "the picker lists the remaining containers")
+    assertEqual(table.concat(picker.order, ","), "1,4,3", "the picker lists the remaining containers, by name")
     local live = 0
     for _, w in ipairs(P.all(after, "Dropdown", NS.L["Container"])) do
         if not w.__released then live = live + 1 end
@@ -498,7 +498,8 @@ test("containers: the copy block offers every other container and copies only th
     local source = P.find(ws, "Dropdown", NS.L["Source container"])
     local what = P.find(ws, "Dropdown", NS.L["What to copy"])
     -- red under: the source list including the selected container (a copy onto itself)
-    assertEqual(table.concat(source.order, ","), "2,3,4")
+    -- by name (B2-2): Player cooldowns, Player debuffs, Target debuffs (mine)
+    assertEqual(table.concat(source.order, ","), "4,2,3")
     assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons,text")
     source:__fire("OnValueChanged", 2)
     what:__fire("OnValueChanged", "bars")
@@ -506,6 +507,11 @@ test("containers: the copy block offers every other container and copies only th
     local c1 = NS.Database.FindContainer(1)
     assertEqual(c1.bars.width, 123, "the chosen section came across")
     assertEqual(c1.layout.spacing, NS.CONTAINER_TEMPLATE.layout.spacing, "and nothing else did")
+    -- Mixed case (B2-2), written straight to the store: red under a byte sort (Zeta, alpha, beta)
+    local cs = NS.db.profile.containers
+    cs[2].name, cs[3].name, cs[4].name = "beta", "Zeta", "alpha"
+    source = P.find(P.rerender("Containers"), "Dropdown", NS.L["Source container"])
+    assertEqual(table.concat(source.order, ","), "4,2,3")
 end)
 
 test("containers: copying Everything takes what the source is, never its name or position", function()

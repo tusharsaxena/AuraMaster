@@ -896,3 +896,8 @@ detail, the step points at it rather than repeating it.
      the template." note under them on a template without one. Text → Animation now holds the Loop
      rows alone. Hover each row: no tooltip says "running out" or "refresh window". Values set before
      the rename are kept (a threshold of 8 still reads 8), and `/am list` still names the same paths.
+157. **The container pickers sort by name (B2-2).** Name three containers "zeta", "Alpha" and "beta"
+     (Containers → Name). The Container dropdown in the band of Containers, Filters, Layout, Bars,
+     Icons and Text lists Alpha, beta, zeta — capitals do not sort first — each still followed by its
+     gray "(unit, aura type, style)"; Containers → Copy settings from's source and Layout → Anchor →
+     Another container (None first) list in the same order. `/am containers` keeps the creation order.

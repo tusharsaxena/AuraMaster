@@ -56,7 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (72)
+### test_database.lua (73)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -130,6 +130,7 @@ badge and any count quoted in the docs must agree with it.
 - v5: RunMigrations converts every stored profile, and the result draws enchants only (feedback #6)
 - v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
+- database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
 
 ### test_schema.lua (29)
 
@@ -960,7 +961,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the degraded stub completes the load — every page's rows still register
 - options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
-### test_options_descriptor.lua (18)
+### test_options_descriptor.lua (19)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -968,8 +969,9 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Reset all writes only session rows through the seam and resets only the active profile
 - options descriptor: Reset all never writes a Profiles-page row, live or degraded
 - options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
-- options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
+- options descriptor: the banner lists every container by name and ignores a re-pick of the selection
 - options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)
+- options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
@@ -1306,7 +1308,7 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 20 |
-| test_database.lua | 72 |
+| test_database.lua | 73 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
@@ -1333,7 +1335,7 @@ badge and any count quoted in the docs must agree with it.
 | test_slash_verbs.lua | 42 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
-| test_options_descriptor.lua | 18 |
+| test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 38 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 43 |
@@ -1354,4 +1356,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1140** |
+| **Total** | **1142** |

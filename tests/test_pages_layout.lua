@@ -183,9 +183,15 @@ test("layout: the Container dropdown offers None and every other container, neve
     local ws = P.show("Layout")
     local dd = targetDropdown(NS, P, ws)
     -- red under: attachTargets listing the selected container (a container attached to itself)
-    assertEqual(table.concat(dd.order, ","), "0,1,3,4")
+    -- None first, then by name (B2-2): Player buffs, Player cooldowns, Target debuffs (mine)
+    assertEqual(table.concat(dd.order, ","), "0,1,4,3")
     assertEqual(dd.list[0], NS.L["None"])
     assertEqual(dd.list[3], "Target debuffs (mine)")
+    -- Mixed case (B2-2), written straight to the store: red under a byte sort (Zeta, alpha, beta)
+    local cs = NS.db.profile.containers
+    cs[1].name, cs[3].name, cs[4].name = "beta", "Zeta", "alpha"
+    dd = targetDropdown(NS, P, P.rerender("Layout"))
+    assertEqual(table.concat(dd.order, ","), "0,4,1,3")
 end)
 
 test("layout: a target that would close a loop is refused; any other, or None, is stored", function()

@@ -72,6 +72,11 @@ band holds **the picker itself** (options-ui-§14):
   on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
   one tab, which §14 then names **General**. The block is drawn on every render, so a Delete's two
   refreshes cannot lose it, and the widgets of the render before are released after each render.
+- **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
+  **Copy settings from**'s source and Layout's *Another container* all read
+  `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
+  regardless of case, so a tie needs a hand-edited store). The banner keeps its gray "(unit, aura type,
+  style)" suffix; the stored display order (`containerOrder`, `/am containers`) does not change.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
@@ -195,7 +200,7 @@ re-choosing the same style keeps a Fill set by hand (B5). A new container (**New
 source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
-from**: a source dropdown, a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
+from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
 ### Filters (41 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
@@ -320,7 +325,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |

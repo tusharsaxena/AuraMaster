@@ -62,7 +62,7 @@ Tag, push, merge and version bumps of addons still wait for the owner.
 
 ## Status ledger (update after every task)
 
-**Current position (2026-09-19):** all tasks done. Awaiting the owner's go-ahead to merge `feat/smoke-feedback-2` and push, and the in-game checks in `docs/smoke-tests.md` section U (143-155).
+**Current position (2026-09-20):** all tasks done, owner follow-ups A and B (rows 14-15) included. Awaiting the owner's go-ahead to merge `feat/smoke-feedback-2` and push, and the in-game checks in `docs/smoke-tests.md` section U (143-157).
 
 Resume at the first row that is not `done`. `blocked` rows wait on the owner (the Notes say for what).
 Dependencies: 1 → 2 → owner tag → 11 → 12. Tasks 3–10 are independent of 1–2 but share Aura Master's
@@ -84,3 +84,4 @@ tree, so they run one at a time. 13 is last.
 | 12 | Re-vendor LibKa0s v1.46.1 into the other ten consumers (`chore/libka0s-v1.46.1`) | 10 repos | done | merged and pushed: PFE 1e37595, BankLedger 0edcff4, PanelMaster 31a7ee0, ConsumableMaster dd78f2b, KickCD cd8fb2a, PrettyChat 0fd4b19, LootHistory f059dd3, WhatGroup e250cce, AbsorbTracker def0af5, MultiMeters 565f9c4 |
 | 13 | Final gate (tests, lint, lizard, perf), smoke section U, test-case inventory | AuraMaster | done | T13 commit: 1137/1137, luacheck 0/0, lizard prints nothing, perf green (10 scenarios, applyPass 30.0 engine calls over 4 containers, 200 writes coalesced into 1 pass); smoke section U (143-155); inventory and badge already current (1137) |
 | 14 | Owner follow-up A — "Pandemic": Running out and Refresh window renamed to pandemic-window wording, on a new Pandemic tab (Bars, Icons, Text) | AuraMaster | done | B2-1 commit: Bars/Icons Highlights tab replaced by Pandemic (subsections Time color, Highlight); Text rows moved off Animation to Pandemic (before Animation) with the duration-token note; labels and tooltips only, paths/values unchanged, no migration; locale keys swapped; settings-panel, schema, module-map, smoke 65/98/104 + 156; +3 tests (1140/1140) |
+| 15 | Owner follow-up B — every container picker sorted by name, case-insensitively | AuraMaster | done | B2-2 commit: Database.GetContainersByName (lowercased name, id tie-break, a new array; containerOrder untouched) feeds the Container banner/header (containerList), Copy settings from's source and Layout's Another container (None first); gray suffix kept; /am containers keeps display order; Database citations re-pointed (+13); settings-panel, module-map, smoke 157; +2 tests (1142/1142) |
