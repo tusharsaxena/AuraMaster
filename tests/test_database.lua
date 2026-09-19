@@ -551,9 +551,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 3
-    -- steps a v1 profile now climbs (v2, v3, v4).
-    assertEqual(perProfile, 6, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 4
+    -- steps a v1 profile now climbs (v2, v3, v4, v5).
+    assertEqual(perProfile, 8, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -846,11 +846,11 @@ test("v3: the whitelist lift never sweeps a category the aura type does not have
     assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
 end)
 
-test("v4: the current schema version is 4", function()
+test("v5: the current schema version is 5", function()
     local NS = fresh()
-    -- red under: the v4 step missing from SCHEMA_STEPS
-    assertEqual(NS.Database.CurrentSchemaVersion(), 4)
-    assertEqual(NS.db.global.schemaVersion, 4)
+    -- red under: the v5 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 5)
+    assertEqual(NS.db.global.schemaVersion, 5)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
@@ -939,7 +939,7 @@ end)
 
 test("v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost", function()
     -- red under: counting an ENCHANT container as `lost`, which docs/schema.md and the [Migrate]
-    -- line would then overstate — FC.Compile's compileEnchant never reads filter.onlyShown at all.
+    -- line would then overstate — FC.Compile's compileEnchant (retired at schema v5) never read filter.onlyShown at all.
     local NS = fresh()
     local p = { containers = { { auraType = "ENCHANT",
         filter = { onlyShown = true, categories = {} } } } }
@@ -1007,7 +1007,7 @@ test("v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debu
             end)
         end,
     })
-    assertEqual(NS.db.global.schemaVersion, 4)
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
     local found = false
     for _, l in ipairs(lines) do
         -- red under: the debug flag being off (the default) swallowing the only notice a player gets
@@ -1030,7 +1030,7 @@ test("v4: no notice is printed when nothing was lost", function()
             end)
         end,
     })
-    assertEqual(NS.db.global.schemaVersion, 4)
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
     for _, l in ipairs(lines) do
         assertTrue(l:find("could not be carried over", 1, true) == nil, "no lost-capability notice: " .. l)
     end
@@ -1051,4 +1051,126 @@ test("database: a fresh profile seeds the Player cooldowns text container last, 
     assertEqual(c.filter.categories.uncategorized, "hide")
     assertEqual(c.filter.categories.bigDefensive, "hide")
     assertEqual(c.text.template, NS.CONTAINER_TEMPLATE.text.template, "the rest is the template's")
+end)
+
+-- ---------------------------------------------------------------------------
+-- Schema v5: the Weapon enchants aura type retires (feedback #6)
+-- ---------------------------------------------------------------------------
+
+--- A v4 container with the ENCHANT aura type, styled and placed as a player would have left it.
+local function enchantContainer()
+    return {
+        name = "My enchants", enabled = true, unit = "target", auraType = "ENCHANT", style = "icons",
+        filter = { hidePermanentEnchants = false, categories = { defensives = "show" }, sortDirection = "reverse" },
+        position = { point = "TOPLEFT", relativePoint = "TOPLEFT", x = 12, y = -34 },
+        icons = { width = 40, height = 40 },
+    }
+end
+
+test("v5: an ENCHANT container becomes a player buff container showing only Weapon enchants, its look kept (feedback #6)", function()
+    local NS = fresh()
+    local p = { containers = { [7] = enchantContainer() } }
+    local converted = NS.Database.MigrateV5(p)
+    local c = p.containers[7]
+    assertEqual(converted, 1)
+    -- red under: the aura type left as ENCHANT (C.AURA_TYPES no longer offers it)
+    assertEqual(c.auraType, "HELPFUL")
+    -- red under: the unit carried over (enchants are only ever the player's)
+    assertEqual(c.unit, "player")
+    local cats = c.filter.categories
+    assertEqual(cats.weaponEnchants, "show")
+    for _, def in ipairs(NS.Categories.For("HELPFUL")) do
+        if def.key ~= "weaponEnchants" then
+            -- red under: a buff category left at Show (the container would draw auras too)
+            assertEqual(cats[def.key], "hide", def.key)
+        end
+    end
+    assertEqual(cats.uncategorized, "hide", "Uncategorized is hidden too")
+    -- red under: the migration resetting what the player set
+    assertEqual(c.filter.hidePermanentEnchants, false, "hide-permanent carries over")
+    assertEqual(c.filter.sortDirection, "reverse")
+    assertEqual(c.style, "icons"); assertEqual(c.icons.width, 40)
+    assertEqual(c.position.x, 12); assertEqual(c.name, "My enchants")
+end)
+
+test("v5: a whitelist on the ENCHANT container is cleared, so the migrated container draws no buffs (fix round 1, review Important #1)", function()
+    local NS = fresh()
+    local c = enchantContainer()
+    c.filter.whitelist = { [500] = true, [600] = true }
+    local p = { containers = { [9] = c } }
+    NS.Database.MigrateV5(p)
+    -- red under: the whitelist kept, so FC.Compile's addWhitelistGroup still draws those buffs
+    assertTrue(p.containers[9].filter.whitelist == nil, "the whitelist is cleared, not merely left empty")
+    local plan = NS.FilterCompiler.Compile(p.containers[9], NS.FilterCompiler.ProfileContext())
+    assertEqual(#plan.groups, 0, "no group at all -- only the enchant slots")
+end)
+
+test("v5: a container with no filter table at all still converts cleanly (review Minor #2)", function()
+    local NS = fresh()
+    local p = { containers = { [1] = { name = "Bare", unit = "target", auraType = "ENCHANT" } } }
+    -- red under: MigrateV5 indexing a nil filter instead of building one
+    assertEqual(NS.Database.MigrateV5(p), 1)
+    local c = p.containers[1]
+    assertEqual(c.auraType, "HELPFUL"); assertEqual(c.unit, "player")
+    assertEqual(c.filter.categories.weaponEnchants, "show")
+end)
+
+test("v5: only ENCHANT containers are touched, and a second run changes nothing (feedback #6)", function()
+    local NS = fresh()
+    local buff = { name = "Buffs", unit = "target", auraType = "HELPFUL", filter = { categories = { defensives = "hide" } } }
+    local p = { containers = { [1] = buff, [2] = enchantContainer() } }
+    NS.Database.MigrateV5(p)
+    -- red under: every container rewritten as an enchant container
+    assertEqual(buff.unit, "target"); assertEqual(buff.filter.categories.defensives, "hide")
+    assertTrue(buff.filter.categories.weaponEnchants == nil, "a buff container's categories are its own")
+    local Sig = NS.FilterCompiler.Signature
+    local once = Sig(p)
+    -- red under: a second run re-stamping categories or re-counting a container it already converted
+    assertEqual(NS.Database.MigrateV5(p), 0, "nothing left to convert")
+    assertEqual(Sig(p), once)
+end)
+
+test("v5: RunMigrations converts every stored profile, and the result draws enchants only (feedback #6)", function()
+    local function raw()
+        return { seeded = true, nextContainerId = 3, containerOrder = { 2 }, containers = { [2] = enchantContainer() } }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 4 } } })
+    assertEqual(NS.db.global.schemaVersion, 5)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local c = NS.db.sv.profiles[name].containers[2]
+        -- red under: the step migrating the active profile only
+        assertEqual(c.auraType, "HELPFUL", name)
+        assertEqual(c.filter.categories.weaponEnchants, "show", name)
+    end
+    local plan = NS.FilterCompiler.Compile(NS.db.sv.profiles.Default.containers[2], NS.FilterCompiler.ProfileContext())
+    local slotCount, groupCount, warnCount = #plan.enchants.slots, #plan.groups, #plan.warnings
+    assertEqual(slotCount, 3, "the three enchant slots")
+    assertEqual(groupCount, 0, "and no aura group")
+    -- red under: finishWarnings calling an enchant-only container one that can never match
+    assertEqual(warnCount, 0, table.concat(plan.warnings, " | "))
+end)
+
+test("v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)", function()
+    local NS = fresh()
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Migrate" then
+            local n = #lines
+            lines[n + 1] = fmt:format(...)
+        end
+    end
+    NS.Database.MigrateV5({ containers = { [3] = enchantContainer(), [4] = { auraType = "HARMFUL" }, [5] = enchantContainer() } })
+    -- red under: the migration silent per container, or logging the untouched debuff one
+    assertEqual(table.concat(lines, " | "), "v5 container '3' (My enchants): now a player buff container showing only Weapon enchants"
+        .. " | v5 container '5' (My enchants): now a player buff container showing only Weapon enchants")
+end)
+
+test("v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)", function()
+    local NS = fresh()
+    local p = { dispelColors = { Magic = { r = 0.2, g = 0.6, b = 1, a = 1 }, None = { r = 0.8, g = 0, b = 0, a = 1 } },
+        containers = {} }
+    NS.Database.MigrateV5(p)
+    -- red under: MigrateV5 leaving a color nothing reads in every old profile
+    assertEqual(p.dispelColors.None, nil)
+    assertEqual(p.dispelColors.Magic.r, 0.2, "the palette's colors stay")
 end)

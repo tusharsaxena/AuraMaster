@@ -17,15 +17,16 @@ end
 -- BATCH 8 (owner, from a screenshot): the wrong-style note was a full-width GameFontNormalLarge
 -- line in warning orange, which shouted for what is a quiet aside — nothing is wrong, the page is
 -- simply inert until the style changes. It is now the small default font in the addon's
--- muted notice gold (B3), reworded to lead with the condition and name the page that fixes it, and
+-- muted notice color, reworded to lead with the condition and name the page that fixes it, and
 -- followed by the ordinary row gap rather than a 12px one. Orange is left to RenderWarnings, which
--- can draw on this very page and must stay the loudest thing on it.
-local NOTICE = "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."
-local GOLD = "|c" .. T.NS.Constants.NOTICE_COLOR
+-- can draw on this very page and must stay the loudest thing on it. The color was gold (B3), then
+-- muted red the same day (Task 20).
+local MSG = "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."
+local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
 
-test("bars: every tab of an icons container carries the muted-gold note; a bars container's carry none", function()
+test("bars: every tab of an icons container carries the muted-red note; a bars container's carry none", function()
     local NS, _, P, ws = bars()
-    local notice = GOLD .. NS.L[NOTICE] .. "|r"
+    local notice = NOTICE .. NS.L[MSG] .. "|r"
     assertFalse(P.hasText(ws, notice), "container 1 is drawn as bars")
     NS.Helpers.SelectContainer(2)
     ws = P.show("Bars")
@@ -70,8 +71,8 @@ test("bars: the wrong-style note is drawn small and gray, then a spacer before t
     H.SelectContainer(2)
     P.show("Bars")
     H.TextRow = textRow
-    local notice = GOLD .. NS.L[NOTICE] .. "|r"
-    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the gold the addon reports in")
+    local notice = NOTICE .. NS.L[MSG] .. "|r"
+    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the color the addon reports notices in")
     -- red under: the note back in large orange, shouting over a page that is merely inert
     assertEqual(seen[notice] and seen[notice].fontObject, "GameFontHighlightSmall")
     local kids = H.EnsureScroll(H.__pageCtx.bars).children
@@ -130,9 +131,9 @@ test("bars: the seven tabs are drawn in order, whatever the container shows (S-1
     local want = table.concat({ L["General"], L["Icon"], L["Background & border"], L["Name text"],
         L["Time text"], L["Stack text"], L["Highlights"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
-    NS.SetByPath("container.auraType", "ENCHANT", 1)
+    NS.SetByPath("container.auraType", "HARMFUL", 1)
     P.rerender("Bars")
-    -- red under: a Bars row declaring `auraTypes` (an enchant container drawn as bars loses it)
+    -- red under: a Bars row declaring `auraTypes` (a debuff container drawn as bars loses it)
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
 end)
 
@@ -195,6 +196,27 @@ test("bars: Highlights carries no dispel swatches, and Color by points at Genera
     -- red under: the tooltip still sending the player to the Highlights tab
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
     assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
+    -- red under: the tooltip silent on why Mystic Touch keeps the bar color (feedback #7)
+    assertTrue(desc:find("Mystic Touch", 1, true) ~= nil, desc)
+end)
+
+test("bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)", function()
+    local NS, _, P = bars()
+    P.show("Bars")
+    local ws = P.tab("bars", NS.L["Background & border"])
+    local row = NS.FindSchemaRow("container.bars.bgColorMode")
+    -- red under: no bgColorMode row
+    assertTrue(row ~= nil and row.subgroup == NS.L["Background"], "a Background row")
+    local dd
+    for _, w in ipairs(P.rowWidgets(ws, "bars", NS.L["Background & border"])) do
+        if w.type == "Dropdown" and w.labelText == row.label then dd = w end
+    end
+    assertTrue(dd ~= nil, "drawn on the tab")
+    assertEqual(table.concat(dd.order, ","), "static,dispel")
+    dd:__fire("OnValueChanged", "dispel")
+    assertEqual(NS.Database.FindContainer(1).bars.bgColorMode, "dispel")
+    assertTrue((row.tooltip or row.desc):find("Mystic Touch", 1, true) ~= nil, "the tooltip says why a typeless debuff keeps its color")
+    assertEqual(NS.CONTAINER_TEMPLATE.bars.bgColorMode, "static", "one color by default")
 end)
 
 test("bars: Defaults restores the selected container's bar look and leaves its icon look alone", function()

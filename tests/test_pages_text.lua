@@ -11,7 +11,37 @@ local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
 local P_ = "container.text."
-local GOLD = "|c" .. T.NS.Constants.NOTICE_COLOR
+local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
+
+--- The Template dropdown (feedback #5): the built-ins and Custom. Not a schema row, found by label.
+local function picker(NS, P, ws) return P.find(ws, "Dropdown", NS.L["Template"]) end
+
+--- The Preview box (Task 20): a disabled EditBox labeled Preview, PrettyChat's own shape. Not a
+--- schema row, found by label like the Template dropdown.
+local function preview(NS, P, ws) return P.find(ws, "EditBox", NS.L["Preview"]) end
+
+--- Choose `key` in the Template dropdown and answer the page as it draws after the choice.
+local function pick(NS, m, P, ws, key)
+    picker(NS, P, ws):__fire("OnValueChanged", key)
+    m.__fireTimers()
+    return P.rerender("Text")
+end
+
+--- Record every [Set] and [Apply] line, rendered `[Tag] text`, with debug on (final review; the
+--- same shape as test_pages_filters.lua's captureLog, which the bulk-bracket "one line, one apply"
+--- convention already tests on Show all/Hide all).
+local function captureLog(NS)
+    NS.State.debug = true
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag ~= "Set" and tag ~= "Apply" then return end
+        local args = { ... }
+        for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+        local n = #lines
+        lines[n + 1] = ("[%s] %s"):format(tag, fmt:format(unpack(args)))
+    end
+    return lines
+end
 
 --- The Animation tab as the current settings draw it: a structural re-render, then a click on the
 --- tab unless it is already the active one (a click on the active tab draws nothing).
@@ -42,7 +72,7 @@ test("text page: a bars or icons container sees every row disabled under the not
     local NS, _, P = textPage()
     local L = NS.L
     NS.Helpers.SelectContainer(2)
-    local notice = GOLD .. L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."]
+    local notice = NOTICE .. L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."]
     P.eachTab("Text", "text", function(key, tabWs)
         -- red under: the Text spec's disabledNotice answering the bars wording for an icons container
         assertTrue(P.hasText(tabWs, notice), key .. " carries the note")
@@ -56,20 +86,21 @@ test("text page: a bars or icons container sees every row disabled under the not
     end)
     NS.SetByPath("container.style", "bars", 2)
     local ws = P.rerender("Text")
-    assertTrue(P.hasText(ws, GOLD .. L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."]))
+    assertTrue(P.hasText(ws, NOTICE .. L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."]))
 end)
 
 test("text page: the Bars and Icons pages name the text style on a text container", function()
     local NS, _, P = textPage()
     local L = NS.L
     -- red under: the Bars notice still claiming every other container is drawn as icons
-    assertTrue(P.hasText(P.show("Bars"), GOLD .. L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."]))
-    assertTrue(P.hasText(P.show("Icons"), GOLD .. L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]))
+    assertTrue(P.hasText(P.show("Bars"), NOTICE .. L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."]))
+    assertTrue(P.hasText(P.show("Icons"), NOTICE .. L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]))
 end)
 
-test("text page: General holds Size, the Template box, the cheat sheet, then Placement", function()
-    local NS, _, P, ws = textPage()
+test("text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement", function()
+    local NS, m, P, ws = textPage()
     local L = NS.L
+    ws = pick(NS, m, P, ws, "custom")
     local box = P.row(ws, P_ .. "template")
     -- red under: the template row without dialogControl = "EditBox" (a dropdown that opens on nothing)
     assertEqual(box.type, "EditBox")
@@ -80,9 +111,16 @@ test("text page: General holds Size, the Template box, the cheat sheet, then Pla
         -- red under: cheatSheet skipping a token
         assertTrue(joined:find("$" .. def.key .. "$", 1, true) ~= nil, "cheat sheet names $" .. def.key .. "$")
     end
-    assertTrue(P.hasText(ws, L["To write a literal [, ] or $, type it twice: [[, ]] or $$."]))
+    -- red under: the Tokens/Rules cheat sheet (Task 20) without either heading
+    assertTrue(P.hasText(ws, L["Tokens"]))
+    assertTrue(P.hasText(ws, L["Rules"]))
+    assertTrue(P.hasText(ws, L["To write a literal [, ] or $, type it twice:"]))
+    assertTrue(P.hasText(ws, L["[[, ]] or $$."]))
     -- red under: the cheat sheet leaving out how an odd run of [ combines an escape and a bracket
-    assertTrue(P.hasText(ws, L["Escapes and brackets combine: [[[$stacks$]]] shows [3] only when stacked."]))
+    assertTrue(P.hasText(ws, L["Escapes and brackets combine:"]))
+    assertTrue(P.hasText(ws, L["[[[$stacks$]]] shows [3] only when stacked."]))
+    -- red under: the cheat sheet without the bracketed-duration example (feedback #5)
+    assertTrue(P.hasText(ws, "[ ($remainingpercent$%)] hides with the time"))
     -- The cheat sheet sits between the Template box and the Placement rows.
     local at = {}
     for i, w in ipairs(ws) do
@@ -91,10 +129,72 @@ test("text page: General holds Size, the Template box, the cheat sheet, then Pla
         if w.labelText == NS.FindSchemaRow(P_ .. "justifyH").label then at.justify = i end
     end
     assertTrue(at.box < at.sheet and at.sheet < at.justify, "box, then cheat sheet, then Placement")
+    local dd = picker(NS, P, ws)
+    for i, w in ipairs(ws) do
+        if w == dd then at.picker = i end
+    end
+    -- red under: the dropdown drawn under the box (the spec puts it above the template box)
+    assertTrue(at.picker < at.box, "the Template dropdown, then the box")
+end)
+
+test("text page: the section is named Text Template (Task 20, owner: rename this section)", function()
+    local NS, _, P, ws = textPage()
+    -- red under: the subgroup still reading "What each line says"
+    assertEqual(NS.FindSchemaRow(P_ .. "template").subgroup, NS.L["Text Template"])
+    -- the subgroup heading is an AceGUI Heading, not a Label, so P.hasText (Label-only) misses it
+    assertTrue(P.find(ws, "Heading", NS.L["Text Template"]) ~= nil, "the heading reads Text Template")
+    assertTrue(P.find(ws, "Heading", "What each line says") == nil, "the old heading is gone")
+end)
+
+test("text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)", function()
+    local NS, _, P, ws = textPage()
+    local box = preview(NS, P, ws)
+    -- red under: no Preview EditBox, or a Label in its place
+    assertTrue(box ~= nil, "the Preview box is drawn")
+    assertEqual(box.type, "EditBox")
+    assertEqual(box.labelText, NS.L["Preview"])
+    -- red under: an editable Preview (PrettyChat's previewInput is SetDisabled(true))
+    assertTrue(box.disabled, "the Preview is read-only")
+    assertTrue(box.fullWidth, "the Preview spans the pane")
+    -- red under: the Preview showing anything but Text.PreviewLine's own rendering
+    local sample = NS.Constants.TEXT_SAMPLE_AURAS.HELPFUL
+    local raw = NS.Style.Text.PreviewLine(NS.Database.FindContainer(1).text, sample)
+    assertTrue(box.text:find(raw, 1, true) ~= nil, box.text)
+end)
+
+test("text page: the Preview box refreshes after a template change (Task 20)", function()
+    local NS, m, P, ws = textPage()
+    -- red under: the box seeded once and never rebuilt (nothing to refresh FROM)
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain x3", 1, true) ~= nil, "the default template's line")
+    NS.SetByPath(P_ .. "template", "$spellname$", 1)
+    m.__fireTimers()
+    ws = P.rerender("Text")
+    local sample = NS.Constants.TEXT_SAMPLE_AURAS.HELPFUL
+    local raw = NS.Style.Text.PreviewLine(NS.Database.FindContainer(1).text, sample)
+    -- red under: the Preview box built once and never rebuilt on a structural refresh
+    assertTrue(preview(NS, P, ws).text:find(raw, 1, true) ~= nil, preview(NS, P, ws).text)
+    assertFalse(preview(NS, P, ws).text:find("x3", 1, true) ~= nil, "the stacks field is gone from the new template")
+end)
+
+test("text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)", function()
+    local NS, _, P, ws = textPage()
+    local tokenBullets = 0
+    for _, t in ipairs(P.texts(ws)) do
+        for _, def in ipairs(NS.Constants.TEXT_TOKENS) do
+            if t:find("$" .. def.key .. "$", 1, true) and t:sub(1, 2) == "- " then
+                tokenBullets = tokenBullets + 1
+            end
+        end
+    end
+    -- red under: a token folded onto another's line, or drawn twice
+    assertEqual(tokenBullets, #NS.Constants.TEXT_TOKENS)
+    assertTrue(P.hasText(ws, NS.L["Tokens"]))
+    assertTrue(P.hasText(ws, NS.L["Rules"]))
 end)
 
 test("text page: a valid template is stored; a refused one is not, and the panel prints why", function()
-    local NS, _, P, ws = textPage()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
     local lines = P.chat()
     local box = P.row(ws, P_ .. "template")
     box:__fire("OnEnterPressed", "$spellname$ $remainingduration$")
@@ -121,13 +221,21 @@ test("text page: /am set refuses a bad template with the parser's reason, indent
     assertEqual(NS.Database.FindContainer(1).text.template, "$spellname$ ($stacks$)")
 end)
 
-test("text page: Center on a multi-piece template draws the note naming the piece count", function()
+test("text page: Center on a multi-piece template draws the note naming its rows (feedback #1)", function()
     local NS, _, P = textPage()
-    local note = NS.L["Center needs a one-piece template; this one has %d pieces, so it lines up Left."]
+    local note = NS.L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]
     NS.SetByPath(P_ .. "justifyH", "CENTER", 1)
     local ws = P.rerender("Text")
-    -- red under: centerNote reading the stored template's piece count wrong, or not drawn
-    assertTrue(P.hasText(ws, note:format(3)), "the default template has three pieces")
+    -- red under: centerNote still saying Center lines a multi-piece template up Left
+    assertTrue(P.hasText(ws, note:format(3)), "the default template has three fields")
+    -- red under: the Preview not showing the stack it will draw, or joining its rows with a raw
+    -- "\n" (final review: a single-line EditBox does not lay a newline out as a break) instead of a
+    -- visible " / " separator
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain /  x3 /  - 11s", 1, true) ~= nil, preview(NS, P, ws).text)
+    assertFalse(preview(NS, P, ws).text:find("\n", 1, true) ~= nil, "no raw newline reaches the EditBox")
+    NS.SetByPath(P_ .. "template", "$spellname$ :: $stacks$", 1)
+    ws = P.rerender("Text")
+    assertTrue(P.hasText(ws, note:format(2)), "a literal is not a row")
     NS.SetByPath(P_ .. "template", "$spellname$", 1)
     ws = P.rerender("Text")
     assertFalse(P.hasText(ws, note:sub(1, 30)), "a one-piece template centers, so no note")
@@ -204,4 +312,193 @@ test("text page: Defaults restores the selected container's text look and nothin
     assertEqual(c1.text.width, NS.CONTAINER_TEMPLATE.text.width)
     assertEqual(c1.text.template, NS.CONTAINER_TEMPLATE.text.template)
     assertEqual(c1.bars.width, 111)
+end)
+
+-- ── built-in templates, Custom and the Preview (feedback #5) ──────────────────────────────────
+
+test("text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)", function()
+    local NS, _, P, ws = textPage()
+    local C = NS.Constants
+    local function expected(auraType)
+        local out = {}
+        for i, key in ipairs(C.TEXT_BUILTIN_SETS[auraType]) do out[i] = key end
+        local n = #out
+        out[n + 1] = "custom"
+        return table.concat(out, ",")
+    end
+    local dd = picker(NS, P, ws)
+    -- red under: no Template dropdown, or the buff page offering the debuff built-ins
+    assertEqual(table.concat(dd.order, ","), expected("HELPFUL"))
+    assertEqual(dd.list.nameTime, NS.L["Name + time"])
+    assertEqual(dd.value, "nameStacksTime", "the default template is a built-in")
+    NS.SetByPath("container.style", "text", 2)
+    NS.Helpers.SelectContainer(2)
+    ws = P.rerender("Text")
+    -- red under: the debuff page without Name (type) and Name, type, time
+    assertEqual(table.concat(picker(NS, P, ws).order, ","), expected("HARMFUL"))
+end)
+
+test("text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)", function()
+    local NS, m, P, ws = textPage()
+    local s = NS.Database.FindContainer(1).text
+    -- red under: the box drawn for a template that is a built-in
+    assertEqual(P.row(ws, P_ .. "template"), nil, "a built-in shows no box")
+    ws = pick(NS, m, P, ws, "timeOfMax")
+    assertEqual(s.template, "$spellname$[ $remainingduration$ / $maxduration$]")
+    assertEqual(s.justifyH, "LEFT")
+    ws = pick(NS, m, P, ws, "centered")
+    -- red under: the centered built-in writing its template and leaving Justify alone
+    -- (fix round 1: no " - " separator — the stacked second row would read " - 11s")
+    assertEqual(s.template, "$spellname$[$remainingduration$]")
+    assertEqual(s.justifyH, "CENTER")
+    assertEqual(picker(NS, P, ws).value, "centered", "Name + time with Center reads as the centered one")
+    ws = pick(NS, m, P, ws, "name")
+    -- red under: a plain built-in leaving the line centered (Center is the centered built-in's)
+    assertEqual(s.justifyH, "LEFT")
+    assertEqual(picker(NS, P, ws).value, "name")
+end)
+
+test("text page: picking a built-in that also moves Justify writes and applies once (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "timeOfMax")   -- Left; picking Centered next must also move justifyH
+    local lines = captureLog(NS)
+    local inst = NS.ContainerManager.instances[1]
+    local applies = 0
+    local apply = inst.Apply
+    inst.Apply = function(...) applies = applies + 1; return apply(...) end
+    picker(NS, P, ws):__fire("OnValueChanged", "centered")
+    m.__fireTimers()
+    inst.Apply = apply
+    local s = NS.Database.FindContainer(1).text
+    assertEqual(s.template, "$spellname$[$remainingduration$]")
+    assertEqual(s.justifyH, "CENTER")
+    -- red under: the template and justify writes each queuing their own apply pass (two, not one)
+    assertEqual(applies, 1, "one apply pass for both writes")
+    -- red under: no NS.Bulk.Run bracket, so each write logs its own [Set] line
+    assertEqual(#lines, 2, "one [Set] line and one [Apply] line: " .. table.concat(lines, " | "))
+    assertTrue(lines[1]:find("^%[Set%] pick built%-in", 1) ~= nil, lines[1])
+    assertTrue(lines[2]:find("^%[Apply%] applied", 1) ~= nil, lines[2])
+end)
+
+test("text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
+    local box = P.row(ws, P_ .. "template")
+    -- red under: Custom not opening the box, or opening it empty
+    assertTrue(box ~= nil, "Custom shows the box")
+    assertEqual(box.text, NS.CONTAINER_TEMPLATE.text.template, "seeded with the current template")
+    assertEqual(picker(NS, P, ws).value, "custom")
+    assertEqual(NS.Database.FindContainer(1).text.template, NS.CONTAINER_TEMPLATE.text.template, "choosing Custom writes nothing")
+    -- Another container, whose stored template is no built-in: Custom, with its box, unasked.
+    NS.SetByPath("container.style", "text", 3)
+    NS.SetByPath(P_ .. "template", "$spellname$ $stacks$", 3)
+    NS.Helpers.SelectContainer(3)
+    ws = P.rerender("Text")
+    -- red under: a template that matches nothing read as the first built-in
+    assertEqual(picker(NS, P, ws).value, "custom")
+    assertTrue(P.row(ws, P_ .. "template") ~= nil, "and its box is drawn")
+end)
+
+test("text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)", function()
+    local NS, m, P, ws = textPage()
+    local L = NS.L
+    -- The buff sample: Ignore Pain, 3 stacks, 11 of 12 s, no dispel type. The harness has no seconds
+    -- formatter, so a time reads as whole seconds ("11s").
+    -- red under: no Preview box, or one not filled from the sample
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain x3 - 11s", 1, true) ~= nil)
+    NS.SetByPath(P_ .. "template", "$spellname$[ ($remainingpercent$%)][ ($dispeltype$)]", 1)
+    m.__fireTimers()
+    ws = P.rerender("Text")
+    -- red under: an empty bracket drawn (the dispel type of a typeless aura), or a percent carrying
+    -- its own "%" beside the one typed
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain (92%)", 1, true) ~= nil)
+    -- The debuff sample: Shadow Word: Pain, no stacks, a Magic type.
+    NS.SetByPath("container.style", "text", 2)
+    NS.Helpers.SelectContainer(2)
+    ws = P.rerender("Text")
+    ws = pick(NS, m, P, ws, "nameTypeTime")
+    assertTrue(preview(NS, P, ws).text:find("Shadow Word: Pain (" .. L["Magic"] .. ") - 11s", 1, true) ~= nil)
+    ws = pick(NS, m, P, ws, "nameStacksTime")
+    assertTrue(preview(NS, P, ws).text:find("Shadow Word: Pain - 11s", 1, true) ~= nil, "no stacks, so no ' x'")
+end)
+
+test("text page: the centered built-in's Preview joins its two rows with a visible separator (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "centered")
+    -- red under: the stacked rows still joined by a raw "\n" (a single-line EditBox swallows it)
+    -- instead of the controller's " / " separator
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain / 11s", 1, true) ~= nil, preview(NS, P, ws).text)
+    assertFalse(preview(NS, P, ws).text:find("\n", 1, true) ~= nil, "no raw newline reaches the EditBox")
+end)
+
+-- ── escapeStrayPipes (final review: no direct test existed) ──────────────────────────────────────
+
+test("text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
+    local box = P.row(ws, P_ .. "template")
+    box:__fire("OnEnterPressed", "$spellname$|extra")
+    ws = P.rerender("Text")
+    -- red under: escapeStrayPipes leaving a lone "|" from the player's own template text undoubled
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain||extra", 1, true) ~= nil, preview(NS, P, ws).text)
+end)
+
+test("text page: an already-doubled || in a custom template still doubles each pipe (final review)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
+    local box = P.row(ws, P_ .. "template")
+    box:__fire("OnEnterPressed", "$spellname$||extra")
+    ws = P.rerender("Text")
+    -- red under: escapeStrayPipes treating an existing "||" as already-escaped and leaving it alone
+    -- (each of the two literal pipes must double on its own, to "||||")
+    assertTrue(preview(NS, P, ws).text:find("Ignore Pain||||extra", 1, true) ~= nil, preview(NS, P, ws).text)
+end)
+
+test("text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)", function()
+    local NS, m, P = textPage()
+    NS.SetByPath("container.style", "text", 2)
+    NS.Helpers.SelectContainer(2)
+    local ws = P.rerender("Text")
+    pick(NS, m, P, ws, "nameType")
+    NS.SetByPath(P_ .. "dispelTypeColor", true, 2)
+    ws = P.rerender("Text")
+    local sample = NS.Constants.TEXT_SAMPLE_AURAS.HARMFUL
+    local raw = NS.Style.Text.PreviewLine(NS.Database.FindContainer(2).text, sample)
+    local run = raw:match("|cff%x%x%x%x%x%x.-|r")
+    assertTrue(run ~= nil, raw)
+    -- red under: escapeStrayPipes doubling the protected color run instead of restoring it whole
+    assertTrue(preview(NS, P, ws).text:find(run, 1, true) ~= nil, preview(NS, P, ws).text)
+    -- red under: a naive blind-double leaving a doubled copy of the run in the box instead
+    assertFalse(preview(NS, P, ws).text:find((run:gsub("|", "||")), 1, true) ~= nil)
+end)
+
+-- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
+
+test("text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)", function()
+    local NS, _, P = textPage()
+    local L = NS.L
+    local D = NS.CONTAINER_TEMPLATE.text
+    -- red under: any of the three on by default (owner, 2026-09-19: all opt-in, all off)
+    assertFalse(D.dispelTypeColor)
+    assertFalse(D.dispelBackdrop)
+    assertFalse(D.dispelEdge)
+    local ws = animationTab(NS, P)
+    for _, key in ipairs({ "dispelTypeColor", "dispelBackdrop", "dispelBackdropAlpha", "dispelEdge", "dispelEdgeSize" }) do
+        local row = NS.FindSchemaRow(P_ .. key)
+        -- red under: no row
+        assertTrue(row ~= nil and row.group == L["Animation"] and row.subgroup == L["Dispel type"], key)
+        assertTrue(P.row(ws, P_ .. key) ~= nil, key .. " is drawn")
+    end
+    -- The default template has no $dispeltype$, so there is no word to color.
+    assertTrue(P.row(ws, P_ .. "dispelTypeColor").disabled, "the word needs the token")
+    assertTrue(P.row(ws, P_ .. "dispelBackdropAlpha").disabled, "the opacity waits for the backdrop")
+    assertTrue(P.row(ws, P_ .. "dispelEdgeSize").disabled, "the thickness waits for the edge")
+    NS.SetByPath(P_ .. "template", "$spellname$[ ($dispeltype$)]", 1)
+    NS.SetByPath(P_ .. "dispelBackdrop", true, 1)
+    NS.SetByPath(P_ .. "dispelEdge", true, 1)
+    ws = animationTab(NS, P)
+    for _, key in ipairs({ "dispelTypeColor", "dispelBackdropAlpha", "dispelEdgeSize" }) do
+        -- red under: a predicate reading the wrong leaf
+        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live")
+    end
 end)

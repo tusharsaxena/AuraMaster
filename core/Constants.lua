@@ -39,11 +39,11 @@ C.LOGO_ICON_PATH = "Interface\\AddOns\\" .. addonName .. "\\media\\logos\\aurama
 C.UNITS = { "player", "target", "focus", "pet" }
 C.UNIT_LABELS = { player = "Player", target = "Target", focus = "Focus", pet = "Pet" }
 
--- Aura types. HELPFUL and HARMFUL are the engine's own filter tokens; ENCHANT is this addon's name for
--- the player's temporary weapon enchants, which the engine draws through AddItemEnchantment rather
--- than through an aura group.
-C.AURA_TYPES = { "HELPFUL", "HARMFUL", "ENCHANT" }
-C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs", ENCHANT = "Weapon enchants" }
+-- Aura types: the engine's own filter tokens. The player's temporary weapon enchants are not an aura
+-- type (schema v5, feedback #6): they are the buff category `weaponEnchants`, which the engine draws
+-- through AddItemEnchantment beside a player buff container's aura groups.
+C.AURA_TYPES = { "HELPFUL", "HARMFUL" }
+C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs" }
 
 -- Container styles.
 C.STYLES = { "bars", "icons", "text" }
@@ -145,9 +145,15 @@ C.TOOLTIP_ANCHOR_LABELS = {
 }
 
 -- The "Not in use" notice over a container page drawn for another style (settings/OptionsSetup.lua's
--- drawDisabledNotice): a muted gold, about (0.78, 0.66, 0.35), readable on the dark panel and quieter
--- than the title gold. The AARRGGBB body of a "|c" escape.
-C.NOTICE_COLOR = "ffc8a85a"
+-- drawDisabledNotice): a muted red, about (0.80, 0.40, 0.40), readable on the dark panel and quieter
+-- than an error red. The owner asked for gold first (2026-09-19, B3), then for this red on the same
+-- day, on bars, icons and text pages alike (Task 20). The AARRGGBB body of a "|c" escape.
+C.NOTICE_COLOR = "ffcc6666"
+
+-- The TEST tag on a container's drag handle while test mode is on (feedback #8, modules/Anchors.lua's
+-- handleText): orange, so the placeholders cannot be mistaken for live auras. The AARRGGBB body of a
+-- "|c" escape.
+C.TEST_TAG_COLOR = "ffff8000"
 
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
@@ -158,24 +164,26 @@ C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "S
 -- harness. The engine writes the live text secret, so its width is never read back.
 C.TIME_TEXT_EMS = { blizzard = 2.5, short = 2.5, long = 4.5 }
 
--- The dispel types the engine names, plus "None" for an aura without one.
-C.DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "None" }
+-- The dispel types the engine names. An aura with none (the engine keys it "None") takes the surface's
+-- own color, not a palette color (feedback #7, modules/Style.lua's DispelColorMap).
+C.DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed" }
 C.DEFAULT_DISPEL_COLORS = {
     Magic   = { r = 0.20, g = 0.60, b = 1.00, a = 1 },
     Curse   = { r = 0.60, g = 0.00, b = 1.00, a = 1 },
     Disease = { r = 0.60, g = 0.40, b = 0.00, a = 1 },
     Poison  = { r = 0.00, g = 0.60, b = 0.00, a = 1 },
     Bleed   = { r = 0.80, g = 0.10, b = 0.10, a = 1 },
-    None    = { r = 0.80, g = 0.00, b = 0.00, a = 1 },
 }
 
 -- ---------------------------------------------------------------------------
 -- The text style (issue #2): each aura one line of text, built from a template
 -- ---------------------------------------------------------------------------
 
--- Where the line sits in its box. Center is honored only for a one-piece template: the chain's width
--- is never readable, so nothing longer can be centered (modules/Style_Text.lua).
+-- Where the line sits in its box. Center on a template of more than one piece STACKS it, one centered
+-- row per field, since a chain's width is never readable (feedback #1, modules/Style_Text.lua's
+-- layoutStack); TEXT_ROW_GAP is the space between two rows, in pixels.
 C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
+C.TEXT_ROW_GAP = 2
 C.TEXT_JUSTIFY_V = { "TOP", "MIDDLE", "BOTTOM" }
 C.TEXT_JUSTIFY_V_LABELS = { TOP = "Top", MIDDLE = "Middle", BOTTOM = "Bottom" }
 
@@ -208,18 +216,49 @@ C.TEXT_TOKEN_LABELS = {
     remainingduration = "The time left",
     maxduration       = "Its full duration",
     elapsedduration   = "The time since it was applied",
-    remainingpercent  = "How much of it is left, in percent",
-    elapsedpercent    = "How much of it has run, in percent",
+    remainingpercent  = "How much of it is left, 0 to 100 (type the % yourself)",
+    elapsedpercent    = "How much of it has run, 0 to 100 (type the % yourself)",
 }
 
--- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry but
--- None, plus Enrage. A type this list lacks shows the engine's own text.
+-- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry, plus
+-- Enrage. A type this list lacks shows the engine's own text.
 C.TEXT_DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "Enrage" }
 C.TEXT_DISPEL_LABELS = { Magic = "Magic", Curse = "Curse", Disease = "Disease", Poison = "Poison",
     Bleed = "Bleed", Enrage = "Enrage" }
 
 -- The longest template the parser accepts (modules/TextTemplate.lua, rule 8).
 C.TEXT_TEMPLATE_MAX = 200
+
+-- The built-in templates the Text page's Template dropdown offers (feedback #5): each a template
+-- string and, for the centered one, the justify it needs. TEXT_BUILTIN_SETS lists them per aura type
+-- in dropdown order; a stored template matching none reads as Custom (modules/TextTemplate.lua's
+-- MatchBuiltin). Every duration run is bracketed, so no built-in leaves text behind on a timeless aura.
+C.TEXT_BUILTINS = {
+    name           = { template = "$spellname$" },
+    nameTime       = { template = "$spellname$[ - $remainingduration$]" },
+    nameStacksTime = { template = "$spellname$[ x$stacks$][ - $remainingduration$]" },
+    timeOfMax      = { template = "$spellname$[ $remainingduration$ / $maxduration$]" },
+    nameType       = { template = "$spellname$[ ($dispeltype$)]" },
+    nameTypeTime   = { template = "$spellname$[ ($dispeltype$)][ - $remainingduration$]" },
+    -- No " - " separator (fix round 1, feedback #1): Center STACKS this in two rows, and a leading
+    -- dash on the second row (" - 11s") is not clean.
+    centered       = { template = "$spellname$[$remainingduration$]", justifyH = "CENTER" },
+}
+C.TEXT_BUILTIN_LABELS = {
+    name = "Name", nameTime = "Name + time", nameStacksTime = "Name, stacks, time", timeOfMax = "Time / max",
+    nameType = "Name (type)", nameTypeTime = "Name, type, time", centered = "Centered: name over time",
+}
+C.TEXT_BUILTIN_SETS = {
+    HELPFUL = { "name", "nameTime", "nameStacksTime", "timeOfMax", "centered" },
+    HARMFUL = { "name", "nameTime", "nameStacksTime", "timeOfMax", "nameType", "nameTypeTime", "centered" },
+}
+
+-- The sample aura the Text page's Preview box renders a template against, per aura type: readable,
+-- invented values (preview-mode). The buff has stacks and no dispel type; the debuff a type and none.
+C.TEXT_SAMPLE_AURAS = {
+    HELPFUL = { name = "Ignore Pain", icon = 1377132, remaining = 11, duration = 12, stacks = 3 },
+    HARMFUL = { name = "Shadow Word: Pain", icon = 136207, remaining = 11, duration = 16, stacks = 0, dispel = "Magic" },
+}
 
 -- Placeholder auras for preview mode (preview-mode): real render path, invented data.
 C.PREVIEW_AURAS = {

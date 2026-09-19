@@ -4,14 +4,14 @@ local _, NS = ...
 -- every container shares (schema v2 made both the profile's).
 --
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
---     Spell Categories  [Category ▾]  -- one of the nine spell-list categories, or Weapon enchants
---                       [Restore this category's starter list]
+--     Spell Categories  [Category ▾]  [Restore this category's starter list]
+--                       -- one of the nine spell-list categories, or Weapon enchants
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
 --                       (X) <icon> A spell you added (424242)
 --                    -- OR, when the category is Weapon enchants --
 --                       [x] Main hand   [x] Off hand   [x] Ranged
---     Dispel Colors     one swatch per dispel type, Magic … None
+--     Dispel Colors     one swatch per dispel type, Magic … Bleed
 --
 -- SPELL CATEGORIES is bespoke: the category dropdown, the restore, then the library's IdList over that
 -- category's edits, drawn with an X at the left of every entry (`removeStyle = "icon"`, LibKa0s
@@ -36,12 +36,14 @@ local _, NS = ...
 -- active tab. A key this tab cannot draw (a token or flag category, say) is ignored, so a stale link
 -- can never leave the tab showing an empty list.
 --
--- DISPEL COLORS are six plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
--- no `effect`, so a write re-applies every container. Only bars read them, a bar colored by dispel
--- type; an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua, owner
--- 2026-09-13). They are palette
--- definitions, one color per dispel type, and carry no class-color companion: the one exemption
--- options-ui-§17 makes.
+-- DISPEL COLORS are five plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
+-- no `effect`, so a write re-applies every container. Bars and text read them: a bar's fill or
+-- background colored by dispel type, and a text line's dispel type word, backdrop and edge (feedback
+-- #7, modules/Style_Text.lua); an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,
+-- owner 2026-09-13). There is no None swatch (feedback #7): an aura with no dispel type keeps the
+-- surface's own color, so a None color would be read by nothing; schema v5 clears the stored leaf.
+-- They are palette definitions, one color per dispel type, and carry no class-color companion: the
+-- one exemption options-ui-§17 makes.
 --
 -- This file registers nothing. settings/General.lua registers ENCHANT_ROWS then DISPEL_ROWS after
 -- the Containers rows, so Spell Categories takes the fourth strip position and Dispel Colors the
@@ -216,6 +218,27 @@ local function categoryCell(defs, def)
     end }
 end
 
+--- The Restore button, as the Category dropdown's right half (a RenderGrid cell, feedback #3): on
+--- the same line, so the list's one reset sits beside the control that picks the list. A
+--- cell-filling button, so it takes the library's inset width (options-ui-§6), never a flush half.
+local function restoreCell(key)
+    return { make = function(_, parent)
+        local btn = NS.AceGUI:Create("Button")
+        btn:SetText(L["Restore this category's starter list"])
+        btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
+        btn:SetCallback("OnClick", function()
+            editCategory(key, function(mine)
+                for id in pairs(mine) do mine[id] = nil end
+            end)
+            rerender()
+        end)
+        H.AttachTooltip(btn, L["Restore this category's starter list"],
+            L["Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."])
+        parent:AddChild(btn)
+        return btn
+    end }
+end
+
 -- ---------------------------------------------------------------------------
 -- Weapon enchants (the Spell Categories tab's non-list entry)
 -- ---------------------------------------------------------------------------
@@ -273,19 +296,9 @@ local function renderSpells(ctx)
         return renderEnchant(ctx)
     end
     H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units."])
-    H.RenderGrid(ctx, { categoryCell(defs, def) })
-    -- At the top, under the dropdown (B2): with the checkboxes gone, a removed starter is off the
-    -- list, and this is how it comes back.
-    H.InlineButtonPair(ctx, {
-        text    = L["Restore this category's starter list"],
-        tooltip = L["Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."],
-        onClick = function()
-            editCategory(key, function(mine)
-                for id in pairs(mine) do mine[id] = nil end
-            end)
-            rerender()
-        end,
-    }, nil)
+    -- Restore on the dropdown's line (feedback #3): with the checkboxes gone (B2) a removed starter is
+    -- off the list, and this is how it comes back.
+    H.RenderGrid(ctx, { categoryCell(defs, def), restoreCell(key) })
     H.IdList(ctx, {
         kind       = "spell",
         removeStyle = "icon",
@@ -318,14 +331,14 @@ local DISPEL_ROWS = {}
 for _, name in ipairs(C.DISPEL_TYPES) do
     local row = {
         path = "dispelColors." .. name, page = PAGE, group = DISPEL, type = "color", label = L[name],
-        desc = L["This dispel type's color for a bar's fill when Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."],
+        desc = L["This dispel type's color for a bar's fill or background, and for a text line's dispel type word, backdrop or edge when those are on. An icon's dispel border keeps Blizzard's own colors."],
     }
     DISPEL_ROWS[#DISPEL_ROWS + 1] = row
 end
 
---- The Dispel Colors tab: one line saying who reads the colors, then the group's six rows.
+--- The Dispel Colors tab: one line saying who reads the colors, then the group's five rows.
 local function renderDispel(ctx, _, rows)
-    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type. An icon's dispel border keeps Blizzard's own colors."])
+    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."])
     H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
 end
 

@@ -157,11 +157,10 @@ function ContainerClass:ResolveUnitClass(unit)
 end
 
 --- Record the class this apply paints with, and whether a unit swap has to re-apply the container.
---- An enchant container shows the player's enchants whatever its unit, so it describes the player.
 --- The class read here is the current one, so a stale mark (ContainerManager.RefreshUnit) is settled
 --- too: an apply that ran on the flush ending a hold must not be followed by ReapplyStaleClass's.
 function ContainerClass:SnapshotClass(cfg)
-    local unit = (cfg.auraType == "ENCHANT") and "player" or cfg.unit
+    local unit = cfg.unit
     local tracked = unit ~= "player"
     self.classColor = tracked and self:ResolveUnitClass(unit) or nil
     self.usesClass = tracked and NS.Style.UsesClassColor(cfg)
@@ -206,7 +205,9 @@ function ContainerClass:ApplyBlocker(cfg)
         self.blocker = blocker
     end
     local ok, engineLevel = pcall(engine.GetFrameLevel, engine)
-    blocker:SetFrameLevel(math.max(0, (ok and engineLevel or 0) - 1))
+    -- Guarded (feedback E): an engine's level can read secret, and arithmetic on it raises.
+    local level = ok and NS.Secrets.NumberOr(engineLevel, 0) or 0
+    blocker:SetFrameLevel(math.max(0, level - 1))
     blocker:ClearAllPoints()
     blocker:SetAllPoints(engine)
     NS.Style.ApplyBlockerBehavior(blocker, cfg)
@@ -260,7 +261,7 @@ function ContainerClass:Build(cfg, plan, structure)
 
     -- The unit LAST, once every group exists, so the engine registers UNIT_AURA for a container that
     -- already knows what it is looking for.
-    callEngine(engine, "SetUnit", (cfg.auraType == "ENCHANT") and "player" or cfg.unit)
+    callEngine(engine, "SetUnit", cfg.unit)
     self.unit = cfg.unit
     self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
@@ -307,9 +308,8 @@ function ContainerClass:Update(cfg, plan)
         callEngine(engine, "SetAuraGroupLayout", g.key, groupLayout(cfg, i))
     end
     updateEnchants(self, engine, cfg, plan)
-    local unit = (cfg.auraType == "ENCHANT") and "player" or cfg.unit
     if self.unit ~= cfg.unit then
-        callEngine(engine, "SetUnit", unit)
+        callEngine(engine, "SetUnit", cfg.unit)
         self.unit = cfg.unit
     end
     self.plan = plan

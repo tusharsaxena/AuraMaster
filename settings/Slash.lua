@@ -233,7 +233,10 @@ local NEW_WORDS = {
     pet = { unit = "pet" },
     buff = { auraType = "HELPFUL" }, buffs = { auraType = "HELPFUL" },
     debuff = { auraType = "HARMFUL" }, debuffs = { auraType = "HARMFUL" },
-    enchant = { auraType = "ENCHANT" }, enchants = { auraType = "ENCHANT" },
+    -- Weapon enchants are a buff category (schema v5, feedback #6): the word makes a player buff
+    -- container showing only that category (runNew builds its states), whatever unit or aura-type
+    -- word came with it: enchants are only ever the player's buffs.
+    enchant = { enchantOnly = true }, enchants = { enchantOnly = true },
     bars = { style = "bars" }, bar = { style = "bars" },
     icons = { style = "icons" }, icon = { style = "icons" },
     text = { style = "text" },
@@ -247,6 +250,11 @@ function runNew(rest)
             return printf(L["Unknown word '%s' — try /am new target debuffs icons"], word)
         end
         for k, v in pairs(spec) do overrides[k] = v end
+    end
+    if overrides.enchantOnly then
+        overrides.enchantOnly = nil
+        overrides.auraType, overrides.unit = "HELPFUL", "player"
+        overrides.filter = { categories = NS.Categories.EnchantOnlyStates() }
     end
     local id, err, refused = NS.ContainerManager.Create(overrides)
     if not id then

@@ -2,10 +2,10 @@
 -- through their widgets: what each Master control and Display row writes, what each one's effect is,
 -- the two buttons the composer adds, the page's Defaults, the Spell Categories ID list and its
 -- restore, and the Dispel Colors rows. The top-level Containers page — its picker and New container
--- inside the tab body (the options-ui-§14 deviation, docs/ARCHITECTURE.md), the identity rows and the
--- acts on the selected container (Duplicate, Delete, Copy settings from) — moved out to its own page
--- (N-1, batch 7) and is tests/test_pages_containers.lua's now. Every case builds a fresh environment,
--- because every case clicks something.
+-- in the band above the strip (options-ui-§14), its identity rows and the acts on the selected
+-- container (Duplicate, Delete, Copy settings from) — moved out to its own page (N-1, batch 7) and is
+-- tests/test_pages_containers.lua's now. Every case builds a fresh environment, because every case
+-- clicks something.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -270,7 +270,7 @@ test("general: the tab strip reads Master controls, Display, Spell Categories, D
     for _, path in ipairs({ "container.name", "container.enabled", "container.unit", "container.auraType", "container.style" }) do
         local row = NS.FindSchemaRow(path)
         assertEqual(row.page, "containers", path)
-        assertEqual(row.group, NS.L["Containers"], path)
+        assertEqual(row.group, NS.L["General"], path)
     end
     -- The Containers page now registers its OWN Blizzard category (N-1), not a General tab.
     assertTrue(m.__subcategories.Containers ~= nil, "the Containers page registers on its own")
@@ -550,6 +550,20 @@ test("general → spell categories: Restore sits above the Add line and clears t
     assertEqual(edits.raidCDs[99], true)
 end)
 
+test("general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)", function()
+    local NS, _, P, ws = spells()
+    local dd = P.find(ws, "Dropdown", NS.L["Category"])
+    local restore = P.find(ws, "Button", NS.L["Restore this category's starter list"])
+    local line
+    for _, w in ipairs(ws) do
+        if w.children and w.children[1] == dd then line = w end
+    end
+    -- red under: Restore still drawn by InlineButtonPair on a line of its own under the dropdown
+    assertTrue(line ~= nil, "the dropdown heads a grid line")
+    assertTrue(line.children[2] == restore, "Restore is the same line's second cell")
+    assertEqual(restore.relativeWidth, NS.Helpers.BUTTON_PAIR_REL, "a cell-filling button takes the inset width")
+end)
+
 -- ── the Weapon enchants entry, and the Select seam (B7) ──────────────────────────────────────
 
 test("general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list", function()
@@ -616,7 +630,7 @@ end)
 
 -- ── the Dispel Colors tab (G-3) ───────────────────────────────────────────────────────────────
 
-test("general → dispel colors: six profile-wide swatches with no class-color companion, under a line saying they drive bars only", function()
+test("general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text", function()
     local NS, _, P, _, tab = general()
     local ws = tab(NS.L["Dispel Colors"])
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
@@ -627,16 +641,19 @@ test("general → dispel colors: six profile-wide swatches with no class-color c
         local cp = P.row(ws, "dispelColors." .. name)
         assertTrue(cp ~= nil and cp.type == "ColorPicker", "a swatch for " .. name)
     end
-    assertEqual(#P.all(ws, "ColorPicker"), 6)
+    -- red under: the None swatch still drawn (an aura with no type keeps the surface's color, feedback #7)
+    assertEqual(#P.all(ws, "ColorPicker"), 5)
+    assertEqual(NS.FindSchemaRow("dispelColors.None"), nil, "no None row")
     -- red under: a class-color companion beside a palette swatch (options-ui-§17's exemption)
     assertEqual(#P.all(ws, "CheckBox"), 0)
-    -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13: icons
-    -- keep Blizzard's own dispel colors, so the palette drives bars only)
-    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type. An icon's dispel border keeps Blizzard's own colors."]))
+    -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13:
+    -- keep Blizzard's own dispel colors), or silent on the Text style's word, backdrop and edge
+    -- (feedback #7)
+    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Animation). An aura with no dispel type keeps a bar's own color and draws no backdrop or edge. An icon's dispel border keeps Blizzard's own colors."]))
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
         local desc = NS.FindSchemaRow("dispelColors." .. name).desc
         -- red under: a row desc still naming the tint on an icon's dispel border
-        assertEqual(desc, NS.L["This dispel type's color for a bar's fill when Color by is set to dispel type. An icon's dispel border keeps Blizzard's own colors."], name)
+        assertEqual(desc, NS.L["This dispel type's color for a bar's fill or background, and for a text line's dispel type word, backdrop or edge when those are on. An icon's dispel border keeps Blizzard's own colors."], name)
     end
 end)
 

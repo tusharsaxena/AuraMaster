@@ -310,7 +310,7 @@ if not lib then
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "UnnamedCandidates", "SelectTab",
         -- this addon's decorations on the live instance (defined below the `return`)
-        "SelectContainer", "ContainerBanner", "ContainerPickerCell", "RenderWarnings",
+        "SelectContainer", "ContainerBanner", "ContainerHeader", "RenderWarnings",
         "RenderTabbedPage", "RenderContainerPage",
     }) do
         Helpers[name] = function() end
@@ -444,24 +444,90 @@ function Helpers.ContainerBanner(ctx)
     return dd
 end
 
---- The picker as a plain AceGUI Dropdown in a page's BODY: a `make` for Helpers.RenderGrid, so it
---- is released with the scroll like every other body widget. The Containers page draws it on the
---- tab's first line beside New container (the options-ui-§14 deviation, docs/ARCHITECTURE.md).
-function Helpers.ContainerPickerCell(_, parent, rel)
+-- The Containers page's CHROME BLOCK (options-ui-§14, feedback #2): the picker and New container on
+-- one row above the tab strip. Not Helpers.PageBanner, which draws exactly one Dropdown: a page with
+-- a picker AND a create control puts both in the library's PageHeader frame, and the host places
+-- what it draws inside it. Its widgets are recorded on ctx.__chromeWidgets, which settings/Containers.lua
+-- releases after the NEXT render: a render is usually running inside one of their own callbacks.
+local HEADER_CONTROL_H = 24   -- AceGUI's Button frame height
+-- AceGUI's labeled Dropdown anchors its CONTROL 14px below the frame's top
+-- (AceGUIWidget-DropDown.lua's SetLabel: `dropdown:SetPoint("TOPLEFT", frame, "TOPLEFT", -15, -14)`),
+-- not centered or foot-aligned in the 44-tall band Helpers.BANNER_H reserves for the frame -- that
+-- SetHeight(40) call runs before this file's own f:SetHeight(BANNER_H) stretches the frame further,
+-- and the control never re-anchors off the new height. New container levels with THIS y, not the
+-- band's foot.
+local HEADER_DROPDOWN_CONTROL_Y = 14
+local HEADER_PAIR_GAP  = 4    -- half the gutter between the block's two halves
+
+--- Anchor one AceGUI widget's frame inside the block, on its LEFT or RIGHT half.
+local function placeInHeader(widget, frame, y, height, half)
+    local f = widget and widget.frame
+    if not f then return end
+    f:SetParent(frame)
+    f:ClearAllPoints()
+    if half == "LEFT" then
+        f:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
+        f:SetPoint("TOPRIGHT", frame, "TOP", -HEADER_PAIR_GAP, -y)
+    else
+        f:SetPoint("TOPLEFT", frame, "TOP", HEADER_PAIR_GAP, -y)
+        f:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -y)
+    end
+    f:SetHeight(height)
+    f:Show()
+end
+
+--- The block's two controls, built into the frame PageHeader hands over.
+local function buildContainerHeader(ctx, frame, spec)
+    local kids = ctx.__chromeWidgets
     local list, order = containerList()
     local _, activeId = NS.ActiveContainer()
     local dd = NS.AceGUI:Create("Dropdown")
+    kids[#kids + 1] = dd
     dd:SetLabel(L["Container"])
     dd:SetList(list, order)
     dd:SetValue(activeId)
-    dd:SetRelativeWidth(rel or 0.5)
     dd:SetCallback("OnValueChanged", function(_, _, id)
         if id == nil or id == activeId then return end
         Helpers.SelectContainer(id)
     end)
-    Helpers.AttachTooltip(dd, L["Container"], L["Which container this tab, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."])
-    parent:AddChild(dd)
-    return dd
+    Helpers.AttachTooltip(dd, L["Container"], L["Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."])
+    placeInHeader(dd, frame, 0, Helpers.BANNER_H, "LEFT")
+    ctx.__bannerWidget = dd
+
+    local btn = NS.AceGUI:Create("Button")
+    kids[#kids + 1] = btn
+    btn:SetText(L["New container"])
+    btn:SetCallback("OnClick", function() if spec.onNew then spec.onNew() end end)
+    Helpers.AttachTooltip(btn, L["New container"], L["Create a container showing the player's buffs as bars. Change what it shows below."])
+    -- Level with the dropdown's control, not its label or the band's foot (see HEADER_DROPDOWN_CONTROL_Y).
+    placeInHeader(btn, frame, HEADER_DROPDOWN_CONTROL_Y, HEADER_CONTROL_H, "RIGHT")
+end
+
+--- The Containers page's chrome: the picker and New container, one row above the strip. Called as
+--- RenderTabbedPage's `chrome`, so it is drawn before the strip reserves its band. `spec.onNew` is
+--- the page's own create act.
+---
+--- Swaps in a fresh ctx.__chromeWidgets before building and releases the PREVIOUS render's kids only
+--- after PageHeader returns -- never before: this may be reached from inside the picker's or New's
+--- own callback, and a widget released on the way in could be handed straight back out, re-
+--- initialized, under its own callback. This covers every caller, not only settings/Containers.lua's
+--- own renderPage wrapper: RenderTabbedPage's tab-strip `onSelect` re-renders through
+--- Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome) directly, calling this again without going
+--- through that wrapper, and without this the swap here that path would leak one picker and one
+--- button per click once the page ever grows a second tab.
+function Helpers.ContainerHeader(ctx, spec)
+    local stale = ctx.__chromeWidgets
+    ctx.__chromeWidgets = {}
+    ctx.__bannerWidget = nil
+    local headerFrame = Helpers.PageHeader(ctx, {
+        height = Helpers.BANNER_H,
+        build  = function(_, hframe) buildContainerHeader(ctx, hframe, spec or {}) end,
+    })
+    local AceGUI = NS.AceGUI
+    if AceGUI and AceGUI.Release and stale then
+        for _, w in ipairs(stale) do AceGUI:Release(w) end
+    end
+    return headerFrame
 end
 
 --- One orange line per thing the aura engine will silently not do for this container, above the
@@ -521,7 +587,7 @@ local function settleActiveTab(ctx, tabs)
     ctx.activeTab = tabs[1].key
 end
 
---- The notice over a page drawn disabled: a quiet muted-gold note (C.NOTICE_COLOR) in the small
+--- The notice over a page drawn disabled: a quiet muted-red note (C.NOTICE_COLOR) in the small
 --- font, then the ordinary row gap before the first control.
 ---
 --- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
@@ -532,7 +598,8 @@ end
 --- it means everywhere else in the panel: RenderWarnings' "the game will not honor this", which can
 --- sit on the very same page and must still be the loudest thing on it. The owner then asked for it
 --- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
---- quieter than the title's is still no warning. The combat refusals keep their gray.
+--- quieter than the title's is still no warning. Later the same day the owner asked for muted red
+--- instead (Task 20), on bars, icons and text pages alike; the combat refusals keep their gray.
 local function drawDisabledNotice(ctx, text)
     Helpers.TextRow(ctx, "|c" .. C.NOTICE_COLOR .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
     local scroll = Helpers.EnsureScroll(ctx)

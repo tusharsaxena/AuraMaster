@@ -11,7 +11,8 @@ local _, NS = ...
 -- (modules/TextTemplate.lua), and plain text between fields is a static font string. Every piece is
 -- single-anchored and auto-sized, so the client sizes an engine-written piece to its secret text and
 -- the next piece anchors to its edge (the 2026-09-18 probes, docs/midnight-quirks.md). Their widths
--- are never readable, which is why a multi-piece line cannot be centered.
+-- are never readable, which is why a multi-piece line cannot be centered as one line: Center STACKS
+-- it instead, one centered row per field (feedback #1, layoutStack).
 --
 -- THREE NESTED FRAMES. `clip` covers the element and clips its children; `anim` fills it and carries
 -- the looping animations, so the icon and the text move and fade together; `area` is the text's box
@@ -25,6 +26,12 @@ local _, NS = ...
 -- Live buttons also get a fresh engine when the shape changes (modules/Container.lua's structure key,
 -- Style.StructureKey), so no stale binding outlives it; the chains are what a PREVIEW frame, reused
 -- across templates, relies on.
+--
+-- COLOR BY DISPEL TYPE (feedback #7). No engine binding colors a font string by the aura's dispel type,
+-- and no addon code may read the type or touch a button's objects in combat. Three opt-in stand-ins,
+-- each wired at dress time: the $dispeltype$ word colored by a |c escape written into the engine's own
+-- text map (dispelOptionsFor), and a backdrop and a four-strip edge in the text area, textures the
+-- engine tints and shows per aura (AddDispelTypeTexture, dispelTints).
 --
 -- ANIMATIONS ARE SET UP AT DRESS TIME ONLY. In combat every call on a button's objects is refused
 -- (AnimationGroup:Play/Stop included), but an animation started at dress time keeps running through
@@ -60,6 +67,20 @@ local function number(v, default)
     return tonumber(v) or default
 end
 
+-- The dispel edge's four strips (feedback #7): each region key, the two corners of the text area it
+-- runs between, and the setter its thickness goes through.
+local EDGES = {
+    { "edgeTop", "TOPLEFT", "TOPRIGHT", "SetHeight" },
+    { "edgeBottom", "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+    { "edgeLeft", "TOPLEFT", "BOTTOMLEFT", "SetWidth" },
+    { "edgeRight", "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+}
+
+--- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height").
+local function fontSize(s)
+    return number((s.font or D.font).fontSize, D.font.fontSize)
+end
+
 -- ---------------------------------------------------------------------------
 -- Regions
 -- ---------------------------------------------------------------------------
@@ -85,6 +106,20 @@ local function buildLoops(am)
     am.bounce:SetSmoothing("IN_OUT")
 end
 
+--- The dispel backdrop and edge (feedback #7): textures of the text area, so they sit under the chain
+--- (a child frame) and move with the loops. Each is its own key on `am`: a region never hides in a
+--- list the style suites cannot see.
+local function buildDispelTints(am)
+    am.backdrop = am.area:CreateTexture(nil, "BACKGROUND")
+    am.backdrop:SetAllPoints(am.area)
+    for _, e in ipairs(EDGES) do
+        local strip = am.area:CreateTexture(nil, "BORDER")
+        strip:SetPoint(e[2], am.area, e[2])
+        strip:SetPoint(e[3], am.area, e[3])
+        am[e[1]] = strip
+    end
+end
+
 --- Build the regions once (Style.RegionsFor). Every region is a descendant of the button, tagged
 --- "text"; the font strings are built per shape (useChain).
 local function build(frame)
@@ -103,6 +138,7 @@ local function build(frame)
     am.iconBorder = CreateFrame("Frame", nil, am.anim, "BackdropTemplate")
     am.area = CreateFrame("Frame", nil, am.anim)
     am.area:SetClipsChildren(true)
+    buildDispelTints(am)
 
     buildLoops(am)
     am.pieceCount = 0
@@ -153,8 +189,10 @@ end
 -- ---------------------------------------------------------------------------
 
 --- The icon at `pos` ("LEFT" | "RIGHT") of the animated frame, and the text area beside it; with no
---- icon the area is the whole element.
-local function layoutIconAndArea(am, s, h)
+--- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (fix round 1,
+--- feedback #1): a stacked Center's box holds several rows, and "line height" is one of them, not the
+--- whole stack.
+local function layoutIconAndArea(am, s, compiled, h)
     local pos = s.icon or D.icon
     am.icon:ClearAllPoints()
     am.area:ClearAllPoints()
@@ -164,7 +202,8 @@ local function layoutIconAndArea(am, s, h)
         am.area:SetAllPoints(am.anim)
         return
     end
-    local size = Style.IconSizeFor(s, D, h)
+    local lineHeight = Text.Stacked(s, compiled) and fontSize(s) or h
+    local size = Style.IconSizeFor(s, D, lineHeight)
     Style.LayoutIcon(am.anim, am, s, D, pos, size)
     local inset = size + number(s.iconGap, D.iconGap)
     am.area:SetPoint("TOPLEFT", am.anim, "TOPLEFT", pos == "LEFT" and inset or 0, 0)
@@ -175,13 +214,60 @@ end
 -- equivalents.
 local V_PREFIX = { TOP = "TOP", MIDDLE = "", BOTTOM = "BOTTOM" }
 
---- The horizontal justify the chain is laid out with: CENTER only for a one-piece template, whose
---- width the client sizes and centers itself; any longer chain lines up Left (its width is never
---- readable, so nothing can center it).
-function Text.JustifyFor(s, compiled)
-    local j = s.justifyH or D.justifyH
-    if j == "CENTER" and not compiled.single then return "LEFT" end
-    return j
+--- Whether a line is laid out as STACKED ROWS (feedback #1, 2026-09-19): Center on a template of more
+--- than one piece. A chain's width is never readable and no addon code runs when the engine rewrites a
+--- piece in combat, so a multi-piece line cannot be centered as one line; each field piece gets a row of
+--- its own instead, centered in the box, and plain literal pieces are not drawn (between two rows they
+--- have nothing to sit between). A one-piece template is not stacked: the client centers it as a line.
+function Text.Stacked(s, compiled)
+    return (s.justifyH or D.justifyH) == "CENTER" and not compiled.single
+end
+
+--- How many field pieces (every kind but literal) a compiled template has: a stacked line's rows.
+function Text.FieldCount(compiled)
+    local n = 0
+    for _, piece in ipairs(compiled.pieces) do
+        if piece.kind ~= "literal" then n = n + 1 end
+    end
+    return n
+end
+
+--- The height a stacked line's rows take: one font size per field row and C.TEXT_ROW_GAP between two;
+--- 0 for a line that is not stacked. Rows are FIXED: an engine-written string that is empty (and
+--- secret) can be neither measured nor collapsed, so a row holds its place whatever its field says.
+--- modules/Style.lua's ElementSize grows the element to this height.
+function Text.StackHeight(s)
+    local compiled = Text.Compiled(s)
+    if not Text.Stacked(s, compiled) then return 0 end
+    local n = Text.FieldCount(compiled)
+    return n * fontSize(s) + (n - 1) * C.TEXT_ROW_GAP
+end
+
+-- How far below the text area's top a stack starts, for each vertical justify, in a box `h` tall
+-- holding rows `stack` tall (never negative: the box grows to the stack).
+local STACK_TOP = {
+    TOP = function() return 0 end,
+    MIDDLE = function(h, stack) return (h - stack) / 2 end,
+    BOTTOM = function(h, stack) return h - stack end,
+}
+
+--- Lay a stacked line out in a box `h` tall: each field piece's TOP at the area's TOP, centered, a row
+--- pitch lower than the one before (x/y nudge the whole stack); every literal piece hidden.
+local function layoutStack(am, s, compiled, h)
+    local pitch = fontSize(s) + C.TEXT_ROW_GAP
+    local top = (STACK_TOP[s.justifyV or D.justifyV] or STACK_TOP.MIDDLE)(h, Text.StackHeight(s))
+    local x, y = number(s.x, D.x), number(s.y, D.y)
+    local row = 0
+    for i, piece in ipairs(compiled.pieces) do
+        local fs = am[PIECE[i]]
+        fs:ClearAllPoints()
+        if piece.kind == "literal" then
+            fs:Hide()
+        else
+            fs:SetPoint("TOP", am.area, "TOP", x, y - top - row * pitch)
+            row = row + 1
+        end
+    end
 end
 
 --- The anchor point `side` ("LEFT" | "CENTER" | "RIGHT") names at vertical prefix `v`.
@@ -192,9 +278,10 @@ end
 
 --- Anchor the chain in the text area: the head piece at the justified edge, nudged by x/y, and each
 --- next piece against the previous one's far edge (LEFT to the previous RIGHT, or the mirror for a
---- Right-justified line, laid from the last piece back).
-local function layoutChain(am, s, compiled)
-    local side = Text.JustifyFor(s, compiled)
+--- Right-justified line, laid from the last piece back). A stacked line is laid out by layoutStack.
+local function layoutChain(am, s, compiled, h)
+    if Text.Stacked(s, compiled) then return layoutStack(am, s, compiled, h) end
+    local side = s.justifyH or D.justifyH
     local v = V_PREFIX[s.justifyV or D.justifyV] or ""
     local x, y = number(s.x, D.x), number(s.y, D.y)
     local n = am.pieceCount
@@ -218,6 +305,23 @@ local function dressPieces(am, s, compiled)
         Style.ApplyFont(fs, font, D.font)
         if piece.kind == "literal" then fs:SetText(piece.text) end
         fs:Show()
+    end
+end
+
+--- The dispel backdrop and edge (feedback #7): white, the backdrop at its opacity, each strip its
+--- thickness, and every one HIDDEN. A live one is shown and tinted by the engine for an aura with a
+--- dispel type (Text.Bind); a placeholder's by Text.FillPreview. Hidden on every dress, because the
+--- engine's Clear restores nothing: a switched-off tint would stay as the engine last drew it.
+local function dressDispelTints(am, s)
+    am.backdrop:SetTexture(C.WHITE_TEXTURE)
+    am.backdrop:SetAlpha(number(s.dispelBackdropAlpha, D.dispelBackdropAlpha))
+    am.backdrop:Hide()
+    local size = number(s.dispelEdgeSize, D.dispelEdgeSize)
+    for _, e in ipairs(EDGES) do
+        local strip = am[e[1]]
+        strip:SetTexture(C.WHITE_TEXTURE)
+        strip[e[4]](strip, size)
+        strip:Hide()
     end
 end
 
@@ -263,20 +367,109 @@ local function stackOptionsFor(piece)
     return opts
 end
 
---- SetDispelTypeText's options for a dispel piece: every type in C.TEXT_DISPEL_TYPES mapped to its
---- localized name inside the piece's bracket text, on harmful and helpful auras alike, nothing for an
---- aura with no type. Built once per bracket text.
-local function dispelOptionsFor(piece)
-    local key = piece.pre .. "\0" .. piece.post
-    local opts = dispelOptions[key]
-    if not opts then
-        local map = {}
-        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do map[t] = piece.pre .. L[C.TEXT_DISPEL_LABELS[t]] .. piece.post end
-        opts = { showWhenHarmful = true, showWhenHelpful = true, showWithoutDispelType = false,
-            customDispelTextMap = map }
-        dispelOptions[key] = opts
+--- One color channel as two hex digits.
+local function hex(v)
+    return ("%02x"):format(math.floor(math.max(0, math.min(1, tonumber(v) or 1)) * 255 + 0.5))
+end
+
+--- The palette `s` colors the dispel type word from: the profile's, when Color the dispel type is on
+--- (feedback #7), else nil.
+local function wordPalette(s)
+    return s and s.dispelTypeColor and Style.ProfileDispelColors() or nil
+end
+
+--- Dispel type `t`'s word inside a piece's bracket text, in `palette`'s color for `t` when it has one:
+--- a |cffRRGGBB escape the font string renders, closed before the bracket text, which keeps the font
+--- color. A type the palette lacks (Enrage) keeps the font color.
+local function dispelWord(piece, t, palette)
+    local word = L[C.TEXT_DISPEL_LABELS[t]]
+    local c = palette and palette[t]
+    if type(c) == "table" then word = "|cff" .. hex(c.r) .. hex(c.g) .. hex(c.b) .. word .. "|r" end
+    return piece.pre .. word .. piece.post
+end
+
+--- Whether a memoized dispel entry was built from exactly the palette leaves `palette` holds now (a
+--- settings write stores a new leaf table, modules/Style.lua's memo note).
+local function paletteCurrent(entry, palette)
+    for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+        if (palette and palette[t] or nil) ~= entry.src[t] then return false end
     end
-    return opts
+    return true
+end
+
+--- SetDispelTypeText's options for a dispel piece: every type in C.TEXT_DISPEL_TYPES mapped to its
+--- localized name inside the piece's bracket text (colored when `s` asks, dispelWord), on harmful and
+--- helpful auras alike, nothing for an aura with no type. The map's values are the engine's own text
+--- (`stringView`, written by fontString:SetText), so the escape is the one path that colors text by
+--- dispel type in combat. Built once per bracket text, coloring and palette.
+local function dispelOptionsFor(piece, s)
+    local palette = wordPalette(s)
+    local key = (palette and "c" or "p") .. piece.pre .. "\0" .. piece.post
+    local entry = dispelOptions[key]
+    if not (entry and paletteCurrent(entry, palette)) then
+        local map, src = {}, {}
+        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+            map[t] = dispelWord(piece, t, palette)
+            src[t] = palette and palette[t] or nil
+        end
+        entry = { src = src, opts = { showWhenHarmful = true, showWhenHelpful = true,
+            showWithoutDispelType = false, customDispelTextMap = map } }
+        dispelOptions[key] = entry
+    end
+    return entry.opts
+end
+
+-- A single fully transparent color, shared by every dispel type the profile's palette does not cover
+-- (Enrage): the engine still calls Show for it (it has a dispelName, and showWithoutDispelType is
+-- false only for a TYPELESS aura), so nothing but a transparent tint keeps it invisible (fix round 1,
+-- controller ruling: an out-of-palette type gets no visible tint, the same as a typeless aura).
+local invisible
+
+--- The backdrop and edge's color map (feedback #7, fix round 1): every type in C.TEXT_DISPEL_TYPES the
+--- profile's palette colors takes that color at full alpha (the backdrop's own opacity is
+--- `dispelBackdropAlpha`'s SetAlpha, not this alpha); a type it does not cover (Enrage) takes
+--- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), every entry here does NOT share one
+--- alpha from a surface fallback: a Text tint has no surface color of its own to fall back to, so "no
+--- color" IS the fallback. No `None` entry: showWithoutDispelType is false, so the engine never looks
+--- a typeless aura up. Built once per set of palette leaves, and read by the live dress
+--- (tintOptionsFor) and the preview (previewTints) alike, so the two cannot disagree.
+local tintMapEntry
+local function tintColorMap()
+    local palette = Style.ProfileDispelColors()
+    if not (tintMapEntry and paletteCurrent(tintMapEntry, palette)) then
+        invisible = invisible or (_G.CreateColor and _G.CreateColor(1, 1, 1, 0))
+        local map, src = {}, {}
+        for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+            local c = palette and palette[t]
+            src[t] = palette and palette[t] or nil
+            map[t] = (type(c) == "table" and _G.CreateColor) and _G.CreateColor(c.r or 1, c.g or 1, c.b or 1, 1) or invisible
+        end
+        tintMapEntry = { src = src, map = map }
+    end
+    return tintMapEntry.map
+end
+
+--- AddDispelTypeTexture's options for the backdrop and edge (feedback #7): shown for a buff or a debuff
+--- WITH a dispel type (as the word is), our white texture kept (PreserveAsset) and tinted from
+--- tintColorMap. Built once per map.
+local tintOptions
+local function tintOptionsFor()
+    local map = tintColorMap()
+    if not (tintOptions and tintOptions.customDispelColorMap == map) then
+        tintOptions = { showWhenHarmful = true, showWhenHelpful = true, showWithoutDispelType = false,
+            style = NS.Compat.DispelStyle("PreserveAsset"), customDispelColorMap = map }
+    end
+    return tintOptions
+end
+
+--- Hand the backdrop and each edge strip that `s` turns on to the engine to tint (Style.Bind). The
+--- additive list was cleared at the head of the dress (Style.ClearAdditiveBindings).
+local function dispelTints(frame, am, s)
+    if not (s.dispelBackdrop or s.dispelEdge) then return end
+    local opts = tintOptionsFor()
+    if s.dispelBackdrop then Style.Bind(frame, "AddDispelTypeTexture", am.backdrop, opts) end
+    if not s.dispelEdge then return end
+    for _, e in ipairs(EDGES) do Style.Bind(frame, "AddDispelTypeTexture", am[e[1]], opts) end
 end
 
 --- The button's prebuilt duration binding, plain or with the blink's refresh, built on first use and
@@ -291,7 +484,7 @@ end
 local BINDERS = {
     name = function(frame, fs) Style.Bind(frame, "SetSpellName", fs) end,
     stacks = function(frame, fs, piece) Style.Bind(frame, "SetApplicationCount", fs, stackOptionsFor(piece)) end,
-    dispel = function(frame, fs, piece) Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece)) end,
+    dispel = function(frame, fs, piece, s) Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece, s)) end,
     duration = function(frame, fs, piece, s, am)
         local font = s.font or D.font
         Style.BindDurationFormat(frame, fs, Style.DurationTextFormat(piece, s.timeFormat),
@@ -307,6 +500,7 @@ function Text.Bind(frame, am, cfg, s, compiled)
         local bind = BINDERS[piece.kind]
         if bind then bind(frame, am[PIECE[i]], piece, s, am) end
     end
+    dispelTints(frame, am, s)
     Style.ApplyBehavior(frame, cfg)
 end
 
@@ -336,9 +530,10 @@ function Text.Apply(frame, cfg, engine)
     frame:SetSize(w, h)
     local compiled = Text.Compiled(s)
     useChain(frame, am, compiled)
-    layoutIconAndArea(am, s, h)
+    layoutIconAndArea(am, s, compiled, h)
     dressPieces(am, s, compiled)
-    layoutChain(am, s, compiled)
+    layoutChain(am, s, compiled, h)
+    dressDispelTints(am, s)
     if engine then Text.Bind(frame, am, cfg, s, compiled) end
     applyLoops(am, s)
 end
@@ -352,52 +547,77 @@ end
 local fillAura, fillSettings, fillPiece, fillIndex
 
 --- One duration component of a placeholder, as the engine would write it: a time through the look's
---- formatter (Style.PreviewSeconds), a percent as "NN%".
+--- formatter (Style.PreviewSeconds), a percent as a bare whole number, rounded to the nearest as the
+--- engine's `step = 1` rule rounds it (modules/Style.lua's PERCENT_BREAKPOINTS).
 local VALUES = {
     RemainingDuration = function(a) return a.remaining end,
     TotalDuration = function(a) return a.duration end,
     ElapsedDuration = function(a) return a.duration - a.remaining end,
-    RemainingPercent = function(a) return math.floor(a.remaining / a.duration * 100) end,
-    ElapsedPercent = function(a) return math.floor((a.duration - a.remaining) / a.duration * 100) end,
+    RemainingPercent = function(a) return math.floor(a.remaining / a.duration * 100 + 0.5) end,
+    ElapsedPercent = function(a) return math.floor((a.duration - a.remaining) / a.duration * 100 + 0.5) end,
 }
 local function componentText()
     fillIndex = fillIndex + 1
     local c = fillPiece.components[fillIndex]
     local value = VALUES[c.prop](fillAura)
-    if c.fmt == "percent" then return ("%d%%"):format(value) end
+    if c.fmt == "percent" then return ("%d"):format(value) end
     return Style.PreviewSeconds(value, fillSettings.timeFormat)
 end
 
---- A placeholder's duration run: the format with each {} filled, nothing for a timeless aura (the
---- prebuilt binding's zero-duration text), and the running-out color below the threshold.
-local function previewDuration(fs, piece, aura, s)
-    if aura.duration <= 0 then
-        fs:SetText("")
-        return
-    end
+--- A placeholder's duration run as text: the format with each {} filled, nothing for a timeless aura
+--- (the prebuilt binding's zero-duration text).
+local function durationText(piece, aura, s)
+    if aura.duration <= 0 then return "" end
     fillAura, fillSettings, fillPiece, fillIndex = aura, s, piece, 0
-    fs:SetText((piece.format:gsub("{}", componentText)))
+    local text = piece.format:gsub("{}", componentText)
     fillAura, fillSettings, fillPiece = nil, nil, nil
-    if (s.expiringColorOn or s.expiringBlink) and aura.remaining < number(s.expiringThreshold, D.expiringThreshold) then
+    return text
+end
+
+-- What each kind of piece reads for a placeholder aura, as the engine would write it. Shared by the
+-- placeholders (Text.FillPreview) and the Text page's Preview box (Text.PreviewLine).
+local PIECE_TEXT = {
+    literal = function(piece) return piece.text end,
+    name = function(_, aura) return aura.name end,
+    stacks = function(piece, aura) return aura.stacks >= 2 and piece.format:format(aura.stacks) or "" end,
+    dispel = function(piece, aura, s)
+        if not (aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]) then return "" end
+        return dispelWord(piece, aura.dispel, wordPalette(s))
+    end,
+    duration = durationText,
+}
+
+--- A placeholder's duration run below the running-out threshold takes the running-out color, as the
+--- engine's curve paints a live one (a timeless one has no threshold to cross).
+local function previewRunColor(fs, aura, s)
+    if aura.duration <= 0 or not (s.expiringColorOn or s.expiringBlink) then return end
+    if aura.remaining < number(s.expiringThreshold, D.expiringThreshold) then
         fs:SetTextColor(Style.Color(s.expiringColorOn and s.expiringColor or (s.font or D.font).fontColor, false))
     end
 end
 
--- How each kind of piece is filled from a placeholder aura, as the engine would fill it.
-local PREVIEW = {
-    name = function(fs, _, aura) fs:SetText(aura.name) end,
-    stacks = function(fs, piece, aura)
-        fs:SetText(aura.stacks >= 2 and piece.format:format(aura.stacks) or "")
-    end,
-    dispel = function(fs, piece, aura)
-        local label = aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]
-        fs:SetText(label and (piece.pre .. L[label] .. piece.post) or "")
-    end,
-    duration = previewDuration,
-}
+--- A placeholder's backdrop and edge (feedback #7): shown in tintColorMap's color for its aura's
+--- dispel type -- the SAME map the live engine is handed (fix round 1), so the preview and a live
+--- button cannot disagree -- left hidden (dressDispelTints) for an aura with no type, and for a type
+--- the palette does not cover (Enrage: invisible, not shown, controller ruling).
+local function previewTints(am, aura, s)
+    local c = aura.dispel and tintColorMap()[aura.dispel]
+    if not (c and c ~= invisible) then return end
+    local r, g, b = c.r or 1, c.g or 1, c.b or 1
+    if s.dispelBackdrop then
+        am.backdrop:SetVertexColor(r, g, b, 1)
+        am.backdrop:Show()
+    end
+    if not s.dispelEdge then return end
+    for _, e in ipairs(EDGES) do
+        am[e[1]]:SetVertexColor(r, g, b, 1)
+        am[e[1]]:Show()
+    end
+end
 
 --- Fill a PREVIEW element with placeholder values (modules/Preview.lua), from the same compiled
---- pieces the live dress binds, so the preview and a live button cannot differ in structure.
+--- pieces the live dress binds, so the preview and a live button cannot differ in structure. A
+--- literal already holds its text (dressPieces).
 function Text.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not (am and am.style == "text") then return end
@@ -405,7 +625,29 @@ function Text.FillPreview(frame, aura, cfg)
     local compiled = Text.Compiled(s)
     am.icon:SetTexture(aura.icon)
     for i, piece in ipairs(compiled.pieces) do
-        local fill = PREVIEW[piece.kind]
-        if fill then fill(am[PIECE[i]], piece, aura, s) end
+        if piece.kind ~= "literal" then
+            local fs = am[PIECE[i]]
+            fs:SetText(PIECE_TEXT[piece.kind](piece, aura, s))
+            if piece.kind == "duration" then previewRunColor(fs, aura, s) end
+        end
     end
+    previewTints(am, aura, s)
+end
+
+--- The line text block `s` draws for a sample `aura`, as one plain string: the Text page's Preview
+--- box (feedback #5). The same compile and the same fill as the placeholders, so the two cannot
+--- disagree.
+--- A stacked line (feedback #1) previews as its field rows, one per line, its literals left out.
+function Text.PreviewLine(s, aura)
+    s = s or {}
+    local compiled = Text.Compiled(s)
+    local stacked = Text.Stacked(s, compiled)
+    local parts = {}
+    for _, piece in ipairs(compiled.pieces) do
+        if not (stacked and piece.kind == "literal") then
+            local n = #parts
+            parts[n + 1] = PIECE_TEXT[piece.kind](piece, aura, s)
+        end
+    end
+    return table.concat(parts, stacked and "\n" or "")
 end

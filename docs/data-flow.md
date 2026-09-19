@@ -43,7 +43,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:509
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:560
         │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -72,14 +72,15 @@ Blizzard-frame toggle made under lockdown is not queued (`BlizzardFrames.Apply` 
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:580`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:572`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority `docs/ARCHITECTURE.md` → Filter
 priority states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
-- **A weapon-enchant container** compiles to no groups and the enchant slots the profile's
-  `enchantSlots` names (falling back to all three when none are ticked), with `hidePermanent` from
-  the settings. A non-player unit only earns a warning: enchants are always the player's.
-- **Every other container starts from a base**: the aura type token (`HELPFUL` or `HARMFUL`), plus
+- **A player buff container** appends the enchant slots the profile's `enchantSlots` names (falling
+  back to all three when none are ticked), with `hidePermanent` from the settings, unless its
+  `weaponEnchants` category is Hide. One showing ONLY enchants (schema v5: every other category Hide)
+  compiles to those slots and no aura group, and is not warned about as one that can never match.
+- **Every container starts from a base**: the aura type token (`HELPFUL` or `HARMFUL`), plus
   `PLAYER` or `!PLAYER` for Cast by, plus the duration rules — `maxDuration = N` for a limit,
   `maxDuration = huge` for "only with a duration", or `excludeSpellIDs = <learned timed spells>` for
   "only without".
@@ -149,7 +150,7 @@ covers no element and nothing moves to make room for it.
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:126`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:135`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
 `engine = false`, fills in invented names, times and stacks, and positions it with
 `Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders

@@ -292,6 +292,14 @@ function Anchors.SavePosition(container)
     local anchor = container.anchor
     if not (anchor and anchor.GetPoint) then return end
     local point, _, relPoint, x, y = anchor:GetPoint(1)
+    -- A screen-attached anchor holds nothing secret, but a read is guarded anyway (feedback E): a
+    -- secret offset would raise in round(), and storing one would poison the saved position. `point`
+    -- is checked before it is truth-tested below, so a secret point is never boolean-tested either.
+    local S = NS.Secrets
+    if not (S.CanAccess(point) and S.CanAccess(relPoint) and S.CanAccess(x) and S.CanAccess(y)) then
+        if NS.Debug then NS.Debug("Anchor", "container %s: position reads secret, not saved", container.id) end
+        return
+    end
     if not point then return end
     NS.SetByPath("container.position",
         { point = point, relativePoint = relPoint or point, x = round(x), y = round(y) }, container.id)
@@ -317,10 +325,17 @@ local BACKDROP_TEX = [[Interface\Buttons\WHITE8X8]]
 -- Blizzard texture only when the media library is absent or stops carrying that name.
 local HELP_TEXTURE = [[Interface\FriendsFrame\InformationIcon]]
 
---- Right-click: the settings, on this container.
+--- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
+--- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
+--- selection is left where it was: a refused click moves nothing. NS.OpenOptionsPage is the one
+--- panel-open seam that carries the refusal; the panels are redrawn first, so a Containers page built
+--- earlier shows the new subject when it opens.
 local function openSettings(container)
-    if NS.State then NS.State.SetActiveContainer(container.id) end
-    if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
+    if not InCombatLockdown() then
+        if NS.State then NS.State.SetActiveContainer(container.id) end
+        if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+    end
+    if NS.OpenOptionsPage then NS.OpenOptionsPage("containers") end
 end
 
 --- One tooltip for the strip and its help mark: the container's name, then how to use the handle.
@@ -396,7 +411,7 @@ function Anchors.BuildHandle(container)
     local anchor = container.anchor
     local handle = CreateFrame("Button", nil, anchor, "BackdropTemplate")
     handle:SetHeight(HANDLE_H)
-    handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + HANDLE_LEVEL)
+    handle:SetFrameLevel(NS.Secrets.NumberOr(anchor:GetFrameLevel(), 0) + HANDLE_LEVEL)
     handle:SetBackdrop({ bgFile = BACKDROP_TEX, edgeFile = BACKDROP_TEX, edgeSize = 1 })
     handle:SetBackdropColor(0, 0, 0, 0.75)
     handle:SetBackdropBorderColor(1, 0.82, 0, 0.6)
@@ -422,6 +437,15 @@ function Anchors.BuildHandle(container)
     return handle
 end
 
+--- A frame's level, READ GUARDED (feedback E): an anchor attached to an engine container, or to a
+--- frame anchored to one, can answer its level secret (FrameLevel is a secret aspect), and
+--- arithmetic on a secret raises. An unreadable level is the one Container:Apply set from the stored
+--- `layout.level`.
+local function levelOf(frame, cfg)
+    local stored = tonumber(cfg and cfg.layout and cfg.layout.level) or D.layout.level
+    return NS.Secrets.NumberOr(frame:GetFrameLevel(), stored)
+end
+
 --- Put the strip on the side the auras do not grow into: above the anchor when they grow down,
 --- below when they grow up, its edge lined up with the edge they start from so it runs along the
 --- first line. At least as wide as one element, and as its label with room for the help mark. The
@@ -431,25 +455,53 @@ end
 --- that one's placeholders (L-4), which it sits beside with its strip toward them; every placeholder,
 --- inner frames included, stacks under that container's own strip, HANDLE_LEVEL above its anchor.
 --- Levels order frames within one strata only: a target in a higher strata still draws on top.
+--- Every level is read through levelOf (feedback E).
 local function handleLevel(container, cfg)
-    local level = (container.anchor:GetFrameLevel() or 0) + HANDLE_LEVEL
+    local level = levelOf(container.anchor, cfg) + HANDLE_LEVEL
     local at = cfg.attach
     local target = at and at.mode == "container" and targetContainer(container, at)
     if target then
-        level = math.max(level, (target.anchor:GetFrameLevel() or 0) + HANDLE_LEVEL + 1)
+        level = math.max(level, levelOf(target.anchor, target:Cfg()) + HANDLE_LEVEL + 1)
     end
     return level
 end
 
+-- The label's width is MEASURED on a font string of our own that is never anchored to anything
+-- (feedback E, 2026-09-19). The label itself hangs off the strip, the strip off the anchor, and an
+-- anchor attached to an engine container (or to a frame anchored to one) inherits its secret
+-- geometry: reading the label's width then answered a secret number, and the arithmetic below
+-- raised "attempt to perform arithmetic on a secret number value" out of combat. The same idea as
+-- modules/Style.lua's time-text measurer (B4).
+local labelFS   -- the hidden measuring string, built on first use
+
+--- The FontString a handle's label is measured on: hidden, parented to a hidden frame of ours on
+--- UIParent, in the label's own font. A test replaces this function to measure on a stand-in.
+function Anchors.__labelMeasurer()
+    if labelFS == nil then
+        local host = CreateFrame("Frame", nil, UIParent)
+        host:Hide()
+        labelFS = host:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    end
+    return labelFS
+end
+
+--- The width `text` takes in the label's font, or 0 when it cannot be read.
+local function labelWidth(text)
+    local fs = Anchors.__labelMeasurer()
+    if not fs then return 0 end
+    fs:SetText(text or "")
+    return NS.Secrets.NumberOr(fs:GetStringWidth(), 0)
+end
+
 --- @return number  how far the strip runs past the anchor along the line
-local function placeHandle(container, cfg)
+local function placeHandle(container, cfg, text)
     local handle = container.handle
     handle:SetFrameLevel(handleLevel(container, cfg))
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
     local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
     local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
     local w = NS.Style.ElementSize(cfg)
-    local width = math.max((tonumber(handle.label:GetStringWidth()) or 0) + HANDLE_PAD + HANDLE_HELP * 2, w)
+    local width = math.max(labelWidth(text) + HANDLE_PAD + HANDLE_HELP * 2, w)
     handle:ClearAllPoints()
     handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and HANDLE_GAP or -HANDLE_GAP)
     handle:SetWidth(width)
@@ -486,6 +538,15 @@ local function clampToHandle(container, cfg, overhang)
     setClamp(container, left, right, top, bottom)
 end
 
+--- The handle's label: the container's name, and while test mode is on an orange TEST tag after it
+--- (feedback #8), so the placeholders on screen read as placeholders.
+local function handleText(cfg)
+    if not cfg then return "" end
+    local name = cfg.name or ""
+    if not (NS.State and NS.State.testMode) then return name end
+    return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
+end
+
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
 --- name sets its width and the layout's growth sets its side. Placing the strip and clamping the
 --- anchor are layout work beside an aura engine's parent, so neither runs under lockdown: the handle
@@ -498,11 +559,12 @@ function Anchors.UpdateHandle(container, show)
     if not handle then return end
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
-    handle.label:SetText(cfg and cfg.name or "")
+    local text = handleText(cfg)
+    handle.label:SetText(text)
     if not InCombatLockdown() then
-        clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
+        clampToHandle(container, cfg, show and placeHandle(container, cfg, text) or nil)
     elseif show and not handle.placed then
-        placeHandle(container, cfg)
+        placeHandle(container, cfg, text)
     end
     handle:SetShown(show)
 end

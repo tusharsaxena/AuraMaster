@@ -22,7 +22,7 @@ otherwise (`docs/profiles.md`).
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
 | `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
-| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`, `None`) for a bar colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
+| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`; no `None` since schema v5, feedback #7) for a bar's fill or background colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
 | `enchantSlots` | map | `{ mainHand = true, offHand = true, ranged = true }` | Which weapon slots the `weaponEnchants` category draws (schema v3, B3); shared by every container, like `categorySpells`. A container showing enchants with every slot off falls back to all three |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
@@ -53,7 +53,7 @@ path, never to a number restated in `modules/`.
 | `name` | `"Container"` (a new one becomes `"Container N"`) | any non-blank string, unique across the registry |
 | `enabled` | `true` | bool |
 | `unit` | `"player"` | `player`, `target`, `focus`, `pet` |
-| `auraType` | `"HELPFUL"` | `HELPFUL`, `HARMFUL`, `ENCHANT` |
+| `auraType` | `"HELPFUL"` | `HELPFUL`, `HARMFUL` (`ENCHANT` retired by schema v5) |
 | `style` | `"bars"` | `bars`, `icons` |
 
 ### `filter`
@@ -109,6 +109,7 @@ path, never to a number restated in `modules/`.
 | `drain` | `"left"` (`left`, `right`) | `smooth` | `false` |
 | `bgTexture` | `"Blizzard"` | `bgAlpha` | `1.0` |
 | `bgColor` | `{ 0, 0, 0, 0.5 }` | `useClassColorBg` | `false` |
+| `bgColorMode` | `"static"` (`static`, `dispel`: tinted by the profile's `dispelColors`, feedback #7) | | |
 | `borderShow` | `false` | `borderStyle` | `"Solid"` |
 | `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
 | `useClassColorBorder` | `false` | `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) |
@@ -124,9 +125,11 @@ path, never to a number restated in `modules/`.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:163`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
-`{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`, Bleed `{0.80, 0.10, 0.10}`, None
-`{0.80, 0.00, 0.00}`, all alpha 1.
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:169`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+`{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
+Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
+with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
+`None` leaf.
 
 ### `icons`
 
@@ -148,15 +151,19 @@ The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constant
 
 The Text style (issue #2). `width` (220), `height` (16); `template`
 (`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
-refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` only for a one-piece
-template), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, size
+refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` on a template of more
+than one piece STACKS it, one centered row per field, text outside `[ ]` not drawn — feedback #1,
+`Style.Text.Stacked`), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, size
 12); `timeFormat` (`"blizzard"`); the icon — `icon` (`"NONE"`), `iconSize` (0 = the line's height),
 `iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
 `iconBorderStyle` `"Solid"`, `iconBorderSize` 1, `iconBorderColor` black, `useClassColorIconBorder`
 false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
 `animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); running out — `expiringColorOn`
-(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false). An existing container
-gains the block by the ordinary backfill; there is no schema-version bump.
+(false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
+#7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
+`dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px).
+An existing container gains the block, and these leaves, by the ordinary backfill; there is no
+schema-version bump.
 
 ### The text block
 
@@ -168,7 +175,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:235`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:240`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -292,7 +299,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:727`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:778`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -382,8 +389,8 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   - **HELPFUL or HARMFUL**: the matching `categories.<key>` is set `"hide"`, preserving the toggle's
     old effect — the container keeps drawing only what it categorized rather than silently widening
     the moment the toggle's own catch-all suppression disappears with the key.
-  - **ENCHANT**: neither converted nor counted as lost. An ENCHANT container compiles to no aura
-    groups at all (`FC.Compile`'s `compileEnchant`), so its `onlyShown` — however it got set — never
+  - **ENCHANT**: neither converted nor counted as lost. An ENCHANT container compiled to no aura
+    groups at all (`FC.Compile`'s `compileEnchant`, retired with the aura type at schema v5), so its `onlyShown` — however it got set — never
     did anything; the dead key is still cleared, just not narrated as a loss.
   - **Any other, unrecognized `auraType`**: there is no `uncategorized` category to migrate onto for
     a shape this migration does not know, so nothing can be invented to stand in for it. The
@@ -396,6 +403,27 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   `NS.CONTAINER_TEMPLATE` no longer carries it. A container where the toggle was already off or
   absent is untouched entirely, not even the dead-key clear (idempotent: nothing at `true` to act on
   on a second run either).
+- **Schema v5** (`Database.MigrateV5`, `core/Database.lua`, feedback #6, 2026-09-19) runs over
+  **every** stored profile and logs one `[Migrate] v5 profile '<name>'` line each, plus one
+  `[Migrate] v5 container '<key>' (<name>)` line per container it converts; `Database.CurrentSchemaVersion()`
+  answers `5`. The **Weapon enchants aura type retires**: weapon enchants are the buff category
+  `weaponEnchants` only. Every container with `auraType == "ENCHANT"` becomes an **enchant-only buff
+  container** — `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever the player's), and
+  `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hide but Weapon enchants,
+  Uncategorized included) — the whole category map is REPLACED, not merged, so any debuff-category
+  state the container held resets to its default (harmless on a buff container; it only matters if the
+  container is later switched to Debuffs). A non-empty `filter.whitelist` is CLEARED too (fix round 1):
+  `FC.Compile`'s "Always shown" group draws a whitelist's spells regardless of category state, and did
+  nothing under the old `ENCHANT` aura type only because the compiler returned before any list was
+  read, so keeping it would have the migrated container draw those buffs alongside its enchants —
+  exactly what "shows only Weapon enchants" rules out. One extra `[Migrate]` line names the container
+  and how many ids were dropped. `filter.hidePermanentEnchants`, the name, the style, every styling
+  block and the position carry over untouched. Such a container compiles to the enchant slots and no
+  aura group, and `FC.Compile` does not call it one that can never match. The step also clears the
+  profile's `dispelColors.None` leaf, if present (`core/Database.lua:725`): an aura with no dispel
+  type takes the surface's own color now (feedback #7), so nothing reads a None swatch any longer.
+  The v3 and v4 steps keep their `ENCHANT` handling, because an old profile climbs them before it
+  reaches v5.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:213`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

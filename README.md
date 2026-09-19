@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1055%2F1055_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1114%2F1114_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -37,7 +37,7 @@ of text near the middle of the screen. They start locked. Type `/am unlock` and 
 gold-edged handle with its name, placed just outside the first bar or icon so it never covers one,
 and a faint outline, so even an empty container can be found. Your live auras keep drawing while
 you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
-opens the settings with that container already selected.
+(or its **?**) opens the Containers page with that container already selected.
 
 Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
 waiting for a real buff to turn up. Turn it on with the Test mode checkbox under General → Master
@@ -75,9 +75,12 @@ which.
 A **Text** container draws each aura as one line, from a template you write on its Text page, such
 as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname$`, `$stacks$`,
 `$dispeltype$`, `$remainingduration$`, `$maxduration$`, `$elapsedduration$`, `$remainingpercent$` and
-`$elapsedpercent$`; text inside `[ ]` hides along with the token it holds (so ` x3` shows only at two
-or more stacks, and ` - 12s` only on an aura with a duration). The page lists them all, and a line
-can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. A new
+`$elapsedpercent$` (a percent is a bare number: type the `%` yourself); text inside `[ ]` hides along
+with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s` only on an aura with a
+duration). The page lists them all, and a line
+can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
+Animation tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
+tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. A new
 profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
 cooldowns.
 
@@ -132,7 +135,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | I can't drag a container | Only containers attached to the screen can be dragged, and not during combat. An attached container follows its target; move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
-| My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default), or in one whose aura type is *Weapon enchants*. Which weapon slots count is General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
+| My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default); `/am new enchants` makes one that shows nothing else. Which weapon slots count is General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
 
 ## Issues and feature requests

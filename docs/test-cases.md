@@ -56,7 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (65)
+### test_database.lua (72)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -112,7 +112,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v4: the current schema version is 4
+- v5: the current schema version is 5
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -123,6 +123,13 @@ badge and any count quoted in the docs must agree with it.
 - v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)
 - v4: no notice is printed when nothing was lost
 - database: a fresh profile seeds the Player cooldowns text container last, showing only two buff lists
+- v5: an ENCHANT container becomes a player buff container showing only Weapon enchants, its look kept (feedback #6)
+- v5: a whitelist on the ENCHANT container is cleared, so the migrated container draws no buffs (fix round 1, review Important #1)
+- v5: a container with no filter table at all still converts cleanly (review Minor #2)
+- v5: only ENCHANT containers are touched, and a second run changes nothing (feedback #6)
+- v5: RunMigrations converts every stored profile, and the result draws enchants only (feedback #6)
+- v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
+- v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 
 ### test_schema.lua (29)
 
@@ -195,7 +202,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (75)
+### test_filtercompiler.lua (74)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -239,12 +246,10 @@ badge and any count quoted in the docs must agree with it.
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
-- filter: a weapon-enchant container has three slots and no aura groups
-- filter: an enchant container on another unit still shows the player's, and says so
 - filter: the weaponEnchants row decides the enchant slots, and adds no group
 - filter: the enchant row does nothing on a debuff or a non-player container
 - filter: the enchant slots the container draws are exactly the profile's, in a fixed order
-- filter: an enchant container's slots also come from the profile, falling back to all three
+- filter: an enchant-only buff container's slots also come from the profile, falling back to all three
 - filter: max auras caps each group; 0 means no cap
 - filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
 - filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
@@ -272,8 +277,9 @@ badge and any count quoted in the docs must agree with it.
 - explain: a stray filter.onlyShown key does not affect rank 5 — the toggle is retired
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
+- filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
 
-### test_container.lua (45)
+### test_container.lua (46)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -302,7 +308,7 @@ badge and any count quoted in the docs must agree with it.
 - container: a unit change is sent to the live engine once
 - container: switching style rebuilds the engine even when the filter plan keeps its shape
 - container: a text template of a new shape rebuilds the engine; one of the same shape restyles it
-- container: a weapon-enchant container shows the player's enchants in the engine's three slots, whatever its unit
+- container: a buff container showing only Weapon enchants draws the engine's three slots and no aura group (feedback #6)
 - container: an enchant slot the engine refuses costs that slot, not the build
 - container: an engine call that raises is traced, and the build carries on to the unit
 - container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses
@@ -310,7 +316,7 @@ badge and any count quoted in the docs must agree with it.
 - container: the anchor's scale is the container's times the master's, never below a tenth
 - container: the anchor's alpha is the container's times the master's
 - container: out-of-combat visibility shows out of combat and hides in it
-- container: the class snapshot is the tracked unit's, and nothing for the player or for enchants
+- container: the class snapshot is the tracked unit's, and nothing for the player
 - container: a class the client withholds resolves to no class instead of raising
 - container: a button the engine creates is dressed with the container's class snapshot
 - container: a live container has a mouse blocker covering its engine, below its buttons
@@ -320,6 +326,7 @@ badge and any count quoted in the docs must agree with it.
 - container: a live click-through flip re-gates the blocker without a rebuild
 - container: a hidden container hides its blocker along with its engine, and Park hides it too
 - container: on a client without the aura engine a container is deleted without error
+- container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 
 ### test_containermanager.lua (51)
 
@@ -433,7 +440,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (63)
+### test_anchors.lua (71)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -498,8 +505,16 @@ badge and any count quoted in the docs must agree with it.
 - anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
+- handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)
+- handle: a measured width that reads secret falls back to the element's width, never raising (E)
+- handle: an anchor whose frame level reads secret places the strip from the stored level (E)
+- handle: an attached container's strip falls back to the stored level when its target's frame level reads secret (E)
+- anchors: a drag whose offsets read secret saves nothing (E)
+- handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)
+- handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
+- handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 
-### test_texttemplate.lua (24)
+### test_texttemplate.lua (26)
 
 - template: an unknown token is refused, naming it and every known token (rule 1)
 - template: a lone $ with no closing $ is literal text (rule 1)
@@ -525,8 +540,10 @@ badge and any count quoted in the docs must agree with it.
 - template: compiled results are memoized per template string
 - template: Validate answers true, or false and the refusal
 - template: ForDraw draws a refused stored template as the default one, and says it fell back
+- template: every built-in compiles, and each aura type's list is the pinned one
+- template: a stored template matches a built-in by its text and its justify rule, else none
 
-### test_style.lua (48)
+### test_style.lua (51)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -561,8 +578,9 @@ badge and any count quoted in the docs must agree with it.
 - style: a binding the client lacks is skipped, and one it refuses costs that binding alone
 - style: a class color is looked for only in the active style's block, text blocks included
 - style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color
+- style: a dispel color map's None entry is the surface's own color, and every entry its alpha (feedback #7)
 - style: tooltips and click-through decide whether a button takes the mouse at all
-- style: right-click cancel reaches weapon enchants, never the player's debuffs, and never when turned off
+- style: right-click cancel reaches the player's buffs and their enchant slots, never the player's debuffs, and never when turned off
 - style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
 - style: the time text gets the engine's formatter for its format, and the expiring color at its threshold
 - style: a placeholder's time text is what its format's formatter writes, the one the engine is handed (B-5)
@@ -576,6 +594,8 @@ badge and any count quoted in the docs must agree with it.
 - style: a duration run's text format has its format string and one component per token, built once
 - style: a duration run binds its format and binding, recolored only when asked, blinking only when asked
 - style: a placeholder's seconds are written by the format's formatter, else as whole seconds
+- style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
+- style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
 
 ### test_timedspells.lua (19)
 
@@ -599,7 +619,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (54)
+### test_style_bars.lua (57)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -642,9 +662,12 @@ badge and any count quoted in the docs must agree with it.
 - bars: a hidden region is never handed to the engine
 - bars: every shown region is bound to its own engine field
 - bars: dispel coloring tints the fill through the engine with the stored dispel colors
+- bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)
 - bars: switching Color by from dispel type back to static paints the bar's own color again
 - bars: back to static on a button holding no aura, the fill the engine hid shows again
 - bars: in dispel mode the engine's tint stays the fill's last color
+- bars: switching Color by from dispel type back to static on the background paints the background's own color again (feedback #7)
+- bars: back to static on a button holding no aura, the background the engine hid shows again (feedback #7)
 - bars: the refresh-window highlight is bound only when turned on, and always cleared first
 - bars: with the time's class color on, the running-out curve returns to the class color, one curve per container
 - bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
@@ -684,13 +707,17 @@ badge and any count quoted in the docs must agree with it.
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 
-### test_style_text.lua (30)
+### test_style_text.lua (45)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
 - text style: Right lays the last piece at the area's right and each earlier piece against the next
 - text style: the vertical justify picks the top, middle or bottom anchor points
-- text style: Center centers a one-piece template and lines a longer one up Left
+- text style: Center centers a one-piece template as one line, exactly as before (feedback #1)
+- text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)
+- text style: a stacked line's element grows to its rows; Left and Right keep the stored height (feedback #1)
+- text style: the vertical justify places the stack at the top, middle or bottom of a taller box (feedback #1)
+- text style: a line moved off Center draws its literals again (feedback #1)
 - text style: every piece takes the line's font; a literal takes its text
 - text style: each engine piece is bound to its own field, a literal to none
 - text style: stacks bind a rule formatter that hides one stack and folds the bracket text
@@ -707,6 +734,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: the three loops are built once, looping as each effect needs, and None plays none
 - text style: each effect plays its own loop with the speed, fade and height set
 - text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
+- text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
 - text style: an icon on the right insets the area's right edge; none hides it and binds nothing
 - text style: a refused stored template draws the default one and logs it once
 - text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
@@ -714,13 +742,24 @@ badge and any count quoted in the docs must agree with it.
 - text style: Style.Element dresses a text container through Style.Text, bound and unbound, without raising
 - text style: bars, then text, then bars again keeps each style's regions, hidden while the other draws
 - text style: a placeholder fills each piece as the engine would
+- text style: a stacked line previews as its field rows, one per line, without its literals (feedback #1)
+- text style: a placeholder's percent is the nearest whole number, as the engine's step rule rounds it (feedback #5)
 - text style: a placeholder hides a single stack, a missing dispel type and a timeless duration with their bracket text
 - text style: a placeholder running out takes the running-out color on its duration piece only
+- text style: Color the dispel type writes each word in its palette color inside the bracket text (feedback #7)
+- text style: a colored dispel map is built once per look, and a new palette color rebuilds it (feedback #7)
+- text style: the dispel tint map is built once per look, and a new palette color rebuilds it too (feedback #7, fix round 1)
+- text style: the dispel backdrop fills the text area and is tinted through the engine, for a typed aura only (feedback #7)
+- text style: the dispel edge is four strips of its thickness around the text area, each tinted through the engine (feedback #7)
+- text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)
+- text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)
+- text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
 
-### test_preview.lua (19)
+### test_preview.lua (21)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
-- preview: the per-group cap limits the placeholders, and an enchant container shows at most two
+- preview: the per-group cap limits the placeholders
+- preview: a container showing only Weapon enchants previews one placeholder per enchant slot, and its extent agrees (feedback #6)
 - preview: a shown preview with nothing applied is left alone; an applied one is dressed again in the same frames
 - preview: a lower cap hides the extra placeholders rather than leaving them drawn
 - preview: Hide releases every placeholder, and the next Show dresses them again
@@ -729,6 +768,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
+- preview: a background colored by dispel type stands in with Magic, keeping its own alpha (feedback #7)
 - preview: switching a previewed container from bars to icons re-dresses without error
 - preview: switching a previewed container from icons to bars re-dresses without error
 - preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
@@ -815,7 +855,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (41)
+### test_slash_verbs.lua (42)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -858,6 +898,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
 - slash verbs: while disabled the live set still answers — settings stay readable and repairable
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
+- slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
 ### test_bulklog.lua (20)
 
@@ -889,7 +930,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
-- options: the Filters page offers the Overrides tab only for a buff or debuff container
+- options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type
 - options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back
 - options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
@@ -901,7 +942,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Background block is composed in canonical order, and its tooltips name the background
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
-- options: a page drawn for another style heads its tabs with the notice in muted gold (B3)
+- options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
 ### test_options_descriptor.lua (18)
 
@@ -912,7 +953,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Reset all never writes a Profiles-page row, live or degraded
 - options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
 - options descriptor: the banner lists every container in display order and ignores a re-pick of the selection
-- options descriptor: Containers' picker is a plain dropdown in the tab body that selects
+- options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
@@ -924,7 +965,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (37)
+### test_pages_general.lua (38)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -954,35 +995,37 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: a starter's X stores false and drops it from the list; adding it again drops the edit (B2)
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
+- general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
 - general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
 - general → spell categories: the Weapon enchants entry explains the all-slots fallback
 - general → spell categories: unticking a weapon slot writes the profile, one row at a time
 - general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
 - general: Select accepts the enchant key too, and lands the tab on it
 - general → spell categories: the tab and Dispel Colors are drawn with no container at all
-- general → dispel colors: six profile-wide swatches with no class-color companion, under a line saying they drive bars only
+- general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_pages_containers.lua (30)
+### test_pages_containers.lua (31)
 
-- containers: registers its own top-level Blizzard category, with one tab, Containers (N-1)
+- containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
 - containers: the subsection heading is drawn between Enabled and Unit, not anywhere else
 - containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
-- containers: the tab body opens with the Container picker and New container on one line
+- containers: the picker and New container sit in the band above the strip, drawn before it (feedback #2)
 - containers: the picker retargets the tab and every page
 - containers: New container creates a container and selects it
 - containers: New container takes the Fill its style suits (B5)
 - containers: a created container with its own Fill keeps it; Create with only a style takes the style's
-- containers: Delete keeps the picker and New through both refreshes, and the picker lists what remains (C-3)
-- containers: with no containers the page draws the picker, New container and one line instead of the rows
+- containers: Delete keeps the band's picker and New through both refreshes, and the picker lists what remains (C-3)
+- containers: with no containers the page draws the band's picker and New, and one line instead of the rows
 - containers: the Name box renames the selected container, trimmed, and no other
 - containers: /am reset container.name says a name has no default and changes nothing
 - containers: a blank name is refused and the container keeps its name
 - containers: a rename re-lists every picker and re-applies no container
 - containers: the Unit dropdown offers the four units in order and writes the selected container
 - containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+- containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)
 - containers: the Style dropdown offers bars, icons and text and writes the selected container
 - containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)
 - containers: re-choosing the same Style keeps a Fill set by hand (B5)
@@ -997,13 +1040,11 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (42)
+### test_pages_filters.lua (43)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
-- filters: a weapon-enchant container's hide-permanent row is a checkbox too, and stores a boolean
 - filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
-- filters: a weapon-enchant container is offered one row on each of two tabs and no spell tabs
 - filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
 - filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
 - filters: a max-duration preset writes the same path as the slider
@@ -1041,16 +1082,19 @@ badge and any count quoted in the docs must agree with it.
 - filters: a blacklisted spell a Hide category would also hide gets no note
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
+- filters: Show all and Hide all head the Blizzard and Spell Categories sections, and no other (feedback #10)
+- filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
+- filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
 ### test_pages_layout.lua (22)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
-- layout: the Anchor tab is broken into Screen, Another container, Named frame and Offset
+- layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
 - layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen
-- layout: in screen mode only the subsections that apply are enabled
-- layout: in container mode only the subsections that apply are enabled
-- layout: in frame mode only the subsections that apply are enabled
-- layout: changing Attach to re-dims the same widgets before any redraw
+- layout: in screen mode only the subsections that apply are drawn (feedback #4)
+- layout: in container mode only the subsections that apply are drawn (feedback #4)
+- layout: in frame mode only the subsections that apply are drawn (feedback #4)
+- layout: changing Attach to redraws the tab on the next frame with the chosen subsections (feedback #4)
 - layout: Attach to writes the mode and redraws an open page on the next frame
 - layout: the Container dropdown offers None and every other container, never the selected one
 - layout: a target that would close a loop is refused; any other, or None, is stored
@@ -1067,9 +1111,9 @@ badge and any count quoted in the docs must agree with it.
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
 
-### test_pages_bars.lua (11)
+### test_pages_bars.lua (12)
 
-- bars: every tab of an icons container carries the muted-gold note; a bars container's carry none
+- bars: every tab of an icons container carries the muted-red note; a bars container's carry none
 - bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
 - bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
@@ -1079,11 +1123,12 @@ badge and any count quoted in the docs must agree with it.
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
 - bars: Highlights carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+- bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
 ### test_pages_icons.lua (7)
 
-- icons: a bars container's tabs carry the muted-gold note; an icons container's carry none
+- icons: a bars container's tabs carry the muted-red note; an icons container's carry none
 - icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
 - icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - icons: the six tabs are drawn in order
@@ -1091,19 +1136,33 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Cooldown rows write the selected container's swipe
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (11)
+### test_pages_text.lua (25)
 
 - text page: the four tabs are drawn in order
 - text page: a bars or icons container sees every row disabled under the note naming its style
 - text page: the Bars and Icons pages name the text style on a text container
-- text page: General holds Size, the Template box, the cheat sheet, then Placement
+- text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
+- text page: the section is named Text Template (Task 20, owner: rename this section)
+- text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
+- text page: the Preview box refreshes after a template change (Task 20)
+- text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
-- text page: Center on a multi-piece template draws the note naming the piece count
+- text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
 - text page: each loop row is live only for the effects that use it
 - text page: without a duration token the running-out rows dim, except the swatch, under a note
 - text page: the blink row is engine-only, and the Font tab carries the composed font block and time format
 - text page: Defaults restores the selected container's text look and nothing else
+- text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
+- text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
+- text page: picking a built-in that also moves Justify writes and applies once (final review)
+- text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)
+- text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)
+- text page: the centered built-in's Preview joins its two rows with a visible separator (final review)
+- text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
+- text page: an already-doubled || in a custom template still doubles each pipe (final review)
+- text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
+- text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)
 
 ### test_pages_about.lua (3)
 
@@ -1221,41 +1280,41 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 20 |
-| test_database.lua | 65 |
+| test_database.lua | 72 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 75 |
-| test_container.lua | 45 |
+| test_filtercompiler.lua | 74 |
+| test_container.lua | 46 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 63 |
-| test_texttemplate.lua | 24 |
-| test_style.lua | 48 |
+| test_anchors.lua | 71 |
+| test_texttemplate.lua | 26 |
+| test_style.lua | 51 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 54 |
+| test_style_bars.lua | 57 |
 | test_style_icons.lua | 25 |
-| test_style_text.lua | 30 |
-| test_preview.lua | 19 |
+| test_style_text.lua | 45 |
+| test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 13 |
 | test_disabled.lua | 12 |
 | test_slash.lua | 25 |
-| test_slash_verbs.lua | 41 |
+| test_slash_verbs.lua | 42 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 18 |
-| test_pages_general.lua | 37 |
-| test_pages_containers.lua | 30 |
-| test_pages_filters.lua | 42 |
+| test_pages_general.lua | 38 |
+| test_pages_containers.lua | 31 |
+| test_pages_filters.lua | 43 |
 | test_pages_layout.lua | 22 |
-| test_pages_bars.lua | 11 |
+| test_pages_bars.lua | 12 |
 | test_pages_icons.lua | 7 |
-| test_pages_text.lua | 11 |
+| test_pages_text.lua | 25 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1269,4 +1328,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1055** |
+| **Total** | **1114** |

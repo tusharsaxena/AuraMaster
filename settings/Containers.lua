@@ -2,9 +2,9 @@ local _, NS = ...
 
 -- settings/Containers.lua — the Containers page: which containers exist, and what each is.
 --
---     [ Containers ]
---     Containers  [Container v picker ][ New container ]            <- the tab body's first line
---                 [Name] [Enabled]
+--     band        [Container v picker ][ New container ]            <- above the strip (options-ui-§14)
+--     [ General ]
+--     General     [Name] [Enabled]
 --                 -- What it shows, and how --                     <- subsection (options-ui-§7)
 --                 [Unit] [Aura type] / [Style]
 --                 [Duplicate] [Delete]                             <- acts on the selected container
@@ -15,12 +15,13 @@ local _, NS = ...
 -- its own page, mirroring MultiMeters' Windows, and Filters, Layout, Bars and Icons became its
 -- sub-pages (N-2, marked by NS.SubPageLabel — settings/OptionsSetup.lua's D6 section).
 --
--- THE PICKER AND NEW CONTAINER SIT IN THE TAB BODY, not in a band above the strip. That is this
--- addon's accepted deviation from options-ui-§14 (docs/ARCHITECTURE.md -> Documented deviations),
--- carried over unchanged by the move: the page draws no banner, and its one tab is Containers itself.
--- Filters, Layout, Bars and Icons keep the banner picker. Drawn in the body, the picker and New are
--- released and redrawn with the scroll like every other widget, so a Delete's two refreshes cannot
--- lose them.
+-- THE PICKER AND NEW CONTAINER SIT IN THE BAND ABOVE THE STRIP (feedback #2, 2026-09-19), in the
+-- library's chrome block (Helpers.ContainerHeader, settings/OptionsSetup.lua): the identity controls
+-- options-ui-§14 puts there, on one row. The acts on the selected container — Name, Enabled,
+-- Duplicate, Delete, Copy settings from — stay on the page's one tab, which §14 then names General.
+-- This retired the page's options-ui-§14 deviation (docs/ARCHITECTURE.md). The block is drawn anew
+-- on every render, so a Delete's two refreshes cannot lose it; the widgets of the render before are
+-- released after each render (releaseStale), never during one.
 --
 -- This file registers its own rows and its own page, at the bottom, like every other page file.
 
@@ -32,7 +33,8 @@ local print = NS.Print
 local printf = NS.Printf
 
 local PAGE = "containers"
-local GROUP = L["Containers"]
+-- options-ui-§14: the tab holding a page's acts, under a band carrying its picker, is named General.
+local GROUP = L["General"]
 
 -- options-ui-§7: the tab is the GROUP's heading, and a subgroup is what breaks a tab up inside
 -- itself. Name and Enabled answer "which container is this" and need no heading; Unit, Aura type and
@@ -75,7 +77,7 @@ local ROWS = {
     {
         path = "container.auraType", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS), label = L["Aura type"],
-        desc = L["Buffs, debuffs, or your temporary weapon enchants. The Filters page offers the categories of whichever you choose."],
+        desc = L["Buffs or debuffs. The Filters page offers the categories of whichever you choose; your temporary weapon enchants are a buff category there."],
         onChange = structural,
     },
     {
@@ -215,21 +217,9 @@ end
 -- The tab
 -- ---------------------------------------------------------------------------
 
-local function newCell(_, parent, rel)
-    local btn = NS.AceGUI:Create("Button")
-    btn:SetText(L["New container"])
-    btn:SetRelativeWidth(rel or 0.5)
-    btn:SetCallback("OnClick", doNew)
-    H.AttachTooltip(btn, L["New container"], L["Create a container showing the player's buffs as bars. Change what it shows below."])
-    parent:AddChild(btn)
-    return btn
-end
-
---- The Containers tab: the picker and New container on one line, then the selected container's
---- identity rows and the acts on it. With no container there is nothing to edit: the line, then
---- the one sentence saying how to make one.
+--- The General tab: the selected container's identity rows and the acts on it. With no container
+--- there is nothing to edit: the one sentence saying how to make one (the band still offers New).
 local function render(ctx, cfg, rows)
-    H.RenderGrid(ctx, { { make = H.ContainerPickerCell }, { make = newCell } })
     if not cfg then
         H.TextRow(ctx, L["No containers yet. Click New container, or type /am new."])
         return
@@ -250,6 +240,36 @@ local PAGE_SPEC = {
     tabs      = { { key = GROUP, label = GROUP, render = render } },
 }
 
+local HEADER = { onNew = doNew }
+local function header(ctx) H.ContainerHeader(ctx, HEADER) end
+
+--- Hand the previous render's chrome widgets back to AceGUI. AFTER the render, never before: the
+--- render is usually running inside one of their callbacks (the picker's, New's), and a widget
+--- released on the way in could be handed straight back out, re-initialized, under its own callback.
+---
+--- Final review, Minor #1 (this file duplicates `Helpers.ContainerHeader`'s own swap-and-release):
+--- kept on purpose. `ContainerHeader` swaps `ctx.__chromeWidgets` too, but by the time it runs here
+--- it is swapping the EMPTY table this wrapper just installed (line below), so its own release is a
+--- no-op on this path -- the widgets this function actually frees are the ones captured before that
+--- swap. Only the tab-strip's own `onSelect` (`Helpers.RenderTabbedPage`'s direct call to `header`,
+--- bypassing this wrapper) relies on `ContainerHeader`'s release doing the real work. No test in the
+--- suite targets the three paths (first build, a `renderPage` redraw, tab `onSelect`) individually
+--- for a leak or a double-release, only the whole-suite live-heap gate, which is indirect evidence
+--- rather than proof. Removing this wrapper's capture without that proof risks a widget leak on the
+--- `renderPage` path the first time `ContainerHeader`'s internals change, so it stays.
+local function releaseStale(stale)
+    local AceGUI = NS.AceGUI
+    if not (AceGUI and AceGUI.Release and stale) then return end
+    for _, w in ipairs(stale) do AceGUI:Release(w) end
+end
+
+local function renderPage(ctx)
+    local stale = ctx.__chromeWidgets
+    ctx.__chromeWidgets = {}
+    H.RenderTabbedPage(ctx, PAGE, PAGE_SPEC, header)
+    releaseStale(stale)
+end
+
 local function build(mainCategory)
     if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
     local ctx = H.CreatePanel("AuraMasterContainersPanel", L["Containers"], {
@@ -260,7 +280,7 @@ local function build(mainCategory)
     ctx.panel.defaultsOnClick = function() H.RestoreDefaults(PAGE, ctx) end
     H.__pageCtx[PAGE] = ctx
     -- Through SetRenderer, which owns WHEN the page draws and refuses under combat (options-ui-§11).
-    H.SetRenderer(ctx, function(c) H.RenderTabbedPage(c, PAGE, PAGE_SPEC) end)
+    H.SetRenderer(ctx, renderPage)
     return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, L["Containers"])
 end
 

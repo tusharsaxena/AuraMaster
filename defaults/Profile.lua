@@ -168,6 +168,7 @@ NS.CONTAINER_TEMPLATE = {
         drain = "left", smooth = false,
 
         bgTexture = "Blizzard", bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
+        bgColorMode = "static",   -- "dispel" tints the background as colorMode does the fill (feedback #7)
 
         borderShow = false, borderStyle = "Solid", borderSize = 1,
         borderColor = color(0, 0, 0, 1), useClassColorBorder = false,
@@ -225,6 +226,11 @@ NS.CONTAINER_TEMPLATE = {
 
         expiringColorOn = false, expiringThreshold = 5, expiringColor = color(1, 0.25, 0.25, 1),
         expiringBlink = false,
+
+        -- Color by dispel type (feedback #7): each opt-in, all off (owner, 2026-09-19).
+        dispelTypeColor = false,
+        dispelBackdrop = false, dispelBackdropAlpha = 0.35,
+        dispelEdge = false, dispelEdgeSize = 1,
     },
 }
 

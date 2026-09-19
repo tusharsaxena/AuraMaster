@@ -92,7 +92,7 @@ test("options: the General page leads with Master controls, in canonical order",
     assertEqual(NS.Helpers.MASTER_GROUP, "Master controls")
 end)
 
-test("options: the Filters page offers the Overrides tab only for a buff or debuff container", function()
+test("options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type", function()
     local NS2 = fresh()
     local ctx = NS2.Helpers.__pageCtx.filters
     local function tabs()
@@ -103,7 +103,9 @@ test("options: the Filters page offers the Overrides tab only for a buff or debu
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
     assertTrue(tabs().overrides)
-    NS2.SetByPath("container.auraType", "ENCHANT", 1)
+    -- A stored aura type this build does not know (a hand-edited file; the retired ENCHANT, before
+    -- schema v5 runs): no write can store one, so it is planted.
+    NS2.Database.FindContainer(1).auraType = "BOGUS"
     -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
     NS2.Helpers.RefreshAllPanels()
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
@@ -171,7 +173,7 @@ test("options: the Containers page's New button creates and selects a container"
         if w.type == "Button" and w.text == "New container" and not w.__released then newButton = w end
     end
     -- red under: the Containers page not drawing its create control
-    assertTrue(newButton ~= nil, "the tab body carries the create control")
+    assertTrue(newButton ~= nil, "the band carries the create control")
     newButton:__fire("OnClick")
     assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
     local _, id = NS2.ActiveContainer()
@@ -378,13 +380,14 @@ test("options: the degraded stub completes the load — every page's rows still 
     assertTrue(last:find("settings panel is unavailable", 1, true) ~= nil, last)
 end)
 
-test("options: a page drawn for another style heads its tabs with the notice in muted gold (B3)", function()
+test("options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)", function()
     local NS2, m2 = fresh()
     local P = dofile("tests/page_helpers.lua")(NS2, m2)
     NS2.State.SetActiveContainer(2)   -- the starter icon row
     local ws = P.show("Bars")
     local want = "|c" .. NS2.Constants.NOTICE_COLOR
-    assertEqual(NS2.Constants.NOTICE_COLOR, "ffc8a85a")
+    -- red under: the notice still pinned to the muted gold Task 20 replaced
+    assertEqual(NS2.Constants.NOTICE_COLOR, "ffcc6666")
     local hit
     for _, t in ipairs(P.texts(ws)) do
         if t:find("Not in use:", 1, true) then hit = t end

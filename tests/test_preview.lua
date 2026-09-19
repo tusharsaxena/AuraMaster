@@ -51,18 +51,36 @@ test("preview: every placeholder aura is drawn, each where Preview.Offset puts i
     end
 end)
 
-test("preview: the per-group cap limits the placeholders, and an enchant container shows at most two", function()
+test("preview: the per-group cap limits the placeholders", function()
     local k = container(cfg({ filter = { maxAuras = 2 } }))
     NS.Preview.Show(k)
     -- red under: Preview.Show ignoring filter.maxAuras
     assertEqual(active(k), 2, "capped")
-    k = container(cfg({ auraType = "ENCHANT" }))
-    NS.Preview.Show(k)
-    -- red under: an enchant preview drawing five placeholders for two weapon slots
-    assertEqual(active(k), 2, "main hand and off hand")
     k = container(cfg({ filter = { maxAuras = 0 } }))
     NS.Preview.Show(k)
     assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "0 means no cap")
+end)
+
+test("preview: a container showing only Weapon enchants previews one placeholder per enchant slot, and its extent agrees (feedback #6)", function()
+    local enchantsOnly = { style = "bars", layout = { axis = "vertical", spacing = 3 },
+        filter = { categories = NS.Categories.EnchantOnlyStates() } }
+    local k = container(cfg(enchantsOnly))
+    k.previewExtent = R()   -- Preview keeps an extent it is handed, so its size can be read
+    NS.Preview.Show(k)
+    -- red under: placeholderCount ignoring the plan (five buff placeholders for three weapon slots)
+    assertEqual(active(k), 3, "main hand, off hand, ranged")
+    local want = container(cfg(enchantsOnly))
+    want.previewExtent = R()
+    NS.Preview.Extent(want, 3)
+    local got, expected = k.previewExtent:__last("SetSize"), want.previewExtent:__last("SetSize")
+    -- red under: Preview.Extent sized for every placeholder aura rather than the slots drawn
+    assertEqual(got[1], expected[1]); assertEqual(got[2], expected[2])
+    k = container(cfg({ filter = { maxAuras = 2, categories = NS.Categories.EnchantOnlyStates() } }))
+    NS.Preview.Show(k)
+    assertEqual(active(k), 2, "the per-group cap still applies")
+    k = container(cfg({ unit = "player", filter = { categories = { weaponEnchants = "show" } } }))
+    NS.Preview.Show(k)
+    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "a buff container that also has enchants keeps every placeholder")
 end)
 
 test("preview: a shown preview with nothing applied is left alone; an applied one is dressed again in the same frames", function()
@@ -186,6 +204,23 @@ test("preview: switching Color by from dispel type back to static leaves no disp
     local own = table.concat({ NS.Style.Color(c.bars.barColor, false) }, ",")
     -- red under: the dress painting the Magic stand-in whatever the colorMode
     for i, got in ipairs(fills()) do assertEqual(got, own, "static: placeholder " .. i .. " paints the bar color") end
+end)
+
+test("preview: a background colored by dispel type stands in with Magic, keeping its own alpha (feedback #7)", function()
+    local c = cfg({ style = "bars", bars = { bgColorMode = "dispel", useClassColorBg = false,
+        bgColor = { r = 0, g = 0, b = 0, a = 0.5 } } })
+    local k = container(c)
+    NS.Preview.Show(k)
+    for _, f in ipairs(k.frames) do
+        for key in pairs(f.__am) do f.__am[key] = R() end
+    end
+    k.previewDirty = true
+    NS.Preview.Show(k)
+    local m = NS.db.profile.dispelColors.Magic
+    for i, f in ipairs(k.previewPools.bars.active) do
+        -- red under: the preview painting the background its static color whatever its Color by
+        assertEqual(f.__am.bg:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 0.5 }, ","), "placeholder " .. i)
+    end
 end)
 
 -- ── a style switch while previewing (C-4) ───────────────────────────────────────────────────────

@@ -110,17 +110,73 @@ test("text style: the vertical justify picks the top, middle or bottom anchor po
     assertEqual(pieces(am)[2]:__last("SetPoint")[1], "TOPRIGHT")
 end)
 
-test("text style: Center centers a one-piece template and lines a longer one up Left", function()
+test("text style: Center centers a one-piece template as one line, exactly as before (feedback #1)", function()
     local _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER", justifyV = "MIDDLE" }))
     local pt = pieces(am)[1]:__last("SetPoint")
     assertEqual(pt[1], "CENTER"); assertEqual(pt[3], "CENTER")
     _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER", justifyV = "TOP" }))
     assertEqual(pieces(am)[1]:__last("SetPoint")[1], "TOP")
-    _, am = dressed(text({ template = "$spellname$ $stacks$", justifyH = "CENTER" }))
-    -- red under: JustifyFor honoring Center on a multi-piece chain (its width is never readable)
-    assertEqual(pieces(am)[1]:__last("SetPoint")[1], "LEFT")
     local NS = E()
-    assertEqual(NS.Style.Text.JustifyFor({ justifyH = "CENTER" }, { single = false }), "LEFT")
+    -- A one-piece template is a one-row stack: nothing to stack, no growth.
+    assertEqual(NS.Style.Text.StackHeight({ template = "$spellname$", justifyH = "CENTER" }), 0)
+end)
+
+-- A four-piece line: name, a literal, stacks, and a bracketed duration run.
+local STACKED = "$spellname$ :: $stacks$[ - $remainingduration$]"
+
+test("text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)", function()
+    local _, am = dressed(text({ template = STACKED, justifyH = "CENTER", justifyV = "TOP", x = 3, y = -1 }))
+    local p = pieces(am)
+    local pitch = 12 + 2   -- the template's 12pt font, then C.TEXT_ROW_GAP
+    local rows = { p[1], p[3], p[4] }
+    for i, fs in ipairs(rows) do
+        local pt = fs:__last("SetPoint")
+        -- red under: the old chain (LEFT to the previous piece's RIGHT) for a centered multi-piece line
+        assertEqual(pt[1], "TOP", "row " .. i)
+        assertTrue(pt[2] == am.area, "row " .. i .. " hangs from the text area")
+        assertEqual(pt[3], "TOP", "row " .. i)
+        assertEqual(pt[4], 3, "row " .. i .. ": x nudges the stack")
+        assertEqual(pt[5], -1 - (i - 1) * pitch, "row " .. i .. ": one pitch under the last")
+        assertTrue(fs:IsShown(), "row " .. i)
+    end
+    -- red under: the literal drawn between two rows (it has nothing to sit between)
+    assertFalse(p[2]:IsShown(), "the literal ' :: ' is not drawn")
+    assertEqual(p[2]:__last("SetPoint"), nil, "and is anchored nowhere")
+end)
+
+test("text style: a stacked line's element grows to its rows; Left and Right keep the stored height (feedback #1)", function()
+    local NS = E()
+    local rows3 = 3 * 12 + 2 * 2
+    -- red under: ElementSize ignoring the stack (rows overflowing a 16px box)
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "CENTER", height = 16 }))), rows3)
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "CENTER", height = 60 }))), 60,
+        "a taller box keeps its height")
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "LEFT", height = 16 }))), 16)
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "CENTER", height = 16,
+        font = { fontSize = 20 } }))), 3 * 20 + 2 * 2, "the rows follow the font size")
+    local frame = dressed(text({ template = STACKED, justifyH = "CENTER", height = 16, width = 200 }))
+    assertEqual(frame:__joined("SetSize"), "200," .. rows3, "the element is sized to it")
+end)
+
+test("text style: the vertical justify places the stack at the top, middle or bottom of a taller box (feedback #1)", function()
+    local stack = 3 * 12 + 2 * 2
+    for v, top in pairs({ TOP = 0, MIDDLE = (60 - stack) / 2, BOTTOM = 60 - stack }) do
+        local _, am = dressed(text({ template = STACKED, justifyH = "CENTER", justifyV = v, height = 60, x = 0, y = 0 }))
+        -- red under: STACK_TOP ignoring the justify (every stack at the top of its box)
+        assertEqual(pieces(am)[1]:__last("SetPoint")[5], -top, v)
+    end
+end)
+
+test("text style: a line moved off Center draws its literals again (feedback #1)", function()
+    local c = text({ template = STACKED, justifyH = "CENTER" })
+    local frame, am = dressed(c)
+    assertFalse(pieces(am)[2]:IsShown())
+    c.text.justifyH = "LEFT"
+    local NS, m = E()
+    B.during(m, {}, function() NS.Style.Element(frame, c, false) end)
+    -- red under: a stacked dress's Hide left on the literal once the line is a chain again
+    assertTrue(pieces(am)[2]:IsShown())
+    assertEqual(pieces(am)[2]:__last("SetPoint")[1], "LEFT")
 end)
 
 test("text style: every piece takes the line's font; a literal takes its text", function()
@@ -350,6 +406,20 @@ test("text style: an icon on the left sits on the animated frame and the text ar
     assertTrue(frame:__last("SetIcon")[1] == am.icon)
 end)
 
+test("text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)", function()
+    local _, am = dressed(text({ template = STACKED, justifyH = "CENTER", height = 16, icon = "LEFT", iconSize = 0 }))
+    -- red under: layoutIconAndArea handing the stack's full height to IconSizeFor (the icon grows to
+    -- the whole stack, "16,16" from the old un-grown box, or "40,40" from the grown one, not "12,12")
+    assertEqual(am.icon:__joined("SetSize"), "12,12", "size 0 is one row's height (the 12pt font)")
+    -- a taller font's row is still one row, not the two- or three-row stack
+    _, am = dressed(text({ template = STACKED, justifyH = "CENTER", height = 16, icon = "LEFT", iconSize = 0,
+        font = { fontSize = 20 } }))
+    assertEqual(am.icon:__joined("SetSize"), "20,20")
+    -- unstacked (Left), size 0 is still the box's own height, exactly as before
+    _, am = dressed(text({ template = STACKED, justifyH = "LEFT", height = 16, icon = "LEFT", iconSize = 0 }))
+    assertEqual(am.icon:__joined("SetSize"), "16,16")
+end)
+
 test("text style: an icon on the right insets the area's right edge; none hides it and binds nothing", function()
     local _, am = dressed(text({ icon = "RIGHT", iconSize = 12, iconGap = 2 }), true)
     local a = am.area:__calls("SetPoint")
@@ -468,8 +538,23 @@ test("text style: a placeholder fills each piece as the engine would", function(
     -- red under: the stacks piece filled without its bracket text
     assertEqual(out[2], " x3")
     assertEqual(out[3], " (" .. NS.L["Magic"] .. ")")
-    -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"
-    assertEqual(out[4], " - 28s / 40s (70%)")
+    -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"; a percent is a bare number
+    -- (feedback #5: the player types the %)
+    assertEqual(out[4], " - 28s / 40s (70)")
+end)
+
+test("text style: a stacked line previews as its field rows, one per line, without its literals (feedback #1)", function()
+    local NS = E()
+    local aura = { name = "Ignore Pain", icon = 1, remaining = 11, duration = 12, stacks = 3 }
+    -- red under: PreviewLine joining a stacked line as one line, literal included
+    assertEqual(NS.Style.Text.PreviewLine({ template = STACKED, justifyH = "CENTER" }, aura), "Ignore Pain\n3\n - 11s")
+    assertEqual(NS.Style.Text.PreviewLine({ template = STACKED, justifyH = "LEFT" }, aura), "Ignore Pain :: 3 - 11s")
+end)
+
+test("text style: a placeholder's percent is the nearest whole number, as the engine's step rule rounds it (feedback #5)", function()
+    local out = filled({ template = "$remainingpercent$" }, { name = "Ignore Pain", icon = 1, remaining = 11, duration = 12, stacks = 0 })
+    -- red under: math.floor truncating 91.67 to 91 (the live rule rounds to the nearest)
+    assertEqual(out[1], "92")
 end)
 
 test("text style: a placeholder hides a single stack, a missing dispel type and a timeless duration with their bracket text", function()
@@ -488,4 +573,153 @@ test("text style: a placeholder running out takes the running-out color on its d
     -- red under: previewDuration ignoring the threshold
     assertEqual(am.piece2:__joined("SetTextColor"), "1,0,0,1")
     assertEqual(am.piece1:__count("SetTextColor"), 1, "the name keeps the font color the dress set")
+end)
+
+-- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
+
+-- The default Magic color (C.DEFAULT_DISPEL_COLORS: 0.2, 0.6, 1) as a font-string escape.
+local MAGIC_CODE = "|cff3399ff"
+
+test("text style: Color the dispel type writes each word in its palette color inside the bracket text (feedback #7)", function()
+    local NS = E()
+    local frame = dressed(text({ template = "$spellname$[ <$dispeltype$>]", dispelTypeColor = true }), true)
+    local opts = frame:__last("SetDispelTypeText")[2]
+    local map = opts.customDispelTextMap
+    -- red under: the words left plain (the escape inside the map's text is the one engine path that
+    -- colors a font string by dispel type)
+    assertEqual(map.Magic, " <" .. MAGIC_CODE .. NS.L["Magic"] .. "|r>")
+    -- Enrage has no palette color: its word keeps the font color
+    assertEqual(map.Enrage, " <" .. NS.L["Enrage"] .. ">")
+    assertNil(map.None)
+    assertFalse(opts.showWithoutDispelType)
+    local off = dressed(text({ template = "$spellname$[ <$dispeltype$>]" }), true)
+    assertEqual(off:__last("SetDispelTypeText")[2].customDispelTextMap.Magic, " <" .. NS.L["Magic"] .. ">", "off: plain")
+end)
+
+test("text style: a colored dispel map is built once per look, and a new palette color rebuilds it (feedback #7)", function()
+    local NS = E()
+    local c = text({ template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true })
+    local first = dressed(c, true):__last("SetDispelTypeText")[2]
+    assertTrue(dressed(c, true):__last("SetDispelTypeText")[2] == first, "one options table per look")
+    local dc = NS.db.profile.dispelColors
+    local old = dc.Curse
+    dc.Curse = { r = 1, g = 0, b = 0, a = 1 }   -- a settings write stores a new table (Style.lua's memo note)
+    local again = dressed(c, true):__last("SetDispelTypeText")[2]
+    dc.Curse = old
+    -- red under: the memo keyed by the bracket text alone (a new Curse color never reaches the line)
+    assertEqual(again.customDispelTextMap.Curse, " (|cffff0000" .. NS.L["Curse"] .. "|r)")
+end)
+
+test("text style: the dispel tint map is built once per look, and a new palette color rebuilds it too (feedback #7, fix round 1)", function()
+    local NS = E()
+    local c = text({ dispelBackdrop = true })
+    local first = dressed(c, true):__last("AddDispelTypeTexture")[2].customDispelColorMap
+    assertTrue(dressed(c, true):__last("AddDispelTypeTexture")[2].customDispelColorMap == first, "one map per look")
+    local dc = NS.db.profile.dispelColors
+    local old = dc.Curse
+    dc.Curse = { r = 1, g = 0, b = 0, a = 1 }   -- a settings write stores a new table (Style.lua's memo note)
+    local again = dressed(c, true):__last("AddDispelTypeTexture")[2].customDispelColorMap
+    dc.Curse = old
+    -- red under: the tint memo ignoring a palette write (a memo keyed on something other than the map)
+    assertTrue(again ~= first, "a new palette leaf rebuilds the tint map")
+    assertEqual(table.concat({ again.Curse.r, again.Curse.g, again.Curse.b, again.Curse.a }, ","), "1,0,0,1")
+end)
+
+test("text style: the dispel backdrop fills the text area and is tinted through the engine, for a typed aura only (feedback #7)", function()
+    local NS = E()
+    local frame, am = dressed(text({ dispelBackdrop = true, dispelBackdropAlpha = 0.4 }), true)
+    -- red under: no backdrop region
+    assertTrue(am.backdrop ~= nil and am.backdrop.parent == am.area, "in the text area, under the chain")
+    assertTrue(am.backdrop:__last("SetAllPoints")[1] == am.area)
+    assertEqual(am.backdrop:__joined("SetTexture"), NS.Constants.WHITE_TEXTURE)
+    assertEqual(am.backdrop:__joined("SetAlpha"), "0.4")
+    local add = frame:__last("AddDispelTypeTexture")
+    -- red under: no backdrop binding
+    assertTrue(add ~= nil and add[1] == am.backdrop, "the backdrop is the engine's to tint")
+    assertEqual(frame:__count("AddDispelTypeTexture"), 1, "no edge while it is off")
+    local o = add[2]
+    assertTrue(o.showWhenHarmful and o.showWhenHelpful, "buffs and debuffs, as the word")
+    assertFalse(o.showAlways)
+    assertFalse(o.showWithoutDispelType)
+    local map = o.customDispelColorMap
+    local m = NS.db.profile.dispelColors.Magic
+    assertEqual(table.concat({ map.Magic.r, map.Magic.g, map.Magic.b, map.Magic.a }, ","),
+        table.concat({ m.r, m.g, m.b, 1 }, ","), "the profile's palette, at full alpha")
+    -- red under: Enrage taking the fallback's opaque white instead of no visible tint at all (fix
+    -- round 1, controller ruling: an out-of-palette type shows nothing, like a typeless aura)
+    assertEqual(map.Enrage.a, 0, "no palette color for Enrage: fully transparent, not Blizzard's white")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < frame:__lastSeq("AddDispelTypeTexture"), "cleared first")
+    am.backdrop:Show()   -- the engine showed it for a typed aura
+    local off = dressed(text({}), true, frame)
+    assertEqual(off:__count("AddDispelTypeTexture"), 1, "off by default: no second binding")
+    -- red under: a dress leaving a switched-off backdrop as the engine last drew it (the Clear
+    -- restores nothing)
+    assertFalse(am.backdrop:IsShown())
+end)
+
+test("text style: the dispel edge is four strips of its thickness around the text area, each tinted through the engine (feedback #7)", function()
+    local frame, am = dressed(text({ dispelEdge = true, dispelEdgeSize = 2 }), true)
+    local adds = frame:__calls("AddDispelTypeTexture")
+    -- red under: no edge
+    assertEqual(#adds, 4, "one binding per strip")
+    local want = {
+        edgeTop = { "TOPLEFT", "TOPRIGHT", "SetHeight" }, edgeBottom = { "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+        edgeLeft = { "TOPLEFT", "BOTTOMLEFT", "SetWidth" }, edgeRight = { "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+    }
+    local bound = {}
+    for _, a in ipairs(adds) do bound[a[1]] = a[2] end
+    for key, w in pairs(want) do
+        local strip = am[key]
+        assertTrue(strip ~= nil and strip.parent == am.area, key)
+        local pts = strip:__calls("SetPoint")
+        assertEqual(pts[1][1] .. "," .. pts[2][1], w[1] .. "," .. w[2], key)
+        assertTrue(pts[1][2] == am.area and pts[2][2] == am.area, key .. " on the area's edge")
+        assertEqual(strip:__joined(w[3]), "2", key)
+        assertTrue(bound[strip] ~= nil and bound[strip] == adds[1][2], key .. " bound with the backdrop's options")
+    end
+end)
+
+test("text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)", function()
+    local NS = E()
+    local m = NS.db.profile.dispelColors.Magic
+    local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
+    local _, am = filled({ dispelBackdrop = true, dispelEdge = true }, AURA)
+    -- red under: FillPreview leaving the tints to an engine a placeholder does not have
+    assertTrue(am.backdrop:IsShown())
+    assertEqual(am.backdrop:__joined("SetVertexColor"), magic)
+    for _, key in ipairs({ "edgeTop", "edgeBottom", "edgeLeft", "edgeRight" }) do
+        assertTrue(am[key]:IsShown(), key)
+        assertEqual(am[key]:__joined("SetVertexColor"), magic, key)
+    end
+    local _, typeless = filled({ dispelBackdrop = true, dispelEdge = true },
+        { name = "Well Fed", icon = 1, remaining = 0, duration = 0, stacks = 0 })
+    assertFalse(typeless.backdrop:IsShown(), "no type, no backdrop")
+    assertFalse(typeless.edgeTop:IsShown(), "no type, no edge")
+    local _, off = filled({}, AURA)
+    assertFalse(off.backdrop:IsShown(), "off: nothing, even for a typed aura")
+end)
+
+test("text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)", function()
+    E()
+    local ENRAGE = { name = "Enrage Effect", icon = 1, remaining = 10, duration = 10, stacks = 0, dispel = "Enrage" }
+    -- Live: Enrage has a dispelName, so the engine still shows the texture; only a transparent tint
+    -- keeps it invisible.
+    local frame = dressed(text({ dispelBackdrop = true, dispelEdge = true }), true)
+    local map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
+    -- red under: Enrage mapped to the fallback's opaque white (a visible white box and edge in game)
+    assertEqual(map.Enrage.a, 0, "Enrage: no palette color, so no visible tint")
+    -- Preview: previewTints must read the SAME map the engine gets, so the two cannot disagree.
+    local _, am = filled({ dispelBackdrop = true, dispelEdge = true }, ENRAGE)
+    -- red under: the preview showing a white backdrop/edge for Enrage where the live button would too
+    assertFalse(am.backdrop:IsShown(), "Enrage: no palette color, no visible backdrop")
+    assertFalse(am.edgeTop:IsShown(), "Enrage: no palette color, no visible edge")
+end)
+
+test("text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)", function()
+    local NS = E()
+    local s = { template = "$spellname$[ ($dispeltype$)]", dispelTypeColor = true }
+    local out = filled(s, AURA)
+    -- red under: the preview fill ignoring the option (the live line colored, the placeholder not)
+    assertEqual(out[2], " (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
+    assertEqual(NS.Style.Text.PreviewLine(s, AURA), "Bloodlust (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
 end)

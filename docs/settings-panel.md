@@ -13,10 +13,10 @@ is a defect in this doc (documentation-§3).
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
-| - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with what the mode does not read dimmed) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
+| - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Highlights | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Highlights | The look of a container drawn as icons |
-| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink |
+| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its loop and running-out blink, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
@@ -44,8 +44,8 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
   banner; Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:209`): the buff categories are not offered on a debuff container, and a
-  weapon-enchant container sees only the rows that mean something for it.
+  (`settings/Schema.lua:209`): the buff categories and Hide enchants without a duration are not
+  offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
   pages offer changes with it. Every `CONTAINERS_CHANGED` does the same.
@@ -60,12 +60,12 @@ band holds **the picker itself** (options-ui-§14):
 - **Filters, Layout, Bars, Icons** draw `Helpers.ContainerBanner` — a Container dropdown built through
   the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
   page's only picker.
-- **Containers** is the one exception, an accepted deviation from options-ui-§14
-  (`docs/ARCHITECTURE.md` → Documented deviations). Its one tab edits the selected container, but its
-  Container picker and **New container** sit on the first line of the tab body
-  (`settings/Containers.lua`), and every act on the selected container (Duplicate, Delete,
-  Copy settings from) follows its rows. The Containers page draws no banner. Drawn in the body, the
-  picker and New are redrawn with the scroll, so a Delete's two refreshes cannot lose them.
+- **Containers** carries the page's identity controls in the band, as options-ui-§14 asks: its Container
+  picker and **New container** on one row, drawn by `Helpers.ContainerHeader` through the library's
+  `PageHeader` chrome block (feedback #2, 2026-09-19; `PageBanner` draws exactly one dropdown). The acts
+  on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
+  one tab, which §14 then names **General**. The block is drawn on every render, so a Delete's two
+  refreshes cannot lose it, and the widgets of the render before are released after each render.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
@@ -92,7 +92,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (19 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -147,10 +147,10 @@ them share is refused until one is picked ("pick one from the list, or use the i
 resolved to one rank; a name neither knows adds nothing, and the line under the box says where
 names come from (the library's spell hint, localized, which the tooltip quotes too). Every entry —
 starter or added — carries an X at the left of every entry (a starter's X hides it, stored `false`;
-an added spell's X forgets it), and **Restore this category's starter list** at the top, under the
-Category dropdown and above Add a spell. Writes the whole set to `categorySpells` (a carve-out, so
-every container re-applies). The page's Defaults does not touch these lists; each category's restore
-does.
+an added spell's X forgets it), and **Restore this category's starter list** on the Category
+dropdown's own line, to its right (feedback #3), above Add a spell. Writes the whole set to
+`categorySpells` (a carve-out, so every container re-applies). The page's Defaults does not touch
+these lists; each category's restore does.
 
 Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
 (Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
@@ -159,16 +159,19 @@ Categories row, with a link back. Unticking every slot here does not turn enchan
 container reads all three anyway — because the container-level Hide on Filters → Categories is the
 one switch for that; the tab says so.
 
-**Dispel Colors** — one line saying who reads the colors, then six swatches, `dispelColors.Magic`,
-`.Curse`, `.Disease`, `.Poison`, `.Bleed`, `.None`: the fill of a bar colored by dispel type. They
-drive bars only; an icon's dispel border keeps Blizzard's own colored art (owner, 2026-09-13), and
-the tab line and each row's tooltip say so. Profile-wide, so a write re-applies every container.
+**Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
+`.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
+a Text line's dispel type word, backdrop and edge when those are on (Text → Animation → Dispel type,
+feedback #7). An aura with no dispel type keeps a bar's own color and draws no text backdrop or edge,
+so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
+colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
+write re-applies every container.
 
 ### Containers (5 rows, `settings/Containers.lua`)
 
-A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **Containers**. The tab
-body opens with the Container picker and **New container** (a player-buff bar container, then
-selected) on one line. With no container, that line and one sentence are all the tab draws.
+A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **General**. The band above
+the strip holds the Container picker and **New container** (a player-buff bar container, then
+selected) on one row. With no container, the band and one sentence are all the page draws.
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
@@ -176,7 +179,7 @@ selected) on one line. With no container, that line and one sentence are all the
 | Enabled | `container.enabled` | bool | A disabled container keeps its settings |
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enabled's "which container is this". Name and Enabled carry no heading of their own — one above a tab's first row only repeats the tab |
 | Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
-| Aura type | `container.auraType` | string | Buffs / Debuffs / Weapon enchants; structural |
+| Aura type | `container.auraType` | string | Buffs / Debuffs; structural (weapon enchants are a buff category, schema v5) |
 | Style | `container.style` | string | Bars / Icons / Text; structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
@@ -235,7 +238,10 @@ for them; the tab is bespoke
 `Show · Hide · Category` and then a line of two cells (an ordinary checkbox check on the lit one,
 LibKa0s v1.36.0's `O.ChoiceGrid`, the yellow fill withdrawn in v1.36.2) and the category's label
 (hover it for its description). A grid
-with no row for the aura type is not drawn.
+with no row for the aura type is not drawn. The **Blizzard Categories** and **Spell Categories**
+sections open with **Show all** and **Hide all** (feedback #10): each writes every category of that
+section, and only that section, for the selected container, as one bulk act (`NS.Bulk.Run`: one
+`[Set] show all|hide all <grid> categories of container <id>: N rows` line, one apply pass).
 
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
@@ -253,11 +259,9 @@ column: a **See spells** link (`K-2`) on every `spells`- or `enchant`-kind row, 
 category on General → Spell Categories, opens the General page and switches to its Spell Categories
 tab (`NS.GeneralSpells.Select`, `NS.OpenOptionsPage`, `H.SelectTab`). Right under that grid — ahead
 of the Uncategorized cost note below — sits **Hide enchants without a duration**
-(`container.filter.hidePermanentEnchants`, bool, buffs and enchants), behind a one-line tie naming
+(`container.filter.hidePermanentEnchants`, bool, buffs only), behind a one-line tie naming
 the `weaponEnchants` row it governs by name (batch 7, `T-3`: the grid draws its rows atomically and
-cannot host a plain bool inline, so the tie text is what keeps it from reading as floating); an
-`ENCHANT`-type container, which draws no Spell Categories grid at all, still sees the checkbox on its
-own, with no tie line (there is no row above to tie it to).
+cannot host a plain bool inline, so the tie text is what keeps it from reading as floating).
 
 **Sorting**
 
@@ -293,11 +297,9 @@ even if another of its categories says Hide; (4) in categories that all say Hide
 category at all — shown, nothing removed it. Full detail and how it compiles: `docs/ARCHITECTURE.md`
 → Filter priority.
 
-A weapon-enchant container drops **What to show** and **Overrides** entirely (neither has a row that
-means anything for it, and with What to show goes the priority block — it has no whitelist, no
-blacklist and no categories to rank) and sees only **Categories** — just **Hide enchants without a duration**,
-since it draws no Spell Categories grid (`Cat.For("ENCHANT")` is empty) — and **Sorting**, just
-**Direction**.
+A container that shows only weapon enchants is a buff container (schema v5): on its Categories tab
+every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
+it like any other.
 
 ### Layout (26 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -316,12 +318,14 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | Corner of this container / of the frame |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
 
-Each subsection's rows carry a `disabledIf` predicate on the selected container's attach mode, so
-the ones the mode does not read are dimmed: in `screen` mode only Screen is live; in `container`
-mode Another container and Offset; in `frame` mode Named frame and Offset. Changing **Attach to**
-re-dims them on the same frame through the scalar refresh. **Pick a frame…** (closes the settings,
-starts the picker, reopens this page) is Frame name's `pairWith` partner and stays live in every
-mode, because a pick sets the mode to Named frame itself.
+Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
+feedback #4), so only the subsections the mode reads are drawn, each heading with its rows: in
+`screen` mode Screen; in `container` mode Another container and Offset; in `frame` mode Named frame
+and Offset. The hidden rows stay in the schema, so `/am set`, `/am get` and the resets still reach
+them. Changing **Attach to** (from the panel, `/am set` or a reset) redraws the tab once, on the next
+frame, through the library's selector watch; the mode row needs no `onChange` of its own. **Pick a
+frame…** (closes the settings, starts the picker, reopens this page) is Frame name's `pairWith`
+partner, so it is drawn with Named frame; a pick still sets the mode to Named frame itself.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow
@@ -352,9 +356,9 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-### Bars (71 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Bars (72 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-When the selected container is drawn as icons, a small muted-gold note heads every tab — "Not in use: this
+When the selected container is drawn as icons, a small muted-red note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
 and every control below it is drawn disabled (the spec's `disabledFor`,
 `settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
@@ -365,7 +369,7 @@ The tabs and the container picker stay live.
 |---|---|
 | General (14) | *Size:* `width` 40–600, `height` 6–80; *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark`, `sparkTimeless` (show the spark on auras without a duration) |
 | Icon (9) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` / `iconBorderColor` · `useClassColorIconBorder` |
-| Background & border (9) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`; *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
+| Background & border (10) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`, then `bgColorMode` (one color / by dispel type); *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
@@ -376,7 +380,10 @@ a permanent aura draws full and `drain` picks which end empties (`modules/Style_
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
-as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors); every `timeFormat` hands the engine a
+as a dispel-type texture tinted from the profile's `dispelColors` (General → Dispel Colors), and
+`bgColorMode = dispel` the background the same way (feedback #7); an aura with no dispel type — a buff,
+or a debuff nothing can dispel, such as Mystic Touch — keeps the surface's own color (the map's
+`None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
 (`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the running-out color is a step color curve over
 remaining time (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the refresh-window highlight is an additive wash the engine
@@ -395,7 +402,7 @@ two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this p
 group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
 deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
-When the selected container is drawn as bars, the same small muted-gold note heads every tab — "Not in
+When the selected container is drawn as bars, the same small muted-red note heads every tab — "Not in
 use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these
 settings." — and every control is drawn disabled, as on the Bars page.
 
@@ -412,12 +419,25 @@ settings." — and every control is drawn disabled, as on the Bars page.
 harmful auras with a dispel type only. The art sits above your border and replaces it there; every
 other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
 
-### Text (31 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Text (36 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put two
-read-only blocks between its rows: the token cheat sheet under the Template box, and the centering
-note under Placement. Its rows are still ordinary schema rows — the panel, `/am set`, Defaults and the
-resets all reach them through the one write seam.
+Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
+built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **Text
+Template** (Task 20, owner: renamed from "What each line says"): a **Template** dropdown of the aura
+type's built-in templates (Name; Name + time; Name, stacks, time — the default; Time / max; and on
+debuffs Name (type) and Name, type, time; Centered: name over time, which also sets Justify to Center)
+plus **Custom**, then the **Custom template** box (drawn only for Custom: a template matching no
+built-in reads as Custom by itself), then a read-only **Preview** — an AceGUI EditBox, PrettyChat's own
+shape (`SetLabel`, `SetFullWidth(true)`, `SetDisabled(true)`), holding the line rendered on a sample
+aura (`C.TEXT_SAMPLE_AURAS`, through the placeholders' own fill, `Style.Text.PreviewLine`), wrapped in
+the container's own font color with a stray `|` doubled so it cannot break the box, and a Task 12
+colored dispel word riding live inside it — then the **Tokens** / **Rules** cheat sheet (Task 20, owner:
+"split it into keywords and guidelines - use bullet points"): one gold `$token$` bullet per token, then
+a bulleted rule per bracket-hiding, the two escapes, how they combine, and text outside `[ ]` always
+showing, each rule's example on its own indented gold continuation line. The centering note sits under
+Placement. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
+the write seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel,
+`/am set`, Defaults and the resets all reach them through the one write seam.
 
 The Template row's `validate` is the parser (`modules/TextTemplate.lua`'s `TT.Validate`): a refused
 template is never stored, and its reason reaches the player through the write seam's third return
@@ -429,17 +449,30 @@ unused) when the template carries no duration token, with a note saying so; the 
 per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
 Bounce).
 
-When the selected container is drawn as bars or icons, the same small muted-gold note heads every tab
+**Dispel type** (Animation, feedback #7) holds three opt-in stand-ins for "color the text by dispel
+type", all off by default, since no engine binding colors a font string by the aura's type
+(`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
+palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
+around the word, the bracket text keeping the font color (dimmed without a `$dispeltype$` token).
+`dispelBackdrop` fills the text area behind the chain with a white texture the engine tints and shows
+per aura (`AddDispelTypeTexture`, `PreserveAsset`, the profile's palette), at `dispelBackdropAlpha`;
+`dispelEdge` draws four strips `dispelEdgeSize` px thick around the text area the same way. The
+backdrop and the edge show only for an aura with a dispel type (buff or debuff) the palette colors;
+a type it has no color for (Enrage) gets no visible tint at all, the same as a typeless aura (fix
+round 1). The opacity and the thickness are dimmed while their toggle is off. The preview draws all
+three from the placeholder's own type.
+
+When the selected container is drawn as bars or icons, the same small muted-red note heads every tab
 — naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
 its Style to Text on the Containers page to use these settings.") — and every control is drawn
 disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. What each line says: `template` (+ the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
+| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
-| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
 
 ### Profiles (`settings/Profiles.lua`)
 
@@ -460,7 +493,7 @@ With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `f
 
 **Palette-definition swatches carry no companion** — they identify a state or a dispel type, not a
 player, which is the one exemption options-ui-§17 makes: `expiringColor` and `pandemicColor` on both
-pages, and the six `dispelColors.*` on General → Dispel Colors.
+pages, and the five `dispelColors.*` on General → Dispel Colors.
 
 ## The degraded panel
 
@@ -469,7 +502,7 @@ With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-comp
 `MasterControls`) and `MASTER_GROUP` (every member a page file touches at file load), and a real
 `RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`), so
 every row still registers and `/am list|get|set` and the defaults keep working. Every other function
-member of the live instance, this addon's decorations (`SelectContainer`, `ContainerPickerCell`,
+member of the live instance, this addon's decorations (`SelectContainer`, `ContainerHeader`,
 `RenderTabbedPage`, …) included, is carried as a no-op, so no call site finds a member missing
 (testing-§8); the library's layout and composer constants, `AceGUI` and `LSMValues` are not copied.
 The panel itself (`CreateOptionsPanel`, `OpenOptionsPanel`) answers one line naming the missing

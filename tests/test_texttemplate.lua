@@ -163,6 +163,9 @@ test("template: the name alone is one piece, and single", function()
     assertEqual(#r.pieces, 1)
     assertTrue(r.single, "a one-piece template may be centered")
     assertFalse(r.hasDuration)
+    -- red under: no hasDispel (the Text page dims Color the dispel type on it, feedback #7)
+    assertFalse(r.hasDispel)
+    assertTrue(TT.Compile("$spellname$[ ($dispeltype$)]").hasDispel)
 end)
 
 test("template: a duration run keeps its inner text in the format, one component per token", function()
@@ -214,4 +217,36 @@ test("template: ForDraw draws a refused stored template as the default one, and 
     r, fell = TT.ForDraw("$nope$")
     assertTrue(fell, "fell back")
     assertTrue(r == TT.Compile(NS.CONTAINER_TEMPLATE.text.template), "the default template's pieces")
+end)
+
+-- ── the built-in templates (feedback #5) ──────────────────────────────────────────────────────
+
+test("template: every built-in compiles, and each aura type's list is the pinned one", function()
+    local C = NS.Constants
+    for key, def in pairs(C.TEXT_BUILTINS) do
+        -- red under: a built-in the parser refuses (the dropdown would write a template it rejects)
+        assertTrue(TT.Compile(def.template).ok, key)
+    end
+    assertEqual(table.concat(TT.Builtins("HELPFUL"), ","), "name,nameTime,nameStacksTime,timeOfMax,centered")
+    assertEqual(table.concat(TT.Builtins("HARMFUL"), ","), "name,nameTime,nameStacksTime,timeOfMax,nameType,nameTypeTime,centered")
+    assertEqual(table.concat(TT.Builtins("NOPE"), ","), table.concat(TT.Builtins("HELPFUL"), ","), "an unknown type offers the buff set")
+    assertEqual(C.TEXT_BUILTINS.nameStacksTime.template, NS.CONTAINER_TEMPLATE.text.template, "the default is a built-in")
+end)
+
+test("template: a stored template matches a built-in by its text and its justify rule, else none", function()
+    local nameTime = "$spellname$[ - $remainingduration$]"
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "LEFT"), "nameTime")
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "RIGHT"), "nameTime")
+    -- red under: nameTime's own text (with its " - " separator) reading as the centered built-in,
+    -- whose template has no separator (fix round 1: a clean second row when Center stacks it)
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "CENTER"), nil)
+    -- red under: the justify rule ignored (the centered built-in's own text, centered, is not itself)
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[$remainingduration$]", "CENTER"), "centered")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[$remainingduration$]", "LEFT"), nil,
+        "the centered built-in's text, left-justified, is Custom")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[ x$stacks$][ - $remainingduration$]", "CENTER"), nil,
+        "a built-in other than the centered one, centered, is Custom")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[ ($dispeltype$)]", "LEFT"), nil, "a debuff built-in on a buff container")
+    assertEqual(TT.MatchBuiltin("HARMFUL", "$spellname$[ ($dispeltype$)]", "LEFT"), "nameType")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$ $stacks$", "LEFT"), nil)
 end)

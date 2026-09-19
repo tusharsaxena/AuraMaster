@@ -172,32 +172,37 @@ local function wireFill(am, b, engine, h)
     wireSpark(am, b, edge, engine, h)
 end
 
---- Paint the fill and show it. A live dispel-colored fill takes the bar color here and the engine's
---- tint over it; a PREVIEW dispel-colored fill stands in with the Magic color, since no placeholder
---- names a type. The tint is part of the dress, so a later static dress is never left tinted. The fill
---- is shown every dress: the engine's no-aura pass hides a dispel texture, and clearing the binding
---- does not show it again.
+--- Paint one surface (the fill or the background) its color. A live surface colored by dispel type
+--- takes its own color here and the engine's tint over it; a PREVIEW one stands in with the profile's
+--- Magic color, since no placeholder names a type, keeping the surface's own alpha. The tint is part of
+--- the dress, so a later static dress is never left tinted.
+local function paintSurface(tex, mode, stored, useClass, preview)
+    local r, g, bl, a = Style.Color(stored, useClass)
+    local dc = preview and mode == "dispel" and Style.ProfileDispelColors()
+    local m = dc and dc.Magic
+    if m then r, g, bl = m.r or 1, m.g or 1, m.b or 1 end
+    tex:SetVertexColor(r, g, bl, a)
+end
+
+--- Paint the fill and show it. The fill is shown every dress: the engine's no-aura pass hides a
+--- dispel texture, and clearing the binding does not show it again.
 local function paintFill(am, b, preview)
     am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
-    local dc = preview and b.colorMode == "dispel" and Style.ProfileDispelColors()
-    local m = dc and dc.Magic
-    if m then
-        am.fill:SetVertexColor(m.r or 1, m.g or 1, m.b or 1, 1)
-    else
-        am.fill:SetVertexColor(Style.Color(b.barColor, b.useClassColorBar))
-    end
+    paintSurface(am.fill, b.colorMode, b.barColor, b.useClassColorBar, preview)
     am.fill:SetAlpha(tonumber(b.barAlpha) or D.bars.barAlpha)
     am.fill:Show()
 end
 
 --- Paint the surfaces: the fill, the background, the border and the spark. Each surface's opacity
---- multiplies onto its color's own alpha, so a color's alpha still applies.
+--- multiplies onto its color's own alpha, so a color's alpha still applies. The background colors by
+--- dispel type as the fill does (feedback #7) and is shown every dress for the same reason.
 local function applySurfaces(am, b, preview)
     paintFill(am, b, preview)
 
     am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
-    am.bg:SetVertexColor(Style.Color(b.bgColor, b.useClassColorBg))
+    paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview)
     am.bg:SetAlpha(tonumber(b.bgAlpha) or D.bars.bgAlpha)
+    am.bg:Show()
 
     Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, tonumber(b.borderSize) or D.bars.borderSize,
         b.borderColor, b.useClassColorBorder)
@@ -274,6 +279,17 @@ function Bars.Apply(frame, cfg, engine)
     end
 end
 
+--- AddDispelTypeTexture's options for a surface colored by dispel type: shown for every aura, our own
+--- texture kept (PreserveAsset), tinted from the profile's palette, and an aura with no dispel type in
+--- the surface's own `fallback` color (Style.DispelColorMap).
+local function dispelTint(Compat, palette, fallback)
+    return {
+        showAlways = true, showWithoutDispelType = true,
+        style = Compat.DispelStyle("PreserveAsset"),
+        customDispelColorMap = Style.DispelColorMap(palette, fallback),
+    }
+end
+
 --- Hand the regions to the engine. Every call is guarded (Style.Bind). The two ADDITIVE bindings only
 --- add here: Bars.Apply has already cleared them, before any binding (Style.ClearAdditiveBindings).
 function Bars.Bind(frame, am, cfg, b)
@@ -287,12 +303,14 @@ function Bars.Bind(frame, am, cfg, b)
     if b.time == nil or b.time.show ~= false then Style.BindDurationText(frame, am.time, b, D.bars) end
     if b.stacks == nil or b.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
+    local palette = Style.ProfileDispelColors()
     if b.colorMode == "dispel" then
-        Style.Bind(frame, "AddDispelTypeTexture", am.fill, {
-            showAlways = true, showWithoutDispelType = true,
-            style = Compat.DispelStyle("PreserveAsset"),
-            customDispelColorMap = Style.DispelColorMap(Style.ProfileDispelColors()),
-        })
+        Style.Bind(frame, "AddDispelTypeTexture", am.fill,
+            dispelTint(Compat, palette, Style.CurveColor(b.barColor, b.useClassColorBar)))
+    end
+    if b.bgColorMode == "dispel" then
+        Style.Bind(frame, "AddDispelTypeTexture", am.bg,
+            dispelTint(Compat, palette, Style.CurveColor(b.bgColor, b.useClassColorBg)))
     end
     if b.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end
 

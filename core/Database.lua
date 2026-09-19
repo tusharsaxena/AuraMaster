@@ -455,7 +455,7 @@ end
 -- gone: the compiler now does that job itself, on every run, not just at migration time.
 --
 -- Only recognized aura types are touched. `Cat.For(nil)` and `Cat.For("garbage")` both fall back to
--- the (empty) ENCHANT list, so liftCategoryWhitelist is already a no-op for them — but the string
+-- an empty list, as ENCHANT's did, so liftCategoryWhitelist is a no-op for them — but the string
 -- compare `auraType == "ENCHANT"` that used to gate liftEnchantFlag does NOT catch nil or garbage, so
 -- a container with a missing or corrupt auraType could still get a weaponEnchants row written with no
 -- corresponding category list. `Database.MigrateV3` itself gates both lifts on a known aura type, so
@@ -657,12 +657,12 @@ end
 --- Fix round 3: both HELPFUL and HARMFUL now carry an `uncategorized` category (asymmetric —
 --- defaults/Categories.lua's KINDS doc — but Hide reproduces the retired toggle on either type, which
 --- is all this migration ever needed). `ENCHANT` is deliberately excluded, not merely absent: an
---- ENCHANT container compiles to no aura groups at all (`FC.Compile`'s `compileEnchant`), so its
---- `onlyShown` — however it got set — never did anything, and clearing it loses nothing worth
---- counting. Any other or unrecognized `auraType` returns nil, the "lost" case — reachable in
---- practice only for a corrupt or future `auraType` (`Database.MigrateV3`'s `KNOWN_AURA_TYPES` names
---- the same three this migration actually expects), not a common one: every real HELPFUL or HARMFUL
---- container converts.
+--- ENCHANT container compiled to no aura groups at all (`FC.Compile`'s `compileEnchant`, retired with
+--- the aura type at schema v5), so its `onlyShown` — however it got set — never did anything, and
+--- clearing it loses nothing worth counting. Any other or unrecognized `auraType` returns nil, the
+--- "lost" case — reachable in practice only for a corrupt or future `auraType`
+--- (`Database.MigrateV3`'s `KNOWN_AURA_TYPES` names the same three this migration actually expects),
+--- not a common one: every real HELPFUL or HARMFUL container converts.
 local function uncategorizedKeyFor(auraType)
     if auraType == "HELPFUL" then return "uncategorized" end
     if auraType == "HARMFUL" then return "uncategorizedDebuffs" end
@@ -701,6 +701,60 @@ function Database.MigrateV4(p)
         end
     end
     return converted, lost, lostList
+end
+
+--- Schema v5 over one profile table (feedback #6, 2026-09-19): the Weapon enchants AURA TYPE retires,
+--- and enchants are a buff category only. Every stored container with `auraType == "ENCHANT"` becomes
+--- an ENCHANT-ONLY buff container: `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever
+--- the player's), and `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hidden but
+--- Weapon enchants, Uncategorized included, the whole map replaced rather than merged). A stored
+--- `filter.whitelist` is CLEARED too (fix round 1, review Important #1): `FC.Compile`'s
+--- `addWhitelistGroup` draws a whitelist's spells regardless of category state, and did nothing under
+--- the old `ENCHANT` aura type only because `compileEnchant` returned before any list was read — kept
+--- as-is it would draw those buffs after v5, when the container never drew anything but enchants
+--- before. Nothing else on `filter` (blacklist, castBy, duration) is touched: those only narrow a
+--- group and add none, so they cannot make the container draw more than its enchant slots.
+--- `filter.hidePermanentEnchants` and every other key — name, style, styling, position — carry over
+--- untouched. One [Migrate] line per converted container, plus one more when a non-empty whitelist
+--- was cleared, naming the container and how many ids it held, in key order. The profile's
+--- `dispelColors.None` is cleared too: an aura with no dispel type takes the surface's own color now
+--- (feedback #7), so nothing reads it. A test seam as well as the step's body, like MigrateV2..V4.
+--- @return number  the containers converted
+function Database.MigrateV5(p)
+    if type(p) ~= "table" then return 0 end
+    if type(p.dispelColors) == "table" then p.dispelColors.None = nil end
+    if type(p.containers) ~= "table" then return 0 end
+    local keys = {}
+    for key in pairs(p.containers) do
+        keys[#keys + 1] = key
+    end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    local converted = 0
+    for _, key in ipairs(keys) do
+        local c = p.containers[key]
+        if type(c) == "table" and c.auraType == "ENCHANT" then
+            c.auraType, c.unit = "HELPFUL", "player"
+            if type(c.filter) ~= "table" then c.filter = {} end
+            c.filter.categories = NS.Categories.EnchantOnlyStates()
+            if type(c.filter.whitelist) == "table" then
+                local whitelistCount = 0
+                for _ in pairs(c.filter.whitelist) do
+                    whitelistCount = whitelistCount + 1
+                end
+                if whitelistCount > 0 then
+                    c.filter.whitelist = nil
+                    if NS.Debug then
+                        NS.Debug("Migrate", "v5 container '%s' (%s): cleared a %s-entry whitelist so it draws only Weapon enchants", tostring(key), tostring(c.name), whitelistCount)
+                    end
+                end
+            end
+            converted = converted + 1
+            if NS.Debug then
+                NS.Debug("Migrate", "v5 container '%s' (%s): now a player buff container showing only Weapon enchants", tostring(key), tostring(c.name))
+            end
+        end
+    end
+    return converted
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -762,6 +816,14 @@ local SCHEMA_STEPS = {
         if lostCount > 0 and NS.Print then
             NS.Print(NS.L["The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."]:format(table.concat(allLost, ", ")))
         end
+    end },
+    { to = 5, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV5(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v5 profile '%s': the Weapon enchants aura type retired -- %s container(s) now show only the Weapon enchants category", name, n)
+            end
+        end)
     end },
 }
 

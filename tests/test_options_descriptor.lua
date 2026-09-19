@@ -201,20 +201,19 @@ test("options descriptor: the banner lists every container in display order and 
     assertEqual(refreshes[1], 1)
 end)
 
-test("options descriptor: Containers' picker is a plain dropdown in the tab body that selects", function()
-    local NS2, m = fresh()
+test("options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)", function()
+    local NS2 = fresh()
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.containers
-    local dd = widget(m, "Dropdown", "Container")
-    assertTrue(dd ~= nil, "the tab drew its picker")
+    local dd = ctx.__bannerWidget
+    -- red under: the picker still drawn in the tab body (the retired options-ui-§14 deviation)
+    assertTrue(dd ~= nil and dd.type == "Dropdown", "the band carries the picker")
+    assertEqual(dd.labelText, "Container")
+    assertTrue((ctx.__bannerHeight or 0) > 0, "and reserves the band above the strip")
     assertEqual(table.concat(dd.order, ","), "1,2,3,4")
-    -- red under: the picker drawn into a chrome block (the Containers page draws no banner, D1)
-    assertNil(ctx.__bannerWidget)
-    local kids = ctx.__chromeKids or {}
-    assertEqual(#kids, 0, "nothing in the band above the strip")
     dd:__fire("OnValueChanged", 2)
-    -- red under: ContainerPickerCell's callback not reaching SelectContainer
+    -- red under: the header's callback not reaching SelectContainer
     assertEqual(NS2.State.activeContainerId, 2)
 end)
 
@@ -323,7 +322,7 @@ test("options descriptor: an addon-wide tabbed page draws every tab with no cont
     local drawn = {}
     NS2.Helpers.RenderTabbedPage(ctx, "containers", {
         addonWide = true,
-        tabs = { { key = "Containers", label = "Containers", render = function(_, cfg, rows)
+        tabs = { { key = "General", label = "General", render = function(_, cfg, rows)
             local list = rows or {}
             local count = #list
             drawn[#drawn + 1] = { cfg = cfg, rows = count }
@@ -332,8 +331,8 @@ test("options descriptor: an addon-wide tabbed page draws every tab with no cont
     local keys = {}
     for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
     -- red under: collectTabs returning no tabs without a container, or adding the bespoke tab twice
-    assertEqual(table.concat(keys, ","), "Containers")
-    clickTab(ctx, "Containers")
+    assertEqual(table.concat(keys, ","), "General")
+    clickTab(ctx, "General")
     assertEqual(#drawn, 1, "the bespoke render replaced the group's rows")
     assertNil(drawn[1].cfg, "with no container")
     assertEqual(drawn[1].rows, 5, "and was handed the group's rows")
@@ -368,11 +367,12 @@ test("options descriptor: RenderWarnings draws one orange line per thing the eng
         rows[#rows + 1] = text
     end
     local CM, Database = NS2.ContainerManager, NS2.Database
-    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "ENCHANT", unit = "player" })))
-    assertEqual(#rows, 0, "a player enchant container is fine")
-    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "ENCHANT", unit = "target" })))
+    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "HARMFUL", unit = "player" })))
+    assertEqual(#rows, 0, "a plain debuff container is fine")
+    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "HARMFUL", unit = "player",
+        filter = { durationMode = "timeless" } })))
     -- red under: RenderWarnings not wrapping the localized warning in the orange code
-    assertEqual(table.concat(rows, "|"), "|cffffa040" .. NS2.FilterCompiler.WARN.ENCHANT_UNIT .. "|r")
+    assertEqual(table.concat(rows, "|"), "|cffffa040" .. NS2.FilterCompiler.WARN.TIMELESS_BUFFS_ONLY .. "|r")
 end)
 
 -- ── refresh and open ──────────────────────────────────────────────────────────────────────────

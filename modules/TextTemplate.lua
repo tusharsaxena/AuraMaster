@@ -410,7 +410,7 @@ local cache = {}
 
 --- Compile one template.
 --- @param template any  the stored or typed template
---- @return table  { ok = true, pieces, single, shape, hasDuration } or { ok = false, err }
+--- @return table  { ok = true, pieces, single, shape, hasDuration, hasDispel } or { ok = false, err }
 function TT.Compile(template)
     if type(template) ~= "string" then return { ok = false, err = L["Use at least one $token$."] } end
     local hit = cache[template]
@@ -423,7 +423,7 @@ function TT.Compile(template)
         local pieces = compile(nodes, countDurations(items))
         local n = #pieces
         result = { ok = true, pieces = pieces, single = n == 1, shape = shapeOf(pieces),
-            hasDuration = hasKind(pieces, "duration") }
+            hasDuration = hasKind(pieces, "duration"), hasDispel = hasKind(pieces, "dispel") }
     else
         result = { ok = false, err = err }
     end
@@ -448,4 +448,28 @@ function TT.ForDraw(template)
     local r = TT.Compile(template)
     if r.ok then return r, false end
     return TT.Compile(NS.CONTAINER_TEMPLATE.text.template), true
+end
+
+-- ---------------------------------------------------------------------------
+-- 4. The built-in templates (feedback #5)
+-- ---------------------------------------------------------------------------
+
+--- The built-in template keys `auraType` offers, in dropdown order (core/Constants.lua's
+--- TEXT_BUILTIN_SETS); an aura type with no set of its own offers the buff set.
+--- @return table  keys of C.TEXT_BUILTINS
+function TT.Builtins(auraType)
+    return C.TEXT_BUILTIN_SETS[auraType] or C.TEXT_BUILTIN_SETS.HELPFUL
+end
+
+--- The built-in a stored template and justify are, or nil (the Text page reads nil as Custom). A
+--- built-in matches when its template is identical and its justify rule holds: the centered one wants
+--- Center, every other one anything but Center. First match in `auraType`'s order.
+--- @return string|nil  a key of C.TEXT_BUILTINS
+function TT.MatchBuiltin(auraType, template, justifyH)
+    local centered = justifyH == "CENTER"
+    for _, key in ipairs(TT.Builtins(auraType)) do
+        local def = C.TEXT_BUILTINS[key]
+        if def.template == template and (def.justifyH == "CENTER") == centered then return key end
+    end
+    return nil
 end

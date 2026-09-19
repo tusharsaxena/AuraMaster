@@ -204,6 +204,14 @@ local function last(f, method)
     return log[#log], #log
 end
 
+--- Measure every handle label as `width` wide: the handle sizes itself from a detached measuring
+--- string (Anchors.__labelMeasurer, feedback E), never from the label, whose width can read secret.
+local function measureAs(NS, width)
+    NS.Anchors.__labelMeasurer = function()
+        return { SetText = function() end, GetStringWidth = function() return width end }
+    end
+end
+
 test("handle: a dark WHITE8X8 strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
@@ -270,7 +278,7 @@ test("handle: at least as wide as its container's element, and as its label with
     local w = NS.Style.ElementSize(cfg)
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, w), "an empty label")
-    rawset(h, "GetStringWidth", function() return w + 100 end)   -- the label is the handle's font string
+    measureAs(NS, w + 100)
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "a label wider than the element")
 end)
@@ -283,7 +291,7 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     local insets
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b) insets = table.concat({ l, r, t, b }, ",") end)
     local w = NS.Style.ElementSize(cfg)
-    rawset(h, "GetStringWidth", function() return w + 100 end)
+    measureAs(NS, w + 100)
     local over = 100 + 24 + 14 * 2
     cfg.layout.growV, cfg.layout.growH = "down", "right"
     NS.Anchors.UpdateHandle(inst, true)
@@ -385,11 +393,15 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     h.help:__fire("OnEnter")
     assertEqual(lines[1], NS.Database.FindContainer(2).name)
     assertEqual(lines[2], NS.L["Drag to move. Right-click for settings."])
-    local opened = 0
-    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    local opened = {}
+    NS.OpenOptionsPage = function(key)
+        local n = #opened
+        opened[n + 1] = key
+    end
     NS.State.SetActiveContainer(1)
     h.help:__fire("OnClick", "RightButton")
-    assertEqual(opened, 1)
+    -- red under: the right-click opening the main panel, not the Containers page (feedback #9)
+    assertEqual(table.concat(opened, ","), "containers")
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
@@ -813,7 +825,7 @@ test("handle: a left click on the strip opens nothing; a right click opens this 
     local inst = NS.ContainerManager.instances[3]
     local h = recordedHandle(mocks, NS, inst)
     local opened = 0
-    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    NS.OpenOptionsPage = function() opened = opened + 1 end
     h:__fire("OnClick", "LeftButton")
     -- red under: the strip's OnClick ignoring the button (every drag's click would open the panel)
     assertEqual(opened, 0)
@@ -1099,4 +1111,171 @@ test("handle: an attached container's strip sits above every placeholder of the 
     mocks.__fireTimers()
     -- red under: the raise kept after a detach
     assertEqual(two.handle:GetFrameLevel(), two.anchor:GetFrameLevel() + 50, "detached: its own anchor's again")
+end)
+
+-- ── secret geometry (feedback E, 2026-09-19) ──────────────────────────────────────────────────
+-- An anchor attached to an engine container, or to a frame anchored to one, inherits its secret
+-- geometry, and so does everything anchored under it: the strip, its label. The client then answers
+-- a width or a frame level as a secret number, and arithmetic on one raises ("attempt to perform
+-- arithmetic on a secret number value", modules/Anchors.lua:452 before the fix). The harness cannot
+-- make a number raise, so a case plants the client's issecretvalue on a sentinel number, and makes
+-- the label's own GetStringWidth raise the client's error outright.
+
+local SECRET = 41.5
+
+--- A fresh environment whose client calls SECRET a secret number.
+local function secretEnv()
+    local NS, mocks = fresh()
+    mocks.issecretvalue = function(v) return v == SECRET end
+    return NS, mocks
+end
+
+test("handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
+    -- The label is the strip in the kit (a font string comes back as its frame).
+    rawset(h, "GetStringWidth", function() error("attempt to perform arithmetic on a secret number value") end)
+    local measured = {}
+    NS.Anchors.__labelMeasurer = function()
+        return {
+            SetText = function(_, s)
+                local n = #measured
+                measured[n + 1] = s
+            end,
+            GetStringWidth = function() return w + 100 end,
+        }
+    end
+    local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    -- red under: placeHandle reading handle.label:GetStringWidth() (the reported error)
+    assertTrue(ok, tostring(err))
+    assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "the measured width sizes the strip")
+    assertEqual(measured[#measured], NS.Database.FindContainer(1).name, "the label's own text is measured")
+end)
+
+test("handle: a measured width that reads secret falls back to the element's width, never raising (E)", function()
+    local NS, mocks = secretEnv()
+    local inst = NS.ContainerManager.instances[2]   -- a 32px icon row: the floor and the label differ
+    local h = recordedHandle(mocks, NS, inst)
+    NS.Anchors.__labelMeasurer = function()
+        return { SetText = function() end, GetStringWidth = function() return SECRET end }
+    end
+    NS.Anchors.UpdateHandle(inst, true)
+    -- red under: labelWidth without its NumberOr guard (41.5 + 52 = 93.5 in the harness; a raise in
+    -- the client)
+    assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, NS.Style.ElementSize(NS.Database.FindContainer(2))))
+end)
+
+test("handle: an anchor whose frame level reads secret places the strip from the stored level (E)", function()
+    local NS, mocks = secretEnv()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    rawset(inst.anchor, "GetFrameLevel", function() return SECRET end)
+    local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
+    assertTrue(ok, tostring(err))
+    -- red under: handleLevel adding HANDLE_LEVEL to the unguarded read (41.5 + 50)
+    assertEqual(h:GetFrameLevel(), NS.CONTAINER_TEMPLATE.layout.level + 50)
+end)
+
+test("handle: an attached container's strip falls back to the stored level when its target's frame level reads secret (E)", function()
+    local NS, mocks = secretEnv()
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    local CM = NS.ContainerManager
+    local one, two = CM.instances[1], CM.instances[2]
+    rawset(one.anchor, "GetFrameLevel", function() return SECRET end)
+    local ok, err = pcall(NS.Anchors.UpdateHandle, two, true)
+    assertTrue(ok, tostring(err))
+    local stored = NS.CONTAINER_TEMPLATE.layout.level
+    -- red under: handleLevel's target read back to (target.anchor:GetFrameLevel() or 0), which lets
+    -- 1's secret level (41.5) into "or 0"'s arithmetic instead of falling back through levelOf
+    assertEqual(two.handle:GetFrameLevel(), math.max(two.anchor:GetFrameLevel() + 50, stored + 51))
+end)
+
+test("anchors: a drag whose offsets read secret saves nothing (E)", function()
+    local NS = secretEnv()
+    local inst = NS.ContainerManager.instances[1]
+    inst.anchor.GetPoint = function() return "TOP", nil, "TOP", SECRET, -30 end
+    local writes = 0
+    NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
+    local ok, err = pcall(NS.Anchors.SavePosition, inst)
+    assertTrue(ok, tostring(err))
+    -- red under: SavePosition rounding and storing a secret offset
+    assertEqual(writes, 0)
+    assertEqual(NS.Database.FindContainer(1).position.x, NS.STARTER_CONTAINERS[1].position.x)
+end)
+
+-- ── the TEST marker (feedback #8) ─────────────────────────────────────────────────────────────
+
+test("handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local texts = {}
+    rawset(h, "SetText", function(_, s)
+        local n = #texts
+        texts[n + 1] = s
+    end)
+    local name = NS.Database.FindContainer(1).name
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], name, "no tag outside test mode")
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    -- red under: UpdateHandle writing the bare name whatever the mode (no marker on the placeholders)
+    assertEqual(texts[#texts], name .. "  |c" .. NS.Constants.TEST_TAG_COLOR .. NS.L["TEST"] .. "|r")
+    assertEqual(NS.Constants.TEST_TAG_COLOR, "ffff8000", "orange")
+    NS.Preview.SetTestMode(false)
+    mocks.__fireTimers()
+    -- red under: a tag left behind once test mode ends
+    assertEqual(texts[#texts], name, "the tag goes when test mode does")
+end)
+
+-- ── right-click the "?" → the Containers page (feedback #9) ──────────────────────────────────────────────
+
+test("handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)", function()
+    local opened = {}
+    local NS, mocks = fresh({ before = function(m)
+        m.Settings.OpenToCategory = function(id)
+            local n = #opened
+            opened[n + 1] = id
+        end
+    end })
+    local P = dofile("tests/page_helpers.lua")(NS, mocks)
+    P.show("Containers")                          -- built once, on container 1
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    h.help:__fire("OnClick", "RightButton")
+    -- red under: the click reaching the main panel's open (no category switch at all)
+    assertEqual(#opened, 1, "one category switch")
+    assertEqual(NS.State.activeContainerId, 2)
+    P.show("Containers")
+    -- red under: the Containers page opening on the container it was last drawn for
+    assertEqual(NS.Helpers.__pageCtx.containers.__bannerWidget.value, 2, "the band's picker names container 2")
+end)
+
+test("handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)", function()
+    local opened = 0
+    local NS, mocks = fresh({ before = function(m)
+        m.Settings.OpenToCategory = function() opened = opened + 1 end
+    end })
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
+        local n = #lines
+        lines[n + 1] = tostring(msg)
+    end)
+    NS.State.SetActiveContainer(1)
+    mocks.__lockdown = true
+    h.help:__fire("OnClick", "RightButton")
+    mocks.__lockdown = false
+    -- red under: the category switch called under lockdown (it taints the panel for the session)
+    assertEqual(opened, 0)
+    -- red under: the selection moved by a click that opened nothing
+    assertEqual(NS.State.activeContainerId, 1)
+    assertTrue(table.concat(lines, "\n"):find("cannot open settings during combat", 1, true) ~= nil, table.concat(lines, " | "))
 end)

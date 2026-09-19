@@ -55,7 +55,9 @@ suite covers what only the client can show.
     attached container's placeholders start just past the target's last placeholder, and its handle
     draws above the target's placeholders (check 41).
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
-    the help mark moves it too. Right-click a handle → the settings open with that container selected.
+    the help mark moves it too. Right-click a handle, then its **?** → each time the settings open on
+    the **Containers** page with that container selected in the band's picker (feedback #9); in combat
+    the right-click prints the gray "cannot open settings during combat" line and changes nothing.
 16. `/am test off` → the placeholders go and real auras return; `/am lock` → handles and outlines go.
 17. **Test mode has its own switch.** General → Master controls shows a **Test mode** row beside
     Minimap button. `/am test` is listed in `/am help`; `/am preview` → an unknown-command line and
@@ -78,8 +80,9 @@ suite covers what only the client can show.
     they take effect immediately (visibility is legal in combat).
 22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
     container's own Layout → Frame scale and opacity.
-23. **Containers** (its own top-level page, one tab) → the tab body's first line holds the Container picker and **New
-    container**, side by side and aligned. Below: Name and Enabled, then the subsection heading
+23. **Containers** (its own top-level page, one tab, **General**) → the band above the tab strip holds the
+    Container picker and **New container**, side by side and aligned. In the tab: Name and Enabled,
+    then the subsection heading
     **What it shows, and how** with Unit, Aura type and Style under it (batch 8 — there is no heading
     above Name, and the three rows are visibly one block apart from the two), then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
@@ -109,11 +112,13 @@ suite covers what only the client can show.
     it naming General → Spell Categories); switch to Weapon enchants → the strip becomes
     **[ Categories ][ Sorting ]**, Categories holding only **Hide
     enchants without a duration** and Sorting only **Direction**.
-25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then
-    **Screen**, **Another container**, **Named frame** (Frame name with **Pick a frame…** beside it)
-    and **Offset**, and there is no Attach to the screen button. Set **Attach to** → *Screen* → every
-    row but Screen's is dimmed; → *Named frame* → Named frame and Offset light up and Screen dims on
-    the same frame; → *Another container* → Another container and Offset are live.
+25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then only
+    the subsections that mode uses, and there is no Attach to the screen button (feedback #4). Set
+    **Attach to** → *Screen* → only **Screen** is drawn under it, no empty headings; → *Named frame* →
+    the tab redraws with **Named frame** (Frame name with **Pick a frame…** beside it) and **Offset**,
+    Screen gone; → *Another container* → **Another container** and **Offset**. Then `/am set
+    container.attach.mode screen` with the page open → it redraws to Screen alone; `/am get
+    container.attach.x` still answers while Offset is hidden.
 26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
     Highlights ]**. On an icon container every tab carries the small gray "Not in use: this container
     is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
@@ -210,10 +215,10 @@ suite covers what only the client can show.
 44. Apply a temporary weapon enchant (an oil, a stone, a poison). The *Player buffs* starter shows it
     after the buffs, because its **Weapon enchants** row on Filters → Categories is Show (the
     default, schema v3). Set that row to **Hide** → the enchant drops out of that container; set it
-    back to **Show** → it returns. A container with aura type *Weapon enchants* shows it too, always
-    (that row has no bearing on it). **Hide enchants without a duration** hides a permanent one.
-45. Set a weapon-enchant container's unit to *target* → the Filters page warns that enchants are always
-    the player's, and it still shows yours.
+    back to **Show** → it returns. **Hide enchants without a duration** hides a permanent one.
+45. `/am new enchants` → a player buff container named *Container N* whose Filters → Categories are
+    all Hide but **Weapon enchants**: it shows your enchants and no buff. The Aura type dropdown on
+    Containers offers Buffs and Debuffs only (schema v5, feedback #6).
 
 ## I. Combat deferral
 
@@ -373,8 +378,8 @@ listed here too, so the batch can be signed off in one pass.
     are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
     B's **Attach to** back to *Screen* → B's own flow returns.
 68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.
-69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections; check 26 for the Bars page on an icon
-    container, and the Icons page on a bar container the same way.
+69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections (now drawn by mode, not dimmed); check
+    26 for the Bars page on an icon container, and the Icons page on a bar container the same way.
 70. **ID lists take a link (X-1).** On General → Spell Categories click into **Add a spell** and
     shift-click a spell in your spellbook → its link lands in the box; press Enter → the spell is
     added with its icon and name. Do the same on Filters → Overrides → Whitelist. If the shift-click
@@ -445,7 +450,8 @@ one. None of this is reproducible headlessly; these checks are.
 78. **The Hide column reads as live, never dimmed (`K-1`, `R-10`).** On Filters → Categories, look at
     a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
     unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
-    with a genuinely disabled row on Layout → Anchor (a mode's dimmed fields) to see the difference.
+    with a genuinely disabled row on the Bars page of an icon container (check 26) to see
+    the difference.
     Set **Uncategorized** to **Hide** → every other row's Hide column still looks the same, still
     clickable, on every row, including one already set to Show; click a lit Show cell's Hide → it
     moves there, live, exactly as it did before Uncategorized was touched.
@@ -572,7 +578,7 @@ nothing).
      that broke; the stored template does not change. Try each rule of spec §3.2 once.
 101. **Style switching.** A container Bars → Text → Icons → Text, out of combat: each redraws cleanly,
      and Layout → Growth → Fill follows (Columns, Rows, Columns).
-102. **Weapon enchants.** A weapon-enchant container styled Text shows the enchant's name and time.
+102. **Weapon enchants.** An enchant-only buff container (`/am new enchants text`) shows the enchant's name and time.
 103. **The Player cooldowns starter.** On a NEW profile, the "Player cooldowns" Text container shows
      an offensive and a defensive cooldown when popped, and nothing else (no food, flask, mount or
      raid buffs).
@@ -603,7 +609,7 @@ nothing).
      X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
      the X too, and it removes the spell. Check the X row's height and vertical alignment against the
      spell name — the library's Icon widget is 26 px tall.
-114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted gold, not gray, on a
+114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted red, not gray, on a
      container drawn in another style.
 115. **A 59-minute buff's time on a bar.** A 59-minute Power Word: Fortitude on a default bar reads
      `59 m` in full, not `59...`, and still does with the time text's X offset at -15.
@@ -612,3 +618,130 @@ nothing).
      Columns. Whatever Grow horizontally/Grow vertically were set to before the switch are unchanged
      by it. `/am new target debuffs icons` makes a container whose Fill reads Rows; `/am new text`
      makes one whose Fill reads Columns.
+
+## T. The smoke-test feedback batch (2026-09-19)
+
+Run with one bar container, one Text container and one icon container on the player's buffs, and a
+debuff container on the target, in a party or with a target dummy.
+
+117. **Attached to another frame: no Lua error (E).** Attach a container to another container, then
+     one to a named frame (`PlayerFrame`), with `/am unlock` → no Lua error, in or out of combat
+     (enable `/console scriptErrors 1`), and each handle's strip is at least as wide as its name, with
+     no clipped label on the handle's first show (the detached measurer's first measure may read 0).
+     Drag the screen-attached one → it moves and saves; `/reload` → it is where you left it.
+118. **Center stacks the pieces (#1).** A Text container, Text → General → Justify Center, template
+     Centered: name over time → the spell name sits on one row and the time centered under it, each
+     row centered; the container's height grows to hold both, the outline and the handle follow.
+     Justify Left → one line again.
+119. **The Containers band (#2).** Containers opens with the **Container** picker and **New
+     container** side by side above the tab strip, and the first tab is named **General**. New
+     container → the new one is selected in the picker; the picker switches the page's subject.
+120. **Restore beside the Category dropdown (#3).** General → Spell Categories: **Restore** sits on
+     the dropdown's own line, right half; hide a starter spell, Restore → it is back.
+121. **TEST on the handle (#8).** `/am test` then `/am unlock` → every handle reads its name, then an
+     orange **TEST**; end test mode → the tag goes on the next frame, the strip narrows.
+122. **Show all / Hide all (#10).** Filters → Categories: under each grid's heading, **Show all** and
+     **Hide all**. Hide all on Spell categories → every row reads Hide, the container empties at once
+     (one pass, no flicker per row), and `/am debug` shows one `[Set] hide all …` line, not one per row.
+123. **Percent tokens and the `( )` (#5a).** Template `$spellname$ ($remainingpercent$%)` on a 30 s
+     buff → `Name (73%)`, a whole number, no space inside the brackets. Now the three probes, one at a
+     time, and write down what each prints:
+     - `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,format="%d%%"}}) print("["..f:FormatNumber(45.5).."]","["..f:FormatNumber(45).."]")`
+       — H1 (the old rule): `[]` for 45.5 and `[45%]` for 45 confirms it; `[45%]` twice rules it out.
+     - `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,step=1,format="%d"}}) print("["..f:FormatNumber(45.5).."]")`
+       — the new rule: `[46]` or `[45]`, never `[]`.
+     - `/run local s=UIParent:CreateFontString(nil,"OVERLAY","GameFontNormal") s:SetPoint("CENTER") s:SetText("") print(s:GetWidth(), s:GetStringWidth())`
+       — the empty-string gap: a non-zero first number is the space seen between `(` and `)`.
+     Then the same template on a buff **without** a duration (a mount, or a permanent aura) → `( )`
+     means H2 (the binding's zero-duration text); `[ ($remainingpercent$%)]` shows nothing there.
+124. **Built-in templates and the Preview (#5b).** Text → General → **Template**: the list names the
+     built-ins (Name, Name + time, …; the debuff container adds Name (type), Name, type, time) and
+     **Custom**. Pick each → the read-only **Preview** box under it changes with it and the
+     live auras follow; Centered: name over time also sets Justify to Center and previews the
+     built-in's own template, `$spellname$[$remainingduration$]` (no separator before the time).
+     Custom → the template box appears.
+125. **Weapon enchants on a real profile (#6).** On a profile that had a Weapon enchants container
+     with an "Always shown" list (back up `WTF/…/SavedVariables/AuraMaster.lua` first): log in → one
+     `[Migrate]` line naming the converted container, plus a second `[Migrate]` line for the cleared
+     whitelist; the container now reads aura type Buffs, unit Player, with only Weapon enchants shown
+     in Filters → Categories, its Overrides list empty, and it still shows your weapon enchant (apply
+     one: a sharpening stone, a rogue poison, a shaman imbue) with no "can never match" warning. The
+     aura-type dropdown has no Weapon enchants entry; `/am new enchants` makes an enchant-only buff
+     container, and `/am test` on it shows exactly as many placeholders as it has enchant slots (one
+     per hand, none for an empty slot), not the usual full set.
+126. **Bars' background by dispel type (#7).** Bars → Background & border → Color by **Dispel type** on
+     a target-debuff bar container: a Magic debuff's background is blue, a Curse's purple; a debuff
+     with no type, and an Enrage-type buff (a type the palette does not cover), each keep the
+     background's own color. Color by Static → the background color alone, including on an empty
+     (currently-unused) button slot that had shown a dispel tint a moment before. General → Dispel
+     Colors lists the five types and no None swatch.
+127. **Right-click the "?" (#9).** `/am unlock`; right-click container 2's handle **?** → the settings
+     open on the **Containers** page with container 2 in the band's picker. In combat → the gray
+     "cannot open settings during combat" line, nothing opens, the picker is unchanged afterwards.
+128. **Switched sections, Aura Master (#4).** Check 25: only the chosen mode's subsections on Layout →
+     Anchor, redrawn at once on a change, from the panel and from `/am set`.
+129. **Switched sections, Party Frame Enhanced (#4).** That addon's smoke item 31a on its
+     `feat/switched-sections` build.
+130. **The dispel type word in color (#7).** A Text container on the target's debuffs, template Name,
+     type, time; Text → Animation → Dispel type → **Color the dispel type** on. A Magic debuff reads
+     `Name (Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the
+     brackets and the rest in the font color; a Curse in its color; an Enrage-type buff (a type the
+     palette does not cover) keeps the plain font color. Change the Magic swatch → the word
+     follows after the re-apply. In combat the word keeps its color as auras come and go (the engine
+     writes the text; nothing of ours runs). If the word shows the raw `|cff…` characters instead,
+     the engine's options processing stripped the escape: report it (option c then does not work, and
+     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed.
+131. **The dispel backdrop (#7).** Same container, **Backdrop in the dispel color** on: a typed debuff's
+     line has a Magic-blue (or Curse-purple, …) box behind its text, the text on top and readable; a
+     debuff with no type, and an Enrage-type buff, each have no box. **Backdrop opacity** changes its
+     strength (dimmed while the backdrop is off). With a text icon on the left, the box covers the text
+     area only, not the icon. With Pulse or Bounce on, the box moves and fades with the line. Test
+     mode: the Bloodlust placeholder has a Magic box, the others none. Turn the backdrop off → every
+     box goes at once, a typed aura included.
+132. **The dispel edge (#7).** **Edge in the dispel color** on (backdrop off): a thin outline in the
+     type's color around a typed debuff's text area, none on a typeless one and none on an Enrage-type
+     buff; **Edge thickness** 1–4 thickens it. Both on at once → the edge draws over the backdrop. On a
+     buff container, a Magic buff (Power Word: Fortitude, Arcane Intellect) is outlined too. `/reload`
+     and combat: nothing to fix up, no Lua error.
+133. **The percent formatter, live (Task 6 carry).** `$remainingpercent$` near a round-number boundary
+     (a buff at 99.6% remaining, then watch it tick to 99% and 100%): compare what the live client
+     prints against the Text preview's own rounding (`math.floor(v + 0.5)`, no `%`). Report whether the
+     live formatter rounds (99.6 → 100) or floors (99.6 → 99); a mismatch between the two is a defect,
+     not a matter of taste.
+134. **A stacked icon keeps one row's height (Task 8 fix round).** An icon container's own text piece,
+     Text → General → Justify Center, a multi-piece template: the rows stack and center exactly as a
+     Text container's do, but the icon element itself does NOT grow to fit them — it keeps its
+     configured size (icon size 0 included), and a row that does not fit is clipped rather than
+     pushing the icon taller. This is the one place `Style.ElementSize` does not add `Text.StackHeight`
+     (`modules/Style.lua`, `key == "text"` only).
+135. **A migrated Weapon enchants container's Overrides list (Task 9 fix round).** Repeat item 125 on
+     a backed-up profile whose Weapon enchants container had spells in Overrides → Always shown: after
+     the migration the list reads empty (not just re-filtered to enchants), and the container's compile
+     draws no group from a cleared whitelist — only the enchant slots show, matching the aura-type
+     switch.
+136. **An enchant-only container in test mode (Task 10 fix round).** `/am test` on `/am new enchants`
+     (before applying a real enchant): the number of placeholders shown equals the number of enchant
+     slots the container can ever draw (one per weapon that can carry an enchant on the player's
+     current spec/gear, at most two), never the full generic test-mode set the other aura types show.
+137. **Bars: switching dispel color back to static repaints idle slots (Task 11 fix round).** Color by
+     Dispel type, let several buttons draw and fade out (so pooled bar frames sit hidden with a stale
+     dispel tint on their background texture), then Color by Static: the next auras to use those pooled
+     frames show the plain static background immediately, not a leftover dispel tint from before the
+     switch.
+138. **An out-of-palette dispel type gets no stand-in at all (Task 12 fix round).** With all three of
+     Color the dispel type, Backdrop in the dispel color and Edge in the dispel color on together, an
+     Enrage-type buff (or any other type General → Dispel Colors does not list a swatch for) shows
+     none of the three — plain font color, no backdrop, no edge — the same treatment a typeless aura
+     gets, never a blank/invisible stand-in that still reserves space.
+139. **The Text Template section, PrettyChat's look (Task 20, owner follow-up).** Text → General: the
+     subsection is titled **Text Template**, not "What each line says". Under the Custom template box,
+     **Preview** is a disabled EditBox (PrettyChat's own shape), holding the same rendered line the old
+     Preview line showed, in the container's font color, with a Task 12 colored dispel word still
+     riding live inside it when that option is on. Under it, the cheat sheet reads as two headed,
+     bulleted lists with a gap before each heading — **Tokens** (one gold `$token$` bullet per token)
+     and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
+     showing), each rule's example on its own indented line in the token gold. On a bars or icons
+     container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
+     muted red, not the earlier muted gold. A Center template's Preview shows its stacked rows joined
+     by " / " (Centered: name over time reads "Ignore Pain / 11s"), never a raw line break, while the
+     live container itself still shows them stacked, each on its own row (final review).

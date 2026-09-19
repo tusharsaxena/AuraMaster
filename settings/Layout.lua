@@ -11,11 +11,13 @@ local _, NS = ...
 --             -- Offset --            [X offset] [Y offset]
 --
 -- A container attaches to the screen, to another container (following it as it grows) or to any
--- named frame (modules/Anchors.lua). A subsection the chosen mode does not read is dimmed through
--- its rows' `disabledIf`, re-read on every scalar refresh, so switching Attach to re-dims the page
--- in place. The frame picker (modules/FramePicker.lua) closes the settings window, lets the player
--- click a frame, and reopens this page; it switches the mode to Named frame itself, so it stays
--- live in every mode.
+-- named frame (modules/Anchors.lua). Only the subsections the chosen mode reads are DRAWN (feedback
+-- #4, LibKa0s v1.45.0's `shownWhen`): Screen for the screen; Another container, or Named frame, and
+-- Offset for an attachment. The rows stay in the schema, so `/am set` and the resets reach every one
+-- of them; switching Attach to redraws the tab once, on the next frame, through the library's own
+-- selector watch. The frame picker (modules/FramePicker.lua) sits beside Frame name, so it is drawn
+-- in Named frame mode; it closes the settings window, lets the player click a frame, writes the
+-- mode itself and reopens this page.
 
 local L = NS.L
 local H = NS.Helpers
@@ -27,18 +29,13 @@ local G_FRAME, G_ANCHOR, G_GROW, G_MOUSE = L["Frame"], L["Anchor"], L["Growth"],
 local S_SCREEN, S_CONTAINER, S_FRAME, S_OFFSET = L["Screen"], L["Another container"], L["Named frame"], L["Offset"]
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 
---- A `disabledIf` predicate: the row is dimmed unless the selected container's attach mode is one
---- of `...`, and dimmed with no container at all.
-local function onlyIn(...)
-    local modes = {}
-    for _, m in ipairs({ ... }) do modes[m] = true end
-    return function()
-        local c = NS.ActiveContainer()
-        return not (c and c.attach and modes[c.attach.mode])
-    end
-end
-local SCREEN_ONLY, CONTAINER_ONLY, FRAME_ONLY = onlyIn("screen"), onlyIn("container"), onlyIn("frame")
-local ATTACHED_ONLY = onlyIn("container", "frame")
+-- The switched subsections under Attach to (LibKa0s-Options-1.0 `shownWhen`, W22): each row is
+-- drawn only while the selected container's attach mode is the one (or one of those) named.
+local MODE = "container.attach.mode"
+local SCREEN_ONLY    = { path = MODE, equals = "screen" }
+local CONTAINER_ONLY = { path = MODE, equals = "container" }
+local FRAME_ONLY     = { path = MODE, equals = "frame" }
+local ATTACHED_ONLY  = { path = MODE, equals = { "container", "frame" } }
 
 --- A `disabledIf` predicate: the selected container follows another container's flow (L-6), so its
 --- Fill and growth rows are dimmed. Only while the attachment is usable: a container set to follow
@@ -91,31 +88,32 @@ NS.RegisterSchemaRows({
     },
 
     {
-        path = "container.attach.mode", page = PAGE, group = G_ANCHOR, type = "string",
+        -- The selector of the switched subsections below: the library redraws the tab when it
+        -- changes, from the panel, `/am set` or a reset alike, so it needs no onChange of its own.
+        path = MODE, page = PAGE, group = G_ANCHOR, type = "string",
         values = NS.Choices(C.ATTACH_MODES, C.ATTACH_MODE_LABELS), label = L["Attach to"],
-        desc = L["The screen (drag it anywhere), another container (it follows that container as it grows), or any named frame — a unit frame, an action bar. Only the settings for your choice are enabled below."],
-        onChange = structural,
+        desc = L["The screen (drag it anywhere), another container (it follows that container as it grows), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
     },
     {
-        path = "container.position.point", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, disabledIf = SCREEN_ONLY,
+        path = "container.position.point", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
         type = "string", values = POINTS, label = L["Point"],
         desc = L["Used while attached to the screen. Dragging the container sets these for you."],
     },
     {
-        path = "container.position.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, disabledIf = SCREEN_ONLY,
+        path = "container.position.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
         type = "string", values = POINTS, label = L["Relative point"], desc = L["The screen corner it is measured from."],
     },
     {
-        path = "container.position.x", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, disabledIf = SCREEN_ONLY,
+        path = "container.position.x", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
         type = "number", min = -2000, max = 2000, step = 1, label = L["X"], desc = L["Horizontal position, in pixels."],
     },
     {
-        path = "container.position.y", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, disabledIf = SCREEN_ONLY,
+        path = "container.position.y", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
         type = "number", min = -2000, max = 2000, step = 1, label = L["Y"], desc = L["Vertical position, in pixels."],
     },
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
-        disabledIf = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
+        shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
         desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, and the attachment points are set for you. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = structural,
@@ -128,26 +126,26 @@ NS.RegisterSchemaRows({
     },
     {
         -- Half width, so Pick a frame... (pairWith, below) can take the line's right half.
-        path = "container.attach.frame", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, disabledIf = FRAME_ONLY,
+        path = "container.attach.frame", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", dialogControl = "EditBox", maxLetters = 120, label = L["Frame name"],
         desc = L["The global name of the frame to attach to when 'Named frame' is chosen — or use Pick a frame... beside it. /fstack shows frame names."],
     },
     {
-        path = "container.attach.point", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, disabledIf = FRAME_ONLY,
+        path = "container.attach.point", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", values = POINTS, startsLine = true, label = L["Point"],
         desc = L["The corner of this container that is attached."],
     },
     {
-        path = "container.attach.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, disabledIf = FRAME_ONLY,
+        path = "container.attach.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", values = POINTS, label = L["Relative point"], desc = L["The corner of the target it is attached to."],
     },
     {
-        path = "container.attach.x", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, disabledIf = ATTACHED_ONLY,
+        path = "container.attach.x", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
         type = "number", min = -500, max = 500, step = 1,
         label = L["X offset"], desc = L["Horizontal offset from the attachment point, in pixels."],
     },
     {
-        path = "container.attach.y", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, disabledIf = ATTACHED_ONLY,
+        path = "container.attach.y", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
         type = "number", min = -500, max = 500, step = 1,
         label = L["Y offset"], desc = L["Vertical offset from the attachment point, in pixels."],
     },

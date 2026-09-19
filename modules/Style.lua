@@ -217,7 +217,7 @@ local function widestSample(path, size, flags, fmt)
     for _, seconds in ipairs(TIME_SAMPLES) do
         fs:SetText(Style.PreviewSeconds(seconds, fmt))
         local w = fs:GetStringWidth()
-        if type(w) ~= "number" then return nil end
+        if not NS.Secrets.IsReadableNumber(w) then return nil end
         if not most or w > most then most = w end
     end
     return most
@@ -295,6 +295,21 @@ local formatters = {}
 local curves = setmetatable({}, WEAK_KEYS)
 local blinkCurves = setmetatable({}, WEAK_KEYS)
 local dispelMaps = setmetatable({}, WEAK_KEYS)
+
+-- Dispel types the engine can report that the palette has no color for (Enrage: C.TEXT_DISPEL_TYPES
+-- names it as a real dispelName, but it is not a C.DISPEL_TYPES palette entry). buildDispelMap maps
+-- each of these to the fallback too, exactly like None, so an aura of one of them keeps the surface's
+-- own color rather than Blizzard's own tint.
+local EXTRA_DISPEL_TYPES = {}
+do
+    local palette = {}
+    for _, name in ipairs(C.DISPEL_TYPES) do palette[name] = true end
+    for _, name in ipairs(C.TEXT_DISPEL_TYPES) do
+        if not palette[name] then
+            EXTRA_DISPEL_TYPES[#EXTRA_DISPEL_TYPES + 1] = name
+        end
+    end
+end
 
 --- The engine's text formatter for one time format, shared by every button that uses it.
 local function formatterFor(fmt)
@@ -377,37 +392,62 @@ function Style.CurveColor(stored, useClass)
     return c
 end
 
---- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now.
-local function dispelMapCurrent(entry, stored)
-    local types, src = C.DISPEL_TYPES, entry.src
-    local count = #types
-    for i = 1, count do
-        if stored[types[i]] ~= src[types[i]] then return false end
+--- Whether a memoized dispel map was built from exactly the color leaves `stored` holds now, and from
+--- the fallback color's channels as they are now (a class-colored fallback is reused in place).
+local function dispelMapCurrent(entry, stored, fallback)
+    local src = entry.src
+    for _, name in ipairs(C.DISPEL_TYPES) do
+        if stored[name] ~= src[name] then return false end
     end
-    return true
+    return entry.r == fallback.r and entry.g == fallback.g and entry.b == fallback.b and entry.a == fallback.a
 end
 
 --- The profile's dispel palette (profile-wide since schema v2; bars colored by dispel type read it,
---- icons keep Blizzard's own dispel colors), or nil before the database exists.
+--- and so does a Text line's dispel type word, backdrop and edge (feedback #7) -- icons keep
+--- Blizzard's own dispel colors), or nil before the database exists.
 function Style.ProfileDispelColors()
     local p = NS.db and NS.db.profile
     return p and p.dispelColors
 end
 
---- A color map for AddDispelTypeTexture's `customDispelColorMap`, from a stored { Magic = {r,g,b,a} }.
---- Built once per set of color leaves and shared by every button that shows it.
-function Style.DispelColorMap(stored)
-    if type(stored) ~= "table" or not _G.CreateColor then return {} end
-    local entry = dispelMaps[stored]
-    if entry and dispelMapCurrent(entry, stored) then return entry.map end
+--- A new dispel map entry for DispelColorMap: the map, and what it was built from.
+local function buildDispelMap(stored, fallback)
+    local a = fallback.a or 1
     local map, src = {}, {}
     for _, name in ipairs(C.DISPEL_TYPES) do
         local c = stored[name]
         src[name] = c
-        if type(c) == "table" then map[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1) end
+        if type(c) == "table" then map[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1, a) end
     end
-    dispelMaps[stored] = { map = map, src = src }
-    return map
+    local none = _G.CreateColor(fallback.r or 1, fallback.g or 1, fallback.b or 1, a)
+    map.None = none
+    for _, name in ipairs(EXTRA_DISPEL_TYPES) do map[name] = none end
+    return { map = map, src = src, r = fallback.r, g = fallback.g, b = fallback.b, a = fallback.a }
+end
+
+--- A color map for AddDispelTypeTexture's `customDispelColorMap`, from a stored { Magic = {r,g,b,a} }
+--- and the surface's own color `fallback` ({ r, g, b, a }, stable per look: Style.CurveColor). Each
+--- dispel type takes its palette color; an aura with NO dispel type — the engine keys it "None"
+--- (GetDispelTypeMapKey) — takes `fallback`, so it keeps the surface's normal color rather than
+--- Blizzard's own "none" tint (feedback #7, owner decision: no type means the normal color). A type
+--- the palette does not cover but the engine can still report (`EXTRA_DISPEL_TYPES`, e.g. `Enrage`)
+--- takes `fallback` too, for the same reason. Every entry carries the fallback's alpha, so a
+--- dispel-colored surface keeps its own transparency. Built once per set of color leaves and
+--- fallback, and shared by every button that shows it.
+function Style.DispelColorMap(stored, fallback)
+    if type(stored) ~= "table" or not _G.CreateColor then return {} end
+    fallback = fallback or NO_COLOR
+    local byFallback = dispelMaps[stored]
+    if not byFallback then
+        byFallback = setmetatable({}, WEAK_KEYS)
+        dispelMaps[stored] = byFallback
+    end
+    local entry = byFallback[fallback]
+    if not (entry and dispelMapCurrent(entry, stored, fallback)) then
+        entry = buildDispelMap(stored, fallback)
+        byFallback[fallback] = entry
+    end
+    return entry.map
 end
 
 --- The size one element occupies, from the container's style settings — what the engine's flow layout
@@ -416,7 +456,10 @@ end
 function Style.ElementSize(cfg)
     local key = Style.StyleKey(cfg)
     local s, sdef = cfg[key] or {}, D[key]
-    return tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
+    local w, h = tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
+    -- A Text line stacked by Center grows to its rows (feedback #1, modules/Style_Text.lua).
+    if key == "text" and Style.Text then h = math.max(h, Style.Text.StackHeight(s)) end
+    return w, h
 end
 
 --- Hide `am`'s regions and remember which were shown, so a return to that style draws them as they
@@ -528,13 +571,14 @@ function Style.Element(frame, cfg, engine, classColor)
 end
 
 --- Whether right-click cancels this element's aura. Only the player's own buffs and weapon enchants
---- can be canceled — a debuff or a target's buff cannot, and registering the click there would only
---- swallow it — and a click-through container takes no clicks at all.
+--- (a player buff container's enchant slots) can be canceled — a debuff or a target's buff cannot,
+--- and registering the click there would only swallow it — and a click-through container takes no
+--- clicks at all.
 local function cancelEnabled(cfg, b)
     if b.clickThrough or not Style.OrTemplate(b.cancelOnRightClick, D.behavior.cancelOnRightClick) then
         return false
     end
-    return cfg.unit == "player" and (cfg.auraType == "HELPFUL" or cfg.auraType == "ENCHANT")
+    return cfg.unit == "player" and cfg.auraType == "HELPFUL"
 end
 
 --- Whether `cfg`'s elements hold the mouse's hover: yes unless the container is click-through or
@@ -592,20 +636,27 @@ end
 -- ---------------------------------------------------------------------------
 
 local textFormats = setmetatable({}, WEAK_KEYS)
-local PERCENT_BREAKPOINTS = { { threshold = 0, format = "%d%%" } }
+-- A percent is written as a BARE whole number (feedback #5, 2026-09-19): the rule is "%d" and the
+-- player types the % in the template, so no token adds text of its own. RemainingPercent arrives on a
+-- fractional 0-100 scale; `step = 1` rounds it to a whole number before "%d" sees it (the 12.1
+-- NumericRuleFormatBreakpoint's own field). A client that refuses `step` gets the plain rule.
+local PERCENT_BREAKPOINTS = { { threshold = 0, step = 1, format = "%d" } }
+local PERCENT_PLAIN = { { threshold = 0, format = "%d" } }
 local percentFormatter   -- nil until first asked for; false when the client cannot build one
 
---- The rule formatter every percent component shares: "%d%%", RemainingPercent being 0-100.
+--- The rule formatter every percent component shares: a whole number, 0-100, with no "%".
 local function percentFor()
     if percentFormatter == nil then
-        percentFormatter = NS.Compat.CreateRuleFormatter(PERCENT_BREAKPOINTS) or false
+        local Compat = NS.Compat
+        percentFormatter = Compat.CreateRuleFormatter(PERCENT_BREAKPOINTS)
+            or Compat.CreateRuleFormatter(PERCENT_PLAIN) or false
     end
     return percentFormatter or nil
 end
 
 --- The `textFormat` option for one compiled duration piece (modules/TextTemplate.lua) in one time
 --- format: the piece's format string, and one { property, formatter } component per {} in order, a
---- time through the look's seconds formatter (formatterFor) and a percent through "%d%%". Built once
+--- time through the look's seconds formatter (formatterFor) and a percent through "%d". Built once
 --- per piece and time format; the parser memoizes its pieces, so a hit allocates nothing.
 function Style.DurationTextFormat(piece, timeFormat)
     local byFormat = textFormats[piece]

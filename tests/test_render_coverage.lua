@@ -264,9 +264,9 @@ end
 local DISTINCT = { r = 0.13, g = 0.57, b = 0.31, a = 0.66 }
 
 -- A free-text row has no list to pick from, so it names the value it is walked with: the Text
--- template's default, with its bracket text changed and its shape kept (a new shape builds a new
--- chain of font strings, which a recorder swapped in by `adopt` would never see).
-local SAMPLES = { ["container.text.template"] = "$spellname$[ y$stacks$][ ~ $remainingduration$]" }
+-- baseline's template (GATES below), with its bracket text changed and its shape kept (a new shape
+-- builds a new chain of font strings, which a recorder swapped in by `adopt` would never see).
+local SAMPLES = { ["container.text.template"] = "$spellname$[ y$stacks$][ <$dispeltype$>][ ~ $remainingduration$]" }
 
 --- A legal value for `row` that differs from `cur`.
 local function differing(row, cur)
@@ -287,9 +287,11 @@ end
 local GATES = {
     bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true },
     icons = { borderShow = true, expiringColorOn = true },
-    -- Right, so Center (a multi-piece template lines up Left) still moves the chain; an icon, so
-    -- its rows reach one.
-    text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT" },
+    -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
+    -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
+    -- (feedback #7).
+    text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
+        template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
 
 --- Every row of `page` whose write leaves a side unchanged, as "<path> (<side>)", plus exemptions
@@ -298,6 +300,11 @@ local function gaps(page)
     local k = rig(page)
     local NS = k.NS
     local baseline = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE[page]), GATES[page])
+    -- Primed on the baseline, applied once first: a baseline template of another shape than the
+    -- stored one rebuilds the engine (Style.StructureKey), which prime's apply would refuse.
+    k.c[page] = NS.Database.DeepCopy(baseline)
+    NS.ContainerManager.RequestApply(k.c.id)
+    NS.ContainerManager.FlushPending()
     prime(k)
     local out = {}
     local rows = NS.SchemaForPage(page)

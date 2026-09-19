@@ -96,7 +96,6 @@ local FC = NS.FilterCompiler
 -- through NS.L (settings/OptionsSetup.lua's RenderWarnings), so each must be a single literal the
 -- locale file can list and tests/test_locale.lua can find.
 FC.WARN = {
-    ENCHANT_UNIT     = "Weapon enchants only exist on your own character; this container shows the player's enchants whatever its unit is set to.",
     MAX_WITH_TIMELESS = "Max duration is ignored while showing only auras without a duration.",
     NEVER_MATCHES    = "These filters can never match anything.",
     TIMELESS_BUFFS_ONLY = "Only auras without a duration works for buffs only; this container shows every duration.",
@@ -323,15 +322,6 @@ local function lookOf(filter)
     }
 end
 
---- A weapon-enchant container: the three slots and no aura groups.
-local function compileEnchant(plan, cfg, filter, ctx)
-    if cfg.unit ~= "player" then
-        warn(plan, FC.WARN.ENCHANT_UNIT)
-    end
-    plan.enchants = enchantBlock(filter, ctx.enchantSlots)
-    return plan
-end
-
 --- The base every group starts from: the aura type, and who cast it.
 local function baseFor(auraType, castBy)
     local base = newCon()
@@ -393,7 +383,7 @@ end
 
 --- The categories set to Show and to Hide, in declaration order. Kind `enchant` is skipped
 --- categorically (R-6): it never narrows an aura group, it decides whether the container has enchant
---- slots (compileEnchant / Compile). Kind `uncategorized` is NOT skipped — unlike `enchant` it DOES
+--- slots (Compile). Kind `uncategorized` is NOT skipped — unlike `enchant` it DOES
 --- match auras (U-1) — it partitions like every other category; only ITS group logic differs
 --- (`includeCategory`/`addCategoryGroups`), because it has no id list of its own, only the complement
 --- of every `spells`-kind category's union. Every other category is either Hide or Show — the default
@@ -560,8 +550,10 @@ local function finishWarnings(plan, unit, auraType, usesSpellIds)
             warn(plan, w)
         end
     end
+    -- A buff container showing only Weapon enchants (schema v5) draws its enchant slots and no aura
+    -- group: that is what it is for, not a filter that can never match.
     local groupCount = #plan.groups
-    if groupCount == 0 then
+    if groupCount == 0 and not plan.enchants then
         warn(plan, FC.WARN.NEVER_MATCHES)
     end
 end
@@ -612,7 +604,6 @@ function FC.Compile(cfg, ctx)
     local look = lookOf(filter)
 
     local auraType = cfg.auraType
-    if auraType == "ENCHANT" then return compileEnchant(plan, cfg, filter, ctx) end
     if auraType ~= "HARMFUL" then auraType = "HELPFUL" end
 
     -- ── The base every group starts from ────────────────────────────────────────────────────

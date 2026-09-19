@@ -6,16 +6,16 @@ in the topic docs registered under [Documentation map](#documentation-map) (docu
 ## Overview
 
 Ka0s Aura Master draws player-built aura **containers**. A container is one unit (`player`,
-`target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL`, `HARMFUL`, or
-`ENCHANT` for the player's temporary weapon enchants — `:39`) and one style (`bars`, `icons` or
+`target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:39`;
+the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:48`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:235`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:240`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:215`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:217`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -43,13 +43,13 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:515-516`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:522-523`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:233`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.44.0 | Ten modules wired, one setup file each — table below |
+| LibKa0s v1.45.0 | Ten modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -102,9 +102,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **235** rows across seven pages: General 19 (its Dispel Colors tab's six and its
+`NS.Schema` holds **240** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 41, Layout 26, Bars 71, Icons 42 and Text 31. The
+out of General's own tab), Filters 41, Layout 26, Bars 72, Icons 42 and Text 36. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:633`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
@@ -340,7 +340,7 @@ checkbox reflects what the player chose and a later reload draws the button wher
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:236-240` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:258`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:265`) and
 is not addon code. The eight `core/AuraMaster.lua` registrations live in one function,
 `RegisterLifecycleEvents`, so the stand-down and the stand-up remove and restore the same list.
 
@@ -459,7 +459,7 @@ return value.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:569-571`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:610-612`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is
@@ -469,9 +469,19 @@ return value.
 
 - **Units are player, target, focus and pet.** Party units 1–5 are deferred and tracked as a GitHub
   issue.
-- **A Text line centers only when its template is one piece.** A line is a chain of font strings the
-  engine writes secret, so the chain's width is never readable; a multi-piece template set to Center
-  lines up Left, and the Text page says so (`Style.Text.JustifyFor`).
+- **A Text line of several pieces cannot be centered as one line.** A line is a chain of font strings
+  the engine writes secret, so the chain's width is never readable, and no addon code runs when the
+  engine rewrites a piece in combat. A multi-piece template set to Center is therefore STACKED: one
+  centered row per field, its plain literal pieces not drawn, the rows fixed in place (an empty field
+  keeps its row) and the box grown to fit them (`Style.Text.Stacked`, `Style.Text.StackHeight`;
+  feedback #1). The Text page says so under Placement.
+- **A Text line cannot be colored by its aura's dispel type.** No engine binding colors a font string by
+  dispel type (`SetDispelTypeText`, `SetSpellName`, `SetApplicationCount` take no color;
+  `SetDurationText`'s color curve runs over time), the dispel-keyed color map exists only on
+  `AddDispelTypeTexture`, which takes a Texture, and addon code can neither read the type nor touch a
+  button in combat. The Text page offers three opt-in stand-ins instead (Animation → Dispel type,
+  feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
+  backdrop and an edge the engine tints (`modules/Style_Text.lua`).
 - **A Text token can be used once, the duration tokens must sit together, and there is no caster
   token.** The engine has one binding per field (one spell name, one stack count, one dispel type, one
   duration text whose format holds every duration value); it has none for the caster
@@ -481,7 +491,7 @@ return value.
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
-  (`identityWarning`, `modules/FilterCompiler.lua:558`), rendered in orange on the Filters page.
+  (`identityWarning`, `modules/FilterCompiler.lua:548`), rendered in orange on the Filters page.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;
@@ -621,4 +631,3 @@ None.
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
 | `documentation-§1` | README's `## Screenshots` section (item 5) is a placeholder with no captioned images | Screenshots can only be captured in a live client and none exist yet, so the section says so in one line and shows nothing; the addon is unpublished (no CurseForge id: `X-Curse-Project-ID` is omitted, AuraMaster.toc:13), so item 5 is still a SHOULD; images are never fabricated; audit docs/audits/2026-09-11 AM-20; the capture is tracked as issue tusharsaxena/AuraMaster#3. Ratified by the owner 2026-09-12. | 2026-09-12 | The first in-client capture session or the first publish (item 5 becomes a MUST), whichever comes first; the row is retired when captioned images land in the section |
-| `options-ui-§14` | The `Containers` page's one tab edits one selected container, but carries its Container picker and New container inside the tab body rather than in a band above the strip. Filters, Layout, Bars and Icons keep the banner picker | The owner keeps a container's identity (create, name, enable, unit, aura type, style, duplicate, delete, copy) in the tab body rather than switching to the banner-picker pattern the other four pages use. Ratified by the owner 2026-09-13, on General's own `Containers` tab; carried unchanged onto the Containers page's own home when the owner moved it out of General to a top-level page (`N-1`, batch 7, 2026-09-15) | 2026-09-13 | The standard gains a registry-tab form the Containers page could adopt in place of the tab-body picker; the row is retired then |

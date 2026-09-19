@@ -572,12 +572,36 @@ test("bars: dispel coloring tints the fill through the engine with the stored di
     -- red under: the bar asking for the Border style, which paints Blizzard's debuff art over the bar
     assertEqual(add[2].style, 32, "PreserveAsset keeps our texture")
     assertTrue(add[2].showAlways and add[2].showWithoutDispelType, "shown for every aura")
-    -- red under: the bar still reading a per-container bars.dispelColors (schema v2 lifted it)
-    assertTrue(add[2].customDispelColorMap == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors), "the profile's colors")
+    -- red under: the bar still reading a per-container bars.dispelColors (schema v2 lifted it), or the
+    -- map built without the bar's own color for an aura with no type (feedback #7)
+    assertTrue(add[2].customDispelColorMap
+        == NS2.Style.DispelColorMap(NS2.db.profile.dispelColors, NS2.Style.CurveColor(c.bars.barColor, false)), "the profile's colors")
     c.bars.colorMode = "static"
     frame = dressed(c, true, nil, NS2)
     assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
     assertEqual(frame:__count("ClearDispelTypeTextures"), 1, "and an earlier tint is cleared")
+end)
+
+-- ── the background by dispel type (feedback #7) ───────────────────────────────────────────────
+
+test("bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)", function()
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = { bgColorMode = "dispel" } })
+    local frame, am = dressed(c, true, nil, NS2)
+    local add = frame:__last("AddDispelTypeTexture")
+    -- red under: no background binding at all
+    assertTrue(add ~= nil and add[1] == am.bg, "the background carries the tint")
+    assertEqual(frame:__count("AddDispelTypeTexture"), 1, "the fill, on one color, carries none")
+    assertEqual(add[2].style, 32, "PreserveAsset keeps our texture")
+    assertTrue(add[2].showAlways and add[2].showWithoutDispelType, "shown for every aura")
+    local map = add[2].customDispelColorMap
+    local bgc = c.bars.bgColor
+    -- red under: the background's map built with the bar color's fallback
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","),
+        table.concat({ bgc.r, bgc.g, bgc.b, bgc.a }, ","))
+    c.bars.bgColorMode = "static"
+    frame = dressed(c, true, nil, NS2)
+    assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
 end)
 
 -- ── Color by: dispel type lets go (B-4) ──────────────────────────────────────────────────────────
@@ -629,6 +653,42 @@ test("bars: in dispel mode the engine's tint stays the fill's last color", funct
     local _, am = toggled({ "static", "dispel" }, true)
     -- red under: repainting the static color after the bindings (the dispel tint then never shows)
     assertEqual(am.fill:__joined("SetVertexColor"), table.concat(MAGIC, ","))
+end)
+
+--- The background's twin of `toggled`: dress ONE live bar button for each bgColorMode in `modes`.
+local function toggledBg(modes, aura)
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+        { bars = { bgColor = { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, useClassColorBg = false } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    engineButton(frame, { tint = MAGIC, aura = aura })
+    local last = #modes
+    for i, mode in ipairs(modes) do
+        if i == last then
+            frame.__log = {}
+            for _, r in pairs(frame.__am) do r.__log = {} end
+        end
+        c.bars.bgColorMode = mode
+        NS2.Style.Element(frame, c, true)
+    end
+    return frame, frame.__am, table.concat({ NS2.Style.Color(c.bars.bgColor, false) }, ",")
+end
+
+test("bars: switching Color by from dispel type back to static on the background paints the background's own color again (feedback #7)", function()
+    local frame, am, bgColor = toggledBg({ "static", "dispel", "static" }, true)
+    -- red under: the static color never repainted last, so the dispel tint or Blizzard's own art wins
+    assertEqual(am.bg:__joined("SetVertexColor"), bgColor, "the static color is the last word")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < am.bg:__lastSeq("SetVertexColor"),
+        "the tint is cleared before the background is painted")
+    assertTrue(am.bg:IsShown(), "the background shows")
+end)
+
+test("bars: back to static on a button holding no aura, the background the engine hid shows again (feedback #7)", function()
+    local _, am = toggledBg({ "static", "dispel", "static" }, false)
+    -- red under: applySurfaces never showing the background the engine's no-aura pass hid
+    assertTrue(am.bg:IsShown())
 end)
 
 test("bars: the refresh-window highlight is bound only when turned on, and always cleared first", function()

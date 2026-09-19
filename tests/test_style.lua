@@ -395,8 +395,9 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     -- red under: BindDurationText calling Compat directly
     assertEqual(built.formatters - f0, 1, "one formatter for two buttons of one look")
     assertEqual(built.curves - c0, 1, "one curve for two buttons of one look")
-    -- red under: Style.DispelColorMap without its memo
-    assertEqual(built.colors - k0, dispelLeaves + 2, "one dispel map and one curve's two colors")
+    -- red under: Style.DispelColorMap without its memo (a map is the palette's colors plus the None
+    -- fallback, feedback #7)
+    assertEqual(built.colors - k0, dispelLeaves + 1 + 2, "one dispel map and one curve's two colors")
     assertTrue(last(b1, "AddDispelTypeTexture")[3].customDispelColorMap
         == last(b2, "AddDispelTypeTexture")[3].customDispelColorMap, "the two buttons share one map")
     assertTrue(last(b1, "SetDurationText")[3].textColor == last(b2, "SetDurationText")[3].textColor)
@@ -410,7 +411,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
     NS2.db.profile.dispelColors.Magic = { r = 0, g = 0, b = 1, a = 1 }
     local k1 = built.colors
     NS2.Style.Element(b1, c, true)
-    assertEqual(built.colors - k1, dispelLeaves, "a new dispel color rebuilds the map")
+    assertEqual(built.colors - k1, dispelLeaves + 1, "a new dispel color rebuilds the map, its None fallback included")
 end)
 
 -- ── Style.lua: media, text, borders, bindings, behavior ───────────────────────────────────────
@@ -656,6 +657,24 @@ test("style: a dispel color map holds a color per stored type, and nothing for a
     assertEqual(next(NS.Style.DispelColorMap(nil)), nil, "no stored colors: an empty map")
 end)
 
+test("style: a dispel color map's None entry is the surface's own color, and every entry its alpha (feedback #7)", function()
+    local stored = { Magic = { r = 0.1, g = 0.2, b = 0.3, a = 1 } }
+    local bar = { r = 0.9, g = 0.5, b = 0.1, a = 0.6 }
+    local map = NS.Style.DispelColorMap(stored, bar)
+    -- red under: None left to the palette (or to Blizzard's own tint) for an aura with no type
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","), "0.9,0.5,0.1,0.6")
+    -- red under: a dispel-colored surface drawn opaque over a translucent one's own alpha
+    assertEqual(map.Magic.a, 0.6)
+    assertTrue(NS.Style.DispelColorMap(stored, bar) == map, "one map per palette and fallback")
+    local bg = { r = 0, g = 0, b = 0, a = 0.5 }
+    assertTrue(NS.Style.DispelColorMap(stored, bg) ~= map, "another surface's fallback, another map")
+    bar.r = 0.2   -- a class-colored fallback is updated in place
+    assertEqual(NS.Style.DispelColorMap(stored, bar).None.r, 0.2, "a moved fallback rebuilds")
+    -- red under: a type outside the palette (Enrage) left to Blizzard's own tint instead of the surface's color
+    assertEqual(table.concat({ map.Enrage.r, map.Enrage.g, map.Enrage.b, map.Enrage.a }, ","),
+        table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","), "Enrage keeps the surface's color, like None")
+end)
+
 test("style: tooltips and click-through decide whether a button takes the mouse at all", function()
     local function behave(over)
         local f = R()
@@ -674,13 +693,15 @@ test("style: tooltips and click-through decide whether a button takes the mouse 
     assertEqual(f:__joined("SetMouseClickEnabled"), "false")
 end)
 
-test("style: right-click cancel reaches weapon enchants, never the player's debuffs, and never when turned off", function()
+test("style: right-click cancel reaches the player's buffs and their enchant slots, never the player's debuffs, and never when turned off", function()
     local function cancelOf(over)
         local f = R()
         NS.Style.ApplyBehavior(f, cfg(over))
         return f:__last("SetCancelAuraButtons")[1]
     end
-    assertEqual(cancelOf({ unit = "player", auraType = "ENCHANT" }), "RightButtonUp", "a weapon enchant")
+    assertEqual(cancelOf({ unit = "player", auraType = "HELPFUL" }), "RightButtonUp", "a player buff, or its weapon enchants")
+    -- red under: cancelEnabled still reading the retired ENCHANT aura type (feedback #6)
+    assertNil(cancelOf({ unit = "player", auraType = "ENCHANT" }), "no aura type of that name any more")
     -- red under: cancelEnabled testing the unit alone (a debuff cannot be canceled, and the click is swallowed)
     assertNil(cancelOf({ unit = "player", auraType = "HARMFUL" }), "the player's debuffs")
     assertNil(cancelOf({ unit = "player", auraType = "HELPFUL", behavior = { cancelOnRightClick = false } }),
@@ -953,7 +974,10 @@ test("style: a duration run's text format has its format string and one componen
     assertEqual(pf.kind, "rule")
     local bp = pf:__last("SetBreakpoints")[1]
     assertEqual(bp[1].threshold, 0)
-    assertEqual(bp[1].format, "%d%%")
+    -- red under: the old "%d%%" (a token adding a "%" the player did not type, feedback #5)
+    assertEqual(bp[1].format, "%d")
+    -- red under: a fractional 0-100 value handed to "%d" unrounded
+    assertEqual(bp[1].step, 1)
     -- red under: DurationTextFormat rebuilding on every dress
     assertTrue(NS2.Style.DurationTextFormat(piece, "short") == tf, "memoized per piece and format")
     assertTrue(NS2.Style.DurationTextFormat(piece, "long") ~= tf, "a new format builds its own")
@@ -996,4 +1020,43 @@ test("style: a placeholder's seconds are written by the format's formatter, else
     assertEqual(NS2.Style.PreviewSeconds(28, "short"), "28s")
     -- red under: PreviewSeconds not falling back when the client has no formatter
     assertEqual(NS.Style.PreviewSeconds(28, "short"), "28s", "the shared environment has none")
+end)
+
+test("style: a client that refuses the percent rule's step gets the plain \"%d\" rule, never none (feedback #5)", function()
+    local NS2 = fresh({ before = function(m)
+        dofile("tests/text_apis.lua")(m)
+        local create = m.C_StringUtil.CreateNumericRuleFormatter
+        m.C_StringUtil.CreateNumericRuleFormatter = function()
+            local f = create()
+            f.SetBreakpoints = function(self, bps)
+                if bps[1].step ~= nil then error("unknown breakpoint field 'step'") end
+                self.given = bps
+                return self
+            end
+            return f
+        end
+    end })
+    local piece = NS2.TextTemplate.Compile("$remainingpercent$").pieces[1]
+    local pf = NS2.Style.DurationTextFormat(piece, "short").components[1].formatter
+    -- red under: percentFor giving up after the refused rule (the component would have no formatter)
+    assertTrue(pf ~= nil, "a formatter was built")
+    assertEqual(pf.given[1].format, "%d")
+    assertEqual(pf.given[1].step, nil)
+end)
+
+test("style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)", function()
+    local NS2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local TT = NS2.TextTemplate
+    local function trimmed(s) return s == s:match("^%s*(.-)%s*$") end
+    -- An unbracketed token's own format: the stacks rule and the duration run.
+    assertEqual(TT.Compile("$spellname$ $stacks$").pieces[3].format, "%d")
+    local run = TT.Compile("$remainingpercent$").pieces[1]
+    assertEqual(run.format, "{}")
+    local bp = NS2.Style.DurationTextFormat(run, "short").components[1].formatter:__last("SetBreakpoints")[1]
+    for _, b in ipairs(bp) do
+        -- red under: a percent rule writing " %" or a trailing space around its number
+        assertTrue(trimmed(b.format), ("%q is trimmed"):format(b.format))
+    end
+    -- Bracket text is the player's and is kept verbatim.
+    assertEqual(TT.Compile("$spellname$[ - $remainingduration$]").pieces[2].format, " - {}")
 end)

@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:215`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:217`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -114,7 +114,7 @@ new shape disables, hides and retires the old engine and builds a new one (`Cont
 
 **What this addon does.** The filters still compile, because a target or focus can be either, but
 `FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
-(`identityWarning`, `modules/FilterCompiler.lua:558`): ignored outright for debuffs on the player or pet, conditional on
+(`identityWarning`, `modules/FilterCompiler.lua:548`): ignored outright for debuffs on the player or pet, conditional on
 hostility or friendliness for target and focus. The Filters page prints them in orange. The starter
 spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
 
@@ -135,7 +135,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:183`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:158`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -171,7 +171,8 @@ buttons each, for issue #2):
   AddOn" (`AnimationGroup:IsPlaying/Play/Stop`, `Region:IsShown`, `IsAnchoringSecret`), so an
   animation is set up at dress time only.
 - `FontString:IsAnchoringSecret()` answers true even out of combat for an engine-written name: no
-  width in a chain can be read, so a multi-piece line cannot be centered.
+  width in a chain can be read, so a multi-piece line cannot be centered as one line (Center stacks
+  it in rows instead, feedback #1).
 - A **Scale** animation broke a left-justified chain (the glyphs grew about 8 % past their boxes and
   overlapped the next piece); an Alpha animation did not. Round 2, four chains each piece boxed and
   tinted, laid out cleanly in and out of combat: the client sizes an engine-written, single-anchored,
@@ -279,3 +280,43 @@ Four client facts decide how `modules/Container.lua` builds an engine, each read
 
 The frame picker cancels itself if combat starts mid-pick: its overlay toggles keyboard propagation,
 which is protected under combat lockdown (`modules/FramePicker.lua`).
+
+## An attached anchor's geometry is secret
+
+**The restriction.** A frame anchored to an aura engine container — or to any frame anchored to one —
+inherits its secret geometry, and so does everything anchored under it. Its width, its points and its
+frame level (`FrameLevel` is a `SecretAspect`) can read back as secret numbers even out of combat, and
+arithmetic on a secret raises "attempt to perform arithmetic on a secret number value" (feedback E,
+2026-09-19: the drag handle's label, on a container attached to another).
+
+**What this addon does.** Nothing reads a measurement off a region that can be **attached**. The
+handle's label is measured on a detached font string of ours (`Anchors.__labelMeasurer`), and every
+frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
+goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
+`NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
+readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:64`
+and `modules/Style_Icons.lua:59`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
+created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
+
+## An empty duration run still takes a space (open, feedback #5)
+
+**What was seen.** The owner's template `($remainingpercent$)` drew `( )`: the literal `(`, then the
+duration run, then the literal `)`, with a space where the number should be. The run is one
+single-anchored, auto-sized font string the engine writes into, so whatever it wrote was EMPTY, and
+the gap is that empty string's own width.
+
+**What could empty it**, and what this addon changed:
+- **H1: the rule formatter.** The percent rule was `"%d%%"`, and `RemainingPercent` arrives as a
+  fractional 0–100 value. If the client's `%d` writes nothing for a non-integer, the run is empty. Fixed
+  here either way: the rule is now `"%d"` with `step = 1` (`modules/Style.lua`'s `PERCENT_BREAKPOINTS`),
+  so `%d` only ever sees a whole number, and the player types the `%`.
+- **H2: a timeless aura.** The engine disables the duration binding for a zero duration
+  (`ApplyDurationText`: `binding:SetEnabled(not auraDuration:IsZero())`), and the binding's zero text is
+  `""` (`Compat.CreateDurationBinding`). Nothing to fix: this is text outside `[ ]` showing on a
+  timeless aura, by design. The Text page's cheat sheet now says to write `[ ($remainingpercent$%)]`.
+- **The gap itself** would then be the client laying an empty, single-anchored font string out with a
+  non-zero width, which no addon code can read (the string is engine-written and secret) or trim.
+
+**The in-game check** (docs/smoke-tests.md section T) runs three `/run` probes that tell these apart:
+the rule formatter on `45.5` and `45`, the binding's zero-duration text, and an empty font string's
+width.
