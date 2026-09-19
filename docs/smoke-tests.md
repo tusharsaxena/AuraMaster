@@ -618,3 +618,118 @@ nothing).
      Columns. Whatever Grow horizontally/Grow vertically were set to before the switch are unchanged
      by it. `/am new target debuffs icons` makes a container whose Fill reads Rows; `/am new text`
      makes one whose Fill reads Columns.
+
+## T. The smoke-test feedback batch (2026-09-19)
+
+Run with one bar container, one Text container and one icon container on the player's buffs, and a
+debuff container on the target, in a party or with a target dummy.
+
+117. **Attached to another frame: no Lua error (E).** Attach a container to another container, then
+     one to a named frame (`PlayerFrame`), with `/am unlock` → no Lua error, in or out of combat
+     (enable `/console scriptErrors 1`), and each handle's strip is at least as wide as its name, with
+     no clipped label on the handle's first show (the detached measurer's first measure may read 0).
+     Drag the screen-attached one → it moves and saves; `/reload` → it is where you left it.
+118. **Center stacks the pieces (#1).** A Text container, Text → General → Justify Center, template
+     Centered: name over time → the spell name sits on one row and the time centered under it, each
+     row centered; the container's height grows to hold both, the outline and the handle follow.
+     Justify Left → one line again.
+119. **The Containers band (#2).** Containers opens with the **Container** picker and **New
+     container** side by side above the tab strip, and the first tab is named **General**. New
+     container → the new one is selected in the picker; the picker switches the page's subject.
+120. **Restore beside the Category dropdown (#3).** General → Spell Categories: **Restore** sits on
+     the dropdown's own line, right half; hide a starter spell, Restore → it is back.
+121. **TEST on the handle (#8).** `/am test` then `/am unlock` → every handle reads its name, then an
+     orange **TEST**; end test mode → the tag goes on the next frame, the strip narrows.
+122. **Show all / Hide all (#10).** Filters → Categories: under each grid's heading, **Show all** and
+     **Hide all**. Hide all on Spell categories → every row reads Hide, the container empties at once
+     (one pass, no flicker per row), and `/am debug` shows one `[Set] hide all …` line, not one per row.
+123. **Percent tokens and the `( )` (#5a).** Template `$spellname$ ($remainingpercent$%)` on a 30 s
+     buff → `Name (73%)`, a whole number, no space inside the brackets. Now the three probes, one at a
+     time, and write down what each prints:
+     - `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,format="%d%%"}}) print("["..f:FormatNumber(45.5).."]","["..f:FormatNumber(45).."]")`
+       — H1 (the old rule): `[]` for 45.5 and `[45%]` for 45 confirms it; `[45%]` twice rules it out.
+     - `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,step=1,format="%d"}}) print("["..f:FormatNumber(45.5).."]")`
+       — the new rule: `[46]` or `[45]`, never `[]`.
+     - `/run local s=UIParent:CreateFontString(nil,"OVERLAY","GameFontNormal") s:SetPoint("CENTER") s:SetText("") print(s:GetWidth(), s:GetStringWidth())`
+       — the empty-string gap: a non-zero first number is the space seen between `(` and `)`.
+     Then the same template on a buff **without** a duration (a mount, or a permanent aura) → `( )`
+     means H2 (the binding's zero-duration text); `[ ($remainingpercent$%)]` shows nothing there.
+124. **Built-in templates and the Preview (#5b).** Text → General → **Template**: the list names the
+     built-ins (Name, Name + time, …; the debuff container adds Name (type), Name, type, time) and
+     **Custom template**. Pick each → the Preview line under it changes with it and the live auras
+     follow; Centered: name over time also sets Justify to Center and previews the built-in's own
+     template, `$spellname$[$remainingduration$]` (no separator before the time). Custom → the
+     template box appears.
+125. **Weapon enchants on a real profile (#6).** On a profile that had a Weapon enchants container
+     with an "Always shown" list (back up `WTF/…/SavedVariables/AuraMaster.lua` first): log in → one
+     `[Migrate]` line naming the converted container, plus a second `[Migrate]` line for the cleared
+     whitelist; the container now reads aura type Buffs, unit Player, with only Weapon enchants shown
+     in Filters → Categories, its Overrides list empty, and it still shows your weapon enchant (apply
+     one: a sharpening stone, a rogue poison, a shaman imbue) with no "can never match" warning. The
+     aura-type dropdown has no Weapon enchants entry; `/am new enchants` makes an enchant-only buff
+     container, and `/am test` on it shows exactly as many placeholders as it has enchant slots (one
+     per hand, none for an empty slot), not the usual full set.
+126. **Bars' background by dispel type (#7).** Bars → Background & border → Color by **Dispel type** on
+     a target-debuff bar container: a Magic debuff's background is blue, a Curse's purple; a debuff
+     with no type, and an Enrage-type buff (a type the palette does not cover), each keep the
+     background's own color. Color by Static → the background color alone, including on an empty
+     (currently-unused) button slot that had shown a dispel tint a moment before. General → Dispel
+     Colors lists the five types and no None swatch.
+127. **Right-click the "?" (#9).** `/am unlock`; right-click container 2's handle **?** → the settings
+     open on the **Containers** page with container 2 in the band's picker. In combat → the gray
+     "cannot open settings during combat" line, nothing opens, the picker is unchanged afterwards.
+128. **Switched sections, Aura Master (#4).** Check 25: only the chosen mode's subsections on Layout →
+     Anchor, redrawn at once on a change, from the panel and from `/am set`.
+129. **Switched sections, Party Frame Enhanced (#4).** That addon's smoke item 31a on its
+     `feat/switched-sections` build.
+130. **The dispel type word in color (#7).** A Text container on the target's debuffs, template Name,
+     type, time; Text → Animation → Dispel type → **Color the dispel type** on. A Magic debuff reads
+     `Name (Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the
+     brackets and the rest in the font color; a Curse in its color; an Enrage-type buff (a type the
+     palette does not cover) keeps the plain font color. Change the Magic swatch → the word
+     follows after the re-apply. In combat the word keeps its color as auras come and go (the engine
+     writes the text; nothing of ours runs). If the word shows the raw `|cff…` characters instead,
+     the engine's options processing stripped the escape: report it (option c then does not work, and
+     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed.
+131. **The dispel backdrop (#7).** Same container, **Backdrop in the dispel color** on: a typed debuff's
+     line has a Magic-blue (or Curse-purple, …) box behind its text, the text on top and readable; a
+     debuff with no type, and an Enrage-type buff, each have no box. **Backdrop opacity** changes its
+     strength (dimmed while the backdrop is off). With a text icon on the left, the box covers the text
+     area only, not the icon. With Pulse or Bounce on, the box moves and fades with the line. Test
+     mode: the Bloodlust placeholder has a Magic box, the others none. Turn the backdrop off → every
+     box goes at once, a typed aura included.
+132. **The dispel edge (#7).** **Edge in the dispel color** on (backdrop off): a thin outline in the
+     type's color around a typed debuff's text area, none on a typeless one and none on an Enrage-type
+     buff; **Edge thickness** 1–4 thickens it. Both on at once → the edge draws over the backdrop. On a
+     buff container, a Magic buff (Power Word: Fortitude, Arcane Intellect) is outlined too. `/reload`
+     and combat: nothing to fix up, no Lua error.
+133. **The percent formatter, live (Task 6 carry).** `$remainingpercent$` near a round-number boundary
+     (a buff at 99.6% remaining, then watch it tick to 99% and 100%): compare what the live client
+     prints against the Text preview's own rounding (`math.floor(v + 0.5)`, no `%`). Report whether the
+     live formatter rounds (99.6 → 100) or floors (99.6 → 99); a mismatch between the two is a defect,
+     not a matter of taste.
+134. **A stacked icon keeps one row's height (Task 8 fix round).** An icon container's own text piece,
+     Text → General → Justify Center, a multi-piece template: the rows stack and center exactly as a
+     Text container's do, but the icon element itself does NOT grow to fit them — it keeps its
+     configured size (icon size 0 included), and a row that does not fit is clipped rather than
+     pushing the icon taller. This is the one place `Style.ElementSize` does not add `Text.StackHeight`
+     (`modules/Style.lua`, `key == "text"` only).
+135. **A migrated Weapon enchants container's Overrides list (Task 9 fix round).** Repeat item 125 on
+     a backed-up profile whose Weapon enchants container had spells in Overrides → Always shown: after
+     the migration the list reads empty (not just re-filtered to enchants), and the container's compile
+     draws no group from a cleared whitelist — only the enchant slots show, matching the aura-type
+     switch.
+136. **An enchant-only container in test mode (Task 10 fix round).** `/am test` on `/am new enchants`
+     (before applying a real enchant): the number of placeholders shown equals the number of enchant
+     slots the container can ever draw (one per weapon that can carry an enchant on the player's
+     current spec/gear, at most two), never the full generic test-mode set the other aura types show.
+137. **Bars: switching dispel color back to static repaints idle slots (Task 11 fix round).** Color by
+     Dispel type, let several buttons draw and fade out (so pooled bar frames sit hidden with a stale
+     dispel tint on their background texture), then Color by Static: the next auras to use those pooled
+     frames show the plain static background immediately, not a leftover dispel tint from before the
+     switch.
+138. **An out-of-palette dispel type gets no stand-in at all (Task 12 fix round).** With all three of
+     Color the dispel type, Backdrop in the dispel color and Edge in the dispel color on together, an
+     Enrage-type buff (or any other type General → Dispel Colors does not list a swatch for) shows
+     none of the three — plain font color, no backdrop, no edge — the same treatment a typeless aura
+     gets, never a blank/invisible stand-in that still reserves space.

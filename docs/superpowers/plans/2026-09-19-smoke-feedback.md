@@ -110,7 +110,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Tasks 1–18 done; next Task 19 (final gate), then the whole-branch review, merge and push.
+**Current position:** Tasks 1–19 done; next Task 20 (owner follow-up), then the whole-branch review, merge and push.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
@@ -132,7 +132,8 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 16 | #4c — Aura Master adopts `shownWhen` on Layout → Anchor | AuraMaster | done | 3c7ab52 + header fix |
 | 17 | #4d — re-vendor v1.45.0 into the other ten consumers; the adoption sweep | 10 repos | done | 9 consumers merged+pushed; PFE c2577a5 on its chore branch (Task 18 builds on it); LibKa0s docs 2b32ee8 pushed |
 | 18 | #4e — Party Frame Enhanced adopts `shownWhen` on Size & Position | PartyFrameEnhanced | done | PFE ea6f8ff, merged 8315f4c and pushed |
-| 19 | Final gate, smoke items, inventory — hand back to the owner | AuraMaster | todo | |
+| 19 | Final gate, smoke items, inventory — hand back to the owner | AuraMaster | done | this commit: smoke T 117–138, inventory 1105, 1105/1105, lint 0/0, lizard clean, perf green |
+| 20 | Owner follow-up: the Text Template section (renamed, a PrettyChat-style Preview box, a readable cheat sheet); the Not in use notice in muted red | AuraMaster | todo |  |
 
 ---
 
@@ -6118,7 +6119,7 @@ and any row the owner has explicitly deferred. A row still `todo`, `in progress`
 finished first.
 
 **Files:**
-- Modify: `docs/smoke-tests.md` (a new section **T** after S, items 117–132), `docs/test-cases.md`
+- Modify: `docs/smoke-tests.md` (a new section **T** after S, items 117–138), `docs/test-cases.md`
   (regenerated), `README.md:7` (the Tests badge)
 - Test: none new — this task runs everything
 
@@ -6262,7 +6263,7 @@ Report, in this order:
    standard change; an optional harvest sentence for options-ui-§6 is theirs to take upstream).
 3. **Task 12 is built**: three opt-in stand-ins for text colored by dispel type (the dispel word
    in color, a backdrop, an edge), all off by default; smoke items 130–132.
-4. **The in-game checks**: smoke section T (117–132) and PFE's 31a; item 123's three probe outputs
+4. **The in-game checks**: smoke section T (117–138) and PFE's 31a; item 123's three probe outputs
    decide whether the `( )` was H1, H2 or the empty-string width, and whether anything more is owed.
 5. **The battery numbers** of every repo, and any repo Task 17 skipped.
 
@@ -6272,5 +6273,69 @@ Do not merge, push, tag or bump a version.
 
 Row 19 → `done` with the SHA. Current position → "Complete but for the owner: the
 merges and pushes (Task 19 Step 5), and the in-game checks (smoke section T)." Commit: `T19: final
-gate — smoke section T (117-132), inventory N, tests N/N, lint 0/0, lizard 0 warnings, perf green`,
+gate — smoke section T (117-138), inventory N, tests N/N, lint 0/0, lizard 0 warnings, perf green`,
 with this plan file.
+
+### Task 20: Owner follow-up (2026-09-19) — the Text Template section
+
+The owner, reviewing Text → General in game:
+- "Make the preview text to be more like PrettyChat". Their screenshot shows PrettyChat's
+  label "Preview" over a read-only box.
+- "The whole text below that is very hard to read - give it better formatting and spacing - e.g.
+  split it into "keywords" (or a better word for this) and "guidelines" - use bullet points".
+- "Rename this section to "Text Template"".
+
+**Files:** `settings/Text.lua` (the section heading, `renderTemplate`'s Preview line, `cheatSheet`),
+`locales/enUS.lua`, `docs/settings-panel.md`, `docs/smoke-tests.md` (section T's Preview and
+cheat-sheet items), `tests/test_pages_text.lua`, and `docs/test-cases.md`, regenerated because
+Task 19 has already run.
+
+**Requirements:**
+1. The Text → General subsection now called "What each line says" is renamed **Text Template**.
+   Rename the locale key, and update every doc and test that names it.
+2. **Preview box, done PrettyChat's way.** PrettyChat (`../PrettyChat/settings/Panel.lua`, the
+   `previewInput` block) uses an AceGUI `EditBox` with `SetLabel(L["Preview"])`, `SetFullWidth(true)`
+   and `SetDisabled(true)`. Its text is the rendered line with colour codes left live, so the
+   colours show, and it carries a tooltip.
+   - Replace the plain "Preview: …" text line with such a box, under the Custom template field.
+   - The box text is `Text.PreviewLine`'s output. Where the line's options call for colour
+     (the font colour, and Task 12's coloured dispel word when it is on), the box shows it.
+   - Escape a literal `|` the way PrettyChat does, so a stray pipe cannot break the box.
+   - Built through the page's existing helpers (`H.AttachTooltip`, and so on); no raw frames.
+   - It refreshes whenever the template, the built-in choice or a colour option changes, as the
+     old line did.
+3. **Cheat sheet with two headed, bulleted lists and spacing:**
+   - **Tokens**: one bullet per token, the gold `$token$` then its meaning. Same content as
+     today, one line each.
+   - **Rules**: one bullet each for `[ ]` hiding its text with the token, escapes (`[[`, `]]`,
+     `$$`), how brackets and escapes combine, and text outside `[ ]` always showing. Put each
+     example on the bullet's own continuation line, in the gold token colour.
+   - A blank-line gap before each heading.
+   - The bullet is the `•` character. Localization rules allow only ASCII apart from the em dash,
+     so if the locale test refuses `•`, use `-`, or draw the bullet as a texture-free `|TInterface...|t`.
+     Prefer `-` for simplicity.
+4. Tests (with "red under:" comments):
+   - the heading reads Text Template;
+   - the Preview is a disabled EditBox labelled Preview, whose text is `Text.PreviewLine`'s output;
+   - the cheat sheet has a Tokens heading, a Rules heading and one bullet per token;
+   - the preview text refreshes after a template change.
+5. Docs: settings-panel.md, and smoke section T's items that describe this section, match the new
+   layout. Regenerate docs/test-cases.md and the README test badge.
+
+6. **The "Not in use" notice goes muted red** (owner, 2026-09-19: "Make this text a muted red
+   color - on bars, icons and text pages (all tabs)").
+   - One constant colours it on all three pages: `C.NOTICE_COLOR` in core/Constants.lua, used by
+     settings/OptionsSetup.lua's drawDisabledNotice. Change it from muted gold `ffc8a85a` to muted
+     red `ffcc6666`, about (0.80, 0.40, 0.40): readable on the dark panel and quieter than an
+     error red.
+   - Update its comment, drawDisabledNotice's doc comment ("muted-gold" becomes "muted-red"),
+     tests/test_optionssetup.lua's pinned value, and every doc or comment that says muted gold for
+     this notice.
+   - In the page tests, rename the `GOLD` locals to `NOTICE`.
+   - The notice already shows on every tab of those pages. Confirm that with the existing tests.
+
+- [ ] **Step 1: Write the failing tests** (above), and see them fail.
+- [ ] **Step 2: Implement** (settings/Text.lua, locales, core/Constants.lua).
+- [ ] **Step 3: Gate** (tests, luacheck, lizard -C 15), docs, inventory.
+- [ ] **Step 4: Update the Status ledger row 20, and commit it with the task (controller).**
+
