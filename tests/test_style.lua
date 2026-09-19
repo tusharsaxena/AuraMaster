@@ -670,6 +670,9 @@ test("style: a dispel color map's None entry is the surface's own color, and eve
     assertTrue(NS.Style.DispelColorMap(stored, bg) ~= map, "another surface's fallback, another map")
     bar.r = 0.2   -- a class-colored fallback is updated in place
     assertEqual(NS.Style.DispelColorMap(stored, bar).None.r, 0.2, "a moved fallback rebuilds")
+    -- red under: a type outside the palette (Enrage) left to Blizzard's own tint instead of the surface's color
+    assertEqual(table.concat({ map.Enrage.r, map.Enrage.g, map.Enrage.b, map.Enrage.a }, ","),
+        table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","), "Enrage keeps the surface's color, like None")
 end)
 
 test("style: tooltips and click-through decide whether a button takes the mouse at all", function()

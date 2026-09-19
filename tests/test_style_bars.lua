@@ -655,6 +655,42 @@ test("bars: in dispel mode the engine's tint stays the fill's last color", funct
     assertEqual(am.fill:__joined("SetVertexColor"), table.concat(MAGIC, ","))
 end)
 
+--- The background's twin of `toggled`: dress ONE live bar button for each bgColorMode in `modes`.
+local function toggledBg(modes, aura)
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+        { bars = { bgColor = { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, useClassColorBg = false } })
+    local frame = R()
+    NS2.Style.Element(frame, c, true)
+    for k in pairs(frame.__am) do frame.__am[k] = R() end
+    engineButton(frame, { tint = MAGIC, aura = aura })
+    local last = #modes
+    for i, mode in ipairs(modes) do
+        if i == last then
+            frame.__log = {}
+            for _, r in pairs(frame.__am) do r.__log = {} end
+        end
+        c.bars.bgColorMode = mode
+        NS2.Style.Element(frame, c, true)
+    end
+    return frame, frame.__am, table.concat({ NS2.Style.Color(c.bars.bgColor, false) }, ",")
+end
+
+test("bars: switching Color by from dispel type back to static on the background paints the background's own color again (feedback #7)", function()
+    local frame, am, bgColor = toggledBg({ "static", "dispel", "static" }, true)
+    -- red under: the static color never repainted last, so the dispel tint or Blizzard's own art wins
+    assertEqual(am.bg:__joined("SetVertexColor"), bgColor, "the static color is the last word")
+    assertTrue(frame:__lastSeq("ClearDispelTypeTextures") < am.bg:__lastSeq("SetVertexColor"),
+        "the tint is cleared before the background is painted")
+    assertTrue(am.bg:IsShown(), "the background shows")
+end)
+
+test("bars: back to static on a button holding no aura, the background the engine hid shows again (feedback #7)", function()
+    local _, am = toggledBg({ "static", "dispel", "static" }, false)
+    -- red under: applySurfaces never showing the background the engine's no-aura pass hid
+    assertTrue(am.bg:IsShown())
+end)
+
 test("bars: the refresh-window highlight is bound only when turned on, and always cleared first", function()
     local frame, am = dressed(cfg({ bars = { pandemic = true } }), true)
     assertTrue(frame:__last("AddPandemicRegion")[1] == am.pandemic)

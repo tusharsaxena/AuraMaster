@@ -202,6 +202,7 @@ local function applySurfaces(am, b, preview)
     am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
     paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview)
     am.bg:SetAlpha(tonumber(b.bgAlpha) or D.bars.bgAlpha)
+    am.bg:Show()
 
     Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, tonumber(b.borderSize) or D.bars.borderSize,
         b.borderColor, b.useClassColorBorder)
@@ -281,10 +282,10 @@ end
 --- AddDispelTypeTexture's options for a surface colored by dispel type: shown for every aura, our own
 --- texture kept (PreserveAsset), tinted from the profile's palette, and an aura with no dispel type in
 --- the surface's own `fallback` color (Style.DispelColorMap).
-local function dispelTint(palette, fallback)
+local function dispelTint(Compat, palette, fallback)
     return {
         showAlways = true, showWithoutDispelType = true,
-        style = NS.Compat.DispelStyle("PreserveAsset"),
+        style = Compat.DispelStyle("PreserveAsset"),
         customDispelColorMap = Style.DispelColorMap(palette, fallback),
     }
 end
@@ -305,11 +306,11 @@ function Bars.Bind(frame, am, cfg, b)
     local palette = Style.ProfileDispelColors()
     if b.colorMode == "dispel" then
         Style.Bind(frame, "AddDispelTypeTexture", am.fill,
-            dispelTint(palette, Style.CurveColor(b.barColor, b.useClassColorBar)))
+            dispelTint(Compat, palette, Style.CurveColor(b.barColor, b.useClassColorBar)))
     end
     if b.bgColorMode == "dispel" then
         Style.Bind(frame, "AddDispelTypeTexture", am.bg,
-            dispelTint(palette, Style.CurveColor(b.bgColor, b.useClassColorBg)))
+            dispelTint(Compat, palette, Style.CurveColor(b.bgColor, b.useClassColorBg)))
     end
     if b.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end
 

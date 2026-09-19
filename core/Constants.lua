@@ -219,8 +219,8 @@ C.TEXT_TOKEN_LABELS = {
     elapsedpercent    = "How much of it has run, 0 to 100 (type the % yourself)",
 }
 
--- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry but
--- None, plus Enrage. A type this list lacks shows the engine's own text.
+-- The types $dispeltype$ names, keyed as the aura's `dispelName`: every C.DISPEL_TYPES entry, plus
+-- Enrage. A type this list lacks shows the engine's own text.
 C.TEXT_DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison", "Bleed", "Enrage" }
 C.TEXT_DISPEL_LABELS = { Magic = "Magic", Curse = "Curse", Disease = "Disease", Poison = "Poison",
     Bleed = "Bleed", Enrage = "Enrage" }

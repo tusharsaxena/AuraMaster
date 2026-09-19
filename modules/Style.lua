@@ -296,6 +296,21 @@ local curves = setmetatable({}, WEAK_KEYS)
 local blinkCurves = setmetatable({}, WEAK_KEYS)
 local dispelMaps = setmetatable({}, WEAK_KEYS)
 
+-- Dispel types the engine can report that the palette has no color for (Enrage: C.TEXT_DISPEL_TYPES
+-- names it as a real dispelName, but it is not a C.DISPEL_TYPES palette entry). buildDispelMap maps
+-- each of these to the fallback too, exactly like None, so an aura of one of them keeps the surface's
+-- own color rather than Blizzard's own tint.
+local EXTRA_DISPEL_TYPES = {}
+do
+    local palette = {}
+    for _, name in ipairs(C.DISPEL_TYPES) do palette[name] = true end
+    for _, name in ipairs(C.TEXT_DISPEL_TYPES) do
+        if not palette[name] then
+            EXTRA_DISPEL_TYPES[#EXTRA_DISPEL_TYPES + 1] = name
+        end
+    end
+end
+
 --- The engine's text formatter for one time format, shared by every button that uses it.
 local function formatterFor(fmt)
     local key = fmt or false
@@ -403,7 +418,9 @@ local function buildDispelMap(stored, fallback)
         src[name] = c
         if type(c) == "table" then map[name] = _G.CreateColor(c.r or 1, c.g or 1, c.b or 1, a) end
     end
-    map.None = _G.CreateColor(fallback.r or 1, fallback.g or 1, fallback.b or 1, a)
+    local none = _G.CreateColor(fallback.r or 1, fallback.g or 1, fallback.b or 1, a)
+    map.None = none
+    for _, name in ipairs(EXTRA_DISPEL_TYPES) do map[name] = none end
     return { map = map, src = src, r = fallback.r, g = fallback.g, b = fallback.b, a = fallback.a }
 end
 
@@ -411,9 +428,11 @@ end
 --- and the surface's own color `fallback` ({ r, g, b, a }, stable per look: Style.CurveColor). Each
 --- dispel type takes its palette color; an aura with NO dispel type — the engine keys it "None"
 --- (GetDispelTypeMapKey) — takes `fallback`, so it keeps the surface's normal color rather than
---- Blizzard's own "none" tint (feedback #7, owner decision: no type means the normal color). Every
---- entry carries the fallback's alpha, so a dispel-colored surface keeps its own transparency.
---- Built once per set of color leaves and fallback, and shared by every button that shows it.
+--- Blizzard's own "none" tint (feedback #7, owner decision: no type means the normal color). A type
+--- the palette does not cover but the engine can still report (`EXTRA_DISPEL_TYPES`, e.g. `Enrage`)
+--- takes `fallback` too, for the same reason. Every entry carries the fallback's alpha, so a
+--- dispel-colored surface keeps its own transparency. Built once per set of color leaves and
+--- fallback, and shared by every button that shows it.
 function Style.DispelColorMap(stored, fallback)
     if type(stored) ~= "table" or not _G.CreateColor then return {} end
     fallback = fallback or NO_COLOR
