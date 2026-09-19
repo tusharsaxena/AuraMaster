@@ -418,3 +418,83 @@ test("layout: Another container names the derived points and the container it is
     -- red under: the line drawn for a container that follows nothing
     assertFalse(P.hasText(ws, "Target debuffs (mine)"), "no line outside container mode")
 end)
+
+-- ── the Point rows and the facing-growth hint (smoke feedback 2, item 1, D-3) ────────────────────
+
+test("layout: every Point and Relative point row places the first aura, since the container's full size is secret", function()
+    local NS = T.NS
+    for _, path in ipairs({ "container.position.point", "container.position.relativePoint",
+                            "container.attach.point", "container.attach.relativePoint" }) do
+        -- red under: the old wording ("the corner of this container that is attached")
+        assertTrue(NS.FindSchemaRow(path).desc:find("first aura", 1, true) ~= nil, path)
+    end
+    assertTrue(NS.FindSchemaRow("container.attach.point").desc:find("secret", 1, true) ~= nil,
+        "Point says why the container itself cannot be anchored")
+end)
+
+--- The Anchor tab of container 1 in Named frame mode with its Point and growth set: whether it drew
+--- the facing-growth hint, and the widgets it drew.
+local function hintFor(point, growH, growV, mode)
+    local NS, _, P = layoutIn(mode or "frame")
+    NS.SetByPath("container.attach.point", point, 1)
+    NS.SetByPath("container.position.point", point, 1)
+    NS.SetByPath("container.layout.growH", growH, 1)
+    NS.SetByPath("container.layout.growV", growV, 1)
+    local ws = P.rerender("Layout")
+    assertTrue(#ws > 0, "the Anchor tab drew")
+    return P.hasText(ws, "grow back over"), ws, NS, P
+end
+
+test("layout: the facing-growth hint shows exactly when Point's side and the growth point at each other", function()
+    local cases = {
+        -- vertical: a BOTTOM point sits above the frame, a TOP point below it
+        { "BOTTOMLEFT", "right", "down", true }, { "BOTTOM", "right", "down", true },
+        { "BOTTOMRIGHT", "left", "down", true }, { "TOP", "right", "up", true },
+        { "TOPRIGHT", "left", "up", true },
+        { "BOTTOMLEFT", "right", "up", false }, { "TOPLEFT", "right", "down", false },
+        { "BOTTOMRIGHT", "left", "up", false },
+        -- horizontal: a LEFT point sits right of the frame, a RIGHT point left of it
+        { "LEFT", "left", "down", true }, { "RIGHT", "right", "down", true },
+        { "TOPLEFT", "left", "down", true }, { "BOTTOMRIGHT", "right", "up", true },
+        { "LEFT", "right", "down", false }, { "RIGHT", "left", "up", false },
+        -- CENTER has no side
+        { "CENTER", "right", "down", false }, { "CENTER", "left", "up", false },
+    }
+    for _, c in ipairs(cases) do
+        local shown = hintFor(c[1], c[2], c[3])
+        -- red under: the hint missing, or its side test inverted or on the wrong axis
+        assertEqual(shown, c[4], ("%s growing %s/%s"):format(c[1], c[2], c[3]))
+    end
+end)
+
+test("layout: the hint names the growth to pick instead, one line per facing axis", function()
+    local L = T.NS.L
+    local PL, GV, GH = T.NS.Constants.POINT_LABELS, T.NS.Constants.GROW_V_LABELS, T.NS.Constants.GROW_H_LABELS
+    local V = L["Point is %s and Grow vertically is %s, so the auras grow back over the frame this container is attached to. Set Grow vertically to %s on the Growth tab instead."]
+    local H = L["Point is %s and Grow horizontally is %s, so the auras grow back over the frame this container is attached to. Set Grow horizontally to %s on the Growth tab instead."]
+    local _, ws, _, P = hintFor("BOTTOMLEFT", "left", "down")
+    -- red under: one combined line, or the growth to pick named wrong
+    assertTrue(P.hasText(ws, V:format(PL.BOTTOMLEFT, GV.down, GV.up)), "the vertical line")
+    assertTrue(P.hasText(ws, H:format(PL.BOTTOMLEFT, GH.left, GH.right)), "the horizontal line")
+    _, ws = hintFor("TOP", "right", "up")
+    assertTrue(P.hasText(ws, V:format(PL.TOP, GV.up, GV.down)))
+    assertFalse(P.hasText(ws, "Grow horizontally is"), "no horizontal line for a point with no side")
+end)
+
+test("layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived", function()
+    for _, mode in ipairs({ "screen", "container" }) do
+        -- red under: the hint drawn in every attach mode
+        assertFalse((hintFor("BOTTOMLEFT", "right", "down", mode)), mode)
+    end
+end)
+
+test("layout: choosing a facing Point redraws the tab with the hint on the next frame", function()
+    local NS, m, P, ws = layoutIn("frame")
+    NS.Helpers.__pageCtx.layout.panel:Show()
+    P.during(function() m.__fireTimers() end)
+    assertFalse(P.hasText(ws, "grow back over"), "the default Top left point grows away from the frame")
+    P.row(ws, "container.attach.point"):__fire("OnValueChanged", "BOTTOMLEFT")
+    local redrawn = P.during(function() m.__fireTimers() end)
+    -- red under: Point without its structural onChange (the tab keeps its old hint state)
+    assertTrue(P.hasText(redrawn, "grow back over"))
+end)

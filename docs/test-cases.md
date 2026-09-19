@@ -279,7 +279,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
 
-### test_container.lua (46)
+### test_container.lua (49)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -308,6 +308,9 @@ badge and any count quoted in the docs must agree with it.
 - container: a unit change is sent to the live engine once
 - container: switching style rebuilds the engine even when the filter plan keeps its shape
 - container: a text template of a new shape rebuilds the engine; one of the same shape restyles it
+- container: flipping Grow vertically retires the engine and pins the new one at the new corner, before its first group
+- container: flipping Grow horizontally retires the engine and pins the new one at the new corner, before its first group
+- container: a spacing, per-line or fill change keeps the corner and updates the engine in place
 - container: a buff container showing only Weapon enchants draws the engine's three slots and no aura group (feedback #6)
 - container: an enchant slot the engine refuses costs that slot, not the build
 - container: an engine call that raises is traced, and the build carries on to the unit
@@ -440,7 +443,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (71)
+### test_anchors.lua (72)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -501,6 +504,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: the engine's flow, the placeholders and the handle all read the inherited flow
 - anchors: detaching a container restores its own stored flow at the next apply
 - anchors: a write that moves a container's flow re-applies every container following it
+- anchors: a parent's growth flip rebuilds its follower's engine, pinned at the derived corner, and re-anchors it to the parent's new engine
 - anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
 - anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
@@ -1086,7 +1090,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (22)
+### test_pages_layout.lua (27)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
 - layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
@@ -1110,6 +1114,11 @@ badge and any count quoted in the docs must agree with it.
 - layout: a screen or frame container's growth rows are its own and live, with no follow line
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
+- layout: every Point and Relative point row places the first aura, since the container's full size is secret
+- layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
+- layout: the hint names the growth to pick instead, one line per facing axis
+- layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
+- layout: choosing a facing Point redraws the tab with the hint on the next frame
 
 ### test_pages_bars.lua (12)
 
@@ -1284,14 +1293,14 @@ badge and any count quoted in the docs must agree with it.
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 74 |
-| test_container.lua | 46 |
+| test_container.lua | 49 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 71 |
+| test_anchors.lua | 72 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 51 |
 | test_timedspells.lua | 19 |
@@ -1311,7 +1320,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general.lua | 38 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 43 |
-| test_pages_layout.lua | 22 |
+| test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 12 |
 | test_pages_icons.lua | 7 |
 | test_pages_text.lua | 25 |
@@ -1328,4 +1337,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1114** |
+| **Total** | **1123** |

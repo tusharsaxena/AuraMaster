@@ -130,7 +130,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_schema.lua` | `settings/Schema.lua`: every row resolves, class-color companions, the container-relative path model, the carve-outs |
 | `test_schema_paths.lua` | `settings/Schema.lua` in depth: the write seam's order, the relative and absolute path models, registration and validation, carve-outs, whole sections, `CheckWrite`, `ApplyDefault`, the session rows |
 | `test_filtercompiler.lua` | `modules/FilterCompiler.lua`: settings in, aura groups and warnings out |
-| `test_container.lua` | `modules/Container.lua` against the recorded engine: call order, update in place vs rebuild, the show ladder, preview |
+| `test_container.lua` | `modules/Container.lua` against the recorded engine: call order, update in place vs rebuild (the growth corner included), the show ladder, preview |
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, an apply error that leaves the rest of the pass running, followers re-applied, combat and secrecy deferral |
 | `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
 | `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue` |
@@ -157,7 +157,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_pages_general.lua` | `settings/General.lua` and `settings/GeneralSpells.lua` through their widgets: the Spell Categories ID list and its restore, the Dispel Colors rows; each Master control and Display row, the composer's two buttons, Defaults; the tab strip with Containers gone from it and no page keyed `containers` to `general`'s rows |
 | `test_pages_containers.lua` | `settings/Containers.lua` through its widgets: the picker and New in the band above the strip, its identity rows, Duplicate / Delete / Copy settings from, a Delete that keeps the picker, Defaults (the name kept), and that the page registers on its own (N-1) |
 | `test_pages_filters.lua` | `settings/Filters.lua` through its widgets: the rows each aura type is offered, the category grids, the Overrides ID lists, the warnings |
-| `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the tab order, the attach rows, the subsections drawn per mode and their cycle guard, Pick a frame, the inherited Growth rows, what a Growth or Frame row re-applies, Defaults |
+| `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the tab order, the attach rows, the subsections drawn per mode and their cycle guard, Pick a frame, the inherited Growth rows, the Point rows' first-aura wording and the facing-growth hint, what a Growth or Frame row re-applies, Defaults |
 | `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs (the Icon tab among them), the not-drawn-as-bars notice with every control disabled, sliders and swatches, Defaults |
 | `test_pages_icons.lua` | `settings/Icons.lua` through its widgets: tabs, the not-drawn-as-icons notice with every control disabled, rows, Defaults |
 | `test_pages_text.lua` | `settings/Text.lua` through its widgets: the tabs, the notice and disabled rows for another style, the Template box and its refusal text (panel and `/am set`), the cheat sheet, the centering note, the rows the effect and the template dim, Defaults |

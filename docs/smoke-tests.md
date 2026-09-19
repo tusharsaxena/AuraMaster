@@ -45,6 +45,9 @@ suite covers what only the client can show.
     real auras are hidden, the outline giving way to them. The handle is a dark strip with a thin gold edge and a gold label, sitting
     outside the container: above it when the auras grow down, below when they grow up, lined up with
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
+    Flip Grow vertically without reloading (Layout → Growth, Down → Up): the bars stack up from the
+    anchor, the handle moves below them, and nothing hangs below the anchor; flip it back and they
+    stack down again. Grow horizontally (Right → Left) likewise, on an icons container.
     Hovering the strip or the help mark at its right end shows, at the cursor, the name and "Drag to
     move. Right-click for settings.", with no Lua error. Run this after a `/reload` and again after
     Profiles → Reset Profile.
@@ -374,7 +377,8 @@ listed here too, so the batch can be signed off in one pass.
 67. **Inherited flow (L-6).** Attach container B to A (Layout → Anchor → *Another container*) where A
     fills in columns growing down → B continues below A's last element, and the line beside the
     Container dropdown names the points. Set A's **Grow vertically** to up → B moves above A, with
-    none of B's own settings changed. On B's Growth tab, Fill, Grow horizontally and Grow vertically
+    none of B's own settings changed, and without a reload B's own auras stack up from its first
+    element too. On B's Growth tab, Fill, Grow horizontally and Grow vertically
     are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
     B's **Attach to** back to *Screen* → B's own flow returns.
 68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.

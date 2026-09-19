@@ -15,7 +15,7 @@ profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:240`
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:217`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:220`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -396,7 +396,7 @@ return value.
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
-  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:38-41`).
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:42-45`).
 - **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
@@ -414,12 +414,12 @@ return value.
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
   it draws. The next visibility pass after combat catches both up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:219-223`).
+  anchor it (`modules/Container.lua:224-228`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:161`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:433`).
+  button's ancestry (`modules/Container.lua:440`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
@@ -533,8 +533,10 @@ return value.
   `hasUnion` gate) — it is Hide-only in practice, exactly reproducing the retired per-container **"only
   these categories"** toggle it replaced (batch 7 fix round 2).
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
-  going, toggling hide-permanent enchants, or a style switch retires the old engine and creates a new
-  one; WoW never frees a frame, so
+  going, toggling hide-permanent enchants, a style switch, or a growth change that moves the corner
+  the engine is pinned at (Grow horizontally or vertically, its own or inherited from the container
+  it follows; the engine cannot be re-anchored after its first group) retires the old engine and
+  creates a new one; WoW never frees a frame, so
   each such change leaves one hidden frame for the session.
 - **Preview elements are addon-owned frames**, dressed by the same `Style` code but laid out by
   `Preview.Offset`'s arithmetic rather than by the engine. Like the live buttons, they hold the

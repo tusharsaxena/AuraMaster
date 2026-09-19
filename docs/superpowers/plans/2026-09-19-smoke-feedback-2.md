@@ -70,7 +70,7 @@ tree, so they run one at a time. 13 is last.
 |---|---|---|---|---|
 | 1 | Standard v2.60.0 — options-ui-§2 combat lock, §13 tab rule, anti-pattern, ripple ("⚔ Standard") | WowAddonStandards | todo | stops before push |
 | 2 | LibKa0s v1.46.0 — the combat cover, refused writes, regen handling, tests, docs/api, CHANGELOG, release bundle ("⚔ Design") | LibKa0s | todo | stops before tag/push |
-| 3 | Item 1 — growth corner in the structure key; Point rows reworded; facing-growth hint | AuraMaster | todo | |
+| 3 | Item 1 — growth corner in the structure key; Point rows reworded; facing-growth hint | AuraMaster | done | T3 commit: corner in Container:Apply structure key; Point rows = first aura; hint Named frame only; +9 tests (1123/1123), inventory + badge regenerated |
 | 4 | Item 4 — dispel-colored bar background / fill honour opacity | AuraMaster | todo | |
 | 5 | Item 7 — report swallowed re-dress errors; anchor text before the icon; guard the icon/border block | AuraMaster | todo | |
 | 6 | Item 6 — Icon rows dim while Icon position is None; border drawn test | AuraMaster | todo | |

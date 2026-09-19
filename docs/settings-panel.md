@@ -311,11 +311,11 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | Row | Path | Type | Behavior |
 |---|---|---|---|
 | Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
-| *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | Used in screen mode; set by dragging |
+| *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
 | *Another container:* Container | `container.attach.container` | number (dropdown) | Every other container, or None; a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
-| *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | Corner of this container / of the frame |
+| *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
 
 Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
@@ -326,6 +326,18 @@ them. Changing **Attach to** (from the panel, `/am set` or a reset) redraws the 
 frame, through the library's selector watch; the mode row needs no `onChange` of its own. **Pick a
 frame…** (closes the settings, starts the picker, reopens this page) is Frame name's `pairWith`
 partner, so it is drawn with Named frame; a pick still sets the mode to Named frame itself.
+
+**Point places the first aura (D-3).** The anchor is one element in size and the engine is pinned at
+its growth corner, because the container's full extent is secret and cannot be anchored; so both
+Point rows (screen and Named frame) name the corner of the **first aura**, and the other auras grow
+away from it as the Growth tab says. **The facing-growth hint.** After the tab's rows (`afterGroup`),
+in `frame` mode only, a small gray line appears when the Point's side faces the growth: a BOTTOM*
+point (the container sits above the frame) with Grow vertically Down, a TOP* point with Up, a LEFT*
+point (it sits right of the frame) with Grow horizontally Left, a RIGHT* point with Right. It reads
+"Point is *point* and Grow vertically is *growth*, so the auras grow back over the frame this
+container is attached to. Set Grow vertically to *opposite* on the Growth tab instead." (the
+horizontal line likewise; a corner point can draw both). The screen has no frame to grow over, and a
+follower's derived points never face its flow, so neither mode draws it.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow
