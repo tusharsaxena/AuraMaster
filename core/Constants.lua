@@ -226,6 +226,35 @@ C.TEXT_DISPEL_LABELS = { Magic = "Magic", Curse = "Curse", Disease = "Disease", 
 -- The longest template the parser accepts (modules/TextTemplate.lua, rule 8).
 C.TEXT_TEMPLATE_MAX = 200
 
+-- The built-in templates the Text page's Template dropdown offers (feedback #5): each a template
+-- string and, for the centered one, the justify it needs. TEXT_BUILTIN_SETS lists them per aura type
+-- in dropdown order; a stored template matching none reads as Custom (modules/TextTemplate.lua's
+-- MatchBuiltin). Every duration run is bracketed, so no built-in leaves text behind on a timeless aura.
+C.TEXT_BUILTINS = {
+    name           = { template = "$spellname$" },
+    nameTime       = { template = "$spellname$[ - $remainingduration$]" },
+    nameStacksTime = { template = "$spellname$[ x$stacks$][ - $remainingduration$]" },
+    timeOfMax      = { template = "$spellname$[ $remainingduration$ / $maxduration$]" },
+    nameType       = { template = "$spellname$[ ($dispeltype$)]" },
+    nameTypeTime   = { template = "$spellname$[ ($dispeltype$)][ - $remainingduration$]" },
+    centered       = { template = "$spellname$[ - $remainingduration$]", justifyH = "CENTER" },
+}
+C.TEXT_BUILTIN_LABELS = {
+    name = "Name", nameTime = "Name + time", nameStacksTime = "Name, stacks, time", timeOfMax = "Time / max",
+    nameType = "Name (type)", nameTypeTime = "Name, type, time", centered = "Centered: name over time",
+}
+C.TEXT_BUILTIN_SETS = {
+    HELPFUL = { "name", "nameTime", "nameStacksTime", "timeOfMax", "centered" },
+    HARMFUL = { "name", "nameTime", "nameStacksTime", "timeOfMax", "nameType", "nameTypeTime", "centered" },
+}
+
+-- The sample aura the Text page's Preview line renders a template against, per aura type: readable,
+-- invented values (preview-mode). The buff has stacks and no dispel type; the debuff a type and none.
+C.TEXT_SAMPLE_AURAS = {
+    HELPFUL = { name = "Ignore Pain", icon = 1377132, remaining = 11, duration = 12, stacks = 3 },
+    HARMFUL = { name = "Shadow Word: Pain", icon = 136207, remaining = 11, duration = 16, stacks = 0, dispel = "Magic" },
+}
+
 -- Placeholder auras for preview mode (preview-mode): real render path, invented data.
 C.PREVIEW_AURAS = {
     { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },

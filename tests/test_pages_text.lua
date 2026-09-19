@@ -13,6 +13,16 @@ local pages = dofile("tests/page_helpers.lua")
 local P_ = "container.text."
 local GOLD = "|c" .. T.NS.Constants.NOTICE_COLOR
 
+--- The Template dropdown (feedback #5): the built-ins and Custom. Not a schema row, found by label.
+local function picker(NS, P, ws) return P.find(ws, "Dropdown", NS.L["Template"]) end
+
+--- Choose `key` in the Template dropdown and answer the page as it draws after the choice.
+local function pick(NS, m, P, ws, key)
+    picker(NS, P, ws):__fire("OnValueChanged", key)
+    m.__fireTimers()
+    return P.rerender("Text")
+end
+
 --- The Animation tab as the current settings draw it: a structural re-render, then a click on the
 --- tab unless it is already the active one (a click on the active tab draws nothing).
 local function animationTab(NS, P)
@@ -67,9 +77,10 @@ test("text page: the Bars and Icons pages name the text style on a text containe
     assertTrue(P.hasText(P.show("Icons"), GOLD .. L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]))
 end)
 
-test("text page: General holds Size, the Template box, the cheat sheet, then Placement", function()
-    local NS, _, P, ws = textPage()
+test("text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement", function()
+    local NS, m, P, ws = textPage()
     local L = NS.L
+    ws = pick(NS, m, P, ws, "custom")
     local box = P.row(ws, P_ .. "template")
     -- red under: the template row without dialogControl = "EditBox" (a dropdown that opens on nothing)
     assertEqual(box.type, "EditBox")
@@ -93,10 +104,17 @@ test("text page: General holds Size, the Template box, the cheat sheet, then Pla
         if w.labelText == NS.FindSchemaRow(P_ .. "justifyH").label then at.justify = i end
     end
     assertTrue(at.box < at.sheet and at.sheet < at.justify, "box, then cheat sheet, then Placement")
+    local dd = picker(NS, P, ws)
+    for i, w in ipairs(ws) do
+        if w == dd then at.picker = i end
+    end
+    -- red under: the dropdown drawn under the box (the spec puts it above the template box)
+    assertTrue(at.picker < at.box, "the Template dropdown, then the box")
 end)
 
 test("text page: a valid template is stored; a refused one is not, and the panel prints why", function()
-    local NS, _, P, ws = textPage()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
     local lines = P.chat()
     local box = P.row(ws, P_ .. "template")
     box:__fire("OnEnterPressed", "$spellname$ $remainingduration$")
@@ -206,4 +224,89 @@ test("text page: Defaults restores the selected container's text look and nothin
     assertEqual(c1.text.width, NS.CONTAINER_TEMPLATE.text.width)
     assertEqual(c1.text.template, NS.CONTAINER_TEMPLATE.text.template)
     assertEqual(c1.bars.width, 111)
+end)
+
+-- ── built-in templates, Custom and the Preview (feedback #5) ──────────────────────────────────
+
+test("text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)", function()
+    local NS, _, P, ws = textPage()
+    local C = NS.Constants
+    local function expected(auraType)
+        local out = {}
+        for i, key in ipairs(C.TEXT_BUILTIN_SETS[auraType]) do out[i] = key end
+        local n = #out
+        out[n + 1] = "custom"
+        return table.concat(out, ",")
+    end
+    local dd = picker(NS, P, ws)
+    -- red under: no Template dropdown, or the buff page offering the debuff built-ins
+    assertEqual(table.concat(dd.order, ","), expected("HELPFUL"))
+    assertEqual(dd.list.nameTime, NS.L["Name + time"])
+    assertEqual(dd.value, "nameStacksTime", "the default template is a built-in")
+    NS.SetByPath("container.style", "text", 2)
+    NS.Helpers.SelectContainer(2)
+    ws = P.rerender("Text")
+    -- red under: the debuff page without Name (type) and Name, type, time
+    assertEqual(table.concat(picker(NS, P, ws).order, ","), expected("HARMFUL"))
+end)
+
+test("text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)", function()
+    local NS, m, P, ws = textPage()
+    local s = NS.Database.FindContainer(1).text
+    -- red under: the box drawn for a template that is a built-in
+    assertEqual(P.row(ws, P_ .. "template"), nil, "a built-in shows no box")
+    ws = pick(NS, m, P, ws, "timeOfMax")
+    assertEqual(s.template, "$spellname$[ $remainingduration$ / $maxduration$]")
+    assertEqual(s.justifyH, "LEFT")
+    ws = pick(NS, m, P, ws, "centered")
+    -- red under: the centered built-in writing its template and leaving Justify alone
+    assertEqual(s.template, "$spellname$[ - $remainingduration$]")
+    assertEqual(s.justifyH, "CENTER")
+    assertEqual(picker(NS, P, ws).value, "centered", "Name + time with Center reads as the centered one")
+    ws = pick(NS, m, P, ws, "name")
+    -- red under: a plain built-in leaving the line centered (Center is the centered built-in's)
+    assertEqual(s.justifyH, "LEFT")
+    assertEqual(picker(NS, P, ws).value, "name")
+end)
+
+test("text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)", function()
+    local NS, m, P, ws = textPage()
+    ws = pick(NS, m, P, ws, "custom")
+    local box = P.row(ws, P_ .. "template")
+    -- red under: Custom not opening the box, or opening it empty
+    assertTrue(box ~= nil, "Custom shows the box")
+    assertEqual(box.text, NS.CONTAINER_TEMPLATE.text.template, "seeded with the current template")
+    assertEqual(picker(NS, P, ws).value, "custom")
+    assertEqual(NS.Database.FindContainer(1).text.template, NS.CONTAINER_TEMPLATE.text.template, "choosing Custom writes nothing")
+    -- Another container, whose stored template is no built-in: Custom, with its box, unasked.
+    NS.SetByPath("container.style", "text", 3)
+    NS.SetByPath(P_ .. "template", "$spellname$ $stacks$", 3)
+    NS.Helpers.SelectContainer(3)
+    ws = P.rerender("Text")
+    -- red under: a template that matches nothing read as the first built-in
+    assertEqual(picker(NS, P, ws).value, "custom")
+    assertTrue(P.row(ws, P_ .. "template") ~= nil, "and its box is drawn")
+end)
+
+test("text page: the Preview line renders the sample aura, brackets filled and empty ones hidden (feedback #5)", function()
+    local NS, m, P, ws = textPage()
+    local L = NS.L
+    -- The buff sample: Ignore Pain, 3 stacks, 11 of 12 s, no dispel type. The harness has no seconds
+    -- formatter, so a time reads as whole seconds ("11s").
+    -- red under: no Preview line, or one not filled from the sample
+    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Ignore Pain x3 - 11s")))
+    NS.SetByPath(P_ .. "template", "$spellname$[ ($remainingpercent$%)][ ($dispeltype$)]", 1)
+    m.__fireTimers()
+    ws = P.rerender("Text")
+    -- red under: an empty bracket drawn (the dispel type of a typeless aura), or a percent carrying
+    -- its own "%" beside the one typed
+    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Ignore Pain (92%)")))
+    -- The debuff sample: Shadow Word: Pain, no stacks, a Magic type.
+    NS.SetByPath("container.style", "text", 2)
+    NS.Helpers.SelectContainer(2)
+    ws = P.rerender("Text")
+    ws = pick(NS, m, P, ws, "nameTypeTime")
+    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Shadow Word: Pain (" .. L["Magic"] .. ") - 11s")))
+    ws = pick(NS, m, P, ws, "nameStacksTime")
+    assertTrue(P.hasText(ws, L["Preview: %s"]:format("Shadow Word: Pain - 11s")), "no stacks, so no ' x'")
 end)

@@ -417,10 +417,17 @@ other icon shows your border. `blizzardNumbers` shows the cooldown frame's own c
 
 ### Text (31 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
 
-Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put two
-read-only blocks between its rows: the token cheat sheet under the Template box, and the centering
-note under Placement. Its rows are still ordinary schema rows — the panel, `/am set`, Defaults and the
-resets all reach them through the one write seam.
+Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
+built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **What
+each line says**: a **Template** dropdown of the aura type's built-in templates (Name; Name + time;
+Name, stacks, time — the default; Time / max; and on debuffs Name (type) and Name, type, time;
+Centered: name over time, which also sets Justify to Center) plus **Custom**, then the **Custom
+template** box (drawn only for Custom: a template matching no built-in reads as Custom by itself), then
+**Preview:** the line rendered on a sample aura (`C.TEXT_SAMPLE_AURAS`, through the placeholders' own
+fill, `Style.Text.PreviewLine`), then the token cheat sheet; the centering note sits under Placement.
+Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through the write
+seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel, `/am set`,
+Defaults and the resets all reach them through the one write seam.
 
 The Template row's `validate` is the parser (`modules/TextTemplate.lua`'s `TT.Validate`): a refused
 template is never stored, and its reason reaches the player through the write seam's third return
@@ -439,7 +446,7 @@ disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. What each line says: `template` (+ the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
+| General | Size: `width`, `height`. What each line says: the Template dropdown, `template` (Custom only; + the Preview and the cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |

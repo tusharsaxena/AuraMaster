@@ -215,3 +215,30 @@ test("template: ForDraw draws a refused stored template as the default one, and 
     assertTrue(fell, "fell back")
     assertTrue(r == TT.Compile(NS.CONTAINER_TEMPLATE.text.template), "the default template's pieces")
 end)
+
+-- ── the built-in templates (feedback #5) ──────────────────────────────────────────────────────
+
+test("template: every built-in compiles, and each aura type's list is the pinned one", function()
+    local C = NS.Constants
+    for key, def in pairs(C.TEXT_BUILTINS) do
+        -- red under: a built-in the parser refuses (the dropdown would write a template it rejects)
+        assertTrue(TT.Compile(def.template).ok, key)
+    end
+    assertEqual(table.concat(TT.Builtins("HELPFUL"), ","), "name,nameTime,nameStacksTime,timeOfMax,centered")
+    assertEqual(table.concat(TT.Builtins("HARMFUL"), ","), "name,nameTime,nameStacksTime,timeOfMax,nameType,nameTypeTime,centered")
+    assertEqual(table.concat(TT.Builtins("NOPE"), ","), table.concat(TT.Builtins("HELPFUL"), ","), "an unknown type offers the buff set")
+    assertEqual(C.TEXT_BUILTINS.nameStacksTime.template, NS.CONTAINER_TEMPLATE.text.template, "the default is a built-in")
+end)
+
+test("template: a stored template matches a built-in by its text and its justify rule, else none", function()
+    local nameTime = "$spellname$[ - $remainingduration$]"
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "LEFT"), "nameTime")
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "RIGHT"), "nameTime")
+    -- red under: the justify rule ignored (Name + time centered would read as Name + time)
+    assertEqual(TT.MatchBuiltin("HELPFUL", nameTime, "CENTER"), "centered")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[ x$stacks$][ - $remainingduration$]", "CENTER"), nil,
+        "a built-in other than the centered one, centered, is Custom")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$[ ($dispeltype$)]", "LEFT"), nil, "a debuff built-in on a buff container")
+    assertEqual(TT.MatchBuiltin("HARMFUL", "$spellname$[ ($dispeltype$)]", "LEFT"), "nameType")
+    assertEqual(TT.MatchBuiltin("HELPFUL", "$spellname$ $stacks$", "LEFT"), nil)
+end)

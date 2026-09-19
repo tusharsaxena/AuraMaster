@@ -369,36 +369,41 @@ local function componentText()
     return Style.PreviewSeconds(value, fillSettings.timeFormat)
 end
 
---- A placeholder's duration run: the format with each {} filled, nothing for a timeless aura (the
---- prebuilt binding's zero-duration text), and the running-out color below the threshold.
-local function previewDuration(fs, piece, aura, s)
-    if aura.duration <= 0 then
-        fs:SetText("")
-        return
-    end
+--- A placeholder's duration run as text: the format with each {} filled, nothing for a timeless aura
+--- (the prebuilt binding's zero-duration text).
+local function durationText(piece, aura, s)
+    if aura.duration <= 0 then return "" end
     fillAura, fillSettings, fillPiece, fillIndex = aura, s, piece, 0
-    fs:SetText((piece.format:gsub("{}", componentText)))
+    local text = piece.format:gsub("{}", componentText)
     fillAura, fillSettings, fillPiece = nil, nil, nil
-    if (s.expiringColorOn or s.expiringBlink) and aura.remaining < number(s.expiringThreshold, D.expiringThreshold) then
+    return text
+end
+
+-- What each kind of piece reads for a placeholder aura, as the engine would write it. Shared by the
+-- placeholders (Text.FillPreview) and the Text page's Preview line (Text.PreviewLine).
+local PIECE_TEXT = {
+    literal = function(piece) return piece.text end,
+    name = function(_, aura) return aura.name end,
+    stacks = function(piece, aura) return aura.stacks >= 2 and piece.format:format(aura.stacks) or "" end,
+    dispel = function(piece, aura)
+        local label = aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]
+        return label and (piece.pre .. L[label] .. piece.post) or ""
+    end,
+    duration = durationText,
+}
+
+--- A placeholder's duration run below the running-out threshold takes the running-out color, as the
+--- engine's curve paints a live one (a timeless one has no threshold to cross).
+local function previewRunColor(fs, aura, s)
+    if aura.duration <= 0 or not (s.expiringColorOn or s.expiringBlink) then return end
+    if aura.remaining < number(s.expiringThreshold, D.expiringThreshold) then
         fs:SetTextColor(Style.Color(s.expiringColorOn and s.expiringColor or (s.font or D.font).fontColor, false))
     end
 end
 
--- How each kind of piece is filled from a placeholder aura, as the engine would fill it.
-local PREVIEW = {
-    name = function(fs, _, aura) fs:SetText(aura.name) end,
-    stacks = function(fs, piece, aura)
-        fs:SetText(aura.stacks >= 2 and piece.format:format(aura.stacks) or "")
-    end,
-    dispel = function(fs, piece, aura)
-        local label = aura.dispel and C.TEXT_DISPEL_LABELS[aura.dispel]
-        fs:SetText(label and (piece.pre .. L[label] .. piece.post) or "")
-    end,
-    duration = previewDuration,
-}
-
 --- Fill a PREVIEW element with placeholder values (modules/Preview.lua), from the same compiled
---- pieces the live dress binds, so the preview and a live button cannot differ in structure.
+--- pieces the live dress binds, so the preview and a live button cannot differ in structure. A
+--- literal already holds its text (dressPieces).
 function Text.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not (am and am.style == "text") then return end
@@ -406,7 +411,19 @@ function Text.FillPreview(frame, aura, cfg)
     local compiled = Text.Compiled(s)
     am.icon:SetTexture(aura.icon)
     for i, piece in ipairs(compiled.pieces) do
-        local fill = PREVIEW[piece.kind]
-        if fill then fill(am[PIECE[i]], piece, aura, s) end
+        if piece.kind ~= "literal" then
+            local fs = am[PIECE[i]]
+            fs:SetText(PIECE_TEXT[piece.kind](piece, aura, s))
+            if piece.kind == "duration" then previewRunColor(fs, aura, s) end
+        end
     end
+end
+
+--- The line text block `s` draws for a sample `aura`, as one plain string: the Text page's Preview
+--- (feedback #5). The same compile and the same fill as the placeholders, so the two cannot disagree.
+function Text.PreviewLine(s, aura)
+    local compiled = Text.Compiled(s or {})
+    local parts = {}
+    for i, piece in ipairs(compiled.pieces) do parts[i] = PIECE_TEXT[piece.kind](piece, aura, s or {}) end
+    return table.concat(parts)
 end

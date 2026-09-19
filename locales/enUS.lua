@@ -588,3 +588,13 @@ L["Set every category in this section to Hide, for this container."] = "Set ever
 -- The smoke-test feedback batch (2026-09-19).
 L["TEST"] = "TEST"
 L["Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."] = "Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."
+L["Custom template"] = "Custom template"
+L["Custom"] = "Custom"
+L["Preview: %s"] = "Preview: %s"
+L["A ready-made line, or Custom to write your own from the tokens below. The Preview shows the result on a sample aura."] = "A ready-made line, or Custom to write your own from the tokens below. The Preview shows the result on a sample aura."
+L["Name + time"] = "Name + time"
+L["Name, stacks, time"] = "Name, stacks, time"
+L["Time / max"] = "Time / max"
+L["Name (type)"] = "Name (type)"
+L["Name, type, time"] = "Name, type, time"
+L["Centered: name over time"] = "Centered: name over time"

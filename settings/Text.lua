@@ -5,11 +5,16 @@ local _, NS = ...
 --
 --     band   [Container ▾]
 --     [ General ][ Font ][ Icon ][ Animation ]
+--     General   Size, then -- What each line says --: [Template ▾] (a built-in, or Custom), the
+--               Custom template box (Custom only), Preview: <the line on a sample aura>, the cheat
+--               sheet; then Placement and the centering note
 --
--- General is drawn bespoke (its `tabs` entry below) only to put two read-only blocks between its
--- rows: the token cheat sheet under the Template box, and the centering note under Placement. Its
--- rows are still ordinary schema rows, drawn by the flow engine, so the panel, `/am set`, the
--- Defaults button and the resets all reach them through the one write seam.
+-- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and two
+-- read-only blocks between its rows: the token cheat sheet, and the centering note under Placement.
+-- Its rows are still ordinary schema rows, drawn by the flow engine, so the panel, `/am set`, the
+-- Defaults button and the resets all reach them through the one write seam. The Template dropdown is
+-- not a row: it writes the template (and, for the centered built-in, Justify) through that seam
+-- (feedback #5).
 --
 -- The Template row's `validate` is the parser (TT.Validate): a refused template is never stored, and
 -- the refusal's reason reaches the player through the write seam's third return (settings/Schema.lua)
@@ -34,6 +39,16 @@ local G_GENERAL, G_FONT, G_ICON, G_ANIM = L["General"], L["Font"], L["Icon"], L[
 local S_PLACEMENT = L["Placement"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local GRAY = "|cff808080%s|r"
+local CUSTOM = "custom"
+
+-- Which containers have Custom chosen in the Template dropdown this session, by id. Page state, not a
+-- setting: a stored template matching no built-in reads as Custom on its own; this keeps the box open
+-- for one that matches a built-in once the player asked to edit it.
+local customOpen = {}
+
+-- A write that changes what the General tab draws (the box, the preview, the centering note) redraws
+-- it, on the next frame, out of the widget's own callback.
+local function structural() if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end end
 
 --- The selected container's text block (empty with no container).
 local function textBlock()
@@ -63,12 +78,13 @@ NS.RegisterSchemaRows({
     { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 8, max = 80, step = 1,
       label = L["Height (px)"], desc = L["The height of one line."] },
     { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["What each line says"], type = "string",
-      dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Template"],
+      dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Custom template"],
       desc = L["What each line says, built from the tokens listed below. Press Enter to apply."],
-      validate = TT.Validate },
+      validate = TT.Validate, onChange = structural },
     { path = P .. "justifyH", page = PAGE, group = G_GENERAL, subgroup = S_PLACEMENT, type = "string",
       values = NS.Choices(C.TEXT_JUSTIFY_H, C.JUSTIFY_LABELS), label = L["Justify"],
-      desc = L["How the line sits in its box. Center needs a template that is one piece (one token and no text around it); any other lines up Left."] },
+      desc = L["How the line sits in its box. Center needs a template that is one piece (one token and no text around it); any other lines up Left."],
+      onChange = structural },
     { path = P .. "justifyV", page = PAGE, group = G_GENERAL, subgroup = S_PLACEMENT, type = "string",
       values = NS.Choices(C.TEXT_JUSTIFY_V, C.TEXT_JUSTIFY_V_LABELS), label = L["Vertical justify"],
       desc = L["Whether the line sits at the top, middle or bottom of its box."] },
@@ -102,17 +118,94 @@ local function centerNote(ctx, cfg)
     H.TextRow(ctx, GRAY:format(L["Center needs a one-piece template; this one has %d pieces, so it lines up Left."]:format(count)), SMALL)
 end
 
---- The General tab: its rows, with the cheat sheet after the Template box and the centering note
---- after Placement.
-local function renderGeneral(ctx, cfg, rows)
-    local head, tail = {}, {}
-    for _, row in ipairs(rows or {}) do
-        local list = (row.subgroup == S_PLACEMENT) and tail or head
-        local n = #list
-        list[n + 1] = row
+-- ── The built-in templates (feedback #5) ──────────────────────────────────────────────────────
+
+--- Whether container `id`'s Template dropdown reads Custom: its template matches no built-in, or the
+--- player chose Custom this session.
+local function isCustom(cfg, id)
+    local s = cfg.text or {}
+    return customOpen[id] or TT.MatchBuiltin(cfg.auraType, s.template, s.justifyH or D.justifyH) == nil
+end
+
+--- Choose built-in `key` for container `id`: its template, then the justify it needs (Center for the
+--- centered one; Left for any other when the stored justify is Center), each through the write seam.
+local function pickBuiltin(cfg, id, key)
+    local def = C.TEXT_BUILTINS[key]
+    customOpen[id] = nil
+    NS.SetByPath(P .. "template", def.template, id)
+    local justify = (cfg.text and cfg.text.justifyH) or D.justifyH
+    if def.justifyH and justify ~= def.justifyH then
+        NS.SetByPath(P .. "justifyH", def.justifyH, id)
+    elseif not def.justifyH and justify == "CENTER" then
+        NS.SetByPath(P .. "justifyH", "LEFT", id)
     end
-    H.RenderRows(ctx, head, nil, nil, { noHeadings = true })
+end
+
+--- The Template dropdown: the container's built-ins, then Custom. A bespoke cell (not a schema row:
+--- it has no stored value of its own), drawn disabled with the page.
+local function templatePicker(cfg, id)
+    return { make = function(ctx, parent, rel)
+        local list, order = {}, {}
+        for i, key in ipairs(TT.Builtins(cfg.auraType)) do
+            list[key] = L[C.TEXT_BUILTIN_LABELS[key]]
+            order[i] = key
+        end
+        local n = #order
+        order[n + 1] = CUSTOM
+        list[CUSTOM] = L["Custom"]
+        local s = cfg.text or {}
+        local dd = NS.AceGUI:Create("Dropdown")
+        dd:SetLabel(L["Template"])
+        dd:SetList(list, order)
+        dd:SetValue(isCustom(cfg, id) and CUSTOM or TT.MatchBuiltin(cfg.auraType, s.template, s.justifyH or D.justifyH))
+        dd:SetRelativeWidth(rel or 0.5)
+        if ctx.__renderDisabled then dd:SetDisabled(true) end
+        dd:SetCallback("OnValueChanged", function(_, _, key)
+            if key == CUSTOM then customOpen[id] = true else pickBuiltin(cfg, id, key) end
+            structural()
+        end)
+        H.AttachTooltip(dd, L["Template"], L["A ready-made line, or Custom to write your own from the tokens below. The Preview shows the result on a sample aura."])
+        parent:AddChild(dd)
+        return dd
+    end }
+end
+
+--- A copy of `row` the flow engine draws nothing for but its subsection heading (RenderRows emits a
+--- subgroup's heading before it looks at skipRender).
+local function headingOnly(row)
+    local copy = {}
+    for k, v in pairs(row) do copy[k] = v end
+    copy.skipRender = true
+    return copy
+end
+
+--- What each line says: the subsection heading, the Template dropdown, the Custom template box (Custom
+--- only), the Preview line on the aura type's sample aura, then the cheat sheet.
+local function renderTemplate(ctx, cfg, row)
+    local _, id = NS.ActiveContainer()
+    if row then H.RenderRows(ctx, { headingOnly(row) }, nil, nil, { noHeadings = true }) end
+    H.RenderGrid(ctx, { templatePicker(cfg, id) })
+    if row and isCustom(cfg, id) then H.RenderRows(ctx, { row }, nil, nil, { noHeadings = true }) end
+    local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
+    H.TextRow(ctx, L["Preview: %s"]:format(NS.Style.Text.PreviewLine(cfg.text, sample)))
     cheatSheet(ctx)
+end
+
+--- The General tab: Size, then what each line says (renderTemplate), then Placement and the
+--- centering note.
+local function renderGeneral(ctx, cfg, rows)
+    local size, tail, templateRow = {}, {}, nil
+    for _, row in ipairs(rows or {}) do
+        if row.path == P .. "template" then
+            templateRow = row
+        else
+            local list = (row.subgroup == S_PLACEMENT) and tail or size
+            local n = #list
+            list[n + 1] = row
+        end
+    end
+    H.RenderRows(ctx, size, nil, nil, { noHeadings = true })
+    renderTemplate(ctx, cfg, templateRow)
     H.RenderRows(ctx, tail, nil, nil, { noHeadings = true })
     centerNote(ctx, cfg)
 end
