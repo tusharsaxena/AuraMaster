@@ -469,9 +469,12 @@ return value.
 
 - **Units are player, target, focus and pet.** Party units 1–5 are deferred and tracked as a GitHub
   issue.
-- **A Text line centers only when its template is one piece.** A line is a chain of font strings the
-  engine writes secret, so the chain's width is never readable; a multi-piece template set to Center
-  lines up Left, and the Text page says so (`Style.Text.JustifyFor`).
+- **A Text line of several pieces cannot be centered as one line.** A line is a chain of font strings
+  the engine writes secret, so the chain's width is never readable, and no addon code runs when the
+  engine rewrites a piece in combat. A multi-piece template set to Center is therefore STACKED: one
+  centered row per field, its plain literal pieces not drawn, the rows fixed in place (an empty field
+  keeps its row) and the box grown to fit them (`Style.Text.Stacked`, `Style.Text.StackHeight`;
+  feedback #1). The Text page says so under Placement.
 - **A Text token can be used once, the duration tokens must sit together, and there is no caster
   token.** The engine has one binding per field (one spell name, one stack count, one dispel type, one
   duration text whose format holds every duration value); it has none for the caster

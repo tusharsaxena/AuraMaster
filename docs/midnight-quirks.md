@@ -171,7 +171,8 @@ buttons each, for issue #2):
   AddOn" (`AnimationGroup:IsPlaying/Play/Stop`, `Region:IsShown`, `IsAnchoringSecret`), so an
   animation is set up at dress time only.
 - `FontString:IsAnchoringSecret()` answers true even out of combat for an engine-written name: no
-  width in a chain can be read, so a multi-piece line cannot be centered.
+  width in a chain can be read, so a multi-piece line cannot be centered as one line (Center stacks
+  it in rows instead, feedback #1).
 - A **Scale** animation broke a left-justified chain (the glyphs grew about 8 % past their boxes and
   overlapped the next piece); an Alpha animation did not. Round 2, four chains each piece boxed and
   tinted, laid out cleanly in and out of combat: the client sizes an engine-written, single-anchored,

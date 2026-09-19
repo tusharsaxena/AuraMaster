@@ -141,13 +141,18 @@ test("text page: /am set refuses a bad template with the parser's reason, indent
     assertEqual(NS.Database.FindContainer(1).text.template, "$spellname$ ($stacks$)")
 end)
 
-test("text page: Center on a multi-piece template draws the note naming the piece count", function()
+test("text page: Center on a multi-piece template draws the note naming its rows (feedback #1)", function()
     local NS, _, P = textPage()
-    local note = NS.L["Center needs a one-piece template; this one has %d pieces, so it lines up Left."]
+    local note = NS.L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]
     NS.SetByPath(P_ .. "justifyH", "CENTER", 1)
     local ws = P.rerender("Text")
-    -- red under: centerNote reading the stored template's piece count wrong, or not drawn
-    assertTrue(P.hasText(ws, note:format(3)), "the default template has three pieces")
+    -- red under: centerNote still saying Center lines a multi-piece template up Left
+    assertTrue(P.hasText(ws, note:format(3)), "the default template has three fields")
+    -- red under: the Preview not showing the stack it will draw
+    assertTrue(P.hasText(ws, NS.L["Preview: %s"]:format("Ignore Pain\n x3\n - 11s")))
+    NS.SetByPath(P_ .. "template", "$spellname$ :: $stacks$", 1)
+    ws = P.rerender("Text")
+    assertTrue(P.hasText(ws, note:format(2)), "a literal is not a row")
     NS.SetByPath(P_ .. "template", "$spellname$", 1)
     ws = P.rerender("Text")
     assertFalse(P.hasText(ws, note:sub(1, 30)), "a one-piece template centers, so no note")

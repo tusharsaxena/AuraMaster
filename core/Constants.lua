@@ -178,9 +178,11 @@ C.DEFAULT_DISPEL_COLORS = {
 -- The text style (issue #2): each aura one line of text, built from a template
 -- ---------------------------------------------------------------------------
 
--- Where the line sits in its box. Center is honored only for a one-piece template: the chain's width
--- is never readable, so nothing longer can be centered (modules/Style_Text.lua).
+-- Where the line sits in its box. Center on a template of more than one piece STACKS it, one centered
+-- row per field, since a chain's width is never readable (feedback #1, modules/Style_Text.lua's
+-- layoutStack); TEXT_ROW_GAP is the space between two rows, in pixels.
 C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
+C.TEXT_ROW_GAP = 2
 C.TEXT_JUSTIFY_V = { "TOP", "MIDDLE", "BOTTOM" }
 C.TEXT_JUSTIFY_V_LABELS = { TOP = "Top", MIDDLE = "Middle", BOTTOM = "Bottom" }
 

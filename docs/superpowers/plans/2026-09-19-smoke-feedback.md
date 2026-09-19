@@ -110,7 +110,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
    11 and 13 are independent. 12 needs nothing. 14 → owner tag → 15 → 16, and 14 → owner tag → 17 → 18.
    19 is last.
 
-**Current position:** Tasks 1–6 done; Tasks 7 and 9 in review; Task 13 in progress; next Task 8.
+**Current position:** Tasks 1–7 done; Task 8 in review; Task 9 in fix round 1; Task 13 in progress; next Task 10.
 
 | # | Task | Repo | Status | Notes |
 |---|---|---|---|---|
@@ -120,8 +120,8 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
 | 4 | #8 — a TEST marker on the handle while test mode is on | AuraMaster | done | 7152fd0 |
 | 5 | #10 — Show all / Hide all on Filters → Categories | AuraMaster | done | 5900198 |
 | 6 | #5a — token output: bare percents, no stray whitespace, the `( )` probe | AuraMaster | done | 89e74b0 |
-| 7 | #5b — built-in templates, Custom, and the Preview line | AuraMaster | in review |  |
-| 8 | #1 — Center lays a multi-piece line out as stacked rows | AuraMaster | todo | |
+| 7 | #5b — built-in templates, Custom, and the Preview line | AuraMaster | done | 780258e |
+| 8 | #1 — Center lays a multi-piece line out as stacked rows | AuraMaster | in review |  |
 | 9 | #6a — schema v5: every ENCHANT container becomes an enchant-only buff container | AuraMaster | in review |  |
 | 10 | #6b — the Weapon enchants aura type is removed everywhere | AuraMaster | todo | |
 | 11 | #7a — bars' background colored by dispel type; no type falls back to the surface's color | AuraMaster | todo | |

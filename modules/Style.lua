@@ -416,7 +416,10 @@ end
 function Style.ElementSize(cfg)
     local key = Style.StyleKey(cfg)
     local s, sdef = cfg[key] or {}, D[key]
-    return tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
+    local w, h = tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
+    -- A Text line stacked by Center grows to its rows (feedback #1, modules/Style_Text.lua).
+    if key == "text" and Style.Text then h = math.max(h, Style.Text.StackHeight(s)) end
+    return w, h
 end
 
 --- Hide `am`'s regions and remember which were shown, so a return to that style draws them as they

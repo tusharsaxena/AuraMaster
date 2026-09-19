@@ -110,17 +110,73 @@ test("text style: the vertical justify picks the top, middle or bottom anchor po
     assertEqual(pieces(am)[2]:__last("SetPoint")[1], "TOPRIGHT")
 end)
 
-test("text style: Center centers a one-piece template and lines a longer one up Left", function()
+test("text style: Center centers a one-piece template as one line, exactly as before (feedback #1)", function()
     local _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER", justifyV = "MIDDLE" }))
     local pt = pieces(am)[1]:__last("SetPoint")
     assertEqual(pt[1], "CENTER"); assertEqual(pt[3], "CENTER")
     _, am = dressed(text({ template = "$spellname$", justifyH = "CENTER", justifyV = "TOP" }))
     assertEqual(pieces(am)[1]:__last("SetPoint")[1], "TOP")
-    _, am = dressed(text({ template = "$spellname$ $stacks$", justifyH = "CENTER" }))
-    -- red under: JustifyFor honoring Center on a multi-piece chain (its width is never readable)
-    assertEqual(pieces(am)[1]:__last("SetPoint")[1], "LEFT")
     local NS = E()
-    assertEqual(NS.Style.Text.JustifyFor({ justifyH = "CENTER" }, { single = false }), "LEFT")
+    -- A one-piece template is a one-row stack: nothing to stack, no growth.
+    assertEqual(NS.Style.Text.StackHeight({ template = "$spellname$", justifyH = "CENTER" }), 0)
+end)
+
+-- A four-piece line: name, a literal, stacks, and a bracketed duration run.
+local STACKED = "$spellname$ :: $stacks$[ - $remainingduration$]"
+
+test("text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)", function()
+    local _, am = dressed(text({ template = STACKED, justifyH = "CENTER", justifyV = "TOP", x = 3, y = -1 }))
+    local p = pieces(am)
+    local pitch = 12 + 2   -- the template's 12pt font, then C.TEXT_ROW_GAP
+    local rows = { p[1], p[3], p[4] }
+    for i, fs in ipairs(rows) do
+        local pt = fs:__last("SetPoint")
+        -- red under: the old chain (LEFT to the previous piece's RIGHT) for a centered multi-piece line
+        assertEqual(pt[1], "TOP", "row " .. i)
+        assertTrue(pt[2] == am.area, "row " .. i .. " hangs from the text area")
+        assertEqual(pt[3], "TOP", "row " .. i)
+        assertEqual(pt[4], 3, "row " .. i .. ": x nudges the stack")
+        assertEqual(pt[5], -1 - (i - 1) * pitch, "row " .. i .. ": one pitch under the last")
+        assertTrue(fs:IsShown(), "row " .. i)
+    end
+    -- red under: the literal drawn between two rows (it has nothing to sit between)
+    assertFalse(p[2]:IsShown(), "the literal ' :: ' is not drawn")
+    assertEqual(p[2]:__last("SetPoint"), nil, "and is anchored nowhere")
+end)
+
+test("text style: a stacked line's element grows to its rows; Left and Right keep the stored height (feedback #1)", function()
+    local NS = E()
+    local rows3 = 3 * 12 + 2 * 2
+    -- red under: ElementSize ignoring the stack (rows overflowing a 16px box)
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "CENTER", height = 16 }))), rows3)
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "CENTER", height = 60 }))), 60,
+        "a taller box keeps its height")
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "LEFT", height = 16 }))), 16)
+    assertEqual(select(2, NS.Style.ElementSize(text({ template = STACKED, justifyH = "CENTER", height = 16,
+        font = { fontSize = 20 } }))), 3 * 20 + 2 * 2, "the rows follow the font size")
+    local frame = dressed(text({ template = STACKED, justifyH = "CENTER", height = 16, width = 200 }))
+    assertEqual(frame:__joined("SetSize"), "200," .. rows3, "the element is sized to it")
+end)
+
+test("text style: the vertical justify places the stack at the top, middle or bottom of a taller box (feedback #1)", function()
+    local stack = 3 * 12 + 2 * 2
+    for v, top in pairs({ TOP = 0, MIDDLE = (60 - stack) / 2, BOTTOM = 60 - stack }) do
+        local _, am = dressed(text({ template = STACKED, justifyH = "CENTER", justifyV = v, height = 60, x = 0, y = 0 }))
+        -- red under: STACK_TOP ignoring the justify (every stack at the top of its box)
+        assertEqual(pieces(am)[1]:__last("SetPoint")[5], -top, v)
+    end
+end)
+
+test("text style: a line moved off Center draws its literals again (feedback #1)", function()
+    local c = text({ template = STACKED, justifyH = "CENTER" })
+    local frame, am = dressed(c)
+    assertFalse(pieces(am)[2]:IsShown())
+    c.text.justifyH = "LEFT"
+    local NS, m = E()
+    B.during(m, {}, function() NS.Style.Element(frame, c, false) end)
+    -- red under: a stacked dress's Hide left on the literal once the line is a chain again
+    assertTrue(pieces(am)[2]:IsShown())
+    assertEqual(pieces(am)[2]:__last("SetPoint")[1], "LEFT")
 end)
 
 test("text style: every piece takes the line's font; a literal takes its text", function()
@@ -471,6 +527,14 @@ test("text style: a placeholder fills each piece as the engine would", function(
     -- tests/text_apis.lua's formatter writes whole seconds as "<n>s"; a percent is a bare number
     -- (feedback #5: the player types the %)
     assertEqual(out[4], " - 28s / 40s (70)")
+end)
+
+test("text style: a stacked line previews as its field rows, one per line, without its literals (feedback #1)", function()
+    local NS = E()
+    local aura = { name = "Ignore Pain", icon = 1, remaining = 11, duration = 12, stacks = 3 }
+    -- red under: PreviewLine joining a stacked line as one line, literal included
+    assertEqual(NS.Style.Text.PreviewLine({ template = STACKED, justifyH = "CENTER" }, aura), "Ignore Pain\n3\n - 11s")
+    assertEqual(NS.Style.Text.PreviewLine({ template = STACKED, justifyH = "LEFT" }, aura), "Ignore Pain :: 3 - 11s")
 end)
 
 test("text style: a placeholder's percent is the nearest whole number, as the engine's step rule rounds it (feedback #5)", function()

@@ -76,14 +76,14 @@ NS.RegisterSchemaRows({
     { path = P .. "width", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 40, max = 600, step = 1,
       label = L["Width (px)"], desc = L["The width of one line, icon included. Text past the edge is cut off."] },
     { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 8, max = 80, step = 1,
-      label = L["Height (px)"], desc = L["The height of one line."] },
+      label = L["Height (px)"], desc = L["The height of one line. Center stacks a line of several fields in rows, and the box grows to fit them."] },
     { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["What each line says"], type = "string",
       dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Custom template"],
       desc = L["What each line says, built from the tokens listed below. Press Enter to apply."],
       validate = TT.Validate, onChange = structural },
     { path = P .. "justifyH", page = PAGE, group = G_GENERAL, subgroup = S_PLACEMENT, type = "string",
       values = NS.Choices(C.TEXT_JUSTIFY_H, C.JUSTIFY_LABELS), label = L["Justify"],
-      desc = L["How the line sits in its box. Center needs a template that is one piece (one token and no text around it); any other lines up Left."],
+      desc = L["How the line sits in its box. Center on a template of several fields stacks them, one centered row each; text outside [ ] is not drawn then, so put it inside the brackets of the field it belongs to."],
       onChange = structural },
     { path = P .. "justifyV", page = PAGE, group = G_GENERAL, subgroup = S_PLACEMENT, type = "string",
       values = NS.Choices(C.TEXT_JUSTIFY_V, C.TEXT_JUSTIFY_V_LABELS), label = L["Vertical justify"],
@@ -107,15 +107,13 @@ local function cheatSheet(ctx)
     H.TextRow(ctx, L["Text outside [ ] always shows, even on an aura with no duration: ($remainingpercent$%) leaves ( ) behind, [ ($remainingpercent$%)] hides with the time."], SMALL)
 end
 
---- Under Placement: why Center is not honored, when it is chosen and the template has more than one
---- piece (modules/Style_Text.lua lines it up Left).
+--- Under Placement: what Center does to a template of more than one piece (feedback #1): it stacks
+--- the fields in rows and leaves plain text out (modules/Style_Text.lua's layoutStack).
 local function centerNote(ctx, cfg)
     local s = cfg.text or {}
-    if (s.justifyH or D.justifyH) ~= "CENTER" then return end
     local compiled = TT.ForDraw(s.template)
-    if compiled.single then return end
-    local count = #compiled.pieces
-    H.TextRow(ctx, GRAY:format(L["Center needs a one-piece template; this one has %d pieces, so it lines up Left."]:format(count)), SMALL)
+    if not NS.Style.Text.Stacked(s, compiled) then return end
+    H.TextRow(ctx, GRAY:format(L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]:format(NS.Style.Text.FieldCount(compiled))), SMALL)
 end
 
 -- ── The built-in templates (feedback #5) ──────────────────────────────────────────────────────

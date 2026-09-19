@@ -11,7 +11,8 @@ local _, NS = ...
 -- (modules/TextTemplate.lua), and plain text between fields is a static font string. Every piece is
 -- single-anchored and auto-sized, so the client sizes an engine-written piece to its secret text and
 -- the next piece anchors to its edge (the 2026-09-18 probes, docs/midnight-quirks.md). Their widths
--- are never readable, which is why a multi-piece line cannot be centered.
+-- are never readable, which is why a multi-piece line cannot be centered as one line: Center STACKS
+-- it instead, one centered row per field (feedback #1, layoutStack).
 --
 -- THREE NESTED FRAMES. `clip` covers the element and clips its children; `anim` fills it and carries
 -- the looping animations, so the icon and the text move and fade together; `area` is the text's box
@@ -175,13 +176,65 @@ end
 -- equivalents.
 local V_PREFIX = { TOP = "TOP", MIDDLE = "", BOTTOM = "BOTTOM" }
 
---- The horizontal justify the chain is laid out with: CENTER only for a one-piece template, whose
---- width the client sizes and centers itself; any longer chain lines up Left (its width is never
---- readable, so nothing can center it).
-function Text.JustifyFor(s, compiled)
-    local j = s.justifyH or D.justifyH
-    if j == "CENTER" and not compiled.single then return "LEFT" end
-    return j
+--- Whether a line is laid out as STACKED ROWS (feedback #1, 2026-09-19): Center on a template of more
+--- than one piece. A chain's width is never readable and no addon code runs when the engine rewrites a
+--- piece in combat, so a multi-piece line cannot be centered as one line; each field piece gets a row of
+--- its own instead, centered in the box, and plain literal pieces are not drawn (between two rows they
+--- have nothing to sit between). A one-piece template is not stacked: the client centers it as a line.
+function Text.Stacked(s, compiled)
+    return (s.justifyH or D.justifyH) == "CENTER" and not compiled.single
+end
+
+--- How many field pieces (every kind but literal) a compiled template has: a stacked line's rows.
+function Text.FieldCount(compiled)
+    local n = 0
+    for _, piece in ipairs(compiled.pieces) do
+        if piece.kind ~= "literal" then n = n + 1 end
+    end
+    return n
+end
+
+--- The line's font size, which is a stacked row's height.
+local function fontSize(s)
+    return number((s.font or D.font).fontSize, D.font.fontSize)
+end
+
+--- The height a stacked line's rows take: one font size per field row and C.TEXT_ROW_GAP between two;
+--- 0 for a line that is not stacked. Rows are FIXED: an engine-written string that is empty (and
+--- secret) can be neither measured nor collapsed, so a row holds its place whatever its field says.
+--- modules/Style.lua's ElementSize grows the element to this height.
+function Text.StackHeight(s)
+    local compiled = Text.Compiled(s)
+    if not Text.Stacked(s, compiled) then return 0 end
+    local n = Text.FieldCount(compiled)
+    return n * fontSize(s) + (n - 1) * C.TEXT_ROW_GAP
+end
+
+-- How far below the text area's top a stack starts, for each vertical justify, in a box `h` tall
+-- holding rows `stack` tall (never negative: the box grows to the stack).
+local STACK_TOP = {
+    TOP = function() return 0 end,
+    MIDDLE = function(h, stack) return (h - stack) / 2 end,
+    BOTTOM = function(h, stack) return h - stack end,
+}
+
+--- Lay a stacked line out in a box `h` tall: each field piece's TOP at the area's TOP, centered, a row
+--- pitch lower than the one before (x/y nudge the whole stack); every literal piece hidden.
+local function layoutStack(am, s, compiled, h)
+    local pitch = fontSize(s) + C.TEXT_ROW_GAP
+    local top = (STACK_TOP[s.justifyV or D.justifyV] or STACK_TOP.MIDDLE)(h, Text.StackHeight(s))
+    local x, y = number(s.x, D.x), number(s.y, D.y)
+    local row = 0
+    for i, piece in ipairs(compiled.pieces) do
+        local fs = am[PIECE[i]]
+        fs:ClearAllPoints()
+        if piece.kind == "literal" then
+            fs:Hide()
+        else
+            fs:SetPoint("TOP", am.area, "TOP", x, y - top - row * pitch)
+            row = row + 1
+        end
+    end
 end
 
 --- The anchor point `side` ("LEFT" | "CENTER" | "RIGHT") names at vertical prefix `v`.
@@ -192,9 +245,10 @@ end
 
 --- Anchor the chain in the text area: the head piece at the justified edge, nudged by x/y, and each
 --- next piece against the previous one's far edge (LEFT to the previous RIGHT, or the mirror for a
---- Right-justified line, laid from the last piece back).
-local function layoutChain(am, s, compiled)
-    local side = Text.JustifyFor(s, compiled)
+--- Right-justified line, laid from the last piece back). A stacked line is laid out by layoutStack.
+local function layoutChain(am, s, compiled, h)
+    if Text.Stacked(s, compiled) then return layoutStack(am, s, compiled, h) end
+    local side = s.justifyH or D.justifyH
     local v = V_PREFIX[s.justifyV or D.justifyV] or ""
     local x, y = number(s.x, D.x), number(s.y, D.y)
     local n = am.pieceCount
@@ -338,7 +392,7 @@ function Text.Apply(frame, cfg, engine)
     useChain(frame, am, compiled)
     layoutIconAndArea(am, s, h)
     dressPieces(am, s, compiled)
-    layoutChain(am, s, compiled)
+    layoutChain(am, s, compiled, h)
     if engine then Text.Bind(frame, am, cfg, s, compiled) end
     applyLoops(am, s)
 end
@@ -421,9 +475,17 @@ end
 
 --- The line text block `s` draws for a sample `aura`, as one plain string: the Text page's Preview
 --- (feedback #5). The same compile and the same fill as the placeholders, so the two cannot disagree.
+--- A stacked line (feedback #1) previews as its field rows, one per line, its literals left out.
 function Text.PreviewLine(s, aura)
-    local compiled = Text.Compiled(s or {})
+    s = s or {}
+    local compiled = Text.Compiled(s)
+    local stacked = Text.Stacked(s, compiled)
     local parts = {}
-    for i, piece in ipairs(compiled.pieces) do parts[i] = PIECE_TEXT[piece.kind](piece, aura, s or {}) end
-    return table.concat(parts)
+    for _, piece in ipairs(compiled.pieces) do
+        if not (stacked and piece.kind == "literal") then
+            local n = #parts
+            parts[n + 1] = PIECE_TEXT[piece.kind](piece, aura, s)
+        end
+    end
+    return table.concat(parts, stacked and "\n" or "")
 end
