@@ -582,7 +582,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a binding the client lacks is skipped, and one it refuses costs that binding alone
 - style: a class color is looked for only in the active style's block, text blocks included
 - style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color
-- style: a dispel color map's None entry is the surface's own color, and every entry its alpha (feedback #7)
+- style: a dispel color map's None entry is the surface's own color, and every entry opaque (feedback #7, item 4)
 - style: tooltips and click-through decide whether a button takes the mouse at all
 - style: right-click cancel reaches the player's buffs and their enchant slots, never the player's debuffs, and never when turned off
 - style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
@@ -623,7 +623,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
 
-### test_style_bars.lua (57)
+### test_style_bars.lua (60)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -667,6 +667,9 @@ badge and any count quoted in the docs must agree with it.
 - bars: every shown region is bound to its own engine field
 - bars: dispel coloring tints the fill through the engine with the stored dispel colors
 - bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)
+- bars: a dispel-colored background carries its opacity times its color's alpha on the region, the map opaque
+- bars: a dispel-colored fill carries its opacity times its color's alpha on the region
+- bars: a static background and fill keep the opacity on the region and the color's alpha on the color
 - bars: switching Color by from dispel type back to static paints the bar's own color again
 - bars: back to static on a button holding no aura, the fill the engine hid shows again
 - bars: in dispel mode the engine's tint stays the fill's last color
@@ -772,7 +775,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
-- preview: a background colored by dispel type stands in with Magic, keeping its own alpha (feedback #7)
+- preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)
 - preview: switching a previewed container from bars to icons re-dresses without error
 - preview: switching a previewed container from icons to bars re-dresses without error
 - preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
@@ -1304,7 +1307,7 @@ badge and any count quoted in the docs must agree with it.
 | test_texttemplate.lua | 26 |
 | test_style.lua | 51 |
 | test_timedspells.lua | 19 |
-| test_style_bars.lua | 57 |
+| test_style_bars.lua | 60 |
 | test_style_icons.lua | 25 |
 | test_style_text.lua | 45 |
 | test_preview.lua | 21 |
@@ -1337,4 +1340,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1123** |
+| **Total** | **1126** |

@@ -597,11 +597,50 @@ test("bars: Color by dispel type on the background tints it through the engine, 
     local map = add[2].customDispelColorMap
     local bgc = c.bars.bgColor
     -- red under: the background's map built with the bar color's fallback
-    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","),
-        table.concat({ bgc.r, bgc.g, bgc.b, bgc.a }, ","))
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b }, ","),
+        table.concat({ bgc.r, bgc.g, bgc.b }, ","))
     c.bars.bgColorMode = "static"
     frame = dressed(c, true, nil, NS2)
     assertEqual(frame:__count("AddDispelTypeTexture"), 0, "one color: no tint")
+end)
+
+-- ── a dispel-colored surface keeps its opacity (smoke batch 2, item 4) ────────────────────────────
+
+test("bars: a dispel-colored background carries its opacity times its color's alpha on the region, the map opaque", function()
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = {
+        bgColorMode = "dispel", bgAlpha = 0.4, bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 } } })
+    local frame, am = dressed(c, true, nil, NS2)
+    -- red under: the region keeping bgAlpha alone while the engine's tint paints the color at alpha 1
+    assertEqual(am.bg:__last("SetAlpha")[1], 0.2, "0.4 x 0.5 rides the region")
+    assertEqual(am.bg:__last("SetVertexColor")[4], 1, "the color's alpha is not applied twice")
+    local map = frame:__last("AddDispelTypeTexture")[2].customDispelColorMap
+    -- red under: map entries carrying the color's alpha (the engine drops it: colorRGB)
+    assertEqual(map.None.a, 1, "no type: opaque entry")
+    assertEqual(map.Magic.a, 1, "a palette type: opaque entry")
+end)
+
+test("bars: a dispel-colored fill carries its opacity times its color's alpha on the region", function()
+    local NS2 = withEnums()
+    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = {
+        colorMode = "dispel", barAlpha = 0.6, barColor = { r = 0.9, g = 0.5, b = 0.1, a = 0.5 },
+        useClassColorBar = false } })
+    local frame, am = dressed(c, true, nil, NS2)
+    -- red under: the fill keeping barAlpha alone in dispel mode
+    assertEqual(am.fill:__last("SetAlpha")[1], 0.3, "0.6 x 0.5 rides the region")
+    assertEqual(am.fill:__last("SetVertexColor")[4], 1)
+    assertEqual(frame:__last("AddDispelTypeTexture")[2].customDispelColorMap.None.a, 1)
+end)
+
+test("bars: a static background and fill keep the opacity on the region and the color's alpha on the color", function()
+    local _, am = dressed(cfg({ bars = { colorMode = "static", bgColorMode = "static",
+        bgAlpha = 0.4, bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 }, useClassColorBg = false,
+        barAlpha = 0.6, barColor = { r = 0.9, g = 0.5, b = 0.1, a = 0.5 }, useClassColorBar = false } }), true)
+    -- red under: the dispel-mode product applied to a static surface (its alpha then counted twice)
+    assertEqual(am.bg:__last("SetAlpha")[1], 0.4)
+    assertEqual(am.bg:__joined("SetVertexColor"), "0.1,0.2,0.3,0.5")
+    assertEqual(am.fill:__last("SetAlpha")[1], 0.6)
+    assertEqual(am.fill:__joined("SetVertexColor"), "0.9,0.5,0.1,0.5")
 end)
 
 -- ── Color by: dispel type lets go (B-4) ──────────────────────────────────────────────────────────

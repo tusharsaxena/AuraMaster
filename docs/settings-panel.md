@@ -404,7 +404,10 @@ shows only while the aura can be refreshed without loss.
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
 surface with no texture a swatch and its companion and nothing else, and this background has a live
 texture, so it takes the whole bar block with its own tooltips. `bgAlpha` multiplies onto the
-background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged.
+background texture, and `bgColor`'s own alpha still applies, so the default look is unchanged. A
+surface colored by dispel type keeps both too: the engine paints its tint's RGB at alpha 1, so the
+map's entries are opaque and the region carries `bgAlpha × bgColor.a` (the fill `barAlpha ×
+barColor.a`) through `SetAlpha` (`paintSurface`, smoke batch 2 item 4).
 
 ### Icons (42 rows, `settings/Icons.lua`) — sub-page of Containers (`N-2`, `D6`)
 

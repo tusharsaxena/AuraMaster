@@ -678,7 +678,13 @@ debuff container on the target, in a party or with a target dummy.
      with no type, and an Enrage-type buff (a type the palette does not cover), each keep the
      background's own color. Color by Static → the background color alone, including on an empty
      (currently-unused) button slot that had shown a dispel tint a moment before. General → Dispel
-     Colors lists the five types and no None swatch.
+     Colors lists the five types and no None swatch. Back on Dispel type, set Background opacity to
+     20% (and separately the background color's own alpha to 50%) → a typed and a typeless debuff's
+     background both go see-through, the fill's Bar opacity likewise on Color by Dispel type. Then
+     check it **in combat**, a debuff applied after the pull: the background keeps its 20%. If it
+     turns opaque in combat only, the engine refused the region alpha (`AddDispelTypeTexture` marks
+     the texture's alpha secret) — report it: the fix then moves the background onto its own child
+     frame, whose frame alpha carries the opacity (smoke batch 2, item 4).
 127. **Right-click the "?" (#9).** `/am unlock`; right-click container 2's handle **?** → the settings
      open on the **Containers** page with container 2 in the band's picker. In combat → the gray
      "cannot open settings during combat" line, nothing opens, the picker is unchanged afterwards.

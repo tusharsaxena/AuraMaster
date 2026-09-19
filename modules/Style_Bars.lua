@@ -172,36 +172,47 @@ local function wireFill(am, b, engine, h)
     wireSpark(am, b, edge, engine, h)
 end
 
---- Paint one surface (the fill or the background) its color. A live surface colored by dispel type
---- takes its own color here and the engine's tint over it; a PREVIEW one stands in with the profile's
---- Magic color, since no placeholder names a type, keeping the surface's own alpha. The tint is part of
---- the dress, so a later static dress is never left tinted.
-local function paintSurface(tex, mode, stored, useClass, preview)
+--- Paint one surface (the fill or the background) its color and its `opacity`. A live surface colored
+--- by dispel type takes its own color here and the engine's tint over it; a PREVIEW one stands in with
+--- the profile's Magic color, since no placeholder names a type. The tint is part of the dress, so a
+--- later static dress is never left tinted. A static surface keeps its color's alpha on the color and
+--- the opacity on the region. A dispel-colored one paints its color opaque and carries the opacity
+--- times the color's alpha on the region (smoke batch 2, item 4): the engine's tint paints the map's
+--- RGB at alpha 1 (Style.DispelColorMap), so an alpha on the color would be lost. Both are plain
+--- config numbers, never an engine value.
+local function paintSurface(tex, mode, stored, useClass, preview, opacity)
     local r, g, bl, a = Style.Color(stored, useClass)
-    local dc = preview and mode == "dispel" and Style.ProfileDispelColors()
+    a = a or 1
+    if mode ~= "dispel" then
+        tex:SetVertexColor(r, g, bl, a)
+        tex:SetAlpha(opacity)
+        return
+    end
+    local dc = preview and Style.ProfileDispelColors()
     local m = dc and dc.Magic
     if m then r, g, bl = m.r or 1, m.g or 1, m.b or 1 end
-    tex:SetVertexColor(r, g, bl, a)
+    tex:SetVertexColor(r, g, bl, 1)
+    tex:SetAlpha(opacity * a)
 end
 
 --- Paint the fill and show it. The fill is shown every dress: the engine's no-aura pass hides a
 --- dispel texture, and clearing the binding does not show it again.
 local function paintFill(am, b, preview)
     am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
-    paintSurface(am.fill, b.colorMode, b.barColor, b.useClassColorBar, preview)
-    am.fill:SetAlpha(tonumber(b.barAlpha) or D.bars.barAlpha)
+    paintSurface(am.fill, b.colorMode, b.barColor, b.useClassColorBar, preview,
+        tonumber(b.barAlpha) or D.bars.barAlpha)
     am.fill:Show()
 end
 
 --- Paint the surfaces: the fill, the background, the border and the spark. Each surface's opacity
---- multiplies onto its color's own alpha, so a color's alpha still applies. The background colors by
+--- multiplies onto its color's own alpha, so a color's alpha still applies (paintSurface). The background colors by
 --- dispel type as the fill does (feedback #7) and is shown every dress for the same reason.
 local function applySurfaces(am, b, preview)
     paintFill(am, b, preview)
 
     am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
-    paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview)
-    am.bg:SetAlpha(tonumber(b.bgAlpha) or D.bars.bgAlpha)
+    paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview,
+        tonumber(b.bgAlpha) or D.bars.bgAlpha)
     am.bg:Show()
 
     Style.ApplyBorder(am.border, b.borderShow, b.borderStyle, tonumber(b.borderSize) or D.bars.borderSize,

@@ -412,7 +412,7 @@ end
 
 --- A new dispel map entry for DispelColorMap: the map, and what it was built from.
 local function buildDispelMap(stored, fallback)
-    local a = fallback.a or 1
+    local a = 1   -- opaque: the surface's region carries its alpha (Style_Bars.lua's paintSurface)
     local map, src = {}, {}
     for _, name in ipairs(C.DISPEL_TYPES) do
         local c = stored[name]
@@ -431,9 +431,9 @@ end
 --- (GetDispelTypeMapKey) — takes `fallback`, so it keeps the surface's normal color rather than
 --- Blizzard's own "none" tint (feedback #7, owner decision: no type means the normal color). A type
 --- the palette does not cover but the engine can still report (`EXTRA_DISPEL_TYPES`, e.g. `Enrage`)
---- takes `fallback` too, for the same reason. Every entry carries the fallback's alpha, so a
---- dispel-colored surface keeps its own transparency. Built once per set of color leaves and
---- fallback, and shared by every button that shows it.
+--- takes `fallback` too, for the same reason. Every entry is opaque: the engine paints a map color's
+--- RGB at alpha 1, so the surface's region carries its transparency instead (smoke batch 2, item 4).
+--- Built once per set of color leaves and fallback, and shared by every button that shows it.
 function Style.DispelColorMap(stored, fallback)
     if type(stored) ~= "table" or not _G.CreateColor then return {} end
     fallback = fallback or NO_COLOR

@@ -657,14 +657,14 @@ test("style: a dispel color map holds a color per stored type, and nothing for a
     assertEqual(next(NS.Style.DispelColorMap(nil)), nil, "no stored colors: an empty map")
 end)
 
-test("style: a dispel color map's None entry is the surface's own color, and every entry its alpha (feedback #7)", function()
+test("style: a dispel color map's None entry is the surface's own color, and every entry opaque (feedback #7, item 4)", function()
     local stored = { Magic = { r = 0.1, g = 0.2, b = 0.3, a = 1 } }
     local bar = { r = 0.9, g = 0.5, b = 0.1, a = 0.6 }
     local map = NS.Style.DispelColorMap(stored, bar)
     -- red under: None left to the palette (or to Blizzard's own tint) for an aura with no type
-    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","), "0.9,0.5,0.1,0.6")
-    -- red under: a dispel-colored surface drawn opaque over a translucent one's own alpha
-    assertEqual(map.Magic.a, 0.6)
+    assertEqual(table.concat({ map.None.r, map.None.g, map.None.b, map.None.a }, ","), "0.9,0.5,0.1,1")
+    -- red under: an entry carrying the surface's alpha (the engine drops it; the region carries it)
+    assertEqual(map.Magic.a, 1)
     assertTrue(NS.Style.DispelColorMap(stored, bar) == map, "one map per palette and fallback")
     local bg = { r = 0, g = 0, b = 0, a = 0.5 }
     assertTrue(NS.Style.DispelColorMap(stored, bg) ~= map, "another surface's fallback, another map")

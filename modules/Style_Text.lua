@@ -428,9 +428,8 @@ local invisible
 --- The backdrop and edge's color map (feedback #7, fix round 1): every type in C.TEXT_DISPEL_TYPES the
 --- profile's palette colors takes that color at full alpha (the backdrop's own opacity is
 --- `dispelBackdropAlpha`'s SetAlpha, not this alpha); a type it does not cover (Enrage) takes
---- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), every entry here does NOT share one
---- alpha from a surface fallback: a Text tint has no surface color of its own to fall back to, so "no
---- color" IS the fallback. No `None` entry: showWithoutDispelType is false, so the engine never looks
+--- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), no entry here falls back to a surface
+--- color: a Text tint has no surface color of its own to fall back to, so "no color" IS the fallback. No `None` entry: showWithoutDispelType is false, so the engine never looks
 --- a typeless aura up. Built once per set of palette leaves, and read by the live dress
 --- (tintOptionsFor) and the preview (previewTints) alike, so the two cannot disagree.
 local tintMapEntry
