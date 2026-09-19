@@ -45,6 +45,8 @@ smoke 11–16). Read it with this plan; it is binding.
 
 ## Status ledger (update after every task)
 
+**Status 2026-09-19: ALL TASKS DONE.** Final whole-branch review passed after one fix wave (083b7f4): 1055/1055, lint 0/0, lizard 0, perf green. Waiting on the owner: in-game smoke checks, push LibKa0s v1.44.0, merge feat/text-style and the ten chore/libka0s-v1.44.0 branches.
+
 **How to resume after an interruption.** Work runs on branch `feat/text-style` (never merge, push or
 tag without the owner's approval; incremental commits are allowed). One commit per task, made by the
 controller after the task's review; README.md carries owner edits that ride along with the task
