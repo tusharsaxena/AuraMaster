@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:220`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:219`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -85,7 +85,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:224-228`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:223-227`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -104,7 +104,7 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:292-300`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:291-299`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters are honored only on one side of the friend/foe line
@@ -196,7 +196,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:479`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:490`), and then adds again
 (`modules/Style_Bars.lua:313`, `modules/Style_Icons.lua:153`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -234,7 +234,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:447`).
+  aura buttons (`modules/Container.lua:446`).
 
 ## Smaller API moves this addon absorbs
 
@@ -329,7 +329,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:420`):
+`modules/Style.lua:431`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -346,6 +346,23 @@ and before `Icons.Bind` could add it back: that is the lost highlight.
   border) run through `Style.GuardedBorder`: a border the client still refuses costs the border
   (hidden, and reported through `Style.ReportError`), never the engine bindings after it. A Text line's
   icon border stays inside its icon block's guard.
+
+**The frames of ours under a container's anchor, and the picker's outline** (follow-up, 2026-09-20).
+The same arithmetic threatened three more frames, each a `BackdropTemplate` before: the unlocked
+outline (`ContainerClass:ApplyOutline`) and the drag handle (`Anchors.BuildHandle`) are built under
+the container's anchor, whose geometry reads secret once the container is attached to another frame
+or container that is itself secret (an engine container, or a frame anchored to one); and the frame
+picker's outline (`modules/FramePicker.lua`) covers whatever frame the cursor is on, another addon's
+aura container or a laid-out button included, and takes that frame's size. Their `SetBackdrop` ran
+the arithmetic when built, and the template's `OnSizeChanged` ran it again on every resize (a width
+change, a growth change re-placing the handle, the cursor moving to another frame). All three are
+now plain frames (the picker's keeps `DisableUntrustedLayoutScriptsTemplate`), their edges drawn once
+when built with the border's own four strips (`Style.DrawEdge`, the Solid path of
+`Style.ApplyBorder`), which hang from the frame's corners and follow every resize without reading a
+size. The handle's dark fill is one texture of its own (`SetColorTexture`, black at 0.75) instead of a
+backdrop `bgFile`. The look is unchanged: the outline a 1px white edge at 0.35, the handle a 1px gold
+edge at 0.6 over its fill, the picker a 2px blue edge. No `BackdropTemplate` or `SetBackdrop` is left
+in `modules/` or `settings/` outside `Style.ApplyBorder`'s guarded non-Solid path.
 
 ## An empty duration run still takes a space (open, feedback #5)
 
