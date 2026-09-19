@@ -292,14 +292,15 @@ function Anchors.SavePosition(container)
     local anchor = container.anchor
     if not (anchor and anchor.GetPoint) then return end
     local point, _, relPoint, x, y = anchor:GetPoint(1)
-    if not point then return end
     -- A screen-attached anchor holds nothing secret, but a read is guarded anyway (feedback E): a
-    -- secret offset would raise in round(), and storing one would poison the saved position.
+    -- secret offset would raise in round(), and storing one would poison the saved position. `point`
+    -- is checked before it is truth-tested below, so a secret point is never boolean-tested either.
     local S = NS.Secrets
     if not (S.CanAccess(point) and S.CanAccess(relPoint) and S.CanAccess(x) and S.CanAccess(y)) then
         if NS.Debug then NS.Debug("Anchor", "container %s: position reads secret, not saved", container.id) end
         return
     end
+    if not point then return end
     NS.SetByPath("container.position",
         { point = point, relativePoint = relPoint or point, x = round(x), y = round(y) }, container.id)
 end

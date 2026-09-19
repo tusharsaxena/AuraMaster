@@ -1174,6 +1174,24 @@ test("handle: an anchor whose frame level reads secret places the strip from the
     assertEqual(h:GetFrameLevel(), NS.CONTAINER_TEMPLATE.layout.level + 50)
 end)
 
+test("handle: an attached container's strip falls back to the stored level when its target's frame level reads secret (E)", function()
+    local NS, mocks = secretEnv()
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("locked", false)
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    local CM = NS.ContainerManager
+    local one, two = CM.instances[1], CM.instances[2]
+    rawset(one.anchor, "GetFrameLevel", function() return SECRET end)
+    local ok, err = pcall(NS.Anchors.UpdateHandle, two, true)
+    assertTrue(ok, tostring(err))
+    local stored = NS.CONTAINER_TEMPLATE.layout.level
+    -- red under: handleLevel's target read back to (target.anchor:GetFrameLevel() or 0), which lets
+    -- 1's secret level (41.5) into "or 0"'s arithmetic instead of falling back through levelOf
+    assertEqual(two.handle:GetFrameLevel(), math.max(two.anchor:GetFrameLevel() + 50, stored + 51))
+end)
+
 test("anchors: a drag whose offsets read secret saves nothing (E)", function()
     local NS = secretEnv()
     local inst = NS.ContainerManager.instances[1]

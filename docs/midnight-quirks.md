@@ -288,7 +288,11 @@ frame level (`FrameLevel` is a `SecretAspect`) can read back as secret numbers e
 arithmetic on a secret raises "attempt to perform arithmetic on a secret number value" (feedback E,
 2026-09-19: the drag handle's label, on a container attached to another).
 
-**What this addon does.** Nothing reads a measurement off a region that can be attached. The handle's
-label is measured on a detached font string of ours (`Anchors.__labelMeasurer`), and every frame level
-or offset read goes through `NS.Secrets.NumberOr`, which answers a fallback (the stored level, 0, or
-"do not save") for a value that is not a plain number.
+**What this addon does.** Nothing reads a measurement off a region that can be **attached**. The
+handle's label is measured on a detached font string of ours (`Anchors.__labelMeasurer`), and every
+frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
+goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
+`NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
+readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:64`
+and `modules/Style_Icons.lua:59`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
+created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
