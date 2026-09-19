@@ -482,7 +482,7 @@ return value.
   dispel type (`SetDispelTypeText`, `SetSpellName`, `SetApplicationCount` take no color;
   `SetDurationText`'s color curve runs over time), the dispel-keyed color map exists only on
   `AddDispelTypeTexture`, which takes a Texture, and addon code can neither read the type nor touch a
-  button in combat. The Text page offers three opt-in stand-ins instead (Animation → Dispel type,
+  button in combat. The Text page offers three opt-in stand-ins instead (Font → Dispel type,
   feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
   backdrop and an edge the engine tints (`modules/Style_Text.lua`).
 - **A Text token can be used once, the duration tokens must sit together, and there is no caster

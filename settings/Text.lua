@@ -9,10 +9,11 @@ local _, NS = ...
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
+--     Font      Font, Countdown, then Dispel type (feedback #7: the word's color, a backdrop, an
+--               edge, each opt-in and off; moved here from Animation, smoke batch 2 item 5)
 --     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
 --               border swatch) dims while the position is None, under a note
---     Animation Loop, then Dispel type (feedback #7: the word's color, a backdrop, an edge, each
---               opt-in and off), then Running out and its note
+--     Animation Loop, then Running out and its note
 --
 -- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and two
 -- read-only blocks between its rows: the token cheat sheet, and the centering note under Placement.
@@ -335,6 +336,25 @@ NS.RegisterSchemaRows({
     { path = P .. "timeFormat", page = PAGE, group = G_FONT, subgroup = L["Countdown"], type = "string",
       values = NS.Choices(C.TIME_FORMATS, C.TIME_FORMAT_LABELS), label = L["Time format"],
       desc = L["How the duration tokens write a time."] },
+    -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
+    -- colors a whole line by the aura's type (modules/Style_Text.lua's header). On the Font tab since
+    -- smoke batch 2, item 5 (they color the text); paths and stored values unchanged.
+    { path = P .. "dispelTypeColor", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, disabledIf = noDispel,
+      label = L["Color the dispel type"],
+      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
+    { path = P .. "dispelBackdrop", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Backdrop in the dispel color"],
+      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
+      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
+      label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
+    { path = P .. "dispelEdge", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
+      startsLine = true, label = L["Edge in the dispel color"],
+      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+    { path = P .. "dispelEdgeSize", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
+      min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
+      label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
 })
 
 -- ── Icon ──────────────────────────────────────────────────────────────────────────────────────
@@ -381,24 +401,6 @@ NS.RegisterSchemaRows({
     { path = P .. "animBounce", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
       min = 1, max = 10, step = 1, disabledIf = unlessAnim("bounce"),
       label = L["Bounce height (px)"], desc = L["How far the line moves up. The box clips it, so leave headroom."] },
-    -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
-    -- colors a whole line by the aura's type (modules/Style_Text.lua's header).
-    { path = P .. "dispelTypeColor", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
-      startsLine = true, disabledIf = noDispel,
-      label = L["Color the dispel type"],
-      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
-    { path = P .. "dispelBackdrop", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
-      startsLine = true, label = L["Backdrop in the dispel color"],
-      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
-    { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
-      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
-      label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
-    { path = P .. "dispelEdge", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "bool",
-      startsLine = true, label = L["Edge in the dispel color"],
-      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
-    { path = P .. "dispelEdgeSize", page = PAGE, group = G_ANIM, subgroup = S_DISPEL, type = "number",
-      min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
-      label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
     { path = P .. "expiringColorOn", page = PAGE, group = G_ANIM, subgroup = L["Running out"], type = "bool",
       startsLine = true, disabledIf = noDuration,
       label = L["Recolor the time when running out"], desc = L["Turn the duration tokens another color in the last seconds. The rest of the line keeps the font color."] },

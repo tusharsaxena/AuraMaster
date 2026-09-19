@@ -320,7 +320,7 @@ test("text page: with Icon position None every Icon row but the position dims, t
     end
 end)
 
-test("text page: the blink row is engine-only, and the Font tab carries the composed font block and time format", function()
+test("text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type", function()
     local NS = textPage()
     local L = NS.L
     assertEqual(NS.FindSchemaRow(P_ .. "expiringBlink").coverage, "engine-only")
@@ -331,10 +331,12 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
             paths[n + 1] = row.path
         end
     end
-    -- red under: the font block on a prefix other than text.font., or the time format elsewhere
+    -- red under: the font block on a prefix other than text.font., the time format elsewhere, or the
+    -- Dispel type subsection not after them (smoke batch 2, item 5)
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
-        P_ .. "font.fontShadow", P_ .. "timeFormat" }, ","))
+        P_ .. "font.fontShadow", P_ .. "timeFormat", P_ .. "dispelTypeColor", P_ .. "dispelBackdrop",
+        P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge", P_ .. "dispelEdgeSize" }, ","))
     assertEqual(NS.FindSchemaRow(P_ .. "font.fontColor").classColorSource, "unit")
 end)
 
@@ -511,7 +513,14 @@ end)
 
 -- ── color by dispel type (feedback #7) ────────────────────────────────────────────────────────
 
-test("text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)", function()
+--- The Font tab as the current settings draw it, as animationTab draws the Animation tab.
+local function fontTab(NS, P)
+    local ws = P.rerender("Text")
+    if NS.Helpers.__pageCtx.text.activeTab == NS.L["Font"] then return ws end
+    return P.tab("text", NS.L["Font"])
+end
+
+test("text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)", function()
     local NS, _, P = textPage()
     local L = NS.L
     local D = NS.CONTAINER_TEMPLATE.text
@@ -519,11 +528,11 @@ test("text page: Animation carries the three dispel-type options, all off, each 
     assertFalse(D.dispelTypeColor)
     assertFalse(D.dispelBackdrop)
     assertFalse(D.dispelEdge)
-    local ws = animationTab(NS, P)
+    local ws = fontTab(NS, P)
     for _, key in ipairs({ "dispelTypeColor", "dispelBackdrop", "dispelBackdropAlpha", "dispelEdge", "dispelEdgeSize" }) do
         local row = NS.FindSchemaRow(P_ .. key)
-        -- red under: no row
-        assertTrue(row ~= nil and row.group == L["Animation"] and row.subgroup == L["Dispel type"], key)
+        -- red under: no row, or the subsection still on the Animation tab (smoke batch 2, item 5)
+        assertTrue(row ~= nil and row.group == L["Font"] and row.subgroup == L["Dispel type"], key)
         assertTrue(P.row(ws, P_ .. key) ~= nil, key .. " is drawn")
     end
     -- The default template has no $dispeltype$, so there is no word to color.
@@ -533,7 +542,7 @@ test("text page: Animation carries the three dispel-type options, all off, each 
     NS.SetByPath(P_ .. "template", "$spellname$[ ($dispeltype$)]", 1)
     NS.SetByPath(P_ .. "dispelBackdrop", true, 1)
     NS.SetByPath(P_ .. "dispelEdge", true, 1)
-    ws = animationTab(NS, P)
+    ws = fontTab(NS, P)
     for _, key in ipairs({ "dispelTypeColor", "dispelBackdropAlpha", "dispelEdgeSize" }) do
         -- red under: a predicate reading the wrong leaf
         assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live")

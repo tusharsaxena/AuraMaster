@@ -161,7 +161,7 @@ one switch for that; the tab says so.
 
 **Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
 `.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
-a Text line's dispel type word, backdrop and edge when those are on (Text → Animation → Dispel type,
+a Text line's dispel type word, backdrop and edge when those are on (Text → Font → Dispel type,
 feedback #7). An aura with no dispel type keeps a bar's own color and draws no text backdrop or edge,
 so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
 colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
@@ -472,7 +472,8 @@ draws the icon and its border only on Left or Right. So every row but Icon posit
 position to show the icon." (smoke batch 2, item 6). Icon position redraws the page on a change, so
 the note and the dimming follow it at once.
 
-**Dispel type** (Animation, feedback #7) holds three opt-in stand-ins for "color the text by dispel
+**Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
+stored values did not change) holds three opt-in stand-ins for "color the text by dispel
 type", all off by default, since no engine binding colors a font string by the aura's type
 (`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
 palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
@@ -493,9 +494,9 @@ disabled, as on the Bars and Icons pages.
 | Tab | Rows (all under `container.text.`) |
 |---|---|
 | General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
-| Font | the composed font block under `font.`; Countdown: `timeFormat` |
+| Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
-| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
+| Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |
 
 ### Profiles (`settings/Profiles.lua`)
 

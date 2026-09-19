@@ -702,14 +702,16 @@ debuff container on the target, in a party or with a target dummy.
 129. **Switched sections, Party Frame Enhanced (#4).** That addon's smoke item 31a on its
      `feat/switched-sections` build.
 130. **The dispel type word in color (#7).** A Text container on the target's debuffs, template Name,
-     type, time; Text → Animation → Dispel type → **Color the dispel type** on. A Magic debuff reads
+     type, time; Text → Font → Dispel type → **Color the dispel type** on. A Magic debuff reads
      `Name (Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the
      brackets and the rest in the font color; a Curse in its color; an Enrage-type buff (a type the
      palette does not cover) keeps the plain font color. Change the Magic swatch → the word
      follows after the re-apply. In combat the word keeps its color as auras come and go (the engine
      writes the text; nothing of ours runs). If the word shows the raw `|cff…` characters instead,
      the engine's options processing stripped the escape: report it (option c then does not work, and
-     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed.
+     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed. The
+     Dispel type subsection sits on the Font tab under Countdown, and no longer on Animation (smoke
+     batch 2, item 5); toggles set before the move keep their values.
 131. **The dispel backdrop (#7).** Same container, **Backdrop in the dispel color** on: a typed debuff's
      line has a Magic-blue (or Curse-purple, …) box behind its text, the text on top and readable; a
      debuff with no type, and an Enrage-type buff, each have no box. **Backdrop opacity** changes its

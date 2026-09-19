@@ -1173,7 +1173,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: each loop row is live only for the effects that use it
 - text page: without a duration token the running-out rows dim, except the swatch, under a note
 - text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
-- text page: the blink row is engine-only, and the Font tab carries the composed font block and time format
+- text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
 - text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
@@ -1184,7 +1184,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
 - text page: an already-doubled || in a custom template still doubles each pipe (final review)
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
-- text page: Animation carries the three dispel-type options, all off, each dimmed until it can show (feedback #7)
+- text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
 
 ### test_pages_about.lua (3)
 
