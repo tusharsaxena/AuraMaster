@@ -177,6 +177,13 @@ local function centerNote(ctx, cfg)
     H.TextRow(ctx, GRAY:format(msg), SMALL)
 end
 
+--- Under Justify, always (smoke batch 2, item 3): what Center does to a template of several fields,
+--- and why it cannot center them on one line. The facts are modules/Style_Text.lua's: Text.Stacked,
+--- layoutStack's rows, Text.StackHeight's fixed rows, and an icon at size 0 taking one row's height.
+local function justifyNote(ctx)
+    H.TextRow(ctx, GRAY:format(L["Center centers the line only when the template is a single piece. With several fields, each field (name, stacks, dispel type, and the duration tokens together) gets its own centered row, text outside [ ] is not drawn, and the box grows to fit the rows. Rows keep their place even when a field is empty (one stack, no dispel type, no duration), and an icon at size 0 is one row tall. Aura text is secret, so its width cannot be measured to center several fields on one line."]), SMALL)
+end
+
 -- ── The built-in templates (feedback #5) ──────────────────────────────────────────────────────
 
 --- Whether container `id`'s Template dropdown reads Custom: its template matches no built-in, or the
@@ -308,21 +315,27 @@ local function renderTemplate(ctx, cfg, row)
     cheatSheet(ctx)
 end
 
---- The General tab: Size, then what each line says (renderTemplate), then Placement and the
---- centering note.
+-- The Placement rows drawn above the Justify note (the justify pair); the offsets follow it.
+local JUSTIFY_ROWS = { [P .. "justifyH"] = true, [P .. "justifyV"] = true }
+
+--- The General tab: Size, then what each line says (renderTemplate), then Placement: the justify
+--- pair, the Justify note (item 3), the offsets and the centering note.
 local function renderGeneral(ctx, cfg, rows)
-    local size, tail, templateRow = {}, {}, nil
+    local size, justify, tail, templateRow = {}, {}, {}, nil
     for _, row in ipairs(rows or {}) do
         if row.path == P .. "template" then
             templateRow = row
         else
-            local list = (row.subgroup == S_PLACEMENT) and tail or size
+            local list = size
+            if row.subgroup == S_PLACEMENT then list = JUSTIFY_ROWS[row.path] and justify or tail end
             local n = #list
             list[n + 1] = row
         end
     end
     H.RenderRows(ctx, size, nil, nil, { noHeadings = true })
     renderTemplate(ctx, cfg, templateRow)
+    H.RenderRows(ctx, justify, nil, nil, { noHeadings = true })
+    justifyNote(ctx)
     H.RenderRows(ctx, tail, nil, nil, { noHeadings = true })
     centerNote(ctx, cfg)
 end

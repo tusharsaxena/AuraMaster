@@ -451,8 +451,12 @@ colored dispel word riding live inside it — then the **Tokens** / **Rules** ch
 a bulleted rule per bracket-hiding, the two escapes, how they combine, text outside `[ ]` always
 showing, and a separator belonging inside the brackets of the field it leads (`$spellname$[-$stacks$]`:
 an empty field takes its separator with it; smoke batch 2, item 8), each rule's example on its own
-indented gold continuation line. The centering note sits under
-Placement. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
+indented gold continuation line. Under Placement, a gray **Justify note** always sits between the
+justify pair and the offsets (smoke batch 2, item 3): Center centers a one-piece template only; with
+several fields each field (the duration tokens together) gets its own centered row, text outside `[ ]`
+is not drawn, the box grows to fit, rows keep their place when a field is empty, an icon at size 0 is
+one row tall, and the reason — aura text is secret, so its width cannot be measured. The centering
+note, naming this template's row count, sits under the offsets. Picking a built-in writes `template` (and `justifyH` where the built-in needs it) through
 the write seam; picking Custom writes nothing. Its rows are still ordinary schema rows — the panel,
 `/am set`, Defaults and the resets all reach them through the one write seam.
 
@@ -493,7 +497,7 @@ disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV`, `x`, `y` (+ the centering note) |
+| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce`. Running out: `expiringColorOn`, `expiringThreshold`, `expiringColor`, `expiringBlink` (engine-only) |

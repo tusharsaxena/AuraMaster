@@ -1157,7 +1157,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Cooldown rows write the selected container's swipe
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (26)
+### test_pages_text.lua (27)
 
 - text page: the four tabs are drawn in order
 - text page: a bars or icons container sees every row disabled under the note naming its style
@@ -1169,6 +1169,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
+- text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
 - text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
 - text page: each loop row is live only for the effects that use it
 - text page: without a duration token the running-out rows dim, except the swatch, under a note
@@ -1336,7 +1337,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 12 |
 | test_pages_icons.lua | 7 |
-| test_pages_text.lua | 26 |
+| test_pages_text.lua | 27 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1350,4 +1351,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1136** |
+| **Total** | **1137** |

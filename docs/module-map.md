@@ -101,7 +101,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `settings/Layout.lua` | The Layout page, a sub-page of Containers (`N-2`, D6): frame, anchor (Screen / Another container / Named frame / Offset, drawn by attach mode), growth, mouse; Pick a frame |
 | `settings/Bars.lua` | The Bars page, a sub-page of Containers (`N-2`, D6): size, the composed bar, border and font blocks, spark, the icon and its composed border, background, text placement, highlights; disabled for any other style |
 | `settings/Icons.lua` | The Icons page, a sub-page of Containers (`N-2`, D6): size, the composed border and font blocks, cooldown, text placement, highlights; disabled for any other style |
-| `settings/Text.lua` | The Text page, a sub-page of Containers (`N-2`, D6): size, the Template box with its token cheat sheet (a bespoke General tab), placement and the centering note, the composed font block and time format, the icon and its composed border, the loop and the running-out rows; disabled for a bars or icons container |
+| `settings/Text.lua` | The Text page, a sub-page of Containers (`N-2`, D6): size, the Template box with its token cheat sheet (a bespoke General tab), placement with the Justify note and the centering note, the composed font block and time format, the icon and its composed border, the loop and the running-out rows; disabled for a bars or icons container |
 | `settings/Profiles.lua` | The Profiles sub-page: AceDBOptions drawn by AceConfigDialog inside the canvas |
 
 ## `tests/`
@@ -160,7 +160,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_pages_layout.lua` | `settings/Layout.lua` through its widgets: the tab order, the attach rows, the subsections drawn per mode and their cycle guard, Pick a frame, the inherited Growth rows, the Point rows' first-aura wording and the facing-growth hint, what a Growth or Frame row re-applies, Defaults |
 | `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs (the Icon tab among them), the not-drawn-as-bars notice with every control disabled, sliders and swatches, Defaults |
 | `test_pages_icons.lua` | `settings/Icons.lua` through its widgets: tabs, the not-drawn-as-icons notice with every control disabled, rows, Defaults |
-| `test_pages_text.lua` | `settings/Text.lua` through its widgets: the tabs, the notice and disabled rows for another style, the Template box and its refusal text (panel and `/am set`), the cheat sheet, the centering note, the rows the effect and the template dim, Defaults |
+| `test_pages_text.lua` | `settings/Text.lua` through its widgets: the tabs, the notice and disabled rows for another style, the Template box and its refusal text (panel and `/am set`), the cheat sheet, the Justify note, the centering note, the rows the effect and the template dim, Defaults |
 | `test_pages_about.lua` | `settings/About.lua`: the command list, the Notes line and the logo, and when each is read |
 | `test_pages_profiles.lua` | `settings/Profiles.lua`: the table it registers, how often it opens the dialog and into what, when it opts out |
 | `test_envsetup.lua` | `core/EnvSetup.lua` on both arms (live and library-absent): which manifest `NS.Meta` reads, what `NS.Version` answers |

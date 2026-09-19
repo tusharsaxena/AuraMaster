@@ -223,6 +223,31 @@ test("text page: /am set refuses a bad template with the parser's reason, indent
     assertEqual(NS.Database.FindContainer(1).text.template, "$spellname$ ($stacks$)")
 end)
 
+--- Where in `ws` (creation order) the first widget matching `pred` was drawn, or nil.
+local function indexOf(ws, pred)
+    for i, w in ipairs(ws) do
+        if pred(w) then return i end
+    end
+    return nil
+end
+
+test("text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)", function()
+    local NS, _, P, ws = textPage()
+    local L = NS.L
+    local note = L["Center centers the line only when the template is a single piece. With several fields, each field (name, stacks, dispel type, and the duration tokens together) gets its own centered row, text outside [ ] is not drawn, and the box grows to fit the rows. Rows keep their place even when a field is empty (one stack, no dispel type, no duration), and an icon at size 0 is one row tall. Aura text is secret, so its width cannot be measured to center several fields on one line."]
+    -- red under: no note row on the General tab
+    local at = indexOf(ws, function(w) return w.type == "Label" and w.text and w.text:find(note, 1, true) end)
+    assertTrue(at ~= nil, "the note is drawn on a Left line too")
+    assertTrue(ws[at].text:find("|cff808080", 1, true) == 1, "drawn gray, as the page's other notes")
+    local justify = indexOf(ws, function(w) return w.labelText == L["Justify"] end)
+    local xRow = indexOf(ws, function(w) return w.labelText == L["X offset"] end)
+    -- red under: the note drawn after the offsets, or above the Placement rows
+    assertTrue(justify < at and at < xRow, ("Justify %s, note %s, X offset %s"):format(justify, at, xRow))
+    NS.SetByPath(P_ .. "justifyH", "CENTER", 1)
+    ws = P.rerender("Text")
+    assertTrue(P.hasText(ws, note), "and on a Center line")
+end)
+
 test("text page: Center on a multi-piece template draws the note naming its rows (feedback #1)", function()
     local NS, _, P = textPage()
     local note = NS.L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]

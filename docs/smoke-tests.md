@@ -774,3 +774,8 @@ debuff container on the target, in a party or with a target dummy.
      the right. A field that is empty (one stack, no dispel type) still leaves its `-` and a small gap:
      rewrite it as `$spellname$[-$stacks$][-$dispeltype$]...` and the empty field's separator goes
      with it. A gap that remains between two non-empty fields is a defect: report the font and size.
+141. **The Justify note (smoke batch 2, item 3).** Text → General → Placement: a gray note sits under
+     Justify and Vertical justify, above the offsets, on Left, Center and Right alike. It says Center
+     centers a one-piece template only, stacks several fields in rows (text outside `[ ]` not drawn,
+     the box growing, rows kept when a field is empty, an icon at size 0 one row tall) and that aura
+     text is secret so its width cannot be measured. Each of those claims holds on a live container.
