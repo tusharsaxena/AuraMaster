@@ -5,7 +5,7 @@ local _, NS = ...
 --
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
 --     Spell Categories  [Category ▾]  [Restore this category's starter list]
---                       -- one of the nine spell-list categories, or Weapon enchants
+--                       -- one of the eleven spell-list categories, or Weapon enchants
 --                       ---- Spells in this category ----------------------------------------
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it

@@ -35,7 +35,7 @@ without a duration, and only out of combat with auras readable. The full pipelin
 
 ### Libraries and what this addon does with each
 
-All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc:15-30`.
+All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc:15-32`.
 
 | Library | Used for |
 |---|---|
@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:522-523`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:523-524`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:246`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -102,9 +102,9 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **240** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **242** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 41, Layout 26, Bars 72, Icons 42 and Text 36. The
+out of General's own tab), Filters 43, Layout 26, Bars 72, Icons 42 and Text 36. The
 AceConfig-drawn Profiles page carries none. It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:633`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
@@ -336,7 +336,7 @@ checkbox reflects what the player chose and a later reload draws the button wher
 |---|---|---|
 | `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:58` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:59` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
-| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:46` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
+| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:60` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:61-62` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
 | `UNIT_PET` | `core/AuraMaster.lua:63` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
 | `ADDON_LOADED` | `core/AuraMaster.lua:64` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
@@ -539,6 +539,16 @@ return value.
   losing a niche rescue on one unit beats defeating every Hide by default. The debuff side answers
   false on every unit for the same reason, which is what keeps issue #11's `hardCC`/`softCC` from
   re-opening fix round 3's failure.
+- **Five crowd-control spells are missing from the shipped `hardCC`/`softCC` lists.** Both lists are
+  derived by `tools/spell-research/research.py` from the client's own DB2 tables, and five abilities
+  sit where that pipeline cannot reach: Repentance (20066), in none of the four pool sources for the
+  build; Axe Toss (89766) and Seduction (6358), on a pet skill line with ClassMask 0, which the same
+  test that excludes professions and mounts throws away; and Earthbind Totem (2484) and Earthgrab
+  Totem (64695), whose root auras carry no mechanic and no matching name, so Shaman ships no root at
+  all. The KNOWN GAPS comment above `hardCC` records each one and why (`defaults/Categories.lua:360-378`)
+  rather than papering over it. A player who
+  wants any of the five adds it by id on General → Spell Categories, which is a profile-wide edit
+  every container picks up.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;
@@ -637,7 +647,7 @@ return value.
 Every `.md` under `docs/` appears in exactly one table below (documentation-§3). Frozen and
 generated directories are named once and never enumerated: `docs/audits/`, `docs/reviews/`,
 `docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/revendor/<date>/`,
-`docs/superpowers/`, `docs/investigations/`.
+`docs/spell-research/<date>/`, `docs/superpowers/`.
 
 ### Required (documentation-§3, Tier 1)
 

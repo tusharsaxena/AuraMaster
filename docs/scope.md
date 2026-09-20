@@ -15,8 +15,9 @@ client. The player-facing contract is the README; the engineering boundary is th
   `weaponEnchants` category (`container.filter.categories.weaponEnchants`) is set to Hide, and a
   container that shows ONLY enchants is a player-buff container whose every other category is Hidden
   (`Cat.EnchantOnlyStates`, `/am new enchants`).
-- **Two styles:** bars (icon, fill, spark, name, time and stack text) and icons (border, dispel
-  border, cooldown swipe, time and stack text).
+- **Three styles:** bars (icon, fill, spark, name, time and stack text), icons (border, dispel
+  border, cooldown swipe, time and stack text) and text (one line an aura, from a template, with
+  the dispel type shown in color three optional ways — `settings/Text.lua`, `modules/Style_Text.lua`).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
   anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
   below), 36 categories set to Show or Hide, schema v4 (defined in `defaults/Categories.lua`: spell

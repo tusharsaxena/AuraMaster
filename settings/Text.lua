@@ -271,7 +271,7 @@ local function templatePicker(cfg, id)
 end
 
 --- A literal `|` in the player's own template text would start a color escape it never asked for and
---- can leave the box unable to render past it -- PrettyChat's convention (`settings/Panel.lua`) is to
+--- can leave the box unable to render past it -- PrettyChat's convention (`../PrettyChat/settings/Panel.lua`) is to
 --- double it. The only LIVE codes in `Text.PreviewLine`'s own output are dispel's `|cffRRGGBB...|r`
 --- wraps (`Style_Text.lua`'s `dispelWord`), so those are pulled out and restored around the doubling,
 --- rather than doubled themselves.

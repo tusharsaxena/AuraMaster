@@ -183,12 +183,15 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 |---|---|
 | `AuraMaster.toc` | Metadata (Interface 120100, version 0.1.0, `X-Standard`), SavedVariables `AuraMasterDB` and `AuraMasterPerfDB`, the load order |
 | `.luacheckrc` | Lint config: Lua 5.1, excludes `libs/`, `tests/_kit/` and the frozen `docs/` bundles; the harness global in a `tests/` stanza |
-| `.pkgmeta` | Packager config: no externals; ignores dev files, `docs`, `tests`, and the `.png`/`.jpg` logo sources |
+| `.pkgmeta` | Packager config: no externals; ignores dev files, `docs`, `tests`, `tools` (the committed generators, never loaded in game), `_dev`, and the `.png`/`.jpg` logo sources |
 | `.gitattributes` | The client-bound line-ending policy (line-endings-§5): CRLF working tree, `*.sh` LF, binaries marked |
 | `.gitignore` | OS and editor clutter, agent scratch directories |
 | `LICENSE` | MIT |
 | `README.md`, `CLAUDE.md`, `DEPENDENCIES.md` | The three root docs (documentation-§1/§2/§7) |
 | `docs/` | The engineering docs; every file is registered in `docs/ARCHITECTURE.md` → Documentation map, which also names the frozen bundle directories |
+| `tools/spell-research/research.py` | The CC spell-list generator (issue #11 Part C): reads Blizzard's DB2 exports for one pinned build, buckets spells by the crowd-control mechanic the client stamps, and prints a diff or a paste-ready Lua fragment. Never writes `defaults/Categories.lua` — the author accepts each change. Python 3.8+, standard library only, needs the network on a run that is not a `--replay` |
+| `tools/spell-research/README.md` | How to run it: `--diff`, `--emit --date`, `--bundle`, `--replay`, and the limitations that make the diff a judgment call |
+| `tools/spell-research/.gitignore` | Keeps the ~75 MB export cache (`.cache/`) and `__pycache__/` out of the repo; only a bundle's gzipped `raw/` copies are committed |
 | `media/logos/auramaster.logo.tga` | The landing-page logo, drawn at 300×300 (options-ui-§5) |
 | `media/logos/auramaster.logo.128.tga` | The ICON logo, 128×128 and uncompressed 32-bit (layout-§4): `## IconTexture`, the minimap button and the broker row. Regenerated from the `.png`, never hand-edited |
 | `media/logos/auramaster.logo.png`, `….jpg` | The 2000×2000 source art and its render; shipped but never loaded — the client reads neither format |

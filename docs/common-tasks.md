@@ -54,14 +54,35 @@ Example: a bar option.
    in its kind's grid on Filters → Categories, and `modules/FilterCompiler.lua` applies it by kind: a
    Hide excludes (`excludeCategory`), and a Show's own positive constraint
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
-   something else is Hidden). A buff `spells` or `enchant` category also joins General → Spell
-   Categories' dropdown (and gets a `See spells` link on the Categories grid), and its profile-wide
+   something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
+   Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
+   kind, never the aura type (`settings/GeneralSpells.lua:96`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.
-3. A `spells` category on a debuff list will not work on friendly units — the engine's identity gate
-   (`docs/midnight-quirks.md`). Keep spell lists on buffs.
+3. A `spells` category on a debuff list is honored only on a HOSTILE target or focus; the engine
+   discards its ids on you or a friendly unit (the identity gate, `docs/midnight-quirks.md`). That
+   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:379`,
+   `:452`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
+   where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
+
+## Re-derive the Hard CC / Soft CC spell lists
+
+`hardCC` and `softCC` are not hand-assembled: `tools/spell-research/research.py` derives them from
+Blizzard's own DB2 exports for one pinned build. Python 3.8+ and the standard library; the first
+run downloads ~75 MB of CSV into `tools/spell-research/.cache/`.
+
+1. `python3 tools/spell-research/research.py --diff` — what would change against what the addon
+   ships today. `--replay docs/spell-research/<date> --diff` re-derives a past run offline.
+2. Read the diff. The generator NEVER writes `defaults/Categories.lua`; each add and each drop is
+   the author's call, which is the whole point of the narrowing rule in Part C of the design.
+3. `--emit --date YYYY-MM-DD` prints the accepted lists in `defaults/Categories.lua`'s own shape,
+   provenance date included. Paste, then update the KNOWN GAPS comment above the category if the
+   run reached or lost one of them.
+4. `--bundle docs/spell-research/<date>` freezes the run — `SOURCES.md`, `derived.json`, `DIFF.md`,
+   `ANALYSIS.md` and the gzipped `raw/` exports. The bundle is what makes step 1 repeatable in a
+   year. `tools/spell-research/README.md` has the rest, including where the pipeline cannot see.
 
 ## Add a slash verb
 
