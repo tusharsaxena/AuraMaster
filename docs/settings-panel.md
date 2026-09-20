@@ -1,7 +1,9 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 242 rows) by loading the addon headlessly and
+below are derived from the live schema (`NS.Schema`, 242 rows on a profile with no categories of the
+player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
+loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
 is a defect in this doc (documentation-§3).
 
@@ -145,7 +147,7 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 | Blizzard frames | Hide Blizzard debuffs | `hideBlizzardDebuffs` | bool | Reparents `DebuffFrame`; out of combat |
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
-dropdown of the eleven spell categories — the nine buff ones (defensives, activeMitigation, raidCDs,
+dropdown of the eleven shipped spell categories, plus every category the player has made — the nine buff ones (defensives, activeMitigation, raidCDs,
 offensiveCDs, healing, support, movement, utility, consumables) and the two debuff ones issue #11
 added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
 KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry
@@ -153,9 +155,14 @@ carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of c
 `C.AURA_TYPE_LABELS` rather than worded again here, so the picker uses the same two words the
 container's own Aura type control does (issue #10). The shorter word is padded so every name starts
 at the same character offset; that is character-exact rather than pixel-exact, since the row font is
-proportional. A **Spells in this
+proportional. A category the player made carries **`(yours)`** after its name — a SUFFIX, because the
+aura-type marker is a padded prefix and a second prefix would move the column that padding bought,
+and because only a few rows answer yes while marking the rest "not yours" would be noise on every
+row. One definition (`NS.GeneralSpells.MarkedName`) serves this dropdown, the Filters → Categories
+grid and the overlap notes below, so no two of them can come to say it differently. A **Spells in this
 category** section heading (2026-09-20) separates the picker and its Restore from the list below it;
-Weapon enchants, which has no spell list, draws no such heading. Every entry but
+Weapon enchants, which has no spell list, draws a **Weapon slots** heading over its three toggles
+instead (2026-09-21), so every block of the tab sits under a heading naming it. Every entry but
 Weapon enchants draws that category's ID list (the library's `IdList`):
 **Add a spell** takes a spell id, a shift-clicked link or a name. While you type, a dropdown lists
 the matching spells (the library's suggestions, LibKa0s issue #31), each with its rank where the
@@ -171,6 +178,69 @@ an added spell's X forgets it), and **Restore this category's starter list** on 
 dropdown's own line, to its right (feedback #3), above Add a spell. Writes the whole set to
 `categorySpells` (a carve-out, so every container re-applies). The page's Defaults does not touch
 these lists; each category's restore does.
+
+**This category** — the block between the picker and the spell list, because its subject is which
+category is being edited, which is the dropdown's subject and not the list's (issue #10, 2026-09-21).
+The heading names that subject in both its cases rather than one of them; it does not reword itself as
+the dropdown moves, or it would stop being the landmark that tells the rename box from the create box
+one block down. What it draws:
+
+- **A category the player made:** a **Rename this category** box, pre-filled from the store on every
+  render and committing on Enter (never per keystroke — that would write a record, re-run the sync and
+  rebuild every schema row per character), and **Delete this category** in the right half of the same
+  line, the column Restore sits in above. A rename keeps the key, so the spells and every container's
+  Show or Hide survive it, and the answer line says the OLD name back, which is a rename's only undo.
+  Delete asks first, through `AURAMASTER_DELETE_CATEGORY`: the confirmation names what is lost — the
+  spell list, and every container's Show/Hide in every profile — and the one consequence that is not a
+  loss, that an aura the category was hiding becomes visible again through Uncategorized. The popup
+  carries the KEY, never the definition, so a popup that outlives its render cannot act on a stale one.
+- **One of Aura Master's own:** one sentence instead of those two controls, saying that the name and
+  the buff-or-debuff choice are fixed and that the spell list is still the player's to add to, remove
+  from and Restore. Weapon enchants gets its own wording, because it has no spell list at all.
+  Disabled controls were declined: on ten of the twelve shipped entries the block would be mostly things
+  that do not work, and it would not say why.
+- **Only while the profile holds a record the sync cannot read:** a line saying how many there are,
+  that nothing is using them and that they cannot be repaired from here, and a **Forget unreadable
+  categories** button behind its own confirmation. Both read at a count of one, through two whole
+  strings and a branch (the idiom `settings/Text.lua`'s `centerNote` already uses). Without this a
+  record with an unusable aura type, name or key was permanently stuck: the sync refuses to
+  materialize it, so it is in no dropdown and no Delete could reach it.
+- **The answer line**: one row under the heading, carrying what the last act of the block answered —
+  an empty or refused name, a duplicate name kept, a create, a rename, a delete, the restore refusal.
+  Everything is said in chat as well, since that is this addon's act log. The line belongs to the
+  state it was said in and the draw enforces it: it is stamped with the profile and the category, and
+  dropped on the first draw that does not match either, or when the panel goes off screen (hooked on
+  the panel's own OnHide, with a structural refresh beside it, because a hidden page is not re-drawn
+  on its next show unless something marked it dirty). A delete stamps no category — the one it names
+  is gone — so the next draw adopts the category shown in its place and the line dies with that one.
+  It deliberately survives a hop to another tab of this page and back: the panel never left the
+  screen, and the sentence is still about the category on it.
+
+**Make a new category** — its own heading, and three controls in reading order: **New category's
+name**, **Aura type** and **Create category**. The heading, labels that name acts rather than the noun
+the two boxes share, and only the rename box ever being pre-filled are the three things that tell the
+two Enter-committing name boxes apart. The aura type is set here and nowhere else, because it is fixed
+at creation — the compiler groups by aura type and every container's stored Show/Hide is keyed by
+category key, so a type that could move would carry a category between two grids and orphan that
+state. A name is capped at `Cat.USER_NAME_MAX` characters in the box and at the store, is stripped of
+`|` and control characters, and a DUPLICATE is kept and reported rather than refused: the key is
+identity, so two categories called the same thing are two categories. Creating selects the new
+category, so it is not left to be found in a dropdown of twelve and counting.
+
+**Restore is not drawn for a category the player made**, and `NS.GeneralSpells.RestoreStarters`
+refuses one at the act, so the drawing rule is a courtesy and never the enforcement. Its starter list
+is `{}`, so the one act behind that label would silently empty the category, one row above a Delete
+that stops to ask for exactly that loss. The picker's lead-in drops its Restore clause on those
+categories too.
+
+**The overlap guardrail informs, it never blocks** (issue #10). Adding a spell already held by another
+category of the same aura type prints one chat line naming the others and what the compiler does about
+it, and each such entry carries an `Also in: …` note under its name. Both read
+`FC.ClaimingCategories` — the compiler's own answer, asked with an empty filter because this is a
+statement about the category set and not about any one container — so the guardrail and the Overrides
+tab's notes cannot drift into two answers to one question. Only the same aura type can claim: a buff
+list and a debuff list never meet in one container. Every name in both surfaces carries the `(yours)`
+marker where it applies.
 
 Starters and added spells are drawn as ONE list **ordered by name**, case-insensitively (owner,
 2026-09-20; before that it was id order, which read Frost Nova, Entangling Roots, Hamstring). The
@@ -261,12 +331,16 @@ chose one control over two. A stored `onlyShown = true` is migrated to `categori
 (buffs) or `categories.uncategorizedDebuffs` (debuffs) `= "hide"` (schema v4, `docs/schema.md`) and
 the key cleared; only a container of some other, unrecognized shape has no category to migrate onto,
 and loses the narrowing — named and printed to the player directly (`NS.Print`), not left to the
-debug console. Then 36 generated rows, one per `defaults/Categories.lua` entry, at
-`container.filter.categories.<key>`, stored `"show"` / `"hide"` (schema v3) and labeled **Show** /
+debug console. Then one generated row per category at
+`container.filter.categories.<key>` — the 36 `defaults/Categories.lua` ships, and one more for every
+category the player has made (issue #10), built by the same `NS.CategoryRow` and registered in front
+of the aura type's Weapon enchants or Uncategorized row so schema order still tracks declaration
+order — stored `"show"` / `"hide"` (schema v3) and labeled **Show** /
 **Hide** (`/am get` and `/am list` print the label, then the stored value in gray). Show is a
 positive claim: an aura in at least one Show category is drawn even if another of its categories says
 Hide; only an aura whose every category says Hide is removed by them (rank 3 of the priority order).
-Buff containers see the 17 buff rows, debuff containers 19 debuff rows — each list's last row is its
+Buff containers see the 17 shipped buff rows, debuff containers the 19 shipped debuff ones, each plus
+the player's own categories of that aura type — each list's last row is still its
 own `Uncategorized`, asymmetric between the two, and since issue #11 (2026-09-20) that asymmetry is
 about the UNIT rather than the aura type: the rescuing group's only constraint is an
 `excludeSpellIDs` of the categorized union, so the compiler emits it only where
@@ -290,7 +364,7 @@ section, and only that section, for the selected container, as one bulk act (`NS
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
 | Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, **weaponEnchants**, **uncategorized** (last) | **uncategorizedDebuffs** (last, fix round 3) |
+| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | *every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
 | Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 
@@ -298,7 +372,10 @@ The **Spell Categories** grid (renamed from Custom Categories, `F-1`) carries on
 it — saying these are the lists on General → Spell Categories, shared by every container — but only
 when the grid this container drew actually holds a `spells`- or `enchant`-kind row (batch 7, `T-2`
 fix round 4): true on a buff container, false on a debuff one, whose grid is `uncategorizedDebuffs`
-alone, a Show/Hide flag over the catch-all rather than a list of anything. It also carries one extra
+alone, a Show/Hide flag over the catch-all rather than a list of anything. A category the player made is labeled **`<name> (yours)`** in this grid, in the same words the General
+→ Spell Categories dropdown uses and read from there (`NS.GeneralSpells.MarkedName`) rather than
+formatted twice; the marker is added to a per-render COPY of the row, because the schema row's label
+is the row's identity in `/am list` and in the write log. It also carries one extra
 column: a **See spells** link (`K-2`) on every `spells`- or `enchant`-kind row, which selects that
 category on General → Spell Categories, opens the General page and switches to its Spell Categories
 tab (`NS.GeneralSpells.Select`, `NS.OpenOptionsPage`, `H.SelectTab`). Right under that grid — ahead

@@ -1623,7 +1623,14 @@ test("user categories: a profile the sweep raises on costs its own leaves and no
     local broken = inactiveProfileWith(NS, "Broken", key)
     broken.containers[1] = setmetatable({}, { __index = function() error("stored table is broken") end })
 
-    assertTrue(NS.Categories.DeleteUserCategory(key), "the act still answers true")
+    local ok, why, failed = NS.Categories.DeleteUserCategory(key)
+    assertTrue(ok, "the act still answers true")
+    assertNil(why)
+    -- THE CALLER CAN TELL, which is the whole of this line's point: `true` alone said the delete
+    -- went and said nothing about the profile that kept its debris, so the difference reached
+    -- NS.Debug and never the player. red under: the third return dropped, or counting profiles that
+    -- were merely SKIPPED (one holding a record of its own) as refusals.
+    assertEqual(failed, 1, "the profile that raised is counted back to the caller")
     -- The category is gone in every sense the panel and the validator can see.
     assertTrue(NS.db.profile.userCategories[key] == nil)
     assertTrue(NS.Categories.Find("HELPFUL", key) == nil, "the definition went")

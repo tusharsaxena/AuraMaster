@@ -129,6 +129,8 @@ test("locale: every string routed by value has its key — Constants labels, cat
     -- checked, and a user category's description is a fixed shipped string precisely so that it can
     -- be. If that description ever has to name the category, the name is a `%s` ARGUMENT to a routed
     -- format string, never concatenated into one -- see defaults/Categories.lua's USER_DESC.
+    -- Written out in full, with why Cat.LabelOf is what enforces it at the draw, in
+    -- docs/ARCHITECTURE.md -> Locale routing, and its one exemption.
     local exempted = 0
     for _, list in ipairs({ NS.Categories.HELPFUL, NS.Categories.HARMFUL }) do
         for _, def in ipairs(list) do

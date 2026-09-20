@@ -7,7 +7,7 @@ local _, NS = ...
 --     Spell Categories  [Category ▾]  [Restore this category's starter list]
 --                       -- one of the eleven shipped spell lists, Weapon enchants, or one the
 --                          player made -- which reads "(yours)" and is drawn no Restore
---                       ---- Your categories -------------------------------------------------
+--                       ---- This category ---------------------------------------------------
 --                       "Created 'Affixes', empty. Add spells to it below..." <- the answer line
 --                       [Rename this category][ Delete this category ]   <- a category you made
 --                       'Healing is one of Aura Master's own categories...' <- a shipped one
@@ -18,8 +18,9 @@ local _, NS = ...
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
 --                       (X) <icon> A spell you added (424242)
---                           Also in: Immunities                  <- another category claims it too
+--                           Also in: Immunities (yours)          <- another category claims it too
 --                    -- OR, when the category is Weapon enchants --
+--                       ---- Weapon slots ----------------------------------------------------
 --                       [x] Main hand   [x] Off hand   [x] Ranged
 --     Dispel Colors     the lead-in and its four bullets, then one swatch per dispel type,
 --                       Magic … Bleed
@@ -48,10 +49,10 @@ local _, NS = ...
 -- can never leave the tab showing an empty list.
 --
 -- THE TAB IS ALSO WHERE A PLAYER'S OWN CATEGORIES ARE MADE AND UNMADE (issue #10 checkpoints 6 and
--- 7). The 'Your categories' block between the picker and the list creates one (a name and an aura
--- type, fixed at creation), renames the picked one, and deletes it behind a confirmation; a SHIPPED
--- category draws a sentence there instead, because the lock is on the category object and not on
--- its spells. The block only DRAWS that rule -- `Cat.RenameUserCategory` and
+-- 7). The 'This category' block between the picker and the list renames the picked one and deletes
+-- it behind a confirmation, and 'Make a new category' under it creates one (a name and an aura type,
+-- fixed at creation); a SHIPPED category draws a sentence in place of the rename and the delete,
+-- because the lock is on the category object and not on its spells. The block only DRAWS that rule -- `Cat.RenameUserCategory` and
 -- `Cat.DeleteUserCategory` are what enforce it, and the aura type has no setter at all. Every
 -- entry in the list is marked with the other categories that also claim it, and adding a claimed
 -- id says so in chat: the guardrail informs and never blocks, because an aura legitimately belongs
@@ -109,29 +110,101 @@ local SECTION_GAP = 10
 
 local spellCategory   -- session: which category the tab edits (the first when unset)
 
--- THE 'YOUR CATEGORIES' BLOCK ANSWERS IN THE PANEL, NOT ONLY IN THE CHAT FRAME. Pressing Create with
+-- THE 'THIS CATEGORY' BLOCK ANSWERS IN THE PANEL, NOT ONLY IN THE CHAT FRAME. Pressing Create with
 -- an empty box used to re-render with nothing visibly changed and a line in chat: from the panel's
 -- side, a button that does nothing. So every act of that block sets this line, and the block draws
 -- it directly under its heading -- one `H.TextRow`, which is the same grammar the Filters page
 -- states its own conditions in and the same one this tab's shipped-category sentence already uses.
 -- No new widget kind, and nothing to dismiss.
 --
--- SESSION STATE, LIKE `spellCategory` AND `newName`: it is about the act just run, so the act sets
--- it, the render that follows draws it, the next act replaces it, and picking another category
--- clears it -- at that point it is about something the player is no longer looking at.
+-- THE LINE'S LIFETIME IS THE STATE IT WAS SAID IN, AND THE DRAW ENFORCES IT (owner, 2026-09-21).
+-- One thing used to clear it -- the Category dropdown's own OnValueChanged -- so it outlived a panel
+-- close and reopen, a move to another settings page and a PROFILE SWITCH: a player could open the
+-- panel and be told about an act they ran ten minutes ago, in a profile they had since left. The
+-- line is now STAMPED with what it is about, and `settleNotice` drops it on the first draw that
+-- does not match. Three things scope it:
+--
+--   * THE PROFILE it was said in. A switch replaces every category, list and container decision the
+--     sentence names, so the sentence is about a store that is no longer loaded.
+--   * THE CATEGORY it was about. "Deleted 'X'" left standing over another category's controls reads
+--     as a statement about THAT one. A delete stamps no key at all -- the category it names is gone
+--     -- and the next draw adopts its own, because that draw is the one the sentence explains.
+--   * THE VISIT. The page leaving the screen ends it: `endVisit` hooks the panel's own OnHide. The
+--     clear alone is not enough there, because a hidden page is NOT re-rendered on its next show
+--     unless something marked it dirty (libs/LibKa0s/Options.lua's SetRenderer), so the stale line
+--     would still be hanging there in pixels when the panel came back -- hence the structural
+--     refresh beside it.
+--
+-- What it deliberately does NOT clear on is a hop to another TAB of this page and back: the panel
+-- never leaves the screen, the profile and the category are the ones the line is about, and it is
+-- still the last thing the player did here. The three moves above are the ones that turn it into a
+-- statement about something else.
+--
+-- SESSION STATE, LIKE `spellCategory` AND `newName`: it means nothing outside an open panel.
 local notice
+local noticeState   -- { profile = <name>, key = <category key, or nil until a draw adopts one> }
 
 --- Re-render on the next frame: the dropdown or button whose callback asked is still on the stack.
 local function rerender()
     if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end
 end
 
+--- The profile the panel is looking at, for the answer line's stamp. `"?"` before there is a store
+--- (the headless harness, and every render before ADDON_LOADED), which is one state and never two
+--- different profiles wearing one name.
+local function profileName()
+    return (NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()) or "?"
+end
+
 --- The block's answer to the act just run: in the panel, and in chat as well. Chat stays because it
 --- is this addon's act log -- the Containers page's acts print theirs there too, and a player who
 --- looked away still finds the line. `nil` clears the panel's line and prints nothing.
-local function say(text)
+---
+--- `key` is the category the line is ABOUT and defaults to the selected one. Pass `false` from an
+--- act that leaves no category to point at -- the delete -- and the next draw adopts the category it
+--- shows in its place.
+local function say(text, key)
+    if key == nil then key = spellCategory end
     notice = text
+    noticeState = text and { profile = profileName(), key = key or nil } or nil
     if text then NS.Print(text) end
+end
+
+--- Drop the answer line unless the draw about to happen is the one it was said for: same profile,
+--- same category. Called by the block before it draws anything, so a line can never be drawn over a
+--- state it was not about.
+local function settleNotice(def)
+    if not notice then return end
+    local st = noticeState
+    if not st or st.profile ~= profileName() then
+        notice, noticeState = nil, nil
+        return
+    end
+    -- A delete's line adopts the category drawn in place of the one it names, and dies with THAT.
+    if st.key == nil then st.key = def.key end
+    if st.key ~= def.key then notice, noticeState = nil, nil end
+end
+
+-- One entry per page context, and this tab is drawn on exactly one, so the table holds one key. It
+-- is keyed by the ctx rather than a flag written onto it: the page context is the library's table,
+-- not ours to grow a field on.
+local visitHooked = {}
+
+--- End the answer line when this page goes off screen -- the settings window closing, or another
+--- page being opened. Hooked once per page context, on the panel's own OnHide.
+local function endVisit(ctx)
+    if type(ctx) ~= "table" or visitHooked[ctx] then return end
+    local panel = ctx.panel
+    if type(panel) ~= "table" or type(panel.HookScript) ~= "function" then return end
+    visitHooked[ctx] = true
+    panel:HookScript("OnHide", function()
+        if not notice then return end
+        notice, noticeState = nil, nil
+        -- STRUCTURAL, because the line is a row of the block and not a widget value: a hidden page
+        -- takes this as "dirty" and draws again on its next show, which is the only thing that
+        -- takes the sentence off the screen it is still sitting on.
+        if H.RefreshPanel then H.RefreshPanel(ctx, true) end
+    end)
 end
 
 --- Whether `def` is a row this tab can draw: a spell list of either aura type, or the weapon-enchant
@@ -482,9 +555,11 @@ local function categoryCell(defs, def)
         dd:SetValue(def.key)
         dd:SetRelativeWidth(rel or 0.5)
         sizeCategoryDropdown(dd)
-        -- The answer line goes with the category it was about: a "Deleted 'X'" or a refusal left
-        -- standing over a different category's controls would read as a statement about THAT one.
-        dd:SetCallback("OnValueChanged", function(_, _, v) spellCategory = v; notice = nil; rerender() end)
+        -- The answer line is not cleared here. It goes with the category it was about -- a
+        -- "Deleted 'X'" or a refusal standing over a different category's controls would read as a
+        -- statement about THAT one -- and `settleNotice` is the ONE place that rule lives, so this
+        -- selection and a profile switch and a panel reopen all meet the same test.
+        dd:SetCallback("OnValueChanged", function(_, _, v) spellCategory = v; rerender() end)
         H.AttachTooltip(dd, L["Category"],
             L["Which spell category's list to edit. Every entry is marked with the aura type it filters, because a category only ever shows on a container of that type."])
         parent:AddChild(dd)
@@ -553,11 +628,11 @@ end
 
 
 -- ---------------------------------------------------------------------------
--- Your categories: create, rename, delete, and the shipped lock (issue #10 checkpoint 6)
+-- This category: rename, delete, and the shipped lock; then Make a new category (checkpoint 6)
 -- ---------------------------------------------------------------------------
 --
 --     [ Category v ]                    [ Restore this category's starter list ]
---     ---- Your categories ---------------------------------------------------
+--     ---- This category -----------------------------------------------------
 --     -- whatever the last act of this block answered, when there was one --
 --     "Renamed 'Frist draft' to 'First draft'. To undo it, type 'Frist draft' back into the box."
 --     -- a category the player made --
@@ -595,6 +670,15 @@ end
 --     compiler groups by aura type and every container's stored Show/Hide is keyed by category key,
 --     so letting the type move would silently carry a category between two grids and orphan that
 --     state). A control that could only ever be set once would read as a control that is broken.
+--   * THE HEADING NAMES THE BLOCK'S SUBJECT, NOT ONE OF ITS TWO CASES. It read "Your categories"
+--     over a body whose usual sentence is that the selected category is NOT yours -- which is what
+--     twelve of the fourteen entries say, and the only thing a player who has made none ever sees.
+--     The block is about the category the picker above it is showing, in both cases, so the heading
+--     says that and the body says whose it is. The alternative -- a heading per case, "Your
+--     categories" against something else -- was declined for a reason the rest of this tab already
+--     turns on: a heading that changes its words as the dropdown moves stops being a landmark, and
+--     this one sits directly under the control that moves it. Creating is the act that is genuinely
+--     about categories in the plural, and it already has its own heading one block down.
 --   * THE SHIPPED CASE DRAWS ONE SENTENCE RATHER THAN DISABLED CONTROLS. A grayed-out name box and
 --     a grayed-out Delete on twelve of the fourteen categories would be a panel mostly made of
 --     things that do not work, and it would not say WHY. The sentence says why, and says the half
@@ -687,9 +771,24 @@ StaticPopupDialogs["AURAMASTER_DELETE_CATEGORY"] = {
         -- that went, a delete looks like the dropdown changing its mind.
         local gone = Cat.Find("HELPFUL", data) or Cat.Find("HARMFUL", data)
         local name = gone and Cat.LabelOf(gone) or tostring(data)
-        local ok, why = Cat.DeleteUserCategory(data)
+        local ok, why, failed = Cat.DeleteUserCategory(data)
         if not ok then return say(why) end
-        say(L["Deleted '%s'. This tab is showing another category now."]:format(name))
+        -- A PARTIAL SWEEP IS SAID OUT LOUD. The act is deliberately recoverable rather than atomic
+        -- (defaults/Categories.lua's sweepUserKey), so a stored profile whose table is malformed
+        -- costs only its own leaves -- but "deleted" then means slightly less than it says, and
+        -- before this the difference reached NS.Debug and nothing else. It is never a failure of the
+        -- delete, so the line still leads with what went; what is left is inert and named as such.
+        --
+        -- `false` is the key this line is about: the category it names no longer exists, so the
+        -- stamp adopts whatever the next draw shows in its place (see `say`).
+        if failed and failed > 0 then
+            local partial = failed == 1
+                and L["Deleted '%s'. One saved profile could not be tidied up: it may still hold this category's spell list and Show or Hide, which nothing reads."]
+                or L["Deleted '%s'. %d saved profiles could not be tidied up: they may still hold this category's spell list and Show or Hide, which nothing reads."]
+            say(partial:format(name, failed), false)
+        else
+            say(L["Deleted '%s'. This tab is showing another category now."]:format(name), false)
+        end
         reapplyAll()
         H.RefreshAllPanels()
     end,
@@ -726,6 +825,13 @@ end
 -- that decide whether to press it: that nothing is using these records, and that what they hold
 -- cannot be recovered from here. The confirmation is the same shape Delete's is, for the same
 -- reason -- it discards stored data the player cannot see and so cannot weigh.
+--
+-- ITS SENTENCE IS PICKED AT THE SHOW, because ONE is the ordinary count and "Forget the 1 saved
+-- categories" is not a sentence (owner, 2026-09-21). This repo's way with a count-dependent string
+-- is two whole strings and a branch, never a stitched-together fragment -- settings/Text.lua's
+-- `centerNote` is the standing example -- and a StaticPopup holds exactly one `text`, so the branch
+-- writes the one it needs onto the dialog a line before showing it. The singular says no number at
+-- all: the block that opened it has just said how many there are.
 StaticPopupDialogs["AURAMASTER_FORGET_BROKEN_CATEGORIES"] = {
     text         = L["Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."],
     button1      = L["Yes"],
@@ -737,7 +843,8 @@ StaticPopupDialogs["AURAMASTER_FORGET_BROKEN_CATEGORIES"] = {
         -- The list is re-read by the act rather than carried on the popup: the popup outlives the
         -- render that showed it, and the answer to "which records are unreadable" is the store's.
         local gone = Cat.ForgetUnusableUserRecords()
-        say(L["Forgot %d unreadable saved categories."]:format(gone))
+        say(gone == 1 and L["Forgot 1 unreadable saved category."]
+            or L["Forgot %d unreadable saved categories."]:format(gone))
         reapplyAll()
         H.RefreshAllPanels()
     end,
@@ -748,13 +855,22 @@ local function renderBroken(ctx)
     local bad = Cat.UnusableUserRecords(NS.db and NS.db.profile)
     local count = #bad
     if count == 0 then return end
-    H.TextRow(ctx, L["Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."]
+    -- One is the common count, and the plural-only sentence read as broken English at exactly the
+    -- moment a player met it. Two strings and a branch, this repo's own idiom for a count-dependent
+    -- line (settings/Text.lua's centerNote); the singular carries the "1" as a literal, as that one
+    -- does, so a translator is handed a whole sentence rather than a number to agree with.
+    H.TextRow(ctx, count == 1
+        and L["Aura Master cannot read 1 of this profile's saved categories, so it is in no list and nothing is using it. It cannot be repaired from here, but you can be rid of it."]
+        or L["Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."]
         :format(count))
     H.RenderGrid(ctx, { { make = function(_, parent)
         local btn = NS.AceGUI:Create("Button")
         btn:SetText(L["Forget unreadable categories"])
         btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
         btn:SetCallback("OnClick", function()
+            StaticPopupDialogs["AURAMASTER_FORGET_BROKEN_CATEGORIES"].text = count == 1
+                and L["Forget the saved category Aura Master cannot read? It is in no list and cannot be repaired from here, and whatever it held is discarded. Your other categories are not affected."]
+                or L["Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."]
             StaticPopup_Show("AURAMASTER_FORGET_BROKEN_CATEGORIES", count)
         end)
         H.AttachTooltip(btn, L["Forget unreadable categories"],
@@ -820,6 +936,11 @@ function doCreate()
     -- name is guaranteed. Formatting the box's own text instead would hand a `|c` or a `|T` typed
     -- into the box straight to the chat frame and to this panel's own line.
     local clean = Cat.SanitizeUserName(newName) or newName
+    -- THE SELECTION MOVES FIRST, and the answer line's stamp is why it is written here rather than
+    -- below: `say` stamps the line with whatever category is selected, and a line about a category
+    -- just made has to be stamped with THAT one or the very next draw drops it as a line about
+    -- something else. The box is still cleared after the branch below, which reads it.
+    spellCategory = key
     if Cat.UserCategoryNameTaken(NS.db.profile, newName, key) then
         -- INFORMS, DOES NOT REFUSE (the ledger): the key is identity, so two categories with one
         -- name are two categories. The line is for the player who typed the same name twice by
@@ -829,7 +950,6 @@ function doCreate()
         say(L["Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."]:format(clean))
     end
     newName = ""
-    spellCategory = key
     reapplyAll()
     rerender()
 end
@@ -849,10 +969,14 @@ local function createCell()
     end }
 end
 
---- The "Your categories" block: the answer line, the picked category's own controls (or the sentence
+--- The "This category" block: the answer line, the picked category's own controls (or the sentence
 --- saying why it has none), the way out of an unreadable record, and then the create form under a
 --- heading of its own. Drawn for the enchant row too -- it is one of the shipped categories the
 --- sentence is about, and creating a category is not a thing only the spell-list tabs may do.
+---
+--- IT SETTLES THE ANSWER LINE BEFORE IT DRAWS ANYTHING (`settleNotice`), so the line can never be
+--- drawn over a profile or a category it was not said about. The rule and its three scopes are
+--- written above `notice`.
 ---
 --- THE SHIPPED SENTENCE COMES IN TWO, because Weapon enchants is not a spell list. The general one
 --- promises "add, remove and Restore" the list below, and on the enchant entry there is no list
@@ -871,9 +995,10 @@ end
 --- the player types. A rename that does go through now says the OLD name back (`nameCell`), which is
 --- the only undo a rename has.
 local function renderManage(ctx, def)
+    settleNotice(def)
     local scroll = H.EnsureScroll(ctx)
     if scroll then H.AddSpacer(scroll, SECTION_GAP) end
-    H.Section(ctx, L["Your categories"])
+    H.Section(ctx, L["This category"])
     if notice then H.TextRow(ctx, notice) end
     if Cat.IsUserCategory(def) then
         H.RenderGrid(ctx, { nameCell(def), deleteCell(def) })
@@ -914,18 +1039,28 @@ end
 -- do not overlap at all, and saying they did would be a false alarm on every dispel and interrupt id
 -- that appears in both worlds.
 
---- Every OTHER category of `def`'s aura type that already holds `id`, as labels in declaration
---- order. `Cat.LabelOf` has already been applied by the compiler, so these are drawn as they are.
+--- Every OTHER category of `def`'s aura type that already holds `id`, as the panel names them, in
+--- declaration order.
+---
+--- MARKED "(yours)" LIKE EVERY OTHER LIST ON THIS TAB (owner, 2026-09-21). The compiler answers with
+--- `Cat.LabelOf`'s name, which is the labeling rule and stays it -- but the marker is the PANEL's,
+--- added by `markedName` wherever the panel lists a category, and these two lines were the only
+--- place it listed one without it. A claimed-by note reading "Also in: Immunities" could name a
+--- category the player made and never say so, in a sentence whose whole job is to tell them where
+--- else their spell already lives. Resolved by KEY out of `def`'s own aura type, which is the only
+--- type that can claim (see above), so the lookup is total over the answer.
 --- @return table  labels, possibly empty
 local function otherClaimants(def, id)
     local out = {}
     local profile = NS.db and NS.db.profile
-    local claiming = FC.ClaimingCategories(Cat, Cat.AuraTypeOf(def), {},
+    local auraType = Cat.AuraTypeOf(def)
+    local claiming = FC.ClaimingCategories(Cat, auraType, {},
         profile and profile.categorySpells, id)
     for _, c in ipairs(claiming) do
         if c.key ~= def.key then
+            local other = auraType and Cat.Find(auraType, c.key)
             local n = #out
-            out[n + 1] = c.label
+            out[n + 1] = other and markedName(other) or c.label
         end
     end
     return out
@@ -991,7 +1126,18 @@ end
 --- The Weapon enchants entry: which slots count, where the per-container switch lives, and the
 --- all-slots fallback (modules/FilterCompiler.lua's enchantBlock) so unticking every slot here does
 --- not read as a broken control.
+---
+--- UNDER A HEADING OF ITS OWN, and that is a fix rather than a decoration (owner, 2026-09-21). This
+--- is drawn AFTER `renderManage`, and a heading owns everything drawn beneath it until the next one
+--- -- so the lead-in and the three checkboxes landed under "Make a new category" and read as part of
+--- the create form. Every other block of this tab already names itself ("This category", "Make a new
+--- category", "Spells in this category"); this one now does too, and the order of the calls is left
+--- alone, because the block ABOVE the slots is the same block that sits above every other category's
+--- spell list and belongs in the same place on both.
 local function renderEnchant(ctx)
+    local scroll = H.EnsureScroll(ctx)
+    if scroll then H.AddSpacer(scroll, SECTION_GAP) end
+    H.Section(ctx, L["Weapon slots"])
     H.TextRow(ctx, L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."])
     H.TextRow(ctx, L["Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."])
     local rows = {}
@@ -1002,10 +1148,17 @@ end
 --- The Spell Categories tab: the category dropdown, then either the ID list over the chosen
 --- category's spells, or (Weapon enchants) the slot toggles.
 local function renderSpells(ctx)
+    endVisit(ctx)
     local defs = spellCategories()
     local def = currentCategory(defs)
     local key = def.key
     if def.kind == "enchant" then
+        -- ITS OWN LEAD-IN, because this was the one entry whose picker had none: both spell-list
+        -- branches below say what the list under the dropdown is, and choosing Weapon enchants
+        -- replaced that sentence with nothing at all. It says the one thing that makes the rest of
+        -- the tab read correctly here -- there is no spell list, so there is nothing to add to or
+        -- take out of -- and leaves the slots to their own block.
+        H.TextRow(ctx, L["Weapon enchants matches the temporary enchants on your weapons rather than a list of spells, so there is nothing to add or remove here. The weapon slots it reads are below."])
         H.RenderGrid(ctx, { categoryCell(defs, def) })
         renderManage(ctx, def)
         return renderEnchant(ctx)

@@ -1033,7 +1033,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (55)
+### test_pages_general.lua (61)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1072,6 +1072,12 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: every act of the block answers in the panel, not only in chat
 - general → spell categories: a saved record the sync cannot read can be forgotten from the panel
 - general → spell categories: an id another category already claims is marked in the list and reported at the add
+- general → spell categories: the answer line dies with the profile it was said in
+- general → spell categories: the answer line ends when the page leaves the screen
+- general → spell categories: Weapon enchants has a lead-in, and its slots have a heading of their own
+- general → spell categories: a claimed-by note says when the other category is one the player made
+- general → spell categories: one unreadable record reads in the singular
+- general → spell categories: a profile that refuses the sweep is said out loud, not only logged
 - general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
 - general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides
 - general → spell categories: picking a suggestion adds it through the one writer, exactly once
@@ -1422,7 +1428,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 55 |
+| test_pages_general.lua | 61 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 45 |
 | test_pages_layout.lua | 27 |
@@ -1442,4 +1448,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1228** |
+| **Total** | **1234** |

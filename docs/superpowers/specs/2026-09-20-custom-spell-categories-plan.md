@@ -16,11 +16,12 @@ its notes. Do not rely on conversation context — everything needed is here or 
 | 2 | Category type as a first-class field | DONE | b520ecd | `def.auraType` stamped at load; `Cat.AuraTypeOf(defOrKey)` reads it |
 | 3 | Storage + schema for user categories | DONE | 0a2004b | Records in `userCategories`/`userCategoryOrder`, materialized into `Cat.HELPFUL`/`Cat.HARMFUL` by `Cat.SyncUserCategories`; random `user…` keys; schema v6; `NS.RegisterSchemaRows(rows, beforePath)` + `NS.UnregisterSchemaRows` |
 | 4 | `Uncategorized` counts user categories | DONE | 0a2004b | No compiler change needed, and proven so from a compiled plan (tests/test_filtercompiler.lua) |
-| 5 | Deletion and cleanup across profiles | DONE | (uncommitted) | `Cat.DeleteUserCategory`; cleanup is EAGER across every stored profile through the published `Database.EachProfile`; a profile holding its OWN record under the key (a profile copy) is skipped |
-| 6 | UX: create / rename / delete + predefined lock | DONE | (uncommitted) | The 'Your categories' block on General -> Spell Categories; the lock is enforced by the ACTS, and a shipped category draws a sentence instead of disabled controls |
-| 7 | Overlap guardrail | DONE | (uncommitted) | Inform, do not block; `FC.ClaimingCategories` published out of `ExplainSpell` and read by the panel for both the add-time line and the per-entry note |
-| 7R | Review round four: the owner's findings on 5-7 | DONE | (uncommitted) | Restore is not drawn for a user category and `RestoreStarters` refuses one; the enchant entry gets its own sentence; a `(yours)` marker on the dropdown and the Filters grid; the two name boxes separated by heading, label and pre-fill; every act of the block answers in the panel; the eight low findings |
-| 8 | Docs, counts, scope, smoke tests | TODO | | |
+| 5 | Deletion and cleanup across profiles | DONE | 7aab1c5 | `Cat.DeleteUserCategory`; cleanup is EAGER across every stored profile through the published `Database.EachProfile`; a profile holding its OWN record under the key (a profile copy) is skipped |
+| 6 | UX: create / rename / delete + predefined lock | DONE | 7aab1c5 | The block on General -> Spell Categories (named `Your categories` here, renamed `This category` at 7R2); the lock is enforced by the ACTS, and a shipped category draws a sentence instead of disabled controls |
+| 7 | Overlap guardrail | DONE | 7aab1c5 | Inform, do not block; `FC.ClaimingCategories` published out of `ExplainSpell` and read by the panel for both the add-time line and the per-entry note |
+| 7R | Review round four: the owner's findings on 5-7 | DONE | 7aab1c5 | Restore is not drawn for a user category and `RestoreStarters` refuses one; the enchant entry gets its own sentence; a `(yours)` marker on the dropdown and the Filters grid; the two name boxes separated by heading, label and pre-fill; every act of the block answers in the panel; the eight low findings |
+| 7R2 | Review round five: the UX findings on the block, and two correctness ones | DONE | (uncommitted) | Headings agree with their blocks (`This category`, `Weapon slots`); the answer line's lifetime is stamped and enforced at the draw; the unreadable-record strings read at a count of one; the overlap note and its chat line carry `(yours)`; Weapon enchants gains a picker lead-in; `.luacheckrc` counts four popups; `Cat.DeleteUserCategory` returns the refused-profile count and the confirmation says so |
+| 8 | Docs, counts, scope, smoke tests | DONE | (uncommitted) | `scope.md` (the count is now "what ships plus the player's own"), `schema.md` (the two profile keys, the runtime rows, `to = 7` for the next rung), `settings-panel.md` (the block, the create form, the marker, the answer line, Restore's absence, the row counts), `ARCHITECTURE.md` (the second structural registry, the materialize decision, the surface table, the LOCALE EXEMPTION in a section of its own, two Known Limitations), `module-map.md`, `common-tasks.md` (the create recipe), `smoke-tests.md` section V (checks 167-177), README (one paragraph and one FAQ row, de-AI pass run). Counts verified by loading the addon headlessly: 242 schema rows, 36 shipped categories (17 buff, 19 debuff), five dispel swatches (module-map said six) |
 
 Status values: `TODO`, `WIP`, `DONE`, `BLOCKED` (with the blocker named).
 
@@ -222,7 +223,7 @@ the duplicate-name line prints the SANITIZED name; `Cat.SanitizeUserName` caps i
 the category was hiding becomes visible again through Uncategorized; and the delete now states that
 it happened, since the tab jumps to another category.
 
-**DELIVERED as the 'Your categories' block on General -> Spell Categories**, between the Category
+**DELIVERED as the 'This category' block on General -> Spell Categories**, between the Category
 picker and the spell list: a name box and a Delete for a category the player made, a one-sentence
 explanation instead of them for a shipped one, and a create form (name, aura type, Create) always.
 Four controls, all of them ordinary AceGUI widgets in `H.RenderGrid` pairs -- the grammar the picker
@@ -240,6 +241,45 @@ block in settings/GeneralSpells.lua.
   `Cat.DeleteUserCategory` refuse a key with no stored record, and the aura type has no setter at
   all -- `Cat.CreateUserCategory` is its only writer in the addon. tests/test_database.lua asserts
   all three, including that no `NS.Categories` member other than `AuraTypeOf` names an aura type.
+
+### Review round five (owner, 2026-09-21)
+
+Five UX findings and two correctness ones, all on the uncommitted 5-7 tree, all closed here.
+
+- **Each block sits under its own heading.** `renderEnchant` is called after `renderManage`, and a
+  heading owns everything under it until the next one, so on Weapon enchants the slot lead-in and
+  the three slot checkboxes were drawn beneath **Make a new category** and read as part of the
+  create form. The SLOTS got a heading (`Weapon slots`) rather than the call order being inverted:
+  the block above them is the same block that sits above every other category's spell list, and it
+  belongs in one place on both.
+- **The answer line's lifetime is decided and enforced at the draw.** It was cleared by exactly one
+  thing -- the Category dropdown's `OnValueChanged` -- so it outlived a panel close and reopen, a
+  page switch and a PROFILE switch. THE RULE: the line belongs to the state it was said in, which is
+  the profile, the category it is about, and the visit. `settleNotice` drops it on the first draw
+  whose profile or category does not match the stamp; `endVisit` hooks the panel's own OnHide and
+  drops it there too, with a structural refresh beside it, because a hidden page is not re-rendered
+  on its next show unless something marks it dirty. A delete stamps NO key -- the category it names
+  is gone -- and the next draw adopts the one shown in its place. A hop to another TAB of this page
+  and back deliberately keeps the line: the panel never left the screen and the sentence is still
+  about the category on it.
+- **The heading names the block's subject, not one of its two cases.** `Your categories` stood over
+  a body whose usual sentence is that the selected category is NOT yours -- ten of the twelve shipped
+  entries, and everything a player who has made none ever sees. It is now `This category`, which is
+  true in both cases and stays put as the dropdown moves; a heading that changes its words sitting
+  directly under the control that changes them is not a landmark. Creating is the act that is about
+  categories in the plural, and it already had its own heading.
+- **The unreadable-record strings read at a count of one**, which is the common count: two whole
+  strings and a branch, this repo's own idiom for a count-dependent line (settings/Text.lua's
+  `centerNote`), for the block's line, the confirmation and the answer. A StaticPopup holds one
+  `text`, so the branch writes the sentence it needs onto the dialog a line before showing it.
+- **Two smaller ones.** Weapon enchants was the only entry whose picker had no lead-in; it has one.
+  And the overlap note and its chat line now carry `(yours)` through `markedName`, so a claimed-by
+  note can no longer name a category the player made without saying it is theirs.
+- **`.luacheckrc` counted three StaticPopupDialogs registrations; there are four.** Corrected.
+- **A partial sweep reaches the player.** `Cat.DeleteUserCategory` answered `true` whether or not a
+  stored profile refused the sweep, so the difference reached `NS.Debug` and nothing else. It now
+  returns the refusing-profile count third, and the confirmation's line says so -- leading with what
+  went, because the delete itself did not fail.
 
 ### 7. Overlap guardrail
 
@@ -260,6 +300,34 @@ category set and not about any one container.
 `docs/scope.md`, `docs/schema.md`, `docs/settings-panel.md`, `docs/ARCHITECTURE.md`,
 `docs/module-map.md`, `docs/common-tasks.md`, the smoke-test checklist, and every count claim the
 change moves. The locale exemption gets written down where the guard test can be understood from it.
+
+**DONE (uncommitted).** What actually landed, and the two judgment calls in it:
+
+- **The category count is no longer a number.** `docs/scope.md` said "36 categories"; it now says the
+  shipped set plus the player's own, with 36 (17 buff, 19 debuff) given as what ships *as this is
+  written* rather than as the count of what a player has. Same treatment for
+  `docs/settings-panel.md`'s "36 generated rows" and `NS.Schema`'s 242: 242 is the count with no user
+  categories, and each one adds a row at runtime. Every number was re-counted by loading the addon
+  headlessly, not read off the old doc.
+- **The locale exemption has a home**: `docs/ARCHITECTURE.md` → *Locale routing, and its one
+  exemption*, which states what it covers (one FIELD of one flagged definition kind), why
+  `Cat.LabelOf` enforces it at the draw, and that it is proven narrow from both sides.
+  `tests/test_locale.lua` points at that section, so a reader of the guard finds the reasoning
+  rather than reconstructing it.
+- **User categories are written up as the addon's SECOND structural registry** (architecture-§5), with
+  the storage keys, the named writer and the load pass the rule asks for, and a table of every surface
+  the issue published. That is a conformance claim, not a deviation: nothing new went into
+  *Documented deviations*.
+- Two counts were stale and are corrected on the way past: `docs/module-map.md` said
+  `settings/GeneralSpells.lua` drew "six" `dispelColors` rows (there are five since schema v5 dropped
+  `None`), and `docs/schema.md`'s migration recipe still told the next change to append `to = 5` (the
+  ladder ends at 6, so the next rung is 7 — `docs/common-tasks.md` already said so).
+- `docs/smoke-tests.md` gained section V, checks 167-177: create, the category being real in the grid
+  and the CLI, that it filters, the overlap note on both sides, rename, the shipped lock and the
+  Weapon enchants wording, the answer line's three scopes, empty and duplicate names, delete with its
+  confirmation, that a deleted category stops filtering, and that categories belong to the profile.
+- README was edited, because a player-facing claim moved: the Usage paragraph now says you can make
+  your own categories, and the FAQ has a row for it. The de-AI pass was run on both.
 
 ## Out of scope
 

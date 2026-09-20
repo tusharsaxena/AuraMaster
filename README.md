@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1228%2F1228_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1234%2F1234_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -55,7 +55,11 @@ Show wins over Hide, so an aura in even one Show category is drawn, and only one
 category it belongs to is dropped. Its Overrides tab holds a whitelist and a blacklist you add spells
 to by name, by id or by shift-clicking a link; the whitelist always wins. When a filter can't work
 where you've put it, an orange line at the top of the page tells you why. General → Spell Categories edits which spells each spell category
-holds, for every container at once, and General → Dispel Colors picks the color for each dispel type.
+holds, for every container at once, and it's also where you make your own: give it a name, say
+whether it holds buffs or debuffs, and add spells. It then sits on every container's Filters →
+Categories grid like the built-in ones, marked (yours). Aura Master's own categories can't be renamed
+or deleted; their spell lists are still yours to change. General → Dispel Colors picks the color for
+each dispel type.
 Bars, Icons and Text hold the look for each style. On the page for a style a container doesn't use, a
 notice says so and the controls are dimmed.
 
@@ -121,6 +125,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |
 | Can I hide Blizzard's buff frame? | Yes, on General → Display. Your weapon enchants live in that same Blizzard frame and go with it, so make sure a player buff container's **Weapon enchants** row on Filters → Categories is set to Show (the default) if you still want to see them. |
+| Can I make my own category? | Yes. General → Spell Categories → **Make a new category**. Name it, pick buffs or debuffs, then add spells to it. It shows up on every container's Filters → Categories grid marked (yours), where you set it to Show or Hide like any other. Renaming it keeps your spells and each container's choice; deleting it throws the spell list away, and asks first. Buffs or debuffs is fixed when you make it — to change that, make another one and delete this. |
 | Can different characters have different setups? | Yes, through the Profiles page. A profile holds every container, so switching profiles swaps the whole set. |
 | Why won't the settings open in combat? | The game protects its settings window during combat, so `/am config` prints a gray line instead of opening it. Try again once combat ends. |
 

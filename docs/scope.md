@@ -20,12 +20,24 @@ client. The player-facing contract is the README; the engineering boundary is th
   the dispel type shown in color three optional ways — `settings/Text.lua`, `modules/Style_Text.lua`).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
   anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
-  below), 36 categories set to Show or Hide, schema v4 (defined in `defaults/Categories.lua`: spell
-  lists, Blizzard aura flags and filter tokens, dispel types, player-or-creature source, and the
-  weapon-enchant capability), a per-container Overrides whitelist and blacklist of spells (the
+  below), categories set to Show or Hide — every category `defaults/Categories.lua` ships, plus every
+  category the player has made, so the number is the shipped set plus the player's own rather than a
+  fixed count (36 shipped as this is written, 17 buff and 19 debuff: spell lists, Blizzard aura flags
+  and filter tokens, dispel types, player-or-creature source, and the weapon-enchant capability) — a
+  per-container Overrides whitelist and blacklist of spells (the
   whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists
   (editable, and shared by every container in the profile), sort method and direction, and a
   per-group cap.
+- **Categories the player makes** (issue #10). A name, a buff-or-debuff choice and a spell list of
+  its own, created on General → Spell Categories and stored per profile (`userCategories`,
+  `userCategoryOrder`, schema v6). A created category is materialized into the same two lists the
+  shipped ones live in, so it gets a Show/Hide row on every container's Filters → Categories, joins
+  the categorized union `Uncategorized` is the complement of, and answers `/am get|set` like any
+  other. Its aura type is fixed at creation; a rename keeps the key, so no container's stored
+  Show/Hide is orphaned; a delete discards the spell list and clears that key from every container
+  of every stored profile. **A shipped category cannot be renamed, retyped or deleted** — the lock is
+  on the category object, never on its spell list, which stays editable and restorable as it always
+  was.
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Test mode:** placeholder auras drawn through the same `Style` code, switched by the Master
@@ -57,7 +69,10 @@ client. The player-facing contract is the README; the engineering boundary is th
   `core/LauncherSetup.lua`), but it is a `type = "launcher"` — something to click, not a value a
   display watches. There is no count, timer or status text to feed one.
 - **Profile import/export strings.** AceDB profiles persist in `AuraMasterDB`; there is no
-  serialization layer.
+  serialization layer. When one is written (issue #9) it has to answer two questions user categories
+  raise: a shared container naming a category the importing player does not have, and a record whose
+  key that account already uses, which the import must re-key rather than merge
+  (`docs/ARCHITECTURE.md` → Known Limitations).
 - **Hiding Blizzard frames during combat.** Reparenting a Blizzard frame under lockdown is refused, so
   the switch applies on the next `PLAYER_REGEN_ENABLED`.
 
@@ -110,5 +125,12 @@ These are not declined; the game forbids them, and a request for one is answered
   `U-1`..`U-5`; the retired per-container "only these categories" toggle meant exactly this and is
   gone, fix round 2 of that effort) — `uncategorized` on a buff container, `uncategorizedDebuffs` on a
   debuff one, both on the Categories tab's Spell Categories grid.
+- **A player's category is a shipped category in every way but who made it.** `Cat.SyncUserCategories`
+  materializes each stored record into `Cat.HELPFUL` or `Cat.HARMFUL` as an ordinary `spells`-kind
+  definition and registers its schema row, rather than giving user categories a parallel path through
+  the compiler, the grids and the CLI. The cost is one rebuild per profile change; what it buys is
+  that every reader — the compiler, `Uncategorized`'s complement, the Filters grids, `/am list` — was
+  already correct for it. The keys live in a reserved `user` namespace nothing shipped may take, and
+  a stored record outside that namespace is refused rather than materialized over a shipped category.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
   and the starter containers come back.

@@ -56,7 +56,7 @@ Example: a bar option.
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
    something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
    Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
-   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:143`) — and its profile-wide
+   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:216`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.
@@ -66,6 +66,34 @@ Example: a bar option.
    `:452`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
    where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
+
+## Make a category a player can make (and what happens when they do)
+
+A shipped category is the recipe above. A player's own category takes no code at all — this is the
+path it walks, for when something about it has to be changed or debugged.
+
+1. **In game:** General → **Spell Categories** → *Make a new category* → a name, an aura type,
+   **Create category**. The tab selects the new category, and its spell list is the ordinary ID list
+   below.
+2. **What is stored:** one record in `profile.userCategories[key]` (`{ key, name, auraType }`) and the
+   key appended to `profile.userCategoryOrder`. The key is `Cat.NewUserKey`'s `user` plus ten base-36
+   characters and never moves again, so a rename is a `name` write. The spell list is
+   `profile.categorySpells[key]`, like every other category's edits.
+3. **What makes it live:** `Cat.SyncUserCategories` materializes the record into `Cat.HELPFUL` or
+   `Cat.HARMFUL` as a `spells`-kind definition with an empty starter list, stamps
+   `NS.CONTAINER_TEMPLATE.filter.categories[key] = "show"`, and registers the schema row built by
+   `NS.CategoryRow` in front of that aura type's Weapon enchants or Uncategorized row.
+   `Cat.CreateUserCategory` then runs `Database.PrepareProfile`, so every stored container carries the
+   key before the Filters grid is next drawn — without it the grid would light neither Show nor Hide.
+4. **Where to hook a change:** the acts and the sync are `defaults/Categories.lua`; the block that
+   draws them is `settings/GeneralSpells.lua`; the row shape is `settings/Filters.lua`'s
+   `NS.CategoryRow`. Never add a second labeling rule — every site that shows a category's name asks
+   `Cat.LabelOf`, and the panel's `(yours)` marker (`NS.GeneralSpells.MarkedName`) wraps that answer.
+5. **Never route a player-supplied name through `NS.L`.** That is the locale guard's one exemption and
+   it is written out in `docs/ARCHITECTURE.md` → *Locale routing, and its one exemption*.
+6. A test for any of this goes in `tests/test_defaults.lua` (definitions and names),
+   `tests/test_database.lua` (the store, the sweep, profile switches) or
+   `tests/test_pages_general.lua` (the block's widgets).
 
 ## Re-derive the Hard CC / Soft CC spell lists
 
@@ -114,7 +142,9 @@ run downloads ~75 MB of CSV into `tools/spell-research/.cache/`.
 4. A label routed by value (a `core/Constants.lua` `*_LABELS` table, a category label) still needs its
    `enUS` key; `NS.Choices` looks them up with `L[…]`, and every site that draws a category name asks
    `Cat.LabelOf`. The one exemption is a **user category's** name: it is the player's own text, it has
-   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/Categories.lua`).
+   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/Categories.lua`). The exemption,
+   what it covers and what it deliberately does not, is `docs/ARCHITECTURE.md` → *Locale routing, and
+   its one exemption*.
 
 ## Add a container field that changes shape (a migration)
 

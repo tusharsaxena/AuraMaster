@@ -24,6 +24,8 @@ otherwise (`docs/profiles.md`).
 | `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
 | `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`; no `None` since schema v5, feedback #7) for a bar's fill or background colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
 | `enchantSlots` | map | `{ mainHand = true, offHand = true, ranged = true }` | Which weapon slots the `weaponEnchants` category draws (schema v3, B3); shared by every container, like `categorySpells`. A container showing enchants with every slot off falls back to all three |
+| `userCategories` | map | `{}` | `[categoryKey] = { key =, name =, auraType = "HELPFUL" \| "HARMFUL" }` — one record per category the player made (schema v6, issue #10). The key is `user` plus ten base-36 characters, minted by `Cat.NewUserKey` and never moved again, so a rename is a `name` write alone. `Cat.SyncUserCategories` materializes each record into `Cat.HELPFUL`/`Cat.HARMFUL`, the container template and the schema; a record whose key falls outside the reserved `user` namespace, or whose aura type or name is unusable, is SKIPPED and left on disk (`Cat.UnusableUserRecords` is what the panel offers to forget). The spell list is not here — it is `categorySpells[key]`, like every other category's |
+| `userCategoryOrder` | array | `{}` | The user categories' declaration order, and their only ordering source (`pairs` over the records varies between logins, and the compiler emits one engine group per shown category in declaration order). Reconciled against the records on every sync, exactly as `containerOrder` is against `containers`: dangling keys dropped, duplicates dropped, records with no entry appended in key order |
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
@@ -60,7 +62,7 @@ path, never to a number restated in `modules/`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `categories` | every category key → `"show"` | `[categoryKey] = "show" \| "hide"` (schema v3); built from `NS.Categories.DefaultStates()`, so a key added later backfills as Show. Show is a positive claim, not merely "not excluded" — see `docs/ARCHITECTURE.md` → Filter priority. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
+| `categories` | every category key → `"show"` | `[categoryKey] = "show" \| "hide"` (schema v3); built from `NS.Categories.DefaultStates()`, so a key added later backfills as Show — which is how a category the player creates reaches every stored container, `Cat.CreateUserCategory` running `Database.PrepareProfile` itself so the key is there before the grid is next drawn. A delete clears the key from every container of every stored profile (`Cat.DeleteUserCategory`). Show is a positive claim, not merely "not excluded" — see `docs/ARCHITECTURE.md` → Filter priority. Since v2 one `healing` key stands where `coreHealing` and `lesserHealing` were |
 | `whitelist` | `{}` | `[spellId] = true` — always shown; beats the blacklist (owner's 2026-09-15 filter-priority revision, `modules/FilterCompiler.lua` rank 1) |
 | `blacklist` | `{}` | `[spellId] = true` — never shown, unless the whitelist also names it |
 | `castBy` | `"any"` | `any`, `mine`, `others` |
@@ -221,6 +223,21 @@ shipped default still comes from the one declaration. The path is spelled verbat
 profile prefix, because the table is LibDBIcon's and lives outside any profile. Its `effect` is
 `"none"`: the button is not a container, and the seam already moved it.
 
+**Some category rows are registered at runtime.** `container.filter.categories.<key>` has one row per
+category, and the player's own categories are not known at load, so `Cat.SyncUserCategories` builds
+theirs through `settings/Filters.lua`'s exported `NS.CategoryRow` — the same function the shipped rows
+come from, so the two cannot drift in `grid`, `skipRender`, `printLabel`, `auraTypes` or `values` —
+and registers them with `NS.RegisterSchemaRows(rows, beforePath)`. The `beforePath` is the row the
+definitions were inserted in front of (Weapon enchants on buffs, Uncategorized on debuffs), because
+the Categories tab draws each grid in SCHEMA order: an appended row would draw below Uncategorized and
+break its "last" rule. `NS.UnregisterSchemaRows(pred)` takes them down again — a profile switch
+replaces one set of user categories with another, and a row left from the old set fails
+`NS.ValidateSchema`, answers `/am get` for a category this profile does not have, and draws a live
+Show/Hide cell whose click writes a key nothing will ever compile. The definitions, the rows and the
+container-template keys are therefore torn down and rebuilt as one act. `NS.Schema` is rebuilt in
+place, same table identity, because `settings/OptionsSetup.lua` and `settings/Slash.lua` both hold a
+live reference to it.
+
 A row may also declare `effect`, which tells `modules/ContainerManager.lua` what a write needs beyond
 the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`, and
 `container.enabled`) runs the combat-legal visibility pass and queues no apply. Only the show ladder
@@ -245,6 +262,9 @@ A few row fields are this addon's own, beyond the library's row shape. Each has 
 - `panelGet`: the value the panel shows instead of the stored one (`panelRead` in
   `settings/OptionsSetup.lua`). Fill and both growth rows use it to show the inherited flow of a
   container attached to another. `/am get` and every module read the stored value.
+- `userCategory`: the row belongs to a category the player made, so `NS.UnregisterSchemaRows` can
+  find again exactly the rows `Cat.SyncUserCategories` owns. A shipped row carries the field as nil,
+  never false.
 - `coverage = "engine-only" | "preview-only"`: exempts a Bars or Icons row from one half of
   `tests/test_render_coverage.lua`'s walk. Each use carries a comment saying why: `bars.smooth`,
   `bars.pandemic` and `icons.pandemic` act only through the engine.
@@ -447,5 +467,5 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   silently fixed.
   A new category key reaches every container the same way, through `DefaultStates()`.
 - **A rename, removal or type change needs a step** in the same change that makes it: append the
-  next rung (`to = 5`), transform the stored value, and remember that containers live in every
+  next rung (`to = 7`, the ladder ending at 6), transform the stored value, and remember that containers live in every
   profile, not only the active one (`docs/common-tasks.md` has the recipe).

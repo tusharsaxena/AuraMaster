@@ -1393,10 +1393,17 @@ end
 --- reconcile, which drops a dangling key), the player's spell list for it, and every container's
 --- stored Show/Hide for it in every stored profile. The definition, the schema row and the container
 --- template's entry are the sync's, and it tears all three down as one act.
+--- THE PARTIAL SWEEP IS PART OF THE ANSWER (owner, 2026-09-21). The sweep is recoverable and not
+--- atomic on purpose -- see `sweepUserKey` -- so a stored profile whose table is malformed keeps its
+--- own leaves while every other profile is cleaned. That is a real outcome and not a failure of the
+--- delete: the record is gone, the definition is gone, and what survives is inert. But it used to
+--- reach `NS.Debug` and nothing else, so the player was told "deleted" and never told that one
+--- profile kept its debris. The count of refusing profiles is now RETURNED, third, so a caller can
+--- say so; settings/GeneralSpells.lua's confirmation does.
 --- @param key string
 --- @param profile table|nil  the profile that OWNS the category; defaults to NS.db.profile
 --- @param db table|nil  the store to sweep; defaults to NS.db
---- @return boolean|nil ok, string|nil reason
+--- @return boolean|nil ok, string|nil reason, number|nil failed  profiles that refused the sweep
 function Cat.DeleteUserCategory(key, profile, db)
     profile = profile or (NS.db and NS.db.profile)
     if type(profile) ~= "table" then return nil, nil end
@@ -1423,7 +1430,7 @@ function Cat.DeleteUserCategory(key, profile, db)
             "user category '%s' (%s) deleted: %s stored leaf(s) cleared across the account, %s profile(s) refused the sweep",
             key, tostring(name), cleared, failed)
     end
-    return true, nil
+    return true, nil, failed
 end
 
 --- Forget every record `Cat.UnusableUserRecords` names, and answer how many went.

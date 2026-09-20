@@ -105,7 +105,12 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 `NS.Schema` holds **242** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 43, Layout 26, Bars 72, Icons 42 and Text 36. The
-AceConfig-drawn Profiles page carries none. It drives the panel,
+AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
+player's own; **the schema is a live table, not a frozen one**, and each user category adds one
+`container.filter.categories.<key>` row at runtime (`NS.RegisterSchemaRows(rows, beforePath)` inserts
+it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
+`NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
+the same table — `docs/schema.md`). It drives the panel,
 `/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:709`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
@@ -155,6 +160,55 @@ screen. The per-container `container.filter.whitelist` and `.blacklist` sets, an
 its named writer and load pass write the registry, so it is compliant and carries no Documented
 deviations row.
 
+The addon holds a second structural registry since issue #10, the player's own spell categories. No
+schema row addresses the registry itself; the row each member GETS is an ordinary category row.
+
+- **Storage keys:** the profile's `userCategories` (one record per category, keyed by a `user…` key
+  that is minted once and never moves) and `userCategoryOrder` (declaration order, their only
+  ordering source). The member's spell list is not part of the registry — it is
+  `categorySpells[key]`, the same carve-out every other category's edits live in.
+- **Registry writer:** `defaults/Categories.lua`. `Cat.CreateUserCategory`, `Cat.RenameUserCategory`,
+  `Cat.DeleteUserCategory` and `Cat.ForgetUnusableUserRecords` make every membership change, and
+  `Cat.NewUserKey` mints the key for `Create` and has no other caller. Nothing else writes a record,
+  and **nothing anywhere writes `rec.auraType` but `Create`**, which is what makes a category's aura
+  type immutable: it is the absence of an act rather than a refusal.
+- **Load pass:** `Cat.SyncUserCategories(profile)`, run from `NS.RunMigrations` after the whole schema
+  ladder and before `Database.PrepareProfile`, from `core/AuraMaster.lua`'s `prepareProfile` (so a
+  profile switch, copy and reset all pass through it), and from each act above. It tears the previous
+  set down and builds the new one as ONE act over four mirrors — the two definition lists, the
+  container template's `filter.categories`, and the schema rows — because a stale definition left
+  behind makes `Cat.IsSpellCategory(deadKey)` true and quietly takes ids out of the complement
+  `Uncategorized` is defined against. Not at panel render: a row that existed only while the panel was
+  open would be invisible to `/am get|set|list`, to a page's Defaults and to the resets.
+
+**Materialized into the shipped lists, deliberately.** A stored record becomes an ordinary
+`spells`-kind definition inside `Cat.HELPFUL` or `Cat.HARMFUL`, inserted in front of that aura type's
+Weapon enchants or Uncategorized row. Every reader was then already correct for it: `Cat.Find` and
+therefore `Cat.AuraTypeOf`'s key form, `modules/FilterCompiler.lua`'s `categorizedUnion`,
+`settings/Filters.lua`'s grids, the CLI. The alternative — a parallel path per reader — would have
+been five places to keep in agreement rather than one rebuild per profile change. **The keys live in a
+reserved `user` namespace** (`Cat.IsUserKey`) that no shipped key may take, asserted by
+`tests/test_defaults.lua`; a stored record outside it is refused rather than materialized, because a
+record keyed `healing` is a claim on a shipped category's identity and the next sync's teardown would
+take the SHIPPED category's container-template entry down with it.
+
+The surfaces this added, all read by name rather than duplicated:
+
+| Surface | Answers |
+|---|---|
+| `Cat.AuraTypeOf(defOrKey)` | Which aura type a category holds, from `def.auraType` or through `Cat.Find` |
+| `Cat.LabelOf(def)` | A category's name AS SHOWN — a shipped label routed through `NS.L`, a user label never. THE labeling rule; every drawing site asks it, and the panel's `(yours)` marker wraps it rather than copying it |
+| `Cat.IsUserCategory(defOrKey)` / `Cat.IsUserKey(key)` | Whether the player made it; whether a key sits in the reserved namespace (structural, not a guess at how the key was made) |
+| `Cat.CreateUserCategory` / `RenameUserCategory` / `DeleteUserCategory` | The three acts, each refusing anything without a stored record and anything outside the namespace |
+| `Cat.UnusableUserRecords` / `Cat.ForgetUnusableUserRecords` | The records the sync refuses, and the way to be rid of them |
+| `Cat.SanitizeUserName` / `Cat.CharCount` / `Cat.USER_NAME_MAX` | The stored form of a player-supplied name, capped in CHARACTERS — the same count `EditBox:SetMaxLetters` applies, so the box and the store cannot disagree |
+| `Cat.SyncUserCategories` / `Cat.UserCategoryOrder` / `Cat.HasUserRecord` / `Cat.UserKeysInUse` / `Cat.NewUserKey` / `Cat.UserCategoryNameTaken` | The load pass, the order reconcile, the record test `settings/Schema.lua` asks before a `categorySpells` write, and the key machinery |
+| `Database.EachProfile(db, fn)` | Every stored profile, the inactive ones included — the schema ladder's own walk, published so the delete sweep reaches the same set rather than growing a second walk that drifts |
+| `NS.CategoryRow(def)` | One category's Show/Hide row, exported by `settings/Filters.lua` so the runtime rows are built by the same function as the shipped ones |
+| `NS.RegisterSchemaRows(rows, beforePath)` / `NS.UnregisterSchemaRows(pred)` | Insert rows in schema order, and remove them again |
+| `FC.ClaimingCategories(Cat, auraType, filter, edits, id)` | Which categories hold a spell id — `ExplainSpell`'s own answer, published so the overlap guardrail cannot drift from it |
+| `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker both surfaces read, the restore ACT behind the button's absence, and the Filters page's per-row link |
+
 The addon holds two pieces of named non-setting state (architecture-§5). The first is learned
 data that no control sets and no row addresses.
 
@@ -183,6 +237,31 @@ capture ring. No control sets it and no row addresses it.
   schema. No addon code writes it, and no verb clears it.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
+
+## Locale routing, and its one exemption
+
+Every user-visible string routes through `NS.L`, the key being the English text itself
+(localization-§2), and `tests/test_locale.lua` fails the build twice over: on a routed string with no
+`locales/enUS.lua` line, and on an `enUS` line nothing routes. A label routed BY VALUE — a
+`core/Constants.lua` `*_LABELS` entry, a category's `label` and `desc` — still needs its own line,
+because `NS.Choices` and the drawing sites look them up with `L[…]`.
+
+**A user category's name is the one exemption** (issue #10), and it is written here so the guard test
+can be read from it. The name is the PLAYER'S OWN TEXT: it is data, no `enUS` line can exist for it,
+and none should. The exemption is exactly one FIELD of exactly one flagged definition kind —
+`def.label` on a definition carrying `userCategory = true`. Its `desc` is still checked, and a user
+category's description is a fixed shipped string precisely so that it can be; if that description ever
+has to name the category, the name is a `%s` ARGUMENT to a routed format string and never concatenated
+into one, because a `%` inside a player-supplied name is an ordinary character.
+
+The exemption is enforced at the draw by `Cat.LabelOf`, which is why every site that shows a category
+name asks it rather than indexing `NS.L`. This is not tidiness: `NS.L` answers its own miss path, so
+`L[def.label]` looks correct for a user category right up until a player names one "Healing" — at
+which point the lookup finds a real shipped line and the panel shows the shipped string instead of the
+name that was typed. Invisible on enUS, plainly wrong on any translated client. The guard proves the
+exemption narrow from both sides: `tests/test_locale.lua` asserts that NO shipped definition claims it
+on the shipped load, and `tests/test_defaults.lua` asserts that a user definition's name is unrouted
+while its description is not.
 
 ## Filter priority
 
@@ -610,6 +689,26 @@ return value.
   on `PLAYER_REGEN_ENABLED` (`ReapplyStaleClass`). While auras are secret it happens when the
   restriction lifts, since engine buttons cannot be re-dressed until then. That residual is ratified
   by the `options-ui-§17` row in Documented deviations.
+- **A user category's key is unique within the account, not across accounts.** `Cat.NewUserKey` draws
+  ten base-36 characters from a Lehmer sequence seeded per client from the player GUID, the clock and
+  the profiler, and then refuses any key `Cat.UserKeysInUse` finds anywhere in the account — so within
+  the account uniqueness is a guarantee and it is the scan's doing, not the generator's. Across
+  accounts nothing can check a key an account has never seen, so it is a very small probability rather
+  than an impossibility. Keys travel: a container copy, an AceDB profile copy, and import/export when
+  it exists (issue #9). The import half of #9 must therefore RE-KEY a record whose key the importing
+  account already holds rather than trust that keys cannot collide.
+- **Deleting a user category sweeps the stored profiles one at a time, and is recoverable rather than
+  atomic.** `Cat.DeleteUserCategory` clears `filter.categories.<key>` and the spell list from every
+  container of every stored profile through `Database.EachProfile`, each profile inside its own
+  `pcall`, and runs the sync unconditionally afterwards. A profile whose stored table is malformed
+  therefore keeps its own leaves while every other profile is cleaned. That is a real outcome and not
+  a failed delete — the record, the definition, the schema row and the template key are all gone, and
+  what survives is inert — so the act returns the refusing-profile count third and the panel's
+  confirmation says so, leading with what went. A profile holding a record of its OWN under the key (a
+  profile copy) is skipped deliberately, which is what keeps a copy's category alive when the original
+  is deleted. `Cat.ForgetUnusableUserRecords` does not yet carry that count out the same way: it sums
+  the leaves cleared and discards each sweep's failure count, so a profile that refuses ITS sweep
+  reaches `NS.Debug` and nothing else.
 - **Unpublished; README `## Screenshots` is a placeholder, and its images are owed before first
   publish** — see Documented deviations and issue tusharsaxena/AuraMaster#3.
 - **A frame anchor needs a global name.** The picker walks up to the nearest named ancestor

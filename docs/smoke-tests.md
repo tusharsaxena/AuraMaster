@@ -963,3 +963,66 @@ detail, the step points at it rather than repeating it.
      not visibly shuffle a second after the tab opens. Pick **Hard CC (loss of control)** → **Wake of
      Ashes is absent**, and it is absent from Soft CC too; cast it on a target with a Hard CC
      container up → nothing is drawn for it.
+
+## V. Categories you make (issue #10, 2026-09-21)
+
+Run with `/console scriptErrors 1`, one player-buff bar container and one target-debuff container up,
+near a target dummy. Steps 167–177 run in order: each uses the category the one before it made.
+
+167. **Make one.** General → **Spell Categories** → under **Make a new category**, type `Cooldowns I
+     watch`, leave **Aura type** on *Buffs*, click **Create category** → the **Category** dropdown
+     jumps to the new entry, reading **[Buffs] Cooldowns I watch (yours)**, and a line under **This
+     category** and in chat says it was created, empty, and where to set it to Show or Hide. The list
+     below is empty, and there is **no Restore this category's starter list** button on the picker's
+     line. No Lua error.
+168. **It is a real category everywhere.** Filters → **Categories** on the buff container → the
+     **Spell Categories** grid holds a **Cooldowns I watch (yours)** row, with Show lit, sitting
+     *after* the shipped spell lists and *above* **Weapon enchants** and **Uncategorized** —
+     Uncategorized is still the last row of the grid. `/am list` shows the row (its label with no
+     `(yours)` on it), and `/am get container.filter.categories.user…` answers **Show**. On the debuff
+     container's Categories tab the row is absent, which is right: the category holds buffs.
+169. **It filters.** Put a buff you can cast on yourself into it (General → Spell Categories → **Add a
+     spell**, by name or id). On the buff container set every other category to **Hide** (Hide all on
+     both sections, then set this one back to Show) → cast the buff → it is drawn, and your other
+     buffs are not. Set the category to **Hide** and leave Uncategorized Hidden → the buff goes.
+170. **The overlap note.** Add a spell that is already in a shipped category of the same aura type
+     (Power Word: Shield, in *Defensive cooldowns*, works) → one chat line naming the other
+     category and saying an aura in two categories is drawn once, under the first of them a container
+     sets to Show. The entry in the list carries **Also in: Defensive cooldowns** under its name. Open
+     *Defensive cooldowns* in the dropdown → that same spell's entry there reads **Also in: Cooldowns
+     I watch (yours)** — the marker is on both surfaces. Nothing was refused: the spell is in both.
+171. **Rename it.** In **Rename this category**, type `Big cooldowns` and press **Enter** → the
+     dropdown, the rename box, the Filters grid and `/am list` all read the new name, the box is no
+     longer holding what you typed but what is stored, and the answer line says it was renamed and
+     names the OLD name to type back. The spells are all still there, and the Filters row's Show or
+     Hide is unchanged — a rename must never reset it.
+172. **A shipped category is locked.** Pick **Healing** in the dropdown → **This category** draws no
+     name box and no Delete, only the sentence that its name and its buff-or-debuff choice are fixed
+     and its spell list is still yours. **Restore this category's starter list** is back on the
+     picker's line and works. Pick **Weapon enchants** → the same lock sentence in its own wording
+     (no spell list at all), a **Weapon slots** heading over the three slot toggles, and the toggles
+     sit under THAT heading rather than under **Make a new category**.
+173. **The answer line knows what it is about.** With a line showing under **This category**, switch
+     the dropdown to another category → the line is gone. Say something again (rename, or a refused
+     empty name), then close the settings window and reopen it on the same tab → the line is gone.
+     Say something again, then Profiles → switch profile → come back → the line is gone. Hopping to
+     General's **Display** tab and back deliberately KEEPS it — the panel never left the screen.
+174. **An empty or duplicate name.** Clear the rename box and press Enter → a line saying a category
+     needs a name, and the box snaps back to the stored name. Create a second category with a name you
+     already used → both are kept, and the line says so — they are separate categories with separate
+     spell lists. The dropdown shows two entries reading the same.
+175. **Delete it, with what that costs said first.** Pick the second category, **Delete this
+     category** → the confirmation names it and says the spell list goes, every container in every
+     profile forgets whether it showed or hid it, and anything it was hiding becomes visible again
+     through Uncategorized. **No** → nothing changes. **Yes** → the tab shows another category, a line
+     says which one was deleted and that the tab has moved, the Filters grid no longer holds the row,
+     `/am get` on its old path answers that the setting is unknown, and no Lua error.
+176. **A deleted category stops filtering.** Before deleting the first one, set it to **Show** on the
+     buff container with every other category Hidden, and confirm the buff in it is drawn. Delete the
+     category → the buff container redraws: the aura is no longer drawn by that category, and it comes
+     back only through **Uncategorized** if that is set to Show. `/reload` → it stays gone, the
+     dropdown does not list it, and the Filters grid has no row for it.
+177. **They belong to the profile.** Make a category, then Profiles → create and switch to a second
+     profile → the dropdown does not list it, and the Filters grid has no row for it. Switch back →
+     it is there, with its spells and its Show or Hide. `/reload` on each profile → no Lua error, and
+     no `/am list` row for a category the loaded profile does not have.

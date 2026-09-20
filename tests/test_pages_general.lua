@@ -985,6 +985,157 @@ test("general → spell categories: an id another category already claims is mar
         "and a category never reports itself as a claimant of its own entry")
 end)
 
+-- ── review round five: the headings, the answer line's lifetime and the counts (owner, 2026-09-21) ─
+
+--- Make a category, then answer the widgets of the render that shows the line saying so.
+local function withNotice(NS, P, ws)
+    local made = manage(NS, ws, P)
+    made.newName:__fire("OnTextChanged", "Affixes")
+    made.create:__fire("OnClick")
+    local drawn = P.rerender("General")
+    assertTrue(P.hasText(drawn, "Created 'Affixes'"), "the act answered on the panel")
+    return drawn
+end
+
+test("general → spell categories: the answer line dies with the profile it was said in", function()
+    local NS, _, P, ws = spells()
+    withNotice(NS, P, ws)
+    -- red under: the line cleared by the Category dropdown alone, which is what it was. A profile
+    -- switch replaces every category, list and container decision the sentence names, so the
+    -- sentence is about a store that is no longer loaded -- and it survived one, so a player could
+    -- open the panel and be told about an act they ran in a profile they had left.
+    NS.db:SetProfile("Raid")
+    assertFalse(P.hasText(P.rerender("General"), "Created 'Affixes'"),
+        "the line does not follow the player into another profile")
+    -- And the block still draws: the line went, not the render.
+    assertTrue(P.find(P.rerender("General"), "Button", NS.L["Create category"]) ~= nil)
+end)
+
+test("general → spell categories: the answer line ends when the page leaves the screen", function()
+    local NS, m, P, ws = spells()
+    withNotice(NS, P, ws)
+    -- The settings window closing, or another page being opened: either hides this panel.
+    m.__subcategories["General"]:__fire("OnHide")
+    -- NO RefreshAllPanels here, deliberately. Clearing the variable is only half the answer: a
+    -- hidden page is not re-rendered on its next show unless something marked it dirty, so the
+    -- sentence would still be sitting there in pixels when the panel came back. red under: the hide
+    -- hook dropping the line without the structural refresh beside it.
+    local back = P.show("General")
+    assertTrue(#back > 0, "the page drew again on its own")
+    assertFalse(P.hasText(back, "Created 'Affixes'"), "and without the line")
+end)
+
+test("general → spell categories: Weapon enchants has a lead-in, and its slots have a heading of their own", function()
+    local NS, _, P, ws = spells()
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
+    ws = P.rerender("General")
+    -- red under: the one entry in the dropdown whose picker said nothing at all about what it was
+    -- picking, while every spell list above it has a lead-in.
+    assertTrue(P.hasText(ws, "matches the temporary enchants on your weapons"),
+        "the picker has a lead-in of its own")
+
+    local slotsHead, createHead
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["Weapon slots"] then slotsHead = slotsHead or i end
+        if w.type == "Heading" and w.text == NS.L["Make a new category"] then createHead = createHead or i end
+    end
+    assertTrue(slotsHead ~= nil, "the slots are drawn under a heading")
+    assertTrue(createHead ~= nil and createHead < slotsHead, "which comes after the create form's")
+    -- red under: no heading here at all, which is what shipped. renderEnchant is called AFTER
+    -- renderManage, and a heading owns everything drawn beneath it until the next one -- so the
+    -- lead-in and all three checkboxes landed under "Make a new category" and read as part of the
+    -- create form.
+    for _, slot in ipairs({ "mainHand", "offHand", "ranged" }) do
+        local cb = P.row(ws, "enchantSlots." .. slot)
+        assertTrue(cb ~= nil and cb.type == "CheckBox", slot .. " is drawn")
+        assertTrue(lineOf(ws, cb) > slotsHead, slot .. " sits under the slots heading, not the create form's")
+    end
+end)
+
+test("general → spell categories: a claimed-by note says when the other category is one the player made", function()
+    local NS, _, P = spells()
+    local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
+    local mine = marked(NS, key):gsub("^.*%] +", "")   -- the name as the panel writes it, marker and all
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true, [424243] = true }, defensives = { [424242] = true } })
+    NS.GeneralSpells.Select("defensives")
+
+    -- red under: the note built from the compiler's bare label, which is `Cat.LabelOf` and carries
+    -- no ownership marker -- so a note whose whole job is to say where else a spell already lives
+    -- could name a category the player made without saying it was theirs.
+    local ws = P.rerender("General")
+    assertTrue(P.hasText(ws, "Also in: " .. mine), "the entry's note marks it")
+    assertTrue(mine:find("(yours)", 1, true) ~= nil, "and the marker is what a user category wears")
+
+    local chat = P.chat()
+    P.find(ws, "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", "424243")
+    local said = table.concat(chat, "\n")
+    assertTrue(said:find("also in: " .. mine, 1, true) ~= nil, "and so does the line at the add: " .. said)
+
+    -- The control: one of Aura Master's own is named without a marker, here as everywhere else.
+    NS.GeneralSpells.Select(key)
+    assertTrue(P.hasText(P.rerender("General"), "Also in: " .. NS.L["Defensive cooldowns"]))
+end)
+
+test("general → spell categories: one unreadable record reads in the singular", function()
+    local NS, m, P = spells()
+    NS.db.profile.userCategories["userbadbad00"] = { key = "userbadbad00", name = "Broken" }
+    NS.Categories.SyncUserCategories(NS.db.profile)
+    assertEqual(#NS.Categories.UnusableUserRecords(NS.db.profile), 1, "one, which is the common count")
+
+    -- red under: plural-only strings, which is what shipped -- "Aura Master cannot read 1 of this
+    -- profile's saved categories, so they are in no list", and a confirmation offering to forget
+    -- "the 1 saved categories".
+    local ws = P.rerender("General")
+    assertTrue(P.hasText(ws, "so it is in no list and nothing is using it"), "the line agrees with its count")
+    assertFalse(P.hasText(ws, "so they are in no list"), "and does not also say the plural")
+
+    local popups = P.popups()
+    P.find(ws, "Button", NS.L["Forget unreadable categories"]):__fire("OnClick")
+    local dialog = m.StaticPopupDialogs.AURAMASTER_FORGET_BROKEN_CATEGORIES
+    assertEqual(dialog.text, NS.L["Forget the saved category Aura Master cannot read? It is in no list and cannot be repaired from here, and whatever it held is discarded. Your other categories are not affected."])
+    dialog.OnAccept()
+    assertTrue(P.hasText(P.rerender("General"), "Forgot 1 unreadable saved category."), "and so does the answer")
+
+    -- Two is still the plural, on the same dialog: the sentence is picked at the show.
+    NS.db.profile.userCategories["userbadbad00"] = { key = "userbadbad00", name = "Broken" }
+    NS.db.profile.userCategories["userbadbad01"] = { key = "userbadbad01", name = "Also broken" }
+    NS.Categories.SyncUserCategories(NS.db.profile)
+    local ws2 = P.rerender("General")
+    assertTrue(P.hasText(ws2, "so they are in no list and nothing is using them"))
+    P.find(ws2, "Button", NS.L["Forget unreadable categories"]):__fire("OnClick")
+    assertEqual(#popups, 2, "both presses asked first")
+    assertTrue(dialog.text:find("the %d saved categories", 1, true) ~= nil, "the plural sentence is back")
+    dialog.OnAccept()
+    assertTrue(P.hasText(P.rerender("General"), "Forgot 2 unreadable saved categories."))
+end)
+
+test("general → spell categories: a profile that refuses the sweep is said out loud, not only logged", function()
+    local NS, m, P = spells()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    NS.GeneralSpells.Select(key)
+    -- A stored profile whose container table raises on any read. The delete is recoverable rather
+    -- than atomic (tests/test_database.lua pins that), so it still goes -- but "Deleted 'Affixes'"
+    -- alone claims a little more than happened.
+    NS.db.sv.profiles.Broken = {
+        seeded = true, nextContainerId = 2, containerOrder = { 1 },
+        containers = { setmetatable({}, { __index = function() error("stored table is broken") end }) },
+        categorySpells = { [key] = { [424242] = true } },
+        userCategories = {}, userCategoryOrder = {},
+    }
+
+    local ws = P.rerender("General")
+    local popups = P.popups()
+    manage(NS, ws, P).delete:__fire("OnClick")
+    m.StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY.OnAccept(popups[1], popups[1].data)
+    -- red under: the panel reading only `ok` and saying "Deleted 'Affixes'. This tab is showing
+    -- another category now.", with the refusal visible in NS.Debug and nowhere a player looks.
+    local after = P.rerender("General")
+    assertTrue(P.hasText(after, "Deleted 'Affixes'"), "it still leads with what went")
+    assertTrue(P.hasText(after, "One saved profile could not be tidied up"), "and names what did not")
+    assertTrue(NS.db.profile.userCategories[key] == nil, "the category is gone all the same")
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
 -- ── the Spell Categories add line: suggestions while typing, and where a name can come from (#31) ─
 
 --- The id lookups and the suggestions' sources (the bags, the spellbook, a spell's subtext), from
