@@ -578,6 +578,19 @@ return value.
 
 - **Units are player, target, focus and pet.** Party units 1–5 are deferred and tracked as a GitHub
   issue.
+- **A profile copy or reset discards the player's own spell categories, without asking.** Profiles
+  → Copy From and Reset Profile replace the profile wholesale, and `userCategories`,
+  `userCategoryOrder` and `categorySpells` go with it. That is how those two acts have always
+  worked and issue #10 did not change them — but it did change what is lost, from a set of
+  Show/Hide states to categories the player named and filled themselves. Reviewed and **accepted by
+  the owner on 2026-09-21**: the acts say what they do, and adding a confirmation to one of them and
+  not the other would be worse than neither. Revisit if a player reports losing work this way.
+- **The create form sits between the category picker and its spell list.** A player who only came to
+  edit spells passes "Make a new category" on every visit. Accepted by the owner on 2026-09-21: the
+  alternative is below the list, where sixty entries would hide it.
+- **Categories are created only on General → Spell Categories.** Filters → Categories, where a player
+  is most likely to be thinking about categories, shows them and links to their spells but offers no
+  way to make one. Accepted by the owner on 2026-09-21.
 - **A Text line of several pieces cannot be centered as one line.** A line is a chain of font strings
   the engine writes secret, so the chain's width is never readable, and no addon code runs when the
   engine rewrites a piece in combat. A multi-piece template set to Center is therefore STACKED: one
