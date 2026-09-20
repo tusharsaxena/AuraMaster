@@ -216,11 +216,15 @@ cap applies **per group**, not to the container as a whole (`container.filter.ma
 exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
 and its state actually supersedes the catch-all: Hide always does, on either aura type — that row's
 Hide IS the catch-all, made controllable, reproducing the retired **"only these categories"** toggle
-exactly. Show does too, but only on a buff container, where the row's own group is a real rescue that
-is already a strict superset of what the catch-all would draw; on a debuff container Show
-contributes NO group of its own (`Cat.HARMFUL` has no `spells`-kind category, so the row's union is
-always empty — an unrestricted group would draw every debuff and defeat every other category's
-Hide), so it changes nothing and the catch-all runs normally. The per-container **"only these
+exactly. Show does too, but only where `FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the
+`player` and `pet`, and nowhere else (issue #11, 2026-09-20). There the row's own group is a real
+rescue, already a strict superset of what the catch-all would draw. Everywhere else Show contributes
+NO group of its own and the catch-all runs normally, because the row's only constraint is
+`excludeSpellIDs` and the engine discards spell ids for buffs on a hostile unit and for debuffs on a
+friendly one: the group would carry no effective constraint at all, drawing every aura of its type
+and defeating every other category's Hide. That reaches further than the debuff case issue #11
+added — a hostile `target`/`focus` **buff** container has always been able to emit exactly that
+group, which is why the gate asks the unit rather than the aura type. The per-container **"only these
 categories"** toggle that used to drop the catch-all a different way (`container.filter.onlyShown`)
 is RETIRED (batch 7 fix round 2): once `uncategorized`'s Hide correctly reproduces it on both aura
 types (fix round 3 restored the debuff row after fix round 1 dropped it), the toggle had nothing left
@@ -521,7 +525,19 @@ return value.
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
-  (`identityWarning`, `modules/FilterCompiler.lua:548`), rendered in orange on the Filters page.
+  (`identityWarning`, `modules/FilterCompiler.lua:417`, choosing its sentence from `FC.IdsHonored`),
+  rendered in orange on the Filters page.
+- **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
+  aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
+  constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan
+  is compiled once — on a hostile target the engine discards the ids and the group degenerates into
+  "every buff", superseding the catch-all and defeating every Hide on the tab. The compiler
+  therefore emits the group only where the ids are CERTAIN (`FC.IdsAlwaysHonored`: buffs on the
+  player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters page never claims a
+  rescue the plan does not contain. Accepted deliberately by the owner (issue #11, 2026-09-20):
+  losing a niche rescue on one unit beats defeating every Hide by default. The debuff side answers
+  false on every unit for the same reason, which is what keeps issue #11's `hardCC`/`softCC` from
+  re-opening fix round 3's failure.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
   auras are readable (`modules/TimedSpells.lua`). A timed buff never seen out of combat shows once;

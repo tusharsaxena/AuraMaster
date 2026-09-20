@@ -72,7 +72,7 @@ Blizzard-frame toggle made under lockdown is not queued (`BlizzardFrames.Apply` 
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:572`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:774`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority `docs/ARCHITECTURE.md` → Filter
 priority states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
@@ -124,7 +124,7 @@ priority states (`FC.ExplainSpell` answers the same question for one spell, for 
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:758`) and re-sent only when the two
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:931`) and re-sent only when the two
 signatures differ (`modules/Container.lua:291-299`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a

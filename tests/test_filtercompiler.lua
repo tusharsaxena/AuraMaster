@@ -52,6 +52,45 @@ local function only(auraType, keys)
     return { For = function() return out end }
 end
 
+--- `only`, with one extra category def spliced in immediately BEFORE the aura type's `uncategorized`
+--- row — U-1 keeps that row last and `addShownGroups` leans on it, so an injected def that landed
+--- after it would be testing a shape the addon never ships. Issue #11 part A gives `Cat.HARMFUL` its
+--- first `spells`-kind categories (`hardCC`/`softCC`, defaults/Categories.lua); until those land this
+--- is how a debuff case gets a NON-EMPTY categorized union to compile against. The gate itself is
+--- `FC.IdsAlwaysHonored` (`addCategoryGroups`, modules/FilterCompiler.lua), NOT the `FC.IdsHonored`
+--- the warning reads, and it answers false for every debuff container whatever the union holds — so
+--- a non-empty debuff union is not what makes the gate decide, it is what makes the decision
+--- OBSERVABLE: with an empty union `hasUnion` would be false anyway and a case could not tell which
+--- half shut the row down. It goes in through the same `ctx.categories` seam every other case uses
+--- rather than patching `NS.Categories`: the shipped table stays untouched, so no case here can leak into
+--- the next one, and the fixture keeps asserting the compiler rather than a monkey-patch.
+local function onlyPlus(auraType, keys, extra)
+    local out = {}
+    for _, def in ipairs(only(auraType, keys).For()) do
+        if extra and def.kind == "uncategorized" then
+            out[#out + 1] = extra
+            extra = nil
+        end
+        out[#out + 1] = def
+    end
+    if extra then
+        local n = #out
+        out[n + 1] = extra
+    end
+    return { For = function() return out end }
+end
+
+--- A stand-in for issue #11's `hardCC`: the first `spells`-kind category `Cat.HARMFUL` will carry.
+--- Two real hard-CC ids (Hammer of Justice, a stun; Polymorph, an incapacitate) so the union a case
+--- asserts is a genuine set in the shipped `spells` shape, not a sentinel number —
+--- `FC.CategorySpells` reads `spells` and the profile's edits for this def exactly as for a
+--- shipped one.
+local HARMFUL_SPELLS_DEF = {
+    key = "hardCCForTest", kind = "spells", label = "Hard CC",
+    desc = "Stand-in for the Hard CC category issue #11 adds to Cat.HARMFUL.",
+    spells = { [853] = "PALADIN", [118] = "MAGE" },
+}
+
 -- ── the base ──────────────────────────────────────────────────────────────────────────────────
 
 test("filter: an unfiltered buff container is one HELPFUL group with no candidate filters", function()
@@ -396,9 +435,11 @@ end)
 -- The fixture narrows `ctx.categories` to JUST `crowdControl` and `uncategorizedDebuffs`, isolating
 -- the row from the real shipped list's `fromPlayers`/`fromNonPlayers` contradiction — that pair
 -- already drops the catch-all for its own, unrelated reason (the "real shipped category list" test
--- above), which would otherwise mask a real bug here. `Cat.HARMFUL` has no `spells`-kind category,
--- so `hasUnion` is always false for HARMFUL: this is the whole reason the two aura types compile
--- differently, not a coincidence of which categories happen to be in the fixture.
+-- above), which would otherwise mask a real bug here. Every case in THIS block runs on the default
+-- `player` unit and on a `Cat.HARMFUL` narrowed to categories with no spell list, so `hasUnion` is
+-- false for both of its reasons at once — the union is empty AND the engine discards debuff ids on
+-- the player. The block below ("once a spells-kind debuff category exists") is what separates the
+-- two, which is the distinction issue #11 makes load-bearing.
 
 test("filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide", function()
     -- red under: an unrestricted debuff-side Show group (fix round 1's original mistake) that would
@@ -426,6 +467,210 @@ test("filter: Uncategorized Show on a debuff container with nothing else hidden 
     assertEqual(#plan.groups, 1)
     assertEqual(plan.groups[1].label, "All")
     assertNil(plan.groups[1].candidateFilters)
+end)
+
+-- ── uncategorized on debuffs, once a spells-kind debuff category exists (issue #11 part A) ───────
+--
+-- Everything above this point compiles `Cat.HARMFUL` as it ships TODAY, where no `spells`-kind
+-- category exists and the union is therefore empty for every debuff container. Issue #11 adds
+-- `hardCC`/`softCC` and that stops being true, which is precisely the hazard: the union alone was
+-- never the right question. Nor is "can the engine honor ids here at all" — that one is right for
+-- the SENTENCE a container prints and wrong for the GATE, because a `target` answers it yes while
+-- being free to turn friendly a second after the plan compiles. The gate asks the strict question,
+-- `FC.IdsAlwaysHonored`: are the ids this group is made of CERTAIN to be applied? The owner's
+-- ruling (2026-09-20) splits the one predicate into those two, and the cases below pin both truth
+-- tables plus the four container shapes where they decide something.
+
+test("filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite", function()
+    -- Blizzard's AuraContainerUtil.CanApplyIdentityCandidateFilters: buffs on friendly units and
+    -- debuffs on hostile ones. `target` and `focus` are TRUE for BOTH aura types, because each unit
+    -- can be either kind of unit — a target buff list bites on a friendly target, a target debuff
+    -- list on a hostile one. Only the player and the pet are pinned, and only on debuffs, which is
+    -- why exactly two cells here are false. This predicate exists for `identityWarning`: it decides
+    -- whether a setting is DEAD (worth saying so) rather than whether a compiled group is SAFE.
+    assertTrue(FC.IdsHonored("player", "HELPFUL"), "your own buffs: ids honored")
+    assertTrue(FC.IdsHonored("pet", "HELPFUL"), "your pet's buffs: ids honored")
+    assertTrue(FC.IdsHonored("target", "HELPFUL"), "a target CAN be friendly: buff ids can bite")
+    assertTrue(FC.IdsHonored("focus", "HELPFUL"), "a focus CAN be friendly: same")
+    assertTrue(not FC.IdsHonored("player", "HARMFUL"), "your own debuffs: ids discarded outright")
+    assertTrue(not FC.IdsHonored("pet", "HARMFUL"), "your pet's debuffs: ids discarded outright")
+    assertTrue(FC.IdsHonored("target", "HARMFUL"), "a target CAN be hostile: debuff ids can bite")
+    assertTrue(FC.IdsHonored("focus", "HARMFUL"), "a focus CAN be hostile: same")
+end)
+
+test("filter: FC.IdsAlwaysHonored is the CERTAIN predicate — true only for buffs on the player and pet", function()
+    -- The gate `addCategoryGroups` and `explainUncategorized`'s caller both read. Every target/focus
+    -- cell is false however common the friendly-target or hostile-target case is in play: hostility
+    -- is dynamic and the plan is compiled long before anyone looks at the unit, so "usually honored"
+    -- is not a thing a group whose ONLY constraint is a spell-id filter can be built on. HARMFUL on
+    -- player/pet is false for the blunter reason that ids are never applied there at all.
+    assertTrue(FC.IdsAlwaysHonored("player", "HELPFUL"), "your own buffs: nothing can make you hostile")
+    assertTrue(FC.IdsAlwaysHonored("pet", "HELPFUL"), "your pet's buffs: same")
+    assertTrue(not FC.IdsAlwaysHonored("target", "HELPFUL"), "a target may be hostile: only conditional")
+    assertTrue(not FC.IdsAlwaysHonored("focus", "HELPFUL"), "a focus may be hostile: only conditional")
+    assertTrue(not FC.IdsAlwaysHonored("player", "HARMFUL"), "your own debuffs: never honored")
+    assertTrue(not FC.IdsAlwaysHonored("pet", "HARMFUL"), "your pet's debuffs: never honored")
+    assertTrue(not FC.IdsAlwaysHonored("target", "HARMFUL"), "a target may be FRIENDLY: only conditional")
+    assertTrue(not FC.IdsAlwaysHonored("focus", "HARMFUL"), "a focus may be FRIENDLY: only conditional")
+    -- The two predicates differ in exactly the four target/focus cells and never the other way
+    -- round: CERTAIN implies CAN-EVER. ONE predicate answering both questions is what produced the
+    -- contradiction the ruling ends — target/HARMFUL counted as honored (a group the engine discards
+    -- the moment the target is friendly) and target/HELPFUL as not honored, the same conditionality
+    -- treated two opposite ways in one function.
+    for _, unit in ipairs({ "player", "pet", "target", "focus" }) do
+        for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+            local label = auraType .. " on " .. unit
+            if FC.IdsAlwaysHonored(unit, auraType) then
+                assertTrue(FC.IdsHonored(unit, auraType), label .. ": certain must imply can-ever")
+            end
+        end
+    end
+end)
+
+test("filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door", function()
+    -- red under `hasUnion = not isEmpty(cats.union or {})`: with a spells-kind debuff category in the
+    -- list the union is non-empty, so the Show row would contribute a group whose ONLY constraint is
+    -- `excludeSpellIDs` of that union — and the engine DISCARDS spell-id filters for debuffs on the
+    -- player. What the engine would actually receive is a group with no effective constraint at all:
+    -- every debuff drawn, hardCCForTest's Hide neutered along with every other Hide on the tab. That
+    -- is the exact failure fix round 3 (2026-09-16) diagnosed and closed, re-entering through a door
+    -- the union test cannot see. `FC.IdsAlwaysHonored` is what shuts it.
+    local plan = compile({ auraType = "HARMFUL", unit = "player",
+        filter = { categories = { crowdControl = "hide" } } },
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    for _, g in ipairs(plan.groups) do
+        assertTrue(not (g.filter == "HARMFUL" and g.candidateFilters == nil),
+            "an unconstrained HARMFUL group would draw every debuff and neuter every Hide on the tab")
+        assertTrue(g.label ~= "Uncategorized",
+            "the Show row contributes nothing where its one constraint is ignored")
+    end
+    -- What remains is exactly what compiles today with no spells-kind debuff category at all: the
+    -- shown spell category's own group, then the ordinary catch-all, still carrying the Hidden token
+    -- category's negation. The catch-all's `excludeSpellIDs` is left in place deliberately — an
+    -- exclude the engine ignores costs nothing, and suppressing it would change no outcome.
+    assertEqual(#plan.groups, 2)
+    assertEqual(plan.groups[1].label, "Hard CC")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118,853")
+    assertEqual(plan.groups[2].label, "All")
+    assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
+    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), "118,853")
+end)
+
+test("filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY", function()
+    -- Defect (a), and the case the owner's ruling turns on. The mirror of the player case above is
+    -- NOT "the target is hostile, so the ids are real": a target's hostility is dynamic and this plan
+    -- is compiled once, long before anyone looks at the unit. Target a friendly player and the engine
+    -- discards this group's `excludeSpellIDs` on the spot, leaving a group whose only remaining
+    -- constraint is the HARMFUL token — every debuff drawn, hardCCForTest's Hide and every other Hide
+    -- on the tab neutered. Compiling a group that is correct only while the unit points one way is
+    -- what `FC.IdsAlwaysHonored` refuses; `FC.IdsHonored` (true here) is for the warning, not this.
+    local plan = compile({ auraType = "HARMFUL", unit = "target",
+        filter = { categories = { crowdControl = "hide" } } },
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    for _, g in ipairs(plan.groups) do
+        assertTrue(not (g.filter == "HARMFUL" and g.candidateFilters == nil),
+            "a group with nothing but the aura-type token draws every debuff on a friendly target")
+        assertTrue(g.label ~= "Uncategorized",
+            "the Show row contributes nothing where the engine is free to discard its one constraint")
+    end
+    -- Same two groups as the player case: the shown spell category, then the catch-all the Show row
+    -- no longer supersedes — which is exactly "as if the row were not there", the behavior fix round
+    -- 3 defined for this side of the gate.
+    assertEqual(#plan.groups, 2)
+    assertEqual(plan.groups[1].label, "Hard CC")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118,853")
+    assertEqual(plan.groups[2].label, "All")
+    assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
+    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), "118,853")
+end)
+
+test("filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned", function()
+    -- THE ACCEPTED COST (issue #11, owner's ruling 2026-09-20), asserted rather than described, so it
+    -- cannot drift back in unnoticed or be "fixed" by someone who reads it as a bug. On the player
+    -- this same fixture rescues an unlisted-but-cancelable buff from a Hidden `Cancelable` — it is
+    -- byte for byte the fixture of "the owner's exact case" above, with the unit moved off the
+    -- player, so the two cases differ in nothing else. On a target it no longer rescues, because
+    -- the same group that rescues on a friendly target degenerates into "every buff" on a hostile
+    -- one, and the compiler cannot tell which it will be. Losing a niche rescue beats defeating
+    -- every Hide on the tab.
+    --
+    -- This ALSO closes a latent bug predating issue #11: at HEAD, where the gate was the union alone,
+    -- a HOSTILE target buff container with this exact shape — Uncategorized Shown, one other category
+    -- Hidden so the R-4 branch is the one that runs — emitted the degenerate group, and
+    -- `Cat.HELPFUL` has shipped nine spells-kind categories all along, so nothing had to be added to
+    -- reach it.
+    local plan = compile({ auraType = "HELPFUL", unit = "target",
+        filter = { categories = { cancelable = "hide" } } },
+        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    for _, g in ipairs(plan.groups) do
+        assertTrue(not (g.filter == "HELPFUL" and g.candidateFilters == nil),
+            "an unconstrained HELPFUL group would draw every buff on a hostile target")
+        assertTrue(g.label ~= "Uncategorized", "the rescue group is not compiled on a target")
+    end
+    -- The catch-all survives instead, and it DOES carry `!CANCELABLE` — which is the cost, stated as
+    -- a plan: an unlisted cancelable buff is drawn by no group here, where on the player the rescue
+    -- group would have drawn it.
+    assertEqual(#plan.groups, 2)
+    assertEqual(plan.groups[1].label, "Defensives")
+    assertEqual(plan.groups[2].label, "All")
+    assertEqual(plan.groups[2].filter, "HELPFUL|!CANCELABLE")
+end)
+
+test("filter: a target debuff container still warns 'while the unit is hostile' although the gate dropped its Show group", function()
+    -- The two predicates are split, and this is where the split is visible in one compile: the GATE
+    -- (`IdsAlwaysHonored`, false here) contributed no Uncategorized group, while the WARNING
+    -- (`IdsHonored`, true here) still prints the conditional sentence, because the container's OTHER
+    -- spell-id constraints — hardCCForTest's own `includeSpellIDs` — are real and do bite while the
+    -- target is hostile. Telling the player "spell lists do nothing here" would be a lie; dropping
+    -- the warning to match the gate would be the drift the rewrite exists to prevent.
+    local hostile = compile({ auraType = "HARMFUL", unit = "target",
+        filter = { categories = { crowdControl = "hide" } } },
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    assertTrue(hasWarning(hostile, "hostile"), "ids are honored here, but only while the unit is hostile")
+    for _, g in ipairs(hostile.groups) do
+        assertTrue(g.label ~= "Uncategorized", "the gate is stricter than the warning, deliberately")
+    end
+    local own = compile({ auraType = "HARMFUL", unit = "player",
+        filter = { categories = { crowdControl = "hide" } } },
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    assertTrue(hasWarning(own, "own character or pet"), "ids are discarded here, and the plan says so")
+end)
+
+test("filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned", function()
+    -- THE ACCEPTED RESIDUAL (issue #11, owner's ruling 2026-09-20), asserted so the behavior is
+    -- fixed by a test rather than left to drift, and so nobody "fixes" it by extending the gate
+    -- above to `spells`-kind Shows. This group's only constraint beyond the HARMFUL token is an
+    -- `includeSpellIDs` of the category's list (`includeCategory`, the `spells` branch), and on a
+    -- target the engine MAY discard exactly that — target a FRIENDLY unit and this group draws every
+    -- debuff, structurally the same degenerate shape `FC.IdsAlwaysHonored` now forbids the
+    -- Uncategorized row. It ships anyway: suppressing it would delete the feature's primary use case,
+    -- since Hard CC exists to answer "is my sheep on the target" and that target is hostile, which is
+    -- exactly where the ids DO bite. A filter that refuses to work in the case it was built for is
+    -- worse than one that is over-broad in a case nobody sets up. It also differs in KIND from the
+    -- Uncategorized case: that row SUPERSEDES the catch-all, so its degeneration takes the tab's only
+    -- Hide-carrying group with it, while this one sits BESIDE the others and removes nothing — the
+    -- catch-all below still carries `!CROWD_CONTROL`.
+    local plan = compile({ auraType = "HARMFUL", unit = "target",
+        filter = { categories = { crowdControl = "hide" } } },
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    assertEqual(#plan.groups, 2)
+    assertEqual(plan.groups[1].label, "Hard CC", "the Show group is emitted, not suppressed")
+    assertEqual(plan.groups[1].filter, "HARMFUL", "nothing but the aura-type token in the string")
+    assertEqual(setOf(plan.groups[1].candidateFilters), "includeSpellIDs",
+        "the id list is its ONLY constraint — which is the residual, stated as a plan")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118,853")
+    assertEqual(plan.groups[2].label, "All")
+    assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL",
+        "an over-broad Show sits beside the others and removes nothing — the Hide still compiles")
+    -- And the player is told, per container, rather than left to discover it: `addShownGroups` sets
+    -- `usesSpellIds` for a `spells`-kind Show, so `finishWarnings` prints `IDS_HOSTILE_ONLY` off that
+    -- flag. The residual is accepted BECAUSE it is a documented, warned-about engine limitation
+    -- (docs/scope.md, "Out of reach on this client" -> "Spell-id filtering everywhere"); if this
+    -- assertion ever goes red the acceptance loses its footing, because the limitation would then be
+    -- silent.
+    assertEqual(#plan.warnings, 1, "exactly the one sentence")
+    assertEqual(plan.warnings[1], FC.WARN.IDS_HOSTILE_ONLY,
+        "the spells-kind Show alone must raise the warning, with no blacklist or whitelist in play")
 end)
 
 -- ── uncategorized: ExplainSpell (fix round 1) ─────────────────────────────────────────────────
@@ -476,6 +721,73 @@ test("explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Un
     assertEqual(r.rank, 4)
     assertEqual(r.categories[1].key, "uncategorizedDebuffs")
     assertEqual(r.categories[1].state, "hide")
+end)
+
+test("explain: HARMFUL with a non-empty union on the PLAYER: an unclaimed id is still rank 5, never a rescue the compiler does not compile", function()
+    -- `explainUncategorized` mirrors `addCategoryGroups` by contract (its own comment says so), so it
+    -- gates on the same `FC.IdsAlwaysHonored`. Without it, issue #11's categories would make
+    -- ExplainSpell report "shown, rescued by Uncategorized" for a container whose plan carries no
+    -- such group at all — the Filters page confidently explaining a group never emitted.
+    local r = FC.ExplainSpell(cfg({ auraType = "HARMFUL", unit = "player", filter = {} }), 999999,
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    assertEqual(r.verdict, "shown")
+    assertEqual(r.rank, 5)
+    assertEqual(#r.categories, 0, "no category is named — Uncategorized decided nothing here")
+end)
+
+test("explain: HARMFUL with a non-empty union on a TARGET: still rank 5, in lockstep with the gate", function()
+    -- The lockstep requirement stated as a test: `explainUncategorized`'s caller reads the same
+    -- `FC.IdsAlwaysHonored` the compiler gates on, so on a target it must report the same "the row
+    -- decided nothing" the plan above actually compiles. Reading the looser `FC.IdsHonored` here
+    -- would make the Filters page announce a rescuing group that the plan does not contain — the
+    -- failure mode of two call sites answering one question with two predicates.
+    local r = FC.ExplainSpell(cfg({ auraType = "HARMFUL", unit = "target", filter = {} }), 999999,
+        { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
+    assertEqual(r.verdict, "shown")
+    assertEqual(r.rank, 5)
+    assertEqual(#r.categories, 0, "no group rescues it on a target, so no category is named")
+end)
+
+test("explain: HELPFUL on a TARGET: the rescue the accepted cost gives up is not claimed here either", function()
+    -- The buff-side half of the same lockstep, and the explain-path pin on the accepted cost: on the
+    -- player this id is rank 3, rescued by Uncategorized (the case above); on a target the compiler
+    -- emits no such group, so the explanation must not name one.
+    local r = FC.ExplainSpell(cfg({ auraType = "HELPFUL", unit = "target",
+        filter = { categories = { cancelable = "hide" } } }), 999999,
+        { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    assertEqual(r.verdict, "shown")
+    assertEqual(r.rank, 5)
+    assertEqual(#r.categories, 0)
+end)
+
+test("filter: every unit/aura-type combination prints exactly the identity warning it printed before the predicate split", function()
+    -- The split touched `identityWarning`'s shape, so this is the parity net around it: the full
+    -- 4x2 table, written out rather than derived from the predicates, so a future edit to either
+    -- predicate cannot quietly redefine what the Filters page says. These eight answers are the ones
+    -- the pre-#11 compiler gave (git HEAD's `identityWarning`: HARMFUL on player/pet -> own debuffs,
+    -- HARMFUL otherwise -> hostile only, HELPFUL on target/focus -> friendly only, else silence).
+    local expected = {
+        { "player", "HELPFUL", nil },
+        { "pet",    "HELPFUL", nil },
+        { "target", "HELPFUL", FC.WARN.IDS_FRIENDLY_ONLY },
+        { "focus",  "HELPFUL", FC.WARN.IDS_FRIENDLY_ONLY },
+        { "player", "HARMFUL", FC.WARN.IDS_OWN_DEBUFFS },
+        { "pet",    "HARMFUL", FC.WARN.IDS_OWN_DEBUFFS },
+        { "target", "HARMFUL", FC.WARN.IDS_HOSTILE_ONLY },
+        { "focus",  "HARMFUL", FC.WARN.IDS_HOSTILE_ONLY },
+    }
+    for _, c in ipairs(expected) do
+        -- A blacklist is the smallest thing that makes a plan lean on spell ids, which is what
+        -- `finishWarnings` gates the sentence on — the same seam the older warning case above uses.
+        local plan = compile({ auraType = c[2], unit = c[1], filter = { blacklist = { [1] = true } } })
+        local label = c[2] .. " on " .. c[1]
+        if c[3] then
+            assertEqual(#plan.warnings, 1, label .. ": exactly one sentence")
+            assertEqual(plan.warnings[1], c[3], label)
+        else
+            assertEqual(#plan.warnings, 0, label .. ": ids are honored outright, so nothing to say")
+        end
+    end
 end)
 
 -- ── what the engine will not do ───────────────────────────────────────────────────────────────
@@ -605,9 +917,16 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- HARMFUL: 17 filterable categories (16 pre-batch-7 plus `uncategorizedDebuffs`, restored fix
     -- round 3 with an asymmetric meaning — defaults/Categories.lua's KINDS doc) minus 1 hidden
     -- (crowdControl) = 16 shown categories, but only 15 actually become groups: `uncategorizedDebuffs`
-    -- contributes NO group of its own on Show (fix round 3 — its union is always empty for HARMFUL,
-    -- `hasUnion` is false, and `addShownGroups` skips it outright rather than emit an unrestricted
-    -- group that would draw every debuff and defeat every other category's Hide). The catch-all is
+    -- contributes NO group of its own on Show (fix round 3, gated on the unit by issue #11 —
+    -- `hasUnion` is false here). TWO independent reasons hold it false on this container, and only
+    -- the first is temporary: the shipped `Cat.HARMFUL` carries no `spells`-kind category YET, so its
+    -- union is empty today — and `FC.IdsAlwaysHonored` is false for EVERY debuff container whatever
+    -- the union holds, because the engine discards debuff ids on the player outright and may discard
+    -- them on a target. So when `hardCC`/`softCC` land and the debuff union stops being empty, this
+    -- row still contributes no group; the totals above move (two more shown categories, so two more
+    -- shown groups), the reasoning about this row does not. Either way `addShownGroups` skips it
+    -- rather than emit an unrestricted group that would draw every debuff and defeat every other
+    -- category's Hide. The catch-all is
     -- NOT suppressed by its presence either (Show-with-no-union supersedes nothing), so it is
     -- attempted — and dropped anyway, for the same pre-existing reason as before round 3:
     -- `fromPlayers` and `fromNonPlayers` are both default-Show HARMFUL categories that hide the SAME
