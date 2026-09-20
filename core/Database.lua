@@ -800,7 +800,16 @@ end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
-local function eachProfile(db, fn)
+---
+--- PUBLISHED because the schema ladder is no longer its only caller (issue #10 checkpoint 5).
+--- `Cat.DeleteUserCategory` has to reach the same set of profiles a migration does -- a deleted
+--- category's `filter.categories.<key>` sits in the containers of profiles nobody is logged into --
+--- and a second walk written to look like this one would drift on exactly the case that matters:
+--- the fallback branch below, which is the whole of the headless harness and of a client whose
+--- AceDB failed to load. The local name is kept so the ladder's five steps read as they did.
+--- @param db table  NS.db, or anything carrying `sv.profiles` or `profile`
+--- @param fn function  fn(profile, name)
+function Database.EachProfile(db, fn)
     local store = type(db.sv) == "table" and db.sv.profiles
     if type(store) ~= "table" then
         if type(db.profile) == "table" then fn(db.profile, "Default") end
@@ -815,6 +824,8 @@ local function eachProfile(db, fn)
         if type(store[name]) == "table" then fn(store[name], name) end
     end
 end
+
+local eachProfile = Database.EachProfile
 
 -- The account-wide schema ladder, in order, one row per version. v1 is the shape the addon shipped
 -- with; each stored-shape change adds a row here in the same change (toc-file-§2). Containers live in

@@ -16,9 +16,10 @@ its notes. Do not rely on conversation context — everything needed is here or 
 | 2 | Category type as a first-class field | DONE | b520ecd | `def.auraType` stamped at load; `Cat.AuraTypeOf(defOrKey)` reads it |
 | 3 | Storage + schema for user categories | DONE | 0a2004b | Records in `userCategories`/`userCategoryOrder`, materialized into `Cat.HELPFUL`/`Cat.HARMFUL` by `Cat.SyncUserCategories`; random `user…` keys; schema v6; `NS.RegisterSchemaRows(rows, beforePath)` + `NS.UnregisterSchemaRows` |
 | 4 | `Uncategorized` counts user categories | DONE | 0a2004b | No compiler change needed, and proven so from a compiled plan (tests/test_filtercompiler.lua) |
-| 5 | Deletion and cleanup across profiles | WIP | | Including inactive profiles |
-| 6 | UX: create / rename / delete + predefined lock | TODO | | |
-| 7 | Overlap guardrail | TODO | | Inform, do not block |
+| 5 | Deletion and cleanup across profiles | DONE | (uncommitted) | `Cat.DeleteUserCategory`; cleanup is EAGER across every stored profile through the published `Database.EachProfile`; a profile holding its OWN record under the key (a profile copy) is skipped |
+| 6 | UX: create / rename / delete + predefined lock | DONE | (uncommitted) | The 'Your categories' block on General -> Spell Categories; the lock is enforced by the ACTS, and a shipped category draws a sentence instead of disabled controls |
+| 7 | Overlap guardrail | DONE | (uncommitted) | Inform, do not block; `FC.ClaimingCategories` published out of `ExplainSpell` and read by the panel for both the add-time line and the per-entry note |
+| 7R | Review round four: the owner's findings on 5-7 | DONE | (uncommitted) | Restore is not drawn for a user category and `RestoreStarters` refuses one; the enchant entry gets its own sentence; a `(yours)` marker on the dropdown and the Filters grid; the two name boxes separated by heading, label and pre-fill; every act of the block answers in the panel; the eight low findings |
 | 8 | Docs, counts, scope, smoke tests | TODO | | |
 
 Status values: `TODO`, `WIP`, `DONE`, `BLOCKED` (with the blocker named).
@@ -160,19 +161,99 @@ if user categories appear there — which must be **verified by a test**, not as
 
 ### 5. Deletion and cleanup
 
-Deleting a category leaves `filter.categories.<key>` in every container of every stored profile,
-including profiles not currently loaded, plus its `categorySpells[key]` edits. Decide and document
-whether cleanup is eager (at delete, across all profiles) or lazy (ignored keys pruned on load), and
-make the schema validator tolerate the transient state either way.
+**DECIDED: EAGER, at the delete, across every stored profile.** `Cat.DeleteUserCategory` removes the
+record, lets the ordinary `Cat.UserCategoryOrder` reconcile drop the order entry, deletes
+`categorySpells[key]`, and clears `filter.categories.<key>` from every container of every profile in
+`Database.EachProfile` -- the walk the schema ladder uses, published for this. The sync then takes
+the definition, the schema row and the container-template entry down together, as it always did, so
+nothing is left for a later pass to find.
+
+Why not lazy, in full in the comment above `forgetUserKey` (defaults/Categories.lua): there is no
+pruning pass to write it into (`Database.Backfill` only ever fills), a load-path pruner would be a
+new destructive pass that cannot tell a not-yet-materialized key from a dead one, and it would never
+reach the inactive profiles that actually hold the debris. The validator is never asked to tolerate
+a transient state, which is the strongest form of the plan's condition rather than a use of the
+allowance it made.
+
+**The one hazard eager has, and its answer:** AceDB's profile COPY duplicates `userCategories`, so
+two profiles can legitimately hold a record under one key. The sweep therefore SKIPS any profile
+that still holds a record of its own, and the owner's record is removed first so the owner profile
+is itself eligible. Both halves are pinned in tests/test_database.lua and both were verified to fail
+when reverted.
 
 ### 6. UX
 
-Create, rename, delete, with the predefined lock. Naming rules (length, duplicates, empty). Deletion
-confirmation, since it discards a list the player built.
+**Review round four (owner, 2026-09-21) changed five things about this block and the picker line
+above it. Each is settled here as well as in the code, because the code's comment says how and this
+says why the alternative was not taken.**
+
+- **Restore is NOT DRAWN for a category the player made** — the owner's option (a). Its starter list
+  is `{}`, so the one act behind that label empties the category, silently, one row above a Delete
+  that stops to ask for precisely that loss. Option (b) — relabel and confirm — was declined: a
+  one-click empty buys nothing the list's own X and the Delete do not already give, and it would
+  make the picker line mean two different things depending on which category is picked. The ACT
+  refuses it too (`restoreStarters`, published as `NS.GeneralSpells.RestoreStarters`), so the
+  drawing rule is a courtesy and never the enforcement; the lead-in sentence drops its Restore
+  clause on the same categories.
+- **Weapon enchants gets its own sentence.** The shipped one promises a spell list, Restore and
+  add/remove; that entry draws three slot toggles and has none of them.
+- **A category the player made is marked `(yours)`** wherever it is listed — the Category dropdown
+  and the Filters → Categories grid — in checkpoint 1's grammar. A SUFFIX on the name, because the
+  aura-type marker is a padded prefix and anything in front of the name would move the column that
+  padding bought. One definition (`NS.GeneralSpells.MarkedName`), read by both surfaces; the SCHEMA
+  row keeps the bare name, since that name is the row's identity in `/am list` and the write log.
+- **The two Enter-committing name boxes are told apart three ways**: different headings (the create
+  form moved under `Make a new category`), labels naming ACTS rather than the noun they shared
+  (`Rename this category` / `New category's name`), and only one of them ever pre-filled — the
+  rename box is redrawn from the store every render. A rename that goes through now says the OLD
+  name back, which is the only undo a rename has.
+- **Every act of the block answers IN THE PANEL**, one `H.TextRow` under the heading, as well as in
+  chat: empty name, duplicate name, create, rename, delete, and the restore refusal. Picking another
+  category clears the line.
+
+The low findings of the same round, all fixed here: the rename gained the reserved-namespace guard
+the delete had (both now pinned by a test that fails when either guard is removed); the delete's
+profile sweep is per-profile inside a pcall and the sync runs unconditionally, so the failure is
+RECOVERABLE rather than atomic and says so; a record the sync cannot read is reachable at last
+(`Cat.UnusableUserRecords` / `Cat.ForgetUnusableUserRecords`, drawn as a line and a confirmed button
+in the block, and `Cat.DeleteUserCategory` no longer refuses a corrupt record inside the namespace);
+the duplicate-name line prints the SANITIZED name; `Cat.SanitizeUserName` caps in CHARACTERS
+(`Cat.CharCount`), which is what `SetMaxLetters` counts; the delete confirmation says that anything
+the category was hiding becomes visible again through Uncategorized; and the delete now states that
+it happened, since the tab jumps to another category.
+
+**DELIVERED as the 'Your categories' block on General -> Spell Categories**, between the Category
+picker and the spell list: a name box and a Delete for a category the player made, a one-sentence
+explanation instead of them for a shipped one, and a create form (name, aura type, Create) always.
+Four controls, all of them ordinary AceGUI widgets in `H.RenderGrid` pairs -- the grammar the picker
+line and the Filters page's act rows already use. The full justification is the comment above the
+block in settings/GeneralSpells.lua.
+
+- **Naming rules.** Non-empty after `Cat.SanitizeUserName` (which also strips `|` and control
+  characters and caps at `Cat.USER_NAME_MAX`, now published so the boxes stop where the store
+  would); a DUPLICATE is allowed and reported in chat, never refused -- the key is identity.
+- **Rename is the name box itself**, committed on Enter, never per keystroke. The key never moves.
+- **Delete asks first**, through `StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY`, and the
+  confirmation says what is lost: the spell list, and every container's Show/Hide in every profile.
+  The popup carries the KEY, so a popup that outlives its render cannot act on a stale definition.
+- **The lock is enforced by the ACTS**, not by the drawing rule: `Cat.RenameUserCategory` and
+  `Cat.DeleteUserCategory` refuse a key with no stored record, and the aura type has no setter at
+  all -- `Cat.CreateUserCategory` is its only writer in the addon. tests/test_database.lua asserts
+  all three, including that no `NS.Categories` member other than `AuraTypeOf` names an aura type.
 
 ### 7. Overlap guardrail
 
-Per the decision above: show which other categories already claim an id, at add time and in the list.
+**DELIVERED, inform-only.** `FC.ClaimingCategories` -- `ExplainSpell`'s own private local until now
+-- is published and read by the panel, so the guardrail and the Overrides notes cannot drift into
+two answers to one question. Asked with an EMPTY filter, because it is a statement about the
+category set and not about any one container.
+
+- At the add: one chat line naming the other categories that hold the id, and what the compiler does
+  about it. The add itself always goes through.
+- In the list: `Also in: <categories>` under the entry, drawn through the library's own `entry.note`.
+- Scoped to the SAME aura type, because a buff list and a debuff list never meet in one container.
+- Every name drawn comes from `Cat.LabelOf` by way of the compiler's answer, so a user category's
+  name is never routed through `NS.L`.
 
 ### 8. Docs and counts
 

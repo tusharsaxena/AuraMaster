@@ -56,7 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (83)
+### test_database.lua (91)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -141,6 +141,14 @@ badge and any count quoted in the docs must agree with it.
 - user categories: a new key collides with nothing shipped and with nothing in any stored profile
 - user categories: a rename keeps the key, so a container's stored Show/Hide survives it
 - user categories: a stored record alone protects its spell list from the categorySpells write
+- user categories: deleting one clears the record, the list and every container's state, in the active profile and in an inactive one
+- user categories: deleting one leaves a COPY of it in another profile entirely alone
+- user categories: delete and rename are refused at the ACT for a shipped category, and the aura type has no setter at all
+- user categories: the reserved namespace is what BOTH the rename and the delete rest on
+- user categories: a record the sync cannot read can still be got rid of, and taking it leaves a shipped category alone
+- user categories: a profile the sweep raises on costs its own leaves and nothing else
+- user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
+- user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
 ### test_schema.lua (29)
 
@@ -213,7 +221,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (87)
+### test_filtercompiler.lua (89)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -302,6 +310,8 @@ badge and any count quoted in the docs must agree with it.
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
 - categories: a user category joins the categorized union, so Uncategorized stops rescuing what it claims
 - categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For
+- categories: ClaimingCategories names every spells-kind category of the aura type that holds an id, in declaration order
+- categories: ClaimingCategories is the same answer ExplainSpell gives, and the container's filter decides only the state
 
 ### test_container.lua (51)
 
@@ -1023,7 +1033,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (44)
+### test_pages_general.lua (55)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1051,6 +1061,17 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+- general → spell categories: the create form makes a category, shows it, and it is usable at once
+- general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide
+- general → spell categories: a shipped category draws the lock sentence instead of a name box and a Delete
+- general → spell categories: Delete asks first, and the confirmation's act is what refuses a shipped key
+- general → spell categories: a category the player made is drawn no Restore, and the act refuses one
+- general → spell categories: Weapon enchants is promised no spell list, Restore or add/remove
+- general → spell categories: a category the player made says so, without moving the name column
+- general → spell categories: the rename box and the create box cannot be mistaken for each other
+- general → spell categories: every act of the block answers in the panel, not only in chat
+- general → spell categories: a saved record the sync cannot read can be forgotten from the panel
+- general → spell categories: an id another category already claims is marked in the list and reported at the add
 - general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
 - general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides
 - general → spell categories: picking a suggestion adds it through the one writer, exactly once
@@ -1104,7 +1125,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (44)
+### test_pages_filters.lua (45)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1116,6 +1137,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: the max-duration description says there is no minimum
 - filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
 - filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
+- filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
 - filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
@@ -1372,10 +1394,10 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 20 |
-| test_database.lua | 83 |
+| test_database.lua | 91 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 87 |
+| test_filtercompiler.lua | 89 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
@@ -1400,9 +1422,9 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 44 |
+| test_pages_general.lua | 55 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 44 |
+| test_pages_filters.lua | 45 |
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
@@ -1420,4 +1442,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1206** |
+| **Total** | **1228** |

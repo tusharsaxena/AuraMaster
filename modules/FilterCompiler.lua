@@ -806,10 +806,22 @@ function FC.Compile(cfg, ctx)
 end
 
 --- The spells-kind categories of `auraType` that claim `id`, in declaration order, each `{ key,
---- label, state }` — and whether any of them is a Show. Split out of `ExplainSpell` to keep both
---- under the file's complexity ceiling.
+--- label, state }` -- and whether any of them is a Show.
+---
+--- PUBLISHED for issue #10 checkpoint 7's overlap guardrail, which asks the same question the
+--- Overrides notes ask: WHICH other categories already hold this id. It is published rather than
+--- answered a second time in the panel because a second walk would be a second answer, free to
+--- disagree with the compiled plan about what `FC.CategorySpells` resolves to -- the starters
+--- unioned with the profile's edits -- which is exactly the mistake the guardrail exists to avoid
+--- making visible.
+---
+--- `filter` is a container's stored `filter` and decides each entry's `state` only. The guardrail
+--- asks with an EMPTY table, because it is about the category SET and not about any one container:
+--- every entry then comes back `show`, and the caller that does not care about state simply reads
+--- the keys and labels. `label` is already `Cat.LabelOf`'d -- routed for a shipped category, the
+--- player's own text for one they made -- so no caller may route it again.
 --- @return table claiming, boolean anyShow
-local function claimingCategories(Categories, auraType, filter, categorySpells, id)
+function FC.ClaimingCategories(Categories, auraType, filter, categorySpells, id)
     local claiming, anyShow = {}, false
     for _, def in ipairs(Categories.For(auraType)) do
         if def.kind == "spells" and FC.CategorySpells(def, categorySpells)[id] then
@@ -827,7 +839,7 @@ end
 --- `auraType`'s `uncategorized` category def, or nil (a future aura type that never gets one). Both
 --- HELPFUL and HARMFUL carry one as of fix round 3 (defaults/Categories.lua's KINDS doc). Unlike
 --- `token`/`flag`/`dispel`, this one needs no guess: whether `id` is on any `spells`-kind list is
---- exactly what `claimingCategories` (empty `claiming`) already answers, so `ExplainSpell` can report
+--- exactly what `FC.ClaimingCategories` (empty `claiming`) already answers, so `ExplainSpell` can report
 --- it with the same confidence as a spells-kind category.
 --- @return table|nil
 local function uncategorizedDef(Categories, auraType)
@@ -913,7 +925,7 @@ function FC.ExplainSpell(cfg, id, ctx)
 
     local Categories = ctx.categories or NS.Categories
     local auraType = (cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
-    local claiming, anyShow = claimingCategories(Categories, auraType, filter, ctx.categorySpells, id)
+    local claiming, anyShow = FC.ClaimingCategories(Categories, auraType, filter, ctx.categorySpells, id)
 
     if isEmpty(claiming) then
         -- The same two-part `hasUnion` `addCategoryGroups` computes, for the same reason and from the

@@ -38,8 +38,14 @@ local function headings(ws)
 end
 
 --- The grid line for category `key`: the Show and Hide cells, then the label (schema v3).
+---
+--- The DRAWN label, which for a category the player made is the schema row's name plus the 'yours'
+--- marker (settings/Filters.lua's markedRows, owner 2026-09-21); for every shipped category the two
+--- are the same string.
 local function gridLine(NS, ws, key)
-    local label = NS.FindSchemaRow("container.filter.categories." .. key).label
+    local def = NS.Categories.Find("HELPFUL", key) or NS.Categories.Find("HARMFUL", key)
+    local label = def and NS.GeneralSpells.MarkedName(def)
+        or NS.FindSchemaRow("container.filter.categories." .. key).label
     for _, w in ipairs(ws) do
         local kids = w.children
         local last = kids and kids[3]
@@ -223,6 +229,21 @@ test("filters: a debuff container's Categories tab is Blizzard Categories, Spell
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
     assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: restored for debuffs (fix round 3)")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
+end)
+
+test("filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)", function()
+    local NS, _, P = filters()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    local ws = P.tab("filters", NS.L["Categories"])
+    local line = gridLine(NS, ws, key)
+    -- red under: the grid drawing the bare name, so a player reading the Categories grid cannot tell
+    -- their own categories from Aura Master's without leaving the page and selecting each one.
+    assertTrue(line ~= nil, "the row is drawn")
+    assertEqual(line[3].text, "Affixes (yours)")
+    -- red under: marking the SCHEMA row rather than a per-render copy, which would carry the marker
+    -- into `/am list` and the write log, where the name is the row's identity and not decoration.
+    assertEqual(NS.FindSchemaRow("container.filter.categories." .. key).label, "Affixes")
+    assertEqual(gridLine(NS, ws, "healing")[3].text, NS.L["Healing"], "a shipped row is unmarked")
 end)
 
 test("filters: every grid's columns are Show and Hide, then the category (schema v3)", function()

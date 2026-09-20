@@ -25,7 +25,7 @@ read_globals = {
 globals = {
     "AuraMasterDB",       -- the SavedVariables write target
     "AuraMasterPerfDB",   -- the diagnostics capture ring (performance-§5)
-    "StaticPopupDialogs", -- the two confirmations register an entry each
+    "StaticPopupDialogs", -- Reset all, Delete container and Delete category each register one
 }
 
 -- AceAddon calls its lifecycle and event handlers as METHODS (addon:OnEnable(), addon:OnEnterWorld

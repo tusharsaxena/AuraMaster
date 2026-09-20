@@ -56,7 +56,7 @@ Example: a bar option.
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
    something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
    Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
-   kind, never the aura type (`settings/GeneralSpells.lua:96`) — and its profile-wide
+   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:143`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.
@@ -123,7 +123,7 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:822`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:833`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure

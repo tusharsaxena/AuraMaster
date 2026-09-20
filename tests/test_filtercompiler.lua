@@ -1369,3 +1369,66 @@ test("categories: a user category reaches the compiler as an ordinary spells-kin
     local spells = E.FilterCompiler.CategorySpells(found, E.db.profile.categorySpells)
     assertEqual(spells[MINE], true, "and its effective list is the profile's edits alone")
 end)
+
+-- ── the overlap guardrail's one question (issue #10 checkpoint 7) ──────────────────────────────
+--
+-- `FC.ClaimingCategories` was `ExplainSpell`'s private local until checkpoint 7 published it, so
+-- that settings/GeneralSpells.lua could say WHICH other categories already hold a spell id without
+-- writing a second answer to that question. These cases pin the published shape: the panel is not
+-- free to re-derive it, and the compiler is not free to change it under the panel.
+
+test("categories: ClaimingCategories names every spells-kind category of the aura type that holds an id, in declaration order", function()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("My affixes", "HELPFUL")
+    local debuffs = E.Categories.CreateUserCategory("Their affixes", "HARMFUL")
+    -- The same id on a SHIPPED buff list, on the player's own buff list, and on a DEBUFF list.
+    E.SetByPath("categorySpells", {
+        defensives = { [MINE] = true }, [key] = { [MINE] = true }, [debuffs] = { [MINE] = true },
+    })
+
+    local claiming, anyShow = E.FilterCompiler.ClaimingCategories(E.Categories, "HELPFUL", {},
+        E.db.profile.categorySpells, MINE)
+    local keys, labels = {}, {}
+    for i, c in ipairs(claiming) do
+        keys[i], labels[i] = c.key, c.label
+    end
+    -- red under: an answer that loses the user category (walking only shipped definitions), or one
+    -- that includes the debuff category -- a buff list and a debuff list never meet in a container,
+    -- so calling that an overlap would be a false alarm on every id that lives in both worlds.
+    assertEqual(table.concat(keys, ","), "defensives," .. key, "declaration order, buffs only")
+    -- Labels come back already routed by `Cat.LabelOf`: the shipped one through NS.L, the player's
+    -- own text untouched. A caller routing them again is what that rule exists to prevent.
+    assertEqual(table.concat(labels, ","), E.L["Defensive cooldowns"] .. ",My affixes")
+    assertTrue(anyShow, "an empty filter leaves every claim at its default Show")
+
+    -- The control: an id nothing claims answers an EMPTY list, which is what the panel reads as
+    -- "no other category holds this" and draws no note for.
+    local none = E.FilterCompiler.ClaimingCategories(E.Categories, "HELPFUL", {},
+        E.db.profile.categorySpells, NOBODYS)
+    assertEqual(#none, 0)
+
+    -- And asking as the debuff side sees only the debuff list.
+    local theirs = E.FilterCompiler.ClaimingCategories(E.Categories, "HARMFUL", {},
+        E.db.profile.categorySpells, MINE)
+    assertEqual(#theirs, 1)
+    assertEqual(theirs[1].key, debuffs)
+end)
+
+test("categories: ClaimingCategories is the same answer ExplainSpell gives, and the container's filter decides only the state", function()
+    local E, key, con = envWithUserCategory()
+    -- The user category is HIDDEN on this container (envWithUserCategory), which is what makes the
+    -- two calls distinguishable: the guardrail asks with an EMPTY filter because it is a statement
+    -- about the category SET, not about one container.
+    local asPanel = E.FilterCompiler.ClaimingCategories(E.Categories, "HELPFUL", {},
+        E.db.profile.categorySpells, MINE)
+    assertEqual(#asPanel, 1)
+    assertEqual(asPanel[1].key, key)
+    assertEqual(asPanel[1].state, "show", "no container, no Hide")
+
+    local why = E.FilterCompiler.ExplainSpell(con, MINE, E.FilterCompiler.ProfileContext())
+    -- red under: the panel and the Overrides notes drifting into two answers to one question.
+    assertEqual(#why.categories, 1)
+    assertEqual(why.categories[1].key, asPanel[1].key)
+    assertEqual(why.categories[1].label, asPanel[1].label)
+    assertEqual(why.categories[1].state, "hide", "the container's stored Hide, read from its filter")
+end)

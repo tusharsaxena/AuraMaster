@@ -302,9 +302,15 @@ local function marked(NS, key, auraType)
     end
     local mine = #NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]]
     local pad = (" "):rep(widest - mine)
+    -- A category the player made carries the ownership marker too, and it is a SUFFIX on the name
+    -- rather than a second prefix, so the padding above still starts every name at one offset.
+    local name = NS.Categories.LabelOf(def)
+    if NS.Categories.IsUserCategory(def) then
+        name = (NS.L["{name} (yours)"]:gsub("{name}", function() return name end))
+    end
     return (NS.L["[{type}] {name}"]
         :gsub("{type}", function() return NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]] end)
-        :gsub("{name}", function() return pad .. NS.Categories.LabelOf(def) end))
+        :gsub("{name}", function() return pad .. name end))
 end
 
 --- Every entry the IdList drew, in DRAW ORDER, as { id =, label =, x =, row =, col = }.
@@ -618,6 +624,365 @@ test("general → spell categories: a name resolves through the candidates — a
     box:__fire("OnEnterPressed", "No Such Spell")
     assertEqual(msgs.config, 0, "an unknown name writes nothing")
     assertTrue(P.hasText(ws, "No spell named 'No Such Spell' in your spellbook."), "and says why on the add line")
+end)
+
+
+-- ── 'Your categories': create, rename, delete and the shipped lock (issue #10 checkpoint 6) ────
+--
+-- The acts themselves are pinned in tests/test_database.lua, including both refusals. What these
+-- cases own is the PANEL: that the block draws the controls the owner asked for, that it draws them
+-- only where they mean something, and that the destructive one asks first.
+
+--- The tab's own management controls, by the labels the block gives them.
+local function manage(NS, ws, P)
+    return {
+        name   = P.find(ws, "EditBox", NS.L["Rename this category"]),
+        delete = P.find(ws, "Button", NS.L["Delete this category"]),
+        newName = P.find(ws, "EditBox", NS.L["New category's name"]),
+        auraType = P.find(ws, "Dropdown", NS.L["Aura type"]),
+        create = P.find(ws, "Button", NS.L["Create category"]),
+    }
+end
+
+--- The index, among the widgets `ws`, of the line `w` was drawn on: `w` itself when it is a
+--- top-level widget, or the H.RenderGrid line holding it when it is a cell.
+local function lineOf(ws, w)
+    for i, line in ipairs(ws) do
+        if line == w then return i end
+        for _, kid in ipairs(line.children or {}) do
+            if kid == w then return i end
+        end
+    end
+    return nil
+end
+
+--- The profile's one user category's key, or nil.
+local function onlyUserKey(NS)
+    local found
+    for key in pairs(NS.db.profile.userCategories) do
+        assertNil(found, "more than one user category")
+        found = key
+    end
+    return found
+end
+
+test("general → spell categories: the create form makes a category, shows it, and it is usable at once", function()
+    local NS, _, P, ws = spells()
+    local m1 = manage(NS, ws, P)
+    assertTrue(m1.newName ~= nil and m1.auraType ~= nil and m1.create ~= nil, "the create form is drawn")
+    -- The two aura types, in C.AURA_TYPES order and in the words every other surface uses, so the
+    -- choice reads the same here as on the container's own Aura type row.
+    assertEqual(table.concat(m1.auraType.order, ","), "HELPFUL,HARMFUL")
+    assertEqual(m1.auraType.list.HARMFUL, NS.L[NS.Constants.AURA_TYPE_LABELS.HARMFUL])
+
+    m1.newName:__fire("OnTextChanged", "My affixes")
+    m1.auraType:__fire("OnValueChanged", "HARMFUL")
+    m1.create:__fire("OnClick")
+
+    local key = onlyUserKey(NS)
+    assertTrue(key ~= nil, "the category was created")
+    assertEqual(NS.db.profile.userCategories[key].name, "My affixes")
+    assertEqual(NS.db.profile.userCategories[key].auraType, "HARMFUL", "the type the form chose")
+
+    -- USABLE AT ONCE, which is what "created" has to mean: a row that resolves, a template entry, a
+    -- stored state in every container, and a place in the debuff grid above Uncategorized.
+    local path = "container.filter.categories." .. key
+    assertTrue(NS.FindSchemaRow(path) ~= nil, "a schema row")
+    assertEqual(NS.DefaultFor(path), "show")
+    assertEqual(NS.GetSetting(path, NS.Database.GetContainers()[1].id), "show")
+    assertEqual(NS.ValidateSchema(), 0)
+    assertEqual(NS.Categories.HARMFUL[#NS.Categories.HARMFUL].key, "uncategorizedDebuffs",
+        "Uncategorized is still last after a create (U-1)")
+
+    -- And the tab moved onto it, so the player is looking at the list they just made rather than
+    -- hunting for it in a dropdown of fifteen.
+    local ws2 = P.rerender("General")
+    local dd = P.find(ws2, "Dropdown", NS.L["Category"])
+    assertEqual(dd.value, key, "the new category is selected")
+    assertEqual(dd.list[key], marked(NS, key, "HARMFUL"), "and marked as a debuff category")
+    assertEqual(manage(NS, ws2, P).newName.text, "", "the form is cleared for the next one")
+end)
+
+test("general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide", function()
+    local NS, _, P = spells()
+    local key = NS.Categories.CreateUserCategory("Frist draft", "HELPFUL")
+    local path = "container.filter.categories." .. key
+    local id = NS.Database.GetContainers()[1].id
+    NS.SetByPath(path, "hide", id)
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true } })
+    NS.GeneralSpells.Select(key)
+
+    local ws = P.rerender("General")
+    local box = manage(NS, ws, P).name
+    assertTrue(box ~= nil, "a category the player made has a name box")
+    assertEqual(box.text, "Frist draft", "showing the stored name")
+    box:__fire("OnEnterPressed", "  First draft  ")
+
+    -- red under: a rename that re-keys. Every one of these is stored UNDER THE KEY.
+    assertEqual(NS.db.profile.userCategories[key].name, "First draft", "trimmed and stored")
+    assertEqual(NS.GetSetting(path, id), "hide", "the container's own decision survives")
+    assertEqual(NS.db.profile.categorySpells[key][424242], true, "and the spell list")
+    assertEqual(NS.FindSchemaRow(path).label, "First draft", "the row's label follows the name")
+    assertEqual(NS.ValidateSchema(), 0)
+
+    -- An empty name is refused by the act and the box goes back to what is stored.
+    P.rerender("General")
+    manage(NS, P.rerender("General"), P).name:__fire("OnEnterPressed", "   ")
+    assertEqual(NS.db.profile.userCategories[key].name, "First draft", "a refused rename changes nothing")
+    assertEqual(manage(NS, P.rerender("General"), P).name.text, "First draft", "and the box is redrawn from the store")
+end)
+
+test("general → spell categories: a shipped category draws the lock sentence instead of a name box and a Delete", function()
+    local NS, _, P, ws = spells()
+    local shipped = manage(NS, ws, P)
+    -- red under: drawing the two controls for every category and leaving the refusal to the act,
+    -- which would offer the player a Delete that can only ever fail.
+    assertNil(shipped.name, "a shipped category has no name box")
+    assertNil(shipped.delete, "and no Delete")
+    assertTrue(P.hasText(ws, "one of Aura Master's own categories"),
+        "the sentence says why, and that the spell list is still the player's")
+    assertTrue(shipped.create ~= nil, "but a category can still be made from here")
+
+    local key = NS.Categories.CreateUserCategory("Mine", "HELPFUL")
+    NS.GeneralSpells.Select(key)
+    local ws2 = P.rerender("General")
+    local mine = manage(NS, ws2, P)
+    assertTrue(mine.name ~= nil and mine.delete ~= nil, "a category the player made has both")
+    assertFalse(P.hasText(ws2, "one of Aura Master's own categories"), "and not the sentence")
+end)
+
+test("general → spell categories: Delete asks first, and the confirmation's act is what refuses a shipped key", function()
+    local NS, m, P = spells()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true } })
+    NS.GeneralSpells.Select(key)
+    local ws = P.rerender("General")
+    local popups = P.popups()
+    manage(NS, ws, P).delete:__fire("OnClick")
+
+    assertEqual(#popups, 1, "the click asks rather than acts")
+    assertEqual(popups[1].which, "AURAMASTER_DELETE_CATEGORY")
+    assertEqual(popups[1].text, "Affixes", "the confirmation names the category")
+    assertEqual(popups[1].data, key, "and carries the KEY, not the definition")
+    -- red under: a confirmation that names the losses and not the one CONSEQUENCE -- an aura this
+    -- category was hiding is hidden by nothing once it is gone, and comes back under Uncategorized.
+    assertTrue(m.StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY.text:find("Uncategorized", 1, true) ~= nil,
+        "the confirmation says what becomes visible again")
+    assertTrue(NS.db.profile.userCategories[key] ~= nil, "nothing is discarded until it is accepted")
+
+    m.StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY.OnAccept(popups[1], popups[1].data)
+    assertTrue(NS.db.profile.userCategories[key] == nil, "accepting discards it")
+    assertTrue(NS.db.profile.categorySpells[key] == nil, "with the list it held")
+    assertTrue(NS.FindSchemaRow("container.filter.categories." .. key) == nil)
+    assertEqual(NS.ValidateSchema(), 0)
+
+    -- THE ACT IS THE ENFORCEMENT. A popup that outlived its render -- or any other caller -- handing
+    -- the dialog a shipped key is refused by Cat.DeleteUserCategory, not by the drawing rule that
+    -- kept the button off a shipped category in the first place.
+    m.StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY.OnAccept(nil, "defensives")
+    assertTrue(NS.Categories.Find("HELPFUL", "defensives") ~= nil, "the shipped category is still there")
+    assertTrue(NS.FindSchemaRow("container.filter.categories.defensives") ~= nil)
+    -- And a second accept of the key just deleted is refused rather than raising.
+    m.StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY.OnAccept(popups[1], key)
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
+-- ── the four things review round four asked for (owner, 2026-09-21) ────────────────────────────
+
+test("general → spell categories: a category the player made is drawn no Restore, and the act refuses one", function()
+    local NS, _, P, ws = spells()
+    -- The premise: one of Aura Master's own categories does get the button.
+    assertTrue(P.find(ws, "Button", NS.L["Restore this category's starter list"]) ~= nil,
+        "a shipped category has a Restore")
+
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true, [555] = true } })
+    NS.GeneralSpells.Select(key)
+    local ws2 = P.rerender("General")
+    -- red under: Restore drawn for every non-enchant category. A category the player made ships
+    -- with NO starter list, so "restore the starter list" there empties it -- silently, under a
+    -- label about something else, one row above the Delete that stops to ask for exactly that loss.
+    assertNil(P.find(ws2, "Button", NS.L["Restore this category's starter list"]),
+        "no Restore on a category with no starter list")
+    assertFalse(P.hasText(ws2, "Restore brings the starter list back"),
+        "and the lead-in does not promise one either")
+
+    -- THE ACT REFUSES IT TOO, so not drawing the button is a courtesy and never the enforcement --
+    -- the same division of labor the Delete already uses. red under: the guard living only in the
+    -- drawing rule, where a stale render or a future caller walks straight past it.
+    local ok, why = NS.GeneralSpells.RestoreStarters(key)
+    assertTrue(ok == nil, "the act refuses a category the player made")
+    assertEqual(why, NS.L["Only one of Aura Master's own categories has a starter list to go back to. Take spells out of your own with the X beside each one, or delete the category."])
+    assertEqual(NS.db.profile.categorySpells[key][424242], true, "and the list is untouched")
+    assertEqual(NS.db.profile.categorySpells[key][555], true)
+
+    -- While a shipped one still restores, which is what the button is for.
+    NS.SetByPath("categorySpells", { defensives = { [424242] = true } })
+    assertTrue(NS.GeneralSpells.RestoreStarters("defensives"))
+    assertNil(NS.db.profile.categorySpells.defensives, "no edit left to store")
+end)
+
+test("general → spell categories: Weapon enchants is promised no spell list, Restore or add/remove", function()
+    local NS, _, P, ws = spells()
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
+    ws = P.rerender("General")
+    -- red under: the enchant branch drawing the general shipped sentence, which describes a spell
+    -- list, a Restore and add/remove -- three things this entry does not have. It draws slot
+    -- toggles.
+    assertFalse(P.hasText(ws, "Its spell list is still yours"), "no promise of a list it has not got")
+    assertTrue(P.hasText(ws, "It holds no spell list at all"), "it says what it actually is")
+    assertNil(P.find(ws, "Button", NS.L["Restore this category's starter list"]))
+    assertTrue(P.find(ws, "Button", NS.L["Create category"]) ~= nil,
+        "but a category can still be made from here")
+end)
+
+test("general → spell categories: a category the player made says so, without moving the name column", function()
+    local NS, _, P = spells()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    local dd = P.find(P.rerender("General"), "Dropdown", NS.L["Category"])
+    -- red under: no ownership marker at all, which left a player unable to tell their own categories
+    -- from Aura Master's without selecting each one and reading the block underneath.
+    assertEqual(dd.list[key], marked(NS, key, "HELPFUL"))
+    assertTrue(dd.list[key]:find("(yours)", 1, true) ~= nil, "the player's own is marked")
+    assertFalse(dd.list.healing:find("(yours)", 1, true) ~= nil, "and only the player's own")
+    -- red under: an ownership marker put in FRONT of the name, which would move the column
+    -- checkpoint 1's padding bought, for exactly the rows that carry it.
+    assertEqual(dd.list[key]:find("Affixes", 1, true), dd.list.healing:find("Healing", 1, true),
+        "every name still starts at the same character offset")
+end)
+
+test("general → spell categories: the rename box and the create box cannot be mistaken for each other", function()
+    local NS, _, P = spells()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    NS.GeneralSpells.Select(key)
+    local ws = P.rerender("General")
+    local mine = manage(NS, ws, P)
+    assertTrue(mine.name ~= nil and mine.newName ~= nil, "both boxes are drawn")
+    -- red under: the two labeled "Name" and "New category" -- one word apart, one row apart, both
+    -- committing on Enter, and one of them renaming a live category with no undo. Each label now
+    -- names its ACT.
+    assertEqual(mine.name.labelText, NS.L["Rename this category"])
+    assertEqual(mine.newName.labelText, NS.L["New category's name"])
+    -- Only one of them is ever pre-filled: the rename box is redrawn from the store every render.
+    assertEqual(mine.name.text, "Affixes")
+    assertEqual(mine.newName.text, "")
+    -- And a heading sits between them, so the block being read says which act it is.
+    local head
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["Make a new category"] then head = head or i end
+    end
+    assertTrue(head ~= nil, "the create form has a heading of its own")
+    assertTrue(lineOf(ws, mine.name) < head, "the rename box is above it")
+    assertTrue(head < lineOf(ws, mine.newName), "and the create box below it")
+end)
+
+test("general → spell categories: every act of the block answers in the panel, not only in chat", function()
+    local NS, m, P, ws = spells()
+    -- EMPTY NAME. red under: the refusal being NS.Print alone, so Create with an empty box
+    -- re-rendered with nothing visibly different and the panel looked broken.
+    manage(NS, ws, P).create:__fire("OnClick")
+    local ws2 = P.rerender("General")
+    assertTrue(P.hasText(ws2, NS.L["A category needs a name."]), "the refusal is on the panel")
+
+    -- A SUCCESSFUL CREATE says what was made and what to do with it.
+    local made = manage(NS, ws2, P)
+    made.newName:__fire("OnTextChanged", "Affixes")
+    made.create:__fire("OnClick")
+    local ws3 = P.rerender("General")
+    assertTrue(P.hasText(ws3, "Created 'Affixes'"), "and so is the act that worked")
+
+    -- A DUPLICATE NAME is reported rather than refused (the ledger), and reported HERE.
+    local dup = manage(NS, ws3, P)
+    dup.newName:__fire("OnTextChanged", "Affixes")
+    dup.create:__fire("OnClick")
+    local ws4 = P.rerender("General")
+    assertTrue(P.hasText(ws4, "There is already a category called 'Affixes'"))
+
+    -- A RENAME SAYS THE OLD NAME BACK, which is the only undo a rename has: the box itself is
+    -- redrawn from the store, so the previous name is nowhere else by the time it is wanted.
+    manage(NS, ws4, P).name:__fire("OnEnterPressed", "Affixes II")
+    local ws5 = P.rerender("General")
+    assertTrue(P.hasText(ws5, "Renamed 'Affixes' to 'Affixes II'"))
+    assertTrue(P.hasText(ws5, "type 'Affixes' back into the box"))
+
+    -- A DELETE SAYS SO, because the tab jumps to the first category and would otherwise read as the
+    -- dropdown changing its mind.
+    local popups = P.popups()
+    manage(NS, ws5, P).delete:__fire("OnClick")
+    m.StaticPopupDialogs.AURAMASTER_DELETE_CATEGORY.OnAccept(popups[1], popups[1].data)
+    assertTrue(P.hasText(P.rerender("General"), "Deleted 'Affixes II'"))
+
+    -- And the line is about the act just run, so picking another category clears it.
+    local ws6 = P.rerender("General")
+    P.find(ws6, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "raidCDs")
+    assertFalse(P.hasText(P.rerender("General"), "Deleted 'Affixes II'"))
+end)
+
+test("general → spell categories: a saved record the sync cannot read can be forgotten from the panel", function()
+    local NS, m, P = spells()
+    local id = NS.Database.GetContainers()[1].id
+    NS.SetByPath("container.filter.categories.healing", "hide", id)
+    -- Two shapes of stuck record: one inside the reserved namespace with no usable aura type, and
+    -- one claiming a SHIPPED key. Neither materializes, so neither is in the dropdown and no Delete
+    -- reaches it -- and forgetUserKey skips a profile that still holds a record under the key, so
+    -- even their debris could never be swept while they sat there.
+    NS.db.profile.userCategories["userbadbad00"] = { key = "userbadbad00", name = "Broken" }
+    NS.db.profile.userCategories.healing = { key = "healing", name = "Forged", auraType = "HELPFUL" }
+    NS.Categories.SyncUserCategories(NS.db.profile)
+    assertEqual(#NS.Categories.UnusableUserRecords(NS.db.profile), 2, "both are unreadable")
+
+    local ws = P.rerender("General")
+    local btn = P.find(ws, "Button", NS.L["Forget unreadable categories"])
+    -- red under: no way out at all, which is what "left on disk for the player to fix or delete"
+    -- amounted to while nothing in the panel could reach them.
+    assertTrue(btn ~= nil, "the panel offers a way out")
+    local popups = P.popups()
+    btn:__fire("OnClick")
+    assertEqual(#popups, 1, "it asks first")
+    assertEqual(popups[1].which, "AURAMASTER_FORGET_BROKEN_CATEGORIES")
+    assertTrue(NS.db.profile.userCategories.healing ~= nil, "and discards nothing until accepted")
+
+    m.StaticPopupDialogs.AURAMASTER_FORGET_BROKEN_CATEGORIES.OnAccept()
+    assertNil(NS.db.profile.userCategories["userbadbad00"])
+    assertNil(NS.db.profile.userCategories.healing)
+    -- red under: sweeping the leaves of a record keyed with a SHIPPED key, which would take the
+    -- shipped category's stored Show/Hide out of every profile in the account with it.
+    assertEqual(NS.GetSetting("container.filter.categories.healing", id), "hide")
+    assertTrue(NS.Categories.Find("HELPFUL", "healing") ~= nil)
+    assertEqual(NS.ValidateSchema(), 0)
+    assertNil(P.find(P.rerender("General"), "Button", NS.L["Forget unreadable categories"]),
+        "and the line goes with them")
+end)
+
+-- ── the overlap guardrail (issue #10 checkpoint 7) ─────────────────────────────────────────────
+
+test("general → spell categories: an id another category already claims is marked in the list and reported at the add", function()
+    local NS, _, P = spells()
+    local claimed = starterIds(NS, "defensives")[1]
+    local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
+    NS.GeneralSpells.Select(key)
+    local chat = P.chat()
+    -- The add itself is never refused: overlap is CORRECT (a defensive that is also an immunity),
+    -- and the compiler draws such an aura once, under the first category set to Show.
+    P.find(P.rerender("General"), "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", tostring(claimed))
+    assertEqual(NS.db.profile.categorySpells[key][claimed], true, "the add went through")
+    local said = table.concat(chat, "\n")
+    -- red under: blocking the add, or informing without naming WHICH category already claims it.
+    assertTrue(said:find("also in", 1, true) ~= nil, "the add says so: " .. said)
+    assertTrue(said:find(NS.L["Defensive cooldowns"], 1, true) ~= nil, "and names the category: " .. said)
+
+    -- And the entry carries the same answer permanently, under its name in the list.
+    local ws = P.rerender("General")
+    assertTrue(P.hasText(ws, "Also in: " .. NS.L["Defensive cooldowns"]), "the entry is marked")
+
+    -- The control: an id nothing else claims is neither reported nor marked.
+    local quiet = P.chat()
+    P.find(ws, "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", "424242")
+    assertEqual(#quiet, 0, "an unclaimed id says nothing")
+    local ws2 = P.rerender("General")
+    assertTrue(P.hasText(ws2, "Also in: " .. NS.L["Defensive cooldowns"]), "the claimed entry is still marked")
+    assertFalse(P.hasText(ws2, "Also in: Immunities"),
+        "and a category never reports itself as a claimant of its own entry")
 end)
 
 -- ── the Spell Categories add line: suggestions while typing, and where a name can come from (#31) ─

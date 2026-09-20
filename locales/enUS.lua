@@ -229,6 +229,41 @@ L["The cap applies to each engine group, not the whole container. With nothing o
 L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."] = "The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."
 L["Category"] = "Category"
 L["Restore this category's starter list"] = "Restore this category's starter list"
+L["Only one of Aura Master's own categories has a starter list to go back to. Take spells out of your own with the X beside each one, or delete the category."] = "Only one of Aura Master's own categories has a starter list to go back to. Take spells out of your own with the X beside each one, or delete the category."
+L["The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."] = "The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."
+-- The 'yours' marker, suffixed to a user category's name wherever it is listed: the Category
+-- dropdown and the Filters -> Categories grid. A token rather than a `%s`, like the aura-type
+-- marker above it, because the name it takes is the player's own text.
+L["{name} (yours)"] = "{name} (yours)"
+-- The 'Your categories' block on General -> Spell Categories, and the overlap guardrail's two
+-- lines (issue #10 checkpoints 6 and 7). A category's NAME is still not here and never will be:
+-- see the note above the user-category strings further down.
+L["Rename this category"] = "Rename this category"
+L["What this category is called, in the lists and on every container's Filters tab. Press Enter to rename it. Renaming keeps everything else: its spells, and each container's Show or Hide for it."] = "What this category is called, in the lists and on every container's Filters tab. Press Enter to rename it. Renaming keeps everything else: its spells, and each container's Show or Hide for it."
+L["Renamed '%s' to '%s'. To undo it, type '%s' back into the box."] = "Renamed '%s' to '%s'. To undo it, type '%s' back into the box."
+L["Delete the category '%s'? Its spell list is discarded, and every container in every profile forgets whether it showed or hid it — anything it was hiding becomes visible again through Uncategorized. Your other categories keep theirs."] = "Delete the category '%s'? Its spell list is discarded, and every container in every profile forgets whether it showed or hid it — anything it was hiding becomes visible again through Uncategorized. Your other categories keep theirs."
+L["Deleted '%s'. This tab is showing another category now."] = "Deleted '%s'. This tab is showing another category now."
+L["Delete this category"] = "Delete this category"
+L["Discards this category, the spells you put in it, and every container's Show or Hide for it. Your other categories are not affected."] = "Discards this category, the spells you put in it, and every container's Show or Hide for it. Your other categories are not affected."
+L["New category's name"] = "New category's name"
+L["A name for a category of your own. Two categories may share a name — each keeps its own spells — but a name you can tell apart in a dropdown is easier to live with."] = "A name for a category of your own. Two categories may share a name — each keeps its own spells — but a name you can tell apart in a dropdown is easier to live with."
+L["Whether this category holds buffs or debuffs. It is fixed when the category is created: a category only ever shows on a container of its own type, and moving it would lose every container's Show or Hide for it. To change it, make a new category and delete this one."] = "Whether this category holds buffs or debuffs. It is fixed when the category is created: a category only ever shows on a container of its own type, and moving it would lose every container's Show or Hide for it. To change it, make a new category and delete this one."
+L["There is already a category called '%s'. Both were kept — they are separate categories with separate spell lists."] = "There is already a category called '%s'. Both were kept — they are separate categories with separate spell lists."
+L["Create category"] = "Create category"
+L["Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."] = "Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."
+L["Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."] = "Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."
+L["Your categories"] = "Your categories"
+L["Make a new category"] = "Make a new category"
+L["'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. Its spell list is still yours — add, remove and Restore it as you like."] = "'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. Its spell list is still yours — add, remove and Restore it as you like."
+L["'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. It holds no spell list at all — the weapon slots below are what it reads."] = "'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. It holds no spell list at all — the weapon slots below are what it reads."
+-- The way out of a stored record the sync cannot read (settings/GeneralSpells.lua's renderBroken).
+L["Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."] = "Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."
+L["Forget unreadable categories"] = "Forget unreadable categories"
+L["Discards the saved categories Aura Master cannot read, and any spell lists or container decisions left under their keys. Asks first."] = "Discards the saved categories Aura Master cannot read, and any spell lists or container decisions left under their keys. Asks first."
+L["Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."] = "Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."
+L["Forgot %d unreadable saved categories."] = "Forgot %d unreadable saved categories."
+L["Also in: %s"] = "Also in: %s"
+L["%s is also in: %s. An aura in two categories is drawn once, under the first of them a container sets to Show."] = "%s is also in: %s. An aura in two categories is drawn once, under the first of them a container sets to Show."
 L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."] = "Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."
 L["Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."] = "Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."
 L["Main hand"] = "Main hand"
@@ -479,7 +514,7 @@ L["Buffs the player is able to cancel."] = "Buffs the player is able to cancel."
 L["Stealable / purgeable"] = "Stealable / purgeable"
 L["Buffs that can be stolen or purged — most useful on an enemy target."] = "Buffs that can be stolen or purged — most useful on an enemy target."
 L["Uncategorized"] = "Uncategorized"
--- The four strings a category the PLAYER made needs (issue #10 checkpoint 3). Its NAME is not among
+-- The five strings a category the PLAYER made needs (issue #10 checkpoints 3 and 5). Its NAME is not among
 -- them and never will be: a name is data, so it is the one thing the locale guard in
 -- tests/test_locale.lua exempts, and the description below is fixed precisely so that the exemption
 -- can stay one field wide. If it ever has to name the category, the name is a %s ARGUMENT.
@@ -487,6 +522,7 @@ L["Your own category. Edit its spells on General -> Spell Categories."] = "Your 
 L["A category needs a name."] = "A category needs a name."
 L["A category holds buffs or debuffs, and the choice cannot be changed later."] = "A category holds buffs or debuffs, and the choice cannot be changed later."
 L["Only a category you made can be renamed."] = "Only a category you made can be renamed."
+L["Only a category you made can be deleted."] = "Only a category you made can be deleted."
 L["Not in any of the Spell Categories lists above (Blizzard categories do not count). On a container watching you or your pet, Show rescues an unlisted buff from a Hidden Blizzard category; on a target or focus Blizzard may discard the spell list that rescue is built from, so Show simply changes nothing there. Hide removes the aura along with everything else this container has no other reason to draw, on every unit."] = "Not in any of the Spell Categories lists above (Blizzard categories do not count). On a container watching you or your pet, Show rescues an unlisted buff from a Hidden Blizzard category; on a target or focus Blizzard may discard the spell list that rescue is built from, so Show simply changes nothing there. Hide removes the aura along with everything else this container has no other reason to draw, on every unit."
 L["Hard CC (loss of control)"] = "Hard CC (loss of control)"
 L["Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit."] = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit."

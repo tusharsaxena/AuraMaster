@@ -678,7 +678,7 @@ end
 -- KEY form (the note above it, carried forward from checkpoint 2, is satisfied by this and nothing
 -- else), settings/Filters.lua's `gridOf` and its `See spells` link, settings/GeneralSpells.lua's
 -- category dropdown, and modules/FilterCompiler.lua's `categorizedUnion`, `splitCategories`,
--- `includeCategory`/`excludeCategory` and `claimingCategories` all go on working with no edit at
+-- `includeCategory`/`excludeCategory` and `FC.ClaimingCategories` all go on working with no edit at
 -- all, because none of them can tell a user definition from a shipped one. `def.userCategory` is
 -- the ONE marker that can, and only three things read it: the teardown below, the schema row's own
 -- `userCategory` flag (so the rows can be found again), and tests/test_locale.lua's exemption.
@@ -722,8 +722,48 @@ local USER_DESC = "Your own category. Edit its spells on General -> Spell Catego
 -- Long enough for "Mythic+ affixes I care about", short enough that a grid row stays a row.
 local NAME_MAX = 40
 
+--- The cap `Cat.SanitizeUserName` applies, published so the panel's name boxes can stop the player
+--- at the same number the store would silently trim them to (settings/GeneralSpells.lua). One
+--- constant, two readers: a box that let 60 characters be typed and then stored 40 would be a
+--- control that lies about what it did.
+---
+--- IT IS A COUNT OF CHARACTERS AT BOTH READERS. `EditBox:SetMaxLetters` counts what the player
+--- typed, not what it encodes to, so a byte cap at the store would disagree with the boxes on every
+--- name with a non-ASCII character in it -- and disagree by cutting one in half, which is how a
+--- name ends in a lone continuation byte the font draws as a replacement glyph.
+Cat.USER_NAME_MAX = NAME_MAX
+
+--- `s`'s length in CHARACTERS rather than bytes: a UTF-8 continuation byte (binary 10xxxxxx) is the
+--- rest of the character before it and is not counted, so this is what a player would count.
+--- Published because the cap below and the Category dropdown's marker padding
+--- (settings/GeneralSpells.lua) both have to count the same thing.
+--- @param s string
+--- @return number
+function Cat.CharCount(s)
+    return select(2, tostring(s):gsub("[^\128-\191]", ""))
+end
+
+--- `s` cut to at most `max` CHARACTERS, never mid-sequence: the cut is taken at the byte before the
+--- lead byte of the character that would be the (max + 1)th.
+local function truncateChars(s, max)
+    local bytes = #s
+    local count, cut = 0, bytes
+    for i = 1, bytes do
+        local b = s:byte(i)
+        if b < 128 or b > 191 then
+            count = count + 1
+            if count > max then
+                cut = i - 1
+                break
+            end
+        end
+    end
+    return s:sub(1, cut)
+end
+
 --- A player-supplied category name as it is STORED: the escape character `|` and every control
---- character removed, trimmed, and capped at NAME_MAX characters. nil when nothing is left.
+--- character removed, trimmed, and capped at NAME_MAX CHARACTERS -- `Cat.CharCount`'s count, which
+--- is the one the panel's boxes enforce. nil when nothing is left.
 ---
 --- SANITIZED ONCE, AT THE WRITE, NEVER AT THE DRAW. `def.label` reaches `NS.L[def.label]` and from
 --- there a FontString, and a FontString reads `|c`, `|T` and `|H` as color, texture and hyperlink
@@ -739,9 +779,8 @@ function Cat.SanitizeUserName(name)
     if type(name) ~= "string" then return nil end
     local clean = name:gsub("|", ""):gsub("%c", "")
     clean = clean:match("^%s*(.-)%s*$")
-    local length = #clean
-    if length > NAME_MAX then
-        clean = clean:sub(1, NAME_MAX):match("^%s*(.-)%s*$")
+    if Cat.CharCount(clean) > NAME_MAX then
+        clean = truncateChars(clean, NAME_MAX):match("^%s*(.-)%s*$")
     end
     if clean == "" then return nil end
     return clean
@@ -992,6 +1031,41 @@ local function usableName(key, rec)
     return name
 end
 
+--- Every record `profile` stores that `usableName` refuses, as { key =, why = } in key order.
+---
+--- SKIPPING SUCH A RECORD IS RIGHT AND LEAVING IT AT THAT IS NOT. The sync will not guess at a
+--- missing aura type or an unusable name, because guessing moves a category between the two grids
+--- or renames it behind the player's back -- so a record that does not answer is left on disk "for
+--- the player to fix or delete". But there was nothing to press: an unmaterialized record is in no
+--- dropdown, so no Delete reaches it, and `forgetUserKey` skips any profile that still holds a
+--- record under the key, so its own debris could never be swept either. A record like that was
+--- permanently stuck. This is what the panel reads to offer a way out
+--- (settings/GeneralSpells.lua's 'Your categories' block).
+---
+--- A record under a non-string key is debris of the same kind and is reported too, keyed by what
+--- `tostring` makes of it, so the count the player is shown is the whole of what will go.
+--- @param profile table|nil
+--- @return table
+function Cat.UnusableUserRecords(profile)
+    profile = profile or (NS.db and NS.db.profile)
+    local out = {}
+    local recs = type(profile) == "table" and profile.userCategories
+    if type(recs) ~= "table" then return out end
+    for key, rec in pairs(recs) do
+        if type(key) ~= "string" then
+            out[#out + 1] = { key = key, why = "the key is not a string" }
+        else
+            local name, why = usableName(key, rec)
+            if not name then
+                local at = #out
+                out[at + 1] = { key = key, why = why }
+            end
+        end
+    end
+    table.sort(out, function(a, b) return tostring(a.key) < tostring(b.key) end)
+    return out
+end
+
 --- The index a user definition is inserted at: immediately before the aura type's Weapon enchants
 --- row (buffs) or its Uncategorized row (debuffs) -- the first definition whose kind is `enchant` or
 --- `uncategorized`. So settings/Filters.lua's `custom` grid reads shipped spell lists, then the
@@ -1183,12 +1257,18 @@ end
 --- category, so a rename cannot orphan one stored value. A duplicate name is ALLOWED -- see
 --- `Cat.UserCategoryNameTaken` -- and an empty or whitespace-only one is refused. A shipped category
 --- is refused outright: the plan of record's lock is on the category OBJECT, never on its contents.
+---
+--- THE RESERVED NAMESPACE IS CHECKED HERE TOO, exactly as `Cat.DeleteUserCategory` checks it and
+--- for the same reason: a record keyed `healing` -- hand-edited, imported, or left by a corrupt
+--- write -- is not a user category with a bad field, it is a claim on a SHIPPED category's identity.
+--- Renaming it would succeed, store a name under a shipped key and leave the store holding a record
+--- the sync refuses to materialize, which is exactly the shape `usableName` exists to refuse.
 --- @return boolean|nil ok, string|nil reason
 function Cat.RenameUserCategory(key, name, profile)
     profile = profile or (NS.db and NS.db.profile)
     if type(profile) ~= "table" then return nil, nil end
     local recs = type(profile.userCategories) == "table" and profile.userCategories or {}
-    local rec = type(key) == "string" and recs[key]
+    local rec = type(key) == "string" and Cat.IsUserKey(key) and recs[key]
     if type(rec) ~= "table" then
         return nil, L["Only a category you made can be renamed."]
     end
@@ -1201,4 +1281,184 @@ function Cat.RenameUserCategory(key, name, profile)
         NS.Debug("Set", "user category '%s' renamed: %s -> %s", key, tostring(was), clean)
     end
     return true, nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Deletion (issue #10 checkpoint 5)
+-- ---------------------------------------------------------------------------
+--
+-- CLEANUP IS EAGER: everything a deleted category leaves behind goes at the moment of the delete,
+-- across every STORED profile, the ones nobody is logged into included. The plan of record allowed
+-- either eager or lazy if the choice was documented and the validator tolerated the transient
+-- state; this is the choice and these are the reasons.
+--
+-- 1. THERE IS NO LAZY PRUNER TO WRITE IT INTO. `Database.Backfill` only ever fills -- its own header
+--    says so -- and `Database.PrepareProfile` is fill-and-reconcile throughout, so lazy would mean a
+--    NEW destructive pass over stored containers that runs on every load and every profile switch,
+--    deleting keys it decides are unknown. That pass is the dangerous thing here, not the debris: it
+--    would run while `Cat.SyncUserCategories` is the thing that decides what is known, and a load in
+--    which the sync half ran -- a corrupt record, an error mid-list -- would hand it a set of
+--    "unknown" keys that are merely not materialized YET, and it would delete the player's stored
+--    Show/Hide for categories that still exist. Eager cleanup runs in one act, on a key the player
+--    just named, and cannot mistake a half-built session for a dead category.
+-- 2. LAZY CANNOT REACH THE PROFILES THAT ACTUALLY HOLD THE DEBRIS. A pruner on the load path only
+--    ever sees the profile being loaded, so debris in an inactive profile survives until the player
+--    happens to switch to it -- and `Cat.UserKeysInUse` is account-wide precisely because these keys
+--    travel (CopyFrom, OnProfileCopied, and #9's import). Eager walks `Database.EachProfile`, which
+--    is the same set of profiles the schema ladder migrates.
+-- 3. THE VALIDATOR IS NEVER ASKED TO TOLERATE ANYTHING. `NS.ValidateSchema` fails a row whose path
+--    does not resolve against the container template, and the sync tears the row, the definition and
+--    the template key down together -- so after an eager delete there is no row, no def, no template
+--    key and no stored leaf anywhere, and the validator is clean at every instant rather than clean
+--    once something later tidies up.
+--
+-- THE ONE THING EAGER MUST NOT DO is delete another category's data, and one case makes that real:
+-- AceDB's profile COPY duplicates `userCategories` wholesale, so two profiles can legitimately hold
+-- a record under the SAME key, with their own names, their own spell lists and their own containers.
+-- Deleting in one of them must leave the other entirely alone. So the sweep skips any profile that
+-- still holds a record of its own under the key -- `forgetUserKey`'s first test -- and the owner's
+-- record is removed BEFORE the sweep, which is what makes the owner profile eligible for it.
+
+--- Clear every trace of category `key` from ONE stored profile: its spell list and the stored
+--- Show/Hide in each of its containers. A profile that holds a RECORD under the key owns a category
+--- of its own there (a profile copy) and is left untouched -- see the note above.
+--- @return number  the leaves cleared, for the log
+local function forgetUserKey(p, key)
+    if type(p) ~= "table" then return 0 end
+    if type(p.userCategories) == "table" and p.userCategories[key] ~= nil then return 0 end
+    local cleared = 0
+    if type(p.categorySpells) == "table" and p.categorySpells[key] ~= nil then
+        p.categorySpells[key] = nil
+        cleared = cleared + 1
+    end
+    if type(p.containers) == "table" then
+        for _, c in pairs(p.containers) do
+            local cats = type(c) == "table" and type(c.filter) == "table" and c.filter.categories
+            if type(cats) == "table" and cats[key] ~= nil then
+                cats[key] = nil
+                cleared = cleared + 1
+            end
+        end
+    end
+    return cleared
+end
+
+--- Sweep category `key` out of every stored profile of `db`, `profile` first and by identity.
+---
+--- PER PROFILE, INSIDE ITS OWN pcall, and that is the whole of the atomicity answer. By the time
+--- this runs the record is already gone, so the definition, the schema row and the container
+--- template's entry MUST come down with it: a raise part way through the walk would otherwise leave
+--- a LIVE category no record owns -- a schema row resolving against a template key nothing will
+--- write again, and a dropdown entry whose Delete now refuses. Making the sweep atomic would mean
+--- copying every stored profile and swapping them in, which is the whole saved-variables table;
+--- making the FAILURE recoverable costs one pcall per profile. So this is RECOVERABLE, NOT ATOMIC,
+--- and the difference is said plainly: a profile whose stored table is malformed costs only its own
+--- leaves, every other profile is still swept, the caller's `Cat.SyncUserCategories` runs either
+--- way, and what survives is an inert Show/Hide value under a key no category answers to -- read by
+--- nothing, written by nothing, and cleared the next time that key is swept.
+---
+--- The owner profile goes first and BY IDENTITY, because it may not be in the store at all: the
+--- headless harness and every test hand a bare profile table in, and `Database.EachProfile`'s
+--- fallback branch answers `db.profile`, which is a DIFFERENT table from the one being deleted from.
+--- The `seen` set is what keeps a profile reachable both ways from being swept twice -- harmless,
+--- but it would double the count in the log line and make the log a lie.
+--- @return number cleared, number failed
+local function sweepUserKey(profile, key, db)
+    local cleared, failed, seen = 0, 0, {}
+    local function sweep(p)
+        if type(p) ~= "table" or seen[p] then return end
+        seen[p] = true
+        local ok, n = pcall(forgetUserKey, p, key)
+        if ok then cleared = cleared + n else failed = failed + 1 end
+    end
+    sweep(profile)
+    db = db or NS.db
+    if type(db) == "table" and NS.Database and NS.Database.EachProfile then
+        if not pcall(NS.Database.EachProfile, db, sweep) then failed = failed + 1 end
+    end
+    return cleared, failed
+end
+
+--- Delete a user category and everything it owns, and answer whether it went.
+---
+--- THE REFUSAL IS THE ACT'S, NOT THE PANEL'S. A shipped category is refused here, by the same test
+--- the rename uses -- it has no stored record -- so hiding the button is a courtesy to the reader
+--- and never the enforcement. The lock is on the category OBJECT: nothing in this file can delete,
+--- rename or retype `healing`, while `categorySpells.healing` stays the player's to edit and to
+--- Restore. A key outside the reserved namespace is refused for the same reason `usableName`
+--- refuses one: a record keyed `healing` is a claim on a shipped category's identity, and honoring
+--- it here would sweep the SHIPPED category's stored state out of every profile in the account.
+---
+--- WHAT IS DISCARDED, in the order this does it: the record, the order entry (through the ordinary
+--- reconcile, which drops a dangling key), the player's spell list for it, and every container's
+--- stored Show/Hide for it in every stored profile. The definition, the schema row and the container
+--- template's entry are the sync's, and it tears all three down as one act.
+--- @param key string
+--- @param profile table|nil  the profile that OWNS the category; defaults to NS.db.profile
+--- @param db table|nil  the store to sweep; defaults to NS.db
+--- @return boolean|nil ok, string|nil reason
+function Cat.DeleteUserCategory(key, profile, db)
+    profile = profile or (NS.db and NS.db.profile)
+    if type(profile) ~= "table" then return nil, nil end
+    local recs = type(profile.userCategories) == "table" and profile.userCategories or {}
+    local rec
+    if type(key) == "string" and Cat.IsUserKey(key) then rec = recs[key] end
+    if rec == nil then
+        return nil, L["Only a category you made can be deleted."]
+    end
+    -- A record that is not a TABLE is a corrupt one, and it is deleted rather than refused. Refusing
+    -- it is what made it permanently undeletable: the sync will not materialize it, so it is in no
+    -- dropdown and no other act can reach it (`Cat.UnusableUserRecords`). The namespace test above
+    -- is the one that still has to hold, because that is the one protecting a shipped category's
+    -- stored state; the shape of the record protects nothing.
+    local name = type(rec) == "table" and rec.name or nil
+    recs[key] = nil
+    Cat.UserCategoryOrder(profile)
+
+    local cleared, failed = sweepUserKey(profile, key, db)
+
+    Cat.SyncUserCategories(profile)
+    if NS.Debug then
+        NS.Debug("Set",
+            "user category '%s' (%s) deleted: %s stored leaf(s) cleared across the account, %s profile(s) refused the sweep",
+            key, tostring(name), cleared, failed)
+    end
+    return true, nil
+end
+
+--- Forget every record `Cat.UnusableUserRecords` names, and answer how many went.
+---
+--- ONE ACT RATHER THAN A LOOP OF DELETES, because `Cat.DeleteUserCategory` cannot reach these: it
+--- refuses a key outside the reserved namespace, and a record keyed `healing` is exactly the shape
+--- that gets stuck. The namespace test is still honored where it actually matters -- the RECORD goes
+--- whatever its key, but the STORED LEAVES are swept only for a key inside the namespace, because a
+--- leaf under a shipped key is the shipped category's Show/Hide and is none of this act's business.
+---
+--- Nothing here can be repaired automatically, and nothing tries: a record with no usable aura type
+--- or no usable name holds a spell list that cannot be attributed to either grid, and guessing is
+--- the thing `usableName` exists to refuse. This is the player's decision, taken behind the panel's
+--- own confirmation (settings/GeneralSpells.lua).
+--- @param profile table|nil
+--- @param db table|nil
+--- @return number  the records forgotten
+function Cat.ForgetUnusableUserRecords(profile, db)
+    profile = profile or (NS.db and NS.db.profile)
+    if type(profile) ~= "table" then return 0 end
+    local bad = Cat.UnusableUserRecords(profile)
+    if not bad[1] then return 0 end
+    local recs = type(profile.userCategories) == "table" and profile.userCategories or {}
+    local cleared = 0
+    for _, entry in ipairs(bad) do
+        recs[entry.key] = nil
+        if Cat.IsUserKey(entry.key) then
+            cleared = cleared + sweepUserKey(profile, entry.key, db)
+        end
+    end
+    Cat.UserCategoryOrder(profile)
+    Cat.SyncUserCategories(profile)
+    if NS.Debug then
+        NS.Debug("Set", "%s unreadable user category record(s) forgotten: %s stored leaf(s) cleared",
+            #bad, cleared)
+    end
+    return #bad
 end

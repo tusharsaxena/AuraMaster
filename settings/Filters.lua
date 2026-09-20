@@ -418,6 +418,33 @@ local function forRenderRows(row)
     return copy
 end
 
+--- `rows` for DRAW, with a category the player made marked as theirs -- in the words the General ->
+--- Spell Categories dropdown uses, read from there (`NS.GeneralSpells.MarkedName`) rather than
+--- formatted again here, so the two surfaces cannot come to say it differently. `Cat.LabelOf` stays
+--- the labeling rule underneath it.
+---
+--- A PER-RENDER COPY, the same idiom as `forRenderRows` above: the SCHEMA row keeps the bare name,
+--- because that name is the row's identity in `/am list` and in the write log and is not a thing to
+--- decorate. Only a user category is copied at all, so a build with none pays nothing.
+local function markedRows(rows)
+    local mark = NS.GeneralSpells and NS.GeneralSpells.MarkedName
+    if not mark then return rows end
+    local out = {}
+    for i, row in ipairs(rows) do
+        local key = keyOfCategoryRow(row)
+        local def = key and (Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key))
+        if def and Cat.IsUserCategory(def) then
+            local copy = {}
+            for k, v in pairs(row) do copy[k] = v end
+            copy.label = mark(def)
+            out[i] = copy
+        else
+            out[i] = row
+        end
+    end
+    return out
+end
+
 --- The row at `path` among `rows`, or nil.
 local function rowAt(rows, path)
     for _, row in ipairs(rows or {}) do
@@ -487,7 +514,7 @@ local function renderCategories(ctx, cfg, rows)
                 if customGridHasEditableList(mine) then
                     H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
                 end
-                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
+                H.ChoiceGrid(ctx, { rows = markedRows(mine), columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
                 if hideRow then
                     H.TextRow(ctx, WEAPON_ENCHANT_TIE)
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
