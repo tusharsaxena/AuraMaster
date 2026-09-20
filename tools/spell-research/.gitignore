@@ -1,0 +1,8 @@
+# The DB2 CSV exports this tool caches. ~75 MB a build, re-downloadable at any time, and never
+# part of the repo: only the gzipped copies inside a dated docs/spell-research/ bundle are committed.
+.cache/
+
+# Left behind when something imports research.py as a module rather than running it (a probe, a
+# future test). Nothing in the repo does, but a stray __pycache__ across a WSL mount is the kind of
+# thing that ends up staged by accident.
+__pycache__/

@@ -13,6 +13,7 @@ ignore:
   - .superpowers     # dev-only: agent tooling; never loaded by the client
   - docs             # holds docs/audits/ and docs/reviews/ too — all dev-only
   - tests
+  - tools            # dev-only: committed generators (tools/spell-research/), never loaded in game
   - _dev
   - "*.bak"
   # Developer documentation. README.md and LICENSE stay, because players read those.

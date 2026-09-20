@@ -1,0 +1,7292 @@
+{
+  "build": "12.1.0.69875",
+  "date": "2026-09-20",
+  "fetchedAt": "2026-09-20 07:38:57 UTC",
+  "poolSize": 8204,
+  "triggerClosureAdded": 886,
+  "familyBridgeAdded": 298,
+  "bucketMechanics": {
+    "hardCC": {
+      "1": "Charmed",
+      "2": "Disoriented",
+      "5": "Fleeing",
+      "10": "Asleep",
+      "12": "Stunned",
+      "13": "Frozen",
+      "14": "Incapacitated",
+      "17": "Polymorphed",
+      "18": "Banished",
+      "20": "Shackled",
+      "23": "Turned",
+      "24": "Horrified",
+      "30": "Sapped"
+    },
+    "softCC": {
+      "7": "Rooted",
+      "8": "Slowed",
+      "11": "Snared",
+      "27": "Dazed"
+    }
+  },
+  "buckets": {
+    "hardCC": [
+      {
+        "id": 99,
+        "name": "Incapacitating Roar",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 118,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 408,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 605,
+        "name": "Mind Control",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 1,
+            "name": "charmed"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 710,
+        "name": "Banish",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 18,
+            "name": "banished"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 853,
+        "name": "Hammer of Justice",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 1098,
+        "name": "Subjugate Demon",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 1,
+            "name": "charmed"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 1513,
+        "name": "Scare Beast",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 1776,
+        "name": "Gouge",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 1833,
+        "name": "Cheap Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 2094,
+        "name": "Blind",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 2637,
+        "name": "Hibernate",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 10,
+            "name": "asleep"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 3355,
+        "name": "Freezing Trap",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 5211,
+        "name": "Mighty Bash",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 5246,
+        "name": "Intimidating Shout",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 5484,
+        "name": "Howl of Terror",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 5782,
+        "name": "Fear",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 6770,
+        "name": "Sap",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 30,
+            "name": "sapped"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 6789,
+        "name": "Mortal Coil",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 24,
+            "name": "horrified"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 8122,
+        "name": "Psychic Scream",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 9484,
+        "name": "Shackle Horror",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 20,
+            "name": "shackled"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 10326,
+        "name": "Turn Evil",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 23,
+            "name": "turned"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 17276,
+        "name": "Scald",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 20549,
+        "name": "War Stomp",
+        "classes": [
+          "DEATHKNIGHT",
+          "DEMONHUNTER",
+          "DRUID",
+          "EVOKER",
+          "HUNTER",
+          "MAGE",
+          "MONK",
+          "PALADIN",
+          "PRIEST",
+          "ROGUE",
+          "SHAMAN",
+          "WARLOCK",
+          "WARRIOR"
+        ],
+        "class": "ALL",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 22703,
+        "name": "Infernal Awakening",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 22911,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 24394,
+        "name": "Intimidation",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 26044,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 27610,
+        "name": "Psychic Scream",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 27615,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 28271,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 28272,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 29847,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 30283,
+        "name": "Shadowfury",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 30600,
+        "name": "Blast Wave",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 30621,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 30980,
+        "name": "Sap",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 30986,
+        "name": "Cheap Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 31661,
+        "name": "Dragon's Breath",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 31733,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 32864,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 33709,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 33786,
+        "name": "Cyclone",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 18,
+            "name": "banished"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 35250,
+        "name": "Dragon's Breath",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 35570,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 36140,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 36509,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 36911,
+        "name": "Ice Block",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 37511,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 38461,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 39082,
+        "name": "Shadowfury",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 39574,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 41389,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 41590,
+        "name": "Ice Block",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 42972,
+        "name": "Blind",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 43519,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 43651,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 49616,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 51514,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 53625,
+        "name": "Heroic Leap",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 55317,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 58619,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 59611,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 61025,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 61305,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 61721,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 61780,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 62961,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 64044,
+        "name": "Psychic Horror",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 71319,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 77505,
+        "name": "Earthquake",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 81441,
+        "name": "Shadowfury",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 82691,
+        "name": "Ring of Frost",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 88010,
+        "name": "Cyclone",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 18,
+            "name": "banished"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 105421,
+        "name": "Blinding Light",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 107079,
+        "name": "Quaking Palm",
+        "classes": [
+          "DEATHKNIGHT",
+          "DEMONHUNTER",
+          "DRUID",
+          "EVOKER",
+          "HUNTER",
+          "MAGE",
+          "MONK",
+          "PALADIN",
+          "PRIEST",
+          "ROGUE",
+          "SHAMAN",
+          "WARLOCK",
+          "WARRIOR"
+        ],
+        "class": "ALL",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 108194,
+        "name": "Asphyxiate",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 111673,
+        "name": "Control Undead",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 1,
+            "name": "charmed"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 115078,
+        "name": "Paralysis",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 117526,
+        "name": "Binding Shot",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 118699,
+        "name": "Fear",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 118905,
+        "name": "Capacitor Totem",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 119381,
+        "name": "Leg Sweep",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 120086,
+        "name": "Fists of Fury",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 126819,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 127886,
+        "name": "Blind",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 128846,
+        "name": "Clash",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 130616,
+        "name": "Fear",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 132168,
+        "name": "Shockwave",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 132169,
+        "name": "Storm Bolt",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 144166,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 145048,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 145067,
+        "name": "Turn Evil",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          },
+          {
+            "id": 23,
+            "name": "turned"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 145424,
+        "name": "Cheap Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 161353,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 161354,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 161355,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 161372,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 161792,
+        "name": "Dragon's Breath",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 162056,
+        "name": "Jailer's Judgment",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 163505,
+        "name": "Rake",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 166972,
+        "name": "Mighty Bash",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 175276,
+        "name": "Blind",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 176050,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 179057,
+        "name": "Chaos Nova",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 180187,
+        "name": "Hammer of Justice",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 190481,
+        "name": "Mighty Bash",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 192220,
+        "name": "Hammer of Justice",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 193082,
+        "name": "Sap",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 196942,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 198909,
+        "name": "Song of Chi-Ji",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 10,
+            "name": "asleep"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 200166,
+        "name": "Metamorphosis",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 200196,
+        "name": "Holy Word: Chastise",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 200200,
+        "name": "Holy Word: Chastise",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 203123,
+        "name": "Maim",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 203126,
+        "name": "Maim",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 203337,
+        "name": "Freezing Trap",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 204437,
+        "name": "Lightning Lasso",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 205290,
+        "name": "Wake of Ashes",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 205364,
+        "name": "Dominate Mind",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 1,
+            "name": "charmed"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 205439,
+        "name": "Bursting Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 207167,
+        "name": "Blinding Sleet",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 207685,
+        "name": "Sigil of Misery",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 210873,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 211004,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 211010,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 211015,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 211881,
+        "name": "Fel Eruption",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 212365,
+        "name": "Freezing Trap",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 213369,
+        "name": "Paralysis",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 30,
+            "name": "sapped"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 213691,
+        "name": "Scatter Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 214299,
+        "name": "Blind",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 217832,
+        "name": "Imprison",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 30,
+            "name": "sapped"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 218434,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219215,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219216,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219217,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219218,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219219,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219393,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219394,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219398,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219399,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219400,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219401,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219402,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219403,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219404,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219405,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219406,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219407,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 219692,
+        "name": "Sap",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 30,
+            "name": "sapped"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 221527,
+        "name": "Imprison",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 18,
+            "name": "banished"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 221562,
+        "name": "Asphyxiate",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 222826,
+        "name": "Chaos Nova",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 222897,
+        "name": "Storm Bolt",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 232055,
+        "name": "Fists of Fury",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 235612,
+        "name": "Frost Breath",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 238559,
+        "name": "Bursting Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 240134,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 247587,
+        "name": "Holy Word: Chastise",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 250206,
+        "name": "Bursting Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 250207,
+        "name": "Bursting Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 254412,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 255941,
+        "name": "Wake of Ashes",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 269352,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 269355,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277778,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277780,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277784,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277785,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277787,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277788,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277792,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 277793,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 287712,
+        "name": "Haymaker",
+        "classes": [
+          "DEATHKNIGHT",
+          "DEMONHUNTER",
+          "DRUID",
+          "EVOKER",
+          "HUNTER",
+          "MAGE",
+          "MONK",
+          "PALADIN",
+          "PRIEST",
+          "ROGUE",
+          "SHAMAN",
+          "WARLOCK",
+          "WARRIOR"
+        ],
+        "class": "ALL",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 302583,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 305485,
+        "name": "Lightning Lasso",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 309328,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 309329,
+        "name": "Hex",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 312678,
+        "name": "Insanity",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 24,
+            "name": "horrified"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 316593,
+        "name": "Intimidating Shout",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 316595,
+        "name": "Intimidating Shout",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 5,
+            "name": "fleeing"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 321177,
+        "name": "Freezing Trap",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 321395,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 323557,
+        "name": "Ravenous Frenzy",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 325886,
+        "name": "Ancient Aftershock",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 326062,
+        "name": "Ancient Aftershock",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 332544,
+        "name": "Imprison",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 30,
+            "name": "sapped"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 333762,
+        "name": "The Hunt",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 334693,
+        "name": "Absolute Zero",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 357768,
+        "name": "Paralysis",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 14,
+            "name": "incapacitated"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 360806,
+        "name": "Sleep Walk",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 10,
+            "name": "asleep"
+          }
+        ],
+        "diminishType": 32
+      },
+      {
+        "id": 372245,
+        "name": "Terror of the Skies",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 377048,
+        "name": "Absolute Zero",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 383121,
+        "name": "Mass Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 385954,
+        "name": "Shield Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 391622,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 391631,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 405397,
+        "name": "Hammer of Retribution",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 413815,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 426589,
+        "name": "Kidney Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 427773,
+        "name": "Blind",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 2,
+            "name": "disoriented"
+          }
+        ],
+        "diminishType": 48
+      },
+      {
+        "id": 449700,
+        "name": "Gravity Lapse",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 451118,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 459690,
+        "name": "Spearhead",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 460392,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 460396,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 461489,
+        "name": "Polymorph",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 17,
+            "name": "polymorphed"
+          }
+        ],
+        "diminishType": 16
+      },
+      {
+        "id": 473291,
+        "name": "Gravity Lapse",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 1234195,
+        "name": "Void Nova",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 1258508,
+        "name": "Intimidation",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 1258862,
+        "name": "Encasing Cold",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 13,
+            "name": "frozen"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 1276084,
+        "name": "Victor's Presence",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 12,
+            "name": "stunned"
+          }
+        ],
+        "diminishType": 4
+      },
+      {
+        "id": 1276097,
+        "name": "Ensorcelled by Flame",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 1,
+            "name": "charmed"
+          }
+        ],
+        "diminishType": 0
+      }
+    ],
+    "softCC": [
+      {
+        "id": 122,
+        "name": "Frost Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 339,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 1715,
+        "name": "Hamstring",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 3409,
+        "name": "Crippling Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 5116,
+        "name": "Concussive Shot",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 12323,
+        "name": "Piercing Howl",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 12486,
+        "name": "Blizzard",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 13439,
+        "name": "Frostbolt",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 15407,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 16568,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 17165,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 23953,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 26143,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 27584,
+        "name": "Hamstring",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 28310,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 29539,
+        "name": "Curse of Exhaustion",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 29570,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 30981,
+        "name": "Crippling Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 30984,
+        "name": "Wound Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 31589,
+        "name": "Slow",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 32417,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 32774,
+        "name": "Avenger's Shield",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 27,
+            "name": "dazed"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 33061,
+        "name": "Blast Wave",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 35546,
+        "name": "Fatal Flourish",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 36974,
+        "name": "Wound Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 37276,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 37330,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 37621,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 38243,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 38256,
+        "name": "Piercing Howl",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 39665,
+        "name": "Wound Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 40363,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 42396,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 43512,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 43530,
+        "name": "Piercing Howl",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 44289,
+        "name": "Crippling Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 45524,
+        "name": "Chains of Ice",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 51490,
+        "name": "Thunderstorm",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 8
+      },
+      {
+        "id": 52744,
+        "name": "Piercing Howl",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 53534,
+        "name": "Chains of Ice",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 54074,
+        "name": "Wound Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 57941,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 58180,
+        "name": "Infected Wounds",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 59367,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 59638,
+        "name": "Frostbolt",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 59974,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 60472,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 61362,
+        "name": "Blast Wave",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 61391,
+        "name": "Typhoon",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 8
+      },
+      {
+        "id": 64803,
+        "name": "Entrapment",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 65792,
+        "name": "Frost Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 66070,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 78751,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 79541,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 79711,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 80391,
+        "name": "Blast Wave",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 89032,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 91134,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 96089,
+        "name": "Frostbolt",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 96294,
+        "name": "Chains of Ice",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 102359,
+        "name": "Mass Entanglement",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 102793,
+        "name": "Ursol's Vortex",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 103024,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 105771,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 114404,
+        "name": "Void Tendrils",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 115196,
+        "name": "Crippling Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 116095,
+        "name": "Disable",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 116706,
+        "name": "Disable",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 121253,
+        "name": "Keg Smash",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 123586,
+        "name": "Flying Serpent Kick",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 127797,
+        "name": "Ursol's Vortex",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 129033,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 135299,
+        "name": "Tar Trap",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 141425,
+        "name": "Frostbolt Volley",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 143375,
+        "name": "Tightening Grasp",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 144249,
+        "name": "Frostbolt",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 144251,
+        "name": "Frostbolt",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 145532,
+        "name": "Frost Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 149984,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 154125,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 157563,
+        "name": "Frost Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 157981,
+        "name": "Blast Wave",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 157997,
+        "name": "Ice Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 162480,
+        "name": "Steel Trap",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 164812,
+        "name": "Moonfire",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 170855,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 171131,
+        "name": "Penance",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 180724,
+        "name": "Slick Ice",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 180740,
+        "name": "Slick Ice",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 183324,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 185763,
+        "name": "Pistol Shot",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 186387,
+        "name": "Bursting Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 188526,
+        "name": "Earthquake",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 188764,
+        "name": "Frostbolt",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 190780,
+        "name": "Frost Breath",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 190925,
+        "name": "Harpoon",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 190927,
+        "name": "Harpoon",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 191746,
+        "name": "Arcane Explosion",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 193473,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 195645,
+        "name": "Wing Clip",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 196733,
+        "name": "Special Delivery",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 196840,
+        "name": "Frost Shock",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 198121,
+        "name": "Frostbite",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 198813,
+        "name": "Vengeful Retreat",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 201192,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 201589,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 202214,
+        "name": "Infected Wounds",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 202894,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 203037,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 204242,
+        "name": "Consecration",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 204408,
+        "name": "Thunderstorm",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 8
+      },
+      {
+        "id": 204843,
+        "name": "Sigil of Chains",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 205273,
+        "name": "Wake of Ashes",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 205320,
+        "name": "Strike of the Windlord",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 206930,
+        "name": "Heart Strike",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 211056,
+        "name": "Mark of Aluneth",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 211793,
+        "name": "Remorseless Winter",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 212792,
+        "name": "Cone of Cold",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 213405,
+        "name": "Master of the Glaive",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 215664,
+        "name": "Frost Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 216513,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 217916,
+        "name": "Flamestrike",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 222075,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 224729,
+        "name": "Bursting Shot",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 228645,
+        "name": "Heart Strike",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 232978,
+        "name": "Harpoon",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 235235,
+        "name": "Frost Nova",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 235963,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 236027,
+        "name": "Charge",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 236299,
+        "name": "Chrono Shift",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 240281,
+        "name": "Frost Breath",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 241934,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 247121,
+        "name": "Metamorphosis",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 247564,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 250440,
+        "name": "Frozen Orb",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 260297,
+        "name": "Arctic Bola",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 260369,
+        "name": "Arcane Pulse",
+        "classes": [
+          "DEATHKNIGHT",
+          "DEMONHUNTER",
+          "DRUID",
+          "EVOKER",
+          "HUNTER",
+          "MAGE",
+          "MONK",
+          "PALADIN",
+          "PRIEST",
+          "ROGUE",
+          "SHAMAN",
+          "WARLOCK",
+          "WARRIOR"
+        ],
+        "class": "ALL",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 264892,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 273977,
+        "name": "Grip of the Dead",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 277521,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 278311,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 279303,
+        "name": "Frostwyrm's Fury",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 289308,
+        "name": "Frozen Orb",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 292974,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 306391,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 312526,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 312679,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 315949,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 317898,
+        "name": "Blinding Sleet",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 321329,
+        "name": "Ring of Frost",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 321330,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 323996,
+        "name": "The Hunt",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 324382,
+        "name": "Clash",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 327093,
+        "name": "Pestilence",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 330371,
+        "name": "Curse of Exhaustion",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 330873,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 330911,
+        "name": "Keg Smash",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 334275,
+        "name": "Curse of Exhaustion",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 342373,
+        "name": "Fae Tendrils",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 345209,
+        "name": "Infected Wounds",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 355689,
+        "name": "Landslide",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 356084,
+        "name": "Blaze of Light",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 357214,
+        "name": "Wing Buffet",
+        "classes": [
+          "DEATHKNIGHT",
+          "DEMONHUNTER",
+          "DRUID",
+          "EVOKER",
+          "HUNTER",
+          "MAGE",
+          "MONK",
+          "PALADIN",
+          "PRIEST",
+          "ROGUE",
+          "SHAMAN",
+          "WARLOCK",
+          "WARRIOR"
+        ],
+        "class": "ALL",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 8
+      },
+      {
+        "id": 359078,
+        "name": "Numbing Poison",
+        "classes": [
+          "ROGUE"
+        ],
+        "class": "ROGUE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 368970,
+        "name": "Tail Swipe",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 369093,
+        "name": "Disintegrate",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 370898,
+        "name": "Permeating Chill",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 370970,
+        "name": "The Hunt",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 378760,
+        "name": "Frostbite",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 384069,
+        "name": "Shadowflame",
+        "classes": [
+          "WARLOCK"
+        ],
+        "class": "WARLOCK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 386770,
+        "name": "Freezing Cold",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 387344,
+        "name": "Walloping Blow",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 389031,
+        "name": "Rend",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 390232,
+        "name": "Arctic Bola",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 390669,
+        "name": "Apathy",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 391104,
+        "name": "Mass Slow",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 392490,
+        "name": "Enfeeble",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 392983,
+        "name": "Strike of the Windlord",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 393456,
+        "name": "Entrapment",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 394255,
+        "name": "Freezing Cold",
+        "classes": [
+          "MAGE"
+        ],
+        "class": "MAGE",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 403695,
+        "name": "Truth's Wake",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 408383,
+        "name": "Judgment of Justice",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 410063,
+        "name": "Reactive Resin",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 410065,
+        "name": "Reactive Resin",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 410790,
+        "name": "Frostwyrm's Fury",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 426912,
+        "name": "Thunder Clap",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 431380,
+        "name": "Dawnlight",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 435203,
+        "name": "Thunder Clap",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 439606,
+        "name": "Perilous Fate",
+        "classes": [
+          "EVOKER"
+        ],
+        "class": "EVOKER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 442396,
+        "name": "Dark Chains",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 444826,
+        "name": "Chains of Ice",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 444834,
+        "name": "Trollbane's Icy Fury",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 450342,
+        "name": "Crashing Momentum",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 450596,
+        "name": "Spirit's Essence",
+        "classes": [
+          "MONK"
+        ],
+        "class": "MONK",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 450845,
+        "name": "Sideline",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 451210,
+        "name": "No Escape",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 451938,
+        "name": "Avenger's Shield",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 27,
+            "name": "dazed"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 453263,
+        "name": "Wave of Debilitation",
+        "classes": [
+          "DEMONHUNTER"
+        ],
+        "class": "DEMONHUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 453848,
+        "name": "Shock Pulse",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 454787,
+        "name": "Ice Prison",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 458480,
+        "name": "Boneshaker",
+        "classes": [
+          "WARRIOR"
+        ],
+        "class": "WARRIOR",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 460501,
+        "name": "Heart Strike",
+        "classes": [
+          "DEATHKNIGHT"
+        ],
+        "class": "DEATHKNIGHT",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 460614,
+        "name": "Entangling Roots",
+        "classes": [
+          "DRUID"
+        ],
+        "class": "DRUID",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 461039,
+        "name": "Wing Buffet",
+        "classes": [
+          "DEATHKNIGHT",
+          "DEMONHUNTER",
+          "DRUID",
+          "EVOKER",
+          "HUNTER",
+          "MAGE",
+          "MONK",
+          "PALADIN",
+          "PRIEST",
+          "ROGUE",
+          "SHAMAN",
+          "WARLOCK",
+          "WARRIOR"
+        ],
+        "class": "ALL",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 8
+      },
+      {
+        "id": 462765,
+        "name": "Arctic Snowstorm",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 462899,
+        "name": "Mind Flay",
+        "classes": [
+          "PRIEST"
+        ],
+        "class": "PRIEST",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 470194,
+        "name": "Ice Strike",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 473290,
+        "name": "Gravity Lapse",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 7,
+            "name": "rooted"
+          }
+        ],
+        "diminishType": 1
+      },
+      {
+        "id": 1236942,
+        "name": "Divine Hammer",
+        "classes": [
+          "PALADIN"
+        ],
+        "class": "PALADIN",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 1246033,
+        "name": "Blast Wave",
+        "classes": [],
+        "class": "ALL",
+        "classSource": "unknown",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 1251059,
+        "name": "Stormbind",
+        "classes": [
+          "SHAMAN"
+        ],
+        "class": "SHAMAN",
+        "classSource": "skillline",
+        "source": "pool",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      },
+      {
+        "id": 1268673,
+        "name": "Cold Feet",
+        "classes": [
+          "HUNTER"
+        ],
+        "class": "HUNTER",
+        "classSource": "skillline",
+        "source": "bridge",
+        "mechanics": [
+          {
+            "id": 11,
+            "name": "snared"
+          }
+        ],
+        "diminishType": 0
+      }
+    ]
+  }
+}

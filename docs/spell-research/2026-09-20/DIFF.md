@@ -1,0 +1,444 @@
+# Diff — spell research, 2026-09-20 (build 12.1.0.69875)
+
+## hardCC
+
+Shipped: 0 | derived: 215 | added: 215 | removed: 0 | regrouped: 0
+
+### Added
+
+- `99` Incapacitating Roar — DRUID (incapacitated)
+- `118` Polymorph — MAGE (polymorphed)
+- `408` Kidney Shot — ROGUE (stunned)
+- `605` Mind Control — PRIEST (charmed)
+- `710` Banish — WARLOCK (banished)
+- `853` Hammer of Justice — PALADIN (stunned)
+- `1098` Subjugate Demon — WARLOCK (charmed)
+- `1513` Scare Beast — HUNTER (fleeing)
+- `1776` Gouge — ROGUE (incapacitated)
+- `1833` Cheap Shot — ROGUE (stunned)
+- `2094` Blind — ROGUE (disoriented)
+- `2637` Hibernate — DRUID (asleep)
+- `3355` Freezing Trap — HUNTER (frozen) **[family bridge — name match inside the family, check it]**
+- `5211` Mighty Bash — DRUID (stunned)
+- `5246` Intimidating Shout — WARRIOR (fleeing)
+- `5484` Howl of Terror — WARLOCK (fleeing)
+- `5782` Fear — WARLOCK (fleeing)
+- `6770` Sap — ROGUE (sapped)
+- `6789` Mortal Coil — WARLOCK (horrified)
+- `8122` Psychic Scream — PRIEST (fleeing)
+- `9484` Shackle Horror — PRIEST (shackled)
+- `10326` Turn Evil — PALADIN (turned)
+- `17276` Scald — MAGE (stunned) **[family bridge — name match inside the family, check it]**
+- `20549` War Stomp — ALL (stunned)
+- `22703` Infernal Awakening — WARLOCK (stunned)
+- `22911` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `24394` Intimidation — HUNTER (stunned) **[family bridge — name match inside the family, check it]**
+- `26044` Mind Flay — PRIEST (fleeing) **[family bridge — name match inside the family, check it]**
+- `27610` Psychic Scream — PRIEST (fleeing) **[family bridge — name match inside the family, check it]**
+- `27615` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `28271` Polymorph — MAGE (polymorphed)
+- `28272` Polymorph — MAGE (polymorphed)
+- `29847` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `30283` Shadowfury — WARLOCK (stunned)
+- `30600` Blast Wave — ALL (incapacitated) **[family bridge — name match inside the family, check it]**
+- `30621` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `30980` Sap — ROGUE (incapacitated) **[family bridge — name match inside the family, check it]**
+- `30986` Cheap Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `31661` Dragon's Breath — MAGE (disoriented)
+- `31733` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `32864` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `33709` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `33786` Cyclone — DRUID (banished)
+- `35250` Dragon's Breath — MAGE (disoriented) **[family bridge — name match inside the family, check it]**
+- `35570` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `36140` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `36509` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `36911` Ice Block — MAGE (frozen) **[family bridge — name match inside the family, check it]**
+- `37511` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `38461` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `39082` Shadowfury — WARLOCK (stunned) **[family bridge — name match inside the family, check it]**
+- `39574` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `41389` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `41590` Ice Block — MAGE (frozen) **[family bridge — name match inside the family, check it]**
+- `42972` Blind — ROGUE (disoriented) **[family bridge — name match inside the family, check it]**
+- `43519` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `43651` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `49616` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `51514` Hex — SHAMAN (polymorphed)
+- `53625` Heroic Leap — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `55317` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `58619` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `59611` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `61025` Polymorph — MAGE (polymorphed)
+- `61305` Polymorph — MAGE (polymorphed)
+- `61721` Polymorph — MAGE (polymorphed)
+- `61780` Polymorph — MAGE (polymorphed)
+- `62961` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `64044` Psychic Horror — ALL (stunned)
+- `71319` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `77505` Earthquake — SHAMAN (stunned) **[family bridge — name match inside the family, check it]**
+- `81441` Shadowfury — WARLOCK (stunned) **[family bridge — name match inside the family, check it]**
+- `82691` Ring of Frost — MAGE (frozen) **[family bridge — name match inside the family, check it]**
+- `88010` Cyclone — DRUID (banished) **[family bridge — name match inside the family, check it]**
+- `105421` Blinding Light — PALADIN (disoriented) **[family bridge — name match inside the family, check it]**
+- `107079` Quaking Palm — ALL (incapacitated)
+- `108194` Asphyxiate — DEATHKNIGHT (stunned) **[family bridge — name match inside the family, check it]**
+- `111673` Control Undead — DEATHKNIGHT (charmed)
+- `115078` Paralysis — MONK (incapacitated)
+- `117526` Binding Shot — HUNTER (stunned)
+- `118699` Fear — WARLOCK (fleeing) **[family bridge — name match inside the family, check it]**
+- `118905` Capacitor Totem — SHAMAN (stunned) **[family bridge — name match inside the family, check it]**
+- `119381` Leg Sweep — MONK (stunned)
+- `120086` Fists of Fury — MONK (stunned)
+- `126819` Polymorph — MAGE (polymorphed)
+- `127886` Blind — ROGUE (disoriented) **[family bridge — name match inside the family, check it]**
+- `128846` Clash — MONK (stunned) **[family bridge — name match inside the family, check it]**
+- `130616` Fear — WARLOCK (fleeing) **[family bridge — name match inside the family, check it]**
+- `132168` Shockwave — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `132169` Storm Bolt — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `144166` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `145048` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `145067` Turn Evil — PALADIN (fleeing, turned) **[family bridge — name match inside the family, check it]**
+- `145424` Cheap Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `161353` Polymorph — MAGE (polymorphed)
+- `161354` Polymorph — MAGE (polymorphed)
+- `161355` Polymorph — MAGE (polymorphed)
+- `161372` Polymorph — MAGE (polymorphed)
+- `161792` Dragon's Breath — MAGE (disoriented) **[family bridge — name match inside the family, check it]**
+- `162056` Jailer's Judgment — PALADIN (stunned)
+- `163505` Rake — DRUID (stunned) **[family bridge — name match inside the family, check it]**
+- `166972` Mighty Bash — DRUID (stunned) **[family bridge — name match inside the family, check it]**
+- `175276` Blind — ROGUE (disoriented) **[family bridge — name match inside the family, check it]**
+- `176050` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `179057` Chaos Nova — DEMONHUNTER (stunned)
+- `180187` Hammer of Justice — PALADIN (stunned) **[family bridge — name match inside the family, check it]**
+- `190481` Mighty Bash — DRUID (stunned) **[family bridge — name match inside the family, check it]**
+- `192220` Hammer of Justice — PALADIN (stunned) **[family bridge — name match inside the family, check it]**
+- `193082` Sap — ROGUE (incapacitated) **[family bridge — name match inside the family, check it]**
+- `196942` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `198909` Song of Chi-Ji — MONK (asleep) **[family bridge — name match inside the family, check it]**
+- `200166` Metamorphosis — DEMONHUNTER (stunned) **[family bridge — name match inside the family, check it]**
+- `200196` Holy Word: Chastise — PRIEST (disoriented) **[family bridge — name match inside the family, check it]**
+- `200200` Holy Word: Chastise — PRIEST (stunned) **[family bridge — name match inside the family, check it]**
+- `203123` Maim — DRUID (stunned) **[family bridge — name match inside the family, check it]**
+- `203126` Maim — DRUID (incapacitated) **[family bridge — name match inside the family, check it]**
+- `203337` Freezing Trap — HUNTER (frozen) **[family bridge — name match inside the family, check it]**
+- `204437` Lightning Lasso — SHAMAN (stunned) **[family bridge — name match inside the family, check it]**
+- `205290` Wake of Ashes — PALADIN (stunned) **[family bridge — name match inside the family, check it]**
+- `205364` Dominate Mind — PRIEST (charmed)
+- `205439` Bursting Shot — ALL (disoriented) **[family bridge — name match inside the family, check it]**
+- `207167` Blinding Sleet — DEATHKNIGHT (disoriented)
+- `207685` Sigil of Misery — DEMONHUNTER (fleeing) **[family bridge — name match inside the family, check it]**
+- `210873` Hex — SHAMAN (polymorphed)
+- `211004` Hex — SHAMAN (polymorphed)
+- `211010` Hex — SHAMAN (polymorphed)
+- `211015` Hex — SHAMAN (polymorphed)
+- `211881` Fel Eruption — ALL (stunned)
+- `212365` Freezing Trap — HUNTER (frozen) **[family bridge — name match inside the family, check it]**
+- `213369` Paralysis — MONK (sapped) **[family bridge — name match inside the family, check it]**
+- `213691` Scatter Shot — ALL (disoriented)
+- `214299` Blind — ROGUE (disoriented) **[family bridge — name match inside the family, check it]**
+- `217832` Imprison — DEMONHUNTER (sapped)
+- `218434` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219215` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219216` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219217` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219218` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219219` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219393` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219394` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219398` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219399` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219400` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219401` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219402` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219403` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219404` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219405` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219406` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219407` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `219692` Sap — ROGUE (sapped) **[family bridge — name match inside the family, check it]**
+- `221527` Imprison — DEMONHUNTER (banished) **[family bridge — name match inside the family, check it]**
+- `221562` Asphyxiate — DEATHKNIGHT (stunned)
+- `222826` Chaos Nova — DEMONHUNTER (stunned) **[family bridge — name match inside the family, check it]**
+- `222897` Storm Bolt — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `232055` Fists of Fury — MONK (stunned) **[family bridge — name match inside the family, check it]**
+- `235612` Frost Breath — DEATHKNIGHT (stunned) **[family bridge — name match inside the family, check it]**
+- `238559` Bursting Shot — ALL (disoriented) **[family bridge — name match inside the family, check it]**
+- `240134` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `247587` Holy Word: Chastise — PRIEST (disoriented) **[family bridge — name match inside the family, check it]**
+- `250206` Bursting Shot — ALL (disoriented) **[family bridge — name match inside the family, check it]**
+- `250207` Bursting Shot — ALL (disoriented) **[family bridge — name match inside the family, check it]**
+- `254412` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `255941` Wake of Ashes — PALADIN (stunned) **[family bridge — name match inside the family, check it]**
+- `269352` Hex — SHAMAN (polymorphed)
+- `269355` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `277778` Hex — SHAMAN (polymorphed)
+- `277780` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `277784` Hex — SHAMAN (polymorphed)
+- `277785` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `277787` Polymorph — MAGE (polymorphed)
+- `277788` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `277792` Polymorph — MAGE (polymorphed)
+- `277793` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `287712` Haymaker — ALL (stunned)
+- `302583` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `305485` Lightning Lasso — SHAMAN (stunned) **[family bridge — name match inside the family, check it]**
+- `309328` Hex — SHAMAN (polymorphed)
+- `309329` Hex — SHAMAN (polymorphed) **[family bridge — name match inside the family, check it]**
+- `312678` Insanity — PRIEST (horrified)
+- `316593` Intimidating Shout — WARRIOR (fleeing) **[family bridge — name match inside the family, check it]**
+- `316595` Intimidating Shout — WARRIOR (fleeing) **[family bridge — name match inside the family, check it]**
+- `321177` Freezing Trap — HUNTER (frozen) **[family bridge — name match inside the family, check it]**
+- `321395` Polymorph — MAGE (polymorphed)
+- `323557` Ravenous Frenzy — DRUID (stunned) **[family bridge — name match inside the family, check it]**
+- `325886` Ancient Aftershock — WARRIOR (stunned)
+- `326062` Ancient Aftershock — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `332544` Imprison — DEMONHUNTER (sapped) **[family bridge — name match inside the family, check it]**
+- `333762` The Hunt — DEMONHUNTER (stunned)
+- `334693` Absolute Zero — ALL (stunned) **[family bridge — name match inside the family, check it]**
+- `357768` Paralysis — MONK (incapacitated) **[family bridge — name match inside the family, check it]**
+- `360806` Sleep Walk — EVOKER (asleep)
+- `372245` Terror of the Skies — EVOKER (stunned)
+- `377048` Absolute Zero — ALL (stunned) **[family bridge — name match inside the family, check it]**
+- `383121` Mass Polymorph — MAGE (polymorphed)
+- `385954` Shield Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `391622` Polymorph — MAGE (polymorphed)
+- `391631` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `405397` Hammer of Retribution — ALL (stunned)
+- `413815` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `426589` Kidney Shot — ROGUE (stunned) **[family bridge — name match inside the family, check it]**
+- `427773` Blind — ROGUE (disoriented) **[family bridge — name match inside the family, check it]**
+- `449700` Gravity Lapse — ALL (stunned) **[family bridge — name match inside the family, check it]**
+- `451118` Charge — WARRIOR (stunned) **[family bridge — name match inside the family, check it]**
+- `459690` Spearhead — ALL (stunned) **[family bridge — name match inside the family, check it]**
+- `460392` Polymorph — MAGE (polymorphed)
+- `460396` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `461489` Polymorph — MAGE (polymorphed) **[family bridge — name match inside the family, check it]**
+- `473291` Gravity Lapse — ALL (stunned) **[family bridge — name match inside the family, check it]**
+- `1234195` Void Nova — DEMONHUNTER (stunned)
+- `1258508` Intimidation — HUNTER (stunned) **[family bridge — name match inside the family, check it]**
+- `1258862` Encasing Cold — SHAMAN (frozen) **[family bridge — name match inside the family, check it]**
+- `1276084` Victor's Presence — ALL (stunned)
+- `1276097` Ensorcelled by Flame — ALL (charmed)
+
+## softCC
+
+Shipped: 0 | derived: 212 | added: 212 | removed: 0 | regrouped: 0
+
+### Added
+
+- `122` Frost Nova — MAGE (rooted)
+- `339` Entangling Roots — DRUID (rooted)
+- `1715` Hamstring — WARRIOR (snared)
+- `3409` Crippling Poison — ROGUE (snared)
+- `5116` Concussive Shot — HUNTER (snared)
+- `12323` Piercing Howl — WARRIOR (snared)
+- `12486` Blizzard — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `13439` Frostbolt — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `15407` Mind Flay — PRIEST (snared)
+- `16568` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `17165` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `23953` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `26143` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `27584` Hamstring — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `28310` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `29539` Curse of Exhaustion — WARLOCK (snared) **[family bridge — name match inside the family, check it]**
+- `29570` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `30981` Crippling Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `30984` Wound Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `31589` Slow — ALL (snared)
+- `32417` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `32774` Avenger's Shield — PALADIN (dazed) **[family bridge — name match inside the family, check it]**
+- `33061` Blast Wave — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `35546` Fatal Flourish — ROGUE (snared)
+- `36974` Wound Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `37276` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `37330` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `37621` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `38243` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `38256` Piercing Howl — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `39665` Wound Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `40363` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `42396` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `43512` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `43530` Piercing Howl — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `44289` Crippling Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `45524` Chains of Ice — DEATHKNIGHT (snared)
+- `51490` Thunderstorm — SHAMAN (snared)
+- `52744` Piercing Howl — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `53534` Chains of Ice — DEATHKNIGHT (rooted) **[family bridge — name match inside the family, check it]**
+- `54074` Wound Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `57941` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `58180` Infected Wounds — DRUID (snared)
+- `59367` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `59638` Frostbolt — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `59974` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `60472` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `61362` Blast Wave — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `61391` Typhoon — DRUID (snared)
+- `64803` Entrapment — ALL (rooted) **[family bridge — name match inside the family, check it]**
+- `65792` Frost Nova — MAGE (rooted) **[family bridge — name match inside the family, check it]**
+- `66070` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `78751` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `79541` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `79711` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `80391` Blast Wave — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `89032` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `91134` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `96089` Frostbolt — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `96294` Chains of Ice — DEATHKNIGHT (rooted) **[family bridge — name match inside the family, check it]**
+- `102359` Mass Entanglement — DRUID (rooted)
+- `102793` Ursol's Vortex — DRUID (snared)
+- `103024` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `105771` Charge — WARRIOR (rooted) **[family bridge — name match inside the family, check it]**
+- `114404` Void Tendrils — PRIEST (rooted) **[family bridge — name match inside the family, check it]**
+- `115196` Crippling Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `116095` Disable — MONK (snared)
+- `116706` Disable — MONK (rooted) **[family bridge — name match inside the family, check it]**
+- `121253` Keg Smash — MONK (snared)
+- `123586` Flying Serpent Kick — MONK (snared)
+- `127797` Ursol's Vortex — DRUID (snared) **[family bridge — name match inside the family, check it]**
+- `129033` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `135299` Tar Trap — HUNTER (snared) **[family bridge — name match inside the family, check it]**
+- `141425` Frostbolt Volley — WARRIOR (snared)
+- `143375` Tightening Grasp — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `144249` Frostbolt — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `144251` Frostbolt — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `145532` Frost Nova — MAGE (rooted) **[family bridge — name match inside the family, check it]**
+- `149984` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `154125` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `157563` Frost Nova — MAGE (rooted) **[family bridge — name match inside the family, check it]**
+- `157981` Blast Wave — ALL (snared)
+- `157997` Ice Nova — MAGE (rooted)
+- `162480` Steel Trap — HUNTER (rooted) **[family bridge — name match inside the family, check it]**
+- `164812` Moonfire — DRUID (snared)
+- `170855` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `171131` Penance — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `180724` Slick Ice — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `180740` Slick Ice — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `183324` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `185763` Pistol Shot — ROGUE (snared)
+- `186387` Bursting Shot — ALL (snared)
+- `188526` Earthquake — SHAMAN (snared) **[family bridge — name match inside the family, check it]**
+- `188764` Frostbolt — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `190780` Frost Breath — DEATHKNIGHT (snared)
+- `190925` Harpoon — HUNTER (rooted)
+- `190927` Harpoon — HUNTER (rooted) **[family bridge — name match inside the family, check it]**
+- `191746` Arcane Explosion — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `193473` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `195645` Wing Clip — HUNTER (snared)
+- `196733` Special Delivery — MONK (snared) **[family bridge — name match inside the family, check it]**
+- `196840` Frost Shock — SHAMAN (snared)
+- `198121` Frostbite — ALL (rooted) **[family bridge — name match inside the family, check it]**
+- `198813` Vengeful Retreat — DEMONHUNTER (snared)
+- `201192` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `201589` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `202214` Infected Wounds — DRUID (snared) **[family bridge — name match inside the family, check it]**
+- `202894` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `203037` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `204242` Consecration — PALADIN (snared) **[family bridge — name match inside the family, check it]**
+- `204408` Thunderstorm — SHAMAN (snared) **[family bridge — name match inside the family, check it]**
+- `204843` Sigil of Chains — DEMONHUNTER (snared) **[family bridge — name match inside the family, check it]**
+- `205273` Wake of Ashes — PALADIN (snared)
+- `205320` Strike of the Windlord — MONK (snared) **[family bridge — name match inside the family, check it]**
+- `206930` Heart Strike — DEATHKNIGHT (snared)
+- `211056` Mark of Aluneth — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `211793` Remorseless Winter — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `212792` Cone of Cold — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `213405` Master of the Glaive — DEMONHUNTER (snared)
+- `215664` Frost Nova — MAGE (rooted) **[family bridge — name match inside the family, check it]**
+- `216513` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `217916` Flamestrike — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `222075` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `224729` Bursting Shot — ALL (snared)
+- `228645` Heart Strike — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `232978` Harpoon — HUNTER (rooted) **[family bridge — name match inside the family, check it]**
+- `235235` Frost Nova — MAGE (rooted) **[family bridge — name match inside the family, check it]**
+- `235963` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `236027` Charge — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `236299` Chrono Shift — ALL (snared)
+- `240281` Frost Breath — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `241934` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `247121` Metamorphosis — DEMONHUNTER (snared) **[family bridge — name match inside the family, check it]**
+- `247564` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `250440` Frozen Orb — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `260297` Arctic Bola — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `260369` Arcane Pulse — ALL (snared)
+- `264892` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `273977` Grip of the Dead — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `277521` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `278311` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `279303` Frostwyrm's Fury — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `289308` Frozen Orb — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `292974` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `306391` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `312526` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `312679` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `315949` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `317898` Blinding Sleet — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `321329` Ring of Frost — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `321330` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `323996` The Hunt — DEMONHUNTER (rooted)
+- `324382` Clash — MONK (rooted) **[family bridge — name match inside the family, check it]**
+- `327093` Pestilence — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `330371` Curse of Exhaustion — WARLOCK (snared) **[family bridge — name match inside the family, check it]**
+- `330873` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `330911` Keg Smash — MONK (snared) **[family bridge — name match inside the family, check it]**
+- `334275` Curse of Exhaustion — WARLOCK (snared)
+- `342373` Fae Tendrils — MAGE (rooted)
+- `345209` Infected Wounds — DRUID (snared)
+- `355689` Landslide — EVOKER (rooted) **[family bridge — name match inside the family, check it]**
+- `356084` Blaze of Light — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `357214` Wing Buffet — ALL (snared)
+- `359078` Numbing Poison — ROGUE (snared) **[family bridge — name match inside the family, check it]**
+- `368970` Tail Swipe — EVOKER (snared)
+- `369093` Disintegrate — EVOKER (snared) **[family bridge — name match inside the family, check it]**
+- `370898` Permeating Chill — EVOKER (snared)
+- `370970` The Hunt — DEMONHUNTER (rooted)
+- `378760` Frostbite — ALL (rooted)
+- `384069` Shadowflame — WARLOCK (snared)
+- `386770` Freezing Cold — MAGE (rooted) **[family bridge — name match inside the family, check it]**
+- `387344` Walloping Blow — EVOKER (snared) **[family bridge — name match inside the family, check it]**
+- `389031` Rend — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `390232` Arctic Bola — ALL (snared)
+- `390669` Apathy — ALL (snared)
+- `391104` Mass Slow — ALL (snared)
+- `392490` Enfeeble — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `392983` Strike of the Windlord — MONK (snared)
+- `393456` Entrapment — ALL (rooted) **[family bridge — name match inside the family, check it]**
+- `394255` Freezing Cold — MAGE (snared) **[family bridge — name match inside the family, check it]**
+- `403695` Truth's Wake — PALADIN (snared)
+- `408383` Judgment of Justice — PALADIN (snared) **[family bridge — name match inside the family, check it]**
+- `410063` Reactive Resin — DRUID (snared) **[family bridge — name match inside the family, check it]**
+- `410065` Reactive Resin — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `410790` Frostwyrm's Fury — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `426912` Thunder Clap — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `431380` Dawnlight — PALADIN (snared) **[family bridge — name match inside the family, check it]**
+- `435203` Thunder Clap — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `439606` Perilous Fate — EVOKER (snared) **[family bridge — name match inside the family, check it]**
+- `442396` Dark Chains — HUNTER (snared) **[family bridge — name match inside the family, check it]**
+- `444826` Chains of Ice — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `444834` Trollbane's Icy Fury — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `450342` Crashing Momentum — MONK (snared) **[family bridge — name match inside the family, check it]**
+- `450596` Spirit's Essence — MONK (snared) **[family bridge — name match inside the family, check it]**
+- `450845` Sideline — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `451210` No Escape — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `451938` Avenger's Shield — PALADIN (dazed) **[family bridge — name match inside the family, check it]**
+- `453263` Wave of Debilitation — DEMONHUNTER (snared) **[family bridge — name match inside the family, check it]**
+- `453848` Shock Pulse — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `454787` Ice Prison — DEATHKNIGHT (rooted) **[family bridge — name match inside the family, check it]**
+- `458480` Boneshaker — WARRIOR (snared) **[family bridge — name match inside the family, check it]**
+- `460501` Heart Strike — DEATHKNIGHT (snared) **[family bridge — name match inside the family, check it]**
+- `460614` Entangling Roots — DRUID (rooted) **[family bridge — name match inside the family, check it]**
+- `461039` Wing Buffet — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `462765` Arctic Snowstorm — SHAMAN (snared) **[family bridge — name match inside the family, check it]**
+- `462899` Mind Flay — PRIEST (snared) **[family bridge — name match inside the family, check it]**
+- `470194` Ice Strike — ALL (snared)
+- `473290` Gravity Lapse — ALL (rooted) **[family bridge — name match inside the family, check it]**
+- `1236942` Divine Hammer — PALADIN (snared) **[family bridge — name match inside the family, check it]**
+- `1246033` Blast Wave — ALL (snared) **[family bridge — name match inside the family, check it]**
+- `1251059` Stormbind — SHAMAN (snared)
+- `1268673` Cold Feet — HUNTER (snared) **[family bridge — name match inside the family, check it]**
+
+Compared against `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/defaults/Categories.lua`. This tool never writes that file.
