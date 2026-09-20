@@ -304,7 +304,7 @@ local function marked(NS, key, auraType)
     local pad = (" "):rep(widest - mine)
     return (NS.L["[{type}] {name}"]
         :gsub("{type}", function() return NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]] end)
-        :gsub("{name}", function() return pad .. NS.L[def.label] end))
+        :gsub("{name}", function() return pad .. NS.Categories.LabelOf(def) end))
 end
 
 --- Every entry the IdList drew, in DRAW ORDER, as { id =, label =, x =, row =, col = }.
@@ -522,7 +522,7 @@ test("general → spell categories: the markers are padded so every name starts 
     local at
     for _, key in ipairs(dd.order) do
         local def = NS.Categories.Find(NS.Categories.AuraTypeOf(key), key)
-        local i = dd.list[key]:find(NS.L[def.label], 1, true)
+        local i = dd.list[key]:find(NS.Categories.LabelOf(def), 1, true)
         assertTrue(i ~= nil, key .. ": the name is in the entry")
         at = at or i
         -- red under: the padding dropped from categoryLabel

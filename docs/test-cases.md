@@ -56,7 +56,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (73)
+### test_database.lua (83)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -112,7 +112,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v5: the current schema version is 5
+- v6: the current schema version is 6
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -131,6 +131,16 @@ badge and any count quoted in the docs must agree with it.
 - v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
+- v6: MigrateV6 stamps the user-category store, and a second run changes nothing
+- v6: a profile that predates user categories climbs the ladder and stays valid
+- user categories: one round-trips through a reload, with its spells
+- user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
+- user categories: the schema row resolves, and the seam reads and writes it per container
+- user categories: Cat.AuraTypeOf answers for a user category KEY, not only for its definition
+- user categories: a profile switch swaps the set and leaves no stale definition, row or template key
+- user categories: a new key collides with nothing shipped and with nothing in any stored profile
+- user categories: a rename keeps the key, so a container's stored Show/Hide survives it
+- user categories: a stored record alone protects its spell list from the categorySpells write
 
 ### test_schema.lua (29)
 
@@ -203,7 +213,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (85)
+### test_filtercompiler.lua (87)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -290,6 +300,8 @@ badge and any count quoted in the docs must agree with it.
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
+- categories: a user category joins the categorized union, so Uncategorized stops rescuing what it claims
+- categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For
 
 ### test_container.lua (51)
 
@@ -1255,7 +1267,7 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (18)
+### test_defaults.lua (29)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
@@ -1275,6 +1287,17 @@ badge and any count quoted in the docs must agree with it.
 - defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
 - defaults: the global schema stamp defaults to 1, never the current version
 - defaults: StatesShowing hides every buff category but the ones named, and leaves the debuff ones at Show
+- defaults: no shipped category key sits in the reserved 'user' namespace
+- defaults: SanitizeUserName strips the escape character and control characters, trims and caps
+- defaults: NewUserKey is namespaced and terminates against a generator that always collides
+- defaults: the key generator is the client's own, not the shared unseeded math.random
+- defaults: a user category materializes among the spell lists, above Weapon enchants, Uncategorized still last
+- defaults: schema order tracks Cat.For order per aura type, user categories included
+- defaults: a user category's name is unrouted by design, and its description is not
+- defaults: a corrupt user record is skipped and left on disk, never coerced
+- defaults: a record outside the reserved namespace cannot hijack a shipped category
+- defaults: a user category's name is shown as typed even when it is a shipped locale key
+- defaults: userCategoryOrder is reconciled the way containerOrder is
 
 ### test_perf.lua (8)
 
@@ -1349,10 +1372,10 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 20 |
-| test_database.lua | 73 |
+| test_database.lua | 83 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 85 |
+| test_filtercompiler.lua | 87 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
@@ -1388,7 +1411,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 18 |
+| test_defaults.lua | 29 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
@@ -1397,4 +1420,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1183** |
+| **Total** | **1206** |

@@ -125,16 +125,34 @@ end
 -- Blacklist wording this replaced is gone from here, locales/enUS.lua and the docs.
 local STATE_DESC = L["Show: this category shows the aura, even if another of its categories says Hide. Hide: this category alone never shows it — a Show on another of its categories still can."]
 
+--- One category's Show/Hide row. EXPORTED because a user category's row (issue #10 checkpoint 3,
+--- defaults/Categories.lua's Cat.SyncUserCategories) has to be built by this exact function rather
+--- than by a second one written to look like it: the two would otherwise drift in `grid`,
+--- `skipRender`, `printLabel`, `auraTypes`, `values` or the shape of `desc`, and every one of those
+--- is read by code whose correctness rests on not being able to tell a user row from a shipped one.
+---
+--- `auraTypes` comes off `def.auraType` (checkpoint 2's stamped field) rather than off a loop
+--- variable, so a definition materialized at runtime types itself the same way a shipped one does.
+--- `userCategory` rides along from the definition, so NS.UnregisterSchemaRows can find again exactly
+--- the rows the sync owns; a shipped row carries the field as nil, never false, so the schema stays
+--- byte-for-byte what it was before this checkpoint.
+--- @param def table  a category definition
+--- @return table
+function NS.CategoryRow(def)
+    return {
+        path = "container.filter.categories." .. def.key, page = PAGE, group = G_CATS,
+        grid = gridOf(def), skipRender = true, printLabel = true,
+        auraTypes = { [Cat.AuraTypeOf(def)] = true },
+        type = "string", values = STATES, label = Cat.LabelOf(def),
+        desc = ("%s\n\n%s"):format(L[def.desc], STATE_DESC),
+        userCategory = def.userCategory or nil,
+    }
+end
+
 local function categoryRows(auraType)
     local rows = {}
     for _, def in ipairs(Cat.For(auraType)) do
-        local row = {
-            path = "container.filter.categories." .. def.key, page = PAGE, group = G_CATS,
-            grid = gridOf(def), skipRender = true, printLabel = true, auraTypes = { [auraType] = true },
-            type = "string", values = STATES, label = L[def.label],
-            desc = ("%s\n\n%s"):format(L[def.desc], STATE_DESC),
-        }
-        rows[#rows + 1] = row
+        rows[#rows + 1] = NS.CategoryRow(def)
     end
     return rows
 end
@@ -546,8 +564,9 @@ end
 --- The labels of `list` (an `ExplainSpell` `categories` array, or a filtered copy of one), in
 --- order, comma-joined — the note's "which categories" fragment. UNROUTED join: only enUS.lua ships
 --- today, so a plain ", " between already-localized labels is not costing a translation anything yet
---- (there is not one). Accepted for now because every label in `list` is itself routed through
---- NS.L, so the sentence a translation actually owns is still whole; if a second locale ships, this
+--- (there is not one). Accepted for now because every label in `list` already came through
+--- `Cat.LabelOf` — routed when it is a shipped key, left alone when it is a player's own category
+--- name — so the sentence a translation actually owns is still whole; if a second locale ships, this
 --- separator is the thing to route (a locale-specific list join), not the labels themselves.
 local function categoryLabelList(list)
     local names = {}

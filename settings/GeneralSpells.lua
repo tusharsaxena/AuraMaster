@@ -345,12 +345,12 @@ end
 local function categoryLabel(def)
     local auraType = Cat.AuraTypeOf(def)
     local typeLabel = auraType and C.AURA_TYPE_LABELS[auraType]
-    if not typeLabel then return L[def.label] end
+    if not typeLabel then return Cat.LabelOf(def) end
     local word = L[typeLabel]
     local pad = (" "):rep(math.max(0, TYPE_WORD_CHARS - charCount(word)))
     return (CATEGORY_MARKER
         :gsub("{type}", function() return word end)
-        :gsub("{name}", function() return pad .. L[def.label] end))
+        :gsub("{name}", function() return pad .. Cat.LabelOf(def) end))
 end
 
 -- The open list and the closed box are two DIFFERENT FontStrings, and the marker is safe in

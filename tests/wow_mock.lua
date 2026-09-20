@@ -237,6 +237,17 @@ return function()
     M.__foci = {}
     M.GetMouseFoci = function() return M.__foci end
 
+    -- ── the player's identity ──────────────────────────────────────────────────────────────
+    -- Settable, because the one thing that reads it -- defaults/Categories.lua's user-category key
+    -- seed -- is interesting precisely when two clients differ, and a test has to be able to BE two
+    -- clients. A real client answers nil until the player is in the world; `__playerGUID = false`
+    -- is how a suite asks for that.
+    M.__playerGUID = "Player-1234-0ABCDEF1"
+    M.UnitGUID = function(unit)
+        if unit ~= "player" then return nil end
+        return M.__playerGUID or nil
+    end
+
     -- ── class colors (LibKa0s-Core's resolver reads RAID_CLASS_COLORS) ─────────────────────
     M.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }
 

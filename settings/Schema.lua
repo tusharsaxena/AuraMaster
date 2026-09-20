@@ -190,18 +190,83 @@ function NS.FindSchemaRow(path)
     return index[path]
 end
 
---- Append a page's rows. Every non-session row's `default` is stamped from defaults/Profile.lua
---- here, overwriting whatever a composer supplied, so the one hardcoded default is the template's.
-function NS.RegisterSchemaRows(rows)
+--- Add a page's rows. Every non-session row's `default` is stamped from defaults/Profile.lua here,
+--- overwriting whatever a composer supplied, so the one hardcoded default is the template's.
+---
+--- APPENDS, unless `beforePath` names a row already registered, in which case the new rows are
+--- INSERTED in front of it in order. The insert exists for issue #10's user categories
+--- (defaults/Categories.lua's Cat.SyncUserCategories) and it is not a convenience: settings/
+--- Filters.lua's renderCategories draws each grid in SCHEMA order, not in `Cat.For` order, and
+--- `weaponEnchants` and `uncategorized` share the `custom` grid with every spell-list row -- so a
+--- user category's row appended to the end of NS.Schema would draw BELOW Uncategorized and break
+--- U-1 outright. The invariant the argument preserves is that schema order tracks `Cat.For`
+--- declaration order per aura type, and tests/test_defaults.lua asserts it.
+---
+--- A `beforePath` naming nothing appends, rather than failing: the rows still exist, still resolve
+--- and still answer the CLI, and the ordering test is what reports the mistake.
+--- @param rows table
+--- @param beforePath string|nil
+function NS.RegisterSchemaRows(rows, beforePath)
     if type(rows) ~= "table" then return end
+    local at
+    if type(beforePath) == "string" then
+        for i, row in ipairs(NS.Schema) do
+            if row.path == beforePath then
+                at = i
+                break
+            end
+        end
+    end
     for _, row in ipairs(rows) do
         if not row.sessionOnly and type(row.path) == "string" then
             local d = NS.DefaultFor(row.path)
             if d ~= nil then row.default = d end
         end
-        NS.Schema[#NS.Schema + 1] = row
+        if at then
+            table.insert(NS.Schema, at, row)
+            at = at + 1
+        else
+            NS.Schema[#NS.Schema + 1] = row
+        end
     end
     reindex()
+end
+
+--- Remove every row `pred` answers true for, and return how many went.
+---
+--- THE SCHEMA HAD NO REMOVAL PATH UNTIL ISSUE #10, and it needs one for exactly one reason: a
+--- profile switch replaces one set of user categories with another, and a row left behind from the
+--- old set is not merely untidy. NS.ValidateSchema fails it (the container template no longer
+--- carries the key, so NS.DefaultFor answers nil), `/am list` and `/am get` answer for a category
+--- this profile does not have, and the Filters page draws a live Show/Hide row whose click WRITES
+--- "show" or "hide" into a real stored container under a key nothing will ever compile -- permanent
+--- garbage in the player's saved variables, one key per switch.
+---
+--- REBUILT IN PLACE, same table identity. settings/OptionsSetup.lua and settings/Slash.lua both hold
+--- `allRows = function() return NS.Schema end`, a live reference handed to the library once at
+--- registration; replacing the table would leave both of them reading the old array forever.
+--- @param pred function  row -> boolean
+--- @return number
+function NS.UnregisterSchemaRows(pred)
+    if type(pred) ~= "function" then return 0 end
+    local kept, removed = {}, 0
+    for _, row in ipairs(NS.Schema) do
+        if pred(row) then
+            removed = removed + 1
+        else
+            kept[#kept + 1] = row
+        end
+    end
+    if removed == 0 then return 0 end
+    local last = #NS.Schema
+    for i = last, 1, -1 do
+        NS.Schema[i] = nil
+    end
+    for i, row in ipairs(kept) do
+        NS.Schema[i] = row
+    end
+    reindex()
+    return removed
 end
 
 --- Whether `row` applies to container `cfg`. A row may name the aura types it means something for
@@ -266,11 +331,22 @@ end
 
 --- Per-category spell edits: [categoryKey] = { [spellId] = true (added) | false (removed) }. A key
 --- that is not a spell category of this build is dropped, and an empty edit set is not stored.
+---
+--- A USER CATEGORY IS RECOGNIZED BY ITS STORED RECORD, NOT BY ITS DEFINITION (issue #10 checkpoint
+--- 3), and the widening is a data-loss guard rather than a courtesy. This set is written WHOLE on
+--- every edit of ANY category, so if a user key's definition were missing at the moment of one such
+--- write -- a load-order slip, an error inside Cat.SyncUserCategories, a profile switch that half
+--- ran -- that single unrelated write would permanently delete the player's entire spell list for
+--- it. `Cat.HasUserRecord` asks the profile, which is the thing that cannot be half-built.
+local function isEditableCategory(key)
+    return NS.Categories.IsSpellCategory(key) or NS.Categories.HasUserRecord(key)
+end
+
 local function normalizeCategoryEdits(value)
     if type(value) ~= "table" then return nil, L["Expected per-category spell edits"] end
     local out = {}
     for key, edits in pairs(value) do
-        if type(key) == "string" and NS.Categories.IsSpellCategory(key) and type(edits) == "table" then
+        if type(key) == "string" and isEditableCategory(key) and type(edits) == "table" then
             local e = {}
             for k, on in pairs(edits) do
                 local id = tonumber(k)

@@ -770,6 +770,34 @@ function Database.MigrateV5(p)
     return converted
 end
 
+--- v6 (issue #10 checkpoint 3, 2026-09-20): the user-category store. Stamps the two profile keys a
+--- player's own categories live in -- `userCategories`, the records, and `userCategoryOrder`, the
+--- declaration order that is their only ordering source -- into every stored profile, the inactive
+--- ones included.
+---
+--- IT CONVERTS NOTHING, and that is stated rather than apologized for. Both keys are MAPS THE PLAYER
+--- FILLS, the shape `Database.Backfill`'s own header at the top of this file calls empty in the
+--- template, so absence and emptiness are indistinguishable and every read of them is nil-safe
+--- anyway -- AceDB strips a stored value equal to its default at save time, so an untouched profile
+--- may carry neither key on disk however many times this has run. The row earns its place for two
+--- other reasons: toc-file-§2 requires a stored-shape change to add a ladder row in the same change,
+--- and the stamp is what lets a LATER step say "a profile at v6 or later carries these keys"
+--- without re-deriving it, checkpoint 5's cross-profile deletion sweep being the obvious candidate.
+---
+--- IDEMPOTENT about everything: it creates only what is absent, and replaces a non-table (a
+--- hand-edited or corrupt leaf that later code would otherwise index) rather than leaving it. A
+--- second run changes nothing.
+--- @return number  the user categories the profile already holds, which is 0 for every profile this
+---                 step can reach -- the count is there for the log, not for a decision
+function Database.MigrateV6(p)
+    if type(p) ~= "table" then return 0 end
+    if type(p.userCategories) ~= "table" then p.userCategories = {} end
+    if type(p.userCategoryOrder) ~= "table" then p.userCategoryOrder = {} end
+    local n = 0
+    for _ in pairs(p.userCategories) do n = n + 1 end
+    return n
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 local function eachProfile(db, fn)
@@ -838,6 +866,14 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 6, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV6(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v6 profile '%s': the user-category store stamped -- %s category(ies) already stored", name, n)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 1. A test seam: tests/test_database.lua calls
@@ -859,6 +895,19 @@ function NS.RunMigrations()
         end
     end
     g.timedSpells = g.timedSpells or {}
+    -- THE USER-CATEGORY SYNC RUNS AFTER THE WHOLE LADDER AND BEFORE PrepareProfile, and neither half
+    -- of that is cosmetic (issue #10 checkpoint 3).
+    --
+    -- After the ladder, because materializing user definitions makes `Cat.IsSpellCategory`
+    -- PROFILE-DEPENDENT, and `MigrateV2`'s `rekeyEdits` above asks it. A v2 profile cannot contain
+    -- user keys, so the answer is the same either way today -- but moving this call earlier would
+    -- quietly make a v2 migration's result depend on the active profile's user categories, which is
+    -- not a dependency a migration may have.
+    --
+    -- Before PrepareProfile, because its `backfillContainers` is what stamps the template's newly
+    -- added category keys into every stored container -- exactly the mechanism `Cat.DefaultStates`'
+    -- own comment (defaults/Categories.lua) promises for a key added in a later version.
+    NS.Categories.SyncUserCategories(NS.db.profile)
     local seeded = Database.PrepareProfile(NS.db.profile)
     if seeded > 0 and NS.Debug then NS.Debug("Migrate", "seeded %s starter container(s)", seeded) end
 end

@@ -14,6 +14,7 @@ read_globals = {
     "_G", "LibStub", "CreateFrame", "UIParent", "GameTooltip", "DEFAULT_CHAT_FRAME",
     "C_Timer", "C_AddOns", "C_Spell", "GetAddOnMetadata", "GetSpellInfo",
     "GetTime", "InCombatLockdown", "UnitAffectingCombat", "UnitClass", "RAID_CLASS_COLORS",
+    "UnitGUID", "time",   -- the user-category key generator's seed (defaults/Categories.lua)
     "IsMouseButtonDown", "GetCursorPosition",
     "Settings", "SettingsPanel", "StaticPopup_Show",
     "debugprofilestop",   -- the perf bracket's clock (performance-§2)

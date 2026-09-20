@@ -12,10 +12,10 @@ its notes. Do not rely on conversation context — everything needed is here or 
 | # | Checkpoint | Status | Commit | Notes |
 | --- | --- | --- | --- | --- |
 | 0 | Plan of record | DONE | this file | — |
-| 1 | Buff/debuff markers in the Category dropdown | DONE | (uncommitted) | `[Buffs] ` / `[Debuffs] ` prefix from `C.AURA_TYPE_LABELS`, padded to a common character width; explicit pullout width and LEFT-justified closed box; settings/GeneralSpells.lua |
-| 2 | Category type as a first-class field | DONE | (uncommitted) | `def.auraType` stamped at load; `Cat.AuraTypeOf(defOrKey)` reads it |
-| 3 | Storage + schema for user categories | TODO | | The hard half; needs a migration |
-| 4 | `Uncategorized` counts user categories | TODO | | Union correctness |
+| 1 | Buff/debuff markers in the Category dropdown | DONE | b520ecd | `[Buffs] ` / `[Debuffs] ` prefix from `C.AURA_TYPE_LABELS`, padded to a common character width; explicit pullout width and LEFT-justified closed box; settings/GeneralSpells.lua |
+| 2 | Category type as a first-class field | DONE | b520ecd | `def.auraType` stamped at load; `Cat.AuraTypeOf(defOrKey)` reads it |
+| 3 | Storage + schema for user categories | DONE | | Records in `userCategories`/`userCategoryOrder`, materialized into `Cat.HELPFUL`/`Cat.HARMFUL` by `Cat.SyncUserCategories`; random `user…` keys; schema v6; `NS.RegisterSchemaRows(rows, beforePath)` + `NS.UnregisterSchemaRows` |
+| 4 | `Uncategorized` counts user categories | DONE | | No compiler change needed, and proven so from a compiled plan (tests/test_filtercompiler.lua) |
 | 5 | Deletion and cleanup across profiles | TODO | | Including inactive profiles |
 | 6 | UX: create / rename / delete + predefined lock | TODO | | |
 | 7 | Overlap guardrail | TODO | | Inform, do not block |
@@ -96,7 +96,9 @@ The hard half:
 - Registering a schema row for a key that did not exist at load.
 - Key generation: stable, collision-free against shipped keys and each other, and surviving a rename
   (so rename must not re-key, or every container's stored state orphans).
-- A schema migration — the stored shape is at v4 and every change so far has needed one.
+- A schema migration — the stored shape is at **v5**, not v4, so the new step is **v6**. (`SCHEMA_STEPS`
+  ended at `{ to = 5 }` when this was planned, the Weapon-enchants aura-type retirement of feedback #6, 2026-09-19; checkpoint 3 added `{ to = 6 }`, so it ends there now. The "v4"
+  written here and in issue #10 was stale when it was written; corrected 2026-09-20, checkpoint 3.)
 - Ordering: `Uncategorized` stays last in the grid, and the compiler's group-per-shown-category order
   depends on declaration order.
 
@@ -107,6 +109,46 @@ category. Given a key it resolves through `Categories.Find`, which walks `Cat.HE
 and a live bug the moment it lands: every caller holding a bare key out of a container's stored
 `filter.categories` would type a user category as nothing. Widen the key form to the user
 categories' store as part of the storage work, and cover it with a case that asks by key.
+
+**CLOSED in checkpoint 3.** Nothing widened `Cat.AuraTypeOf` itself, and nothing needed to: user
+categories are MATERIALIZED into `Cat.HELPFUL`/`Cat.HARMFUL`, so `Cat.Find` -- and therefore the key
+form -- finds them like any shipped definition. Covered by "user categories: Cat.AuraTypeOf answers
+for a user category KEY, not only for its definition" (tests/test_database.lua).
+
+The accessor's own doc comment said the opposite for a while: it still claimed the key form "answers
+for the SHIPPED lists only" and that user categories "do not exist until checkpoint 3", which this
+checkpoint falsified the moment it landed. Rewritten in the checkpoint 3/4 review pass — it now
+states what the code does, and records that the widening came for free from materializing user defs
+into the shipped lists rather than from any change to the accessor.
+
+### Checkpoint 3/4 review pass
+
+Five findings from the review of the uncommitted checkpoint 3/4 tree, all fixed on the same tree:
+
+1. **A record whose key is outside the reserved namespace is refused** (`Cat.IsUserKey`, consulted by
+   `usableName`). A stored record keyed `healing` was materialized beside the shipped `healing` --
+   two definitions under one key -- and the next sync's teardown, which finds a user def BY KEY, then
+   took the SHIPPED category's entry out of the container template for the rest of the session, so
+   `NS.DefaultFor` answered `nil` and `NS.ValidateSchema` failed on a row nobody had touched. Both
+   the refusal and that consequence are pinned in tests/test_defaults.lua.
+2. **The key generator is seeded.** Nothing ever called `math.randomseed`, so every client walked the
+   same sequence and two players' first categories got the same key -- which is exactly the collision
+   the random scheme was chosen to prevent. `Cat.NewUserKey` now draws from this file's own Lehmer
+   sequence, seeded once on first use from `UnitGUID("player")`, the clock and the profiler.
+   **The design claim is weakened to what is delivered:** within the account, uniqueness is a
+   guarantee and always was the `taken` scan's doing, not the generator's; ACROSS accounts it is now
+   a small probability rather than the impossibility the old comment implied, so the import half of
+   #9 must REKEY a record whose key the importing account already holds.
+3. **`Cat.AuraTypeOf`'s doc comment** — above.
+4. **A user category's name never goes through `NS.L`.** `Cat.LabelOf(def)` is now the single site
+   rule: a shipped label is a locale key and is routed, a user label is the player's text and is not.
+   Before it, a category named "Healing" or "Movement" drew the shipped translation instead of the
+   name that was typed — invisible on enUS, wrong on any translated client. Callers: the Filters
+   grids, the Spell Categories dropdown and `ExplainSpell`'s notes.
+5. **The sync/`PrepareProfile` order in `NS.RunMigrations` is pinned by a test.** Inverting the two
+   lines left the whole suite green while genuinely breaking a stored-but-not-yet-backfilled user
+   category: its containers carried no state for the key, so its grid row drew with neither Show nor
+   Hide lit. tests/test_database.lua now fails on the inversion.
 
 ### 4. `Uncategorized` counts user categories
 

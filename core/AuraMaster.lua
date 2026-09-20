@@ -142,6 +142,14 @@ end
 
 --- Before the trace, so the trace follows the registry the new profile will run with.
 local function prepareProfile()
+    -- THE USER CATEGORIES FIRST, for the same reason NS.RunMigrations syncs before it prepares
+    -- (issue #10 checkpoint 3): until the sync swaps them, the container template still carries the
+    -- PREVIOUS profile's user keys, so PrepareProfile's backfill would write those dead keys into
+    -- every container of the new profile while missing the new profile's own. Both call sites are
+    -- edited together or the ordering holds in one path and not the other.
+    if NS.Categories and NS.Categories.SyncUserCategories and NS.db then
+        NS.Categories.SyncUserCategories(NS.db.profile)
+    end
     if NS.Database and NS.db then NS.Database.PrepareProfile(NS.db.profile) end
     if NS.State then NS.State.SetActiveContainer(nil) end
     -- A PROFILE SWITCH CAN FLIP THE ENABLE PATH with no checkbox and no verb touched, so the latch

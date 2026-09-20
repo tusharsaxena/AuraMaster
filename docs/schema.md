@@ -40,7 +40,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:112`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:128`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -175,7 +175,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:240`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:255`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -299,7 +299,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:791`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:822`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -405,8 +405,7 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   on a second run either).
 - **Schema v5** (`Database.MigrateV5`, `core/Database.lua`, feedback #6, 2026-09-19) runs over
   **every** stored profile and logs one `[Migrate] v5 profile '<name>'` line each, plus one
-  `[Migrate] v5 container '<key>' (<name>)` line per container it converts; `Database.CurrentSchemaVersion()`
-  answers `5`. The **Weapon enchants aura type retires**: weapon enchants are the buff category
+  `[Migrate] v5 container '<key>' (<name>)` line per container it converts. The **Weapon enchants aura type retires**: weapon enchants are the buff category
   `weaponEnchants` only. Every container with `auraType == "ENCHANT"` becomes an **enchant-only buff
   container** — `auraType = "HELPFUL"`, `unit = "player"` (enchants are only ever the player's), and
   `filter.categories = Cat.EnchantOnlyStates()` (every buff category Hide but Weapon enchants,
@@ -424,6 +423,15 @@ row per stored-shape change, applied in order by `NS.RunMigrations` while
   type takes the surface's own color now (feedback #7), so nothing reads a None swatch any longer.
   The v3 and v4 steps keep their `ENCHANT` handling, because an old profile climbs them before it
   reaches v5.
+- **Schema v6** (`Database.MigrateV6`, `core/Database.lua`, issue #10 checkpoint 3, 2026-09-20) runs
+  over **every** stored profile and logs one `[Migrate] v6 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `6`. It stamps the two keys a player's own spell
+  categories live in — `userCategories` and `userCategoryOrder` — and **converts nothing**: both are
+  maps the player fills, so absence and emptiness are indistinguishable and every read of them is
+  nil-safe. The row exists because a stored-shape change takes a ladder row in the same change
+  (toc-file-§2) and because a later step can then say "a profile at v6 or later carries these keys"
+  without re-deriving it. Idempotent in the strongest sense: it creates only what is absent and
+  replaces only a non-table leaf.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

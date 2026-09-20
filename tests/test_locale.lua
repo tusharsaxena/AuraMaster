@@ -123,12 +123,28 @@ test("locale: every string routed by value has its key — Constants labels, cat
             for k, label in pairs(tbl) do need(name .. "." .. tostring(k), label) end
         end
     end
+    -- THE ONE EXEMPTION (issue #10, checkpoint 3). A user category's `label` is the PLAYER'S OWN
+    -- NAME -- data, not a translatable string -- so no enUS line can exist for it and none should.
+    -- The exemption is exactly one FIELD of exactly one flagged definition kind: `desc` is still
+    -- checked, and a user category's description is a fixed shipped string precisely so that it can
+    -- be. If that description ever has to name the category, the name is a `%s` ARGUMENT to a routed
+    -- format string, never concatenated into one -- see defaults/Categories.lua's USER_DESC.
+    local exempted = 0
     for _, list in ipairs({ NS.Categories.HELPFUL, NS.Categories.HARMFUL }) do
         for _, def in ipairs(list) do
-            need("category " .. def.key, def.label)
+            if def.userCategory then
+                exempted = exempted + 1
+            else
+                need("category " .. def.key, def.label)
+            end
             need("category " .. def.key, def.desc)
         end
     end
+    -- red under: a SHIPPED definition acquiring `userCategory` to dodge the guard. The shared
+    -- environment holds no profile with user categories, so the correct count here is zero -- the
+    -- exemption is proven narrow by never firing on the shipped load at all. That it EXISTS, and
+    -- that `desc` is still checked, is proven from the other side in tests/test_defaults.lua.
+    assertEqual(exempted, 0, "a shipped category claimed the user-category exemption")
     for k, w in pairs(NS.FilterCompiler.WARN) do need("warning " .. k, w) end
     table.sort(missing)
     -- red under: a label added to a Constants table, a category or a warning without its enUS line

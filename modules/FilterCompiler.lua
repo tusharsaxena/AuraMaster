@@ -634,6 +634,10 @@ local function addShownGroups(plan, base, cats, look, hasUnion)
                 usesSpellIds = excludeGuarded(con, cats.shown[j], edits) or usesSpellIds
             end
             if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
+            -- The RAW `def.label`, not `NS.Categories.LabelOf(def)`: a plan group's label is an
+            -- internal name nothing draws, so it stays the locale KEY for a shipped category. Do
+            -- not "fix" this into a lookup -- routing it is what would drag a player's own category
+            -- name through NS.L, which is the one thing the name must never go through.
             addGroup(plan, con, def.label, look)
         end
     end
@@ -810,7 +814,10 @@ local function claimingCategories(Categories, auraType, filter, categorySpells, 
     for _, def in ipairs(Categories.For(auraType)) do
         if def.kind == "spells" and FC.CategorySpells(def, categorySpells)[id] then
             local state = ((filter.categories or {})[def.key] == "hide") and "hide" or "show"
-            claiming[#claiming + 1] = { key = def.key, label = NS.L[def.label], state = state }
+            -- NS.Categories, not the injected `Categories`: `LabelOf` is a pure function of one
+            -- definition, so it does not belong to whichever category SET a caller handed in.
+            local label = NS.Categories.LabelOf(def)
+            claiming[#claiming + 1] = { key = def.key, label = label, state = state }
             anyShow = anyShow or (state == "show")
         end
     end
@@ -859,11 +866,11 @@ local function explainUncategorized(Categories, auraType, filter, hasUnion)
     if def then
         local hidden = (filter.categories or {})[def.key] == "hide"
         if hidden then
-            local entry = { { key = def.key, label = NS.L[def.label], state = "hide" } }
+            local entry = { { key = def.key, label = NS.Categories.LabelOf(def), state = "hide" } }
             return { verdict = "hidden", rank = 4, categories = entry }
         end
         if hasUnion then
-            local entry = { { key = def.key, label = NS.L[def.label], state = "show" } }
+            local entry = { { key = def.key, label = NS.Categories.LabelOf(def), state = "show" } }
             return { verdict = "shown", rank = 3, categories = entry }
         end
     end

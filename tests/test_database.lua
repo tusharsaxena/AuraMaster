@@ -231,9 +231,11 @@ end)
 -- ── migrations, the id counter, the order and the seeding, on old and odd shapes ───────────────
 
 test("database: a schema version newer than this build is never lowered", function()
-    local NS = fresh({ savedVariables = { global = { schemaVersion = 5 } } })
-    -- red under: RunMigrations stamping the current version over whatever was stored
-    assertEqual(NS.db.global.schemaVersion, 5, "a file from a newer build keeps its version")
+    local NS = fresh({ savedVariables = { global = { schemaVersion = 99 } } })
+    -- red under: RunMigrations stamping the current version over whatever was stored. The stored
+    -- number is deliberately far past the ladder rather than one step past it, so the case does not
+    -- have to be re-numbered every time a step is added (it was 5 until issue #10's v6).
+    assertEqual(NS.db.global.schemaVersion, 99, "a file from a newer build keeps its version")
 end)
 
 test("database: learned timed spells survive a load", function()
@@ -551,9 +553,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 4
-    -- steps a v1 profile now climbs (v2, v3, v4, v5).
-    assertEqual(perProfile, 8, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 5
+    -- steps a v1 profile now climbs (v2, v3, v4, v5, v6).
+    assertEqual(perProfile, 10, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -846,11 +848,11 @@ test("v3: the whitelist lift never sweeps a category the aura type does not have
     assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
 end)
 
-test("v5: the current schema version is 5", function()
+test("v6: the current schema version is 6", function()
     local NS = fresh()
-    -- red under: the v5 step missing from SCHEMA_STEPS
-    assertEqual(NS.Database.CurrentSchemaVersion(), 5)
-    assertEqual(NS.db.global.schemaVersion, 5)
+    -- red under: the v6 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 6)
+    assertEqual(NS.db.global.schemaVersion, 6)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
@@ -1135,7 +1137,7 @@ test("v5: RunMigrations converts every stored profile, and the result draws ench
         return { seeded = true, nextContainerId = 3, containerOrder = { 2 }, containers = { [2] = enchantContainer() } }
     end
     local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 4 } } })
-    assertEqual(NS.db.global.schemaVersion, 5)
+    assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
     for _, name in ipairs({ "Default", "Raid" }) do
         local c = NS.db.sv.profiles[name].containers[2]
         -- red under: the step migrating the active profile only
@@ -1189,4 +1191,237 @@ test("database: GetContainersByName sorts by name, case-insensitively, the id br
     for i, c in ipairs(NS.Database.GetContainers()) do ids[i] = c.id end
     assertEqual(table.concat(ids, ","), "1,2,3,4", "GetContainers keeps the display order")
     assertEqual(table.concat(NS.db.profile.containerOrder, ","), "1,2,3,4", "and the store is untouched")
+end)
+
+-- ── user categories: storage, keying, dynamic rows (issue #10 checkpoint 3) ────────────────────
+--
+-- This is the checkpoint that can corrupt stored player data -- a spell list silently deleted by an
+-- unrelated write, a dead category key written into every container of every profile -- so the cases
+-- below are as much the deliverable as the code is.
+
+--- The saved variables a session left behind, fed to a new one: a genuine reload, not a second read
+--- of the same live tables.
+local function reload()
+    local saved = _G.AuraMasterDB
+    local copy = {}
+    local function deep(v)
+        if type(v) ~= "table" then return v end
+        local out = {}
+        for k, item in pairs(v) do out[k] = deep(item) end
+        return out
+    end
+    for k, v in pairs(saved or {}) do copy[k] = deep(v) end
+    return fresh({ savedVariables = copy })
+end
+
+test("v6: MigrateV6 stamps the user-category store, and a second run changes nothing", function()
+    local NS = fresh()
+    local p = {}
+    assertEqual(NS.Database.MigrateV6(p), 0)
+    assertEqual(type(p.userCategories), "table")
+    assertEqual(type(p.userCategoryOrder), "table")
+    p.userCategories.userabcdefghij = { key = "userabcdefghij", name = "Mine", auraType = "HELPFUL" }
+    p.userCategoryOrder[1] = "userabcdefghij"
+    -- red under: a step that recreates or clears what it already stamped
+    assertEqual(NS.Database.MigrateV6(p), 1, "the second run counts what is there and converts nothing")
+    assertEqual(#p.userCategoryOrder, 1)
+    assertEqual(p.userCategories.userabcdefghij.name, "Mine")
+    -- A hand-edited or corrupt leaf is REPLACED rather than left for later code to index.
+    p.userCategories = "junk"
+    NS.Database.MigrateV6(p)
+    assertEqual(type(p.userCategories), "table")
+    assertEqual(NS.Database.MigrateV6(nil), 0, "a non-table profile is not an error")
+end)
+
+test("v6: a profile that predates user categories climbs the ladder and stays valid", function()
+    local function raw()
+        return {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 },
+            containers = { [1] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars" } },
+        }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 5 } } })
+    assertEqual(NS.db.global.schemaVersion, 6)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local p = NS.db.sv.profiles[name]
+        -- red under: the step touching the active profile only, as every step before it must not
+        assertEqual(type(p.userCategories), "table", name)
+        assertEqual(type(p.userCategoryOrder), "table", name)
+        assertEqual(next(p.userCategories), nil, name .. " invented a category")
+    end
+    assertEqual(NS.ValidateSchema(), 0, "and every schema row still resolves")
+end)
+
+test("user categories: one round-trips through a reload, with its spells", function()
+    local NS = fresh()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    assertTrue(key ~= nil, "created")
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true, [424243] = true } })
+    -- The list is categorySpells[key] like every other category's edits: no second store.
+    assertEqual(NS.db.profile.categorySpells[key][424242], true)
+
+    local NS2 = reload()
+    local def = NS2.Categories.Find("HELPFUL", key)
+    -- red under: the record surviving but the definition not being rebuilt at load
+    assertTrue(def ~= nil, "the definition is materialized again at load")
+    assertEqual(def.label, "Affixes")
+    assertEqual(def.auraType, "HELPFUL")
+    local spells = NS2.FilterCompiler.CategorySpells(def, NS2.db.profile.categorySpells)
+    assertEqual(spells[424242], true)
+    assertEqual(spells[424243], true)
+    assertEqual(NS2.ValidateSchema(), 0)
+end)
+
+test("user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container", function()
+    -- THE ORDER IN NS.RunMigrations IS LOAD-BEARING (core/Database.lua). PrepareProfile's
+    -- backfillContainers is what stamps the container template's category keys into every stored
+    -- container, and the template only carries a user category's key once the sync has materialized
+    -- it. Run the two the other way round and the backfill walks a template that does not yet know
+    -- the key, so the stored container carries NO state for it.
+    --
+    -- A category created in this session hides the bug -- Cat.CreateUserCategory runs its own
+    -- PrepareProfile -- so the shape that exposes it is a record already on disk whose key no
+    -- container has yet: a profile written by another client, or an import (#9).
+    local K = "userabcdefghij"
+    local NS = fresh({ savedVariables = { global = { schemaVersion = 6 }, profiles = { Default = {
+        seeded = true, nextContainerId = 2, containerOrder = { 1 },
+        containers = { [1] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars" } },
+        userCategories = { [K] = { key = K, name = "Affixes", auraType = "HELPFUL" } },
+        userCategoryOrder = { K },
+    } } } })
+    assertTrue(NS.Categories.Find("HELPFUL", K) ~= nil, "materialized at load (the premise)")
+    local con = NS.db.profile.containers[1]
+    -- red under: swapping the two lines in NS.RunMigrations. The compiler would not notice
+    -- (splitCategories reads an absent state as Show, the default anyway), but the settings panel
+    -- would: a ChoiceGrid cell lights by comparing the STORED value against its column, so the row
+    -- draws with neither Show nor Hide lit until something else writes it.
+    assertEqual(con.filter.categories[K], "show", "the stored container was backfilled with the key")
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
+test("user categories: the schema row resolves, and the seam reads and writes it per container", function()
+    local NS = fresh()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    local path = "container.filter.categories." .. key
+    local row = NS.FindSchemaRow(path)
+    -- red under: registering the definition without its row, which would leave the category
+    -- invisible to /am get|set|list, to a page's Defaults and to every reset
+    assertTrue(row ~= nil, "a schema row exists for a key that did not exist at load")
+    assertEqual(row.default, "show", "stamped from the container template, like every other row")
+    assertEqual(row.grid, "custom")
+    assertEqual(row.type, "string")
+    assertTrue(row.auraTypes.HELPFUL, "offered on buff containers")
+    assertTrue(row.auraTypes.HARMFUL == nil, "and not on debuff ones")
+    assertEqual(row.label, "Affixes", "the player's own text, straight through NS.L's miss path")
+    assertEqual(NS.DefaultFor(path), "show")
+    assertEqual(NS.CONTAINER_TEMPLATE.filter.categories[key], "show")
+
+    local id = NS.Database.GetContainers()[1].id
+    assertEqual(NS.GetSetting(path, id), "show", "the backfill stamped it into every stored container")
+    NS.SetByPath(path, "hide", id)
+    assertEqual(NS.GetSetting(path, id), "hide")
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
+test("user categories: Cat.AuraTypeOf answers for a user category KEY, not only for its definition", function()
+    -- Checkpoint 2 left the key form answering for the SHIPPED lists only and said so in its own doc
+    -- comment; this is the case that closes it. It answers because the definition is materialized
+    -- INTO those lists, which is the whole reason materialization was chosen over a side list.
+    local NS = fresh()
+    local buffs = NS.Categories.CreateUserCategory("Mine", "HELPFUL")
+    local debuffs = NS.Categories.CreateUserCategory("Theirs", "HARMFUL")
+    assertEqual(NS.Categories.AuraTypeOf(buffs), "HELPFUL")
+    assertEqual(NS.Categories.AuraTypeOf(debuffs), "HARMFUL")
+    assertEqual(NS.Categories.AuraTypeOf(NS.Categories.Find("HARMFUL", debuffs)), "HARMFUL")
+    -- red under: the key form answering for a key nothing knows, which a stored container may well
+    -- name (a retired key, and after checkpoint 5 a deleted user category)
+    assertTrue(NS.Categories.AuraTypeOf("userffffffffff") == nil)
+end)
+
+test("user categories: a profile switch swaps the set and leaves no stale definition, row or template key", function()
+    local NS = fresh()
+    local key = NS.Categories.CreateUserCategory("Only in Default", "HELPFUL")
+    local path = "container.filter.categories." .. key
+    assertTrue(NS.FindSchemaRow(path) ~= nil)
+
+    NS.db:SetProfile("Raid")
+    -- red under: NS.Schema having only an append path, so the old profile's row survives. The severe
+    -- consequence is not the failing validator but the stale DEFINITION below: categorizedUnion
+    -- would read the NEW profile's categorySpells under the OLD profile's key and quietly take ids
+    -- out of the complement `uncategorized` is defined against.
+    assertTrue(NS.Categories.Find("HELPFUL", key) == nil, "the definition went")
+    assertTrue(NS.FindSchemaRow(path) == nil, "and the row with it")
+    assertTrue(NS.CONTAINER_TEMPLATE.filter.categories[key] == nil, "and the template key")
+    assertFalse(NS.Categories.IsSpellCategory(key), "so nothing compiles against it")
+    assertEqual(NS.ValidateSchema(), 0)
+
+    NS.db:SetProfile("Default")
+    assertTrue(NS.Categories.Find("HELPFUL", key) ~= nil, "and it all comes back on the way home")
+    assertTrue(NS.FindSchemaRow(path) ~= nil)
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
+test("user categories: a new key collides with nothing shipped and with nothing in any stored profile", function()
+    local NS = fresh()
+    local mine = NS.Categories.CreateUserCategory("Mine", "HELPFUL")
+    -- A key living in a profile this session is not running: exactly the case a per-profile counter
+    -- cannot see, and the reason the scan is account-wide (defaults/Categories.lua's Cat.NewUserKey).
+    NS.db.sv.profiles.Elsewhere = { userCategories = { userzzzzzzzzzz = { key = "userzzzzzzzzzz", name = "Theirs", auraType = "HARMFUL" } } }
+    local taken = NS.Categories.UserKeysInUse(NS.db)
+    assertTrue(taken[mine], "the active profile's key")
+    assertTrue(taken.userzzzzzzzzzz, "and an inactive profile's")
+    for _ = 1, 50 do
+        local key = NS.Categories.NewUserKey(taken)
+        assertTrue(taken[key] == nil, key .. " collides with a stored key")
+        assertTrue(NS.Categories.Find("HELPFUL", key) == nil, key .. " collides with a shipped key")
+        assertTrue(NS.Categories.Find("HARMFUL", key) == nil, key .. " collides with a shipped key")
+    end
+end)
+
+test("user categories: a rename keeps the key, so a container's stored Show/Hide survives it", function()
+    local NS = fresh()
+    local key = NS.Categories.CreateUserCategory("Frist draft", "HELPFUL")
+    local path = "container.filter.categories." .. key
+    local id = NS.Database.GetContainers()[1].id
+    NS.SetByPath(path, "hide", id)
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true } })
+
+    assertTrue(NS.Categories.RenameUserCategory(key, "  First draft  "))
+    -- red under: a rename that re-keys, which orphans every container's stored state, the schema row
+    -- and the spell list in one act. This is the failure mode issue #10 names by name.
+    assertEqual(NS.db.profile.userCategories[key].name, "First draft", "trimmed, and stored canonically")
+    assertEqual(NS.Categories.Find("HELPFUL", key).label, "First draft", "the label follows")
+    assertEqual(NS.FindSchemaRow(path).label, "First draft", "and so does the row's")
+    assertEqual(NS.GetSetting(path, id), "hide", "the container's own decision is untouched")
+    assertEqual(NS.db.profile.categorySpells[key][424242], true, "and so is the list")
+    assertEqual(NS.ValidateSchema(), 0)
+
+    -- The refusals. A shipped category is not the player's to rename, and a name has to be a name.
+    assertTrue(NS.Categories.RenameUserCategory("defensives", "Mine") == nil)
+    assertTrue(NS.Categories.RenameUserCategory(key, "   ") == nil)
+    assertEqual(NS.Categories.Find("HELPFUL", key).label, "First draft", "a refused rename changes nothing")
+    -- A duplicate name is allowed and merely reported: the key is identity, and two categories called
+    -- the same thing are two categories (checkpoint 6 warns, it does not block).
+    local other = NS.Categories.CreateUserCategory("First draft", "HELPFUL")
+    assertTrue(other ~= nil and other ~= key)
+    assertTrue(NS.Categories.UserCategoryNameTaken(NS.db.profile, "first draft", other))
+    assertFalse(NS.Categories.UserCategoryNameTaken(NS.db.profile, "Nobody's", nil))
+end)
+
+test("user categories: a stored record alone protects its spell list from the categorySpells write", function()
+    -- THE DATA-LOSS GUARD. settings/Schema.lua's normalizer drops every key it does not recognize
+    -- and the set is written WHOLE on every edit of ANY category, so a user key whose definition had
+    -- failed to materialize would have its entire list deleted by one unrelated write. The record is
+    -- the thing that cannot be half-built, so the record is what the normalizer asks about.
+    local NS = fresh()
+    local key = "userdeadbeef0"
+    NS.db.profile.userCategories[key] = { key = key, name = "Unmaterialized", auraType = "HELPFUL" }
+    assertTrue(NS.Categories.Find("HELPFUL", key) == nil, "no definition: the sync has not run")
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true } })
+    -- red under: normalizeCategoryEdits asking only Cat.IsSpellCategory
+    assertEqual(NS.db.profile.categorySpells[key][424242], true, "the list survived the write")
+    -- And a key with neither a definition nor a record is still dropped, as it always was.
+    NS.SetByPath("categorySpells", { [key] = { [424242] = true }, nonsense = { [1] = true } })
+    assertTrue(NS.db.profile.categorySpells.nonsense == nil)
+    assertEqual(NS.db.profile.categorySpells[key][424242], true)
 end)

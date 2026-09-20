@@ -1280,3 +1280,92 @@ test("filter: a buff container showing only Weapon enchants draws the slots, no 
     c.unit = "target"
     assertTrue(hasWarning(FC.Compile(c, {}), "never match"))
 end)
+
+-- ── user categories and the categorized union (issue #10 checkpoint 4) ─────────────────────────
+--
+-- Checkpoint 4 asks for NO compiler change at all: `categorizedUnion` walks `Categories.For` and
+-- takes every `spells`-kind definition, and checkpoint 3 materializes a user category as exactly
+-- that. The plan of record calls this out as must-prove-not-assume, so the cases below prove it
+-- through a COMPILED PLAN rather than by reading the local -- and they prove the NEGATIVE the issue
+-- is actually worried about, not merely that the union is non-empty.
+--
+-- Their own environment: materializing a category mutates Cat.HELPFUL, the container template and
+-- NS.Schema, all of which the shared environment above is read for.
+
+local freshEnv = dofile("tests/fresh_env.lua")
+
+local MINE = 987654      -- an id no shipped list carries, claimed by the player's own category
+local NOBODYS = 987655   -- and one nothing claims at all, the control
+
+--- A player buff container with one user category holding MINE, that category HIDDEN and everything
+--- else left at its default Show. `unit = "player"` is not incidental: it is the one unit where
+--- FC.IdsAlwaysHonored is true, so the Uncategorized rescue group genuinely exists and the rescue
+--- this checkpoint is about can actually happen.
+local function envWithUserCategory()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("My affixes", "HELPFUL")
+    E.SetByPath("categorySpells", { [key] = { [MINE] = true } })
+    local con = E.Database.DeepCopy(E.CONTAINER_TEMPLATE)
+    con.unit, con.auraType = "player", "HELPFUL"
+    con.filter.categories[key] = "hide"
+    return E, key, con
+end
+
+local function groupNamed(plan, label)
+    for _, g in ipairs(plan.groups) do
+        if g.label == label then return g end
+    end
+    return nil
+end
+
+test("categories: a user category joins the categorized union, so Uncategorized stops rescuing what it claims", function()
+    local E, key, con = envWithUserCategory()
+    local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
+
+    -- 1. The union, read out of the compiled plan and not out of the local: Uncategorized's whole
+    -- group IS an excludeSpellIDs of the union. red under: categorizedUnion missing user categories.
+    local rescue = groupNamed(plan, "Uncategorized")
+    assertTrue(rescue ~= nil, "the player-buff container has its Uncategorized rescue group")
+    local excluded = rescue.candidateFilters and rescue.candidateFilters.excludeSpellIDs or {}
+    assertTrue(excluded[MINE], "the user category's id is outside what Uncategorized draws")
+    assertTrue(excluded[NOBODYS] == nil, "and an id in no category at all is not")
+
+    -- 2. Concretely: nothing in the plan draws MINE. The category that claims it is Hidden and gets
+    -- no group, and the rescue group excludes it.
+    for _, g in ipairs(plan.groups) do
+        local include = g.candidateFilters and g.candidateFilters.includeSpellIDs
+        assertTrue(include == nil or include[MINE] == nil, "group " .. g.label .. " draws a hidden id")
+    end
+
+    -- 3. And the explanation agrees with the plan. Rank 4 is the assertion that matters: rank 5 --
+    -- "in no category at all" -- is exactly the misbehavior issue #10 describes, where rank 3
+    -- rescues the aura precisely when the player hid it deliberately.
+    local why = E.FilterCompiler.ExplainSpell(con, MINE, E.FilterCompiler.ProfileContext())
+    assertEqual(why.verdict, "hidden")
+    assertEqual(why.rank, 4)
+    assertEqual(#why.categories, 1)
+    assertEqual(why.categories[1].key, key)
+    assertEqual(why.categories[1].label, "My affixes")
+    assertEqual(why.categories[1].state, "hide")
+
+    -- The control, so the case cannot pass by hiding everything: an id no list claims still takes
+    -- Uncategorized's Show, at rank 3, on this very container.
+    local control = E.FilterCompiler.ExplainSpell(con, NOBODYS, E.FilterCompiler.ProfileContext())
+    assertEqual(control.verdict, "shown")
+    assertEqual(control.rank, 3)
+end)
+
+test("categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For", function()
+    -- The cheaper guard, on the MECHANISM rather than the outcome: a later refactor that stopped
+    -- materializing user categories -- keeping them in a side list, say -- would empty the union
+    -- silently, and this is where it fails loudly instead.
+    local E, key = envWithUserCategory()
+    local found
+    for _, def in ipairs(E.Categories.For("HELPFUL")) do
+        if def.key == key then found = def end
+    end
+    assertTrue(found ~= nil, "the user category is in Categories.For('HELPFUL')")
+    assertEqual(found.kind, "spells", "which is the kind categorizedUnion takes")
+    local spells = E.FilterCompiler.CategorySpells(found, E.db.profile.categorySpells)
+    assertEqual(spells[MINE], true, "and its effective list is the profile's edits alone")
+end)

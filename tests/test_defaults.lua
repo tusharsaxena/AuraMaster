@@ -49,7 +49,10 @@ end
 -- enchantSlots (schema v3, B3) got its rows in B7 (settings/GeneralSpells.lua's ENCHANT_ROWS), so it
 -- is no longer exempted here.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
-local PROFILE_CARVE_OUTS = set({ "categorySpells" })
+-- userCategories and userCategoryOrder (issue #10 checkpoint 3) join categorySpells here for the
+-- same reason: they are maps the PLAYER fills, written by defaults/Categories.lua's create and
+-- rename acts rather than by a settings row, so there is no row for a row-shaped test to find.
+local PROFILE_CARVE_OUTS = set({ "categorySpells", "userCategories", "userCategoryOrder" })
 
 test("defaults: every starter container is a valid container whose every override the template knows", function()
     local units, types, styles = set(C.UNITS), set(C.AURA_TYPES), set(C.STYLES)
@@ -371,4 +374,279 @@ test("defaults: StatesShowing hides every buff category but the ones named, and 
         assertEqual(states[def.key], "show", def.key)
     end
     assertTrue(Cat.StatesShowing({}) ~= Cat.StatesShowing({}), "a fresh table each call")
+end)
+
+-- ── user categories (issue #10 checkpoint 3) ──────────────────────────────────────────────────
+--
+-- Every case below builds its own environment: materializing a user category MUTATES Cat.HELPFUL,
+-- the container template and NS.Schema, and the shared environment tests/run.lua builds is read by
+-- every other suite.
+
+local fresh = dofile("tests/fresh_env.lua")
+
+--- A fresh environment holding `n` user categories, created through the real act. Returns the NS and
+--- the keys in creation order.
+local function withUserCategories(specs)
+    local NS2 = fresh()
+    local keys = {}
+    for i, spec in ipairs(specs) do
+        local key = NS2.Categories.CreateUserCategory(spec[1], spec[2])
+        keys[i] = key
+    end
+    return NS2, keys
+end
+
+test("defaults: no shipped category key sits in the reserved 'user' namespace", function()
+    -- red under: a category added to defaults/Categories.lua with a key like `userFavorites`. The
+    -- prefix is what guarantees a generated user key can never shadow a shipped one, so it is a
+    -- promise about THIS file, not about the generator (defaults/Categories.lua's Cat.NewUserKey).
+    for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do
+        for _, def in ipairs(list) do
+            assertTrue(def.key:find("^user") == nil, def.key .. " takes the reserved user namespace")
+        end
+    end
+end)
+
+test("defaults: SanitizeUserName strips the escape character and control characters, trims and caps", function()
+    local s = Cat.SanitizeUserName
+    -- red under: storing a name that can open a color, texture or hyperlink escape in the grid row
+    -- and the tooltip the label reaches (defaults/Categories.lua's note above the function).
+    assertEqual(s("|cffff0000Mine|r"), "cffff0000Miner")
+    assertEqual(s("Big\tCDs"), "BigCDs")
+    assertEqual(s("  Raid cooldowns  "), "Raid cooldowns")
+    assertEqual(s("100% uptime"), "100% uptime", "a percent sign is an ordinary character in a name")
+    assertTrue(s("   ") == nil, "whitespace alone is not a name")
+    assertTrue(s("") == nil)
+    assertTrue(s(nil) == nil)
+    assertTrue(s(42) == nil)
+    local long = s(("x"):rep(200))
+    assertEqual(#long, 40, "capped, so a grid row stays a row")
+end)
+
+test("defaults: NewUserKey is namespaced and terminates against a generator that always collides", function()
+    local key = Cat.NewUserKey({})
+    assertEqual(key:sub(1, 4), "user")
+    assertEqual(#key, 14, "the prefix plus ten base-36 characters")
+    assertTrue(key:find("^user[0-9a-z]+$") ~= nil, key)
+    -- A degenerate generator answers the same character for ever, so every attempt produces the same
+    -- ten characters; the attempt counter appended past the fifth try is what makes termination a
+    -- property of the loop rather than of the generator.
+    local stuck = function() return 1 end
+    local base = Cat.NewUserKey({}, stuck)
+    local taken = { [base] = true }
+    for i = 6, 9 do taken[base .. i] = true end
+    local escaped = Cat.NewUserKey(taken, stuck)
+    -- red under: the loop returning a key that is already taken, or spinning for ever
+    assertTrue(taken[escaped] == nil, escaped .. " was already taken")
+    assertEqual(escaped, base .. "10")
+end)
+
+test("defaults: the key generator is the client's own, not the shared unseeded math.random", function()
+    -- The justification for a random key over a counter is that two categories created
+    -- independently cannot collide. `math.random` alone did not earn it: nothing in the addon ever
+    -- called `math.randomseed`, so in Lua 5.1 every client walks the SAME sequence from its first
+    -- draw and two players making their first category would have been handed one key between them.
+    --
+    -- Both halves are pinned by SEEDING THE SHARED GENERATOR IDENTICALLY first. That is what a fresh
+    -- client looks like from inside one test process: two clients cannot be two processes here, and
+    -- consecutive `math.random` draws differ within one process however unseeded it is, so a naive
+    -- "these two sequences differ" case would pass over the bug it is meant to catch.
+    local function firstKey(guid)
+        math.randomseed(1)
+        local NS2 = fresh({ before = function(mocks) mocks.__playerGUID = guid end })
+        return NS2.Categories.NewUserKey({})
+    end
+    -- red under: `rand = rand or math.random`. Two clients whose shared generator is in the same
+    -- state draw the same key unless the addon's own seed distinguishes them -- and the player GUID
+    -- is the ingredient that does.
+    assertTrue(firstKey("Player-1234-0AAAAAA1") ~= firstKey("Player-5678-0BBBBBB2"),
+        "two characters, two keys")
+
+    local NS3 = fresh()
+    math.randomseed(1)
+    local one = NS3.Categories.NewUserKey({})
+    math.randomseed(1)
+    local two = NS3.Categories.NewUserKey({})
+    -- red under the same revert, from the other side: reseeding the SHARED generator must not rewind
+    -- this addon's keys. The client runs every addon in one Lua state, so the generator has to be
+    -- this file's own -- which is also why nothing here calls `math.randomseed` itself.
+    assertTrue(one ~= two, "the shared generator's state does not decide our keys")
+    for _, key in ipairs({ one, two }) do
+        assertTrue(key:find("^user[0-9a-z]+$") ~= nil, key)
+        assertEqual(#key, 14, "the prefix plus ten base-36 characters")
+    end
+
+    -- A client that answers no GUID -- the seed's one genuinely distinguishing ingredient is absent
+    -- until the player is in the world -- still produces well-formed, distinct keys off the rest.
+    local NS4 = fresh({ before = function(mocks) mocks.__playerGUID = false end })
+    local a, b = NS4.Categories.NewUserKey({}), NS4.Categories.NewUserKey({})
+    assertTrue(a:find("^user[0-9a-z]+$") ~= nil, a)
+    assertTrue(a ~= b)
+end)
+
+test("defaults: a user category materializes among the spell lists, above Weapon enchants, Uncategorized still last", function()
+    local NS2, keys = withUserCategories({ { "My cooldowns", "HELPFUL" }, { "Their nonsense", "HARMFUL" } })
+    local C2 = NS2.Categories
+    local at = {}
+    for i, def in ipairs(C2.HELPFUL) do at[def.key] = i end
+    -- red under: appending a user definition after Weapon enchants or after Uncategorized (U-1)
+    assertTrue(at[keys[1]] < at.weaponEnchants, "a user category sits above Weapon enchants")
+    assertTrue(at.consumables < at[keys[1]], "and below the shipped spell lists it is a sibling of")
+    assertEqual(C2.HELPFUL[#C2.HELPFUL].key, "uncategorized", "U-1 survives materialization")
+    assertEqual(C2.HARMFUL[#C2.HARMFUL].key, "uncategorizedDebuffs")
+    local def = C2.Find("HELPFUL", keys[1])
+    assertTrue(def ~= nil and def.kind == "spells", "an ordinary spells-kind definition")
+    assertEqual(def.label, "My cooldowns")
+    assertEqual(def.auraType, "HELPFUL")
+    assertTrue(def.userCategory, "the one marker that tells a user definition from a shipped one")
+    assertEqual(next(def.spells), nil, "an EMPTY starter list: the list IS categorySpells[key]")
+    assertTrue(C2.IsSpellCategory(keys[1]), "so General -> Spell Categories can edit it")
+    assertEqual(C2.DefaultStates()[keys[1]], "show")
+    -- The debuff one landed on the other list, and only on the other list.
+    assertTrue(C2.Find("HARMFUL", keys[2]) ~= nil)
+    assertTrue(C2.Find("HELPFUL", keys[2]) == nil)
+end)
+
+test("defaults: schema order tracks Cat.For order per aura type, user categories included", function()
+    local NS2 = withUserCategories({ { "Mine", "HELPFUL" }, { "Also mine", "HELPFUL" }, { "Theirs", "HARMFUL" } })
+    local index = {}
+    for i, row in ipairs(NS2.Schema) do
+        if index[row.path] == nil then index[row.path] = i end
+    end
+    -- settings/Filters.lua's renderCategories draws each grid in SCHEMA order, not in Cat.For order,
+    -- so this equality is what keeps Uncategorized last on screen. red under: a user row appended to
+    -- the end of NS.Schema instead of inserted before the aura type's enchant/uncategorized row.
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+        local previous, previousKey = 0, "(none)"
+        for _, def in ipairs(NS2.Categories.For(auraType)) do
+            local i = index["container.filter.categories." .. def.key]
+            assertTrue(i ~= nil, def.key .. " has no schema row")
+            assertTrue(i > previous, def.key .. " is registered before " .. previousKey)
+            previous, previousKey = i, def.key
+        end
+    end
+end)
+
+test("defaults: a user category's name is unrouted by design, and its description is not", function()
+    -- The locale exemption tests/test_locale.lua makes, proved from the other side: the NAME cannot
+    -- have an enUS line (it is the player's text and no build could ship one), and the DESCRIPTION
+    -- must, which is exactly why the exemption is one FIELD of one flagged definition kind rather
+    -- than the whole definition.
+    local NS2, keys = withUserCategories({ { "Affixes I care about", "HELPFUL" } })
+    local fh = io.open("locales/enUS.lua", "r")
+    assertTrue(fh ~= nil, "cannot open locales/enUS.lua (tests run from the repo root)")
+    local body = fh:read("*a")
+    fh:close()
+    local defined = {}
+    for key in body:gmatch('\nL%["(.-)"%] = ') do defined[key] = true end
+    local def = NS2.Categories.Find("HELPFUL", keys[1])
+    assertTrue(defined[def.label] == nil, "a player's own name must never be a locale key")
+    -- red under: building the description out of the name, which would drag the player's text into
+    -- the one field the guard still checks
+    assertTrue(defined[def.desc], "the description is a shipped string and stays routed: " .. def.desc)
+end)
+
+test("defaults: a corrupt user record is skipped and left on disk, never coerced", function()
+    local NS2 = fresh()
+    local p = NS2.db.profile
+    p.userCategories = {
+        usergood   = { key = "usergood", name = "Fine", auraType = "HELPFUL" },
+        usernoType = { key = "usernoType", name = "Fine too", auraType = "BOTH" },
+        usernoName = { key = "usernoName", name = "   ", auraType = "HELPFUL" },
+        usernotATable = 7,
+    }
+    p.userCategoryOrder = { "usergood", "usernoType", "usernoName", "usernotATable" }
+    local made = NS2.Categories.SyncUserCategories(p)
+    assertEqual(made, 1, "one usable record of four")
+    -- red under: coercing an unknown aura type to HELPFUL, which silently moves the category between
+    -- two grids and orphans every container's stored state for it (the immutability decision).
+    assertTrue(NS2.Categories.Find("HELPFUL", "usernoType") == nil)
+    assertTrue(NS2.Categories.Find("HARMFUL", "usernoType") == nil)
+    assertTrue(NS2.Categories.Find("HELPFUL", "usernoName") == nil)
+    assertTrue(NS2.Categories.Find("HELPFUL", "usergood") ~= nil)
+    -- Skipped, not deleted: the records are still on disk for the player to fix or remove.
+    assertTrue(p.userCategories.usernoType ~= nil, "a skipped record is left alone")
+    assertTrue(p.userCategories.usernoName ~= nil)
+    assertEqual(NS2.ValidateSchema(), 0, "and no row is left over from the ones that were skipped")
+end)
+
+test("defaults: a record outside the reserved namespace cannot hijack a shipped category", function()
+    -- The most damaging shape a hand-edited or corrupt SavedVariables file can take: a record keyed
+    -- with a SHIPPED category's key. It is refused for the same reason an unknown aura type is --
+    -- it is not a user category with a bad field, it is a claim on another category's identity.
+    local NS2 = fresh()
+    local C2, p = NS2.Categories, NS2.db.profile
+    assertTrue(C2.Find("HELPFUL", "healing") ~= nil, "healing is a shipped category (the premise)")
+    p.userCategories = {
+        healing = { key = "healing", name = "Mine", auraType = "HELPFUL" },
+        userok  = { key = "userok", name = "Also mine", auraType = "HELPFUL" },
+    }
+    p.userCategoryOrder = { "healing", "userok" }
+    -- red under: usableName checking the RECORD and never the KEY, which materialized the record
+    -- into Cat.HELPFUL beside the shipped healing -- two definitions under one key.
+    assertEqual(C2.SyncUserCategories(p), 1, "the namespaced record only")
+    local n = 0
+    for _, def in ipairs(C2.HELPFUL) do
+        if def.key == "healing" then n = n + 1 end
+    end
+    assertEqual(n, 1, "exactly one definition is keyed healing, and it is the shipped one")
+    assertTrue(C2.IsUserCategory("healing") == false, "the shipped definition is the survivor")
+    assertEqual(C2.Find("HELPFUL", "healing").label, "Healing", "with the shipped label intact")
+    assertTrue(p.userCategories.healing ~= nil, "and the record is left on disk, not deleted")
+
+    -- THE CONSEQUENCE, which is what makes this worth a guard rather than a shrug. Teardown finds a
+    -- user definition BY KEY, so a materialized `healing` takes the SHIPPED healing's entry out of
+    -- the container template with it at the very next sync -- a profile switch, a copy or a reset --
+    -- and never puts it back. NS.DefaultFor then answers nil for a row the player never touched.
+    C2.SyncUserCategories({})
+    assertEqual(NS2.CONTAINER_TEMPLATE.filter.categories.healing, "show",
+        "the shipped key survives a later sync")
+    assertEqual(NS2.DefaultFor("container.filter.categories.healing"), "show")
+    assertEqual(NS2.ValidateSchema(), 0, "so no shipped row is left without a default")
+end)
+
+test("defaults: a user category's name is shown as typed even when it is a shipped locale key", function()
+    -- NS.L hands back any key it has no line for, so an unguarded `L[def.label]` is invisible on
+    -- enUS for most names and WRONG for the handful that collide with a real shipped line. "Healing"
+    -- is one: it is the enUS text of the shipped `healing` category's label key.
+    local NS2, keys = withUserCategories({ { "Healing", "HELPFUL" } })
+    local def = NS2.Categories.Find("HELPFUL", keys[1])
+    -- red under: any category-labeling site indexing NS.L with a user def's label. Only the shipped
+    -- definition's label is a key; the user one's is the player's text and is returned untouched.
+    assertEqual(NS2.Categories.LabelOf(def), "Healing")
+    assertEqual(NS2.Categories.LabelOf(NS2.Categories.Find("HELPFUL", "healing")), "Healing")
+    -- The two are indistinguishable on enUS by design, so the guard is proved on the OTHER side:
+    -- a locale line that translates the shipped key must not reach the player's category.
+    NS2.L["Healing"] = "Heilung"
+    assertEqual(NS2.Categories.LabelOf(def), "Healing", "the player's own text, whatever locale says")
+    assertEqual(NS2.Categories.LabelOf(NS2.Categories.Find("HELPFUL", "healing")), "Heilung")
+    assertEqual(NS2.FindSchemaRow("container.filter.categories." .. keys[1]).label, "Healing",
+        "and the schema row, built at the moment of creation, carries the same text")
+end)
+
+test("defaults: userCategoryOrder is reconciled the way containerOrder is", function()
+    local NS2 = fresh()
+    local p = NS2.db.profile
+    p.userCategories = {
+        usera = { key = "usera", name = "A", auraType = "HELPFUL" },
+        userb = { key = "userb", name = "B", auraType = "HELPFUL" },
+        userc = { key = "userc", name = "C", auraType = "HELPFUL" },
+    }
+    -- A dangling key, a duplicate, and two records with no entry at all.
+    p.userCategoryOrder = { "userb", "gone", "userb" }
+    local order = NS2.Categories.UserCategoryOrder(p)
+    -- red under: leaving group order to `pairs` over userCategories, which varies between logins and
+    -- rebuilds every container that has anything Hidden (FC.StructureKey counts groups).
+    assertEqual(table.concat(order, ","), "userb,usera,userc",
+        "dangling and duplicate dropped, orphans appended sorted")
+    assertEqual(table.concat(p.userCategoryOrder, ","), "userb,usera,userc", "and written back")
+    NS2.Categories.SyncUserCategories(p)
+    local seen = {}
+    for _, def in ipairs(NS2.Categories.HELPFUL) do
+        if def.userCategory then
+            seen[#seen + 1] = def.key
+        end
+    end
+    assertEqual(table.concat(seen, ","), "userb,usera,userc",
+        "declaration order follows the reconciled order")
 end)

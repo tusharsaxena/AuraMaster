@@ -56,6 +56,20 @@ NS.defaults.profile = {
     -- categorySpells: one set of slots every container's enchant block shares.
     enchantSlots   = { mainHand = true, offHand = true, ranged = true },
 
+    -- The categories the PLAYER made (issue #10 checkpoint 3, schema v6). Profile-wide for the same
+    -- reason categorySpells is: a category is a set of spells every container may show or hide, not
+    -- a property of one container.
+    --   userCategories    [key] = { key = key, name = "<the player's text>", auraType = "HELPFUL"|"HARMFUL" }
+    --   userCategoryOrder { key, key, ... } -- declaration order, the ONLY ordering source
+    -- There is no `spells` field on a record: a user category's list is `categorySpells[key]` like
+    -- every other category's edits, because defaults/Categories.lua materializes the definition with
+    -- an empty starter list and modules/FilterCompiler.lua's FC.CategorySpells is already defined as
+    -- starters plus edits. Both are MAPS THE PLAYER FILLS, so the template holds them empty and the
+    -- backfill has nothing to fill into them (core/Database.lua's Backfill header); AceDB may drop
+    -- either from the file entirely while it is empty, so every read of them is nil-safe.
+    userCategories    = {},
+    userCategoryOrder = {},
+
     -- The container registry. `containers` is keyed by id; `containerOrder` is display order (the
     -- settings picker, the CLI, and the order containers are built in). Both are written at runtime by
     -- modules/ContainerManager.lua, and on load by core/Database.lua's PrepareProfile (repair and

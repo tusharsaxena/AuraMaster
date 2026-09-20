@@ -112,7 +112,9 @@ run downloads ~75 MB of CSV into `tools/spell-research/.cache/`.
 3. US spelling (localization-§5): `color`, `gray`, `canceled`. A spelling fix changes the key — update
    every `locales/*.lua` and every call site in the same change.
 4. A label routed by value (a `core/Constants.lua` `*_LABELS` table, a category label) still needs its
-   `enUS` key; `NS.Choices` and the category rows look them up with `L[…]`.
+   `enUS` key; `NS.Choices` looks them up with `L[…]`, and every site that draws a category name asks
+   `Cat.LabelOf`. The one exemption is a **user category's** name: it is the player's own text, it has
+   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/Categories.lua`).
 
 ## Add a container field that changes shape (a migration)
 
@@ -120,8 +122,8 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 5, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:791`. The ladder is account-wide (`global.schemaVersion`), but containers live
+2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
+   `core/Database.lua:822`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure

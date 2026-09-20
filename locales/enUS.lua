@@ -479,6 +479,14 @@ L["Buffs the player is able to cancel."] = "Buffs the player is able to cancel."
 L["Stealable / purgeable"] = "Stealable / purgeable"
 L["Buffs that can be stolen or purged — most useful on an enemy target."] = "Buffs that can be stolen or purged — most useful on an enemy target."
 L["Uncategorized"] = "Uncategorized"
+-- The four strings a category the PLAYER made needs (issue #10 checkpoint 3). Its NAME is not among
+-- them and never will be: a name is data, so it is the one thing the locale guard in
+-- tests/test_locale.lua exempts, and the description below is fixed precisely so that the exemption
+-- can stay one field wide. If it ever has to name the category, the name is a %s ARGUMENT.
+L["Your own category. Edit its spells on General -> Spell Categories."] = "Your own category. Edit its spells on General -> Spell Categories."
+L["A category needs a name."] = "A category needs a name."
+L["A category holds buffs or debuffs, and the choice cannot be changed later."] = "A category holds buffs or debuffs, and the choice cannot be changed later."
+L["Only a category you made can be renamed."] = "Only a category you made can be renamed."
 L["Not in any of the Spell Categories lists above (Blizzard categories do not count). On a container watching you or your pet, Show rescues an unlisted buff from a Hidden Blizzard category; on a target or focus Blizzard may discard the spell list that rescue is built from, so Show simply changes nothing there. Hide removes the aura along with everything else this container has no other reason to draw, on every unit."] = "Not in any of the Spell Categories lists above (Blizzard categories do not count). On a container watching you or your pet, Show rescues an unlisted buff from a Hidden Blizzard category; on a target or focus Blizzard may discard the spell list that rescue is built from, so Show simply changes nothing there. Hide removes the aura along with everything else this container has no other reason to draw, on every unit."
 L["Hard CC (loss of control)"] = "Hard CC (loss of control)"
 L["Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit."] = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit."
