@@ -97,11 +97,12 @@ suite covers what only the client can show.
     style only: no cooldown swipe or icon border left over a bar, no bar, bar text or background left
     behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
     each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
-24. **Filters** → a Container dropdown above the strip. On a buff container the strip is **[ What to
-    show ][ Categories ][ Overrides ][ Sorting ]**, with no Spell lists tab on any aura type
-    (batch 8: Overrides sits right after Categories and Sorting is last). **What to show** ends with
-    the priority block — heading **Which aura wins**, the lead-in, then the five rank lines — below
-    its own three rows, and neither Categories nor Overrides carries a copy of it any more.
+24. **Filters** → a Container dropdown above the strip. On a buff container the strip is
+    **[ General ][ Categories ][ Overrides ][ Sorting ]**, with no Spell lists tab on any aura type
+    (batch 8: Overrides sits right after Categories and Sorting is last; the first tab was called
+    *What to show* until 2026-09-20). **General** ends with the priority block — heading **Filter
+    priority logic**, the lead-in, then the five rank lines — below its own three rows, and neither
+    Categories nor Overrides carries a copy of it any more.
     **Categories** opens straight onto two grids,
     **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
     once, with columns **Show · Hide** and the category name (hover it for its description). Click
@@ -122,9 +123,9 @@ suite covers what only the client can show.
     Screen gone; → *Another container* → **Another container** and **Offset**. Then `/am set
     container.attach.mode screen` with the page open → it redraws to Screen alone; `/am get
     container.attach.x` still answers while Offset is hidden.
-26. **Bars** → **[ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][
-    Pandemic ]**. On an icon container every tab carries the small gray "Not in use: this container
-    is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
+26. **Bars** → **[ General ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Icon ][
+    Pandemic ]** — Icon is second-last, right before Pandemic (2026-09-20). On an icon container
+    every tab carries the small gray "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
     quiet text, not a full-width orange banner, and not larger than the labels under it — a gap below it, and every control dimmed and unclickable; the tabs
     and the Container dropdown still work. **General** opens on its Size subsection (**Width**,
     **Height**) before Fill and Spark. On **Icon** tick **Show border**, set the thickness to 3 →
@@ -479,13 +480,15 @@ one. None of this is reproducible headlessly; these checks are.
     container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
     row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
     slot toggles, not a spell list.
-80. **The priority block reads as one rank per line, once, at the foot of What to show (`F-4`,
-    `P-1`, `T-2`, batch 8).** On Filters → **What to show**, scroll past Cast by, Duration and Max
-    duration → a **Which aura wins** section heading, the lead-in line ("Highest priority first:")
-    and the five numbered rank lines below it → each rank is its own line, none sharing a line with
-    another, the ranks readably larger than they were and separated by a hairline gap, no word cut
-    off mid-character, no horizontal scrollbar appearing on the tab. Now open **Categories** and
-    **Overrides** → neither carries the lead-in or any rank line; Categories opens straight onto its
+80. **The priority block reads as one rank per line, once, at the foot of General (`F-4`,
+    `P-1`, `T-2`, batch 8).** On Filters → **General**, scroll past Cast by, Duration and Max
+    duration → a **Filter priority logic** section heading, the lead-in line ("Highest priority
+    first:") and the five numbered rank lines below it → each rank is its own line, none sharing a
+    line with another, separated by a hairline gap, no word cut off mid-character, no horizontal
+    scrollbar appearing on the tab. The rank lines read at the SAME size as the Whitelist and
+    Blacklist notes on the **Overrides** tab — flip between the two tabs and compare (2026-09-20);
+    the lead-in is one notch smaller than it was too, and still in the normal font's color. Now open
+    **Categories** and **Overrides** → neither carries the lead-in or any rank line; Categories opens straight onto its
     first grid and Overrides onto **Whitelist**. Resize the WoW window narrower (if your UI scale
     allows it) and re-open the tab → each line still wraps cleanly on its own, just onto more
     sub-lines.
@@ -931,3 +934,21 @@ detail, the step points at it rather than repeating it.
      far end. Right-click the strip → the Containers page opens on that container; a screen-attached
      container still drags by it. While picking a frame, move the cursor across several frames,
      aura buttons included → the blue 2px outline follows each, no Lua error.
+163. **General → Dispel Colors reads as a list (2026-09-20).** General → **Dispel Colors** → above the
+     five swatches, "One color per dispel type, shared by every container:" on its own line, then three
+     lines each opening with "- ": where the colors are read (bars by dispel type, and a text line's
+     dispel type word, backdrop or edge), what has no dispel type and how that looks, and that an icon's
+     dispel border keeps Blizzard's own colors. No wall of prose, a hairline gap between the bullets, no
+     bullet sharing a line with another, and nothing cut off or scrolling sideways.
+164. **General → Spell Categories is split in two (2026-09-20).** General → **Spell Categories** → the
+     Category dropdown and its **Restore this category's starter list** button, then a **Spells in this
+     category** section heading with the library's own rule under it, and only then the **Add a spell**
+     box and the list of spells. Pick **Weapon enchants** → the three slot toggles, and NO "Spells in
+     this category" heading (there is no spell list to head).
+165. **The Text page's Text Template block dims with the page (2026-09-20).** Select a container drawn
+     as **bars** and open **Text** → the "Not in use: this container is drawn as bars." note, every
+     control dimmed. Now look at the **Text Template** subsection: the **Preview** line, the **Tokens**
+     and **Rules** headings, every bullet and every gold example are all gray, the same gray as the
+     Placement note under Justify — nothing in the block is brighter than the dimmed controls around
+     it. Switch the container's Style to **Text** on the Containers page and come back → the Preview is
+     in the container's own font color again, the tokens and examples in gold, the headings bright.

@@ -127,9 +127,11 @@ end)
 test("bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)", function()
     local NS, _, P = bars()
     local L = NS.L
-    -- red under: Size still a tab of its own, or the icon rows registered after Background & border
-    local want = table.concat({ L["General"], L["Icon"], L["Background & border"], L["Name text"],
-        L["Time text"], L["Stack text"], L["Pandemic"] }, ",")
+    -- red under: Size still a tab of its own, or Icon back among the bar's own look (it moved to
+    -- second-last, ahead of Pandemic, on 2026-09-20 -- a tab's place is where its group is FIRST
+    -- declared, settings/OptionsSetup.lua's collectTabs)
+    local want = table.concat({ L["General"], L["Background & border"], L["Name text"],
+        L["Time text"], L["Stack text"], L["Icon"], L["Pandemic"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
     NS.SetByPath("container.auraType", "HARMFUL", 1)
     P.rerender("Bars")

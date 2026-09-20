@@ -29,7 +29,10 @@ local _, NS = ...
 -- -- printed under "Invalid value for container.text.template" by the panel and by `/am set` alike.
 --
 -- A container drawn as bars or icons sees every row here disabled, under a note naming where its
--- style is changed (settings/OptionsSetup.lua's drawDisabledNotice). The font and icon-border blocks
+-- style is changed (settings/OptionsSetup.lua's drawDisabledNotice). The read-only TEXT between the
+-- rows dims with them: the Placement notes are gray at all times, and the Text Template block's
+-- Preview line and cheat sheet are grayed for that render (`dim`/`token`), so nothing on an inert
+-- tab reads brighter than the controls it describes. The font and icon-border blocks
 -- are composed (options-ui-§16) with class-color companions (§17) resolved to the tracked unit's
 -- class, as on the Bars page; the pandemic-window time swatch is a palette color and carries none.
 
@@ -122,23 +125,46 @@ NS.RegisterSchemaRows({
       min = -100, max = 100, step = 1, label = L["Y offset"], desc = L["Vertical nudge, in pixels."] },
 })
 
+--- Whether this render is the page drawn disabled — the container is not drawn as text. The library
+--- holds `ctx.__renderDisabled` for the whole of a bespoke tab's render (settings/OptionsSetup.lua's
+--- renderBespoke), which is how every ROW here dims itself; free-standing text has to be told.
+local function pageDim(ctx)
+    return ctx.__renderDisabled and true or false
+end
+
+--- Read-only prose, in the gray the Placement notes already read in (they are written GRAY at all
+--- times, which is why they were the one block that looked right on a disabled page). Owner,
+--- 2026-09-20: the Text Template subsection's Preview and cheat sheet stayed at full brightness
+--- while every control around them dimmed, so the inert part of the tab was its loudest part.
+local function dim(ctx, text)
+    if not pageDim(ctx) then return text end
+    return GRAY:format(text)
+end
+
+--- A run of template syntax: the token gold, or the same gray as the prose once the page is not in
+--- use — gold nested inside a gray wrap would survive it, since a WoW `|r` restores the color it is
+--- nested in rather than the default.
+local function token(ctx, text)
+    return (pageDim(ctx) and GRAY or GOLD):format(text)
+end
+
 --- A small gap, then a heading line, in the same voice a subgroup heading reads in (owner,
 --- 2026-09-19: "hard to read - give it better formatting and spacing").
 local function heading(ctx, text)
     local scroll = H.EnsureScroll(ctx)
     if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
-    H.TextRow(ctx, text, HEADING)
+    H.TextRow(ctx, dim(ctx, text), HEADING)
 end
 
 --- One bullet, drawn small.
 local function bullet(ctx, text)
-    H.TextRow(ctx, BULLET .. text, SMALL)
+    H.TextRow(ctx, dim(ctx, BULLET .. text), SMALL)
 end
 
 --- A bullet's continuation line: an example, indented under it and in the token gold so it reads as
 --- template syntax rather than prose.
 local function example(ctx, text)
-    H.TextRow(ctx, ("    " .. GOLD):format(text), SMALL)
+    H.TextRow(ctx, "    " .. token(ctx, text), SMALL)
 end
 
 --- The token cheat sheet, under the Template box: a **Tokens** list (one gold `$token$` bullet each,
@@ -151,7 +177,7 @@ end
 local function cheatSheet(ctx)
     heading(ctx, L["Tokens"])
     for _, def in ipairs(C.TEXT_TOKENS) do
-        bullet(ctx, (GOLD .. "  %s"):format("$" .. def.key .. "$", L[C.TEXT_TOKEN_LABELS[def.key]]))
+        bullet(ctx, ("%s  %s"):format(token(ctx, "$" .. def.key .. "$"), L[C.TEXT_TOKEN_LABELS[def.key]]))
     end
     heading(ctx, L["Rules"])
     bullet(ctx, L["[ ] hides its text along with the token inside it:"])
@@ -269,9 +295,12 @@ end
 --- LABEL (it wraps), but a single-line WoW EditBox does not lay a `\n` out as a break (final review,
 --- Task 20/8 interaction). Controller ruling: join stacked rows with a visible `" / "` instead, inside
 --- the same font-color wrap, so "Centered: name over time" reads "Ignore Pain / 11s".
-local function previewText(cfg, sample)
+--- `gray` (the page drawn disabled) takes the font color off the line and reads it in the notes'
+--- gray instead: the container's own bright font color on an inert tab was the loudest thing on it.
+local function previewText(cfg, sample, gray)
     local raw = (NS.Style.Text.PreviewLine(cfg.text, sample):gsub("\n", " / "))
     raw = escapeStrayPipes(raw)
+    if gray then return GRAY:format(raw) end
     local font = (cfg.text and cfg.text.font) or D.font
     local r, g, b = NS.Style.Color(font.fontColor, font.useClassColorFont)
     -- Rounded, not truncated, and clamped (Style_Text.lua's own `hex`): a stored 196/255 can float
@@ -285,13 +314,13 @@ end
 --- (`../PrettyChat/settings/Panel.lua`). A bespoke cell, not a schema row: it has no stored value of
 --- its own, and is rebuilt on every render, so it is never stale.
 local function previewBox(cfg)
-    return { wide = true, make = function(_, parent)
+    return { wide = true, make = function(ctx, parent)
         local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
         local box = NS.AceGUI:Create("EditBox")
         box:SetLabel(L["Preview"])
         box:SetFullWidth(true)
         box:SetDisabled(true)
-        box:SetText(previewText(cfg, sample))
+        box:SetText(previewText(cfg, sample, pageDim(ctx)))
         H.AttachTooltip(box, L["Preview"], L["The line this template draws on a sample aura. Read-only."])
         parent:AddChild(box)
         return box
@@ -309,6 +338,10 @@ end
 
 --- Text Template: the subsection heading, the Template dropdown, the Custom template box (Custom
 --- only), the Preview box on the aura type's sample aura, then the cheat sheet.
+---
+--- The dropdown and the box are widgets, and dim with the page on their own. The Preview's text and
+--- the cheat sheet are free-standing text, and are dimmed by hand (`dim`/`token`) so the whole
+--- subsection goes quiet together, as Placement's notes always have (owner, 2026-09-20).
 local function renderTemplate(ctx, cfg, row)
     local _, id = NS.ActiveContainer()
     if row then H.RenderRows(ctx, { headingOnly(row) }, nil, nil, { noHeadings = true }) end

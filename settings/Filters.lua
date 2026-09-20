@@ -3,8 +3,8 @@ local _, NS = ...
 -- settings/Filters.lua — what a container shows.
 --
 --     band          [Container ▾]
---     [ What to show ][ Categories ][ Overrides ][ Sorting ]
---     What to show  the rows, then the priority block (spec §6) at the foot of the tab
+--     [ General ][ Categories ][ Overrides ][ Sorting ]
+--     General       the rows, then the priority block (spec §6) at the foot of the tab
 --     Categories    Blizzard Categories   [Show all][Hide all], then Show · Hide · Category, plus an
 --                                         info icon (N-5)
 --                   Spell Categories      [Show all][Hide all], the same grid, plus a `See spells`
@@ -44,7 +44,12 @@ local FC = NS.FilterCompiler
 local PAGE = "filters"
 local BUFFS_DEBUFFS = { HELPFUL = true, HARMFUL = true }
 
-local G_SHOW, G_CATS, G_SORT = L["What to show"], L["Categories"], L["Sorting"]
+-- The first tab was "What to show" until the owner renamed it (2026-09-20): every other container
+-- sub-page opens on a tab called General, and this one asks the same kind of question. The name is
+-- per PAGE — settings/OptionsSetup.lua's collectTabs builds a page's strip out of the groups of
+-- NS.SchemaForPage(pageKey) alone — so it does not meet the General groups on the Text and Bars
+-- pages.
+local G_SHOW, G_CATS, G_SORT = L["General"], L["Categories"], L["Sorting"]
 
 NS.RegisterSchemaRows({
     {
@@ -270,7 +275,7 @@ local CATEGORY_EXTRA = {
 }
 
 -- F-4/spec §6: the five ranks, highest first. ONE place in the panel states them — the BOTTOM of the
--- What to show tab. Rank 1 is the whitelist, rank 2 the blacklist (revised 2026-09-15: the whitelist
+-- General tab. Rank 1 is the whitelist, rank 2 the blacklist (revised 2026-09-15: the whitelist
 -- beats the blacklist, and rank 3's Show is a positive claim that rescues an aura from a Hide
 -- elsewhere).
 -- Fix round 2 (batch 7): rank 5's trailing "UNLESS 'Only these categories' is on" clause is gone —
@@ -280,21 +285,31 @@ local CATEGORY_EXTRA = {
 -- WHERE IT LIVES (batch 8, from the owner's screenshots). It used to be restated verbatim at the
 -- TOP of BOTH the Categories and the Overrides tabs — "two halves of one decision" — which put a
 -- five-line wall of small text between the player and the controls, twice: "right now it looks
--- horrible". It is now drawn once, after the What to show rows, through the flow engine's
--- `afterGroup` hook (the page spec at the bottom of this file). What to show is the tab where the
--- player asks what this container shows at all, so the order that settles it is a footnote to that
--- answer rather than a preamble to two grids.
+-- horrible". It is now drawn once, after the General rows, through the flow engine's `afterGroup`
+-- hook (the page spec at the bottom of this file). General is the tab where the player asks what
+-- this container shows at all, so the order that settles it is a footnote to that answer rather
+-- than a preamble to two grids.
 --
 -- T-2 (batch 7) had already broken the old single dense paragraph into one line per rank; this keeps
 -- that and adds the frame around it, all from helpers that already exist (no new widget type, and
 -- OptionsWidgets.lua still has no bullet/list maker to reach for): an H.Section so the block is
--- announced and separated by the library's own heading rule, the lead-in in GameFontNormal, and each
--- rank its own H.TextRow in GameFontHighlight — the readable size, where the AceGUI Label default is
--- GameFontHighlightSmall — with a hairline spacer between ranks so five lines read as five lines.
+-- announced and separated by the library's own heading rule, the lead-in, and each rank its own
+-- H.TextRow, with a hairline spacer between ranks so five lines read as five lines.
 --
--- The WORDING is untouched, and is still verified rank by rank against modules/FilterCompiler.lua's
--- own header comment (same five ranks, same order).
-local PRIORITY_HEADING = L["Which aura wins"]
+-- THE SIZE (owner, 2026-09-20, from the live panel): the ranks used to pass GameFontHighlight, the
+-- larger face, because batch 8 read the AceGUI Label default as too small. Against the Overrides
+-- tab's own Whitelist/Blacklist notes — plain H.TextRow calls with no opts, so the Label default —
+-- the block shouted. The ranks now pass NO fontObject either, so the two read at one size
+-- (LibKa0s/OptionsWidgets.lua's applyLabelFont only overrides when a name is passed), and the
+-- lead-in drops from GameFontNormal to GameFontNormalSmall so it shrinks with them while keeping
+-- the normal font's own color.
+--
+-- THE HEADING is "Filter priority logic" (same owner pass): "Which aura wins" read as a question
+-- the tab was asking rather than as the name of the rule below it.
+--
+-- The WORDING of the ranks is untouched, and is still verified rank by rank against
+-- modules/FilterCompiler.lua's own header comment (same five ranks, same order).
+local PRIORITY_HEADING = L["Filter priority logic"]
 local PRIORITY_LEAD = L["Highest priority first:"]
 local PRIORITY_RANKS = {
     L["1. On the Overrides whitelist — always shown."],
@@ -309,16 +324,17 @@ local PRIORITY_RANKS = {
 -- between two CONTROLS.
 local PRIORITY_RANK_GAP = 4
 
---- The priority block at the foot of the What to show tab: a heading, the lead-in, then one line per
+--- The priority block at the foot of the General tab: a heading, the lead-in, then one line per
 --- rank. H.Section supplies the gap above it (the library adds its own top spacer once a group has
 --- been drawn), so this adds none of its own.
 local function renderPriorityBlurb(ctx)
     local scroll = H.EnsureScroll(ctx)
     H.Section(ctx, PRIORITY_HEADING)
-    H.TextRow(ctx, PRIORITY_LEAD, { fontObject = "GameFontNormal" })
+    H.TextRow(ctx, PRIORITY_LEAD, { fontObject = "GameFontNormalSmall" })
     if scroll then H.AddSpacer(scroll, PRIORITY_RANK_GAP) end
     for _, line in ipairs(PRIORITY_RANKS) do
-        H.TextRow(ctx, line, { fontObject = "GameFontHighlight" })
+        -- No fontObject: the AceGUI Label default, which is the size the Overrides notes read at.
+        H.TextRow(ctx, line)
         if scroll then H.AddSpacer(scroll, PRIORITY_RANK_GAP) end
     end
 end
@@ -426,7 +442,7 @@ local function bulkButtons(ctx, rows, gridKey)
           onClick = function() setGrid(rows, "hide", gridKey) end })
 end
 
---- The Categories tab: a grid each (the priority blurb is the What to show tab's now, F-4). The Spell Categories grid (kind
+--- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell Categories grid (kind
 --- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three
 --- separate gates, deliberately, because the three sentences stopped being true together the moment
 --- `Cat.HARMFUL` gained spell lists: the blurb asks whether this grid holds an editable list (T-2 fix
@@ -633,7 +649,7 @@ NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
     pairWith = {
         ["container.filter.maxDuration"] = maxDurationPresets,
     },
-    -- The priority block is drawn after the last What to show row, not above the first (see
+    -- The priority block is drawn after the last General row, not above the first (see
     -- PRIORITY_RANKS).
     afterGroup = {
         [G_SHOW] = renderPriorityBlurb,

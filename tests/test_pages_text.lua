@@ -201,6 +201,37 @@ test("text page: the cheat sheet has a Tokens heading, a Rules heading and one b
     assertTrue(P.hasText(ws, NS.L["Put a separator inside the brackets of the field it leads, so an empty field takes it along:"]))
 end)
 
+-- Owner, 2026-09-20: on a container drawn as bars every ROW dimmed and the Placement note was gray
+-- (it always is), but the Text Template block -- the Preview line and the Tokens/Rules cheat sheet --
+-- stayed at full brightness, so the inert part of the tab was its loudest part. They are free-standing
+-- TextRows that nothing dims, so settings/Text.lua grays them for that render instead (`dim`/`token`).
+test("text page: the Text Template block grays with the page on a bars container (2026-09-20)", function()
+    local NS, _, P, ws = textPage()
+    local GRAY = "|cff808080"
+    local GOLD = "|cffffd100"
+    -- while the page IS in use: the cheat sheet is bright, its examples gold
+    assertFalse(P.hasText(ws, GRAY .. "- "), "no grayed bullet while the container is drawn as text")
+    assertTrue(P.hasText(ws, GOLD), "the token examples are gold")
+    local live = preview(NS, P, ws).text
+    assertFalse(live:sub(1, #GRAY) == GRAY, "the Preview reads in the container's own font color")
+
+    NS.SetByPath("container.style", "bars", 1)
+    ws = P.rerender("Text")
+    local texts = P.texts(ws)
+    -- red under: the cheat sheet's headings, bullets and examples left bright on a dimmed page
+    for _, t in ipairs(texts) do
+        if t:find("Tokens", 1, true) or t:find("- ", 1, true) or t:find("$spellname$", 1, true) then
+            -- an example line is indented under its bullet, so the color code follows the spaces
+            local body = (t:gsub("^%s+", ""))
+            assertTrue(body:sub(1, #GRAY) == GRAY, "grayed: " .. t)
+        end
+    end
+    -- red under: a gold run left inside the gray wrap, which a WoW |r would restore TO gray, not out
+    assertFalse(P.hasText(ws, GOLD), "nothing in the block is still gold")
+    -- red under: the Preview still wearing the container's font color, the one bright line left
+    assertTrue(preview(NS, P, ws).text:sub(1, #GRAY) == GRAY, "the Preview line is gray too")
+end)
+
 test("text page: a valid template is stored; a refused one is not, and the panel prints why", function()
     local NS, m, P, ws = textPage()
     ws = pick(NS, m, P, ws, "custom")

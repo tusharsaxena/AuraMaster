@@ -12,9 +12,9 @@ is a defect in this doc (documentation-§3).
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| - Filters (sub-page of Containers, `N-2`) | What to show · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
+| - Filters (sub-page of Containers, `N-2`) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
-| - Bars (sub-page of Containers, `N-2`) | General · Icon · Background & border · Name text · Time text · Stack text · Pandemic | The look of a container drawn as bars |
+| - Bars (sub-page of Containers, `N-2`) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
 | - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
@@ -148,7 +148,9 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 dropdown of the eleven spell categories — the nine buff ones (defensives, activeMitigation, raidCDs,
 offensiveCDs, healing, support, movement, utility, consumables) and the two debuff ones issue #11
 added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
-KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry but
+KIND, not on an aura type, so a debuff spell list is editable here like any other. A **Spells in this
+category** section heading (2026-09-20) separates the picker and its Restore from the list below it;
+Weapon enchants, which has no spell list, draws no such heading. Every entry but
 Weapon enchants draws that category's ID list (the library's `IdList`):
 **Add a spell** takes a spell id, a shift-clicked link or a name. While you type, a dropdown lists
 the matching spells (the library's suggestions, LibKa0s issue #31), each with its rank where the
@@ -172,7 +174,9 @@ Categories row, with a link back. Unticking every slot here does not turn enchan
 container reads all three anyway — because the container-level Hide on Filters → Categories is the
 one switch for that; the tab says so.
 
-**Dispel Colors** — one line saying who reads the colors, then five swatches, `dispelColors.Magic`,
+**Dispel Colors** — a lead-in ("One color per dispel type, shared by every container:") and three
+bullets (2026-09-20, owner: a list rather than a wall of prose — the shape the Filters priority block
+already uses), then five swatches, `dispelColors.Magic`,
 `.Curse`, `.Disease`, `.Poison`, `.Bleed`: the fill or background of a bar colored by dispel type, and
 a Text line's dispel type word, backdrop and edge when those are on (Text → Font → Dispel type,
 feedback #7). An aura with no dispel type — every buff and many debuffs, class debuffs such as
@@ -210,7 +214,7 @@ Bar style, Icon style, Text style) and **Copy onto this container**. Name and po
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
 
-**What to show**
+**General** (named *What to show* until 2026-09-20)
 
 | Row | Path | Type | Applies to | Behavior |
 |---|---|---|---|---|
@@ -225,7 +229,7 @@ come from the profile-wide `enchantSlots`. `Hide enchants without a duration` ke
 group, `skipRender`, so the Categories tab draws it under the `weaponEnchants` row.
 
 **Categories** (`F-1`…`F-7`) — the grids and nothing above them: the five-rank priority block moved
-to the foot of **What to show** in batch 8 (see *Filter priority* below), off both this tab and
+to the foot of **General** in batch 8 (see *Filter priority* below), off both this tab and
 Overrides. The per-container **Only these categories** toggle
 (`container.filter.onlyShown`) that used to sit here is RETIRED (batch 7 fix round 2): once
 `Uncategorized = Hide` correctly suppresses the catch-all on its own, on EITHER aura type (fix round
@@ -303,9 +307,11 @@ or Cast by can still keep it off screen even where the lists and categories alon
 nothing else Shown, whose whitelist entry really was the only thing keeping an aura on screen): rank 5
 can no longer be "hidden" at all once the toggle is gone, so every note stays non-definite now.
 
-**Filter priority.** The five ranks, highest first, are stated in ONE place — the foot of the **What
-to show** tab (`P-1`, `P-4`), under the heading *Which aura wins*: a lead-in in the normal font, then
-one rank per line in `GameFontHighlight` with a hairline gap between them. Before batch 8 the same
+**Filter priority.** The five ranks, highest first, are stated in ONE place — the foot of the
+**General** tab (`P-1`, `P-4`), under the heading *Filter priority logic*: a lead-in in
+`GameFontNormalSmall`, then one rank per line at the AceGUI Label default with a hairline gap between
+them. Both sizes were a step larger until 2026-09-20, which made the block shout beside the Overrides
+tab's own notes; heading and sizes changed in that pass, the wording did not. Before batch 8 the same
 five lines were restated at the top of both Categories and Overrides, which put a wall of small text
 above the controls on two tabs at once. The wording is unchanged, and drives `FC.ExplainSpell`, the
 per-entry notes above: (1) on the Overrides whitelist — always shown; (2) on the Overrides blacklist
@@ -397,11 +403,11 @@ The tabs and the container picker stay live.
 | Tab | Rows (all under `container.bars.`) |
 |---|---|
 | General (14) | *Size:* `width` 40–600, `height` 6–80; *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar`, then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark`, `sparkTimeless` (show the spark on auras without a duration) |
-| Icon (9) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` / `iconBorderColor` · `useClassColorIconBorder` |
 | Background & border (10) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg`, then `bgColorMode` (one color / by dispel type); *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
 | Name text (11) | *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`); *Placement:* `name.show`, `name.justify`, `name.point`, `name.x`, `name.y` |
 | Time text (12) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
 | Stack text (11) | The same on `stacks.` |
+| Icon (9) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` / `iconBorderColor` · `useClassColorIconBorder` |
 | Pandemic (5) | *Time color:* `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` 1–60 (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color); *Highlight:* `pandemic` (Highlight the pandemic window), `pandemicColor` (Pandemic-window highlight color). Once the Highlights tab's *Running out* and *Refresh window* (smoke batch 2, B2-1: labels only, paths unchanged). The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
@@ -476,7 +482,11 @@ colored dispel word riding live inside it — then the **Tokens** / **Rules** ch
 a bulleted rule per bracket-hiding, the two escapes, how they combine, text outside `[ ]` always
 showing, and a separator belonging inside the brackets of the field it leads (`$spellname$[-$stacks$]`:
 an empty field takes its separator with it; smoke batch 2, item 8), each rule's example on its own
-indented gold continuation line. Under Placement, a gray **Justify note** always sits between the
+indented gold continuation line. On a container NOT drawn as text the whole Text Template block goes
+gray with the rows around it (2026-09-20) — the Preview line loses the container's font color, and the
+cheat sheet's headings, bullets and gold examples are all drawn in the notes' gray; the Placement
+notes were already gray at all times, which is why they alone looked right on a dimmed page. Under
+Placement, a gray **Justify note** always sits between the
 justify pair and the offsets (smoke batch 2, item 3): Center centers a one-piece template only; with
 several fields each field (the duration tokens together) gets its own centered row, text outside `[ ]`
 is not drawn, the box grows to fit, rows keep their place when a field is empty, an icon at size 0 is

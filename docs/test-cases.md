@@ -1011,7 +1011,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (38)
+### test_pages_general.lua (39)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1030,6 +1030,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
 - general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
+- general → spell categories: a section heading separates the picker from the spell list (2026-09-20)
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
@@ -1104,12 +1105,12 @@ badge and any count quoted in the docs must agree with it.
 - filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)
 - filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
-- filters: the priority order (spec §6) is stated on the What to show tab, highest rank first
+- filters: the priority order (spec §6) is stated on the General tab, highest rank first
 - filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
 - filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
-- filters: the priority block is drawn under the What to show rows, not above them (batch 8)
-- filters: the priority lead-in and its ranks are drawn in the fonts the block asks for (batch 8)
-- filters: the four tabs read What to show, Categories, Overrides, Sorting (batch 8)
+- filters: the priority block is drawn under the General rows, not above them (batch 8)
+- filters: the priority ranks read at the same size as the Overrides notes (2026-09-20)
+- filters: the four tabs read General, Categories, Overrides, Sorting (batch 8)
 - filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
@@ -1191,7 +1192,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (28)
+### test_pages_text.lua (29)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: a bars or icons container sees every row disabled under the note naming its style
@@ -1201,6 +1202,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
 - text page: the Preview box refreshes after a template change (Task 20)
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
+- text page: the Text Template block grays with the page on a bars container (2026-09-20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
 - text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
@@ -1368,13 +1370,13 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 38 |
+| test_pages_general.lua | 39 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 44 |
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
-| test_pages_text.lua | 28 |
+| test_pages_text.lua | 29 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1388,4 +1390,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1174** |
+| **Total** | **1176** |

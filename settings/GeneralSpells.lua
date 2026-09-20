@@ -6,12 +6,14 @@ local _, NS = ...
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
 --     Spell Categories  [Category ▾]  [Restore this category's starter list]
 --                       -- one of the nine spell-list categories, or Weapon enchants
+--                       ---- Spells in this category ----------------------------------------
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
 --                       (X) <icon> A spell you added (424242)
 --                    -- OR, when the category is Weapon enchants --
 --                       [x] Main hand   [x] Off hand   [x] Ranged
---     Dispel Colors     one swatch per dispel type, Magic … Bleed
+--     Dispel Colors     the lead-in and its four bullets, then one swatch per dispel type,
+--                       Magic … Bleed
 --
 -- SPELL CATEGORIES is bespoke: the category dropdown, the restore, then the library's IdList over that
 -- category's edits, drawn with an X at the left of every entry (`removeStyle = "icon"`, LibKa0s
@@ -59,6 +61,19 @@ local Cat = NS.Categories
 local PAGE = "general"
 local SPELLS = L["Spell Categories"]
 local DISPEL = L["Dispel Colors"]
+
+-- One bullet's marker, prefixed at draw so the locale keys stay plain prose (settings/Text.lua's
+-- cheat sheet does the same).
+local BULLET = "- "
+
+-- A hairline between two bullets: enough that they are not read as one wrapped paragraph, small
+-- enough that they still read as one block. settings/Filters.lua's PRIORITY_RANK_GAP, same reason.
+local BULLET_GAP = 4
+
+-- The gap a subsection heading gets above it. Mirrors the library's own SECTION_TOP_SPACER, which
+-- `H.Section` emits only for a schema-driven page; this tab is drawn by hand, so it supplies its
+-- own. See the note at the `H.Section` call in `renderSpells` for why the number is a literal.
+local SECTION_GAP = 10
 
 -- ---------------------------------------------------------------------------
 -- Spell Categories
@@ -311,6 +326,26 @@ local function renderSpells(ctx)
     -- Restore on the dropdown's line (feedback #3): with the checkboxes gone (B2) a removed starter is
     -- off the list, and this is how it comes back.
     H.RenderGrid(ctx, { categoryCell(defs, def), restoreCell(key) })
+    -- Owner, 2026-09-20: the add box and the entries under it ran straight on from the dropdown and
+    -- its Restore, so the tab read as one undivided column. The library's own heading rule closes
+    -- the picker off and opens the list. The heading does NOT repeat the add row's own label ("Add
+    -- a spell") -- the block below it is the whole list, of which adding is one control -- so it
+    -- names what the block IS.
+    --
+    -- The spacer is ours because the library's own is out of reach here. `H.Section` emits its
+    -- SECTION_TOP_SPACER only once `ctx.lastGroup` is set, and only the schema-driven row renderer
+    -- sets it — this tab is drawn by hand through `H.RenderGrid`, which never does. Without this the
+    -- heading sits tighter under the picker than every schema-driven heading on Bars or Text, which
+    -- is the inconsistency the owner asked to close rather than a new one to open.
+    --
+    -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
+    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:45-83`, and the scalar list at
+    -- `:594-598`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
+    -- Matching the number is the honest way to match the look; if the library ever republishes it,
+    -- this is the line that takes it.
+    local gridScroll = H.EnsureScroll(ctx)
+    if gridScroll then H.AddSpacer(gridScroll, SECTION_GAP) end
+    H.Section(ctx, L["Spells in this category"])
     H.IdList(ctx, {
         kind       = "spell",
         removeStyle = "icon",
@@ -348,9 +383,32 @@ for _, name in ipairs(C.DISPEL_TYPES) do
     DISPEL_ROWS[#DISPEL_ROWS + 1] = row
 end
 
---- The Dispel Colors tab: one line saying who reads the colors, then the group's five rows.
+-- The three facts the tab has to state before the swatches mean anything: where the colors are
+-- read, what has no dispel type at all and how that looks, and that an icon's dispel border is
+-- Blizzard's art rather than one of these. They were one paragraph of five lines until the owner
+-- asked for a list (2026-09-20, from the live panel) -- the same complaint, and the same answer,
+-- as settings/Filters.lua's priority block: a lead-in, then one H.TextRow per fact with a hairline
+-- between them, drawn from helpers that already exist. The WORDING is the paragraph's, split.
+local DISPEL_LEAD = L["One color per dispel type, shared by every container:"]
+local DISPEL_FACTS = {
+    L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text -> Font)."],
+    -- Split in two (the paragraph's one long sentence): at panel width a ~170-character bullet wraps,
+    -- and its second line lands flush under the "- " with no hanging indent, so a three-bullet block
+    -- reads as 1/2/1 lines and loses the shape the bullets were asked for. Two short facts instead.
+    L["Buffs and many debuffs have no dispel type at all, class debuffs such as Judgment or Consecration included."],
+    L["Those keep a bar's own color, and show no type word, backdrop or edge."],
+    L["An icon's dispel border keeps Blizzard's own colors."],
+}
+
+--- The Dispel Colors tab: the lead-in and its four bullets, then the group's five rows.
 local function renderDispel(ctx, _, rows)
-    H.TextRow(ctx, L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Font). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep a bar's own color and show no type word, backdrop or edge. An icon's dispel border keeps Blizzard's own colors."])
+    local scroll = H.EnsureScroll(ctx)
+    H.TextRow(ctx, DISPEL_LEAD, { fontObject = "GameFontNormalSmall" })
+    if scroll then H.AddSpacer(scroll, BULLET_GAP) end
+    for _, fact in ipairs(DISPEL_FACTS) do
+        H.TextRow(ctx, BULLET .. fact)
+        if scroll then H.AddSpacer(scroll, BULLET_GAP) end
+    end
     H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
 end
 

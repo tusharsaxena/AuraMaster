@@ -167,7 +167,7 @@ test("filters: a max-duration preset writes the same path as the slider", functi
     -- red under: the preset not writing the slider's path, which would make it decorative.
     local NS, _, P, ws = filters()
     local dd = P.find(ws, "Dropdown", NS.L["Preset"])
-    assertTrue(dd ~= nil, "the What to show tab draws a preset dropdown")
+    assertTrue(dd ~= nil, "the General tab draws a preset dropdown")
     dd:__fire("OnValueChanged", 300)
     assertEqual(NS.Database.FindContainer(1).filter.maxDuration, 300)
     -- the slider itself agrees, once the tab redraws from the new stored value
@@ -358,11 +358,12 @@ end)
 -- ── the priority block (F-4) ──────────────────────────────────────────────────────────────────
 
 -- BATCH 8 (owner, from a screenshot): the five ranks used to be restated at the TOP of both the
--- Categories and the Overrides tab. They are now drawn ONCE, at the foot of What to show. The
--- expectations below moved with the behavior — the order itself, and every word of it, is unchanged.
+-- Categories and the Overrides tab. They are now drawn ONCE, at the foot of the first tab (called
+-- What to show then, General since 2026-09-20). The expectations below moved with the behavior —
+-- the order itself, and every word of it, is unchanged.
 
-test("filters: the priority order (spec §6) is stated on the What to show tab, highest rank first", function()
-    -- What to show is the page's FIRST tab, so the show's own draw is that tab's (a click on the
+test("filters: the priority order (spec §6) is stated on the General tab, highest rank first", function()
+    -- General is the page's FIRST tab, so the show's own draw is that tab's (a click on the
     -- active tab draws nothing — tests/page_helpers.lua).
     local _, _, P, ws = filters()
     -- red under: the block missing from the tab, or restating the superseded blacklist-first order
@@ -407,11 +408,11 @@ test("filters: the priority block is a heading, a lead-in and five separate rank
     assertTrue(P.hasText(ws, "Highest priority first"), "the lead-in line still introduces the order")
     -- red under: the block drawn as bare text again, with nothing announcing or separating it
     local heads = headings(ws)
-    assertEqual(heads[#heads], NS.L["Which aura wins"], "a Section heading announces it, last on the tab")
+    assertEqual(heads[#heads], NS.L["Filter priority logic"], "a Section heading announces it, last on the tab")
 end)
 
 -- The block is a FOOTNOTE to the tab: every one of the tab's own controls is drawn before it.
-test("filters: the priority block is drawn under the What to show rows, not above them (batch 8)", function()
+test("filters: the priority block is drawn under the General rows, not above them (batch 8)", function()
     local NS, _, _, ws = filters()
     local lastRow, firstRankLine
     for i, w in ipairs(ws) do
@@ -426,11 +427,15 @@ test("filters: the priority block is drawn under the What to show rows, not abov
     end
     assertTrue(lastRow ~= nil and firstRankLine ~= nil, "both the rows and the block drew")
     -- red under: the block hoisted back above the controls it is a footnote to
-    assertTrue(lastRow < firstRankLine, "every What to show control comes first")
+    assertTrue(lastRow < firstRankLine, "every General control comes first")
 end)
 
--- The ranks are readable text, not the Label default's small font, and the lead-in is not a rank.
-test("filters: the priority lead-in and its ranks are drawn in the fonts the block asks for (batch 8)", function()
+-- 2026-09-20 (owner, from the live panel): the ranks read one size LARGER than the Overrides tab's
+-- own Whitelist/Blacklist notes and shouted. Both now take the AceGUI Label default — which the
+-- notes get by passing no opts at all — and the lead-in drops to GameFontNormalSmall so it shrinks
+-- with them while keeping the normal font's color. LibKa0s/OptionsWidgets.lua's applyLabelFont only
+-- overrides the face when a NAME is passed, so "no fontObject" is what "the default size" means.
+test("filters: the priority ranks read at the same size as the Overrides notes (2026-09-20)", function()
     local NS, m = fresh()
     local P = pages(NS, m)
     local H = NS.Helpers
@@ -441,21 +446,34 @@ test("filters: the priority lead-in and its ranks are drawn in the fonts the blo
         return textRow(ctx, text, opts)
     end
     P.show("Filters")
+    P.tab("filters", "overrides")
     H.TextRow = textRow
-    -- red under: the ranks back at the AceGUI Label default (GameFontHighlightSmall), which is the
-    -- size the owner called unreadable
-    assertEqual(seen[NS.L["Highest priority first:"]].fontObject, "GameFontNormal")
-    assertEqual(seen[NS.L["1. On the Overrides whitelist — always shown."]].fontObject, "GameFontHighlight")
+    -- red under: the lead-in back at GameFontNormal, a full step above the ranks under it
+    assertEqual(seen[NS.L["Highest priority first:"]].fontObject, "GameFontNormalSmall")
+    -- red under: a fontObject back on the rank lines (GameFontHighlight, the larger face)
+    local rank = seen[NS.L["1. On the Overrides whitelist — always shown."]]
+    assertTrue(rank == false or rank.fontObject == nil, "a rank line names no font object")
+    -- the Whitelist note is the yardstick: it passes no opts, so it IS the Label default
+    local note = seen[NS.L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."]]
+    assertEqual(note, false, "the Overrides note names no font object either")
 end)
 
 -- BATCH 8: Overrides moved up to sit beside Categories — the two halves of one decision — and
 -- Sorting, which only orders whatever survived them, is last.
-test("filters: the four tabs read What to show, Categories, Overrides, Sorting (batch 8)", function()
+test("filters: the four tabs read General, Categories, Overrides, Sorting (batch 8)", function()
     local NS, _, P = filters()
     local L = NS.L
-    -- red under: the overrides tab appended after Sorting again (its `before` dropped)
+    -- red under: the overrides tab appended after Sorting again (its `before` dropped), or the first
+    -- tab back at "What to show" (renamed 2026-09-20)
     assertEqual(table.concat(P.tabKeys("filters"), ","),
-        table.concat({ L["What to show"], L["Categories"], "overrides", L["Sorting"] }, ","))
+        table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"] }, ","))
+    -- red under: tabs keyed globally rather than per page, which would fuse this General with the
+    -- Text and Bars pages' own General tabs (settings/OptionsSetup.lua's collectTabs builds a strip
+    -- out of NS.SchemaForPage(pageKey) alone, so the name is the PAGE's)
+    P.show("Text")
+    assertEqual(P.tabKeys("text")[1], L["General"], "the Text page keeps its own General tab")
+    P.show("Bars")
+    assertEqual(P.tabKeys("bars")[1], L["General"], "so does the Bars page")
 end)
 
 -- Fix round 2 (batch 7): "Only these categories" (D8/R-8..R-11) is retired — the owner chose one
@@ -655,7 +673,7 @@ test("filters: every tab opens with what the engine will not honor here, in oran
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
     ws = P.rerender("Filters")
     -- red under: the page's intro not calling RenderWarnings
-    assertTrue(P.hasText(ws, warning), "What to show")
+    assertTrue(P.hasText(ws, warning), "General")
     ws = P.tab("filters", NS.L["Sorting"])
     assertTrue(P.hasText(ws, warning), "and every other tab")
 end)

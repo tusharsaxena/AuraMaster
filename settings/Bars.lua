@@ -3,7 +3,7 @@ local _, NS = ...
 -- settings/Bars.lua — how a container drawn as BARS looks (modules/Style_Bars.lua draws it).
 --
 --     band   [Container ▾]
---     [ General ][ Icon ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Pandemic ]
+--     [ General ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Icon ][ Pandemic ]
 --
 -- A container drawn as icons sees every row here disabled, under a note naming where its style is
 -- changed (B-2; settings/OptionsSetup.lua's drawDisabledNotice, which draws it small and gray).
@@ -75,34 +75,6 @@ NS.RegisterSchemaRows({
       desc = L["A permanent aura's bar is full and never moves. Turn this off to hide its spark; a timed bar's spark then sits just inside its moving edge."] },
 })
 
--- ── Icon ──────────────────────────────────────────────────────────────────────────────────────
-
-NS.RegisterSchemaRows({
-    { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
-      values = NS.Choices(C.ICON_POSITIONS, C.ICON_POSITION_LABELS), label = L["Icon position"],
-      desc = L["Where the aura's icon sits, or hide it."] },
-    { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
-      label = L["Icon size (0 = bar height)"], desc = L["A square icon this many pixels wide."] },
-    { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
-      label = L["Icon gap (px)"], desc = L["Space between the icon and the bar."] },
-    { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
-      label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
-})
--- The composed border block (options-ui-§16) on the icon's own leaves; modules/Style_Bars.lua draws
--- it around the icon's box and insets the art inside it.
-local iconBorder = H.BorderGroup({
-    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT,
-    keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
-             borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
-})
--- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
--- (modules/Style.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
-for _, row in ipairs(iconBorder) do
-    if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
-    if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
-end
-NS.RegisterSchemaRows(iconBorder)
-
 -- ── Background & border ───────────────────────────────────────────────────────────────────────
 
 -- The background is a bar group, not options-ui-§16's "group over a background": that clause is for
@@ -169,6 +141,40 @@ textRows("time", G_TIME, {
       desc = L["How the remaining time is written."] },
 })
 textRows("stacks", G_STACK)
+
+-- ── Icon ──────────────────────────────────────────────────────────────────────────────────────
+-- Second-last in the strip, ahead of Pandemic (owner, 2026-09-20): the icon is an ornament beside
+-- the bar rather than part of the bar itself, so it follows the bar's own look and its three text
+-- elements. A tab's place is where its group is FIRST DECLARED — settings/OptionsSetup.lua's
+-- collectTabs walks NS.SchemaForPage(pageKey) in declaration order and opens a tab the first time
+-- it meets a group — so this block sits here, between the text rows and Pandemic, rather than
+-- carrying an index of its own.
+
+NS.RegisterSchemaRows({
+    { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
+      values = NS.Choices(C.ICON_POSITIONS, C.ICON_POSITION_LABELS), label = L["Icon position"],
+      desc = L["Where the aura's icon sits, or hide it."] },
+    { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
+      label = L["Icon size (0 = bar height)"], desc = L["A square icon this many pixels wide."] },
+    { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
+      label = L["Icon gap (px)"], desc = L["Space between the icon and the bar."] },
+    { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
+      label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
+})
+-- The composed border block (options-ui-§16) on the icon's own leaves; modules/Style_Bars.lua draws
+-- it around the icon's box and insets the art inside it.
+local iconBorder = H.BorderGroup({
+    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT,
+    keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
+             borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
+})
+-- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
+-- (modules/Style.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
+for _, row in ipairs(iconBorder) do
+    if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
+    if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
+end
+NS.RegisterSchemaRows(iconBorder)
 
 -- ── Pandemic ──────────────────────────────────────────────────────────────────────────────────
 -- Smoke batch 2, B2-1 (the owner's call): the seconds-left time color (once "Running out") and the

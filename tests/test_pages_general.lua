@@ -347,6 +347,29 @@ test("general → spell categories: a dropdown of the eleven spell categories pl
     assertEqual(dd.value, "defensives")
 end)
 
+-- Owner, 2026-09-20: the picker, its Restore and the whole spell list ran together as one column.
+-- The heading is the library's own section rule, and it names what the block IS rather than
+-- repeating the add row's "Add a spell" label.
+test("general → spell categories: a section heading separates the picker from the spell list (2026-09-20)", function()
+    local NS, _, P, ws = spells()
+    local head, dd, add
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["Spells in this category"] then head = head or i end
+        if w.type == "Dropdown" and w.labelText == NS.L["Category"] then dd = i end
+        if w.type == "EditBox" and w.labelText == NS.L["Add a spell"] then add = add or i end
+    end
+    -- red under: the H.Section dropped, so the tab reads as one undivided column again
+    assertTrue(head ~= nil, "a Spells in this category heading is drawn")
+    assertTrue(dd ~= nil and add ~= nil, "the picker and the add line both drew")
+    -- red under: the heading drawn above the picker, or below the add line
+    assertTrue(dd < head, "the Category picker and its Restore come first")
+    assertTrue(head < add, "then the heading, then Add a spell")
+    -- red under: the heading following the enchant row too, which has no spell list to head
+    P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
+    assertNil(P.find(P.rerender("General"), "Heading", NS.L["Spells in this category"]),
+        "Weapon enchants draws no spell-list heading")
+end)
+
 test("general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)", function()
     local NS, _, P, ws = spells()
     local want = starterIds(NS, "defensives")
@@ -656,7 +679,15 @@ test("general → dispel colors: five profile-wide swatches, no None, no class-c
     -- red under: the tab still promising an icon's dispel border the tint (owner 2026-09-13:
     -- keep Blizzard's own dispel colors), or silent on the Text style's word, backdrop and edge
     -- (feedback #7)
-    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container, for bars colored by dispel type and for a text line's dispel type word, backdrop or edge (Text -> Font). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep a bar's own color and show no type word, backdrop or edge. An icon's dispel border keeps Blizzard's own colors."]))
+    -- 2026-09-20: the one paragraph is now a lead-in and four bullets, each its own Label line
+    -- (settings/Filters.lua's priority block, same shape). The FACTS are unchanged.
+    assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container:"]))
+    assertTrue(P.hasText(ws, "- " .. NS.L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text -> Font)."]))
+    -- Split in two: at panel width the single ~170-char fact wrapped, and its second line landed
+    -- flush under the "- " with no hanging indent, so the block read 1/2/1 lines instead of 1/1/1.
+    assertTrue(P.hasText(ws, "- " .. NS.L["Buffs and many debuffs have no dispel type at all, class debuffs such as Judgment or Consecration included."]))
+    assertTrue(P.hasText(ws, "- " .. NS.L["Those keep a bar's own color, and show no type word, backdrop or edge."]))
+    assertTrue(P.hasText(ws, "- " .. NS.L["An icon's dispel border keeps Blizzard's own colors."]))
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
         local desc = NS.FindSchemaRow("dispelColors." .. name).desc
         -- red under: a row desc still naming the tint on an icon's dispel border
