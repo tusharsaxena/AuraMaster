@@ -479,7 +479,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 
-### test_anchors.lua (73)
+### test_anchors.lua (74)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -501,7 +501,8 @@ badge and any count quoted in the docs must agree with it.
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
 - handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
-- handle: without the media library the help mark falls back to Blizzard's information icon
+- handle: with no media catalog the help mark falls back to Blizzard's information icon
+- handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
 - picker: a forbidden frame under the cursor ends the walk without calling its methods
 - picker: it arms on release, then a left-click on a named frame picks it
@@ -1411,7 +1412,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 5 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
-| test_anchors.lua | 73 |
+| test_anchors.lua | 74 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 59 |
 | test_timedspells.lua | 19 |
@@ -1448,4 +1449,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1234** |
+| **Total** | **1235** |

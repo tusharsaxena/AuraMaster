@@ -314,14 +314,20 @@ end
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
-local HANDLE_H     = 18   -- strip height
-local HANDLE_GAP   = 2    -- gap between the strip and the anchor
-local HANDLE_PAD   = 24   -- horizontal padding around the label
-local HANDLE_HELP  = 14   -- the help mark's edge, inside the strip's far end
+-- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 1): the fill, the
+-- edge, the label, the help mark with its own art fallback, the tooltip, the drag scripts and the
+-- width arithmetic were all this file's and are the library's. ConsumableMaster drew the same strip
+-- over its macro bar, which is why the widget exists. Resolved at file load like every other library
+-- seam here; absent, Anchors.BuildHandle answers nil and a container simply has no handle, which
+-- Anchors.UpdateHandle and Container:Park already tolerate.
+local KW   = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+local DRAG = KW and KW.DRAG_HANDLE
+
+-- The strip's height, the gap it leaves and what it keeps clear each side of its label are the
+-- widget's numbers (`lib.DRAG_HANDLE`), read through DRAG rather than copied back here: a copy is a
+-- second set to keep in step. This number is OURS, because nothing in the widget knows what an aura
+-- engine stacks above its anchor.
 local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
--- The LAST rung of the help mark's ladder: the catalog's `help` icon through NS.Icon first, and this
--- Blizzard texture only when the media library is absent or stops carrying that name.
-local HELP_TEXTURE = [[Interface\FriendsFrame\InformationIcon]]
 
 --- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
 --- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
@@ -336,109 +342,91 @@ local function openSettings(container)
     if NS.OpenOptionsPage then NS.OpenOptionsPage("containers") end
 end
 
---- One tooltip for the strip and its help mark: the container's name, then how to use the handle.
+--- The tooltip descriptor the strip and its help mark share: the container's name, how to use the
+--- handle, and — for an attached container only — where its offsets are set.
 ---
---- OWNED BY UIParent AT THE CURSOR, never by the hovered frame. The anchor inherits
---- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
---- frame anchored under it: the strip and the mark. GameTooltip does not inherit the template, so the
---- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
---- forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on nothing under the anchor.
-local function showTooltip(container)
-    if not GameTooltip then return end
-    local cfg = container:Cfg()
-    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
-    GameTooltip:SetText(cfg and cfg.name or NS.L["Container"], 1, 0.82, 0)
-    GameTooltip:AddLine(NS.L["Drag to move. Right-click for settings."], 1, 1, 1, true)
-    if cfg and cfg.attach and cfg.attach.mode ~= "screen" then
-        GameTooltip:AddLine(NS.L["Attached — set its offsets on the Layout page."], 1, 0.82, 0, true)
-    end
-    GameTooltip:Show()
-end
-
-local function hideTooltip() if GameTooltip then GameTooltip:Hide() end end
-
---- The strip's two drag scripts, built once per handle and set on the strip AND its help mark, so a
---- drag that starts on the mark moves the container too instead of landing in a dead zone.
-local function dragScripts(container)
-    local anchor = container.anchor
-    local function start()
+--- THE LINES ARE FUNCTIONS because the widget calls them on EVERY hover rather than capturing them
+--- when the handle is built: a renamed container and a container that has just been attached or
+--- detached both show through without rebuilding anything. The attached line carries its own gold
+--- through the `{ entry, r, g, b }` shape, so it stays the color it is today instead of taking the
+--- body band's white.
+---
+--- OWNED BY UIParent AT THE CURSOR (`tooltipOwner = "cursor"`), never by the hovered frame. The
+--- anchor inherits DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that
+--- restriction reaches every frame anchored under it: the strip and the mark. GameTooltip does not
+--- inherit the template, so the client refuses SetOwner on either ("Anchoring disallowed as dependent
+--- object would inherit forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on
+--- nothing under the anchor.
+local function tooltipSpec(container)
+    local function attached()
         local cfg = container:Cfg()
-        -- Only a screen-attached container moves by dragging; an attached one follows its target, and
-        -- its offsets are set on the Layout page. Never mid-combat: the anchor parents an aura engine.
-        if cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown() then
-            anchor:StartMoving()
-            container.__dragging = true
+        if cfg and cfg.attach and cfg.attach.mode ~= "screen" then
+            return NS.L["Attached — set its offsets on the Layout page."]
         end
     end
-    local function stop()
-        if not container.__dragging then return end
-        container.__dragging = nil
-        anchor:StopMovingOrSizing()
-        Anchors.SavePosition(container)
-    end
-    return start, stop
+    return {
+        title = function()
+            local cfg = container:Cfg()
+            return cfg and cfg.name or NS.L["Container"]
+        end,
+        body = {
+            NS.L["Drag to move. Right-click for settings."],
+            { attached, 1, 0.82, 0 },
+        },
+    }
 end
 
---- The help mark: a fixed 14px icon rather than a line of hint text, so a one-element container's
---- handle is not forced wider by prose. It carries the tooltip, passes a right-click through, and
---- takes a left-drag with the strip's own drag scripts.
-local function buildHelp(handle, container)
-    local help = CreateFrame("Button", nil, handle)
-    help:SetSize(HANDLE_HELP, HANDLE_HELP)
-    help:SetPoint("RIGHT", handle, "RIGHT", -4, 0)
-    help:RegisterForClicks("RightButtonUp")
-    help:RegisterForDrag("LeftButton")
-    help:SetScript("OnDragStart", handle:GetScript("OnDragStart"))
-    help:SetScript("OnDragStop", handle:GetScript("OnDragStop"))
-    local icon = help:CreateTexture(nil, "OVERLAY")
-    icon:SetAllPoints(help)
-    icon:SetTexture(NS.Icon and NS.Icon("help") or HELP_TEXTURE)
-    help.icon = icon
-    help:SetScript("OnEnter", function() showTooltip(container) end)
-    help:SetScript("OnLeave", hideTooltip)
-    help:SetScript("OnClick", function() openSettings(container) end)
-    return help
+--- Asked by the widget at every OnDragStart. Only a screen-attached container moves by dragging; an
+--- attached one follows its target, and its offsets are set on the Layout page. Never mid-combat:
+--- the anchor parents an aura engine.
+local function canDrag(container)
+    local cfg = container:Cfg()
+    return (cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown()) and true or false
 end
 
---- Build the handle a player drags a container by. Shown only while unlocked; it sits outside the
---- anchor (Anchors.UpdateHandle places it), so no element is covered and nothing moves to make room.
---- The one exception is the screen edge: while the handle shows, the anchor's clamp rect takes the
---- strip in (clampToHandle), so a container flush with the edge on the handle's side is pushed in by
---- the strip while unlocked and returns when locked. Its stored position does not change.
---- A PLAIN button, never a BackdropTemplate: under an anchor attached to another frame or container
---- its size can read secret, and the Backdrop does arithmetic on the size on every SetBackdrop and
---- resize (docs/midnight-quirks.md, "A backdrop on an engine button reads a secret size"). So the fill
---- is one texture of its own and the edge is Style.DrawEdge's strips, both drawn before the strip is
---- hidden: neither reads a size.
+--- The handle's label: the container's name, and while test mode is on an orange TEST tag after it
+--- (feedback #8), so the placeholders on screen read as placeholders. It sits ABOVE BuildHandle
+--- because the strip is born with its text — `label` is the widget's one required string.
+local function handleText(cfg)
+    if not cfg then return "" end
+    local name = cfg.name or ""
+    if not (NS.State and NS.State.testMode) then return name end
+    return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
+end
+
+--- Build the handle a player drags a container by: LibKa0s-Widgets-1.0's strip, wearing this
+--- addon's strings, art and callbacks. Shown only while unlocked; it sits outside the anchor
+--- (Anchors.UpdateHandle places it), so no element is covered and nothing moves to make room. The
+--- one exception is the screen edge: while the handle shows, the anchor's clamp rect takes the strip
+--- in (clampToHandle), so a container flush with the edge on the handle's side is pushed in by the
+--- strip while unlocked and returns when locked. Its stored position does not change.
+---
+--- THE WIDGET BUILDS A PLAIN BUTTON, never a BackdropTemplate, and paints its edge with the painter
+--- we hand it: under an anchor attached to another frame or container the strip's size can read
+--- secret, and the Backdrop does arithmetic on that size on every SetBackdrop and every resize
+--- (docs/midnight-quirks.md, "A backdrop on an engine button reads a secret size"). `number` hands it
+--- NS.Secrets.NumberOr for the same reason, so a measured width that reads secret falls back to the
+--- element instead of raising. The widget hides the strip at birth, exactly as this file did.
+---
+--- THE LEVEL IS OURS and is set after the build: the widget never places, sizes or shows the strip.
+--- @return table|nil  nil without LibKa0s-Widgets-1.0, and in a client that cannot make the frame
 function Anchors.BuildHandle(container)
+    if not (KW and KW.DragHandle) then return nil end
     local anchor = container.anchor
-    local handle = CreateFrame("Button", nil, anchor)
-    handle:SetHeight(HANDLE_H)
+    local handle = KW.DragHandle(anchor, {
+        label        = handleText(container:Cfg()),
+        moveFrame    = anchor,
+        helpIcon     = NS.Icon and NS.Icon("help") or nil,
+        canDrag      = function() return canDrag(container) end,
+        onDragStop   = function() Anchors.SavePosition(container) end,
+        onRightClick = function() openSettings(container) end,
+        tooltip      = tooltipSpec(container),
+        tooltipOwner = "cursor",
+        edge         = NS.Style.DrawEdge,
+        number       = NS.Secrets.NumberOr,
+    })
+    if not handle then return nil end
     handle:SetFrameLevel(NS.Secrets.NumberOr(anchor:GetFrameLevel(), 0) + HANDLE_LEVEL)
-    local bg = handle:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(handle)
-    bg:SetColorTexture(0, 0, 0, 0.75)
-    handle.bg = bg
-    NS.Style.DrawEdge(handle, 1, 1, 0.82, 0, 0.6)
-    handle:EnableMouse(true)
-    handle:RegisterForDrag("LeftButton")
-    handle:RegisterForClicks("RightButtonUp")
-    handle:Hide()
-
-    local label = handle:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    label:SetPoint("CENTER")
-    label:SetTextColor(1, 0.82, 0)
-    handle.label = label
-
-    local dragStart, dragStop = dragScripts(container)
-    handle:SetScript("OnDragStart", dragStart)
-    handle:SetScript("OnDragStop", dragStop)
-    handle.help = buildHelp(handle, container)
-    handle:SetScript("OnClick", function(_, button)
-        if button == "RightButton" then openSettings(container) end
-    end)
-    handle:SetScript("OnEnter", function() showTooltip(container) end)
-    handle:SetScript("OnLeave", hideTooltip)
     return handle
 end
 
@@ -471,47 +459,20 @@ local function handleLevel(container, cfg)
     return level
 end
 
--- The label's width is MEASURED on a font string of our own that is never anchored to anything
--- (feedback E, 2026-09-19). The label itself hangs off the strip, the strip off the anchor, and an
--- anchor attached to an engine container (or to a frame anchored to one) inherits its secret
--- geometry: reading the label's width then answered a secret number, and the arithmetic below
--- raised "attempt to perform arithmetic on a secret number value" out of combat. The same idea as
--- modules/Style.lua's time-text measurer (B4).
-local labelFS   -- the hidden measuring string, built on first use
-
---- The FontString a handle's label is measured on: hidden, parented to a hidden frame of ours on
---- UIParent, in the label's own font. A test replaces this function to measure on a stand-in.
-function Anchors.__labelMeasurer()
-    if labelFS == nil then
-        local host = CreateFrame("Frame", nil, UIParent)
-        host:Hide()
-        labelFS = host:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    end
-    return labelFS
-end
-
---- The width `text` takes in the label's font, or 0 when it cannot be read.
-local function labelWidth(text)
-    local fs = Anchors.__labelMeasurer()
-    if not fs then return 0 end
-    fs:SetText(text or "")
-    return NS.Secrets.NumberOr(fs:GetStringWidth(), 0)
-end
-
 --- @return number  how far the strip runs past the anchor along the line
-local function placeHandle(container, cfg, text)
+local function placeHandle(container, cfg)
     local handle = container.handle
     handle:SetFrameLevel(handleLevel(container, cfg))
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
     local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
     local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
     local w = NS.Style.ElementSize(cfg)
-    local width = math.max(labelWidth(text) + HANDLE_PAD + HANDLE_HELP * 2, w)
     handle:ClearAllPoints()
-    handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and HANDLE_GAP or -HANDLE_GAP)
-    handle:SetWidth(width)
+    handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and DRAG.GAP or -DRAG.GAP)
     handle.placed = true
-    return width - w
+    -- The widget measures its own label on a detached string of its own and floors the width at the
+    -- element, which is the arithmetic this file used to carry (labelWidth + HANDLE_PAD + …).
+    return handle:ApplyWidth(w) - w
 end
 
 --- Set the anchor's clamp insets only when they change. This runs on every visibility pass, and a
@@ -535,21 +496,12 @@ local function clampToHandle(container, cfg, overhang)
         return
     end
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    local reach = HANDLE_H + HANDLE_GAP
+    local reach = DRAG.HEIGHT + DRAG.GAP
     local left = (growH == "left") and -overhang or 0
     local right = (growH == "right") and overhang or 0
     local top = (growV == "down") and reach or 0
     local bottom = (growV == "up") and -reach or 0
     setClamp(container, left, right, top, bottom)
-end
-
---- The handle's label: the container's name, and while test mode is on an orange TEST tag after it
---- (feedback #8), so the placeholders on screen read as placeholders.
-local function handleText(cfg)
-    if not cfg then return "" end
-    local name = cfg.name or ""
-    if not (NS.State and NS.State.testMode) then return name end
-    return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
 end
 
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
@@ -564,12 +516,11 @@ function Anchors.UpdateHandle(container, show)
     if not handle then return end
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
-    local text = handleText(cfg)
-    handle.label:SetText(text)
+    handle:SetLabel(handleText(cfg))
     if not InCombatLockdown() then
-        clampToHandle(container, cfg, show and placeHandle(container, cfg, text) or nil)
+        clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
     elseif show and not handle.placed then
-        placeHandle(container, cfg, text)
+        placeHandle(container, cfg)
     end
     handle:SetShown(show)
 end

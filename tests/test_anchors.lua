@@ -208,13 +208,21 @@ local function last(f, method)
     return log[#log], #log
 end
 
---- Measure every handle label as `width` wide: the handle sizes itself from a detached measuring
---- string (Anchors.__labelMeasurer, feedback E), never from the label, whose width can read secret.
-local function measureAs(NS, width)
-    NS.Anchors.__labelMeasurer = function()
+--- Measure every handle label as `width` wide. The seam moved with the strip: the widget measures on
+--- a detached font string of its own (`lib.__DragHandleMeasurer`), never on the label, whose width can
+--- read secret (feedback E). One lib table per environment, so a replacement here leaks nowhere.
+local function measureAs(mocks, width)
+    mocks.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function()
         return { SetText = function() end, GetStringWidth = function() return width end }
     end
 end
+
+--- What the widget keeps clear on EACH side of the label: the mark's inset, its frame less the gutter
+--- its art is centered in, and the clearance in front of that art (`lib.DRAG_HANDLE.RESERVE`). The
+--- strip's natural width is the measured label plus twice this. It replaced this file's own
+--- `HANDLE_PAD + HANDLE_HELP * 2` (24 + 28 = 52), and it is 58: the mark's click target grew to the
+--- strip's full height while its art shrank to 8px, which is the widget's correction, not a drift.
+local RESERVE2 = 58
 
 test("handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
@@ -233,15 +241,23 @@ test("handle: a dark strip with a 1px gold edge, a gold label and the catalog he
     assertEqual(bg:__joined("SetColorTexture"), "0,0,0,0.75")
     -- The edge: Style.ApplyBorder's four Solid strips, 1px, gold at 0.6 (the old edgeFile, edgeSize
     -- and SetBackdropBorderColor), read once the strip shows.
-    measureAs(NS, 60)
+    measureAs(mocks, 60)
     NS.Anchors.UpdateHandle(inst, true)
     BS.assertSolid(h, 1, "1,0.82,0,0.6", "the handle's edge")
     assertEqual(table.concat(last(h, "SetTextColor"), ","), "1,0.82,0")
+    -- The mark is an ART SIZE INSIDE A FRAME SIZE and they are two numbers (lib.DRAG_HANDLE): the
+    -- Button is the strip's full height, so the only right-click affordance on the strip stays easy
+    -- to hit, and the "?" is 8px of ink centered in it, about the chevron's weight beside the small
+    -- label face. The kit hands a texture back as its frame, so both land on `help` in order.
     local help = h.help
-    assertEqual(table.concat(last(help, "SetSize"), ","), "14,14")
-    local p = last(help, "SetPoint")
+    local sizes = help.__rec.SetSize
+    assertEqual(table.concat(sizes[1], ","), "18,18", "the click target: the strip's full height")
+    assertEqual(table.concat(sizes[2], ","), "8,8", "the art inside it")
+    local points = help.__rec.SetPoint
+    local p = points[1]
     assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h); assertEqual(p[3], "RIGHT")
     assertEqual(p[4], -4); assertEqual(p[5], 0)
+    assertEqual(points[2][1], "CENTER", "the art is centered in its gutter, not stretched over it")
     assertTrue(NS.Icon("help") ~= nil, "the vendored catalog carries the help mark")
     assertEqual(last(help, "SetTexture")[1], NS.Icon("help"))
     local _, covers = last(h, "SetAllPoints")
@@ -262,7 +278,7 @@ test("handle: under a secret anchor size it builds, resizes and draws its edge w
     local ok, h = pcall(recordedHandle, mocks, NS, inst)
     assertTrue(ok, tostring(h))
     assertTrue(h.__secretRect, "the strip's own size reads secret")
-    measureAs(NS, 60)
+    measureAs(mocks, 60)
     local placed, err = pcall(NS.Anchors.UpdateHandle, inst, true)
     assertTrue(placed, tostring(err))
     assertTrue(h:IsShown())
@@ -318,10 +334,10 @@ test("handle: at least as wide as its container's element, and as its label with
     local h = recordedHandle(mocks, NS, inst)
     local w = NS.Style.ElementSize(cfg)
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, w), "an empty label")
-    measureAs(NS, w + 100)
+    assertEqual(last(h, "SetWidth")[1], math.max(RESERVE2, w), "an empty label")
+    measureAs(mocks, w + 100)
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "a label wider than the element")
+    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "a label wider than the element")
 end)
 
 test("handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone", function()
@@ -332,8 +348,8 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     local insets
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b) insets = table.concat({ l, r, t, b }, ",") end)
     local w = NS.Style.ElementSize(cfg)
-    measureAs(NS, w + 100)
-    local over = 100 + 24 + 14 * 2
+    measureAs(mocks, w + 100)
+    local over = 100 + RESERVE2
     cfg.layout.growV, cfg.layout.growH = "down", "right"
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(insets, "0," .. over .. ",20,0", "down/right: above, reaching right")
@@ -488,12 +504,31 @@ test("handle: a left-drag that starts on the help mark moves the container as on
     assertTrue(h.help:GetScript("OnDragStart") == h:GetScript("OnDragStart"), "one drag function, not a copy")
 end)
 
-test("handle: without the media library the help mark falls back to Blizzard's information icon", function()
-    local NS2, mocks2 = dofile("tests/degraded_env.lua")()
-    assertNil(NS2.Icon("help"))
-    local inst = { id = 1, anchor = mocks2.CreateFrame("Frame"), Cfg = function() return nil end }
-    local h = recordedHandle(mocks2, NS2, inst)
+test("handle: with no media catalog the help mark falls back to Blizzard's information icon", function()
+    -- The ladder is the widget's last rung now, reached by handing it no `helpIcon` at all. A client
+    -- that unzipped LibKa0s without its media, or a catalog that stops carrying `help`, still gets a
+    -- mark rather than an invisible button.
+    local NS, mocks = fresh()
+    NS.Icon = function() return nil end
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
     assertEqual(last(h.help, "SetTexture")[1], [[Interface\FriendsFrame\InformationIcon]])
+end)
+
+test("handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op", function()
+    -- The strip is LibKa0s-Widgets-1.0's, so the vendored folder going missing takes it with it --
+    -- the case the old degraded-environment test used to reach. BuildHandle answers nil rather than
+    -- half a strip, and nothing downstream may raise on that nil.
+    local NS2, mocks2 = dofile("tests/degraded_env.lua")()
+    assertNil(mocks2.LibStub("LibKa0s-Widgets-1.0", true), "no widget library in a degraded client")
+    local inst = { id = 1, anchor = mocks2.CreateFrame("Frame"), Cfg = function() return nil end }
+    -- red under: BuildHandle calling KW.DragHandle without checking the library resolved
+    local ok, handle = pcall(NS2.Anchors.BuildHandle, inst)
+    assertTrue(ok, tostring(handle))
+    assertNil(handle, "no widget, no handle")
+    inst.handle = handle
+    local shown, err = pcall(NS2.Anchors.UpdateHandle, inst, true)
+    assertTrue(shown, tostring(err))
 end)
 
 -- ── the frame picker ──────────────────────────────────────────────────────────────────────────
@@ -1206,7 +1241,7 @@ test("handle: the width comes from a detached measuring string, never the label,
     -- The label is the strip in the kit (a font string comes back as its frame).
     rawset(h, "GetStringWidth", function() error("attempt to perform arithmetic on a secret number value") end)
     local measured = {}
-    NS.Anchors.__labelMeasurer = function()
+    mocks.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function()
         return {
             SetText = function(_, s)
                 local n = #measured
@@ -1218,7 +1253,7 @@ test("handle: the width comes from a detached measuring string, never the label,
     local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
     -- red under: placeHandle reading handle.label:GetStringWidth() (the reported error)
     assertTrue(ok, tostring(err))
-    assertEqual(last(h, "SetWidth")[1], w + 100 + 24 + 14 * 2, "the measured width sizes the strip")
+    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "the measured width sizes the strip")
     assertEqual(measured[#measured], NS.Database.FindContainer(1).name, "the label's own text is measured")
 end)
 
@@ -1226,13 +1261,13 @@ test("handle: a measured width that reads secret falls back to the element's wid
     local NS, mocks = secretEnv()
     local inst = NS.ContainerManager.instances[2]   -- a 32px icon row: the floor and the label differ
     local h = recordedHandle(mocks, NS, inst)
-    NS.Anchors.__labelMeasurer = function()
+    mocks.LibStub("LibKa0s-Widgets-1.0").__DragHandleMeasurer = function()
         return { SetText = function() end, GetStringWidth = function() return SECRET end }
     end
     NS.Anchors.UpdateHandle(inst, true)
     -- red under: labelWidth without its NumberOr guard (41.5 + 52 = 93.5 in the harness; a raise in
     -- the client)
-    assertEqual(last(h, "SetWidth")[1], math.max(24 + 14 * 2, NS.Style.ElementSize(NS.Database.FindContainer(2))))
+    assertEqual(last(h, "SetWidth")[1], math.max(RESERVE2, NS.Style.ElementSize(NS.Database.FindContainer(2))))
 end)
 
 test("handle: an anchor whose frame level reads secret places the strip from the stored level (E)", function()

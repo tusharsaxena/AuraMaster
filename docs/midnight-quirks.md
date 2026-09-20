@@ -302,7 +302,8 @@ arithmetic on a secret raises "attempt to perform arithmetic on a secret number 
 2026-09-19: the drag handle's label, on a container attached to another).
 
 **What this addon does.** Nothing reads a measurement off a region that can be **attached**. The
-handle's label is measured on a detached font string of ours (`Anchors.__labelMeasurer`), and every
+handle's label is measured on a detached font string the strip's own widget keeps
+(`lib.__DragHandleMeasurer`, which this addon hands `NS.Secrets.NumberOr` as its `number` guard), and every
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
@@ -349,7 +350,8 @@ and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **The frames of ours under a container's anchor, and the picker's outline** (follow-up, 2026-09-20).
 The same arithmetic threatened three more frames, each a `BackdropTemplate` before: the unlocked
-outline (`ContainerClass:ApplyOutline`) and the drag handle (`Anchors.BuildHandle`) are built under
+outline (`ContainerClass:ApplyOutline`) and the drag handle (`Anchors.BuildHandle`, a
+LibKa0s-Widgets-1.0 strip since v1.48.0, handed our painter and our numeric guard) are built under
 the container's anchor, whose geometry reads secret once the container is attached to another frame
 or container that is itself secret (an engine container, or a frame anchored to one); and the frame
 picker's outline (`modules/FramePicker.lua`) covers whatever frame the cursor is on, another addon's
