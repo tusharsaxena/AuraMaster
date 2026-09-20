@@ -971,10 +971,10 @@ near a target dummy. Steps 167–177 run in order: each uses the category the on
 
 167. **Make one.** General → **Spell Categories** → under **Make a new category**, type `Cooldowns I
      watch`, leave **Aura type** on *Buffs*, click **Create category** → the **Category** dropdown
-     jumps to the new entry, reading **[Buffs] Cooldowns I watch (yours)**, and a line under **This
-     category** and in chat says it was created, empty, and where to set it to Show or Hide. The list
-     below is empty, and there is **no Restore this category's starter list** button on the picker's
-     line. No Lua error.
+     jumps to the new entry, reading **[Buffs] Cooldowns I watch (yours)** — `[Buffs]` in muted
+     green, `(yours)` in muted gold — and a line under the **Rename this category** box and in chat
+     says it was created, empty, and where to set it to Show or Hide. The list below is empty, and
+     there is **no Restore this category's starter list** button on the picker's line. No Lua error.
 168. **It is a real category everywhere.** Filters → **Categories** on the buff container → the
      **Spell Categories** grid holds a **Cooldowns I watch (yours)** row, with Show lit, sitting
      *after* the shipped spell lists and *above* **Weapon enchants** and **Uncategorized** —
@@ -991,18 +991,23 @@ near a target dummy. Steps 167–177 run in order: each uses the category the on
      sets to Show. The entry in the list carries **Also in: Defensive cooldowns** under its name. Open
      *Defensive cooldowns* in the dropdown → that same spell's entry there reads **Also in: Cooldowns
      I watch (yours)** — the marker is on both surfaces. Nothing was refused: the spell is in both.
+170a. **The rename and the Delete sit directly under the picker** (owner, 2026-09-21), with no
+     heading between them and the **Category** dropdown, and **Make a new category** below them: the
+     tab reads picker → rename and Delete → create form → **Spells in this category**. Each block is
+     separated by the gap under it, not by a heading over the acts.
 171. **Rename it.** In **Rename this category**, type `Big cooldowns` and press **Enter** → the
      dropdown, the rename box, the Filters grid and `/am list` all read the new name, the box is no
      longer holding what you typed but what is stored, and the answer line says it was renamed and
      names the OLD name to type back. The spells are all still there, and the Filters row's Show or
      Hide is unchanged — a rename must never reset it.
-172. **A shipped category is locked.** Pick **Healing** in the dropdown → **This category** draws no
-     name box and no Delete, only the sentence that its name and its buff-or-debuff choice are fixed
-     and its spell list is still yours. **Restore this category's starter list** is back on the
-     picker's line and works. Pick **Weapon enchants** → the same lock sentence in its own wording
-     (no spell list at all), a **Weapon slots** heading over the three slot toggles, and the toggles
-     sit under THAT heading rather than under **Make a new category**.
-173. **The answer line knows what it is about.** With a line showing under **This category**, switch
+172. **A shipped category draws nothing about itself** (owner, 2026-09-21). Pick **Healing** in the
+     dropdown → between the picker and **Make a new category** there is **no name box, no Delete, no
+     heading and no sentence** — the picker line, then the create form. **Restore this category's
+     starter list** is back on the picker's line and works. Pick **Weapon enchants** → the lead-in
+     above the picker still says it matches temporary enchants and there is nothing to add or remove,
+     a **Weapon slots** heading sits over the three slot toggles, and the toggles sit under THAT
+     heading rather than under **Make a new category**.
+173. **The answer line knows what it is about.** With a line showing under the rename box, switch
      the dropdown to another category → the line is gone. Say something again (rename, or a refused
      empty name), then close the settings window and reopen it on the same tab → the line is gone.
      Say something again, then Profiles → switch profile → come back → the line is gone. Hopping to

@@ -284,13 +284,32 @@ local function spells(opts)
     return NS, m, P, tab(NS.L["Spell Categories"])
 end
 
+--- The muted markers the panel colors with (settings/GeneralSpells.lua's TYPE_COLORS and
+--- YOURS_COLOR). Restated here as literals on purpose: the panel's own constants are file-local, so
+--- these are what say a color CHANGED, and the register they were picked from -- the drag handle's
+--- gold (1, 0.82, 0) and its help mark (0.7, 0.7, 0.72) -- is written above the constants there.
+local TYPE_COLOR = { HELPFUL = "|cff73bf80", HARMFUL = "|cffcc7373" }
+local YOURS_COLOR = "|cffd9b861"
+
+--- `text` with every color escape taken out: what the client actually DRAWS. `|cAARRGGBB` and `|r`
+--- are read by the client and rendered as nothing at all, so this is the string a player's eye
+--- measures -- which is what the padding case asserts the name column against.
+local function rendered(text)
+    return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+end
+
 --- The Category dropdown's label for `key`, built the way the panel builds it: the aura type's own
---- `C.AURA_TYPE_LABELS` word, then padding out to the widest such word, then the category's name
---- (settings/GeneralSpells.lua's `categoryLabel`, issue #10 checkpoint 1). Built here out of the
---- SAME locale strings rather than hard-coded, so a case asserting it asserts the composition and
---- never re-states the wording -- which is also why it is NOT the only thing the marker cases rest
---- on: this helper takes the aura type from the accessor under test, so the cases below anchor the
---- type itself to the literal label and to the list the category is declared in.
+--- `C.AURA_TYPE_LABELS` word in its bracket, colored, then padding out to the widest such word, then
+--- the category's name (settings/GeneralSpells.lua's `categoryLabel`, issue #10 checkpoint 1 and the
+--- owner's colors of 2026-09-21). Built here out of the SAME locale strings rather than hard-coded,
+--- so a case asserting it asserts the composition and never re-states the wording -- which is also
+--- why it is NOT the only thing the marker cases rest on: this helper takes the aura type from the
+--- accessor under test, so the cases below anchor the type itself to the literal label and to the
+--- list the category is declared in.
+---
+--- THE PADDING IS MEASURED ON THE BARE WORD HERE TOO, which is the whole point: a helper that padded
+--- the colored mark would agree with a panel that did the same, and both would be wrong by twelve
+--- characters the player cannot see. `rendered` above is the second, independent check.
 local function marked(NS, key, auraType)
     auraType = auraType or NS.Categories.AuraTypeOf(key)
     local def = NS.Categories.Find(auraType, key)
@@ -300,17 +319,29 @@ local function marked(NS, key, auraType)
         local n = #NS.L[word]
         widest = math.max(widest, n)
     end
-    local mine = #NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]]
-    local pad = (" "):rep(widest - mine)
-    -- A category the player made carries the ownership marker too, and it is a SUFFIX on the name
-    -- rather than a second prefix, so the padding above still starts every name at one offset.
+    local word = NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]]
+    local pad = (" "):rep(widest - #word)
+    -- A category the player made carries the ownership marker too, in muted gold, and it is a SUFFIX
+    -- on the name rather than a second prefix, so the padding above still starts every name at one
+    -- offset.
     local name = NS.Categories.LabelOf(def)
     if NS.Categories.IsUserCategory(def) then
-        name = (NS.L["{name} (yours)"]:gsub("{name}", function() return name end))
+        name = (NS.L["{name} {mark}"]
+            :gsub("{mark}", function() return YOURS_COLOR .. NS.L["(yours)"] .. "|r" end)
+            :gsub("{name}", function() return name end))
     end
-    return (NS.L["[{type}] {name}"]
-        :gsub("{type}", function() return NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]] end)
+    local mark = TYPE_COLOR[auraType] .. (NS.L["[{type}]"]:gsub("{type}", function() return word end)) .. "|r"
+    return (NS.L["{mark} {name}"]
+        :gsub("{mark}", function() return mark end)
         :gsub("{name}", function() return pad .. name end))
+end
+
+--- `key`'s name as the panel writes it in a list of categories: the 'yours' marker, no aura type.
+--- `NS.GeneralSpells.MarkedName` is the panel's ONE definition of that, so the claimed-by cases read
+--- it rather than composing a second one.
+local function ownedName(NS, key)
+    local def = NS.Categories.Find("HELPFUL", key) or NS.Categories.Find("HARMFUL", key)
+    return NS.GeneralSpells.MarkedName(def)
 end
 
 --- Every entry the IdList drew, in DRAW ORDER, as { id =, label =, x =, row =, col = }.
@@ -491,7 +522,11 @@ test("general → spell categories: every Category entry is prefixed with the au
         local word = NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]]
         -- red under: the marker dropped from an entry, or matching the OTHER aura type
         assertEqual(dd.list[key], marked(NS, key), key)
-        assertEqual(dd.list[key]:sub(1, #word + 3), "[" .. word .. "] ", key .. ": marked as a prefix")
+        -- red under: the color escape read as part of the marker's text, which is how this goes
+        -- wrong -- `rendered` is what the player sees, and there the prefix is exactly as it was.
+        assertEqual(rendered(dd.list[key]):sub(1, #word + 3), "[" .. word .. "] ", key .. ": marked as a prefix")
+        -- red under: the marker drawn in no color at all, or in the OTHER aura type's color.
+        assertEqual(dd.list[key]:sub(1, 10), TYPE_COLOR[auraType], key .. ": colored by aura type")
         -- red under: a suffix-shaped marker, which would collide with the two CC rows' own
         -- parenthetical suffixes ("Hard CC (loss of control)")
         assertTrue(dd.list[key]:find(NS.L[NS.Categories.Find(auraType, key).label], 1, true) ~= nil,
@@ -503,12 +538,15 @@ test("general → spell categories: every Category entry is prefixed with the au
     assertTrue(buffs > 0 and debuffs > 0, ("both aura types appear: %d buff, %d debuff"):format(buffs, debuffs))
     -- Weapon enchants is kind "enchant", not a spell list, and is marked buff-side like the rest of
     -- Cat.HELPFUL — the Aura type row's own description already calls it a buff category.
-    assertEqual(dd.list.weaponEnchants:sub(1, 8), "[" .. NS.L["Buffs"] .. "] ")
+    assertEqual(rendered(dd.list.weaponEnchants):sub(1, 8), "[" .. NS.L["Buffs"] .. "] ")
     -- Anchored to the literal rather than to the accessor: everything above builds its expectation
     -- by asking Cat.AuraTypeOf, so a build in which EVERY category answered the wrong type would
     -- still pass. These two say what a player reads, in full, padding included.
-    assertEqual(dd.list.hardCC, "[Debuffs] Hard CC (loss of control)")
-    assertEqual(dd.list.healing, "[Buffs]   Healing")
+    assertEqual(dd.list.hardCC, "|cffcc7373[Debuffs]|r Hard CC (loss of control)")
+    assertEqual(dd.list.healing, "|cff73bf80[Buffs]|r   Healing")
+    -- And what the client DRAWS of those two, which is the pair the padding is for.
+    assertEqual(rendered(dd.list.hardCC), "[Debuffs] Hard CC (loss of control)")
+    assertEqual(rendered(dd.list.healing), "[Buffs]   Healing")
     -- And anchored to the declaration: hardCC reads Debuffs because it is declared in Cat.HARMFUL.
     local declaredHarmful = false
     for _, d in ipairs(NS.Categories.For("HARMFUL")) do
@@ -525,16 +563,31 @@ test("general → spell categories: the markers are padded so every name starts 
     -- name at a different place and cost the list the name column the marker is there to keep.
     -- Character-exact is what the panel can promise in a proportional font, and it is what this
     -- pins; settings/GeneralSpells.lua says plainly why pixel-exact is not on offer.
+    --
+    -- MEASURED ON THE RENDERED STRING (owner's colors, 2026-09-21). The markers now carry
+    -- `|cAARRGGBB` and `|r`, which the client reads and draws as NOTHING -- so a padding computed
+    -- over the colored string would pad by twelve phantom characters, and a case measuring the
+    -- colored string would agree with it and pass. `rendered` strips every escape, so what is
+    -- compared here is the text the player's eye lines up.
     local at
     for _, key in ipairs(dd.order) do
         local def = NS.Categories.Find(NS.Categories.AuraTypeOf(key), key)
-        local i = dd.list[key]:find(NS.Categories.LabelOf(def), 1, true)
+        local shown = rendered(dd.list[key])
+        local i = shown:find(NS.Categories.LabelOf(def), 1, true)
         assertTrue(i ~= nil, key .. ": the name is in the entry")
         at = at or i
-        -- red under: the padding dropped from categoryLabel
+        -- red under: the padding dropped from categoryLabel, or measured over the colored mark
         assertEqual(i, at, key .. ": the name starts where every other name starts")
+        -- red under: an escape left in what the player reads -- `rendered` must take out every one
+        -- of them, or the offsets above are a statement about nothing.
+        assertNil(shown:find("|c", 1, true), key .. ": no escape survives the strip")
+        assertNil(shown:find("|r", 1, true), key)
     end
     -- red under: a padding rule that happens to align only one aura type's rows with itself
+    assertEqual(rendered(dd.list.softCC):find("Soft CC", 1, true),
+        rendered(dd.list.healing):find("Healing", 1, true))
+    -- The escapes are the same length on both aura types (one `|c` and one `|r` each), so the
+    -- column survives in BYTES as well -- which is what every other case here indexes with.
     assertEqual(dd.list.softCC:find("Soft CC", 1, true), dd.list.healing:find("Healing", 1, true))
 end)
 
@@ -732,23 +785,68 @@ test("general → spell categories: the name box renames without moving the key,
     assertEqual(manage(NS, P.rerender("General"), P).name.text, "First draft", "and the box is redrawn from the store")
 end)
 
-test("general → spell categories: a shipped category draws the lock sentence instead of a name box and a Delete", function()
+-- Owner, 2026-09-21, from the live panel: the block drew a "This category" heading over a sentence
+-- saying the selected category is Aura Master's own, on twelve of the fourteen entries. Neither is
+-- wanted. A shipped category now draws NOTHING between the picker and "Make a new category".
+test("general → spell categories: a shipped category draws no controls, no heading and no sentence (owner 2026-09-21)", function()
     local NS, _, P, ws = spells()
     local shipped = manage(NS, ws, P)
     -- red under: drawing the two controls for every category and leaving the refusal to the act,
     -- which would offer the player a Delete that can only ever fail.
     assertNil(shipped.name, "a shipped category has no name box")
     assertNil(shipped.delete, "and no Delete")
-    assertTrue(P.hasText(ws, "one of Aura Master's own categories"),
-        "the sentence says why, and that the spell list is still the player's")
+    -- red under: the lock sentence, or a heading over the empty space where it stood.
+    assertFalse(P.hasText(ws, "one of Aura Master's own categories"), "and no sentence saying so")
+    for _, w in ipairs(ws) do
+        assertFalse(w.type == "Heading" and w.text == "This category", "no heading over nothing")
+    end
     assertTrue(shipped.create ~= nil, "but a category can still be made from here")
+    -- The create form still opens the next block, which is what keeps this from reading as a run-on.
+    local head
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["Make a new category"] then head = head or i end
+    end
+    assertTrue(head ~= nil, "'Make a new category' still names itself")
 
     local key = NS.Categories.CreateUserCategory("Mine", "HELPFUL")
     NS.GeneralSpells.Select(key)
     local ws2 = P.rerender("General")
     local mine = manage(NS, ws2, P)
     assertTrue(mine.name ~= nil and mine.delete ~= nil, "a category the player made has both")
-    assertFalse(P.hasText(ws2, "one of Aura Master's own categories"), "and not the sentence")
+    assertFalse(P.hasText(ws2, "one of Aura Master's own categories"), "and still no sentence")
+end)
+
+-- Owner, 2026-09-21: the rename and the Delete belong to the dropdown directly above them -- they
+-- act on what it is showing -- so nothing is drawn between the two, heading included.
+test("general → spell categories: the rename and the Delete sit directly under the picker (owner 2026-09-21)", function()
+    local NS, _, P = spells()
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    NS.GeneralSpells.Select(key)
+    local ws = P.rerender("General")
+    local mine = manage(NS, ws, P)
+    local dd = P.find(ws, "Dropdown", NS.L["Category"])
+    local picker, acts = lineOf(ws, dd), lineOf(ws, mine.name)
+    assertTrue(picker ~= nil and acts ~= nil, "both lines are drawn")
+    assertTrue(acts > picker, "the rename comes after the picker")
+    -- red under: a heading, a sentence or the answer line put back between the two. What is allowed
+    -- between them is layout and the picker line's own cells; what is not is anything a player
+    -- READS -- a Heading, or a Label, which is what both the old "This category" heading and the
+    -- lock sentence were drawn as.
+    for i = picker + 1, acts - 1 do
+        assertFalse(ws[i].type == "Heading" or ws[i].type == "Label",
+            "nothing is read between the picker and the rename: " .. tostring(ws[i].type))
+    end
+    assertTrue(lineOf(ws, mine.delete) >= acts, "with Delete beside it, as Restore is beside the picker")
+    -- And everything else this tab draws about the category is BELOW them.
+    assertTrue(lineOf(ws, mine.newName) > acts, "the create form follows")
+    assertTrue(lineOf(ws, P.find(ws, "EditBox", NS.L["Add a spell"])) > acts, "then the spell list")
+    -- The gap below is what makes it a block: "Make a new category" closes the picker and its two
+    -- acts off, which is the job the heading over them used to be doing badly.
+    local head
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["Make a new category"] then head = head or i end
+    end
+    assertTrue(head ~= nil and head > lineOf(ws, mine.delete), "and the next heading is below them")
 end)
 
 test("general → spell categories: Delete asks first, and the confirmation's act is what refuses a shipped key", function()
@@ -826,11 +924,12 @@ test("general → spell categories: Weapon enchants is promised no spell list, R
     local NS, _, P, ws = spells()
     P.find(ws, "Dropdown", NS.L["Category"]):__fire("OnValueChanged", "weaponEnchants")
     ws = P.rerender("General")
-    -- red under: the enchant branch drawing the general shipped sentence, which describes a spell
-    -- list, a Restore and add/remove -- three things this entry does not have. It draws slot
-    -- toggles.
+    -- red under: the enchant branch promising a spell list, a Restore and add/remove -- three
+    -- things this entry does not have. It draws slot toggles, and says so in its own lead-in above
+    -- the picker, which is the sentence that survived the owner's 2026-09-21 cull of the block.
     assertFalse(P.hasText(ws, "Its spell list is still yours"), "no promise of a list it has not got")
-    assertTrue(P.hasText(ws, "It holds no spell list at all"), "it says what it actually is")
+    assertFalse(P.hasText(ws, "one of Aura Master's own categories"), "and no lock sentence either")
+    assertTrue(P.hasText(ws, "there is nothing to add or remove here"), "it says what it actually is")
     assertNil(P.find(ws, "Button", NS.L["Restore this category's starter list"]))
     assertTrue(P.find(ws, "Button", NS.L["Create category"]) ~= nil,
         "but a category can still be made from here")
@@ -845,6 +944,9 @@ test("general → spell categories: a category the player made says so, without 
     assertEqual(dd.list[key], marked(NS, key, "HELPFUL"))
     assertTrue(dd.list[key]:find("(yours)", 1, true) ~= nil, "the player's own is marked")
     assertFalse(dd.list.healing:find("(yours)", 1, true) ~= nil, "and only the player's own")
+    -- red under: the marker drawn in the panel's own text color, which the owner asked for muted
+    -- gold (2026-09-21). The parentheses are inside the escape: the mark is one object.
+    assertTrue(dd.list[key]:find(YOURS_COLOR .. "(yours)|r", 1, true) ~= nil, "in muted gold, brackets and all")
     -- red under: an ownership marker put in FRONT of the name, which would move the column
     -- checkpoint 1's padding bought, for exactly the rows that carry it.
     assertEqual(dd.list[key]:find("Affixes", 1, true), dd.list.healing:find("Healing", 1, true),
@@ -1055,7 +1157,7 @@ end)
 test("general → spell categories: a claimed-by note says when the other category is one the player made", function()
     local NS, _, P = spells()
     local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
-    local mine = marked(NS, key):gsub("^.*%] +", "")   -- the name as the panel writes it, marker and all
+    local mine = ownedName(NS, key)   -- the name as the panel writes it in a list, marker and all
     NS.SetByPath("categorySpells", { [key] = { [424242] = true, [424243] = true }, defensives = { [424242] = true } })
     NS.GeneralSpells.Select("defensives")
 

@@ -131,7 +131,12 @@ L["Several spells are named '{text}' — pick one from the list, or use the id."
 L["Looking up spells..."] = "Looking up spells..."
 L["+{count} more"] = "+{count} more"
 L["Unknown spell {id}"] = "Unknown spell {id}"
-L["[{type}] {name}"] = "[{type}] {name}"
+-- The Category dropdown's aura-type marker (settings/GeneralSpells.lua's categoryLabel). TWO
+-- strings: the bracketed mark, and the shape it is dropped into. The mark is colored whole --
+-- muted green for buffs, muted red for debuffs -- so the brackets are part of it, and a
+-- translation restyles them by rewriting the mark rather than the line.
+L["[{type}]"] = "[{type}]"
+L["{mark} {name}"] = "{mark} {name}"
 L["Which spell category's list to edit. Every entry is marked with the aura type it filters, because a category only ever shows on a container of that type."] = "Which spell category's list to edit. Every entry is marked with the aura type it filters, because a category only ever shows on a container of that type."
 L["Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."] = "Forget every edit to this category: its removed starter spells come back and the spells you added are removed. Other categories keep theirs."
 L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."] = "Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."
@@ -232,9 +237,11 @@ L["Restore this category's starter list"] = "Restore this category's starter lis
 L["Only one of Aura Master's own categories has a starter list to go back to. Take spells out of your own with the X beside each one, or delete the category."] = "Only one of Aura Master's own categories has a starter list to go back to. Take spells out of your own with the X beside each one, or delete the category."
 L["The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."] = "The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."
 -- The 'yours' marker, suffixed to a user category's name wherever it is listed: the Category
--- dropdown and the Filters -> Categories grid. A token rather than a `%s`, like the aura-type
--- marker above it, because the name it takes is the player's own text.
-L["{name} (yours)"] = "{name} (yours)"
+-- dropdown and the Filters -> Categories grid. Tokens rather than a `%s`, like the aura-type
+-- marker above it, because the name it takes is the player's own text -- and two strings, as
+-- that marker is, because the mark is drawn in muted gold and its parentheses are part of it.
+L["{name} {mark}"] = "{name} {mark}"
+L["(yours)"] = "(yours)"
 -- The 'Your categories' block on General -> Spell Categories, and the overlap guardrail's two
 -- lines (issue #10 checkpoints 6 and 7). A category's NAME is still not here and never will be:
 -- see the note above the user-category strings further down.
@@ -254,10 +261,7 @@ L["There is already a category called '%s'. Both were kept — they are separate
 L["Create category"] = "Create category"
 L["Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."] = "Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."
 L["Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."] = "Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."
-L["This category"] = "This category"
 L["Make a new category"] = "Make a new category"
-L["'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. Its spell list is still yours — add, remove and Restore it as you like."] = "'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. Its spell list is still yours — add, remove and Restore it as you like."
-L["'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. It holds no spell list at all — the weapon slots below are what it reads."] = "'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. It holds no spell list at all — the weapon slots below are what it reads."
 -- The way out of a stored record the sync cannot read (settings/GeneralSpells.lua's renderBroken).
 L["Aura Master cannot read 1 of this profile's saved categories, so it is in no list and nothing is using it. It cannot be repaired from here, but you can be rid of it."] = "Aura Master cannot read 1 of this profile's saved categories, so it is in no list and nothing is using it. It cannot be repaired from here, but you can be rid of it."
 L["Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."] = "Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."

@@ -239,7 +239,9 @@ test("filters: a category the player made is marked as theirs in the grid, and i
     -- red under: the grid drawing the bare name, so a player reading the Categories grid cannot tell
     -- their own categories from Aura Master's without leaving the page and selecting each one.
     assertTrue(line ~= nil, "the row is drawn")
-    assertEqual(line[3].text, "Affixes (yours)")
+    -- In muted gold, as everywhere else the panel marks one (owner, 2026-09-21): the grid reads
+    -- `NS.GeneralSpells.MarkedName`, which is the ONE definition of the marker and of its color.
+    assertEqual(line[3].text, "Affixes |cffd9b861(yours)|r")
     -- red under: marking the SCHEMA row rather than a per-render copy, which would carry the marker
     -- into `/am list` and the write log, where the name is the row's identity and not decoration.
     assertEqual(NS.FindSchemaRow("container.filter.categories." .. key).label, "Affixes")

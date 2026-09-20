@@ -6,11 +6,12 @@ local _, NS = ...
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
 --     Spell Categories  [Category ▾]  [Restore this category's starter list]
 --                       -- one of the eleven shipped spell lists, Weapon enchants, or one the
---                          player made -- which reads "(yours)" and is drawn no Restore
---                       ---- This category ---------------------------------------------------
+--                          player made -- which reads "(yours)" and is drawn no Restore. Every
+--                          entry is marked [Buffs] green or [Debuffs] red, "(yours)" gold
+--                       [Rename this category][ Delete this category ]   <- a category you made,
+--                          straight under the picker and under no heading; a shipped one draws
+--                          nothing here at all
 --                       "Created 'Affixes', empty. Add spells to it below..." <- the answer line
---                       [Rename this category][ Delete this category ]   <- a category you made
---                       'Healing is one of Aura Master's own categories...' <- a shipped one
 --                       ---- Make a new category ---------------------------------------------
 --                       [New category's name][ Aura type ▾ ]
 --                       [ Create category ]
@@ -49,16 +50,16 @@ local _, NS = ...
 -- can never leave the tab showing an empty list.
 --
 -- THE TAB IS ALSO WHERE A PLAYER'S OWN CATEGORIES ARE MADE AND UNMADE (issue #10 checkpoints 6 and
--- 7). The 'This category' block between the picker and the list renames the picked one and deletes
--- it behind a confirmation, and 'Make a new category' under it creates one (a name and an aura type,
--- fixed at creation); a SHIPPED category draws a sentence in place of the rename and the delete,
--- because the lock is on the category object and not on its spells. The block only DRAWS that rule -- `Cat.RenameUserCategory` and
+-- 7). The rename box and the Delete sit directly under the picker, for a category the player made
+-- and for no other, and 'Make a new category' under them creates one (a name and an aura type,
+-- fixed at creation); a SHIPPED category draws neither, and no sentence in their place either
+-- (owner, 2026-09-21). That is a DRAWING rule only -- `Cat.RenameUserCategory` and
 -- `Cat.DeleteUserCategory` are what enforce it, and the aura type has no setter at all. Every
 -- entry in the list is marked with the other categories that also claim it, and adding a claimed
 -- id says so in chat: the guardrail informs and never blocks, because an aura legitimately belongs
 -- to two sets.
 --
--- EVERY ACT OF THAT BLOCK ANSWERS IN THE PANEL as well as in chat -- one line under the heading,
+-- EVERY ACT OF THAT BLOCK ANSWERS IN THE PANEL as well as in chat -- one line under the controls,
 -- `notice` below -- and a category the player made is marked "(yours)" wherever it is listed, here
 -- and on Filters -> Categories. Restore is not drawn for one at all: see the note above
 -- `restoreStarters` for why an empty starter list makes that button a silent delete.
@@ -442,7 +443,46 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- for, and a FontString has no tab stops, so the two spaces standing in for "De" land short of it.
 -- Pixel-exact would mean measuring the string at draw time or giving each row a second FontString,
 -- and a twelve-row picker does not carry either. Character-exact is what the tests pin.
-local CATEGORY_MARKER = L["[{type}] {name}"]
+--
+-- THE MARKER IS COLORED, AND MUTED (owner, 2026-09-21, from the live panel). Green for buffs, red
+-- for debuffs, gold for a category the player made. MUTED is the word: these sit BESIDE a name and
+-- are not the subject of the row, so each is a dimmed version of its hue rather than the saturated
+-- one a status light would use. The panel already has a register for chrome of this kind -- the
+-- drag handle's gold label at (1, 0.82, 0) and its help mark at (0.7, 0.7, 0.72),
+-- libs/LibKa0s/WidgetsDragHandle.lua:133 and :153 -- and these three sit inside it:
+--
+--     Buffs    (0.45, 0.75, 0.50) = 73bf80   muted green
+--     Debuffs  (0.80, 0.45, 0.45) = cc7373   muted red
+--     (yours)  (0.85, 0.72, 0.38) = d9b861   the handle's gold, dimmed toward the help mark
+--
+-- THE ESCAPES ARE NOT CHARACTERS, AND THE PADDING NEVER SEES THEM. `|cAARRGGBB` and `|r` are read
+-- by the client and drawn as nothing at all, so a padding measured over a colored string would pad
+-- by twelve phantom characters and throw the column away -- which is exactly how this change goes
+-- wrong. It cannot here: `categoryLabel` measures `charCount(word)` on the BARE aura-type word, the
+-- color is applied to the finished bracket afterwards, and both markers carry the same one `|c` and
+-- one `|r`, so the offsets do not even move in BYTES. tests/test_pages_general.lua strips every
+-- escape and asserts the name still starts at one offset in what is left, which is the thing the
+-- player's eye actually measures.
+--
+-- THE BRACKETS ARE COLORED WITH THE WORD, so the marker reads as one object. That is why the shape
+-- string takes a `{mark}` rather than a `{type}`: the bracketed marker is built and colored whole,
+-- and only then dropped into the line. Both halves stay in the locale -- the brackets are a
+-- translator's to restyle, as they were when they were literals in the shape.
+local CATEGORY_MARKER = L["{mark} {name}"]
+local TYPE_MARK       = L["[{type}]"]
+
+-- The muted markers, as the client's own escapes. Applied by `colored`, which leaves text alone
+-- when there is no color for it: a `|r` with no `|c` in front of it would close a color the panel
+-- never opened.
+local COLOR_END   = "|r"
+local TYPE_COLORS = { HELPFUL = "|cff73bf80", HARMFUL = "|cffcc7373" }
+local YOURS_COLOR = "|cffd9b861"
+
+--- `text` in `color`, or `text` unchanged when there is no color for it.
+local function colored(color, text)
+    if type(color) ~= "string" or color == "" then return text end
+    return color .. text .. COLOR_END
+end
 
 -- ---------------------------------------------------------------------------
 -- The 'yours' marker (owner, 2026-09-21; issue #10 checkpoint 6 follow-up)
@@ -468,7 +508,18 @@ local CATEGORY_MARKER = L["[{type}] {name}"]
 -- The name is the player's own text, so the token is substituted through a FUNCTION replacement,
 -- exactly as CATEGORY_MARKER's is: a `%` in a name is an ordinary character (defaults/Categories.lua
 -- keeps it deliberately) and must never be read as a gsub directive.
-local USER_MARKER = L["{name} (yours)"]
+--
+-- IN MUTED GOLD, and the marker is its own locale string for the same reason the aura type's
+-- bracket is: the parentheses are part of the mark and are colored with it, so the shape string
+-- holds a `{mark}` and the mark holds the words. The mark is substituted BEFORE the name, so a
+-- player who types "{name}" or "{mark}" into a category's name gets those characters back rather
+-- than a second substitution.
+--
+-- COLORED HERE MEANS COLORED EVERYWHERE THE PANEL LISTS A CATEGORY: this is the one definition
+-- (settings/Filters.lua's Categories grid and the claimed-by note both read it), and a gold marker
+-- in the dropdown beside a plain one in the grid would read as two different marks.
+local USER_MARKER = L["{name} {mark}"]
+local YOURS_MARK  = L["(yours)"]
 
 --- `def`'s name as the panel shows it: `Cat.LabelOf`, marked when the player made the category.
 --- `Cat.LabelOf` stays THE labeling rule -- this adds a marker to its answer and never a second copy
@@ -476,7 +527,10 @@ local USER_MARKER = L["{name} (yours)"]
 local function markedName(def)
     local name = Cat.LabelOf(def)
     if not Cat.IsUserCategory(def) then return name end
-    return (USER_MARKER:gsub("{name}", function() return name end))
+    local mark = colored(YOURS_COLOR, YOURS_MARK)
+    return (USER_MARKER
+        :gsub("{mark}", function() return mark end)
+        :gsub("{name}", function() return name end))
 end
 
 -- `s`'s length in CHARACTERS rather than bytes, so an aura-type word translated with an accent in it
@@ -503,9 +557,13 @@ local function categoryLabel(def)
     local typeLabel = auraType and C.AURA_TYPE_LABELS[auraType]
     if not typeLabel then return markedName(def) end
     local word = L[typeLabel]
+    -- MEASURED ON THE BARE WORD, before any color reaches it: `|cff73bf80` and `|r` are drawn as
+    -- nothing, so padding out a colored marker would pad by twelve characters the player cannot see.
     local pad = (" "):rep(math.max(0, TYPE_WORD_CHARS - charCount(word)))
+    local mark = colored(TYPE_COLORS[auraType],
+        (TYPE_MARK:gsub("{type}", function() return word end)))
     return (CATEGORY_MARKER
-        :gsub("{type}", function() return word end)
+        :gsub("{mark}", function() return mark end)
         :gsub("{name}", function() return pad .. markedName(def) end))
 end
 
@@ -628,18 +686,14 @@ end
 
 
 -- ---------------------------------------------------------------------------
--- This category: rename, delete, and the shipped lock; then Make a new category (checkpoint 6)
+-- Rename, delete, and the shipped lock; then Make a new category (checkpoint 6)
 -- ---------------------------------------------------------------------------
 --
 --     [ Category v ]                    [ Restore this category's starter list ]
---     ---- This category -----------------------------------------------------
+--     -- a category the player made; one of Aura Master's own draws nothing here --
+--     [ Rename this category ____ ]     [ Delete this category ]
 --     -- whatever the last act of this block answered, when there was one --
 --     "Renamed 'Frist draft' to 'First draft'. To undo it, type 'Frist draft' back into the box."
---     -- a category the player made --
---     [ Rename this category ____ ]     [ Delete this category ]
---     -- one of Aura Master's own --
---     "Healing is one of Aura Master's own categories. Its name and its buff/debuff choice are
---      fixed, but the spell list below is yours -- add, remove and Restore as you like."
 --     -- only while the profile holds a record the sync cannot read --
 --     "Aura Master cannot read 1 of this profile's saved categories..."
 --     [ Forget unreadable categories ]
@@ -670,20 +724,16 @@ end
 --     compiler groups by aura type and every container's stored Show/Hide is keyed by category key,
 --     so letting the type move would silently carry a category between two grids and orphan that
 --     state). A control that could only ever be set once would read as a control that is broken.
---   * THE HEADING NAMES THE BLOCK'S SUBJECT, NOT ONE OF ITS TWO CASES. It read "Your categories"
---     over a body whose usual sentence is that the selected category is NOT yours -- which is what
---     twelve of the fourteen entries say, and the only thing a player who has made none ever sees.
---     The block is about the category the picker above it is showing, in both cases, so the heading
---     says that and the body says whose it is. The alternative -- a heading per case, "Your
---     categories" against something else -- was declined for a reason the rest of this tab already
---     turns on: a heading that changes its words as the dropdown moves stops being a landmark, and
---     this one sits directly under the control that moves it. Creating is the act that is genuinely
---     about categories in the plural, and it already has its own heading one block down.
---   * THE SHIPPED CASE DRAWS ONE SENTENCE RATHER THAN DISABLED CONTROLS. A grayed-out name box and
---     a grayed-out Delete on twelve of the fourteen categories would be a panel mostly made of
---     things that do not work, and it would not say WHY. The sentence says why, and says the half
---     that is NOT locked -- the spell list, Restore included, which is the owner's exact
---     distinction.
+--   * IT HAS NO HEADING OF ITS OWN (owner, 2026-09-21). It carried one -- "This category" -- and a
+--     heading between the dropdown and the two controls that act on what the dropdown is showing
+--     separated things that belong together. The blocks that follow still name themselves, so the
+--     tab reads: picker, what you can do to it, "Make a new category", "Spells in this category".
+--   * THE SHIPPED CASE DRAWS NOTHING AT ALL, neither disabled controls nor a sentence. Grayed-out
+--     controls on twelve of the fourteen categories would be a panel mostly made of things that do
+--     not work; the sentence that stood there instead said the name and the aura type are fixed and
+--     the spell list is still the player's, and the owner asked for it gone (2026-09-21) because
+--     the lead-in above the picker already describes the list in the words its own controls use.
+--     So a shipped category goes picker -> create form -> list, with nothing in between.
 --
 -- THE LOCK IS NOT DRAWN, IT IS ENFORCED. `Cat.RenameUserCategory` and `Cat.DeleteUserCategory` both
 -- refuse a key with no stored record, which is every shipped category, and the aura type has no
@@ -969,20 +1019,43 @@ local function createCell()
     end }
 end
 
---- The "This category" block: the answer line, the picked category's own controls (or the sentence
---- saying why it has none), the way out of an unreadable record, and then the create form under a
---- heading of its own. Drawn for the enchant row too -- it is one of the shipped categories the
---- sentence is about, and creating a category is not a thing only the spell-list tabs may do.
+--- The picked category's own controls -- the rename and the Delete, for a category the player made
+--- -- then the answer line, the way out of an unreadable record, and the create form under a
+--- heading of its own. Drawn for the enchant row too: creating a category is not a thing only the
+--- spell-list tabs may do.
+---
+--- NO HEADING, AND NOTHING AT ALL FOR ONE OF AURA MASTER'S OWN (owner, 2026-09-21, from the live
+--- panel). It had a "This category" heading over a body that, on twelve of the fourteen entries,
+--- was one sentence saying the category is Aura Master's. The owner wants neither: no heading, no
+--- sentence. So this block now draws for a SHIPPED category exactly what it has to say about it,
+--- which is nothing, and the tab goes picker -> create form -> spell list.
+---
+---   * THE SENTENCE IS GONE, BOTH OF ITS TWO FORMS, and nothing is lost that the tab does not
+---     already say. The lock it described is still enforced by `Cat.RenameUserCategory` and
+---     `Cat.DeleteUserCategory` and was never drawn from here; what the sentence ADDED was that the
+---     spell list is still the player's, which the lead-in above the picker says in the words the
+---     controls use ("Click X to leave one out, or add your own; Restore brings the starter list
+---     back"), and, on the enchant entry, that there is no spell list at all -- which that branch's
+---     own lead-in says in full before the picker is even drawn.
+---   * THE HEADING IS GONE FOR A CATEGORY THE PLAYER MADE TOO, and the rename and the Delete move
+---     up against the dropdown. They are about WHICH category is picked, which is the dropdown's
+---     own subject, so under it with nothing in between is where they belong: picker, then the two
+---     things you can do to what it is showing. A heading between a control and the two controls
+---     that act on it was a landmark separating things that belong together.
+---   * WHAT KEEPS IT READING AS BLOCKS rather than a run-on is the gap below, not a heading above:
+---     the picker and its two acts are consecutive grid rows and read as one block, and SECTION_GAP
+---     plus "Make a new category" closes it off -- the same gap that already separates the create
+---     form from "Spells in this category". For a shipped category the block collapses to nothing
+---     and the gap lands directly under the picker line, which is one gap and not two.
+---
+--- THE ANSWER LINE OUTLIVES THE HEADING IT USED TO SIT UNDER. It is the block's answer to the act
+--- just run -- a refusal, a rename's undo, a create's next step -- and it is drawn under whatever
+--- the block drew, so it reads as the answer to the control above it. On a shipped category it is
+--- the only thing this block ever draws.
 ---
 --- IT SETTLES THE ANSWER LINE BEFORE IT DRAWS ANYTHING (`settleNotice`), so the line can never be
 --- drawn over a profile or a category it was not said about. The rule and its three scopes are
 --- written above `notice`.
----
---- THE SHIPPED SENTENCE COMES IN TWO, because Weapon enchants is not a spell list. The general one
---- promises "add, remove and Restore" the list below, and on the enchant entry there is no list
---- below to add to, nothing to remove and no Restore drawn -- a sentence describing three controls
---- the tab does not have. The enchant entry gets the half of the sentence that IS true (the name and
---- the aura type are fixed) plus what it actually draws.
 ---
 --- THE CREATE FORM SITS UNDER ITS OWN HEADING, and finding #4 is why. "Rename this category" and the
 --- create form's name box are two Enter-committing edit boxes a row apart; the rename takes effect
@@ -997,18 +1070,12 @@ end
 local function renderManage(ctx, def)
     settleNotice(def)
     local scroll = H.EnsureScroll(ctx)
-    if scroll then H.AddSpacer(scroll, SECTION_GAP) end
-    H.Section(ctx, L["This category"])
-    if notice then H.TextRow(ctx, notice) end
+    -- Directly under the picker, under no heading, and only for a category the player made: a
+    -- shipped one draws nothing here at all.
     if Cat.IsUserCategory(def) then
         H.RenderGrid(ctx, { nameCell(def), deleteCell(def) })
-    elseif def.kind == "enchant" then
-        H.TextRow(ctx, L["'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. It holds no spell list at all — the weapon slots below are what it reads."]
-            :format(Cat.LabelOf(def)))
-    else
-        H.TextRow(ctx, L["'%s' is one of Aura Master's own categories: its name and its buff or debuff choice are fixed. Its spell list is still yours — add, remove and Restore it as you like."]
-            :format(Cat.LabelOf(def)))
     end
+    if notice then H.TextRow(ctx, notice) end
     renderBroken(ctx)
     if scroll then H.AddSpacer(scroll, SECTION_GAP) end
     H.Section(ctx, L["Make a new category"])
@@ -1130,8 +1197,8 @@ end
 --- UNDER A HEADING OF ITS OWN, and that is a fix rather than a decoration (owner, 2026-09-21). This
 --- is drawn AFTER `renderManage`, and a heading owns everything drawn beneath it until the next one
 --- -- so the lead-in and the three checkboxes landed under "Make a new category" and read as part of
---- the create form. Every other block of this tab already names itself ("This category", "Make a new
---- category", "Spells in this category"); this one now does too, and the order of the calls is left
+--- the create form. Every other block of this tab already names itself ("Make a new category",
+--- "Spells in this category"); this one now does too, and the order of the calls is left
 --- alone, because the block ABOVE the slots is the same block that sits above every other category's
 --- spell list and belongs in the same place on both.
 local function renderEnchant(ctx)

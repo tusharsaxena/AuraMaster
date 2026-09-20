@@ -155,7 +155,15 @@ carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of c
 `C.AURA_TYPE_LABELS` rather than worded again here, so the picker uses the same two words the
 container's own Aura type control does (issue #10). The shorter word is padded so every name starts
 at the same character offset; that is character-exact rather than pixel-exact, since the row font is
-proportional. A category the player made carries **`(yours)`** after its name — a SUFFIX, because the
+proportional. The markers are **colored, muted** (owner, 2026-09-21): `[Buffs]` in muted green
+(0.45, 0.75, 0.50 = `73bf80`), `[Debuffs]` in muted red (0.80, 0.45, 0.45 = `cc7373`) and `(yours)`
+in muted gold (0.85, 0.72, 0.38 = `d9b861`) — the register of the drag handle's gold label
+(1, 0.82, 0) and its help mark (0.7, 0.7, 0.72), dimmed because a marker sits beside a name and is
+not the subject of the row. The brackets and the parentheses are inside the escape, so each mark
+reads as one object. **The escapes do not move the column**: `|cAARRGGBB` and `|r` are drawn as
+nothing, and the padding is measured on the bare aura-type word before any color reaches it, so the
+name still starts at the same character offset — a case strips every escape and asserts that on what
+is left. A category the player made carries **`(yours)`** after its name — a SUFFIX, because the
 aura-type marker is a padded prefix and a second prefix would move the column that padding bought,
 and because only a few rows answer yes while marking the rest "not yours" would be noise on every
 row. One definition (`NS.GeneralSpells.MarkedName`) serves this dropdown, the Filters → Categories
@@ -179,11 +187,13 @@ dropdown's own line, to its right (feedback #3), above Add a spell. Writes the w
 `categorySpells` (a carve-out, so every container re-applies). The page's Defaults does not touch
 these lists; each category's restore does.
 
-**This category** — the block between the picker and the spell list, because its subject is which
-category is being edited, which is the dropdown's subject and not the list's (issue #10, 2026-09-21).
-The heading names that subject in both its cases rather than one of them; it does not reword itself as
-the dropdown moves, or it would stop being the landmark that tells the rename box from the create box
-one block down. What it draws:
+**The picked category's own controls** — drawn between the picker and the create form, because their
+subject is which category is being edited, which is the dropdown's subject and not the list's
+(issue #10, 2026-09-21). They sit **directly under the picker and under no heading of their own**
+(owner, 2026-09-21): a heading between a control and the two controls that act on what it is showing
+separated things that belong together. What keeps the tab reading as blocks rather than a run-on is
+the gap below — the picker and its two acts are consecutive rows, and **Make a new category** closes
+them off. What it draws:
 
 - **A category the player made:** a **Rename this category** box, pre-filled from the store on every
   render and committing on Enter (never per keystroke — that would write a record, re-run the sync and
@@ -194,18 +204,21 @@ one block down. What it draws:
   spell list, and every container's Show/Hide in every profile — and the one consequence that is not a
   loss, that an aura the category was hiding becomes visible again through Uncategorized. The popup
   carries the KEY, never the definition, so a popup that outlives its render cannot act on a stale one.
-- **One of Aura Master's own:** one sentence instead of those two controls, saying that the name and
-  the buff-or-debuff choice are fixed and that the spell list is still the player's to add to, remove
-  from and Restore. Weapon enchants gets its own wording, because it has no spell list at all.
-  Disabled controls were declined: on ten of the twelve shipped entries the block would be mostly things
-  that do not work, and it would not say why.
+- **One of Aura Master's own: nothing at all** (owner, 2026-09-21) — no controls, no heading and no
+  sentence. It drew a sentence saying the name and the buff-or-debuff choice are fixed and the spell
+  list is still the player's; the owner asked for it gone, and nothing is lost, because the lead-in
+  above the picker already describes the list in the words its own controls use, and the Weapon
+  enchants branch says in its own lead-in that there is no spell list to add to. Disabled controls
+  were declined for the same block long before: on ten of the twelve shipped entries they would be
+  mostly things that do not work, and they would not say why. The lock itself was never drawn from
+  here — `Cat.RenameUserCategory` and `Cat.DeleteUserCategory` enforce it.
 - **Only while the profile holds a record the sync cannot read:** a line saying how many there are,
   that nothing is using them and that they cannot be repaired from here, and a **Forget unreadable
   categories** button behind its own confirmation. Both read at a count of one, through two whole
   strings and a branch (the idiom `settings/Text.lua`'s `centerNote` already uses). Without this a
   record with an unusable aura type, name or key was permanently stuck: the sync refuses to
   materialize it, so it is in no dropdown and no Delete could reach it.
-- **The answer line**: one row under the heading, carrying what the last act of the block answered —
+- **The answer line**: one row under whatever the block drew, carrying what the last act answered —
   an empty or refused name, a duplicate name kept, a create, a rename, a delete, the restore refusal.
   Everything is said in chat as well, since that is this addon's act log. The line belongs to the
   state it was said in and the draw enforces it: it is stamped with the profile and the category, and
@@ -235,12 +248,28 @@ categories too.
 
 **The overlap guardrail informs, it never blocks** (issue #10). Adding a spell already held by another
 category of the same aura type prints one chat line naming the others and what the compiler does about
-it, and each such entry carries an `Also in: …` note under its name. Both read
+it, and each such entry carries an `Also in: …` note. Both read
 `FC.ClaimingCategories` — the compiler's own answer, asked with an empty filter because this is a
 statement about the category set and not about any one container — so the guardrail and the Overrides
 tab's notes cannot drift into two answers to one question. Only the same aura type can claim: a buff
 list and a debuff list never meet in one container. Every name in both surfaces carries the `(yours)`
 marker where it applies.
+
+**The note is a second line under the entry, not part of its row, and that is the library's contract**
+(owner asked for it on the row, 2026-09-21). `O.IdList` composes an entry's label itself, from the
+kind's `info(id)` — name, then the id in gray (`libs/LibKa0s/OptionsWidgets.lua`, `entryLabel`) — and
+a host passes no label of its own; `note` is the one text hook, and the library draws it as a
+full-width `Label` in the same Flow row, which wraps to a line of its own and takes that entry out of
+the two-column grid for the row it lands on. Folding it into the label through a host kind table was
+rejected: `info` is also what the add box matches a typed name against and what the suggestion rows
+are built from, so a decorated name would break both. The arithmetic says it would not fit anyway —
+at two columns an entry's label is `(0.78 + 0.20 − 0.08 − 0.04) / 2 = 0.43` of the content width, so
+about 251px at the 584px content width the library sizes two columns against, less the 16px icon:
+roughly 45 characters of this font, against `Ancestral Protection Totem (207399)` at 35 before the
+note is added and word wrap turned off at two columns, which truncates the tail and the id with it.
+Only a count form (`(also in 1)`, 12 characters) comes close. Putting a one-row form on the table
+needs a LibKa0s change — an entry `suffix` the host composes, drawn inside the label — which is a
+library ask, not a host one.
 
 Starters and added spells are drawn as ONE list **ordered by name**, case-insensitively (owner,
 2026-09-20; before that it was id order, which read Frost Nova, Entangling Roots, Hamstring). The

@@ -1039,7 +1039,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (61)
+### test_pages_general.lua (62)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1069,7 +1069,8 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
 - general → spell categories: the create form makes a category, shows it, and it is usable at once
 - general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide
-- general → spell categories: a shipped category draws the lock sentence instead of a name box and a Delete
+- general → spell categories: a shipped category draws no controls, no heading and no sentence (owner 2026-09-21)
+- general → spell categories: the rename and the Delete sit directly under the picker (owner 2026-09-21)
 - general → spell categories: Delete asks first, and the confirmation's act is what refuses a shipped key
 - general → spell categories: a category the player made is drawn no Restore, and the act refuses one
 - general → spell categories: Weapon enchants is promised no spell list, Restore or add/remove
@@ -1434,7 +1435,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 61 |
+| test_pages_general.lua | 62 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 45 |
 | test_pages_layout.lua | 27 |
@@ -1454,4 +1455,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1240** |
+| **Total** | **1241** |

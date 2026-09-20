@@ -207,7 +207,7 @@ The surfaces this added, all read by name rather than duplicated:
 | `NS.CategoryRow(def)` | One category's Show/Hide row, exported by `settings/Filters.lua` so the runtime rows are built by the same function as the shipped ones |
 | `NS.RegisterSchemaRows(rows, beforePath)` / `NS.UnregisterSchemaRows(pred)` | Insert rows in schema order, and remove them again |
 | `FC.ClaimingCategories(Cat, auraType, filter, edits, id)` | Which categories hold a spell id — `ExplainSpell`'s own answer, published so the overlap guardrail cannot drift from it |
-| `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker both surfaces read, the restore ACT behind the button's absence, and the Filters page's per-row link |
+| `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker, muted gold included, that both surfaces read, the restore ACT behind the button's absence, and the Filters page's per-row link |
 
 The addon holds two pieces of named non-setting state (architecture-§5). The first is learned
 data that no control sets and no row addresses.
@@ -588,6 +588,17 @@ return value.
 - **The create form sits between the category picker and its spell list.** A player who only came to
   edit spells passes "Make a new category" on every visit. Accepted by the owner on 2026-09-21: the
   alternative is below the list, where sixty entries would hide it.
+- **The `Also in: …` note is a second line under the spell, not part of its row.** The owner asked
+  for it on the entry's own line (2026-09-21) and the host cannot put it there: `O.IdList` composes
+  an entry's label itself from the kind's `info(id)` and takes no label from the host, so `note` —
+  drawn as a full-width `Label` in the same Flow row, which wraps to its own line and drops that
+  entry out of the two-column grid — is the only text hook there is. Decorating `info` was rejected:
+  it is also what the add box matches a typed name against and what the suggestion rows are built
+  from. It would not fit either — at two columns an entry's label is 0.43 of the content width, about
+  251px at the 584px the library sizes two columns against, roughly 45 characters once the 16px icon
+  is taken off, against 35 for a long spell and its id before the note is added, with word wrap off
+  and the tail truncated. Putting a one-row form on the table needs a LibKa0s entry `suffix` the host
+  composes; until then the note stays where the library draws it. See `docs/settings-panel.md`.
 - **Categories are created only on General → Spell Categories.** Filters → Categories, where a player
   is most likely to be thinking about categories, shows them and links to their spells but offers no
   way to make one. Accepted by the owner on 2026-09-21.
