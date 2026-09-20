@@ -314,7 +314,7 @@ end
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
--- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 1): the fill, the
+-- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 2): the fill, the
 -- edge, the label, the help mark with its own art fallback, the tooltip, the drag scripts and the
 -- width arithmetic were all this file's and are the library's. ConsumableMaster drew the same strip
 -- over its macro bar, which is why the widget exists. Resolved at file load like every other library
