@@ -1432,3 +1432,136 @@ test("categories: ClaimingCategories is the same answer ExplainSpell gives, and 
     assertEqual(why.categories[1].label, asPanel[1].label)
     assertEqual(why.categories[1].state, "hide", "the container's stored Hide, read from its filter")
 end)
+
+-- ── a user category as the ONLY shown category (owner report, 2026-09-21) ────────────────
+--
+-- THE REPORT: a user category "MyCat1" holding three monk buffs, a player BUFF container with that
+-- category Show and EVERY other category Hide (Uncategorized included), Renewing Mist active on the
+-- player -- and the container drew nothing at all.
+--
+-- THE HYPOTHESIS THAT BROUGHT THESE CASES HERE, written down because it was WRONG and the next
+-- reader deserves to know it was tested rather than assumed: that `includeCategory`'s `spells`
+-- branch conflicts a user category (whose own `def.spells` is empty by construction, checkpoint 3),
+-- drops its group, and -- with Uncategorized Hidden suppressing the catch-all -- leaves a plan with
+-- no groups at all. It does not: `FC.CategorySpells` resolves starters PLUS `categorySpells[key]`,
+-- which is exactly where a user category's whole list lives, so the group compiles with the ids on
+-- it. The cases below pin that, and they pin the one shape that really does compile to nothing (an
+-- EMPTY list, which can never match and says so) so the two can never be confused again.
+--
+-- The report's own failure was neither: the ids. AuraMaster filters on the id of the AURA sitting on
+-- the unit, never the id of the spell that was cast (tools/spell-research/README.md, "The crux: aura
+-- ids, not cast ids"), and 115151 is Renewing Mist's CAST id -- the shipped monk healing starters
+-- carry 119611 for it (defaults/Categories.lua:182), beside the same 124682 and 115175 the report
+-- lists. A list built from a cast id draws nothing and reports nothing, which is what was seen.
+
+local OWNER_IDS = { 124682, 115151, 115175 }   -- the report's list, its Renewing Mist a CAST id
+local RENEWING_MIST_AURA = 119611              -- what the shipped monk healing list carries instead
+
+--- A player BUFF container with `key` Show and every other category of the aura type Hide --
+--- Uncategorized included, which is what suppresses the catch-all and leaves the shown groups as
+--- the whole plan.
+local function onlyShown(E, con, key)
+    for _, def in ipairs(E.Categories.For(con.auraType)) do
+        con.filter.categories[def.key] = (def.key == key) and "show" or "hide"
+    end
+    return con
+end
+
+local function userContainer(E, unit, auraType)
+    local con = E.Database.DeepCopy(E.CONTAINER_TEMPLATE)
+    con.unit, con.auraType = unit, auraType
+    return con
+end
+
+test("categories: a user category alone on Show compiles to its group, with its own spell ids on it", function()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("MyCat1", "HELPFUL")
+    local edits = {}
+    for _, id in ipairs(OWNER_IDS) do edits[id] = true end
+    E.SetByPath("categorySpells", { [key] = edits })
+    local con = onlyShown(E, userContainer(E, "player", "HELPFUL"), key)
+
+    local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
+    -- red under the hypothesis above: a conflicted group is dropped, and with Uncategorized Hidden
+    -- suppressing the catch-all the plan would carry no group at all.
+    assertEqual(#plan.groups, 1, "the shown user category is the whole plan")
+    assertEqual(plan.groups[1].filter, "HELPFUL")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "115151,115175,124682")
+    assertTrue(not hasWarning(plan, "never match"), "a list with ids in it can match")
+
+    -- And the compiler filters on exactly the ids it was given: the aura id the shipped monk list
+    -- carries for Renewing Mist is NOT in this group, because nobody put it in this category. That
+    -- is the report's actual failure, pinned as behavior rather than as a defect.
+    assertTrue(plan.groups[1].candidateFilters.includeSpellIDs[RENEWING_MIST_AURA] == nil,
+        "an id the category does not hold is not filtered for")
+end)
+
+test("categories: a user category with an EMPTY list is the one shape that compiles to nothing, and it warns", function()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("Empty", "HELPFUL")
+    local con = onlyShown(E, userContainer(E, "player", "HELPFUL"), key)
+
+    local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
+    -- An empty `includeSpellIDs` IS what the engine would honor, so `includeCategory` conflicts the
+    -- group and `addGroup` drops it (the top-of-file comment's "a group that can never match").
+    -- With Uncategorized Hidden there is no catch-all behind it either, so the plan is empty -- and
+    -- `finishWarnings` is what keeps that from being silent.
+    assertEqual(#plan.groups, 0, "an empty category shown alone leaves nothing to draw")
+    assertTrue(hasWarning(plan, "never match anything"), "and the container says so")
+end)
+
+test("categories: an empty user category shown does not take Uncategorized's catch-all down with it", function()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("Empty", "HELPFUL")
+    local con = onlyShown(E, userContainer(E, "player", "HELPFUL"), key)
+    con.filter.categories.uncategorized = "show"
+
+    local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
+    -- The union is non-empty (the shipped buff lists) and the unit is the player, so `hasUnion` is
+    -- true and Uncategorized supersedes the catch-all with a group of its own -- which is what still
+    -- draws an uncategorized buff on a container whose only other Show holds no ids.
+    assertEqual(#plan.groups, 1)
+    assertEqual(plan.groups[1].label, "Uncategorized")
+    assertTrue(plan.groups[1].candidateFilters.excludeSpellIDs[RENEWING_MIST_AURA],
+        "the categorized union is what it draws around")
+end)
+
+test("categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility", function()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("Theirs", "HARMFUL")
+    E.SetByPath("categorySpells", { [key] = { [118] = true } })
+    local con = onlyShown(E, userContainer(E, "target", "HARMFUL"), key)
+
+    local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
+    assertEqual(#plan.groups, 1, "the aura type is not what decides a user category's group")
+    assertEqual(plan.groups[1].filter, "HARMFUL")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118")
+    -- The engine honors debuff ids only while the unit is hostile, and `usesSpellIds` is set by the
+    -- user category's own Show: the sentence has to reach a container whose only spell list is one
+    -- the player made.
+    assertTrue(hasWarning(plan, "hostile"), "the identity warning fires for a user category too")
+end)
+
+test("categories: a user category shown beside a shipped one gets its own group, after it and minus its ids", function()
+    local E = freshEnv()
+    local key = E.Categories.CreateUserCategory("Mine", "HELPFUL")
+    E.SetByPath("categorySpells", { [key] = { [RENEWING_MIST_AURA] = true, [987654] = true } })
+    local con = userContainer(E, "player", "HELPFUL")
+    for _, def in ipairs(E.Categories.For("HELPFUL")) do
+        con.filter.categories[def.key] = (def.key == key or def.key == "healing") and "show" or "hide"
+    end
+
+    local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
+    assertEqual(#plan.groups, 2, "one group per shown category, user or shipped")
+    -- Declaration order: a user category is materialized ahead of Uncategorized and behind every
+    -- shipped row (Cat.SyncUserCategories' userInsertIndex), so the shipped group comes first.
+    assertEqual(plan.groups[1].label, "Healing")
+    assertEqual(plan.groups[2].label, "Mine")
+    assertTrue(plan.groups[1].candidateFilters.includeSpellIDs[RENEWING_MIST_AURA],
+        "the shipped list claims the aura id")
+    -- R-4's dedup runs on a user category like any other: an aura in both is drawn under the FIRST
+    -- shown category, so the later group subtracts the earlier one's ids.
+    assertTrue(plan.groups[2].candidateFilters.excludeSpellIDs[RENEWING_MIST_AURA],
+        "and the user group excludes what the earlier shown group already draws")
+    assertTrue(plan.groups[2].candidateFilters.includeSpellIDs[987654], "its own id still includes")
+end)

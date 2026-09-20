@@ -221,7 +221,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (89)
+### test_filtercompiler.lua (94)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -312,6 +312,11 @@ badge and any count quoted in the docs must agree with it.
 - categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For
 - categories: ClaimingCategories names every spells-kind category of the aura type that holds an id, in declaration order
 - categories: ClaimingCategories is the same answer ExplainSpell gives, and the container's filter decides only the state
+- categories: a user category alone on Show compiles to its group, with its own spell ids on it
+- categories: a user category with an EMPTY list is the one shape that compiles to nothing, and it warns
+- categories: an empty user category shown does not take Uncategorized's catch-all down with it
+- categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility
+- categories: a user category shown beside a shipped one gets its own group, after it and minus its ids
 
 ### test_container.lua (51)
 
@@ -1404,7 +1409,7 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 91 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 89 |
+| test_filtercompiler.lua | 94 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
@@ -1449,4 +1454,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1235** |
+| **Total** | **1240** |
