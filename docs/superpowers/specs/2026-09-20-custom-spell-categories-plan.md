@@ -14,9 +14,9 @@ its notes. Do not rely on conversation context — everything needed is here or 
 | 0 | Plan of record | DONE | this file | — |
 | 1 | Buff/debuff markers in the Category dropdown | DONE | b520ecd | `[Buffs] ` / `[Debuffs] ` prefix from `C.AURA_TYPE_LABELS`, padded to a common character width; explicit pullout width and LEFT-justified closed box; settings/GeneralSpells.lua |
 | 2 | Category type as a first-class field | DONE | b520ecd | `def.auraType` stamped at load; `Cat.AuraTypeOf(defOrKey)` reads it |
-| 3 | Storage + schema for user categories | DONE | | Records in `userCategories`/`userCategoryOrder`, materialized into `Cat.HELPFUL`/`Cat.HARMFUL` by `Cat.SyncUserCategories`; random `user…` keys; schema v6; `NS.RegisterSchemaRows(rows, beforePath)` + `NS.UnregisterSchemaRows` |
-| 4 | `Uncategorized` counts user categories | DONE | | No compiler change needed, and proven so from a compiled plan (tests/test_filtercompiler.lua) |
-| 5 | Deletion and cleanup across profiles | TODO | | Including inactive profiles |
+| 3 | Storage + schema for user categories | DONE | 0a2004b | Records in `userCategories`/`userCategoryOrder`, materialized into `Cat.HELPFUL`/`Cat.HARMFUL` by `Cat.SyncUserCategories`; random `user…` keys; schema v6; `NS.RegisterSchemaRows(rows, beforePath)` + `NS.UnregisterSchemaRows` |
+| 4 | `Uncategorized` counts user categories | DONE | 0a2004b | No compiler change needed, and proven so from a compiled plan (tests/test_filtercompiler.lua) |
+| 5 | Deletion and cleanup across profiles | WIP | | Including inactive profiles |
 | 6 | UX: create / rename / delete + predefined lock | TODO | | |
 | 7 | Overlap guardrail | TODO | | Inform, do not block |
 | 8 | Docs, counts, scope, smoke tests | TODO | | |
