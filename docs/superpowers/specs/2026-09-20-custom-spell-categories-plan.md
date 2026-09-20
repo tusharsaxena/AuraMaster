@@ -12,8 +12,8 @@ its notes. Do not rely on conversation context — everything needed is here or 
 | # | Checkpoint | Status | Commit | Notes |
 | --- | --- | --- | --- | --- |
 | 0 | Plan of record | DONE | this file | — |
-| 1 | Buff/debuff markers in the Category dropdown | TODO | | Independent; no stored-shape change |
-| 2 | Category type as a first-class field | TODO | | `auraType` on every def; shipped ones derive it |
+| 1 | Buff/debuff markers in the Category dropdown | DONE | (uncommitted) | `[Buffs] ` / `[Debuffs] ` prefix from `C.AURA_TYPE_LABELS`, padded to a common character width; explicit pullout width and LEFT-justified closed box; settings/GeneralSpells.lua |
+| 2 | Category type as a first-class field | DONE | (uncommitted) | `def.auraType` stamped at load; `Cat.AuraTypeOf(defOrKey)` reads it |
 | 3 | Storage + schema for user categories | TODO | | The hard half; needs a migration |
 | 4 | `Uncategorized` counts user categories | TODO | | Union correctness |
 | 5 | Deletion and cleanup across profiles | TODO | | Including inactive profiles |
@@ -70,7 +70,7 @@ silently move a category between two different grids. Changing type means delete
 - **Category rows are generated from `Cat.For(auraType)`** (`settings/Filters.lua:128-143`), one row
   per category at `container.filter.categories.<key>`, with `label = L[def.label]` — that `L[...]`
   is exactly where the locale exemption has to land.
-- **`Cat.DefaultStates()`** (`defaults/Categories.lua:574`) stamps a state for every key into the
+- **`Cat.DefaultStates()`** (`defaults/Categories.lua:629`) stamps a state for every key into the
   container template, and its header already promises that a key added later reaches stored
   containers through the ordinary backfill. A user category must reach them the same way.
 
@@ -99,6 +99,14 @@ The hard half:
 - A schema migration — the stored shape is at v4 and every change so far has needed one.
 - Ordering: `Uncategorized` stays last in the grid, and the compiler's group-per-shown-category order
   depends on declaration order.
+
+**NOTE, carried forward from checkpoint 2 — `Categories.AuraTypeOf`'s KEY form must be widened
+here.** Given a definition it reads `def.auraType` and answers for anything, including a user
+category. Given a key it resolves through `Categories.Find`, which walks `Cat.HELPFUL` and
+`Cat.HARMFUL` only, so a user category's key answers `nil`. That is harmless until this checkpoint
+and a live bug the moment it lands: every caller holding a bare key out of a container's stored
+`filter.categories` would type a user category as nothing. Widen the key form to the user
+categories' store as part of the storage work, and cover it with a case that asks by key.
 
 ### 4. `Uncategorized` counts user categories
 

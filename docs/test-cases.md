@@ -1011,7 +1011,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (41)
+### test_pages_general.lua (44)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1032,6 +1032,9 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
+- general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
+- general → spell categories: the markers are padded so every name starts at the same column (issue #10)
+- general → spell categories: the closed dropdown shows the marked label too (issue #10)
 - general → spell categories: a section heading separates the picker from the spell list (2026-09-20)
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
@@ -1252,11 +1255,13 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (16)
+### test_defaults.lua (18)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
 - defaults: IsSpellCategory names exactly the spells-kind categories of BOTH aura types
+- defaults: every shipped category answers its own aura type through AuraTypeOf, by def and by key
+- defaults: AuraTypeOf is total — nil for an unknown key and for anything that is not a definition
 - defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of positive integer ids
 - defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine
 - defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)
@@ -1372,7 +1377,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 41 |
+| test_pages_general.lua | 44 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 44 |
 | test_pages_layout.lua | 27 |
@@ -1383,7 +1388,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 16 |
+| test_defaults.lua | 18 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
@@ -1392,4 +1397,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1178** |
+| **Total** | **1183** |

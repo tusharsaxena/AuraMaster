@@ -266,11 +266,131 @@ local ID_STRINGS = {
 local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shift-click a spell link into the box, then press Enter or Add. {hint}"]
     :gsub("{hint}", function() return NAME_HINT end))
 
+-- ---------------------------------------------------------------------------
+-- The Category dropdown's buff/debuff marker (owner, 2026-09-20; issue #10 checkpoint 1)
+-- ---------------------------------------------------------------------------
+--
+-- Every entry in the Category dropdown says which aura type its category filters. Until issue #11
+-- the list was buff-only and the question never arose; it now mixes `Cat.HELPFUL`'s nine spell
+-- lists and Weapon enchants with `Cat.HARMFUL`'s `hardCC` and `softCC`, and nothing on the row said
+-- so -- a player editing "Hard CC (loss of control)" had no way to tell from this tab that its ids
+-- only ever bite on a hostile target or focus.
+--
+-- A PREFIX, NOT A SUFFIX, and the real labels decide it rather than taste: the two debuff rows
+-- already end in parenthetical suffixes ("Hard CC (loss of control)", "Soft CC (roots & snares)"),
+-- so a trailing marker would sit a second bracketed phrase behind the first and read as part of the
+-- name. A prefix also puts every marker in the same column down the open list, which is what makes
+-- it scannable rather than something to be read per row. And it survives the one thing this
+-- dropdown cannot afford: it is narrow, and a pullout row's FontString is LEFT-justified and
+-- anchored to both edges of its button (AceGUIWidget-DropDown-Items.lua:166-169, under libs/), so
+-- an entry too long for the list loses its TAIL -- a leading marker is the half that cannot be cut
+-- off, a trailing one is the first thing lost, exactly on the longest names. The CLOSED box is a
+-- different FontString with a different default, and `sizeCategoryDropdown` below deals with it.
+--
+-- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
+-- things everywhere a player meets them: the container's own Aura type dropdown
+-- (settings/Containers.lua:79), the gray summary behind every container in the picker
+-- (settings/OptionsSetup.lua:410) and the `/am list` line (settings/Slash.lua:177) -- those three
+-- are its readers, and the Filters page is not among them; its category rows are labeled from the
+-- category, not from the aura type. So the marker reads the table rather than defining a second
+-- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
+-- with them, and a future third aura type would be marked without touching this file.
+--
+-- WEAPON ENCHANTS IS MARKED LIKE EVERY OTHER ROW, as a buff. It is kind "enchant" and not a spell
+-- list at all, but it is declared in `Cat.HELPFUL`, it is drawn in a BUFF container's Filters grid
+-- and nowhere else, and the container Aura type row's own description already tells the player
+-- "your temporary weapon enchants are a buff category there". An unmarked row in a marked list
+-- would read as a bug or as a third, nameless kind of category; marking it buff-side agrees with
+-- every other surface it appears on. This is why the marker keys off `Cat.AuraTypeOf` (the field
+-- stamped in defaults/Categories.lua) and not off the KIND, which `editableHere` tests separately.
+--
+-- The CLOSED dropdown needs no separate TEXT: AceGUI's Dropdown draws the selected value by looking
+-- its key up in the same `list` table (`SetValue` -> `self:SetText(self.list[value] or "")`,
+-- libs/AceGUI-3.0/widgets/AceGUIWidget-DropDown.lua:528-530), so marking the entries marks the
+-- selection. A test below pins that, since it is a property of the widget and not of this file.
+-- What it does need is `sizeCategoryDropdown`, further down: the box it is drawn in has its own
+-- clipping behavior.
+--
+-- THE NAMES LINE UP AS FAR AS A PROPORTIONAL FONT ALLOWS, WHICH IS NOT PIXEL-EXACT, AND THAT IS
+-- SAID PLAINLY RATHER THAN CLAIMED AWAY. "[Buffs] " and "[Debuffs] " are different widths, so a
+-- bare prefix would start every name at a different x and cost the list the name column the marker
+-- was meant to preserve. The type word is therefore padded out to the widest one in the locale, so
+-- every name starts at the same CHARACTER offset -- the padding sits behind the "]" so the brackets
+-- keep their own shape. In pixels it only closes most of the gap: the item font is proportional
+-- (GameFontNormalSmall, FRIZQT__.TTF), a space glyph is not the width of the letters it stands in
+-- for, and a FontString has no tab stops, so the two spaces standing in for "De" land short of it.
+-- Pixel-exact would mean measuring the string at draw time or giving each row a second FontString,
+-- and a twelve-row picker does not carry either. Character-exact is what the tests pin.
+local CATEGORY_MARKER = L["[{type}] {name}"]
+
+--- `s`'s length in CHARACTERS rather than bytes: UTF-8 continuation bytes are not counted, so an
+--- aura-type word translated with an accent in it pads by what the player actually sees.
+local function charCount(s)
+    return select(2, tostring(s):gsub("[^\128-\191]", ""))
+end
+
+-- The widest aura-type word in this locale, in characters -- every marker is padded out to it.
+-- Read out of `C.AURA_TYPE_LABELS` at load, so a third aura type, or a translation that makes
+-- "Buffs" the longer word, changes the padding without an edit here.
+local TYPE_WORD_CHARS = 0
+for _, word in pairs(C.AURA_TYPE_LABELS) do
+    TYPE_WORD_CHARS = math.max(TYPE_WORD_CHARS, charCount(L[word]))
+end
+
+--- `def`'s dropdown label: its name, prefixed with the aura type it filters and padded so the name
+--- starts at the same character offset as every other row's.
+--- Falls back to the bare name if the def carries no aura type, which no shipped or user category
+--- ever should -- given a def, `Cat.AuraTypeOf` is total over real definitions -- so the fallback
+--- is there to keep a malformed def out of the panel's way, not as a supported shape.
+local function categoryLabel(def)
+    local auraType = Cat.AuraTypeOf(def)
+    local typeLabel = auraType and C.AURA_TYPE_LABELS[auraType]
+    if not typeLabel then return L[def.label] end
+    local word = L[typeLabel]
+    local pad = (" "):rep(math.max(0, TYPE_WORD_CHARS - charCount(word)))
+    return (CATEGORY_MARKER
+        :gsub("{type}", function() return word end)
+        :gsub("{name}", function() return pad .. L[def.label] end))
+end
+
+-- The open list and the closed box are two DIFFERENT FontStrings, and the marker is safe in
+-- neither by default. Both are fixed from here rather than in `libs/`, which is a vendored payload.
+--
+-- THE OPEN LIST DOES NOT GROW TO FIT ITS ENTRIES. Opening sizes the pullout as
+-- `self.pulloutWidth or self.frame:GetWidth()`
+-- (libs/AceGUI-3.0/widgets/AceGUIWidget-DropDown.lua:381) and nothing anywhere measures the items,
+-- so with no `pulloutWidth` the open list is exactly as wide as this half-width control while its
+-- longest entry, "[Debuffs] Hard CC (loss of control)", runs to 35 characters -- and a row that
+-- does not fit loses its tail, which is the end of the category's name. `SetPulloutWidth`
+-- (AceGUIWidget-DropDown.lua:639-641) is the widget's own answer, and a fixed width is the right
+-- shape for it: the list is sized to its contents, not to whatever fraction of the panel the
+-- control happens to occupy.
+--
+-- THE CLOSED BOX WOULD CLIP THE MARKER ITSELF. Its FontString is not one of AceGUI's: it is the
+-- Blizzard UIDropDownMenuTemplate's own `$parentText`, adopted and re-anchored to both edges of the
+-- control (AceGUIWidget-DropDown.lua:712-717) with its justification never set -- the single
+-- `SetJustifyH` in that file is line 722, on the `label` caption above the box. The template is not
+-- in this tree, so what it justifies to cannot be read here, and a RIGHT-justified FontString holds
+-- an overlong string by its tail and pushes the HEAD out of the frame, which for a prefix marker is
+-- precisely the half that must survive. So it is not inherited: justify LEFT explicitly, and the
+-- closed box clips like the pullout rows do, tail first, marker last.
+--
+-- Both calls are capability-guarded (the same shape as modules/Style.lua:824): the headless widget
+-- kit is a data recorder with neither method, and it is not ours to extend.
+local CATEGORY_PULLOUT_WIDTH = 320
+
+--- Size `dd`'s open list to its own entries and pin its closed box to LEFT justification.
+local function sizeCategoryDropdown(dd)
+    if dd.SetPulloutWidth then dd:SetPulloutWidth(CATEGORY_PULLOUT_WIDTH) end
+    local fs = dd.text
+    if type(fs) == "table" and fs.SetJustifyH then fs:SetJustifyH("LEFT") end
+end
+
 local function categoryCell(defs, def)
     return { make = function(_, parent, rel)
         local list, order = {}, {}
         for i, d in ipairs(defs) do
-            list[d.key] = L[d.label]
+            list[d.key] = categoryLabel(d)
             order[i] = d.key
         end
         local dd = NS.AceGUI:Create("Dropdown")
@@ -278,8 +398,10 @@ local function categoryCell(defs, def)
         dd:SetList(list, order)
         dd:SetValue(def.key)
         dd:SetRelativeWidth(rel or 0.5)
+        sizeCategoryDropdown(dd)
         dd:SetCallback("OnValueChanged", function(_, _, v) spellCategory = v; rerender() end)
-        H.AttachTooltip(dd, L["Category"], L["Which spell category's list to edit."])
+        H.AttachTooltip(dd, L["Category"],
+            L["Which spell category's list to edit. Every entry is marked with the aura type it filters, because a category only ever shows on a container of that type."])
         parent:AddChild(dd)
         return dd
     end }

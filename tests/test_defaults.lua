@@ -134,6 +134,46 @@ test("defaults: IsSpellCategory names exactly the spells-kind categories of BOTH
     assertFalse(Cat.IsSpellCategory("no such category"))
 end)
 
+test("defaults: every shipped category answers its own aura type through AuraTypeOf, by def and by key", function()
+    -- Issue #10 checkpoint 2. Before it, a category's aura type was readable only as "which list did
+    -- this come out of" -- `Cat.AuraTypeOf` is the one question the dropdown markers and every later
+    -- checkpoint ask of a single definition, so it is asserted against the SHIPPED lists, both ways
+    -- of asking, every row.
+    local seen = {}
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+        local n = 0
+        for _, def in ipairs(Cat.For(auraType)) do
+            -- red under: the load-time stamp dropped, or stamping only one of the two lists
+            assertEqual(Cat.AuraTypeOf(def), auraType, def.key .. " (by def)")
+            -- red under: the key form searching only HELPFUL, the bug Cat.IsSpellCategory once had
+            assertEqual(Cat.AuraTypeOf(def.key), auraType, def.key .. " (by key)")
+            assertEqual(def.auraType, auraType, def.key .. ": the field itself")
+            n = n + 1
+        end
+        assertTrue(n > 0, auraType .. " ships no categories")
+        seen[auraType] = n
+    end
+    -- red under: an accessor that happens to work because only one aura type was exercised
+    assertTrue(seen.HELPFUL ~= nil and seen.HARMFUL ~= nil, "both aura types were covered")
+    -- The two rows the marker design turns on: the enchant row is buff-side though it is no spell
+    -- list, and issue #11's debuff lists are the reason the dropdown is no longer buff-only.
+    assertEqual(Cat.AuraTypeOf("weaponEnchants"), "HELPFUL")
+    assertEqual(Cat.AuraTypeOf("hardCC"), "HARMFUL")
+end)
+
+test("defaults: AuraTypeOf is total — nil for an unknown key and for anything that is not a definition", function()
+    -- A stored container may name a category this build does not have (a retired key, and once user
+    -- categories can be deleted, a key whose category is gone), so the accessor must answer rather
+    -- than fail -- exactly as Cat.Find already leaves the decision to its caller.
+    assertEqual(Cat.AuraTypeOf("no such category"), nil)
+    assertEqual(Cat.AuraTypeOf(nil), nil)
+    assertEqual(Cat.AuraTypeOf(42), nil)
+    -- red under: reading the field off the def being skipped for a lookup by key — a user category
+    -- (checkpoint 3) is a def that is in NEITHER shipped list and must still answer.
+    assertEqual(Cat.AuraTypeOf({ key = "notShipped", auraType = "HARMFUL" }), "HARMFUL")
+    assertEqual(Cat.AuraTypeOf({ key = "notShipped" }), nil, "a def with no stamp says so")
+end)
+
 --- The shipped `spells` table of `auraType`'s `key`, failing the case if there is no such category.
 local function shippedSpells(auraType, key)
     local def = Cat.Find(auraType, key)

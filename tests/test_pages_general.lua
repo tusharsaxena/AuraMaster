@@ -284,6 +284,29 @@ local function spells(opts)
     return NS, m, P, tab(NS.L["Spell Categories"])
 end
 
+--- The Category dropdown's label for `key`, built the way the panel builds it: the aura type's own
+--- `C.AURA_TYPE_LABELS` word, then padding out to the widest such word, then the category's name
+--- (settings/GeneralSpells.lua's `categoryLabel`, issue #10 checkpoint 1). Built here out of the
+--- SAME locale strings rather than hard-coded, so a case asserting it asserts the composition and
+--- never re-states the wording -- which is also why it is NOT the only thing the marker cases rest
+--- on: this helper takes the aura type from the accessor under test, so the cases below anchor the
+--- type itself to the literal label and to the list the category is declared in.
+local function marked(NS, key, auraType)
+    auraType = auraType or NS.Categories.AuraTypeOf(key)
+    local def = NS.Categories.Find(auraType, key)
+    -- Byte length is character length here: the locale guard already holds enUS to ASCII.
+    local widest = 0
+    for _, word in pairs(NS.Constants.AURA_TYPE_LABELS) do
+        local n = #NS.L[word]
+        widest = math.max(widest, n)
+    end
+    local mine = #NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]]
+    local pad = (" "):rep(widest - mine)
+    return (NS.L["[{type}] {name}"]
+        :gsub("{type}", function() return NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]] end)
+        :gsub("{name}", function() return pad .. NS.L[def.label] end))
+end
+
 --- Every entry the IdList drew, in DRAW ORDER, as { id =, label =, x =, row =, col = }.
 ---
 --- The walk is per CHILD, not per row, because the spell-category list asks for `columns = 2`
@@ -437,15 +460,90 @@ test("general → spell categories: a dropdown of the eleven spell categories pl
     for _, k in ipairs(dd.order) do
         assertTrue(NS.Categories.IsSpellCategory(k) or k == "weaponEnchants", "a spell category or the enchant row: " .. k)
     end
-    assertEqual(dd.list.healing, NS.L["Healing"], "the merged Healing category is offered")
-    assertEqual(dd.list.weaponEnchants, NS.L["Weapon enchants"], "Weapon enchants is offered too")
-    assertEqual(dd.list.hardCC, NS.L["Hard CC (loss of control)"], "and the debuff lists")
-    assertEqual(dd.list.softCC, NS.L["Soft CC (roots & snares)"])
+    -- Every entry now carries its aura type as a prefix (issue #10 checkpoint 1); the name follows
+    -- it unchanged, which is what these four pin alongside the marker itself.
+    assertEqual(dd.list.healing, marked(NS, "healing"), "the merged Healing category is offered")
+    assertEqual(dd.list.weaponEnchants, marked(NS, "weaponEnchants"), "Weapon enchants is offered too")
+    assertEqual(dd.list.hardCC, marked(NS, "hardCC"), "and the debuff lists")
+    assertEqual(dd.list.softCC, marked(NS, "softCC"))
     assertEqual(dd.order[1], "defensives")
     assertEqual(dd.order[10], "weaponEnchants", "the buff rows first, in defaults/Categories.lua's order")
     assertEqual(dd.order[11], "hardCC", "then Cat.HARMFUL's, in its own order")
     assertEqual(dd.order[12], "softCC")
     assertEqual(dd.value, "defensives")
+end)
+
+test("general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)", function()
+    local NS, _, P, ws = spells()
+    local dd = P.find(ws, "Dropdown", NS.L["Category"])
+    assertTrue(dd ~= nil, "the category dropdown is drawn")
+    local buffs, debuffs = 0, 0
+    for _, key in ipairs(dd.order) do
+        local auraType = NS.Categories.AuraTypeOf(key)
+        -- red under: an entry whose category the accessor cannot type, which would draw unmarked
+        assertTrue(auraType == "HELPFUL" or auraType == "HARMFUL", key .. ": no aura type")
+        local word = NS.L[NS.Constants.AURA_TYPE_LABELS[auraType]]
+        -- red under: the marker dropped from an entry, or matching the OTHER aura type
+        assertEqual(dd.list[key], marked(NS, key), key)
+        assertEqual(dd.list[key]:sub(1, #word + 3), "[" .. word .. "] ", key .. ": marked as a prefix")
+        -- red under: a suffix-shaped marker, which would collide with the two CC rows' own
+        -- parenthetical suffixes ("Hard CC (loss of control)")
+        assertTrue(dd.list[key]:find(NS.L[NS.Categories.Find(auraType, key).label], 1, true) ~= nil,
+            key .. ": the name survives the marker whole")
+        if auraType == "HELPFUL" then buffs = buffs + 1 else debuffs = debuffs + 1 end
+    end
+    -- red under: the case passing on a buff-only list again — issue #11 put hardCC and softCC here,
+    -- and a marker nothing ever draws as Debuffs is a marker that is not doing its job
+    assertTrue(buffs > 0 and debuffs > 0, ("both aura types appear: %d buff, %d debuff"):format(buffs, debuffs))
+    -- Weapon enchants is kind "enchant", not a spell list, and is marked buff-side like the rest of
+    -- Cat.HELPFUL — the Aura type row's own description already calls it a buff category.
+    assertEqual(dd.list.weaponEnchants:sub(1, 8), "[" .. NS.L["Buffs"] .. "] ")
+    -- Anchored to the literal rather than to the accessor: everything above builds its expectation
+    -- by asking Cat.AuraTypeOf, so a build in which EVERY category answered the wrong type would
+    -- still pass. These two say what a player reads, in full, padding included.
+    assertEqual(dd.list.hardCC, "[Debuffs] Hard CC (loss of control)")
+    assertEqual(dd.list.healing, "[Buffs]   Healing")
+    -- And anchored to the declaration: hardCC reads Debuffs because it is declared in Cat.HARMFUL.
+    local declaredHarmful = false
+    for _, d in ipairs(NS.Categories.For("HARMFUL")) do
+        if d.key == "hardCC" then declaredHarmful = true end
+    end
+    assertTrue(declaredHarmful, "hardCC is declared in the HARMFUL list, which is what it is marked as")
+    assertEqual(dd.list.hardCC, marked(NS, "hardCC", "HARMFUL"))
+end)
+
+test("general → spell categories: the markers are padded so every name starts at the same column (issue #10)", function()
+    local NS, _, P, ws = spells()
+    local dd = P.find(ws, "Dropdown", NS.L["Category"])
+    -- "[Buffs] " and "[Debuffs] " are different lengths, so an unpadded prefix would start every
+    -- name at a different place and cost the list the name column the marker is there to keep.
+    -- Character-exact is what the panel can promise in a proportional font, and it is what this
+    -- pins; settings/GeneralSpells.lua says plainly why pixel-exact is not on offer.
+    local at
+    for _, key in ipairs(dd.order) do
+        local def = NS.Categories.Find(NS.Categories.AuraTypeOf(key), key)
+        local i = dd.list[key]:find(NS.L[def.label], 1, true)
+        assertTrue(i ~= nil, key .. ": the name is in the entry")
+        at = at or i
+        -- red under: the padding dropped from categoryLabel
+        assertEqual(i, at, key .. ": the name starts where every other name starts")
+    end
+    -- red under: a padding rule that happens to align only one aura type's rows with itself
+    assertEqual(dd.list.softCC:find("Soft CC", 1, true), dd.list.healing:find("Healing", 1, true))
+end)
+
+test("general → spell categories: the closed dropdown shows the marked label too (issue #10)", function()
+    local NS, _, P, ws = spells()
+    -- AceGUI's Dropdown draws its selection by looking the value up in the same list table, so this
+    -- is what a player sees on the closed control, not only in the open one.
+    local dd = P.find(ws, "Dropdown", NS.L["Category"])
+    assertEqual(dd.list[dd.value], marked(NS, dd.value), "the opening selection reads marked")
+    dd:__fire("OnValueChanged", "hardCC")
+    local dd2 = P.find(P.rerender("General"), "Dropdown", NS.L["Category"])
+    assertEqual(dd2.value, "hardCC")
+    -- red under: the marker read off the tab's own aura type rather than the category's, which only
+    -- shows once the selection is a debuff list
+    assertEqual(dd2.list[dd2.value], marked(NS, "hardCC"), "and so does a debuff list, as Debuffs")
 end)
 
 -- Owner, 2026-09-20: the picker, its Restore and the whole spell list ran together as one column.

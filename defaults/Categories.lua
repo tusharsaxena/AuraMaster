@@ -538,6 +538,38 @@ Cat.HARMFUL = {
     },
 }
 
+-- ---------------------------------------------------------------------------
+-- Aura type, stamped onto every definition (issue #10 checkpoint 2)
+-- ---------------------------------------------------------------------------
+--
+-- From here on every definition above carries its own aura type in `def.auraType`, written once at
+-- load out of the list it was declared in. Until now the type was purely IMPLICIT: a def was a buff
+-- category because it sat in `Cat.HELPFUL` and a debuff one because it sat in `Cat.HARMFUL`, so
+-- nothing holding a single def could ask which it was without also remembering which table handed
+-- it over. The Category dropdown's buff/debuff markers (settings/GeneralSpells.lua, the same
+-- issue's checkpoint 1) need exactly that question answered per def, and so does every later
+-- checkpoint of issue #10.
+--
+-- STAMPED AT LOAD, NOT DERIVED BY LOOKUP, and the reason is the user categories checkpoint 3 brings
+-- rather than tidiness. An accessor that derived the answer could only do it by searching
+-- `Cat.HELPFUL` and `Cat.HARMFUL` for the key -- which answers NOTHING for a def that was never in
+-- either list, and a user category is precisely that: a definition built out of the player's stored
+-- data, whose aura type is their choice at creation. Deriving would leave two ways to ask the same
+-- question, one for shipped categories and another for user ones, which is the split the single
+-- accessor below exists to prevent. With a field, a user category simply arrives already stamped
+-- and `Cat.AuraTypeOf` never learns the difference. The price is one write per def at load.
+--
+-- AURA TYPE IS IMMUTABLE AFTER CREATION (the plan of record's decision, 2026-09-20,
+-- docs/superpowers/specs/2026-09-20-custom-spell-categories-plan.md). Nothing rewrites
+-- `def.auraType` afterwards -- not this file, not the settings panel, not a migration.
+-- modules/FilterCompiler.lua groups by aura type and a container's stored Show/Hide is keyed by
+-- category key, so a category that changed type would orphan every container's stored state for it
+-- and silently move between two different grids. Changing a user category's type means deleting it
+-- and creating another.
+for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+    for _, def in ipairs(Cat[auraType]) do def.auraType = auraType end
+end
+
 -- The list an aura type this build does not know gets: none (a stored ENCHANT container predates schema
 -- v5, which turns it into a buff container before anything reads its categories).
 local NONE = {}
@@ -564,6 +596,35 @@ end
 function Cat.IsSpellCategory(key)
     local def = Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key)
     return def ~= nil and def.kind == "spells"
+end
+
+--- The aura type a category filters: "HELPFUL" or "HARMFUL". Reads the field stamped above. It
+--- takes EITHER a definition or a key, so a caller holding one asks the same way as a caller
+--- holding the other: settings/GeneralSpells.lua's dropdown holds defs, while everything walking a
+--- container's stored `filter.categories` holds a bare key.
+---
+--- THE DEF FORM IS TOTAL OVER REAL DEFINITIONS; THE KEY FORM IS NOT, AND CANNOT BE YET. Given a
+--- def it reads `def.auraType`, so any definition the addon built answers -- shipped ones from the
+--- load-time stamp, and a user category (issue #10 checkpoint 3) from the same field out of its
+--- stored shape. Given a KEY it must first find the def, and it finds it through `Cat.Find`, which
+--- walks `Cat.HELPFUL` and `Cat.HARMFUL` and nothing else. So the key form answers for the SHIPPED
+--- lists only: a user category's key answers nil even though that category exists and its own def
+--- would answer at once. That is correct today, because user categories do not exist until
+--- checkpoint 3 -- and it is exactly what checkpoint 3 must widen when they land, or every caller
+--- holding a bare key out of stored `filter.categories` types a user category as nothing.
+---
+--- A key nothing knows answers nil rather than failing, the same as `Cat.Find`. A stored container
+--- can perfectly well name a category this build does not have -- an older profile's retired key,
+--- and after checkpoint 5 a deleted user category -- so the caller decides what that means.
+---
+--- Aura type is IMMUTABLE after creation; the note above the stamping loop says why.
+--- @param defOrKey table|string  a category definition, or a category key
+--- @return string|nil
+function Cat.AuraTypeOf(defOrKey)
+    local def = defOrKey
+    if type(def) == "string" then def = Cat.Find("HELPFUL", def) or Cat.Find("HARMFUL", def) end
+    if type(def) ~= "table" then return nil end
+    return def.auraType
 end
 
 --- Every category key across both lists, each mapped to "show" — the default state (schema v3:

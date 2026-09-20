@@ -148,7 +148,12 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 dropdown of the eleven spell categories — the nine buff ones (defensives, activeMitigation, raidCDs,
 offensiveCDs, healing, support, movement, utility, consumables) and the two debuff ones issue #11
 added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
-KIND, not on an aura type, so a debuff spell list is editable here like any other. A **Spells in this
+KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry
+carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of control)` — read out of
+`C.AURA_TYPE_LABELS` rather than worded again here, so the picker uses the same two words the
+container's own Aura type control does (issue #10). The shorter word is padded so every name starts
+at the same character offset; that is character-exact rather than pixel-exact, since the row font is
+proportional. A **Spells in this
 category** section heading (2026-09-20) separates the picker and its Restore from the list below it;
 Weapon enchants, which has no spell list, draws no such heading. Every entry but
 Weapon enchants draws that category's ID list (the library's `IdList`):
