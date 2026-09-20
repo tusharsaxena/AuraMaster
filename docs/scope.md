@@ -103,7 +103,7 @@ These are not declined; the game forbids them, and a request for one is answered
   excluded" — an aura in even one Show category is drawn even if another of its categories says Hide,
   and only an aura whose every category says Hide is removed by them (`docs/ARCHITECTURE.md` →
   Filter priority). **The real limitation this costs:** Categories alone can no longer build "only
-  Defensives" the way the old exclusive Whitelist did — hiding every other category is not the same
+  Defensive cooldowns" the way the old exclusive Whitelist did — hiding every other category is not the same
   thing, because an aura in no category at all still shows (nothing removed it). Getting that back
   needs either the Overrides whitelist, or the **Uncategorized** category set to Hide (batch 7,
   `U-1`..`U-5`; the retired per-container "only these categories" toggle meant exactly this and is

@@ -525,7 +525,7 @@ local KNOWN_AURA_TYPES = { HELPFUL = true, HARMFUL = true, ENCHANT = true }
 --- (`liftWhitelisted`): the old exclusive whitelist meant "only these categories", and the longhand
 --- of that is `uncategorized = "hide"` — leaving it nil there does not defer to a neutral default, it
 --- silently WIDENS an already-narrowed container. The gap is real and was shipped once: a v2 profile
---- narrowed to "Defensives only" migrates through v3 with every OTHER category explicitly `"hide"`
+--- narrowed to "Defensive cooldowns only" migrates through v3 with every OTHER category explicitly `"hide"`
 --- but `uncategorized` still nil; the ordinary backfill then supplies `"show"`; `addCategoryGroups`
 --- (modules/FilterCompiler.lua) sees a Show `uncategorized` category, emits its own group (the base
 --- plus `excludeSpellIDs(union)`, carrying NO hidden-category exclusion) AND suppresses the catch-all

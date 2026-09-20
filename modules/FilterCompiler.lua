@@ -8,7 +8,7 @@ local _, NS = ...
 -- secure code, and all it takes from us is a declaration per group: a filter STRING of tokens
 -- (`HELPFUL|PLAYER|!CROWD_CONTROL`) and a table of CANDIDATE FILTERS (spell ids, dispel types, a few
 -- aura booleans, a maximum duration). This file is the only place that knows how a player's
--- "show Defensives, hide Consumables, only mine, under 60 s" becomes those declarations.
+-- "show Defensive cooldowns, hide Consumables, only mine, under 60 s" becomes those declarations.
 --
 -- PURE. No frames, no database, no globals beyond math.huge: `Compile(cfg, ctx)` in, a plan out. That
 -- is what makes the filtering rules testable headlessly (tests/test_filtercompiler.lua) when nothing

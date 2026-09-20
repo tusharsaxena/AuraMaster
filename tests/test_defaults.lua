@@ -178,6 +178,14 @@ test("defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of pos
     local soft = shippedSpells("HARMFUL", "softCC")
     assertEqual(soft[339], "DRUID", "Entangling Roots")
     assertEqual(soft[1715], "WARRIOR", "Hamstring")
+    -- The owner removed Wake of Ashes from these lists on 2026-09-20, and a later research run will
+    -- derive it back into the hard-CC bucket: this is the assertion that makes re-adding it a red
+    -- test rather than an unexplained diff. Every id of the ability -- the stun aura, the cast, the
+    -- older stun aura and the ancestor's slow -- is out of BOTH rows.
+    for _, id in ipairs({ 255941, 255937, 205290, 205273 }) do
+        assertTrue(hard[id] == nil, "Wake of Ashes id " .. id .. " is back on hardCC")
+        assertTrue(soft[id] == nil, "Wake of Ashes id " .. id .. " is back on softCC")
+    end
 end)
 
 test("defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine", function()

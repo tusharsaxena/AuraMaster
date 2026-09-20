@@ -167,6 +167,24 @@ dropdown's own line, to its right (feedback #3), above Add a spell. Writes the w
 `categorySpells` (a carve-out, so every container re-applies). The page's Defaults does not touch
 these lists; each category's restore does.
 
+Starters and added spells are drawn as ONE list **ordered by name**, case-insensitively (owner,
+2026-09-20; before that it was id order, which read Frost Nova, Entangling Roots, Hamstring). The
+two are indistinguishable on screen anyway, so an added spell sits in the alphabet rather than below
+it. An id the client cannot name is drawn `Unknown spell <id>` and sorts after every named one, ties
+there broken on the id ascending — a deliberate, stable answer rather than whatever `pairs` handed
+over. It is drawn **two columns wide, filled row-major** — 1 2 / 3 4 / 5 6, so the alphabet reads
+left-to-right then down (owner, 2026-09-20: one entry per row ran very long for a 60-id category).
+That is `O.IdList`'s `columns` option, new in LibKa0s v1.47.0; each entry's width is divided by the
+count, so a pair fills the row one entry used to, and an odd count leaves the last row half filled.
+Two is the option's whole range — the library caps it there and says why. The trade at two columns
+is that an entry's name no longer wraps: one that does not fit is cut from the TAIL, which is where
+the gray `(id)` sits, so such an entry shows part of its name and no id (hover it and the client's
+own spell tooltip names it). The library's `entryNoWrap` explains why a wrapped name would break the
+grid rather than merely look uneven.
+The list does not resettle a moment later: `O.IdList`'s re-ask-and-redraw is the item path
+(`loads = true`), and a spell's name is client data with no load step. The Filters page's
+**Overrides** lists keep their own id order.
+
 Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
 (Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
 a line saying that whether a container shows enchants at all is that container's own Filters →

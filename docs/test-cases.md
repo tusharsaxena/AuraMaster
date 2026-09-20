@@ -1011,7 +1011,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (39)
+### test_pages_general.lua (41)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1029,6 +1029,8 @@ badge and any count quoted in the docs must agree with it.
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
+- general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
+- general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
 - general → spell categories: a section heading separates the picker from the spell list (2026-09-20)
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
@@ -1370,7 +1372,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 39 |
+| test_pages_general.lua | 41 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 44 |
 | test_pages_layout.lua | 27 |
@@ -1390,4 +1392,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1176** |
+| **Total** | **1178** |

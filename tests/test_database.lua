@@ -796,7 +796,7 @@ test("v3: a narrowed container does not gain unlisted auras after migrating — 
     NS.Database.PrepareProfile(p)
     local cfg = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), p.containers[1])
     local plan = NS.FilterCompiler.Compile(cfg, {})
-    assertEqual(#plan.groups, 1, "narrowed to Defensives alone: exactly one group")
+    assertEqual(#plan.groups, 1, "narrowed to Defensive cooldowns alone: exactly one group")
     local ids = plan.groups[1].candidateFilters and plan.groups[1].candidateFilters.includeSpellIDs
     assertTrue(type(ids) == "table" and next(ids) ~= nil,
         "the one surviving group is id-restricted, not an unlisted-admitting Uncategorized/catch-all/token/flag group")

@@ -99,7 +99,7 @@ end
 
 Cat.HELPFUL = {
     {
-        key = "defensives", kind = "spells", label = "Defensives",
+        key = "defensives", kind = "spells", label = "Defensive cooldowns",
         desc = "Personal defensive cooldowns.",
         spells = spells({
             WARRIOR     = { 118038, 184364, 871, 23920, 12975 },
@@ -287,7 +287,7 @@ Cat.HARMFUL = {
         -- they refine, which is the order a player reasons in (spec A1).
         --
         -- CURATED, not the generator's raw output, and curated BY HAND. The 2026-09-20 run bucketed
-        -- 215 ids here; what ships is 60. No mechanical filter over derived.json reproduces those 60
+        -- 215 ids here; what ships is 59. No mechanical filter over derived.json reproduces those 59
         -- and this note does not pretend one does. Three things govern, in order:
         --   1. ONE ID PER ABILITY A PLAYER LANDS ON A TARGET, and it is the id whose mechanic and DR
         --      the TARGET carries — not the cast id, not a legacy rank, not a sibling aura out of an
@@ -315,8 +315,9 @@ Cat.HARMFUL = {
         -- mechanic graph cannot reach because the ability is cast as one spell and applies its aura
         -- as another (Freezing Trap, Storm Bolt, Shockwave, Ring of Frost, Blinding Light, Holy Word:
         -- Chastise, Capacitor Totem, Intimidation), the six the domain review named as holes a player
-        -- of that class notices on sight (Asphyxiate 108194, Sigil of Misery, Song of Chi-Ji, Maim,
-        -- Shield Charge, Wake of Ashes), and the last three the per-class sweep found: Lightning
+        -- of that class notices on sight (Asphyxiate 108194, Sigil of Misery, Song of Chi-Ji, Maim
+        -- and Shield Charge; the sixth was Wake of Ashes, removed — see below), and the last three
+        -- the per-class sweep found: Lightning
         -- Lasso 204437 (Shaman shipped only Hex and Capacitor Totem), Rake 163505 (the Feral stealth
         -- opener's stun) and Void Nova 1234195.
         --
@@ -341,18 +342,15 @@ Cat.HARMFUL = {
         -- drops ranks and variants of ONE ability; it does not merge two live abilities that share
         -- a name, and the first draft misapplied it here.
         --
-        -- WAKE OF ASHES files here as a stun, not under `softCC` as a snare (the first draft shipped
-        -- 205273 there, filing the ability as the one thing nobody calls it). Today's Ret ability is
-        -- 255937, the id this build's TraitDefinition grants, and the debuff it lands is 255941 on
-        -- the best evidence this build offers — SpellCategories mechanic 12 on DiminishType 4, the
-        -- stun DR. Said exactly: no SpellEffect row names 255941 as a trigger of 255937, so the run
-        -- reached it through the family-name bridge rather than a trigger edge, and the pairing is
-        -- the mechanic's rather than the client's own. First thing to re-check if the row ever
-        -- misses in play. 205290 is that same stun aura
-        -- in the older id block and goes out under the one-id-per-ability rule. 205273 is granted by
-        -- no trait in this build, reaches the pool only as a plain paladin skill-line row, and
-        -- applies a slow of its own: an ancestor of the ability, not the ability. Paladin's Soft CC
-        -- row is Judgment of Justice instead.
+        -- WAKE OF ASHES IS DELIBERATELY ABSENT FROM BOTH ROWS. The owner removed it on 2026-09-20.
+        -- It shipped here as a stun (255941) until then, and this file carried the argument for
+        -- filing it as one; that argument is gone with the id, because the decision was not that the
+        -- research was wrong. No id of the ability belongs on either list — not 255941, not 255937
+        -- (the cast), not 205290 (the older stun aura) and not 205273 (the ancestor's slow, which
+        -- `softCC` has never shipped; Paladin's Soft CC row is Judgment of Justice). A later research
+        -- run WILL derive the ability into the hard-CC bucket again: leaving it out is the intended
+        -- diff, not an oversight to helpfully correct. A player who wants it adds the id on
+        -- General -> Spell Categories.
         --
         -- MAIM ships on 203123, not 203126. Both are aura-applying spells named Maim in this build,
         -- and the one a Feral target carries is 203123 — mechanic 12 (stunned) on DiminishType 4,
@@ -378,11 +376,11 @@ Cat.HARMFUL = {
         --     and the root aura 64695 ("Earthgrab", mechanic 7) is triggered only by 116943, the
         --     totem's own pulse, which the pool never reaches.
         -- A player who wants any of the five adds it by id on General -> Spell Categories.
-        key = "hardCC", kind = "spells", label = "Hard CC",
+        key = "hardCC", kind = "spells", label = "Hard CC (loss of control)",
         desc = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
         spells = spells({
             WARRIOR     = { 5246, 132168, 132169, 385954 },          -- Intimidating Shout, Shockwave, Storm Bolt, Shield Charge
-            PALADIN     = { 853, 10326, 105421, 255941 },            -- Hammer of Justice, Turn Evil, Blinding Light, Wake of Ashes
+            PALADIN     = { 853, 10326, 105421 },                    -- Hammer of Justice, Turn Evil, Blinding Light
             HUNTER      = { 1513, 3355, 24394, 117526, 213691 },     -- Scare Beast, Freezing Trap, Intimidation, Binding Shot, Scatter Shot
             ROGUE       = { 408, 1776, 1833, 2094, 6770 },           -- Kidney Shot, Gouge, Cheap Shot, Blind, Sap
             PRIEST      = { 605, 8122, 9484, 64044, 200200, 205364 }, -- Mind Control, Psychic Scream, Shackle Horror, Psychic Horror, Holy Word: Chastise, Dominate Mind
@@ -443,14 +441,15 @@ Cat.HARMFUL = {
         -- DR come from derived.json and every shipped id's class was verified by hand.
         --
         -- ABILITIES WITH BOTH A HARD AND A SOFT MECHANIC are not rare — 13 names appear in both
-        -- derived buckets, eight of them with an id shipped across the two rows (Blast Wave, Blinding
-        -- Sleet, Bursting Shot, Clash, Mind Flay, Ring of Frost, The Hunt, Wake of Ashes). Each ships
+        -- derived buckets, seven of them with an id shipped across the two rows (Blast Wave, Blinding
+        -- Sleet, Bursting Shot, Clash, Mind Flay, Ring of Frost, The Hunt). Each ships
         -- ONCE, on the id whose mechanic is the one the target actually carries, because a spell
         -- belongs to exactly one bucket and the two lists must never double-count an aura. The Hunt
         -- ships here on its root id (323996 rooted; 333762 is the stun): a demon hunter watching The
-        -- Hunt on a target is watching the root that pins them. Wake of Ashes goes the other way, to
-        -- `hardCC` — the reasoning for each is on that row.
-        key = "softCC", kind = "spells", label = "Soft CC",
+        -- Hunt on a target is watching the root that pins them. Wake of Ashes was the eighth such
+        -- name and went to `hardCC`; the owner removed it from both rows on 2026-09-20, and `hardCC`
+        -- says so.
+        key = "softCC", kind = "spells", label = "Soft CC (roots & snares)",
         desc = "Roots and snares — the unit keeps control of itself but cannot move freely. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
         spells = spells({
             WARRIOR     = { 1715, 12323 },                           -- Hamstring, Piercing Howl

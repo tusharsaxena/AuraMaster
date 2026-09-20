@@ -256,7 +256,7 @@ NS.STARTER_CONTAINERS = {
         layout = { axis = "horizontal", growH = "right", growV = "down" },
     },
     {
-        -- Only the Offensive cooldowns and Defensives lists draw: every other buff category is
+        -- Only the Offensive cooldowns and Defensive cooldowns lists draw: every other buff category is
         -- Hidden, Uncategorized included (defaults/Categories.lua's StatesShowing).
         name = "Player cooldowns", unit = "player", auraType = "HELPFUL", style = "text",
         filter = { castBy = "any", categories = NS.Categories.StatesShowing({ "offensiveCDs", "defensives" }) },

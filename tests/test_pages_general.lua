@@ -284,20 +284,121 @@ local function spells(opts)
     return NS, m, P, tab(NS.L["Spell Categories"])
 end
 
---- The line an IdList drew for spell `id`: its label, and the X at the line's left
---- (`removeStyle = "icon"`, B2).
-local function entry(ws, id)
-    for _, w in ipairs(ws) do
-        local lbl = w.children and w.children[2]
-        if lbl and lbl.type == "InteractiveLabel" then
-            local t = lbl.text or ""
-            if t:find("(" .. id .. ")|r", 1, true) or t == "Unknown spell " .. id then
-                return lbl, w.children[1]
+--- Every entry the IdList drew, in DRAW ORDER, as { id =, label =, x =, row =, col = }.
+---
+--- The walk is per CHILD, not per row, because the spell-category list asks for `columns = 2`
+--- (settings/GeneralSpells.lua's H.IdList call, LibKa0s v1.47.0): two entries share one Flow row,
+--- so a row's children run X, label, X, label and a helper that read `w.children[2]` alone would
+--- see the left column and call the right one absent. `row` is that row's index among the widgets
+--- handed in and `col` the entry's position inside it, 1-based -- which is what lets a test assert
+--- ROW-MAJOR placement (1 2 / 3 4) rather than only the flat sequence.
+---
+--- A named entry reads "<name> (<id>)", an unnamed one "Unknown spell <id>" (the library's
+--- entryLabel); the X is the Icon immediately before the label (`removeStyle = "icon"`, B2).
+local function drawnEntries(ws)
+    local out = {}
+    for r, w in ipairs(ws) do
+        local kids, col = w.children, 0
+        if type(kids) ~= "table" then kids = {} end
+        local n = #kids
+        for i = 1, n do
+            local lbl = kids[i]
+            if type(lbl) == "table" and lbl.type == "InteractiveLabel" then
+                local t = lbl.text or ""
+                local id = t:match("%((%d+)%)|r$") or t:match("^Unknown spell (%d+)$")
+                if id then
+                    local prev = kids[i - 1]
+                    col = col + 1
+                    local at = #out + 1
+                    out[at] = {
+                        id = tonumber(id), label = lbl, row = r, col = col,
+                        x = (type(prev) == "table" and prev.type == "Icon") and prev or nil,
+                    }
+                end
             end
         end
     end
+    return out
+end
+
+--- The line an IdList drew for spell `id`: its label, and the X at its left.
+local function entry(ws, id)
+    for _, e in ipairs(drawnEntries(ws)) do
+        if e.id == id then return e.label, e.x end
+    end
     return nil
 end
+
+--- Every id the IdList drew, in the order it drew them.
+local function listedIds(ws)
+    local out = {}
+    for _, e in ipairs(drawnEntries(ws)) do
+        local n = #out
+        out[n + 1] = e.id
+    end
+    return out
+end
+
+-- Owner, 2026-09-20: the list came out in id order, so it read Frost Nova (122), Entangling Roots
+-- (339), Hamstring (1715) -- no order at all to someone looking for a spell by name.
+test("general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)", function()
+    local NS, m, P = spells()
+    -- Names chosen so that name order and id order disagree on every pair, and so that a
+    -- case-sensitive compare would put both capitalized names ahead of "alpha".
+    m.__spells[871]    = { name = "zeta", iconID = 1 }
+    m.__spells[12975]  = { name = "alpha", iconID = 1 }
+    m.__spells[118038] = { name = "Mid", iconID = 1 }
+    m.__spells[424242] = { name = "Beta", iconID = 1 }
+    NS.SetByPath("categorySpells", { defensives = { [424242] = true } })
+    local order = listedIds(P.rerender("General"))
+    -- red under: the old numeric sort (871, 12975, 118038, ...), a case-sensitive compare (Beta,
+    -- Mid, alpha, zeta), or the added spell parked below the starters instead of in the alphabet
+    assertEqual(table.concat({ order[1], order[2], order[3], order[4] }, ","), "12975,424242,118038,871")
+    -- Every remaining defensive is one this client cannot name, and those go LAST, ascending by id:
+    -- the library draws them "Unknown spell <id>", so there is no name for a reader to look for.
+    local drawn = #order
+    assertTrue(drawn > 4, "the rest of the defensives are drawn too")
+    for i = 5, drawn do
+        assertNil(m.__spells[order[i]], "id " .. order[i] .. " is one the client cannot name")
+        -- red under: a nil name reaching the comparison and leaving the tail in pairs() order
+        if i > 5 then assertTrue(order[i - 1] < order[i], "unnamed ids break the tie on the id") end
+    end
+end)
+
+-- Owner, 2026-09-20: one entry per row ran very long for a 60-id category, so the list asks the
+-- library for two columns. The two changes of that day have to agree: the sort is BY NAME and the
+-- packing is ROW-MAJOR, so the alphabet reads left-to-right then down (1 2 / 3 4). Column-major
+-- would put the same ids on screen in an order no reader could follow, and nothing about the flat
+-- sequence would notice -- which is why this asserts the ROW and the COLUMN each entry landed in,
+-- not just the order they came back in.
+test("general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)", function()
+    local NS, m, P = spells()
+    -- Four names whose alphabet disagrees with their ids, so a list that fell back to id order
+    -- could not pass by luck.
+    m.__spells[871]    = { name = "delta", iconID = 1 }
+    m.__spells[12975]  = { name = "charlie", iconID = 1 }
+    m.__spells[118038] = { name = "bravo", iconID = 1 }
+    m.__spells[424242] = { name = "alpha", iconID = 1 }
+    NS.SetByPath("categorySpells", { defensives = { [424242] = true } })
+    local drawn = drawnEntries(P.rerender("General"))
+    assertTrue(#drawn >= 4, "the four named defensives are drawn")
+    -- The by-name order first: alpha, bravo, charlie, delta.
+    assertEqual(table.concat({ drawn[1].id, drawn[2].id, drawn[3].id, drawn[4].id }, ","),
+        "424242,118038,12975,871")
+    -- Then WHERE each one landed. red under column-major (alpha and charlie sharing a row), and
+    -- red under a silent return to one entry per row (every col == 1).
+    assertEqual(drawn[1].row, drawn[2].row, "entries 1 and 2 share the first row")
+    assertEqual(drawn[1].col, 1, "entry 1 is the left column")
+    assertEqual(drawn[2].col, 2, "entry 2 is the right column, not the row below")
+    assertTrue(drawn[3].row > drawn[2].row, "entry 3 starts the next row down")
+    assertEqual(drawn[3].col, 1, "entry 3 is the left column of that row")
+    assertEqual(drawn[4].row, drawn[3].row, "entry 4 sits beside entry 3")
+    assertEqual(drawn[4].col, 2, "entry 4 is the right column")
+    -- Every entry keeps its own X at its own left, one per entry and not one per row (B2).
+    for i = 1, 4 do
+        assertTrue(drawn[i].x ~= nil, "entry " .. i .. " carries its own X")
+    end
+end)
 
 local function starterIds(NS, key)
     local out = {}
@@ -338,8 +439,8 @@ test("general → spell categories: a dropdown of the eleven spell categories pl
     end
     assertEqual(dd.list.healing, NS.L["Healing"], "the merged Healing category is offered")
     assertEqual(dd.list.weaponEnchants, NS.L["Weapon enchants"], "Weapon enchants is offered too")
-    assertEqual(dd.list.hardCC, NS.L["Hard CC"], "and the debuff lists")
-    assertEqual(dd.list.softCC, NS.L["Soft CC"])
+    assertEqual(dd.list.hardCC, NS.L["Hard CC (loss of control)"], "and the debuff lists")
+    assertEqual(dd.list.softCC, NS.L["Soft CC (roots & snares)"])
     assertEqual(dd.order[1], "defensives")
     assertEqual(dd.order[10], "weaponEnchants", "the buff rows first, in defaults/Categories.lua's order")
     assertEqual(dd.order[11], "hardCC", "then Cat.HARMFUL's, in its own order")

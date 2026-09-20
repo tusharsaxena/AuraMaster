@@ -49,7 +49,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.46.1 | Ten modules wired, one setup file each — table below |
+| LibKa0s v1.47.0 | Ten modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -568,8 +568,8 @@ return value.
   or Duplicate adds under an id the profile change just retired: while aura information is withheld
   out of combat it draws nothing until that ends.
 - **The schema v3 migration can widen what an already-narrowed container draws.** A container that
-  used the old three-state model's exclusive Whitelist (only Defensives shown, say) keeps drawing
-  only Defensives after migration — every other category of its aura type becomes Hide (`E-8`,
+  used the old three-state model's exclusive Whitelist (only Defensive cooldowns shown, say) keeps drawing
+  only Defensive cooldowns after migration — every other category of its aura type becomes Hide (`E-8`,
   `docs/schema.md` → Migration path). But an aura in **no category at all** now shows too (rank 5),
   where the old exclusive Whitelist excluded it, because the two-state model has no way to express
   "only the categories I named" on its own. The fix is `Uncategorized = Hide` (batch 7, `U-1`..`U-5`,

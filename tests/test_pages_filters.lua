@@ -719,7 +719,7 @@ test("filters: a blacklisted spell in a Show category names that category as ove
     NS.SetByPath("container.filter.blacklist", { [900001] = true }, 1)
     NS.SetByPath("categorySpells", { defensives = { [900001] = true } })
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, ("overriding %s (set to Show)"):format(NS.L["Defensives"])))
+    assertTrue(P.hasText(ws, ("overriding %s (set to Show)"):format(NS.L["Defensive cooldowns"])))
 end)
 
 -- red under: a whitelisted spell whose categories all say Hide not reporting the conflict
@@ -729,7 +729,7 @@ test("filters: a whitelisted spell every one of its categories would hide names 
     NS.SetByPath("categorySpells", { defensives = { [900002] = true } })
     NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, ("overriding %s (set to Hide)"):format(NS.L["Defensives"])))
+    assertTrue(P.hasText(ws, ("overriding %s (set to Hide)"):format(NS.L["Defensive cooldowns"])))
 end)
 
 -- red under: a blacklisted spell in a Hide-only category getting a spurious note (the blacklist and

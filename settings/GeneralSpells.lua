@@ -120,12 +120,48 @@ local function currentCategory(defs)
     return def
 end
 
-local function sortedIds(set)
-    local out = {}
+--- The client's name for spell `id`, lowercased for sorting, or nil while it has none. The lookup is
+--- `NS.Compat.GetSpellInfo`, deliberately the same C_Spell call the library's own entry label reads
+--- (`libs/LibKa0s/OptionsWidgets.lua:397-405`), so a list can never sort on one name and draw
+--- another.
+local function sortName(id)
+    local name = NS.Compat.GetSpellInfo(id)
+    if type(name) ~= "string" or name == "" then return nil end
+    return name:lower()
+end
+
+--- `set`'s ids in the order the list draws them: BY NAME, case-insensitively, exactly as every
+--- container picker lists (core/Database.lua's GetContainersByName, B2-2). Owner, 2026-09-20: id
+--- order put Frost Nova (122) above Entangling Roots (339) above Hamstring (1715), which is no
+--- order at all to a reader.
+---
+--- AN ID THE CLIENT CANNOT NAME HAS NO NAME TO SORT ON, and the answer is chosen rather than
+--- accidental: it sorts AFTER every named id, and ties there break on the id ascending. Two reasons.
+--- The library draws such an entry as "Unknown spell 12345" (`OptionsWidgets.lua:2499-2506`), so it
+--- carries no name for a reader to look for and belongs at the end rather than wedged between two
+--- real names; and the id tiebreak makes the whole comparison a total order over the set, so the
+--- sort is deterministic whatever order `pairs` hands the ids in. A nil name never reaches the
+--- comparison — it is resolved once, up front, into `key`.
+---
+--- The list does NOT reorder itself a moment later. O.IdList's re-ask-and-redraw (five asks, 0.4 s
+--- a window) is the ITEM path: `loadEntry` returns at once unless the kind declares `loads = true`,
+--- which only "item" does (`OptionsWidgets.lua:741` and `:2543-2548`). A spell's name is client data
+--- with no load step, so an id that is unnamed at this draw is an id the client does not know at
+--- all, and it stays unnamed and last until a re-render — no visible settling, and nothing here to
+--- mistake for a bug.
+local function sortedByName(set)
+    local out, key = {}, {}
     for id in pairs(set or {}) do
         out[#out + 1] = id
+        key[id] = sortName(id)
     end
-    table.sort(out)
+    table.sort(out, function(a, b)
+        local ka, kb = key[a], key[b]
+        if ka == kb then return a < b end       -- both unnamed, or the same name: id ascending
+        if ka == nil then return false end      -- unnamed sorts after every named id
+        if kb == nil then return true end
+        return ka < kb
+    end)
     return out
 end
 
@@ -145,21 +181,25 @@ local function editCategory(key, fn)
     NS.SetByPath("categorySpells", all)
 end
 
---- The list's entries: the starters the player has not removed, in id order, then the spells the
---- player added. Every one carries the X (removeStyle = "icon"); none is a toggle.
+--- The list's entries: the starters the player has not removed and the spells the player added, as
+--- ONE list ordered by name (`sortedByName`). Every one carries the X (removeStyle = "icon"); none
+--- is a toggle.
+---
+--- One list, not starters-then-additions: the two are indistinguishable on screen — same icon, same
+--- name, same X — so a spell of the player's own parked below the alphabet would read as a list that
+--- is sorted right up to the point where it stops. The distinction that does survive is stored, not
+--- drawn: Restore still tells them apart (editCategory), and an added spell is still forgotten by
+--- its X while a removed starter is stored `false`.
 local function entriesFor(def)
-    local mine, starters, out = editsOf(def.key), def.spells or {}, {}
-    for _, id in ipairs(sortedIds(starters)) do
-        if mine[id] ~= false then
-            local n = #out
-            out[n + 1] = { id = id }
-        end
+    local mine, starters, wanted = editsOf(def.key), def.spells or {}, {}
+    for id in pairs(starters) do
+        if mine[id] ~= false then wanted[id] = true end
     end
-    for _, id in ipairs(sortedIds(mine)) do
-        if mine[id] == true and not starters[id] then
-            out[#out + 1] = { id = id }
-        end
+    for id, on in pairs(mine) do
+        if on == true and not starters[id] then wanted[id] = true end
     end
+    local out = {}
+    for i, id in ipairs(sortedByName(wanted)) do out[i] = { id = id } end
     return out
 end
 
@@ -349,6 +389,26 @@ local function renderSpells(ctx)
     H.IdList(ctx, {
         kind       = "spell",
         removeStyle = "icon",
+        -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
+        -- long for a 60-id category -- Hard CC alone is most of a screen of scrolling before the
+        -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
+        -- `libs/LibKa0s/OptionsWidgets.lua:2843-2850`): the count is floored and clamped into
+        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:1902`), so two is the whole of what it
+        -- offers rather than a taste. Each entry's relative width is divided by the count, so a
+        -- pair still sums to the width one entry held alone. Row-major is the library's packing
+        -- order, which is why the by-name sort above reads left-to-right then down, not down one
+        -- column and back up the next.
+        --
+        -- THE TRADE WE TOOK. At more than one column the library turns word wrap OFF on an entry's
+        -- label, because a name that wrapped to two lines would push the column beside it down and
+        -- break the grid (`entryNoWrap`, `:2762-2770`). The client then truncates the TAIL, and the
+        -- gray `(id)` sits at the tail -- so a long spell name in a narrow panel shows part of its
+        -- name and no id. Hovering the row still names the spell. docs/settings-panel.md says this
+        -- where it describes the Spell Categories tab.
+        --
+        -- Only the spell-category list asks for columns; the Filters page Overrides lists stay one
+        -- per row.
+        columns    = 2,
         label      = L["Add a spell"],
         tooltip    = ID_TOOLTIP,
         strings    = ID_STRINGS,

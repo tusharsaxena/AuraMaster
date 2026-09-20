@@ -165,15 +165,15 @@ suite covers what only the client can show.
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
 35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category (including
     *Uncategorized*) left at Show → your flask disappears from it, nothing else changes. Now also set
-    *Defensives* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
+    *Defensive cooldowns* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
     still shows (rank 3: a Show elsewhere rescues it). Set every category to **Hide**, *Uncategorized*
     included, with the Overrides whitelist empty → the container goes empty and shows "These filters
-    can never match anything."; set *Defensives* back to Show → only defensive cooldowns appear, and
+    can never match anything."; set *Defensive cooldowns* back to Show → only defensive cooldowns appear, and
     only those. Now set every category back to Show except *Uncategorized*, which stays Hide → a
     cancelable-but-unlisted buff (one in none of the profile's Spell Categories lists) disappears too,
     even though nothing named it directly.
-36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensives*, cast it
-    → it no longer shows in any container showing Defensives. Type a spell of yours by name into **Add
+36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensive cooldowns*, cast it
+    → it no longer shows in any container showing Defensive cooldowns. Type a spell of yours by name into **Add
     a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
     nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
     **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
@@ -193,9 +193,9 @@ suite covers what only the client can show.
     → they reappear until relearned out of combat.
 40. **Warnings.** Add a spell to the Overrides *Whitelist* on a *player debuffs* container → the Filters page
     shows the orange "ignored for debuffs on your own character or pet" line. On a *target buffs*
-    container → "only apply while the unit is friendly". Set every category to **Hide**, *Defensives*
-    left at Show, and on General → Spell Categories untick every *Defensives* spell (Restore
-    afterward) → "These filters can never match anything." (the only group left, Defensives' Show
+    container → "only apply while the unit is friendly". Set every category to **Hide**, *Defensive cooldowns*
+    left at Show, and on General → Spell Categories untick every *Defensive cooldowns* spell (Restore
+    afterward) → "These filters can never match anything." (the only group left, Defensive cooldowns' Show
     group, now matches no id at all).
 
 ## G. Attach
@@ -343,11 +343,11 @@ listed here too, so the batch can be signed off in one pass.
 58. **Schema v2 migration (spec section 7).** Back up
     `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` first: a profile loaded once on this build
     cannot go back. On the previous build, in two profiles: untick a starter spell in *Core healing*
-    and add a spell to *Lesser healing* on the same container; add a spell to *Defensives* on a
+    and add a spell to *Lesser healing* on the same container; add a spell to *Defensive cooldowns* on a
     second container; set a bar container's **Color by** to dispel type and change its Magic color;
     leave a container's strata at Medium. Log in on this build → no Lua errors. General → Spell
     Categories lists one *Healing* category (no Core or Lesser healing) holding the added spell, with
-    the starter unticked; *Defensives* holds the other added spell. Dispel Colors → Magic shows the
+    the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel Colors → Magic shows the
     color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the other
     profile → the same.
 59. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
@@ -499,7 +499,7 @@ one. None of this is reproducible headlessly; these checks are.
     unlit checkbox shape, and at no point are both cells lit or neither lit.
 82. **An Overrides entry's note wraps under it, not through it (`K-3`).** Add a spell to the
     Whitelist whose categories are ALL set to Hide, on a container with several categories so the
-    note names more than one (a long note, e.g. "Shown here by the whitelist, overriding Defensives,
+    note names more than one (a long note, e.g. "Shown here by the whitelist, overriding Defensive cooldowns,
     Cancelable (set to Hide)."). Confirm the note text wraps onto as many lines as it needs directly
     under the entry's name/id, in the existing gray, without overlapping the entry's icon, id, or its
     **Remove** button, and without pushing the NEXT entry's row on top of it.
@@ -952,3 +952,14 @@ detail, the step points at it rather than repeating it.
      Placement note under Justify — nothing in the block is brighter than the dimmed controls around
      it. Switch the container's Style to **Text** on the Containers page and come back → the Preview is
      in the container's own font color again, the tokens and examples in gold, the headings bright.
+166. **Spell category lists read alphabetically, and three categories are renamed (2026-09-20).**
+     General → **Spell Categories** → the **Category** dropdown now offers **Defensive cooldowns**,
+     **Hard CC (loss of control)** and **Soft CC (roots & snares)** — the parentheses and the `&`
+     render as written, in the dropdown, in its tooltip and on Filters → Categories, with no stray
+     escape. Pick **Soft CC (roots & snares)** → the spells read in name order (Chains of Ice,
+     Concussive Shot, Crippling Poison, … ), NOT Frost Nova (122) first. Add a spell of your own by
+     name → it lands in the alphabet among the starters, not at the bottom of the list. Any id the
+     client cannot name shows as "Unknown spell <id>" at the very END of the list, and the order does
+     not visibly shuffle a second after the tab opens. Pick **Hard CC (loss of control)** → **Wake of
+     Ashes is absent**, and it is absent from Soft CC too; cast it on a target with a Hard CC
+     container up → nothing is drawn for it.

@@ -397,7 +397,7 @@ test("filter: no two groups can match the same aura when Uncategorized is Show �
     assertEqual(#plan.groups, 2)
     local def, uncat
     for _, g in ipairs(plan.groups) do
-        if g.label == "Defensives" then def = g end
+        if g.label == "Defensive cooldowns" then def = g end
         if g.label == "Uncategorized" then uncat = g end
     end
     assertTrue(def ~= nil and uncat ~= nil)
@@ -414,7 +414,7 @@ test("filter: Uncategorized Hide drops the catch-all entirely rather than shippi
     -- already excludes every spells-kind category's ids, so restricting it to that same union could
     -- never match anything. Fix round 1: no catch-all at all, in either state.
     assertEqual(#plan.groups, 1, "only Defensives — no group of Uncategorized's own, no catch-all")
-    assertEqual(plan.groups[1].label, "Defensives")
+    assertEqual(plan.groups[1].label, "Defensive cooldowns")
 end)
 
 test("filter: a listed aura's own category group is unaffected by Uncategorized either way", function()
@@ -424,7 +424,7 @@ test("filter: a listed aura's own category group is unaffected by Uncategorized 
         { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
     local function defensivesGroup(plan)
         for _, g in ipairs(plan.groups) do
-            if g.label == "Defensives" then return g end
+            if g.label == "Defensive cooldowns" then return g end
         end
         return nil
     end
@@ -552,7 +552,7 @@ test("filter: a PLAYER debuff container with a non-empty union still gives Uncat
     -- category's negation. The catch-all's `excludeSpellIDs` is left in place deliberately — an
     -- exclude the engine ignores costs nothing, and suppressing it would change no outcome.
     assertEqual(#plan.groups, 2)
-    assertEqual(plan.groups[1].label, "Hard CC")
+    assertEqual(plan.groups[1].label, "Hard CC (loss of control)")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
@@ -580,7 +580,7 @@ test("filter: a TARGET debuff container gives Uncategorized Show no group either
     -- no longer supersedes — which is exactly "as if the row were not there", the behavior fix round
     -- 3 defined for this side of the gate.
     assertEqual(#plan.groups, 2)
-    assertEqual(plan.groups[1].label, "Hard CC")
+    assertEqual(plan.groups[1].label, "Hard CC (loss of control)")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
@@ -614,7 +614,7 @@ test("filter: a FRIENDLY-target buff container loses the Uncategorized Show resc
     -- a plan: an unlisted cancelable buff is drawn by no group here, where on the player the rescue
     -- group would have drawn it.
     assertEqual(#plan.groups, 2)
-    assertEqual(plan.groups[1].label, "Defensives")
+    assertEqual(plan.groups[1].label, "Defensive cooldowns")
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HELPFUL|!CANCELABLE")
 end)
@@ -657,7 +657,7 @@ test("filter: a TARGET debuff container's spells-kind Show still emits its group
         filter = { categories = { crowdControl = "hide" } } },
         { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
     assertEqual(#plan.groups, 2)
-    assertEqual(plan.groups[1].label, "Hard CC", "the Show group is emitted, not suppressed")
+    assertEqual(plan.groups[1].label, "Hard CC (loss of control)", "the Show group is emitted, not suppressed")
     assertEqual(plan.groups[1].filter, "HARMFUL", "nothing but the aura-type token in the string")
     assertEqual(setOf(plan.groups[1].candidateFilters), "includeSpellIDs",
         "the id list is its ONLY constraint — which is the residual, stated as a plan")
@@ -878,7 +878,7 @@ test("filter: an aura in a Show category is drawn even if it is also in a Hide c
         { categories = only("HELPFUL", { "defensives", "consumables" }) })
     local shownGroup
     for _, g in ipairs(plan.groups) do
-        if g.label == "Defensives" then shownGroup = g end
+        if g.label == "Defensive cooldowns" then shownGroup = g end
     end
     assertTrue(shownGroup ~= nil, "the shown category gets its own group")
     -- red under: includeCategory's spells branch swapping includeSpellIDs for excludeSpellIDs
@@ -893,7 +893,7 @@ test("filter: a Hide plus a Show yields a group per shown category plus the catc
     assertEqual(#plan.groups, 2, "one shown group (defensives) plus the catch-all")
     local shownGroup, catchAll
     for _, g in ipairs(plan.groups) do
-        if g.label == "Defensives" then shownGroup = g
+        if g.label == "Defensive cooldowns" then shownGroup = g
         elseif g.label == "All" then catchAll = g end
     end
     assertTrue(shownGroup ~= nil and catchAll ~= nil, "both groups exist")
