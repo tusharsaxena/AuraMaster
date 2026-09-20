@@ -116,19 +116,78 @@ test("defaults: every category carries what its kind needs, and a label and desc
     assertEqual(#bad, 0, table.concat(bad, "; "))
 end)
 
-test("defaults: spell categories are buff categories, and IsSpellCategory names exactly them", function()
-    for _, def in ipairs(Cat.HARMFUL) do
-        -- red under: a debuff spell list (Blizzard ignores spell ids for debuffs on friendly units)
-        assertTrue(def.kind ~= "spells", "debuff category " .. def.key)
-        assertFalse(Cat.IsSpellCategory(def.key), def.key)
-    end
+test("defaults: IsSpellCategory names exactly the spells-kind categories of BOTH aura types", function()
+    -- Until issue #11 this case asserted the stronger "and they are all buff categories". That
+    -- stopped being true with `hardCC`/`softCC`, and it was never the invariant anything depends on:
+    -- `Cat.IsSpellCategory` is what settings/GeneralSpells.lua, the schema's categorySpells carve-out
+    -- and modules/FilterCompiler.lua's union all key off, and what they need is that it answers the
+    -- KIND, whichever list the key came from.
     local spellCats = 0
-    for _, def in ipairs(Cat.HELPFUL) do
-        assertEqual(Cat.IsSpellCategory(def.key), def.kind == "spells", def.key)
-        if def.kind == "spells" then spellCats = spellCats + 1 end
+    for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do
+        for _, def in ipairs(list) do
+            -- red under: IsSpellCategory looking at only one aura type's list again
+            assertEqual(Cat.IsSpellCategory(def.key), def.kind == "spells", def.key)
+            if def.kind == "spells" then spellCats = spellCats + 1 end
+        end
     end
     assertTrue(spellCats > 0, "the editor has something to edit")
     assertFalse(Cat.IsSpellCategory("no such category"))
+end)
+
+--- The shipped `spells` table of `auraType`'s `key`, failing the case if there is no such category.
+local function shippedSpells(auraType, key)
+    local def = Cat.Find(auraType, key)
+    assertTrue(def ~= nil, key .. " is not a category of " .. auraType)
+    assertEqual(def.kind, "spells", key .. " is kind " .. tostring(def.kind))
+    assertTrue(type(def.spells) == "table", key .. " has no spell list")
+    return def.spells, def
+end
+
+test("defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of positive integer ids", function()
+    -- Issue #11 part A1: the first `spells`-kind categories `Cat.HARMFUL` has ever carried. Asserted
+    -- against the SHIPPED data, not a fixture — the lists are curated by hand from
+    -- tools/spell-research/research.py's output (docs/spell-research/2026-09-20/), so a paste slip is
+    -- exactly the kind of mistake that reaches a player otherwise.
+    local seen = {}
+    for _, key in ipairs({ "hardCC", "softCC" }) do
+        local ids, def = shippedSpells("HARMFUL", key)
+        local n = 0
+        for id, class in pairs(ids) do
+            -- red under: a float, a string id, a negative or a 0 from a bad paste
+            assertEqual(type(id), "number", key .. ": id " .. tostring(id))
+            assertTrue(id > 0 and id == math.floor(id), key .. ": id " .. tostring(id))
+            assertTrue(type(class) == "string" and class ~= "", key .. ": id " .. id .. " has no class")
+            -- red under: the same spell in both buckets — a spell belongs to exactly ONE, so the two
+            -- lists can never double-count an aura or disagree about which row claims it.
+            assertTrue(seen[id] == nil, ("id %d is in both %s and %s"):format(id, tostring(seen[id]), key))
+            seen[id] = key
+            n = n + 1
+        end
+        assertTrue(n > 0, key .. " ships empty")
+        assertTrue(Cat.IsSpellCategory(key), key .. " is not reachable through IsSpellCategory")
+        assertEqual(Cat.DefaultStates()[key], "show", key .. " is not in DefaultStates at Show")
+        assertTrue(def.desc:find("hostile", 1, true) ~= nil,
+            key .. "'s desc must say the list only works on a hostile unit")
+    end
+    -- Canonical members, one per bucket, from the ids the research run reached directly: a list
+    -- rewritten down to a stub would still satisfy every shape check above.
+    local hard = shippedSpells("HARMFUL", "hardCC")
+    assertEqual(hard[853], "PALADIN", "Hammer of Justice")
+    assertEqual(hard[118], "MAGE", "Polymorph")
+    assertEqual(hard[3355], "HUNTER", "Freezing Trap — the bridged aura id, not the cast id")
+    local soft = shippedSpells("HARMFUL", "softCC")
+    assertEqual(soft[339], "DRUID", "Entangling Roots")
+    assertEqual(soft[1715], "WARRIOR", "Hamstring")
+end)
+
+test("defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine", function()
+    -- Spec A1, and not cosmetic: Cat.For's order is the order settings/Filters.lua draws the grid in
+    -- and the order modules/FilterCompiler.lua's shown-group loop dedups in.
+    local at = {}
+    for i, def in ipairs(Cat.HARMFUL) do at[def.key] = i end
+    assertTrue(at.hardCC < at.crowdControl, "hardCC is below crowdControl")
+    assertTrue(at.softCC < at.crowdControl, "softCC is below crowdControl")
+    assertTrue(at.hardCC < at.softCC, "hard before soft, as the descs read")
 end)
 
 test("defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)", function()

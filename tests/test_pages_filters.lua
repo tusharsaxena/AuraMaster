@@ -251,31 +251,53 @@ test("filters: the Spell Categories grid opens with a line naming where its list
     assertTrue(P.hasText(ws, "General -> Spell Categories"), "names where the lists live")
 end)
 
--- T-2 fix round 4 (batch 7): the F-2 line claims the grid holds EDITABLE lists — true on a buff
--- container, false on a debuff container, whose Spell Categories grid carries exactly one row
--- (Uncategorized, a Show/Hide flag, not a spell list). The row stays (D6/U-1); only the claim about
--- it is conditional now.
-test("filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)", function()
+-- T-2 fix round 4 (batch 7), revised by issue #11 A1: the F-2 line claims the grid holds EDITABLE
+-- lists. That is now true on BOTH aura types — `Cat.HARMFUL` carries `hardCC` and `softCC` — so the
+-- gate has stopped discriminating by aura type, which is exactly what it was written to do: it asks
+-- the grid what it drew, never which tab it is on. It still refuses a grid whose only row is
+-- `uncategorized`, the Show/Hide flag over the catch-all, which is what a debuff grid was before A1.
+test("filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)", function()
     local NS, _, P, buffWs = categories(1)
     assertTrue(P.hasText(buffWs, "General -> Spell Categories"), "a buff container has editable lists")
     local _, _, P2, debuffWs = categories(2)
-    assertFalse(P2.hasText(debuffWs, "General -> Spell Categories"), "a debuff container's grid is Uncategorized-only, not an editable list")
-    -- and the grid itself is still drawn, with its one row, so the fix is conditional wording, not
-    -- a removed grid or a removed row
+    assertTrue(P2.hasText(debuffWs, "General -> Spell Categories"),
+        "a debuff container's grid now carries Hard CC and Soft CC, whose lists live there")
     assertTrue(P2.find(debuffWs, "Heading", NS.L["Spell Categories"]) ~= nil, "the Spell Categories grid still draws")
-    assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its one Uncategorized row")
+    assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its Uncategorized row")
+    assertTrue(gridLine(NS, debuffWs, "hardCC") ~= nil, "and the Hard CC row the claim is now about")
+    assertTrue(gridLine(NS, debuffWs, "softCC") ~= nil, "and Soft CC")
 end)
 
--- Review fix wave, item 2: UNCATEGORIZED_NOTE ("Uncategorized defaults to Show, which rescues...")
--- claims a buff-only truth — on a debuff container Show rescues nothing at all (there is no spell
--- list for it to be outside of), and the sentence would flatly contradict that row's own tooltip
--- ("Show ... changes nothing by itself") in the same glance. Gated the same way as F-2's blurb above.
-test("filters: the Uncategorized cost note draws on a buff container and not on a debuff one (review fix wave, item 2)", function()
+-- A3 (issue #11): the debuff grid's own limitation note. Blizzard honors debuff spell ids on hostile
+-- units only, so Hard CC and Soft CC do nothing on a player, pet or friendly container. Said under
+-- the grid that offers them and nowhere else — a buff tab's limit is the mirror one and would be
+-- actively misleading here.
+test("filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)", function()
+    local _, _, P2, debuffWs = categories(2)
+    assertTrue(P2.hasText(debuffWs, "only work on a hostile target or focus"),
+        "the debuff grid carries the hostile-unit note")
     local _, _, P, buffWs = categories(1)
-    assertTrue(P.hasText(buffWs, "rescues any aura not on the lists above"), "true on a buff container")
+    assertFalse(P.hasText(buffWs, "only work on a hostile target or focus"),
+        "never on a buff container, whose spell lists are honored on friendly units instead")
+end)
+
+-- Review fix wave item 2, re-derived by issue #11 A2: UNCATEGORIZED_NOTE ("Uncategorized defaults to
+-- Show, which rescues...") describes a group the compiler emits only where `FC.IdsAlwaysHonored`
+-- holds — buffs on the player and the pet. The old gate ("is this a buff container") gave the right
+-- answer for both fixtures below by coincidence; the live gate asks the UNIT, so a debuff container
+-- is silent because the engine discards its ids, not because its grid holds no list any more.
+test("filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)", function()
+    local _, _, P, buffWs = categories(1)
+    assertTrue(P.hasText(buffWs, "rescues any aura not on the lists above"),
+        "true on the player's own buffs, the one place the rescue group is emitted")
     local _, _, P2, debuffWs = categories(2)
     assertFalse(P2.hasText(debuffWs, "rescues any aura not on the lists above"),
-        "false on a debuff container — nothing there for Show to rescue")
+        "false on a debuff container — the engine throws that group's one constraint away")
+    -- Container 3 is "Target debuffs (mine)" (defaults/Profile.lua): a debuff container on a unit
+    -- that MAY be hostile, which is still not CERTAIN, so still no rescue and still no sentence.
+    local _, _, P3, targetWs = categories(3)
+    assertFalse(P3.hasText(targetWs, "rescues any aura not on the lists above"),
+        "false on a target too — hostility is dynamic and the plan is compiled long before anyone looks")
 end)
 
 --- The lines a widget's tooltip draws when hovered, via the mocked GameTooltip's :AddLine (the

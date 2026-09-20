@@ -54,9 +54,9 @@ end
 
 --- `only`, with one extra category def spliced in immediately BEFORE the aura type's `uncategorized`
 --- row — U-1 keeps that row last and `addShownGroups` leans on it, so an injected def that landed
---- after it would be testing a shape the addon never ships. Issue #11 part A gives `Cat.HARMFUL` its
---- first `spells`-kind categories (`hardCC`/`softCC`, defaults/Categories.lua); until those land this
---- is how a debuff case gets a NON-EMPTY categorized union to compile against. The gate itself is
+--- after it would be testing a shape the addon never ships. The debuff cases below use it to narrow
+--- `Cat.HARMFUL` to one Blizzard token, the real `hardCC` and `uncategorizedDebuffs`, which is the
+--- smallest list that gives a debuff container a NON-EMPTY categorized union. The gate itself is
 --- `FC.IdsAlwaysHonored` (`addCategoryGroups`, modules/FilterCompiler.lua), NOT the `FC.IdsHonored`
 --- the warning reads, and it answers false for every debuff container whatever the union holds — so
 --- a non-empty debuff union is not what makes the gate decide, it is what makes the decision
@@ -80,16 +80,19 @@ local function onlyPlus(auraType, keys, extra)
     return { For = function() return out end }
 end
 
---- A stand-in for issue #11's `hardCC`: the first `spells`-kind category `Cat.HARMFUL` will carry.
---- Two real hard-CC ids (Hammer of Justice, a stun; Polymorph, an incapacitate) so the union a case
---- asserts is a genuine set in the shipped `spells` shape, not a sentinel number —
---- `FC.CategorySpells` reads `spells` and the profile's edits for this def exactly as for a
---- shipped one.
-local HARMFUL_SPELLS_DEF = {
-    key = "hardCCForTest", kind = "spells", label = "Hard CC",
-    desc = "Stand-in for the Hard CC category issue #11 adds to Cat.HARMFUL.",
-    spells = { [853] = "PALADIN", [118] = "MAGE" },
-}
+--- The SHIPPED `hardCC` — the first `spells`-kind category `Cat.HARMFUL` carries (issue #11 part A1,
+--- defaults/Categories.lua). While A2 was written ahead of A1 this was a two-id stand-in; now that
+--- the category exists the cases below pin the gate against the data a player actually gets, so a
+--- curation pass that emptied the list or changed its kind takes these cases red rather than leaving
+--- them green against a fixture nothing ships.
+local HARMFUL_SPELLS_DEF = NS.Categories.Find("HARMFUL", "hardCC")
+
+--- Every id `HARMFUL_SPELLS_DEF` claims, in exactly the form `setOf` renders a candidate filter's id
+--- set — so a case can assert the WHOLE union rather than a count, which a wrong list of the right
+--- length would satisfy. Built by `setOf` itself rather than by a second sort of its own: the shape
+--- under assertion is "these ids and no others", and two independent orderings of the same ids
+--- (`setOf` sorts them as strings) would make a case fail over a comma.
+local HARD_CC_IDS = setOf(HARMFUL_SPELLS_DEF.spells)
 
 -- ── the base ──────────────────────────────────────────────────────────────────────────────────
 
@@ -532,7 +535,7 @@ test("filter: a PLAYER debuff container with a non-empty union still gives Uncat
     -- list the union is non-empty, so the Show row would contribute a group whose ONLY constraint is
     -- `excludeSpellIDs` of that union — and the engine DISCARDS spell-id filters for debuffs on the
     -- player. What the engine would actually receive is a group with no effective constraint at all:
-    -- every debuff drawn, hardCCForTest's Hide neutered along with every other Hide on the tab. That
+    -- every debuff drawn, Hard CC's Hide neutered along with every other Hide on the tab. That
     -- is the exact failure fix round 3 (2026-09-16) diagnosed and closed, re-entering through a door
     -- the union test cannot see. `FC.IdsAlwaysHonored` is what shuts it.
     local plan = compile({ auraType = "HARMFUL", unit = "player",
@@ -550,10 +553,10 @@ test("filter: a PLAYER debuff container with a non-empty union still gives Uncat
     -- exclude the engine ignores costs nothing, and suppressing it would change no outcome.
     assertEqual(#plan.groups, 2)
     assertEqual(plan.groups[1].label, "Hard CC")
-    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118,853")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
-    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), "118,853")
+    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), HARD_CC_IDS)
 end)
 
 test("filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY", function()
@@ -561,7 +564,7 @@ test("filter: a TARGET debuff container gives Uncategorized Show no group either
     -- NOT "the target is hostile, so the ids are real": a target's hostility is dynamic and this plan
     -- is compiled once, long before anyone looks at the unit. Target a friendly player and the engine
     -- discards this group's `excludeSpellIDs` on the spot, leaving a group whose only remaining
-    -- constraint is the HARMFUL token — every debuff drawn, hardCCForTest's Hide and every other Hide
+    -- constraint is the HARMFUL token — every debuff drawn, Hard CC's Hide and every other Hide
     -- on the tab neutered. Compiling a group that is correct only while the unit points one way is
     -- what `FC.IdsAlwaysHonored` refuses; `FC.IdsHonored` (true here) is for the warning, not this.
     local plan = compile({ auraType = "HARMFUL", unit = "target",
@@ -578,10 +581,10 @@ test("filter: a TARGET debuff container gives Uncategorized Show no group either
     -- 3 defined for this side of the gate.
     assertEqual(#plan.groups, 2)
     assertEqual(plan.groups[1].label, "Hard CC")
-    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118,853")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
-    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), "118,853")
+    assertEqual(setOf(plan.groups[2].candidateFilters.excludeSpellIDs), HARD_CC_IDS)
 end)
 
 test("filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned", function()
@@ -620,7 +623,7 @@ test("filter: a target debuff container still warns 'while the unit is hostile' 
     -- The two predicates are split, and this is where the split is visible in one compile: the GATE
     -- (`IdsAlwaysHonored`, false here) contributed no Uncategorized group, while the WARNING
     -- (`IdsHonored`, true here) still prints the conditional sentence, because the container's OTHER
-    -- spell-id constraints — hardCCForTest's own `includeSpellIDs` — are real and do bite while the
+    -- spell-id constraints — Hard CC's own `includeSpellIDs` — are real and do bite while the
     -- target is hostile. Telling the player "spell lists do nothing here" would be a lie; dropping
     -- the warning to match the gate would be the drift the rewrite exists to prevent.
     local hostile = compile({ auraType = "HARMFUL", unit = "target",
@@ -658,7 +661,7 @@ test("filter: a TARGET debuff container's spells-kind Show still emits its group
     assertEqual(plan.groups[1].filter, "HARMFUL", "nothing but the aura-type token in the string")
     assertEqual(setOf(plan.groups[1].candidateFilters), "includeSpellIDs",
         "the id list is its ONLY constraint — which is the residual, stated as a plan")
-    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118,853")
+    assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL",
         "an over-broad Show sits beside the others and removes nothing — the Hide still compiles")
@@ -901,7 +904,7 @@ end)
 
 -- ── the cost is real: the REAL shipped category list, not `only` (documented in the plan ledger) ──
 
-test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 15 for HARMFUL today", function()
+test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 17 for HARMFUL today", function()
     -- Not a bug — R-4's shape is inherent to "in ANY shown category" being a union over heterogeneous
     -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1 of batch 6). This test
     -- exists so the count is visible in the suite: if it moves, a category was added or removed and
@@ -914,18 +917,18 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- subset of `uncategorized`'s own group's, or a group that could never match — see
     -- modules/FilterCompiler.lua's top-of-file comment). 15 groups total.
     --
-    -- HARMFUL: 17 filterable categories (16 pre-batch-7 plus `uncategorizedDebuffs`, restored fix
-    -- round 3 with an asymmetric meaning — defaults/Categories.lua's KINDS doc) minus 1 hidden
-    -- (crowdControl) = 16 shown categories, but only 15 actually become groups: `uncategorizedDebuffs`
-    -- contributes NO group of its own on Show (fix round 3, gated on the unit by issue #11 —
-    -- `hasUnion` is false here). TWO independent reasons hold it false on this container, and only
-    -- the first is temporary: the shipped `Cat.HARMFUL` carries no `spells`-kind category YET, so its
-    -- union is empty today — and `FC.IdsAlwaysHonored` is false for EVERY debuff container whatever
+    -- HARMFUL: 19 filterable categories (16 pre-batch-7, plus `uncategorizedDebuffs` restored in fix
+    -- round 3 with an asymmetric meaning — defaults/Categories.lua's KINDS doc — plus issue #11's
+    -- `hardCC` and `softCC`) minus 1 hidden (crowdControl) = 18 shown categories, but only 17
+    -- actually become groups: `uncategorizedDebuffs` contributes NO group of its own on Show (fix
+    -- round 3, gated on the unit by issue #11 — `hasUnion` is false here). The count moved by
+    -- exactly the two categories A1 added, which is the prediction the previous revision of this
+    -- comment wrote down before they existed. What did NOT move is the reasoning about this row: it
+    -- used to be held false by two independent reasons and is now held false by one, since the debuff
+    -- union is no longer empty — `FC.IdsAlwaysHonored` is false for EVERY debuff container whatever
     -- the union holds, because the engine discards debuff ids on the player outright and may discard
-    -- them on a target. So when `hardCC`/`softCC` land and the debuff union stops being empty, this
-    -- row still contributes no group; the totals above move (two more shown categories, so two more
-    -- shown groups), the reasoning about this row does not. Either way `addShownGroups` skips it
-    -- rather than emit an unrestricted group that would draw every debuff and defeat every other
+    -- them on a target the moment it is friendly. Either way `addShownGroups` skips it rather than
+    -- emit an unrestricted group that would draw every debuff and defeat every other
     -- category's Hide. The catch-all is
     -- NOT suppressed by its presence either (Show-with-no-union supersedes nothing), so it is
     -- attempted — and dropped anyway, for the same pre-existing reason as before round 3:
@@ -938,13 +941,12 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- catch-all's absence. This holds only on the assumption that a real aura's
     -- `isFromPlayerOrPlayerPet` is never nil; if a future category pair ever left a gap in the aura
     -- space the way this one does not, its catch-all would need to survive, and this count would need
-    -- to be revisited along with it. The final count (15) is the same number as before round 3, but
-    -- for a different reason — see the dedicated test below that isolates `uncategorizedDebuffs` from
-    -- this pair, which the real shipped list otherwise masks.
+    -- to be revisited along with it. See the dedicated test below that isolates
+    -- `uncategorizedDebuffs` from this pair, which the real shipped list otherwise masks.
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
     assertEqual(#helpfulPlan.groups, 15, "HELPFUL: 15 shown groups, no catch-all (Uncategorized supersedes it)")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
-    assertEqual(#harmfulPlan.groups, 15, "HARMFUL: 15 shown groups, no catch-all (it self-contradicts and is dropped)")
+    assertEqual(#harmfulPlan.groups, 17, "HARMFUL: 17 shown groups, no catch-all (it self-contradicts and is dropped)")
 end)
 
 test("filter: an unknown sort method falls back to Blizzard's default", function()

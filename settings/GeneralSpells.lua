@@ -71,14 +71,26 @@ local function rerender()
     if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end
 end
 
---- The categories this tab can edit: every spell list, plus the weapon-enchant row, whose entry
---- shows its slots rather than a list. Both are buff categories — the engine honors spell lists for
---- buffs only, and enchants are the player's own.
+--- Whether `def` is a row this tab can draw: a spell list of either aura type, or the weapon-enchant
+--- row, whose entry shows its slots rather than a list. Buffs are no longer the whole story — issue
+--- #11 gave `Cat.HARMFUL` its first `spells`-kind categories (`hardCC`, `softCC`) and the engine
+--- honors debuff spell ids on a hostile target or focus — so the test is the KIND, never the aura
+--- type. Missing that is how a shipped list becomes uneditable: the Filters page's `See spells` link
+--- offers itself for every `spells`-kind row it draws, including a debuff container's.
+local function editableHere(def)
+    return def ~= nil and (def.kind == "spells" or def.kind == "enchant")
+end
+
+--- The categories this tab can edit, buff lists first and in each aura type's own declaration order,
+--- so the dropdown reads the way the Filters page's grids do.
 local function spellCategories()
     local out = {}
-    for _, def in ipairs(Cat.For("HELPFUL")) do
-        if def.kind == "spells" or def.kind == "enchant" then
-            out[#out + 1] = def
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+        for _, def in ipairs(Cat.For(auraType)) do
+            if editableHere(def) then
+                local n = #out
+                out[n + 1] = def
+            end
         end
     end
     return out
@@ -87,8 +99,8 @@ end
 --- The category this render edits: the session's choice while it is still one this tab can draw
 --- (a spell list or the enchant row), else the first.
 local function currentCategory(defs)
-    local def = Cat.Find("HELPFUL", spellCategory)
-    if not (def and (def.kind == "spells" or def.kind == "enchant")) then def = defs[1] end
+    local def = Cat.Find("HELPFUL", spellCategory) or Cat.Find("HARMFUL", spellCategory)
+    if not editableHere(def) then def = defs[1] end
     spellCategory = def.key
     return def
 end
@@ -295,7 +307,7 @@ local function renderSpells(ctx)
         H.RenderGrid(ctx, { categoryCell(defs, def) })
         return renderEnchant(ctx)
     end
-    H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units."])
+    H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."])
     -- Restore on the dropdown's line (feedback #3): with the checkboxes gone (B2) a removed starter is
     -- off the list, and this is how it comes back.
     H.RenderGrid(ctx, { categoryCell(defs, def), restoreCell(key) })
@@ -361,8 +373,8 @@ NS.GeneralSpells = {
 --- on a category with no editor. Moves the General page's active tab to Spell Categories too, so the
 --- link actually lands the player where the category is shown.
 function NS.GeneralSpells.Select(key)
-    local def = Cat.Find("HELPFUL", key)
-    if not (def and (def.kind == "spells" or def.kind == "enchant")) then return end
+    local def = Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key)
+    if not editableHere(def) then return end
     spellCategory = key
     local ctx = H.__pageCtx and H.__pageCtx.general
     if ctx then ctx.activeTab = SPELLS end

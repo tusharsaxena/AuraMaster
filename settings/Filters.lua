@@ -7,9 +7,9 @@ local _, NS = ...
 --     What to show  the rows, then the priority block (spec §6) at the foot of the tab
 --     Categories    Blizzard Categories   [Show all][Hide all], then Show · Hide · Category, plus an
 --                                         info icon (N-5)
---                   Spell Categories      (buffs)        [Show all][Hide all], the same grid, plus a
---                                                         `See spells` link
---                                                         and hidePermanentEnchants beneath it
+--                   Spell Categories      [Show all][Hide all], the same grid, plus a `See spells`
+--                                         link; hidePermanentEnchants beneath it (buffs), and the
+--                                         hostile-unit note beneath it (debuffs)
 --                   Dispel Types · Who Cast It  (debuffs)
 --     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
@@ -158,17 +158,17 @@ NS.RegisterSchemaRows({
     {
         path = "container.filter.sortMethod", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.SORT_METHODS, C.SORT_METHOD_LABELS), label = L["Sort by"],
-        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden — each category set to Show gets its own group (a debuff container's Uncategorized row is the one exception, and never does), and EACH of those groups is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
+        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden — each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and EACH of those groups is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
     },
     {
         path = "container.filter.sortDirection", page = PAGE, group = G_SORT,
         type = "string", values = NS.Choices(C.SORT_DIRECTIONS, C.SORT_DIRECTION_LABELS), label = L["Direction"],
-        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden — each category set to Show gets its own group (a debuff container's Uncategorized row is the one exception, and never does), and EACH of those groups is reversed separately; the groups' own layout order does not change."],
+        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden — each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and EACH of those groups is reversed separately; the groups' own layout order does not change."],
     },
     {
         path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
         type = "number", min = 0, max = 40, step = 1, label = L["Max auras per group (0 = no limit)"],
-        desc = L["The cap applies to each engine group, not the whole container. With nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden — each category set to Show gets its own group (a debuff container's Uncategorized row is the one exception, and never does), and the cap applies to EACH of those groups separately."],
+        desc = L["The cap applies to each engine group, not the whole container. With nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden — each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and the cap applies to EACH of those groups separately."],
     },
 })
 
@@ -326,22 +326,41 @@ end
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
 -- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
 -- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell Categories grid, in
--- the tab's own text rather than a tooltip only the row's own label would carry. BUFFS ONLY (review
--- fix wave, fix round 3 restored the debuff row underneath this same grid): a debuff Show rescues
--- NOTHING — there is no spell list for it to be outside of — so this sentence is false on a debuff
--- container and contradicts that row's own tooltip ("Show ... changes nothing by itself") in the
--- same glance. Gated by `customGridHasEditableList` below, same as the "These are the lists..." line.
+-- the tab's own text rather than a tooltip only the row's own label would carry.
+--
+-- PRINTED ONLY WHERE THE RESCUE CAN HAPPEN, which since issue #11's A2 is a question about the UNIT,
+-- not about the aura type. The rescuing group carries one constraint, an `excludeSpellIDs` of the
+-- categorized union, so `modules/FilterCompiler.lua` emits it only where the engine is CERTAIN to
+-- apply spell ids — `FC.IdsAlwaysHonored`, true for buffs on the player and the pet alone. Anywhere
+-- else (every debuff container; a buff container on a `target` or `focus`, which may be hostile when
+-- the engine looks) Uncategorized Show contributes nothing, so this sentence would describe a rescue
+-- the plan does not contain and would contradict the row's own tooltip in the same glance. The old
+-- gate was `customGridHasEditableList`, i.e. "is this a buff container", which was the right answer
+-- for the wrong reason and stopped being either once `Cat.HARMFUL` gained spell lists.
 local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
 
+-- A3 (issue #11): Hard CC and Soft CC are the first debuff spell lists, and Blizzard honors spell ids
+-- for debuffs on HOSTILE units only — on you, your pet or a friendly unit the engine throws the list
+-- away and the two rows do nothing at all. Said here, under the grid that offers them, in the same
+-- voice the Overrides whitelist already uses for the same engine limit ("Blizzard only honors this
+-- for buffs on friendly units and debuffs on hostile ones", renderOverrides below). Drawn only on a
+-- debuff container that actually got a `spells`-kind row, so it appears beside the rows it is about
+-- and never on a buff tab, where the limit is the mirror one and the whitelist note already covers
+-- it. The per-container orange warning above every tab (FC.WARN.IDS_HOSTILE_ONLY / IDS_OWN_DEBUFFS)
+-- is the other half: it says the same thing for the container's actual unit, this says it for the
+-- rows regardless of unit.
+local SPELL_LIST_DEBUFF_NOTE = L["Hard CC and Soft CC only work on a hostile target or focus. Blizzard discards spell lists for debuffs on you, your pet or a friendly unit, so on those containers the two rows change nothing."]
+
 -- T-2 fix round 4 (batch 7, readability): "These are the lists on General -> Spell Categories..."
--- claims the grid holds EDITABLE lists. True for a buff container (its Spell Categories grid carries
--- `spells`-kind rows and the `weaponEnchants` row, both of which own a list on General -> Spell
--- Categories). False for a debuff container: D6/U-1 gives it the SAME grid, but with exactly one row
--- — `uncategorized`, kind "uncategorized" — which is a Show/Hide flag over the catch-all, not a list
--- of spells; debuffs have no editable spell lists at all (Cat.For("HARMFUL") carries no `spells` or
--- `enchant` kind entries). So the line is printed only when the grid this container drew actually
--- carries a row whose list lives there — never removed, never reworded into something vague enough
--- to be true on both sides.
+-- claims the grid holds EDITABLE lists. True wherever the grid carries a `spells`-kind row or the
+-- `weaponEnchants` row, both of which own a list on General -> Spell Categories — which since issue
+-- #11 is BOTH aura types' grids, not the buff one alone (`Cat.HARMFUL` carries `hardCC` and
+-- `softCC`, and settings/GeneralSpells.lua offers every `spells`-kind row of either type). It stays
+-- false for a grid whose only row is `uncategorized`, a Show/Hide flag over the catch-all rather
+-- than a list of spells — which is what a debuff grid was until A1, and what either grid becomes if
+-- its lists are ever taken away. So the line is printed only when the grid this container drew
+-- actually carries a row whose list lives there — never removed, never reworded into something vague
+-- enough to be true on both sides.
 local function customGridHasEditableList(mine)
     for _, row in ipairs(mine) do
         local key = keyOfCategoryRow(row)
@@ -408,14 +427,18 @@ local function bulkButtons(ctx, rows, gridKey)
 end
 
 --- The Categories tab: a grid each (the priority blurb is the What to show tab's now, F-4). The Spell Categories grid (kind
---- `custom`) carries F-2's blurb AND `UNCATEGORIZED_NOTE` (both conditionally — T-2 fix round 4 and
---- the review fix wave, only when the grid holds an editable list, i.e. a buff container — a debuff
---- container's Uncategorized row rescues nothing, so neither sentence is true there) and F-3's
---- `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide choice — drawn
---- right under that grid (T-3), tied by name to the weaponEnchants row it governs since ChoiceGrid
---- draws its rows atomically and cannot host it inline.
-local function renderCategories(ctx, _, rows)
+--- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three
+--- separate gates, deliberately, because the three sentences stopped being true together the moment
+--- `Cat.HARMFUL` gained spell lists: the blurb asks whether this grid holds an editable list (T-2 fix
+--- round 4, now true on both aura types), the debuff note asks whether it is a debuff grid holding
+--- one, and UNCATEGORIZED_NOTE asks whether the engine is CERTAIN to honor spell ids for this
+--- container's unit, which is the only place the rescue it describes can happen. It also carries
+--- F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide choice —
+--- drawn right under that grid (T-3), tied by name to the weaponEnchants row it governs since
+--- ChoiceGrid draws its rows atomically and cannot host it inline.
+local function renderCategories(ctx, cfg, rows)
     local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
+    local auraType = cfg and cfg.auraType or "HELPFUL"
     for _, g in ipairs(GRIDS) do
         local mine = {}
         for _, row in ipairs(rows or {}) do
@@ -435,7 +458,10 @@ local function renderCategories(ctx, _, rows)
                     H.TextRow(ctx, WEAPON_ENCHANT_TIE)
                     H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
                 end
-                if customGridHasEditableList(mine) then
+                if auraType == "HARMFUL" and customGridHasEditableList(mine) then
+                    H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
+                end
+                if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
                     H.TextRow(ctx, UNCATEGORIZED_NOTE)
                 end
             elseif g.key == "blizzard" then

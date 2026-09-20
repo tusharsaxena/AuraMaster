@@ -100,12 +100,16 @@ priority states (`FC.ExplainSpell` answers the same question for one spell, for 
   all (rank 5). The per-container "Only these categories" toggle that used to drop the catch-all is
   RETIRED (batch 7 fix round 2); an addon-defined `uncategorized` category in the Spell Categories grid (batch 7, `U-1`..`U-5`) does
   that instead — Hide always suppresses the catch-all (on either aura type, reproducing the retired
-  toggle exactly, fix round 3); Show suppresses it too, but only for a buff container, where the
-  category's own group is a real rescue that already covers everything the catch-all would (a strict
-  superset relationship); on a debuff container Show contributes no group of its own at all and
-  changes nothing (`hasUnion` is always false there — no `spells`-kind category exists for debuffs to
-  be a complement of), so the catch-all is left exactly as it would be without the category. A
-  container with anything Hidden this way compiles to roughly 15 groups, not one, and the "Max auras"
+  toggle exactly, fix round 3); Show suppresses it too, but only where `FC.IdsAlwaysHonored(unit,
+  auraType)` holds — buffs on the `player` and `pet` — because only there is the category's own group
+  a real rescue that already covers everything the catch-all would (a strict superset relationship).
+  On every debuff container, and on a `target`/`focus` buff container whose unit may be hostile when
+  the engine looks, Show contributes no group of its own at all and changes nothing, so the catch-all
+  is left exactly as it would be without the category. `hasUnion` is that gate, not an emptiness
+  test: `Cat.HARMFUL` has carried `hardCC` and `softCC` since issue #11, so a debuff union is no
+  longer empty — what stops the group is that the engine may throw its one `excludeSpellIDs` away. A
+  container with anything Hidden this way compiles to roughly 15 groups on buffs and 17 on debuffs,
+  not one, and the "Max auras"
   cap (`maxFrameCount`) applies to each group separately.
 - **A category applies by kind**: a token adds `TOKEN` or `!TOKEN`; a flag sets a boolean candidate
   filter (`isBossAura`, `isRoleAura`, `isPriorityAura`, `isStealable`, `isFromPlayerOrPlayerPet`); a

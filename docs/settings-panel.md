@@ -145,9 +145,11 @@ are not affected.* The descriptor's `profilesPage = true` picks that wording (Li
 | Blizzard frames | Hide Blizzard debuffs | `hideBlizzardDebuffs` | bool | Reparents `DebuffFrame`; out of combat |
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
-dropdown of the nine spell categories (defensives, activeMitigation, raidCDs, offensiveCDs, healing,
-support, movement, utility, consumables) **plus Weapon enchants** (schema v3). Every entry but Weapon
-enchants draws that category's ID list (the library's `IdList`):
+dropdown of the eleven spell categories — the nine buff ones (defensives, activeMitigation, raidCDs,
+offensiveCDs, healing, support, movement, utility, consumables) and the two debuff ones issue #11
+added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
+KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry but
+Weapon enchants draws that category's ID list (the library's `IdList`):
 **Add a spell** takes a spell id, a shift-clicked link or a name. While you type, a dropdown lists
 the matching spells (the library's suggestions, LibKa0s issue #31), each with its rank where the
 client gives one; a click, or Up/Down then Enter, picks one. The client finds a spell by name only
@@ -232,16 +234,19 @@ chose one control over two. A stored `onlyShown = true` is migrated to `categori
 (buffs) or `categories.uncategorizedDebuffs` (debuffs) `= "hide"` (schema v4, `docs/schema.md`) and
 the key cleared; only a container of some other, unrecognized shape has no category to migrate onto,
 and loses the narrowing — named and printed to the player directly (`NS.Print`), not left to the
-debug console. Then 34 generated rows, one per `defaults/Categories.lua` entry, at
+debug console. Then 36 generated rows, one per `defaults/Categories.lua` entry, at
 `container.filter.categories.<key>`, stored `"show"` / `"hide"` (schema v3) and labeled **Show** /
 **Hide** (`/am get` and `/am list` print the label, then the stored value in gray). Show is a
 positive claim: an aura in at least one Show category is drawn even if another of its categories says
 Hide; only an aura whose every category says Hide is removed by them (rank 3 of the priority order).
-Buff containers see the 17 buff rows, debuff containers 17 debuff rows — each list's last row is its
-own `Uncategorized`, asymmetric between the two (`Cat.HARMFUL` has no `spells`-kind category for its
-row to be a complement of, batch 7 fix round 3): on a buff container Show rescues an unlisted aura
-from another category's Hide; on a debuff container Show changes nothing at all (there is no spell
-list for it to be outside of), and only Hide does anything — reproducing the retired toggle exactly.
+Buff containers see the 17 buff rows, debuff containers 19 debuff rows — each list's last row is its
+own `Uncategorized`, asymmetric between the two, and since issue #11 (2026-09-20) that asymmetry is
+about the UNIT rather than the aura type: the rescuing group's only constraint is an
+`excludeSpellIDs` of the categorized union, so the compiler emits it only where
+`FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the `player` and `pet`. There Show rescues an
+unlisted aura from another category's Hide. On every debuff container, and on a `target`/`focus`
+buff container whose unit may be hostile, Show changes nothing at all and only Hide does anything —
+reproducing the retired toggle exactly.
 Under the Spell Categories grid, a line states the cost of the buff row's default (Show): hiding a
 Blizzard category alone does little while it stays Show, since it keeps rescuing unlisted auras; both
 rows need Hide to actually remove one. The rows carry `skipRender`, so the flow engine draws nothing

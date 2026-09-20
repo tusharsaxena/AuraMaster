@@ -203,7 +203,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (74)
+### test_filtercompiler.lua (85)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -239,11 +239,22 @@ badge and any count quoted in the docs must agree with it.
 - filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide
 - filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
 - filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
+- filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite
+- filter: FC.IdsAlwaysHonored is the CERTAIN predicate — true only for buffs on the player and pet
+- filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door
+- filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
+- filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
+- filter: a target debuff container still warns 'while the unit is hostile' although the gate dropped its Show group
+- filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
 - explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
 - explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue
 - explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized
+- explain: HARMFUL with a non-empty union on the PLAYER: an unclaimed id is still rank 5, never a rescue the compiler does not compile
+- explain: HARMFUL with a non-empty union on a TARGET: still rank 5, in lockstep with the gate
+- explain: HELPFUL on a TARGET: the rescue the accepted cost gives up is not claimed here either
+- filter: every unit/aura-type combination prints exactly the identity warning it printed before the predicate split
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
@@ -255,7 +266,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
 - filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
 - filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
-- filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 15 for HARMFUL today
+- filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 17 for HARMFUL today
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
@@ -1018,7 +1029,7 @@ badge and any count quoted in the docs must agree with it.
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
-- general → spell categories: a dropdown of the nine spell categories plus Weapon enchants, opening on the first
+- general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
@@ -1075,7 +1086,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (43)
+### test_pages_filters.lua (44)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1089,8 +1100,9 @@ badge and any count quoted in the docs must agree with it.
 - filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
-- filters: the 'these are the lists' line draws on a buff container and not on a debuff one, whose Spell Categories grid is Uncategorized-only (T-2)
-- filters: the Uncategorized cost note draws on a buff container and not on a debuff one (review fix wave, item 2)
+- filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
+- filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)
+- filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
 - filters: the priority order (spec §6) is stated on the What to show tab, highest rank first
 - filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
@@ -1236,11 +1248,13 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (14)
+### test_defaults.lua (16)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
-- defaults: spell categories are buff categories, and IsSpellCategory names exactly them
+- defaults: IsSpellCategory names exactly the spells-kind categories of BOTH aura types
+- defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of positive integer ids
+- defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine
 - defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)
 - defaults: every leaf of the container template is edited by a settings row or is a spell set
 - defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
@@ -1329,7 +1343,7 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 73 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 74 |
+| test_filtercompiler.lua | 85 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
@@ -1356,7 +1370,7 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 38 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 43 |
+| test_pages_filters.lua | 44 |
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
@@ -1365,7 +1379,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 14 |
+| test_defaults.lua | 16 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
@@ -1374,4 +1388,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1160** |
+| **Total** | **1174** |

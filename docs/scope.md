@@ -19,7 +19,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   border, cooldown swipe, time and stack text).
 - **Filters declared up front and evaluated by the game:** who cast it (anyone / me and my pet /
   anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
-  below), 34 categories set to Show or Hide, schema v4 (defined in `defaults/Categories.lua`: spell
+  below), 36 categories set to Show or Hide, schema v4 (defined in `defaults/Categories.lua`: spell
   lists, Blizzard aura flags and filter tokens, dispel types, player-or-creature source, and the
   weapon-enchant capability), a per-container Overrides whitelist and blacklist of spells (the
   whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists

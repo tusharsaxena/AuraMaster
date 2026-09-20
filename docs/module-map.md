@@ -65,7 +65,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 
 | File | Responsibility |
 |---|---|
-| `defaults/Categories.lua` | The 17 buff and 17 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, `enchant` for `weaponEnchants`, and `uncategorized` for `uncategorized` and `uncategorizedDebuffs`), the starter spell lists, `For`/`Find`/`IsSpellCategory`/`DefaultStates` |
+| `defaults/Categories.lua` | The 17 buff and 19 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, `enchant` for `weaponEnchants`, and `uncategorized` for `uncategorized` and `uncategorizedDebuffs`), the starter spell lists — eleven `spells`-kind categories, nine buff and the two debuff ones issue #11 added (`hardCC`, `softCC`, derived by `tools/spell-research/research.py` against build 12.1.0.69875) — and `For`/`Find`/`IsSpellCategory`/`DefaultStates` |
 | `defaults/Profile.lua` | `NS.defaults` (profile and global), `NS.CONTAINER_TEMPLATE`, `NS.STARTER_CONTAINERS` — the one place a default is hardcoded |
 
 ## `modules/` (TOC order)

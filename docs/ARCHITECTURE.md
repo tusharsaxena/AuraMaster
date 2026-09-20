@@ -210,7 +210,8 @@ ANY shown category" is a union and needs a group per Shown category. With nothin
 one group is emitted (the base minus the whitelist) — a Show cannot rescue anything when nothing is
 hiding, so the extra groups would be pure cost. Once anything is Hidden, one group per Shown category
 is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
-container with anything Hidden therefore compiles to roughly 15 groups, not one, and the "Max auras"
+container with anything Hidden therefore compiles to roughly 15 groups on buffs and 17 on debuffs,
+not one, and the "Max auras"
 cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
 `docs/schema.md`). The catch-all is skipped instead of joined whenever an `uncategorized` category
 exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
@@ -574,10 +575,13 @@ return value.
   "only the categories I named" on its own. The fix is `Uncategorized = Hide` (batch 7, `U-1`..`U-5`,
   restored to debuffs in fix round 3) — a player who notices new, uncategorized auras appear in a
   container that used to be narrow should look at Filters → Categories and set that row to Hide. On a
-  debuff container this row means only that: since `Cat.HARMFUL` has no `spells`-kind category, its
-  Show side has nothing to rescue and does not contribute a group of its own (batch 7 fix round 3's
-  `hasUnion` gate) — it is Hide-only in practice, exactly reproducing the retired per-container **"only
-  these categories"** toggle it replaced (batch 7 fix round 2).
+  debuff container this row means only that: its Show side does not contribute a group of its own, so
+  it is Hide-only in practice, exactly reproducing the retired per-container **"only these
+  categories"** toggle it replaced (batch 7 fix round 2). The reason is no longer "`Cat.HARMFUL` has
+  no `spells`-kind category" — it carries `hardCC` and `softCC` as of issue #11 — but that
+  `FC.IdsAlwaysHonored` is false for every debuff container: the engine discards debuff spell ids on
+  the player and pet outright, and may discard them on a `target` or `focus` the moment the unit is
+  friendly, so the group that Show would contribute could arrive carrying nothing at all.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or
   going, toggling hide-permanent enchants, a style switch, or a growth change that moves the corner
   the engine is pinned at (Grow horizontally or vertically, its own or inherited from the container

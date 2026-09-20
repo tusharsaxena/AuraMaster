@@ -447,8 +447,9 @@ one. None of this is reproducible headlessly; these checks are.
 
 77. **Group explosion has a real cost, and nothing silently vanishes (spec §6b, `R-4`).** On a
     *player debuffs* container, set exactly one debuff category — say *Dispellable* — to **Hide**
-    and leave the other 16 at **Show** → the container now compiles to roughly 15 groups plus a
-    catch-all (spec §6b), not one. Cast or apply enough different debuffs to populate several
+    and leave the other 18 at **Show** → the container now compiles to roughly 17 groups plus a
+    catch-all (spec §6b), not one. (16 and 15 when this check was written; issue #11 added *Hard CC*
+    and *Soft CC* to the debuff list on 2026-09-20.) Cast or apply enough different debuffs to populate several
     categories at once and confirm **every** one you expect still appears — a debuff in *Dispellable*
     and nothing else disappears, but one in *Dispellable* and also, say, *Boss* still shows (rank 3).
     Nothing is missing, garbled or duplicated. Then `/am perf` a capture over a few seconds with the
