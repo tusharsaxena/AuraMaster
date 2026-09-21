@@ -336,11 +336,7 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
             refused[#refused + 1] = verb
         end
     end
-    -- `probe` is here TEMPORARILY (issue #15, item 3). It is a diagnostic, but the reserved list
-    -- that answers while the addon is off is the STANDARD's (slash-commands-§2) and this addon
-    -- does not get to extend it, so probe refuses with the rest. Drop it from this string when
-    -- the verb goes.
-    assertEqual(table.concat(refused, ","), "probe,new,delete,lock,unlock,test,pick,resetposition,forgettimed",
+    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,test,pick,resetposition,forgettimed",
         "exactly the feature verbs refuse")
 
     -- And `set` really wrote. The point of keeping the schema CLI live is repair, not politeness.

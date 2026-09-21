@@ -146,7 +146,7 @@ Cat.HELPFUL = {
             DEATHKNIGHT = { 145629 },
             DEMONHUNTER = { 209426 },
             PRIEST      = { 81782 },
-            SHAMAN      = { 2825, 32182, 98007 },
+            SHAMAN      = { 2825, 32182, 325174 },   -- 325174 is the AURA; 98007 is the cast (issue #15)
             MAGE        = { 80353 },
             HUNTER      = { 264667 },
             EVOKER      = { 390386, 374227 },
@@ -216,7 +216,7 @@ Cat.HELPFUL = {
         desc = "Soulstones, stealth, water walking and similar.",
         spells = spells({
             WARLOCK = { 20707, 5697 },
-            PRIEST  = { 1706 },
+            PRIEST  = { 111759 },   -- the AURA; 1706 is the cast (issue #15)
             SHAMAN  = { 546 },
             MAGE    = { 130, 32612 },
             HUNTER  = { 5384 },
@@ -387,7 +387,7 @@ Cat.HARMFUL = {
             DEATHKNIGHT = { 108194, 111673, 207167, 221562 },        -- Asphyxiate (Frost/Unholy), Control Undead, Blinding Sleet, Asphyxiate (Blood)
             SHAMAN      = { 51514, 118905, 204437 },                 -- Hex, Capacitor Totem, Lightning Lasso
             MAGE        = { 118, 31661, 82691, 383121 },             -- Polymorph, Dragon's Breath, Ring of Frost, Mass Polymorph
-            WARLOCK     = { 710, 1098, 5484, 5782, 6789, 30283 },    -- Banish, Subjugate Demon, Howl of Terror, Fear, Mortal Coil, Shadowfury
+            WARLOCK     = { 710, 1098, 5484, 118699, 6789, 30283 },  -- Banish, Subjugate Demon, Howl of Terror, Fear (the AURA; 5782 is the cast), Mortal Coil, Shadowfury
             MONK        = { 115078, 119381, 198909 },                -- Paralysis, Leg Sweep, Song of Chi-Ji
             DRUID       = { 99, 2637, 5211, 33786, 163505, 203123 }, -- Incapacitating Roar, Hibernate, Mighty Bash, Cyclone, Rake, Maim
             DEMONHUNTER = { 179057, 207685, 211881, 217832, 1234195 }, -- Chaos Nova, Sigil of Misery, Fel Eruption, Imprison, Void Nova
@@ -455,14 +455,21 @@ Cat.HARMFUL = {
             WARRIOR     = { 1715, 12323 },                           -- Hamstring, Piercing Howl
             PALADIN     = { 403695, 408383 },                        -- Truth's Wake, Judgment of Justice
             HUNTER      = { 5116, 64803, 135299, 162480, 186387, 190925, 195645 }, -- Concussive Shot, Entrapment, Tar Trap, Steel Trap, Bursting Shot, Harpoon, Wing Clip
-            ROGUE       = { 3409, 35546, 185763 },                   -- Crippling Poison, Fatal Flourish, Pistol Shot
+            -- 35546 IS THE CAST AND ITS AURA IS UNKNOWN (issue #15). It applies no aura of its
+            -- own and has no EffectTriggerSpell edge, so the data cannot name one; the owner's
+            -- live probe could not observe one either, reporting it as a proc that fires and
+            -- vanishes rather than an aura that sits on a unit. It is left as the cast id
+            -- KNOWINGLY: a row that matches nothing is no worse than a row that is gone, and
+            -- removing it would lose the record that this slow exists. Settle it by watching a
+            -- real target while an Outlaw rogue has the talent, then swap in what lands.
+            ROGUE       = { 3409, 35546, 185763 },                   -- Crippling Poison, Fatal Flourish (cast; aura unknown), Pistol Shot
             PRIEST      = { 15407, 114404, 390669 },                 -- Mind Flay, Void Tendrils, Apathy
             DEATHKNIGHT = { 45524, 206930, 273977 },                 -- Chains of Ice, Heart Strike, Grip of the Dead
             SHAMAN      = { 51490, 196840, 470194, 1251059 },        -- Thunderstorm, Frost Shock, Ice Strike, Stormbind
             MAGE        = { 122, 31589, 157981, 157997, 212792, 236299, 378760, 391104 }, -- Frost Nova, Slow, Blast Wave, Ice Nova, Cone of Cold, Chrono Shift, Frostbite, Mass Slow
             WARLOCK     = { 334275, 384069 },                        -- Curse of Exhaustion, Shadowflame
             MONK        = { 116095, 121253, 123586, 324382, 392983 }, -- Disable, Keg Smash, Flying Serpent Kick, Clash, Strike of the Windlord
-            DRUID       = { 339, 58180, 61391, 102359, 102793, 164812 }, -- Entangling Roots, Infected Wounds, Typhoon, Mass Entanglement, Ursol's Vortex, Moonfire
+            DRUID       = { 339, 58180, 61391, 102359, 127797, 164812 }, -- Entangling Roots, Infected Wounds, Typhoon, Mass Entanglement, Ursol's Vortex (the AURA; 102793 is the cast), Moonfire
             DEMONHUNTER = { 198813, 204843, 213405, 323996 },        -- Vengeful Retreat, Sigil of Chains, Master of the Glaive, The Hunt
             EVOKER      = { 355689, 357214, 368970, 370898 },        -- Landslide, Wing Buffet, Tail Swipe, Permeating Chill
             ALL         = { 260369 },                                -- Arcane Pulse (racial)
