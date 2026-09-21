@@ -97,6 +97,26 @@ These are not declined; the game forbids them, and a request for one is answered
   (`CM.MustDefer`, `modules/ContainerManager.lua:161`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
+- **Which aura a spell applies.** The addon filters on the id the aura carries, and a great many
+  spells are CAST as one id and land as another. Nothing in the client's Lua answers the
+  mapping: `C_Spell` and `C_SpellBook` give a spell's name, icon, cooldown, range and
+  description, and none of them exposes `SpellEffect`, its `EffectTriggerSpell`, or any other
+  view of what a cast actually applies. There is no "what aura does this spell put on the
+  target" call to make.
+
+  So the panel cannot work this out at the moment a player types a name, and nothing it could
+  ask would help. What it can do is carry the answer, derived OFFLINE from Blizzard's own DB2
+  exports by `tools/spell-research/research.py` and shipped as `defaults/CastToAura.lua` --
+  which is why that file exists rather than a lookup (issue #15).
+
+  **And the data does not answer it either, in general.** `EffectTriggerSpell` covers the
+  Freezing Trap shape -- a spell whose effect triggers a second spell -- but many links are
+  server-side script with no row behind them at all. Renewing Mist is the case that proved it:
+  `115151` is cast, `119611` lands, and 115151's ONLY `SpellEffect` row is a dummy with no
+  trigger. The generated table falls back to matching aura-applying spells of the same NAME,
+  which finds 119611 -- and six others also called Renewing Mist, five of which survive the
+  class-family fence. An id the data can resolve to exactly one aura is rewritten; one it
+  cannot is offered as a choice, never guessed at.
 
 ## Resolved decisions
 
