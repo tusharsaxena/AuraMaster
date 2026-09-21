@@ -1183,13 +1183,6 @@ end
 --- TWO WHOLE STRINGS AND A BRANCH, which is this repo's own count idiom (settings/Text.lua's
 --- `centerNote`): the singular is its own locale value rather than a `%d` standing in for "1", so a
 --- translation is free to give the two forms different shapes.
-local function overlapSuffix(def, id)
-    local n = #otherClaimants(def, id)
-    if n == 0 then return nil end
-    if n == 1 then return L["(also in 1)"] end
-    return L["(also in %d)"]:format(n)
-end
-
 --- The claim line in `id`'s entry tooltip, or nil: which other categories claim it, BY NAME. The
 --- suffix on the row says only that there are some; the tooltip is where the library says the full
 --- story belongs, and it is the one place on this row with the width for names.
@@ -1230,6 +1223,10 @@ end
 local function spellKind(def)
     return {
         base = "spell",
+        -- WARN BEFORE THE CLICK, not after it (LibKa0s v1.51.0). A suggestion row for an id that
+        -- can never be an aura says so while the player is still choosing between it and the aura
+        -- underneath it. Everything else modules/CastAura.lua does happens after the pick.
+        suggestTag = NS.CastAura.SuggestTag,
         resolve = function(text, cands) return H.ResolveId("spell", text, cands) end,
         tooltip = function(tip, id)
             if type(tip.SetSpellByID) == "function" then tip:SetSpellByID(id) end
@@ -1413,13 +1410,14 @@ local function renderSpells(ctx)
         entries    = function()
             local out = entriesFor(def)
             for _, e in ipairs(out) do
-                e.suffix = overlapSuffix(def, e.id)
-                -- AND A NOTE WHEN THE ENTRY CAN NEVER MATCH (issue #15). The add-time line is chat
-                -- and is gone by the next login; an id stored before this addon could say anything
-                -- about it would otherwise sit here forever looking perfectly normal. A noted entry
-                -- takes a full-width row of its own -- the library's rule, since a note is a second
-                -- line -- so the grid gives one row back per bad id, which is the right price.
-                e.note = CA.Note(e.id)
+                -- EVERYTHING THIS ROW HAS TO SAY GOES IN ITS "?" MARK (LibKa0s v1.51.0). It used
+                -- to be split: an `(also in N)` suffix inline, and a `note` for an id that can
+                -- never match -- and a note is a full-width second line, so the library gave such
+                -- an entry a row of its own and every warned id punched a hole through the
+                -- two-column grid. The mark costs a fixed 18px, says both, and leaves every row
+                -- the same shape as every other. The count is gone from the row with the suffix:
+                -- the mark is where a reader now looks, and the names were always in the tooltip.
+                e.help = CA.Help(e.id, overlapLine(def, e.id))
             end
             return out
         end,

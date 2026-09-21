@@ -407,6 +407,32 @@ local function entryTooltip(m, lbl)
     return table.concat(lines, "\n")
 end
 
+--- The lines an entry's "?" help mark carries, joined; "" for a mark with nothing behind it, and
+--- nil when the entry was not drawn at all.
+---
+--- WALKED IN ORDER, because a Flow row holds TWO entries at two columns and each has its own mark.
+--- The library draws [X] [?] [label] per entry, so the mark in force when a label is reached is the
+--- one belonging to it -- picking "the first Icon in the row" would answer the left entry's mark
+--- for the right entry's label. `__helpLines` is what the library records on the Icon (v1.51.0);
+--- the kit's fake has no texture and no tooltip to hover, so it is the only way to read one.
+local function entryHelp(ws, id)
+    for _, row in ipairs(ws) do
+        local mark
+        for _, kid in ipairs(row.children or {}) do
+            if kid.type == "Icon" and kid.__helpTint then
+                mark = kid
+            elseif kid.type == "InteractiveLabel" and type(kid.text) == "string" then
+                local drawn = kid.text:match("%((%d+)%)|r") or kid.text:match("^Unknown spell (%d+)")
+                if drawn and tonumber(drawn) == id then
+                    if not (mark and mark.__helpLines) then return "" end
+                    return table.concat(mark.__helpLines, "\n")
+                end
+            end
+        end
+    end
+    return nil
+end
+
 --- Every id the IdList drew, in the order it drew them.
 local function listedIds(ws)
     local out = {}
@@ -1130,18 +1156,21 @@ test("general → spell categories: an id another category already claims is mar
     assertTrue(said:find("also in", 1, true) ~= nil, "the add says so: " .. said)
     assertTrue(said:find(NS.L["Defensive cooldowns"], 1, true) ~= nil, "and names the category: " .. said)
 
-    -- And the entry carries the same answer permanently: a count ON its own row, and the names in
-    -- its tooltip (owner, 2026-09-21; LibKa0s v1.49.0's entry `suffix`).
-    -- red under: the answer back on a second full-width line under the entry, which is what the
-    -- `note` it replaced drew -- and which cost that entry its place in the two-column grid.
+    -- And the entry carries the same answer permanently, in its "?" mark (LibKa0s v1.51.0). It
+    -- was an `(also in N)` suffix inline until 2026-09-22, and before that a `note` -- a full-width
+    -- second line, which cost the entry its place in the two-column grid. The mark costs a fixed
+    -- 18px and leaves every row the same shape.
+    -- red under: the answer back on the row or on a line of its own.
     local ws = P.rerender("General")
     local lbl = entry(ws, claimed)
-    assertTrue(lbl ~= nil and lbl.text:find("(also in 1)", 1, true) ~= nil,
-        "the row says how many: " .. tostring(lbl and lbl.text))
+    assertTrue(lbl ~= nil and lbl.text:find("also in", 1, true) == nil,
+        "the row itself carries no count: " .. tostring(lbl and lbl.text))
     assertFalse(P.hasText(ws, "Also in: " .. NS.L["Defensive cooldowns"]),
-        "and says it inside the label, not on a line of its own")
+        "and nothing is drawn on a line of its own")
+    assertTrue(entryHelp(ws, claimed):find("Also in: " .. NS.L["Defensive cooldowns"], 1, true) ~= nil,
+        "the mark names the category")
     assertTrue(entryTooltip(m, lbl):find("Also in: " .. NS.L["Defensive cooldowns"], 1, true) ~= nil,
-        "the tooltip names the category")
+        "and so does the entry's own tooltip, which is unchanged")
 
     -- The control: an id nothing else claims is neither reported nor marked.
     local quiet = P.chat()
@@ -1149,11 +1178,13 @@ test("general → spell categories: an id another category already claims is mar
     assertEqual(#quiet, 0, "an unclaimed id says nothing")
     local ws2 = P.rerender("General")
     local still = entry(ws2, claimed)
-    assertTrue(still ~= nil and still.text:find("(also in 1)", 1, true) ~= nil,
-        "the claimed entry is still marked")
+    assertTrue(still ~= nil, "the claimed entry is still drawn")
+    assertTrue(entryHelp(ws2, claimed):find("Also in", 1, true) ~= nil,
+        "and its mark still says so")
     local unclaimed = entry(ws2, 424242)
     assertTrue(unclaimed ~= nil, "the added id is drawn")
-    assertTrue(unclaimed.text:find("also in", 1, true) == nil, "with no count on it")
+    assertEqual(entryHelp(ws2, 424242), "",
+        "an id nothing claims gets a mark with nothing behind it, not no mark at all")
     local said2 = entryTooltip(m, unclaimed)
     assertTrue(said2:find("Also in:", 1, true) == nil,
         "and a category never reports itself as a claimant of its own entry: " .. said2)
@@ -1252,12 +1283,12 @@ test("general → spell categories: a claimed-by tooltip says when the other cat
         :find("Also in: " .. NS.L["Defensive cooldowns"], 1, true) ~= nil)
 end)
 
-test("general → spell categories: two other claimants read '(also in 2)', and the tooltip names both", function()
+test("general → spell categories: two other claimants are both named, in the mark and the tooltip", function()
     local NS, m, P = spells()
-    -- red under: one locale string with a `%d` in it doing the singular as well, which reads
-    -- "(also in 1)" only by accident of the number -- settings/Text.lua's centerNote is the idiom
-    -- this follows, two whole strings and a branch. The plural arm is the one a single claimant
-    -- never exercises.
+    -- This used to assert the row read "(also in 2)" against a single claimant's "(also in 1)" --
+    -- two whole locale strings and a branch, so that no `%d` string did the singular by accident.
+    -- The count is gone with the suffix (LibKa0s v1.51.0): the mark NAMES them instead, so there
+    -- is no number to get wrong and nothing for a plural rule to do.
     local both = { NS.L["Defensive cooldowns"], NS.L["Healing"] }
     local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
     NS.SetByPath("categorySpells", {
@@ -1266,10 +1297,12 @@ test("general → spell categories: two other claimants read '(also in 2)', and 
     NS.GeneralSpells.Select(key)
     local ws = P.rerender("General")
     local lbl = entry(ws, 424242)
-    assertTrue(lbl ~= nil and lbl.text:find("(also in 2)", 1, true) ~= nil,
-        "the row counts both: " .. tostring(lbl and lbl.text))
+    assertTrue(lbl ~= nil and lbl.text:find("also in", 1, true) == nil,
+        "the row carries no count: " .. tostring(lbl and lbl.text))
+    local help = entryHelp(ws, 424242)
     local said = entryTooltip(m, lbl)
     for _, name in ipairs(both) do
+        assertTrue(help:find(name, 1, true) ~= nil, "the mark names " .. name .. ": " .. help)
         assertTrue(said:find(name, 1, true) ~= nil, "the tooltip names " .. name .. ": " .. said)
     end
 end)

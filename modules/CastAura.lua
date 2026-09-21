@@ -101,6 +101,56 @@ function CA.ForAdd(typed)
     return typed, nil
 end
 
+--- The short word a SUGGESTION row wears, or nil (LibKa0s v1.51.0's `kind.suggestTag`).
+---
+--- THE WHOLE POINT IS THAT IT ARRIVES BEFORE THE CLICK. Everything else this file does happens
+--- after a player has picked an id: the add is rewritten, or a chat line lists what they should
+--- have picked instead. That is a correction. A tag on the row turns it into a choice -- the row
+--- for a cast id says so while the player is still choosing between it and the aura underneath it.
+---
+--- ORANGE, AND TWO WORDS. The library adds no color of its own and does not wrap, truncate or
+--- measure this, so a sentence here would run off the row; the full story is what the chat line
+--- and the entry's own help mark are for.
+function CA.SuggestTag(id)
+    local kind = CA.Resolve(id)
+    if kind then return "|cffff8000" .. NS.L["not an aura"] .. "|r" end
+    return nil
+end
+
+--- The lines an entry's "?" mark shows, or nil (LibKa0s v1.51.0's `entry.help`).
+---
+--- THIS REPLACED A `note`, AND THE REASON IS THE GRID. A note is a full-width second line, so the
+--- library gives a noted entry a row of its own -- which in a two-column list means every warned
+--- entry punches a hole through the grid, and the entry is drawn at one column while its
+--- neighbors are at two. Moving the same sentence into the mark's tooltip costs a fixed 18px and
+--- leaves every row the same shape.
+---
+--- `extra` is whatever the CALLER has to add for this list -- the overlap guardrail's "also in"
+--- line on the Spell Categories tab, the override verdict on the Filters page. It goes AFTER the
+--- never-matches line, because an id no aura carries has no verdict worth explaining.
+function CA.Help(id, extra)
+    local lines = {}
+    --- Append `s` when it is a non-empty string. Written out rather than inlined because
+    --- `lines[#lines + 1] = s` on a line with an `if` hides the whole statement from lizard
+    --- (tests/test_lintconfig.lua), and this function would have had four of them.
+    local function add(s)
+        if type(s) ~= "string" or s == "" then return end
+        local n = #lines
+        lines[n + 1] = s
+    end
+    add(CA.Note(id))
+    if type(extra) == "table" then
+        local n = #extra
+        for i = 1, n do
+            add(extra[i])
+        end
+    else
+        add(extra)
+    end
+    if not lines[1] then return nil end
+    return lines
+end
+
 --- The gray second line an ALREADY-STORED entry gets, or nil.
 ---
 --- The add-time line is chat and is gone by the next login; an id stored before this addon could
