@@ -1366,8 +1366,10 @@ local function renderSpells(ctx)
         -- documented truncation order, and acceptable, because the tooltip still carries
         -- every name. A panel wider than the floor buys it back at about 8 characters per 100px.
         --
-        -- Only the spell-category list asks for columns; the Filters page Overrides lists stay one
-        -- per row.
+        -- The Filters page's Overrides lists ask for two as well, since 2026-09-21. They are
+        -- SHORT lists -- a handful of ids per container against this one's sixty -- so that is a
+        -- consistency call rather than a scroll-length one, and settings/Filters.lua says so at
+        -- its own call.
         columns    = 2,
         label      = L["Add a spell"],
         tooltip    = ID_TOOLTIP,

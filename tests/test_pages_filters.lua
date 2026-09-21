@@ -616,6 +616,45 @@ test("filters: Overrides adds to one list at a time by id or by name, and Remove
     assertEqual(NS.Database.FindContainer(1).filter.blacklist[12345], true, "the blacklist is not")
 end)
 
+-- The Overrides lists pack TWO entries to a Flow row, as the Spell Categories list does
+-- (`columns`, LibKa0s v1.47.0 / OptionsWidgets minor 24; the canvas fit that makes it a MAXIMUM is
+-- v1.50.0, minor 27). Pinned here because the reason is a CONSISTENCY one rather than a length one
+-- -- an override list is short, so nothing about its own scroll would notice a silent return to one
+-- entry a row, and the point of the option here is that these rows look like General's.
+test("filters: the Overrides lists pack two entries to a row, row-major", function()
+    local NS, _, P = filters()
+    -- Through the seam, not by writing the table: the page reads the container the seam wrote,
+    -- and settings/Filters.lua's own edit() puts the whole set back through `container.filter.*`.
+    NS.SetByPath("container.filter.whitelist", { [774] = true, [8936] = true, [33763] = true })
+    -- SAY WHAT CANVAS THIS PACKS INTO: the kit's ScrollFrame fixture is 400, 380 of content once
+    -- OptionsScroll takes its gutter, which is under the icon style's 520px floor for two columns.
+    -- Unarmed, the library correctly draws ONE column and this case asserts the fixture.
+    P.canvasWidth(700)
+    local ws = P.tab("filters", "overrides")
+    local rows, seen = {}, {}
+    for _, w in ipairs(ws) do
+        local kids = type(w.children) == "table" and w.children or {}
+        local col = 0
+        for _, kid in ipairs(kids) do
+            if type(kid) == "table" and kid.type == "InteractiveLabel" and type(kid.text) == "string" then
+                local id = kid.text:match("%((%d+)%)|r") or kid.text:match("^Unknown spell (%d+)")
+                if id and not seen[id] then
+                    seen[id] = true
+                    col = col + 1
+                    rows[#rows + 1] = { id = tonumber(id), row = w, col = col }
+                end
+            end
+        end
+    end
+    assertTrue(#rows >= 3, "the three whitelisted ids are drawn")
+    -- red under no `columns` (each entry takes a row of its own), and red under column-major.
+    assertEqual(rows[1].row, rows[2].row, "the first two share one row")
+    assertEqual(rows[1].col, 1, "the first is the left column")
+    assertEqual(rows[2].col, 2, "the second is beside it, not under it")
+    assertTrue(rows[3].row ~= rows[2].row, "the third starts the next row down")
+    assertEqual(rows[3].col, 1, "and is the left column of that row")
+end)
+
 test("filters: an Overrides name the game cannot find adds nothing and says why on the add line", function()
     local NS, _, P = filters()
     local ws = P.tab("filters", "overrides")

@@ -666,6 +666,22 @@ local function overrideList(ctx, cfg, key, heading, blurb)
         kind       = "spell",
         -- Every spell list in the addon draws its remove control the same way (B2).
         removeStyle = "icon",
+        -- TWO TO A ROW, as the Spell Categories list draws (LibKa0s v1.47.0's `columns`,
+        -- OptionsWidgets minor 24; fitted to the canvas since v1.50.0, minor 27).
+        --
+        -- THIS IS A CONSISTENCY CALL, NOT A SCROLL-LENGTH ONE, and it is worth saying which.
+        -- An override list is per CONTAINER and a player writes a handful of ids into one, so
+        -- unlike Hard CC -- 60-odd ids, most of a screen before the next control -- these lists
+        -- are short and two columns saves them little. What it saves is the reading: the same
+        -- spell rows, with the same X and the same gray id, drawn one per line here and two per
+        -- line on General reads as an omission on whichever page the player sees second. An odd
+        -- count simply leaves the last row half full.
+        --
+        -- The truncation trade is the same one General takes and is documented there: above one
+        -- column the name does not wrap, the client cuts the TAIL, and the gray `(id)` goes
+        -- first. The entry's tooltip still carries the name. And the count is a MAXIMUM -- a
+        -- canvas too narrow for two draws one, with nothing here needing to know its width.
+        columns    = 2,
         label      = L["Add a spell"],
         tooltip    = NS.GeneralSpells.ID_TOOLTIP,
         strings    = NS.GeneralSpells.ID_STRINGS,

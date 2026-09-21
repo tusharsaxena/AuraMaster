@@ -312,7 +312,11 @@ own spell tooltip names it). The library's `entryNoWrap` explains why a wrapped 
 grid rather than merely look uneven.
 The list does not resettle a moment later: `O.IdList`'s re-ask-and-redraw is the item path
 (`loads = true`), and a spell's name is client data with no load step. The Filters page's
-**Overrides** lists keep their own id order.
+**Overrides** lists keep their own id order, and since 2026-09-21 they draw **two columns wide** as well. That
+is a consistency call rather than a length one: an override list is per container and holds a handful of
+ids, so it was never the scroll this option was bought for — but the same spell rows, with the same X
+and the same gray id, drawn one per line here and two per line on General read as an omission on
+whichever page you saw second.
 
 Choosing **Weapon enchants** draws something else entirely: three toggles, one per weapon slot
 (Main hand, Off hand, Ranged; `enchantSlots.<slot>`, profile-wide, all on by default, schema v3), and
