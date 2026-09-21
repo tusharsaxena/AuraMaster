@@ -112,6 +112,66 @@ run downloads ~75 MB of CSV into `tools/spell-research/.cache/`.
    `ANALYSIS.md` and the gzipped `raw/` exports. The bundle is what makes step 1 repeatable in a
    year. `tools/spell-research/README.md` has the rest, including where the pipeline cannot see.
 
+The tool has two other modes, both covered with the rest under *Prompts* below:
+`--emit-cast-aura` regenerates `defaults/CastToAura.lua` (issue #15), and `--check-shipped`
+cross-checks every id the file ships against the build.
+
+## Prompts: asking an assistant to run the spell-research tool
+
+`tools/spell-research/research.py` has three modes and they answer different questions. These are
+the prompts to paste; each says which mode, where the data comes from, and what to hand back.
+
+**The one rule that runs through all of them: the tool never writes `defaults/Categories.lua`, and
+neither should the assistant without being told to.** Every add, drop and swap is the author's call
+— that is Part C's narrowing rule and the reason the generator prints rather than edits. A prompt
+that does not say "do not change the file" should still be read that way.
+
+**Replay or network.** `--replay docs/spell-research/<date>` re-derives from a frozen bundle's own
+gzipped exports: no network, no cache, and the same answer a year from now. Without it the tool
+resolves the live retail build and downloads ~75 MB of CSV into `tools/spell-research/.cache/` on
+the first run. **Prefer replay unless the point is to pick up a new build** — a run against today's
+live data answers a different question from a run against the build the shipped lists were derived
+from, and mixing them silently is how a diff stops meaning anything.
+
+### Refresh the Hard CC / Soft CC lists
+
+> Re-derive the Hard CC and Soft CC lists with `tools/spell-research/research.py` against the
+> current retail build. Show me the diff against what we ship, freeze the run as a bundle under
+> `docs/spell-research/<today>`, and tell me which sentinels the coverage gate checked. **Do not
+> change `defaults/Categories.lua`** — I accept or reject each add and drop myself. For anything
+> added, say which rule brought it in (mechanic, trigger closure or family bridge); for anything
+> dropped, say whether the spell is gone or just no longer matches.
+
+### Regenerate the cast → aura table
+
+> Regenerate `defaults/CastToAura.lua` with `research.py --emit-cast-aura`, replaying the newest
+> bundle under `docs/spell-research/` so it runs offline. Then tell me how the counts moved against
+> the file we ship: how many rewrites, how many choices, and whether any id changed sides. An id
+> moving from choice to rewrite is the interesting one — it means the data gained a trigger edge.
+
+### Cross-check the shipped ids
+
+> Run `research.py --check-shipped` against the newest frozen bundle and show me all three
+> sections. For each finding, tell me whether the data can settle it or whether it needs a live
+> client — and if a name disagrees with its comment, say which of the two is wrong rather than
+> assuming the build is right.
+
+### What to expect back, and what to push on
+
+* **A clean result is worth one question.** This check has reported clean while broken twice: once
+  because it split comments on commas before stripping parentheticals, once because it deduped by
+  id and hid a wrong name on a second list behind a right one on the first. If it says everything
+  passes, ask how many id slots the name check actually ran over — `--check-shipped` prints that
+  number, and a low one means most lines were skipped rather than verified.
+* **A rewrite needs a trigger edge, never a name.** `--emit-cast-aura` may only rewrite an id whose
+  aura it found through `EffectTriggerSpell`. Same-name candidates are offered and never resolved;
+  an early cut that ignored this produced 215 confident rewrites of spells that apply no aura at
+  all. If a proposed change rewrites something on the strength of a name, that is the bug.
+* **`--emit` and `--emit-cast-aura` both demand `--date`** and will not invent one from the clock.
+  The date is pasted into the generated file as provenance and has to name a run that exists.
+* Python 3.8+ and the standard library only. These are not the Lua suites, so the bounded runner is
+  not involved; `lua tests/run.lua` and `luacheck .` still gate any file the run changes.
+
 ## Add a slash verb
 
 1. Add a positional triple `{ "verb", L["Description"], function(rest) runVerb(rest) end }` to
