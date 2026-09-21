@@ -1039,7 +1039,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (63)
+### test_pages_general.lua (65)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1087,6 +1087,8 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: one unreadable record reads in the singular
 - general → spell categories: a profile that refuses the sweep is said out loud, not only logged
 - general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
+- general → spell categories: the add box still offers a spellbook spell that is on NO list of this addon
+- general → spell categories: a host kind with a base keeps its own entry tooltip AND its base's suggestions
 - general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides
 - general → spell categories: picking a suggestion adds it through the one writer, exactly once
 - general → spell categories: a name two ranks share lists both, labeled; Enter without a pick adds neither
@@ -1436,7 +1438,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 63 |
+| test_pages_general.lua | 65 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 45 |
 | test_pages_layout.lua | 27 |
@@ -1456,4 +1458,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1242** |
+| **Total** | **1244** |

@@ -167,7 +167,8 @@ is left. A category the player made carries **`(yours)`** after its name — a S
 aura-type marker is a padded prefix and a second prefix would move the column that padding bought,
 and because only a few rows answer yes while marking the rest "not yours" would be noise on every
 row. One definition (`NS.GeneralSpells.MarkedName`) serves this dropdown, the Filters → Categories
-grid and the overlap notes below, so no two of them can come to say it differently. A **Spells in this
+grid and the claiming names in an entry's tooltip, so no two of them can come to say it
+differently. A **Spells in this
 category** section heading (2026-09-20) separates the picker and its Restore from the list below it;
 Weapon enchants, which has no spell list, draws a **Weapon slots** heading over its three toggles
 instead (2026-09-21), so every block of the tab sits under a heading naming it. Every entry but
@@ -273,11 +274,12 @@ category by name, through `Cat.LabelOf` and the panel's own `(yours)` marker. Th
 The tooltip line needs a host kind table (`spellKind`), because `O.IdList` builds an entry's tooltip
 from the kind's `tooltip` and nothing else. It is `base = "spell"`, so the list draws exactly as
 before, and its `resolve` hands typed text straight back to `O.ResolveId("spell", …)` so the add box
-keeps the client's name lookup and the shared-name check. **One thing is genuinely lost**: a based
-kind cannot reach the library's client sources, so the add box's SUGGESTION rows are now the ids
-`candidates()` returns and no longer the spellbook as well. A spell in the spellbook and on no list
-of this addon still resolves and still adds — by name, by id or by link — but it is no longer
-suggested as you type.
+keeps the client's name lookup and the shared-name check. **The suggestions come with the base**
+(LibKa0s v1.49.1): the library reads its client-source table through `decorKind`, so a kind that
+declares `base = "spell"` is offered the spellbook exactly as the library's own spell kind is. A
+spell in the spellbook and on no list of this addon is suggested as you type, and resolves and adds
+by name, by id or by link. Under v1.49.0 that table was keyed by the kind table itself, a host
+table matched no row, and the tooltip cost this tab its autocomplete.
 
 **It does not always fit, and the suffix is what goes.** The label is `0.43` of the content width in
 the icon style at two columns (`(0.78 + 0.20 − 0.08 − 0.04) / 2`, `entryNameRel`) less the 16px icon,

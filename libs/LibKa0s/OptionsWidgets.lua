@@ -32,7 +32,7 @@ local Pool = LibStub and LibStub("LibKa0s-Pool-1.0", true)
 local NEEDS_POOL = 1
 if not Pool or (Pool.MINOR or 0) < NEEDS_POOL then return end
 
-local WIDGETS_MINOR = 25
+local WIDGETS_MINOR = 26
 -- Paired on the SHELL's minor as well as this file's own — see OptionsScroll.lua for why the
 -- file's own counter is not enough.
 if lib.__widgetsMinor and lib.__widgetsMinor >= WIDGETS_MINOR
@@ -463,10 +463,11 @@ local ID_ONLY = { noun = "entry", plural = "entries" }
 local NAME_COLOR = { [ID_KINDS.item] = itemQualityColor }
 
 -- A host kind whose ids are one library kind's says so with `base = "item"` (or "spell",
--- "currency"): it wears that kind's decorations -- the name color and the suggestion rows' rank
--- below, keyed by the library's kind table -- and takes these fields from it where it sets none of
--- its own. Never `byName` or the client's enumeration: what a host kind resolves, and the ids it
--- lists, stay its own. `resolve`, and any field the host sets (false included), win.
+-- "currency"): it wears that kind's decorations -- the name color, and the suggestion row's rank
+-- and client source below, both keyed by the library's kind table -- and takes these fields from it
+-- where it sets none of its own. Never `byName`: what a host kind RESOLVES stays its own, so a
+-- typed name still reaches the host's resolver and its candidates rather than the client's name
+-- lookup. `resolve`, and any field the host sets (false included), win.
 local BASE_FIELDS = { info = true, link = true, tooltip = true, loads = true, noun = true, plural = true }
 -- The view idKind hands out for each based host table, and the host table behind each view, so a
 -- host that builds its kind per render leaks nothing. basedViews is weak on its VALUES too: a view
@@ -672,7 +673,9 @@ end
 --- says the kind's ids are items the client loads, so IdInput pre-warms and looks up its candidates
 --- as it does the item kind's. `base = "item"` ("spell", "currency") says its ids are that kind's:
 --- it takes the base's info, link, tooltip, loads, noun and plural where it sets none, and wears
---- its name color and rank; a based kind's pick is asked of its own resolve. The order, for a
+--- its name color, its rank and the client ids it enumerates -- the spellbook or the bags, which
+--- the add box suggests and the shared-name check reads; a based kind's pick is asked of its own
+--- resolve, and its own `byName` is never the base's. The order, for a
 --- named kind:
 ---   1. a number (`21562`);
 ---   2. a link of the kind's own type (`|Hspell:21562:...`, or the bare `spell:21562`);
@@ -847,16 +850,29 @@ local function spellRank(id)
   return tonumber(text:match("%d+")) or 0, text
 end
 
--- The named kinds' client source and rank, keyed by the kind table as NAME_COLOR is, so a host's
--- own kind -- whose ids need not be the client's -- has neither.
+-- The named kinds' client source and rank, keyed by the kind table -- and read through decorKind
+-- below, so a BASED host kind reads its base's row. A host that says `base = "spell"` has said its
+-- ids ARE the client's spells, and it says that to get the base's decorations; withholding the
+-- client's own list from it would leave a host that wanted nothing but its own entry tooltip with
+-- an add box that suggests nothing as the player types. A host kind with NO base still matches
+-- nothing here, which is the protection this table has always wanted: its ids need not be the
+-- client's at all, and a list of currency ids must never be offered the spellbook. Declaring a
+-- base is how a host opts in; leaving it out is how it opts out.
 local SUGGEST_KIND = {
   [ID_KINDS.item]  = { sources = bagItemIds, rank = itemRank },
   [ID_KINDS.spell] = { sources = spellBookIds, rank = spellRank },
 }
 
+--- The suggestion row `k` wears: a named kind's own, a based host kind's base's, or nil for a host
+--- kind with no base. Every reader below goes through this one lookup, so the client source, the
+--- rank and the shared-name check can never disagree about which row a kind has.
+local function suggestRow(k)
+  return SUGGEST_KIND[decorKind(k)]
+end
+
 -- Declared above for the shared-name check: what resolves a name and what lists it read one source.
 kindSourceIds = function(k)
-  local row = SUGGEST_KIND[k]
+  local row = suggestRow(k)
   return row and row.sources() or {}
 end
 
@@ -884,7 +900,7 @@ local function suggestEntry(k, id)
   local ok, name, icon = pcall(k.info, id)
   if not ok or type(name) ~= "string" or name == "" then return nil end
   local e = { id = id, name = name, lower = name:lower(), icon = icon }
-  local row = SUGGEST_KIND[decorKind(k)]
+  local row = suggestRow(k)
   if row then e.rank, e.rankLabel = row.rank(id) end
   return e
 end

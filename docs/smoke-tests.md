@@ -1002,11 +1002,12 @@ near a target dummy. Steps 167–177 run in order: each uses the category the on
      heading between them and the **Category** dropdown, and **Make a new category** below them: the
      tab reads picker → rename and Delete → create form → **Spells in this category**. Each block is
      separated by the gap under it, not by a heading over the acts.
-170b. **The add box still finds a spell by name** (the cost of the tooltip above). In **Add a spell**
-     type the name of a spell that is in one of Aura Master's lists → it is suggested as you type,
-     and Enter adds it. Type the name of a spell you know but that is on NO list of this addon →
-     **nothing is suggested**, which is expected now, but pressing Enter still resolves it and adds
-     it, and so do its id and a shift-clicked link. A name no spell carries is still refused with
+170b. **The add box suggests from the spellbook as well as from our own lists** (LibKa0s v1.49.1;
+     the tooltip above no longer costs this). In **Add a spell** type the name of a spell that is in
+     one of Aura Master's lists → it is suggested as you type, and Enter adds it. Now type the name
+     of a spell you know but that is on NO list of this addon → **it is suggested too**, with its
+     rank where the client gives one, and clicking the row adds it. Its id and a shift-clicked link
+     still work. A name no spell carries is still refused with
      "No spell named '…' in your spellbook."
 171. **Rename it.** In **Rename this category**, type `Big cooldowns` and press **Enter** → the
      dropdown, the rename box, the Filters grid and `/am list` all read the new name, the box is no

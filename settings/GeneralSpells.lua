@@ -261,18 +261,19 @@ end
 ---
 --- AN ID THE CLIENT CANNOT NAME HAS NO NAME TO SORT ON, and the answer is chosen rather than
 --- accidental: it sorts AFTER every named id, and ties there break on the id ascending. Two reasons.
---- The library draws such an entry as "Unknown spell 12345" (`OptionsWidgets.lua:2499-2506`), so it
---- carries no name for a reader to look for and belongs at the end rather than wedged between two
---- real names; and the id tiebreak makes the whole comparison a total order over the set, so the
---- sort is deterministic whatever order `pairs` hands the ids in. A nil name never reaches the
---- comparison — it is resolved once, up front, into `key`.
+--- The library draws such an entry as "Unknown spell 12345" (`entryLabel`,
+--- `OptionsWidgets.lua:2626-2637`), so it carries no name for a reader to look for and belongs at
+--- the end rather than wedged between two real names; and the id tiebreak makes the whole
+--- comparison a total order over the set, so the sort is deterministic whatever order `pairs`
+--- hands the ids in. A nil name never reaches the comparison — it is resolved once, up front,
+--- into `key`.
 ---
 --- The list does NOT reorder itself a moment later. O.IdList's re-ask-and-redraw (five asks, 0.4 s
 --- a window) is the ITEM path: `loadEntry` returns at once unless the kind declares `loads = true`,
---- which only "item" does (`OptionsWidgets.lua:741` and `:2543-2548`). A spell's name is client data
---- with no load step, so an id that is unnamed at this draw is an id the client does not know at
---- all, and it stays unnamed and last until a re-render — no visible settling, and nothing here to
---- mistake for a bug.
+--- which only "item" does (`OptionsWidgets.lua:2674-2679`, and the candidate rule at `:744`). A
+--- spell's name is client data with no load step, so an id that is unnamed at this draw is an id
+--- the client does not know at all, and it stays unnamed and last until a re-render — no visible
+--- settling, and nothing here to mistake for a bug.
 local function sortedByName(set)
     local out, key = {}, {}
     for id in pairs(set or {}) do
@@ -518,8 +519,9 @@ end
 -- than a second substitution.
 --
 -- COLORED HERE MEANS COLORED EVERYWHERE THE PANEL LISTS A CATEGORY: this is the one definition
--- (settings/Filters.lua's Categories grid and the claimed-by note both read it), and a gold marker
--- in the dropdown beside a plain one in the grid would read as two different marks.
+-- (settings/Filters.lua's Categories grid, and the claiming names in an entry's tooltip, both
+-- read it), and a gold marker in the dropdown beside a plain one in the grid would read as two
+-- different marks.
 local USER_MARKER = L["{name} {mark}"]
 local YOURS_MARK  = L["(yours)"]
 
@@ -1094,7 +1096,8 @@ end
 -- compiler already resolves the overlap by drawing the aura once, under the first category set to
 -- Show (docs/ARCHITECTURE.md, Filter priority). Refusing the add would make a correct configuration
 -- unreachable. So the player is told WHICH other categories hold the id, twice over: once in a chat
--- line at the moment of the add, and permanently as a note under the entry in the list.
+-- line at the moment of the add, and permanently on the entry's own row -- a count in its label,
+-- the names in its tooltip.
 --
 -- ASKED OF `FC.ClaimingCategories`, WHICH IS THE COMPILER'S OWN ANSWER (published at checkpoint 7).
 -- A walk written here would be a second answer to the question "whose list is this id on", free to
@@ -1114,10 +1117,10 @@ end
 --- MARKED "(yours)" LIKE EVERY OTHER LIST ON THIS TAB (owner, 2026-09-21). The compiler answers with
 --- `Cat.LabelOf`'s name, which is the labeling rule and stays it -- but the marker is the PANEL's,
 --- added by `markedName` wherever the panel lists a category, and these two lines were the only
---- place it listed one without it. A claimed-by note reading "Also in: Immunities" could name a
---- category the player made and never say so, in a sentence whose whole job is to tell them where
---- else their spell already lives. Resolved by KEY out of `def`'s own aura type, which is the only
---- type that can claim (see above), so the lookup is total over the answer.
+--- place it listed one without it. A claimed-by tooltip line reading "Also in: Immunities" could
+--- name a category the player made and never say so, in a sentence whose whole job is to tell them
+--- where else their spell already lives. Resolved by KEY out of `def`'s own aura type, which is
+--- the only type that can claim (see above), so the lookup is total over the answer.
 --- @return table  labels, possibly empty
 local function otherClaimants(def, id)
     local out = {}
@@ -1138,7 +1141,7 @@ end
 --- The list entry's suffix for `id`, or nil: HOW MANY other categories claim it, in a few gray
 --- words the library draws INSIDE the entry's own label, after the id -- `(X) [icon] Renewing Mist
 --- (119611) (also in 1)` (owner, 2026-09-21; LibKa0s v1.49.0's `entry.suffix`, OptionsWidgets minor
---- 25, `libs/LibKa0s/OptionsWidgets.lua:2587-2621`). It replaces the `note` this used to be: a note
+--- 25, `libs/LibKa0s/OptionsWidgets.lua:2603-2637`). It replaces the `note` this used to be: a note
 --- is a second full-width Label that took the entry out of the two-column grid for the row it landed
 --- on, and the library's own guidance is a sentence in a `note`, a few words in a `suffix`, and the
 --- full story in the TOOLTIP -- which is where the NAMES now are (`overlapLine`).
@@ -1177,19 +1180,22 @@ end
 ---
 --- A host kind with `base = "spell"` is the only hook there is: `O.IdList` builds an entry's tooltip
 --- from the kind's `tooltip` and from nothing else (`entryTooltip`,
---- `libs/LibKa0s/OptionsWidgets.lua:2674-2686`), and a based kind takes the base's `info`, `link`,
+--- `libs/LibKa0s/OptionsWidgets.lua:2690-2702`), and a based kind takes the base's `info`, `link`,
 --- `noun`, `plural` and name color, so the list draws exactly as it did.
 ---
 --- `resolve` DELEGATES back to the library. A based kind does not inherit the client's name lookup
---- (`BASE_FIELDS`, `:470`), so without this line typing "Renewing Mist" into the add box would stop
+--- (`BASE_FIELDS`, `:471`), so without this line typing "Renewing Mist" into the add box would stop
 --- resolving; handing the text to `O.ResolveId("spell", ...)` is the library's own documented way
 --- back to the spellbook lookup and the shared-name check, rather than a second copy of either.
 ---
---- WHAT IS STILL LOST, said plainly: the add box's SUGGESTION rows for a based kind come from
---- `candidates()` alone -- the library keys its client sources off its own kind tables
---- (`SUGGEST_KIND`, `:852-855`), which a host table cannot join -- so a spell that is in the
---- spellbook and on no list of this addon no longer appears in the suggestions. It still resolves
---- and still adds, by name, by id or by link.
+--- AND THE SUGGESTIONS COME WITH THE BASE. The library keys its client sources off its own kind
+--- tables, but reads that table through `decorKind`, so a kind declaring `base = "spell"` wears the
+--- spell row -- the spellbook, and the rank a shared name is checked against (`suggestRow`,
+--- `libs/LibKa0s/OptionsWidgets.lua:866-871`). A spell that is in the spellbook and on no list of
+--- this addon is therefore still offered as you type, as well as still resolving by name, by id or
+--- by link. Under LibKa0s v1.49.0 that lookup was keyed by the kind TABLE ITSELF, a host table
+--- joined no row, and this tab bought its tooltip at the price of its autocomplete; v1.49.1 is the
+--- fix, and tests/test_pages_general.lua pins both halves together.
 local function spellKind(def)
     return {
         base = "spell",
@@ -1331,8 +1337,8 @@ local function renderSpells(ctx)
         -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
         -- long for a 60-id category -- Hard CC alone is most of a screen of scrolling before the
         -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
-        -- `libs/LibKa0s/OptionsWidgets.lua:2883-2890`): the count is floored and clamped into
-        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:1902`), so two is the whole of what it
+        -- `libs/LibKa0s/OptionsWidgets.lua:2899-2906`): the count is floored and clamped into
+        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:1918`), so two is the whole of what it
         -- offers rather than a taste. Each entry's relative width is divided by the count, so a
         -- pair still sums to the width one entry held alone. Row-major is the library's packing
         -- order, which is why the by-name sort above reads left-to-right then down, not down one

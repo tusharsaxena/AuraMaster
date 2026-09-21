@@ -49,7 +49,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.49.0 | Ten modules wired, one setup file each — table below |
+| LibKa0s v1.49.1 | Ten modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -598,14 +598,6 @@ return value.
   `Ancestral Protection Totem (207399) (also in 1)` is 47. So at the floor that row shows
   no `(also in 1)`. **Accepted**: this is the library's documented degradation and the tooltip still
   names every claiming category. A wider panel buys it back at about 8 characters per 100px.
-- **The Add-a-spell box no longer suggests spells straight from the spellbook.** Naming the categories
-  in an entry's tooltip needs a host kind table (`O.IdList` builds an entry tooltip from the kind and
-  nothing else), and a host kind cannot reach the library's client sources, so the suggestion rows
-  are the ids `candidates()` returns — every spell on any list this addon knows. A spell in the
-  spellbook and on none of them still resolves and still adds, by name, by id or by link, because
-  the kind's `resolve` hands the text back to `O.ResolveId("spell", …)`; it is only no longer
-  offered as you type. Revisit if LibKa0s ever lets a based host kind opt into its base's sources.
-  See `docs/settings-panel.md`.
 - **Categories are created only on General → Spell Categories.** Filters → Categories, where a player
   is most likely to be thinking about categories, shows them and links to their spells but offers no
   way to make one. Accepted by the owner on 2026-09-21.

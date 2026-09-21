@@ -1342,6 +1342,50 @@ test("general → spell categories: typing lists the candidates — the profile'
     assertEqual(S.ids(), "774", "and any category's starter")
 end)
 
+test("general → spell categories: the add box still offers a spellbook spell that is on NO list of this addon", function()
+    local NS, _, _, _, S, box = suggesting(function(_, m)
+        -- In the SPELLBOOK and nowhere else: no category's starters or edits, no container's
+        -- overrides, not a learned timed buff. Nothing candidates() can hand the dropdown.
+        spell(m, 5621, "Zephyr Ember")
+        m.setSpellBook({ 5621 })
+    end)
+    S.type(box, "zephyr emb")
+    -- red under: LibKa0s v1.49.0 (OptionsWidgets minor 25), where SUGGEST_KIND was keyed by the kind
+    -- TABLE IDENTITY, so this tab's own `base = "spell"` host kind -- the one that carries the
+    -- claimed-by tooltip -- matched no row and reached no client source. The dropdown then showed
+    -- candidates() alone, which does not know 5621, and this assert read "" instead of "5621".
+    -- v1.49.1 keys that table through decorKind, so a based kind reads its base's row.
+    assertEqual(S.ids(), "5621", "a spellbook spell on no list of ours is offered as you type")
+    local row = S.row(5621)
+    assertTrue(row ~= nil and row.labelText:find("Zephyr Ember", 1, true) ~= nil,
+        "named as the client names it")
+    row:__fire("OnClick")
+    assertEqual(NS.db.profile.categorySpells.defensives[5621], true, "and the pick adds it")
+end)
+
+test("general → spell categories: a host kind with a base keeps its own entry tooltip AND its base's suggestions", function()
+    local NS, m, P, _, S, box = suggesting(function(NS2, m2)
+        spell(m2, 5622, "Zephyr Bloom")
+        m2.setSpellBook({ 5622 })
+        local key = NS2.Categories.CreateUserCategory("Immunities", "HELPFUL")
+        NS2.SetByPath("categorySpells", { [key] = { [5622] = true } })
+    end)
+    -- The two halves of what v1.49.1 bought back, in one place: the client source AND the tooltip
+    -- the host kind exists for. Either one alone is a regression the other would hide.
+    S.type(box, "zephyr blo")
+    assertEqual(S.ids(), "5622", "the spellbook still reaches the dropdown")
+    S.row(5622):__fire("OnClick")
+    local ws = P.rerender("General")
+    local said = entryTooltip(m, entry(ws, 5622))
+    -- red under: dropping the host kind to win the suggestions back, which would take the names of
+    -- the claiming categories with it -- O.IdList builds an entry tooltip from the kind and nothing
+    -- else.
+    assertTrue(said:find("Also in: ", 1, true) ~= nil, "and the entry tooltip still names them: " .. said)
+    assertTrue(said:find("(yours)", 1, true) ~= nil, "a category the player made still says so there")
+    assertTrue(said:find(YOURS_COLOR .. "(yours)|r", 1, true) ~= nil, "in the same muted gold")
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
 test("general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides", function()
     local NS, _, _, _, _, box = suggesting(seedZephyrs)
     box:__fire("OnEnterPressed", "Zephyr Ward")
