@@ -435,6 +435,10 @@ TABLES = (
 
 DOWNLOAD_CHUNK = 1 << 20  # 1 MiB; SpellEffect is ~57 MB and must never be read into a string
 
+# The emitted Lua's line terminator. The repo is pinned `* text=auto eol=crlf`, and a generated
+# file lands in the working tree where tests/_kit's eol suite reads it.
+NEWLINE = "\r\n"
+
 
 def log(msg: str) -> None:
     """Progress goes to stderr so `--emit` can be piped straight into a file."""
@@ -1391,6 +1395,218 @@ def repo_root() -> Path:
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
+# ---------------------------------------------------------------------------
+# The cast -> aura table (issue #15)
+# ---------------------------------------------------------------------------
+#
+# A DIFFERENT QUESTION FROM THE REST OF THIS FILE, sharing its tables. Everything above derives
+# which spells belong in a CC bucket. This derives which spells a player can type into the editor
+# and get an id that never matches, plus what the aura actually is when the data can say.
+#
+# THE PROBLEM. Aura Master filters on the id the AURA carries. Many abilities are cast as one id
+# and land as another, and the editor resolves a typed NAME through the client, which answers the
+# id in the spellbook -- the CAST one. The entry then draws perfectly, with the right icon and the
+# right name, and matches nothing. Nothing in the client's Lua can tell the panel otherwise
+# (docs/scope.md), so the answer has to be carried.
+#
+# THE RULE FOR "CAN NEVER MATCH": a spell with no APPLY_AURA effect of its own. Effect 6 is
+# SPELL_EFFECT_APPLY_AURA, and a spell that has one puts an aura carrying its own id on something.
+# A spell with none does not, whatever else it does.
+APPLY_AURA_EFFECT = 6
+
+# How far to walk EffectTriggerSpell looking for something that applies an aura. Shallow on purpose:
+# these chains are a cast triggering its aura, not a graph to explore, and a long walk starts
+# collecting the unrelated. close_over_triggers above walks to a fixed point because it is growing a
+# POOL; this is answering "what does this one cast land", which is a different question.
+TRIGGER_DEPTH = 3
+
+
+def read_aura_appliers(path: Path) -> set[int]:
+    """Every spell with an APPLY_AURA effect of its own, i.e. every id that can BE an aura.
+
+    Its own streaming pass over SpellEffect rather than a third return from read_spell_effect,
+    because it is wanted by one caller for one mode and that function is already doing two jobs for
+    the main pipeline. The cost is one more read of the big table in a mode that is not the default.
+    """
+    out: set[int] = set()
+    for row in iter_csv(path):
+        if not base_difficulty(row):
+            continue
+        if as_int(row.get("Effect")) == APPLY_AURA_EFFECT:
+            spell = as_int(row.get("SpellID"))
+            if spell:
+                out.add(spell)
+    return out
+
+
+def triggered_auras(spell: int, triggers: dict[int, set[int]], appliers: set[int]) -> list[int]:
+    """Aura-applying spells reachable from `spell` along EffectTriggerSpell, breadth first.
+
+    Stops at the first depth that finds any: the nearest aura is the one the cast applies, and
+    anything past it is what THAT aura goes on to trigger.
+    """
+    seen = {spell}
+    frontier = [spell]
+    for _ in range(TRIGGER_DEPTH):
+        found, nxt = set(), []
+        for node in frontier:
+            for edge in triggers.get(node, ()):
+                if edge in seen:
+                    continue
+                seen.add(edge)
+                if edge in appliers:
+                    found.add(edge)
+                else:
+                    nxt.append(edge)
+        if found:
+            return sorted(found)
+        frontier = nxt
+        if not frontier:
+            break
+    return []
+
+
+def derive_cast_aura(cache: dict[str, Path]) -> dict:
+    """The cast -> aura table: every player-castable id that can never match, with what it means.
+
+    Only ids the panel can SAY SOMETHING USEFUL ABOUT are emitted -- a spell that applies no aura
+    and has no candidate aura either is left out (the owner's coverage decision, 2026-09-21). Such a
+    spell is overwhelmingly a passive talent or a proc nobody types into an aura filter, and
+    carrying all of them would multiply the shipped table roughly sevenfold to warn about ids that
+    are never entered.
+
+    Two ways to find the aura, in this order:
+
+      a. THE TRIGGER EDGE, `EffectTriggerSpell`. Real data, and the Freezing Trap shape: the cast's
+         effect triggers a second spell and it is THAT spell's aura which lands.
+      b. THE SAME NAME. Many links are server-side script with NO row behind them at all -- Renewing
+         Mist is the case that proved it, whose only SpellEffect row is a dummy with no trigger --
+         and for those the only thing the data still agrees on is the name. An aura-applying spell
+         called exactly what the cast is called is a candidate, never a conclusion.
+
+    A candidate set of exactly one is a REWRITE; anything else is a CHOICE the panel offers and
+    never resolves. The class-family fence (SpellClassOptions.SpellClassSet, the same fence the
+    bucket bridge rests on) is applied to the name candidates first, because a name is shared across
+    the whole game -- six unrelated spells called "Fear" -- and the family narrows it to the one
+    class's. It narrows; it does not always settle. Renewing Mist has seven same-named auras and
+    five survive the fence, so it stays a choice.
+    """
+    log("Building the player pool ...")
+    pool, _classes = build_pool(cache)
+    log("  %d player-castable spells" % len(pool))
+
+    log("Reading SpellEffect for APPLY_AURA ...")
+    appliers = read_aura_appliers(cache["SpellEffect"])
+    log("  %d spells apply an aura of their own id" % len(appliers))
+
+    log("Reading SpellEffect for trigger edges ...")
+    _mechanics, triggers = read_spell_effect(cache["SpellEffect"])
+
+    names = read_names(cache["SpellName"])
+    families = read_spell_families(cache["SpellClassOptions"])
+
+    by_name: dict[str, list[int]] = defaultdict(list)
+    for spell, name in names.items():
+        if name and spell in appliers:
+            by_name[name].append(spell)
+
+    entries: dict[int, dict] = {}
+    dead_no_candidate = 0
+    for spell in sorted(pool):
+        if spell in appliers:
+            continue                      # it applies its own aura; nothing to say
+        name = names.get(spell, "")
+        found = triggered_auras(spell, triggers, appliers)
+        source = "trigger"
+        if not found:
+            siblings = [s for s in by_name.get(name, ()) if s != spell]
+            family = families.get(spell)
+            fenced = [s for s in siblings if family and families.get(s) == family]
+            found = sorted(fenced or siblings)
+            source = "name"
+        if not found:
+            dead_no_candidate += 1
+            continue
+        # ONLY A TRIGGER EDGE MAY BECOME A REWRITE. A name match is a candidate and never a
+        # conclusion -- the docstring above says so and the first cut of this function did not
+        # honour it, which produced 215 confident rewrites of spells that apply no aura at all:
+        # Purge to 33625, Remove Curse to 147635, Pick Pocket to 319470. Each is a DIFFERENT
+        # spell that happens to reuse the name, and storing one would be the exact silent wrong
+        # id this whole table exists to prevent. A lone name candidate is still offered as a
+        # choice, because the WARNING that the typed id can never match is true either way.
+        unique = found[0] if (len(found) == 1 and source == "trigger") else None
+        entries[spell] = {"name": name, "auras": found, "source": source, "unique": unique}
+
+    unique = sum(1 for e in entries.values() if e["unique"])
+    by_name_only = sum(1 for e in entries.values() if e["source"] == "name")
+    log("Cast -> aura: %d entries (%d rewritten from a trigger edge, %d offered as a choice, "
+        "%d of those found by name alone); %d more apply no aura and have no candidate, and are "
+        "not emitted"
+        % (len(entries), unique, len(entries) - unique, by_name_only, dead_no_candidate))
+    return {"entries": entries, "pool": len(pool), "appliers": len(appliers),
+            "dead_no_candidate": dead_no_candidate}
+
+
+def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
+    """`defaults/CastToAura.lua`, whole. Written by this tool and never edited by hand."""
+    entries = result["entries"]
+    unique = {s: e["unique"] for s, e in entries.items() if e["unique"]}
+    choices = {s: e["auras"] for s, e in entries.items() if not e["unique"]}
+    out: list[str] = []
+    w = out.append
+    w("local _, NS = ...")
+    w("")
+    w("-- defaults/CastToAura.lua -- GENERATED. Do not edit by hand.")
+    w("--")
+    w("--   Build %s, derived %s by tools/spell-research/research.py --emit-cast-aura." % (build, date))
+    w("--   Re-run the tool to refresh it; the bundle it came from is under docs/spell-research/.")
+    w("--")
+    w("-- WHAT THIS IS. Aura Master filters on the id an AURA carries, and many abilities are CAST as")
+    w("-- one id and land as another. A player who types a spell name gets the id the client knows --")
+    w("-- the cast one -- and the entry then draws perfectly and matches nothing (issue #15). Nothing")
+    w("-- in the client's Lua answers the mapping (docs/scope.md), so it is carried here.")
+    w("--")
+    w("-- Only ids the panel can say something USEFUL about are here. A spell that applies no aura and")
+    w("-- has no candidate aura either is left out: %d such ids exist in the player-castable pool and" % result["dead_no_candidate"])
+    w("-- are overwhelmingly passives and procs nobody types into an aura filter.")
+    w("--")
+    w("-- REWRITES: the data resolves exactly one aura, so the panel stores that instead and says so.")
+    w("-- CHOICES:  more than one candidate survives; the panel lists them and never guesses.")
+    w("--")
+    w("-- Derived over %d player-castable spells. %d ids in the whole game apply an aura of their" % (result["pool"], result["appliers"]))
+    w("-- own -- that second number is the game, not this pool, and is here only to say what the")
+    w("-- membership test was run against.")
+    w("")
+    w("NS.CastToAura = NS.CastToAura or {}")
+    w("")
+    w("-- [cast id] = the one aura it applies.")
+    w("NS.CastToAura.REWRITE = {")
+    for spell in sorted(unique):
+        w("    [%d] = %d,%s" % (spell, unique[spell], _trail(entries[spell], unique[spell])))
+    w("}")
+    w("")
+    w("-- [cast id] = { every aura id that could be the one }, ascending.")
+    w("NS.CastToAura.CHOICES = {")
+    for spell in sorted(choices):
+        ids = ", ".join(str(i) for i in choices[spell])
+        w("    [%d] = { %s },%s" % (spell, ids, _trail(entries[spell], None)))
+    w("}")
+    # A trailing terminator and no more. The caller writes this to stdout with sys.stdout.write
+    # rather than print(), because print() would append a bare LF to a CRLF file and leave it
+    # mixed -- which tests/_kit's eol suite reads out of the working tree and fails on.
+    return NEWLINE.join(out) + NEWLINE
+
+
+def _trail(entry: dict, target: int | None) -> str:
+    """The trailing `-- Name` comment on an emitted row, naming how the answer was reached."""
+    name = entry.get("name") or "?"
+    how = "trigger" if entry.get("source") == "trigger" else "name"
+    if target is not None:
+        return "   -- %s (%s)" % (name, how)
+    n = len(entry.get("auras") or ())
+    return "   -- %s (%s, %d candidate%s)" % (name, how, n, "" if n == 1 else "s")
+
+
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="research.py",
@@ -1412,6 +1628,10 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
                         help="report added / removed / regrouped against the shipped lists (default)")
     parser.add_argument("--emit", action="store_true",
                         help="print a paste-ready Lua fragment on stdout")
+    parser.add_argument("--emit-cast-aura", action="store_true",
+                        help="print defaults/CastToAura.lua on stdout (issue #15). A different "
+                             "question from --emit over the same tables: which player-castable ids "
+                             "apply no aura of their own, and what aura they actually land")
     parser.add_argument("--bundle", type=Path, metavar="DIR",
                         help="freeze the run into DIR, e.g. docs/spell-research/2026-09-20")
     parser.add_argument("--date", metavar="YYYY-MM-DD",
@@ -1422,7 +1642,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    if not (args.diff or args.emit or args.bundle):
+    if not (args.diff or args.emit or args.emit_cast_aura or args.bundle):
         args.diff = True  # a bare run reports; it never emits something that looks authoritative
 
     date = args.date
@@ -1433,7 +1653,7 @@ def main(argv: list[str] | None = None) -> int:
         if not DATE_RE.match(candidate):
             raise SystemExit("--bundle's directory name is not a YYYY-MM-DD date; pass --date.")
         date = candidate
-    if args.emit and not date:
+    if (args.emit or args.emit_cast_aura) and not date:
         # NO `datetime.now()` FALLBACK, AND THIS IS THE REASON. The date reaches the shipped tree:
         # it is spec C6's provenance, printed in the comment above each emitted block and pasted
         # verbatim into defaults/Categories.lua, where it is read afterwards as "the day this list
@@ -1467,6 +1687,13 @@ def main(argv: list[str] | None = None) -> int:
         fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     cache = {table: fetch_table(table, build, args.cache_dir, args.refresh, args.replay)
              for table, _why in TABLES}
+
+    if args.emit_cast_aura:
+        # ITS OWN PIPELINE, AND IT RETURNS HERE. The CC derivation below answers a different
+        # question and its coverage gate is about CC sentinels, so running it would gate this
+        # emit on something that has nothing to do with it.
+        sys.stdout.write(format_cast_aura_lua(derive_cast_aura(cache), build, date))
+        return 0
 
     result = derive(cache)
     for bucket in BUCKET_ORDER:

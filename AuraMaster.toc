@@ -77,6 +77,8 @@ core\Database.lua
 # LOAD-BEARING: Categories before Profile — the container template's category states are built
 # from the category lists.
 defaults\Categories.lua
+# Conventional: a generated lookup, read at add time by settings/GeneralSpells.lua.
+defaults\CastToAura.lua
 defaults\Profile.lua
 
 # Modules
