@@ -1045,3 +1045,52 @@ near a target dummy. Steps 167–177 run in order: each uses the category the on
      profile → the dropdown does not list it, and the Filters grid has no row for it. Switch back →
      it is there, with its spells and its Show or Hide. `/reload` on each profile → no Lua error, and
      no `/am list` row for a category the loaded profile does not have.
+
+
+## W. The id has to be the aura's (issue #15, 2026-09-21)
+
+Run with `/console scriptErrors 1`. Steps 178–184 cover the add box; 185 is the temporary probe, and
+it is the one that needs you rather than the suite.
+
+**What this is about.** Aura Master filters on the id an *aura* carries. Many abilities are cast as
+one id and land as another — Renewing Mist is cast as `115151` and lands as `119611`. Typing a name
+gets you the id the client knows, which is the cast's, so the entry draws perfectly and matches
+nothing. Nothing in the client can answer the mapping, so the addon carries it in
+`defaults/CastToAura.lua`.
+
+178. **A spell the data resolves.** General → **Spell Categories**, pick any category, and add
+     **Corruption** by name or as `172`. → The entry appears as **146739**, not 172, and chat says
+     *"Corruption (172) is cast, but the aura it applies is … — added 146739 instead, which is what
+     the filter can match."* The swap is never silent.
+179. **A spell it cannot resolve.** Add **Renewing Mist**, or `115151`. → The entry is stored
+     **exactly as typed** — still 115151 — and chat lists the candidates: *"115151 never appears as
+     an aura, so this entry will match nothing. Auras with that name: 119611, 144080, 448430,
+     1238851, 1242480. Add the one you meant."* It does **not** pick one for you.
+180. **Then pick one.** Add `119611` → it goes in silently, as an ordinary id. Remove 115151.
+181. **It never refuses.** Add a made-up id, say `999999` → it is added, with nothing said. An id
+     the table has never heard of is not an id the addon may reject; a boss aura the generator has
+     never seen has to be enterable.
+182. **The note on an entry already stored.** With 115151 still in a list, reopen the panel → its
+     row carries a **gray second line** naming the candidate auras. A noted entry takes a full-width
+     row of its own, so it breaks the two-column grid for that row — that is the library's rule for
+     notes and is expected.
+183. **The hint.** Hover the **Add a spell** box → the tooltip says *"The id has to be the one the
+     AURA carries, which is not always the one you cast."* before the usual sentence about where a
+     name can come from.
+184. **The Overrides lists take the same path.** Filters → **Overrides** → add `115151` to the
+     whitelist → the same chat line. If that id also has a verdict note, the two are joined, with
+     the never-matches sentence first.
+
+185. **The probe (temporary).** Five ids in the shipped category lists apply no aura of their own,
+     and **none of them can be fixed from the data** — not one has an `EffectTriggerSpell` edge, so
+     all the generator can offer is same-name candidates, which are not evidence. Only the live
+     client can settle them. See the block below the suite for exactly what to run.
+
+     `/am probe` dumps every readable aura on you, your target, your focus and your pet to the
+     **debug log** (not chat — a chat frame wraps long lines and loses the start). Open it with
+     `/am debug` and copy the block out of its copy box.
+
+     Sanity-check it first: with any buff on you, `/am probe` → chat says how many lines it wrote,
+     and the debug log holds a `---- /am probe ----` block with one line per aura carrying its
+     `id=`, name, duration and source. In combat it refuses with a line telling you to leave combat,
+     because aura data is secret there.

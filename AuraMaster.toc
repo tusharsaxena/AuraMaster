@@ -82,9 +82,13 @@ defaults\CastToAura.lua
 defaults\Profile.lua
 
 # Modules
-# Conventional: TimedSpells and FilterCompiler resolve their peers at call time.
 # Conventional: a lookup over defaults/CastToAura.lua, read at add time by the two add boxes.
 modules\CastAura.lua
+# Conventional: TEMPORARY (issue #15, item 3) -- /am probe, a diagnostic nothing in the addon
+# calls. Delete it, this note and its verb together once the five shipped ids it exists to settle
+# are settled.
+modules\AuraProbe.lua
+# Conventional: TimedSpells and FilterCompiler resolve their peers at call time.
 modules\TimedSpells.lua
 modules\FilterCompiler.lua
 # LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.

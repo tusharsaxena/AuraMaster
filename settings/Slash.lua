@@ -33,6 +33,11 @@ local runResetPosition, runForgetTimed, runDebug, runPerf, runTest
 NS.COMMANDS = {
     {"help",          L["List available commands"],
         function() cli:PrintHelp() end},
+    -- TEMPORARY (issue #15, item 3). Dumps every readable aura to the DEBUG LOG so a human can
+    -- answer what the data cannot: which aura five shipped category ids actually apply. Delete
+    -- this row and modules/AuraProbe.lua together once they are settled.
+    {"probe",         L["Dump every aura on you and your target to the debug log (temporary, issue #15)"],
+        function() NS.AuraProbe.Dump() end},
     {"config",        L["Open the settings panel"],
         function() NS.OpenOptionsPanel() end},
     {"enable",        L["Turn Aura Master on (every enabled container shows again)"],

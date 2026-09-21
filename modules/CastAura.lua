@@ -91,7 +91,10 @@ function CA.ForAdd(typed)
     end
     if kind == "choose" then
         local parts = {}
-        for i = 1, #value do parts[i] = named(value[i]) end
+        local n = #value
+        for i = 1, n do
+            parts[i] = named(value[i])
+        end
         return typed, NS.L["%s never appears as an aura, so this entry will match nothing. Auras with that name: %s. Add the one you meant."]
             :format(named(typed), table.concat(parts, ", "))
     end
@@ -113,7 +116,10 @@ function CA.Note(id)
     end
     if kind == "choose" then
         local parts = {}
-        for i = 1, #value do parts[i] = tostring(value[i]) end
+        local n = #value
+        for i = 1, n do
+            parts[i] = tostring(value[i])
+        end
         return NS.L["Never matches — this spell applies no aura. Auras with this name: %s."]
             :format(table.concat(parts, ", "))
     end
