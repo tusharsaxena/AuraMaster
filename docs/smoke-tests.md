@@ -985,16 +985,29 @@ near a target dummy. Steps 167–177 run in order: each uses the category the on
      spell**, by name or id). On the buff container set every other category to **Hide** (Hide all on
      both sections, then set this one back to Show) → cast the buff → it is drawn, and your other
      buffs are not. Set the category to **Hide** and leave Uncategorized Hidden → the buff goes.
-170. **The overlap note.** Add a spell that is already in a shipped category of the same aura type
-     (Power Word: Shield, in *Defensive cooldowns*, works) → one chat line naming the other
-     category and saying an aura in two categories is drawn once, under the first of them a container
-     sets to Show. The entry in the list carries **Also in: Defensive cooldowns** under its name. Open
-     *Defensive cooldowns* in the dropdown → that same spell's entry there reads **Also in: Cooldowns
-     I watch (yours)** — the marker is on both surfaces. Nothing was refused: the spell is in both.
+170. **The overlap mark, on the row and in the tooltip.** Add a spell that is already in a shipped
+     category of the same aura type (Power Word: Shield, in *Defensive cooldowns*, works) → one chat
+     line naming the other category and saying an aura in two categories is drawn once, under the
+     first of them a container sets to Show. **The row form:** that entry reads
+     `(X) [icon] Power Word: Shield (17) (also in 1)` — the count in the same gray as the id, ON the
+     entry's own line, with the entry beside it still sharing the row (a claimed entry does not push
+     its neighbor down). **The tooltip:** hover the entry → the client's spell tooltip, with
+     **Also in: Defensive cooldowns** added under it. Open *Defensive cooldowns* in the dropdown →
+     that same spell reads `(also in 1)` there, and its tooltip says **Also in: Cooldowns I watch
+     (yours)** — the marker is on both surfaces. Nothing was refused: the spell is in both.
+     **Expected degradation:** on a very long name at a narrow panel the `(also in N)` is cut off the
+     end of the row (the library truncates the suffix first, then the id, then the name) — the
+     tooltip still names the categories. Widen the settings window and it comes back.
 170a. **The rename and the Delete sit directly under the picker** (owner, 2026-09-21), with no
      heading between them and the **Category** dropdown, and **Make a new category** below them: the
      tab reads picker → rename and Delete → create form → **Spells in this category**. Each block is
      separated by the gap under it, not by a heading over the acts.
+170b. **The add box still finds a spell by name** (the cost of the tooltip above). In **Add a spell**
+     type the name of a spell that is in one of Aura Master's lists → it is suggested as you type,
+     and Enter adds it. Type the name of a spell you know but that is on NO list of this addon →
+     **nothing is suggested**, which is expected now, but pressing Enter still resolves it and adds
+     it, and so do its id and a shift-clicked link. A name no spell carries is still refused with
+     "No spell named '…' in your spellbook."
 171. **Rename it.** In **Rename this category**, type `Big cooldowns` and press **Enter** → the
      dropdown, the rename box, the Filters grid and `/am list` all read the new name, the box is no
      longer holding what you typed but what is stored, and the answer line says it was renamed and

@@ -248,28 +248,51 @@ categories too.
 
 **The overlap guardrail informs, it never blocks** (issue #10). Adding a spell already held by another
 category of the same aura type prints one chat line naming the others and what the compiler does about
-it, and each such entry carries an `Also in: …` note. Both read
+it, and each such entry is marked on its own row. Both read
 `FC.ClaimingCategories` — the compiler's own answer, asked with an empty filter because this is a
 statement about the category set and not about any one container — so the guardrail and the Overrides
 tab's notes cannot drift into two answers to one question. Only the same aura type can claim: a buff
 list and a debuff list never meet in one container. Every name in both surfaces carries the `(yours)`
 marker where it applies.
 
-**The note is a second line under the entry, not part of its row, and that is the library's contract**
-(owner asked for it on the row, 2026-09-21). `O.IdList` composes an entry's label itself, from the
-kind's `info(id)` — name, then the id in gray (`libs/LibKa0s/OptionsWidgets.lua`, `entryLabel`) — and
-a host passes no label of its own; `note` is the one text hook, and the library draws it as a
-full-width `Label` in the same Flow row, which wraps to a line of its own and takes that entry out of
-the two-column grid for the row it lands on. Folding it into the label through a host kind table was
-rejected: `info` is also what the add box matches a typed name against and what the suggestion rows
-are built from, so a decorated name would break both. The arithmetic says it would not fit anyway —
-at two columns an entry's label is `(0.78 + 0.20 − 0.08 − 0.04) / 2 = 0.43` of the content width, so
-about 251px at the 584px content width the library sizes two columns against, less the 16px icon:
-roughly 45 characters of this font, against `Ancestral Protection Totem (207399)` at 35 before the
-note is added and word wrap turned off at two columns, which truncates the tail and the id with it.
-Only a count form (`(also in 1)`, 12 characters) comes close. Putting a one-row form on the table
-needs a LibKa0s change — an entry `suffix` the host composes, drawn inside the label — which is a
-library ask, not a host one.
+**The mark rides the row, and the names are in the tooltip** (owner, 2026-09-21; LibKa0s v1.49.0).
+A claimed entry reads
+
+```
+(X) [icon] Renewing Mist (119611) (also in 1)
+```
+
+— the count in the same gray as the id, drawn INSIDE the label through `O.IdList`'s entry `suffix`
+(OptionsWidgets minor 25). It is bytes on a string the row was already drawing, so it adds no widget
+and, unlike `note`, never costs the entry its place in the two-column grid. Hovering the entry gives
+the client's own spell tooltip with one line added: `Also in: Immunities (yours)`, every claiming
+category by name, through `Cat.LabelOf` and the panel's own `(yours)` marker. The count is
+`FC.ClaimingCategories`'s answer, the same one the chat line at the add reads; `(also in 1)` and
+`(also in %d)` are two whole locale strings with a branch, as `settings/Text.lua` writes a count.
+
+The tooltip line needs a host kind table (`spellKind`), because `O.IdList` builds an entry's tooltip
+from the kind's `tooltip` and nothing else. It is `base = "spell"`, so the list draws exactly as
+before, and its `resolve` hands typed text straight back to `O.ResolveId("spell", …)` so the add box
+keeps the client's name lookup and the shared-name check. **One thing is genuinely lost**: a based
+kind cannot reach the library's client sources, so the add box's SUGGESTION rows are now the ids
+`candidates()` returns and no longer the spellbook as well. A spell in the spellbook and on no list
+of this addon still resolves and still adds — by name, by id or by link — but it is no longer
+suggested as you type.
+
+**It does not always fit, and the suffix is what goes.** The label is `0.43` of the content width in
+the icon style at two columns (`(0.78 + 0.20 − 0.08 − 0.04) / 2`, `entryNameRel`) less the 16px icon,
+and the floor for THIS list is the icon style's **520px** content — not the 584px the default style
+needs, which an earlier version of this paragraph used and which overstated the budget by about 28px.
+The real number is `0.43 × 520 − 16 = 207.6px`. Turning that into characters needs a figure this repo
+does not measure: LibKa0s publishes a **rule of thumb** of ~4.5px a character for this face, which
+puts the budget at about **46 characters** for the name, the space, the gray `(id)` and the suffix
+together. A long row such as
+`Ancestral Protection Totem (207399) (also in 1)` is 47. At the floor it overruns by about a
+character, word wrap is off at two columns, and the library's truncation order is suffix first, then
+the id, then the tail of the name — so the `(also in 1)` is what disappears on that row at the
+narrowest width. That is the documented degradation and it is accepted: the tooltip still carries
+every claiming category by name, which is the information itself. Wider than the floor, roughly 8
+more characters per 100px of content, and the suffix is back.
 
 Starters and added spells are drawn as ONE list **ordered by name**, case-insensitively (owner,
 2026-09-20; before that it was id order, which read Frost Nova, Entangling Roots, Hamstring). The

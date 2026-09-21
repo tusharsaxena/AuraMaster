@@ -18,8 +18,9 @@ local _, NS = ...
 --                       ---- Spells in this category ----------------------------------------
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
---                       (X) <icon> A spell you added (424242)
---                           Also in: Immunities (yours)          <- another category claims it too
+--                       (X) <icon> A spell you added (424242) (also in 1)
+--                                                                <- another category claims it too;
+--                                                                   hovering the entry names it
 --                    -- OR, when the category is Weapon enchants --
 --                       ---- Weapon slots ----------------------------------------------------
 --                       [x] Main hand   [x] Off hand   [x] Ranged
@@ -55,9 +56,10 @@ local _, NS = ...
 -- fixed at creation); a SHIPPED category draws neither, and no sentence in their place either
 -- (owner, 2026-09-21). That is a DRAWING rule only -- `Cat.RenameUserCategory` and
 -- `Cat.DeleteUserCategory` are what enforce it, and the aura type has no setter at all. Every
--- entry in the list is marked with the other categories that also claim it, and adding a claimed
+-- entry in the list is marked with how many other categories also claim it, and adding a claimed
 -- id says so in chat: the guardrail informs and never blocks, because an aura legitimately belongs
--- to two sets.
+-- to two sets. On the row that mark is a gray `(also in N)` after the id -- LibKa0s v1.49.0's entry
+-- `suffix`, which costs the row nothing -- and the NAMES are in the entry's tooltip.
 --
 -- EVERY ACT OF THAT BLOCK ANSWERS IN THE PANEL as well as in chat -- one line under the controls,
 -- `notice` below -- and a category the player made is marked "(yours)" wherever it is listed, here
@@ -1133,15 +1135,73 @@ local function otherClaimants(def, id)
     return out
 end
 
---- The list entry's note for `id`, or nil: which other categories claim it. The library draws a
---- noted entry on a full-width row of its own, so an unclaimed id costs nothing.
-local function overlapNote(def, id)
+--- The list entry's suffix for `id`, or nil: HOW MANY other categories claim it, in a few gray
+--- words the library draws INSIDE the entry's own label, after the id -- `(X) [icon] Renewing Mist
+--- (119611) (also in 1)` (owner, 2026-09-21; LibKa0s v1.49.0's `entry.suffix`, OptionsWidgets minor
+--- 25, `libs/LibKa0s/OptionsWidgets.lua:2587-2621`). It replaces the `note` this used to be: a note
+--- is a second full-width Label that took the entry out of the two-column grid for the row it landed
+--- on, and the library's own guidance is a sentence in a `note`, a few words in a `suffix`, and the
+--- full story in the TOOLTIP -- which is where the NAMES now are (`overlapLine`).
+---
+--- The count is `#otherClaimants`, so it is still `FC.ClaimingCategories`'s answer and not a second
+--- walk of the category set.
+---
+--- TWO WHOLE STRINGS AND A BRANCH, which is this repo's own count idiom (settings/Text.lua's
+--- `centerNote`): the singular is its own locale value rather than a `%d` standing in for "1", so a
+--- translation is free to give the two forms different shapes.
+local function overlapSuffix(def, id)
+    local n = #otherClaimants(def, id)
+    if n == 0 then return nil end
+    if n == 1 then return L["(also in 1)"] end
+    return L["(also in %d)"]:format(n)
+end
+
+--- The claim line in `id`'s entry tooltip, or nil: which other categories claim it, BY NAME. The
+--- suffix on the row says only that there are some; the tooltip is where the library says the full
+--- story belongs, and it is the one place on this row with the width for names.
+---
+--- The names are `markedName`'s, so a category the player made still reads "(yours)" here exactly as
+--- it does in every other list on this tab -- `Cat.LabelOf` stays THE labeling rule and this is not a
+--- second copy of it (see `otherClaimants`).
+local function overlapLine(def, id)
     local others = otherClaimants(def, id)
     if not others[1] then return nil end
     -- The join is a plain ", " for the same reason settings/Filters.lua's `categoryLabelList` gives:
     -- every label in it is already localized, only enUS ships, and if a second locale ever does it
     -- is the SEPARATOR that needs routing, never the labels.
     return L["Also in: %s"]:format(table.concat(others, ", "))
+end
+
+--- The IdList kind for this tab's spell list: the library's `"spell"` ids, with ONE thing added --
+--- the claim line under the client's own spell tooltip on an entry (`overlapLine`).
+---
+--- A host kind with `base = "spell"` is the only hook there is: `O.IdList` builds an entry's tooltip
+--- from the kind's `tooltip` and from nothing else (`entryTooltip`,
+--- `libs/LibKa0s/OptionsWidgets.lua:2674-2686`), and a based kind takes the base's `info`, `link`,
+--- `noun`, `plural` and name color, so the list draws exactly as it did.
+---
+--- `resolve` DELEGATES back to the library. A based kind does not inherit the client's name lookup
+--- (`BASE_FIELDS`, `:470`), so without this line typing "Renewing Mist" into the add box would stop
+--- resolving; handing the text to `O.ResolveId("spell", ...)` is the library's own documented way
+--- back to the spellbook lookup and the shared-name check, rather than a second copy of either.
+---
+--- WHAT IS STILL LOST, said plainly: the add box's SUGGESTION rows for a based kind come from
+--- `candidates()` alone -- the library keys its client sources off its own kind tables
+--- (`SUGGEST_KIND`, `:852-855`), which a host table cannot join -- so a spell that is in the
+--- spellbook and on no list of this addon no longer appears in the suggestions. It still resolves
+--- and still adds, by name, by id or by link.
+local function spellKind(def)
+    return {
+        base = "spell",
+        resolve = function(text, cands) return H.ResolveId("spell", text, cands) end,
+        tooltip = function(tip, id)
+            if type(tip.SetSpellByID) == "function" then tip:SetSpellByID(id) end
+            local line = overlapLine(def, id)
+            if line and type(tip.AddLine) == "function" then
+                tip:AddLine(line, nil, nil, nil, true)
+            end
+        end,
+    }
 end
 
 --- Say, once, that the spell just added is claimed elsewhere too. At the ADD rather than only in the
@@ -1266,12 +1326,12 @@ local function renderSpells(ctx)
     if gridScroll then H.AddSpacer(gridScroll, SECTION_GAP) end
     H.Section(ctx, L["Spells in this category"])
     H.IdList(ctx, {
-        kind       = "spell",
+        kind       = spellKind(def),
         removeStyle = "icon",
         -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
         -- long for a 60-id category -- Hard CC alone is most of a screen of scrolling before the
         -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
-        -- `libs/LibKa0s/OptionsWidgets.lua:2843-2850`): the count is floored and clamped into
+        -- `libs/LibKa0s/OptionsWidgets.lua:2883-2890`): the count is floored and clamped into
         -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:1902`), so two is the whole of what it
         -- offers rather than a taste. Each entry's relative width is divided by the count, so a
         -- pair still sums to the width one entry held alone. Row-major is the library's packing
@@ -1280,10 +1340,25 @@ local function renderSpells(ctx)
         --
         -- THE TRADE WE TOOK. At more than one column the library turns word wrap OFF on an entry's
         -- label, because a name that wrapped to two lines would push the column beside it down and
-        -- break the grid (`entryNoWrap`, `:2762-2770`). The client then truncates the TAIL, and the
-        -- gray `(id)` sits at the tail -- so a long spell name in a narrow panel shows part of its
-        -- name and no id. Hovering the row still names the spell. docs/settings-panel.md says this
+        -- break the grid (`entryNoWrap`, `:2800-2808`). The client then truncates the TAIL, and the
+        -- gray `(id)` and the `(also in N)` suffix sit at the tail -- so a long spell name in a
+        -- narrow panel loses its suffix first, then its id, then the end of its own name. Hovering
+        -- the row still names the spell AND names the categories. docs/settings-panel.md says this
         -- where it describes the Spell Categories tab.
+        --
+        -- AND IT DOES NOT ALWAYS FIT, at the narrowest width this list is drawn at. The label is
+        -- `0.43` of the content width in the icon style at two columns and an entry spends 16px of
+        -- it on its icon (`entryNameRel` and `ID_ICON_SIZE`, `libs/LibKa0s/OptionsWidgets.lua`), and
+        -- the floor for THIS list is the icon style's 520px content, not the default style's 584px
+        -- (the table in `docs/api/Options/version-23.24.3.7.3-docs.md` of the LibKa0s repo). So the
+        -- real budget is `0.43 * 520 - 16 = 207.6px` -- an earlier note here computed 235px against
+        -- the wrong floor and overstated it by 28px. At the LIBRARY's rule-of-thumb 4.5px a
+        -- character (its figure, stated as a rule of thumb; nothing in this repo measures a font)
+        -- that is about 46 characters for the name, the id and the suffix together, while a long
+        -- row such as `Ancestral Protection Totem (207399) (also in 1)` is 47 with the spaces. It
+        -- overruns the floor by about a character, and what goes is the SUFFIX -- the library's
+        -- documented truncation order, and acceptable, because the tooltip still carries
+        -- every name. A panel wider than the floor buys it back at about 8 characters per 100px.
         --
         -- Only the spell-category list asks for columns; the Filters page Overrides lists stay one
         -- per row.
@@ -1292,13 +1367,13 @@ local function renderSpells(ctx)
         tooltip    = ID_TOOLTIP,
         strings    = ID_STRINGS,
         candidates = candidates,
-        -- The entries, each marked with the other categories that also claim it (checkpoint 7's
-        -- guardrail). The note is computed per draw rather than stored: it is a statement about the
-        -- other lists, and those change under this one -- from this very tab, and from another
-        -- category's Restore.
+        -- The entries, each marked with HOW MANY other categories also claim it (checkpoint 7's
+        -- guardrail); the names are in the entry's tooltip, through `spellKind`. The suffix is
+        -- computed per draw rather than stored: it is a statement about the other lists, and those
+        -- change under this one -- from this very tab, and from another category's Restore.
         entries    = function()
             local out = entriesFor(def)
-            for _, e in ipairs(out) do e.note = overlapNote(def, e.id) end
+            for _, e in ipairs(out) do e.suffix = overlapSuffix(def, e.id) end
             return out
         end,
         -- Adding a starter back includes it again (drops its `false`); anything else is an addition.

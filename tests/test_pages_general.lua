@@ -355,6 +355,11 @@ end
 ---
 --- A named entry reads "<name> (<id>)", an unnamed one "Unknown spell <id>" (the library's
 --- entryLabel); the X is the Icon immediately before the label (`removeStyle = "icon"`, B2).
+---
+--- NEITHER MATCH IS ANCHORED AT THE END any more: since LibKa0s v1.49.0 an entry may carry a
+--- `suffix` drawn inside the same label after the id ("(also in 1)", settings/GeneralSpells.lua's
+--- overlap guardrail), so the id is no longer the last thing in the string. The first
+--- "(<digits>)|r" in the label is the id; the count in a suffix never wears parentheses of its own.
 local function drawnEntries(ws)
     local out = {}
     for r, w in ipairs(ws) do
@@ -365,7 +370,7 @@ local function drawnEntries(ws)
             local lbl = kids[i]
             if type(lbl) == "table" and lbl.type == "InteractiveLabel" then
                 local t = lbl.text or ""
-                local id = t:match("%((%d+)%)|r$") or t:match("^Unknown spell (%d+)$")
+                local id = t:match("%((%d+)%)|r") or t:match("^Unknown spell (%d+)")
                 if id then
                     local prev = kids[i - 1]
                     col = col + 1
@@ -387,6 +392,19 @@ local function entry(ws, id)
         if e.id == id then return e.label, e.x end
     end
     return nil
+end
+
+--- The lines an IdList entry's tooltip draws when the entry is hovered, joined. The claim line
+--- ("Also in: ...") is added there by settings/GeneralSpells.lua's own kind table, under the
+--- client's spell tooltip, which is where the NAMES live now that the row itself carries only a
+--- count. Same idiom as the Reset-all tooltip case above: capture the mocked GameTooltip's AddLine.
+local function entryTooltip(m, lbl)
+    local lines = {}
+    rawset(m.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    lbl:__fire("OnEnter")
+    return table.concat(lines, "\n")
 end
 
 --- Every id the IdList drew, in the order it drew them.
@@ -1059,7 +1077,7 @@ end)
 -- ── the overlap guardrail (issue #10 checkpoint 7) ─────────────────────────────────────────────
 
 test("general → spell categories: an id another category already claims is marked in the list and reported at the add", function()
-    local NS, _, P = spells()
+    local NS, m, P = spells()
     local claimed = starterIds(NS, "defensives")[1]
     local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
     NS.GeneralSpells.Select(key)
@@ -1073,18 +1091,33 @@ test("general → spell categories: an id another category already claims is mar
     assertTrue(said:find("also in", 1, true) ~= nil, "the add says so: " .. said)
     assertTrue(said:find(NS.L["Defensive cooldowns"], 1, true) ~= nil, "and names the category: " .. said)
 
-    -- And the entry carries the same answer permanently, under its name in the list.
+    -- And the entry carries the same answer permanently: a count ON its own row, and the names in
+    -- its tooltip (owner, 2026-09-21; LibKa0s v1.49.0's entry `suffix`).
+    -- red under: the answer back on a second full-width line under the entry, which is what the
+    -- `note` it replaced drew -- and which cost that entry its place in the two-column grid.
     local ws = P.rerender("General")
-    assertTrue(P.hasText(ws, "Also in: " .. NS.L["Defensive cooldowns"]), "the entry is marked")
+    local lbl = entry(ws, claimed)
+    assertTrue(lbl ~= nil and lbl.text:find("(also in 1)", 1, true) ~= nil,
+        "the row says how many: " .. tostring(lbl and lbl.text))
+    assertFalse(P.hasText(ws, "Also in: " .. NS.L["Defensive cooldowns"]),
+        "and says it inside the label, not on a line of its own")
+    assertTrue(entryTooltip(m, lbl):find("Also in: " .. NS.L["Defensive cooldowns"], 1, true) ~= nil,
+        "the tooltip names the category")
 
     -- The control: an id nothing else claims is neither reported nor marked.
     local quiet = P.chat()
     P.find(ws, "EditBox", NS.L["Add a spell"]):__fire("OnEnterPressed", "424242")
     assertEqual(#quiet, 0, "an unclaimed id says nothing")
     local ws2 = P.rerender("General")
-    assertTrue(P.hasText(ws2, "Also in: " .. NS.L["Defensive cooldowns"]), "the claimed entry is still marked")
-    assertFalse(P.hasText(ws2, "Also in: Immunities"),
-        "and a category never reports itself as a claimant of its own entry")
+    local still = entry(ws2, claimed)
+    assertTrue(still ~= nil and still.text:find("(also in 1)", 1, true) ~= nil,
+        "the claimed entry is still marked")
+    local unclaimed = entry(ws2, 424242)
+    assertTrue(unclaimed ~= nil, "the added id is drawn")
+    assertTrue(unclaimed.text:find("also in", 1, true) == nil, "with no count on it")
+    local said2 = entryTooltip(m, unclaimed)
+    assertTrue(said2:find("Also in:", 1, true) == nil,
+        "and a category never reports itself as a claimant of its own entry: " .. said2)
 end)
 
 -- ── review round five: the headings, the answer line's lifetime and the counts (owner, 2026-09-21) ─
@@ -1154,18 +1187,19 @@ test("general → spell categories: Weapon enchants has a lead-in, and its slots
     end
 end)
 
-test("general → spell categories: a claimed-by note says when the other category is one the player made", function()
-    local NS, _, P = spells()
+test("general → spell categories: a claimed-by tooltip says when the other category is one the player made", function()
+    local NS, m, P = spells()
     local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
     local mine = ownedName(NS, key)   -- the name as the panel writes it in a list, marker and all
     NS.SetByPath("categorySpells", { [key] = { [424242] = true, [424243] = true }, defensives = { [424242] = true } })
     NS.GeneralSpells.Select("defensives")
 
-    -- red under: the note built from the compiler's bare label, which is `Cat.LabelOf` and carries
-    -- no ownership marker -- so a note whose whole job is to say where else a spell already lives
-    -- could name a category the player made without saying it was theirs.
+    -- red under: the line built from the compiler's bare label, which is `Cat.LabelOf` and carries
+    -- no ownership marker -- so a sentence whose whole job is to say where else a spell already
+    -- lives could name a category the player made without saying it was theirs.
     local ws = P.rerender("General")
-    assertTrue(P.hasText(ws, "Also in: " .. mine), "the entry's note marks it")
+    assertTrue(entryTooltip(m, entry(ws, 424242)):find("Also in: " .. mine, 1, true) ~= nil,
+        "the entry's tooltip marks it")
     assertTrue(mine:find("(yours)", 1, true) ~= nil, "and the marker is what a user category wears")
 
     local chat = P.chat()
@@ -1175,7 +1209,30 @@ test("general → spell categories: a claimed-by note says when the other catego
 
     -- The control: one of Aura Master's own is named without a marker, here as everywhere else.
     NS.GeneralSpells.Select(key)
-    assertTrue(P.hasText(P.rerender("General"), "Also in: " .. NS.L["Defensive cooldowns"]))
+    assertTrue(entryTooltip(m, entry(P.rerender("General"), 424242))
+        :find("Also in: " .. NS.L["Defensive cooldowns"], 1, true) ~= nil)
+end)
+
+test("general → spell categories: two other claimants read '(also in 2)', and the tooltip names both", function()
+    local NS, m, P = spells()
+    -- red under: one locale string with a `%d` in it doing the singular as well, which reads
+    -- "(also in 1)" only by accident of the number -- settings/Text.lua's centerNote is the idiom
+    -- this follows, two whole strings and a branch. The plural arm is the one a single claimant
+    -- never exercises.
+    local both = { NS.L["Defensive cooldowns"], NS.L["Healing"] }
+    local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
+    NS.SetByPath("categorySpells", {
+        [key] = { [424242] = true }, defensives = { [424242] = true }, healing = { [424242] = true },
+    })
+    NS.GeneralSpells.Select(key)
+    local ws = P.rerender("General")
+    local lbl = entry(ws, 424242)
+    assertTrue(lbl ~= nil and lbl.text:find("(also in 2)", 1, true) ~= nil,
+        "the row counts both: " .. tostring(lbl and lbl.text))
+    local said = entryTooltip(m, lbl)
+    for _, name in ipairs(both) do
+        assertTrue(said:find(name, 1, true) ~= nil, "the tooltip names " .. name .. ": " .. said)
+    end
 end)
 
 test("general → spell categories: one unreadable record reads in the singular", function()

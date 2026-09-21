@@ -32,7 +32,7 @@ local Pool = LibStub and LibStub("LibKa0s-Pool-1.0", true)
 local NEEDS_POOL = 1
 if not Pool or (Pool.MINOR or 0) < NEEDS_POOL then return end
 
-local WIDGETS_MINOR = 24
+local WIDGETS_MINOR = 25
 -- Paired on the SHELL's minor as well as this file's own — see OptionsScroll.lua for why the
 -- file's own counter is not enough.
 if lib.__widgetsMinor and lib.__widgetsMinor >= WIDGETS_MINOR
@@ -2571,15 +2571,53 @@ function lib.__AttachWidgets(O, d)
     return underDisable(ctx, spec.disabled, drawIdInput, ctx, parent, spec, nil)
   end
 
+  --- An entry's `suffix` (minor 25), or nil: a host-composed aside short enough to sit INSIDE the
+  --- label, after the gray id and in the same gray. Anything that is not a non-empty string is
+  --- nil, exactly as `note` reads, so an entry that never heard of the field draws what minor 24
+  --- drew, byte for byte.
+  ---
+  --- The host composes the words and the widget only concatenates them. That is also the whole
+  --- escaping story, and it is the one `note` already tells: a host string is never a pattern and
+  --- never a replacement here -- `fillText` is the only gsub on this path and it runs over the
+  --- library's own templates, with the host's values arriving as the RETURN of its replacement
+  --- function, where `%` is an ordinary byte. So a `%` or a `%%` in a suffix is drawn as typed.
+  --- A `|c` is drawn as typed for the opposite reason: nothing strips it, so the client reads it
+  --- as the color escape it is. A host that wants a literal pipe writes `||`, as it must anywhere
+  --- else it hands the client text.
+  local function entrySuffix(entry)
+    local s = entry and entry.suffix
+    if type(s) ~= "string" or s == "" then return nil end
+    return s
+  end
+
   --- The text an entry's label reads: its name (an item's in its quality color) and its id in
-  --- gray, or "Unknown <kind> <id>".
-  local function entryLabel(spec, k, id, name)
+  --- gray, or "Unknown <kind> <id>" -- then, from minor 25, the entry's `suffix` after it in the
+  --- same gray.
+  ---
+  --- INSIDE the label rather than under it, which is the whole difference between this and `note`.
+  --- A note is a second full-width Label and costs a noted entry its place in a shared row
+  --- (entryNoted); a suffix is bytes on the end of a string the row was already drawing, so it
+  --- costs a row nothing and two suffixed entries still pair up. Reach for `note` for a sentence
+  --- and `suffix` for a few words -- "(also in 1)", a count, a tag.
+  ---
+  --- It is drawn in ID_GRAY so the NAME stays the bright thing on the row, and it lands after the
+  --- id rather than before it so the two gray runs read as one tail. The cost is the truncation
+  --- order at more than one column: word wrap is off there (entryNoWrap) and the client cuts the
+  --- tail, so a name already too long for its column loses its suffix first and its id second. That
+  --- is the right order -- the suffix is the least of the three -- but it is why a suffix is a few
+  --- words and why the API document carries the character budget rather than leaving a host to
+  --- find the ceiling by overrunning it.
+  local function entryLabel(spec, k, id, name, suffix)
+    local text
     if type(name) == "string" and name ~= "" then
       local color = nameColor(k, id)
       if color then name = color .. name .. "|r" end
-      return name .. " " .. ID_GRAY .. "(" .. tostring(id) .. ")|r"
+      text = name .. " " .. ID_GRAY .. "(" .. tostring(id) .. ")|r"
+    else
+      text = idText(spec, "unknown", { noun = (kindWords(k)), id = id })
     end
-    return idText(spec, "unknown", { noun = (kindWords(k)), id = id })
+    if suffix then text = text .. " " .. ID_GRAY .. suffix .. "|r" end
+    return text
   end
 
   local askItem
@@ -2806,7 +2844,7 @@ function lib.__AttachWidgets(O, d)
       entryNoWrap(lbl)
       entryHighlight(lbl)
     end
-    lbl:SetText(entryLabel(spec, k, entry.id, name))
+    lbl:SetText(entryLabel(spec, k, entry.id, name, entrySuffix(entry)))
     if icon then
       lbl:SetImage(icon)
       lbl:SetImageSize(ID_ICON_SIZE, ID_ICON_SIZE)
@@ -2816,7 +2854,9 @@ function lib.__AttachWidgets(O, d)
     line:AddChild(lbl)
     -- The note: a second line under the name, in the gray the id already uses, for a host that has
     -- something to say about this entry (why it is or is not drawn, say). Its own line rather than
-    -- a suffix, because a note is a sentence and a name is a name.
+    -- a suffix, because a note is a sentence and a name is a name. `entry.suffix` (minor 25) is
+    -- the lighter option beside it and is already inside the label above; the two are independent,
+    -- and an entry carrying both keeps the suffix inline and still takes its own full-width row.
     if type(entry.note) == "string" and entry.note ~= "" then
       local n = O.AceGUI:Create("Label")
       n:SetText(ID_GRAY .. entry.note .. "|r")
@@ -2967,8 +3007,8 @@ function lib.__AttachWidgets(O, d)
   --- still unnamed is asked for again, up to five asks in all.
   ---
   --- spec = everything O.IdInput takes, plus:
-  ---   entries     = function() -> ordered { { id =, toggle = bool?, on = bool?, note = string? },
-  ---                 ... };
+  ---   entries     = function() -> ordered { { id =, toggle = bool?, on = bool?, note = string?,
+  ---                 suffix = string? }, ... };
   ---   onRemove    = function(id), from an entry's Remove;
   ---   onToggle    = function(id, on), from a toggle entry's checkbox;
   ---   heading     = optional section heading, drawn with O.Section;
@@ -2999,7 +3039,24 @@ function lib.__AttachWidgets(O, d)
   ---                 one. The entry's tooltip still names it; the id is only on the row. A host
   ---                 whose ids must always be readable asks for one column, which still wraps
   ---                 exactly as it did at minor 23;
+  ---                 A `suffix` is the opposite trade and is the FIRST thing truncation takes:
+  ---                 it is appended to that same FontString after the id, so an entry that already
+  ---                 overruns its column loses the suffix, then the id, then its own tail. That is
+  ---                 the right order and it is why a suffix is a few words -- the character budget
+  ---                 is in the API document;
   ---   strings     = as O.IdInput's, plus remove and unknown.
+  ---
+  --- An entry may carry, beside its id:
+  ---   note   = string, minor 17: a SECOND full-width Label under the name, in the id's gray, for a
+  ---            sentence about the entry. A noted entry takes a full-width row of its own whatever
+  ---            the column count;
+  ---   suffix = string, minor 25: a few words drawn INSIDE the label, after the gray id and in the
+  ---            same gray -- `Renewing Mist (119611) (also in 1)`. It adds no line and no row, so a
+  ---            suffixed entry still pairs up under `columns`; it is truncated first at more than
+  ---            one column; and it is concatenated, never formatted, so a `%` or a `|c` in it
+  ---            reaches the client exactly as the host wrote it. The full story belongs in the
+  ---            entry TOOLTIP, which the host already owns. Both may be set on one entry: the note
+  ---            still wins its own full-width row and the suffix still rides the name.
   ---
   --- The host owns storage: the widget calls back and never writes a path. After an add or a remove
   --- it redraws through `ctx.rebuild` when the host set one, else O.RefreshAllPanels(). A toggle

@@ -271,6 +271,8 @@ L["Forget the saved category Aura Master cannot read? It is in no list and canno
 L["Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."] = "Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."
 L["Forgot 1 unreadable saved category."] = "Forgot 1 unreadable saved category."
 L["Forgot %d unreadable saved categories."] = "Forgot %d unreadable saved categories."
+L["(also in 1)"] = "(also in 1)"
+L["(also in %d)"] = "(also in %d)"
 L["Also in: %s"] = "Also in: %s"
 L["%s is also in: %s. An aura in two categories is drawn once, under the first of them a container sets to Show."] = "%s is also in: %s. An aura in two categories is drawn once, under the first of them a container sets to Show."
 L["Weapon enchants matches the temporary enchants on your weapons rather than a list of spells, so there is nothing to add or remove here. The weapon slots it reads are below."] = "Weapon enchants matches the temporary enchants on your weapons rather than a list of spells, so there is nothing to add or remove here. The weapon slots it reads are below."

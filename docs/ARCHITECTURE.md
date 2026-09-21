@@ -49,7 +49,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.48.1 | Ten modules wired, one setup file each — table below |
+| LibKa0s v1.49.0 | Ten modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -588,17 +588,24 @@ return value.
 - **The create form sits between the category picker and its spell list.** A player who only came to
   edit spells passes "Make a new category" on every visit. Accepted by the owner on 2026-09-21: the
   alternative is below the list, where sixty entries would hide it.
-- **The `Also in: …` note is a second line under the spell, not part of its row.** The owner asked
-  for it on the entry's own line (2026-09-21) and the host cannot put it there: `O.IdList` composes
-  an entry's label itself from the kind's `info(id)` and takes no label from the host, so `note` —
-  drawn as a full-width `Label` in the same Flow row, which wraps to its own line and drops that
-  entry out of the two-column grid — is the only text hook there is. Decorating `info` was rejected:
-  it is also what the add box matches a typed name against and what the suggestion rows are built
-  from. It would not fit either — at two columns an entry's label is 0.43 of the content width, about
-  251px at the 584px the library sizes two columns against, roughly 45 characters once the 16px icon
-  is taken off, against 35 for a long spell and its id before the note is added, with word wrap off
-  and the tail truncated. Putting a one-row form on the table needs a LibKa0s entry `suffix` the host
-  composes; until then the note stays where the library draws it. See `docs/settings-panel.md`.
+- **A claimed spell's `(also in N)` can be truncated away on the narrowest panel.** The claim now
+  rides the entry's own row — `(X) [icon] Renewing Mist (119611) (also in 1)`, LibKa0s v1.49.0's
+  entry `suffix` — with the claiming categories named in the entry's tooltip. At two columns word
+  wrap is off and the client cuts the tail, and the library's truncation order is the suffix first,
+  then the id, then the name's tail. The budget is real: `0.43 × 520 − 16 = 207.6px` of label at the
+  icon style's 520px floor, which at LibKa0s's published rule of thumb of ~4.5px a character (its
+  figure; nothing here measures a font) is about 46 characters, while a long row such as
+  `Ancestral Protection Totem (207399) (also in 1)` is 47. So at the floor that row shows
+  no `(also in 1)`. **Accepted**: this is the library's documented degradation and the tooltip still
+  names every claiming category. A wider panel buys it back at about 8 characters per 100px.
+- **The Add-a-spell box no longer suggests spells straight from the spellbook.** Naming the categories
+  in an entry's tooltip needs a host kind table (`O.IdList` builds an entry tooltip from the kind and
+  nothing else), and a host kind cannot reach the library's client sources, so the suggestion rows
+  are the ids `candidates()` returns — every spell on any list this addon knows. A spell in the
+  spellbook and on none of them still resolves and still adds, by name, by id or by link, because
+  the kind's `resolve` hands the text back to `O.ResolveId("spell", …)`; it is only no longer
+  offered as you type. Revisit if LibKa0s ever lets a based host kind opt into its base's sources.
+  See `docs/settings-panel.md`.
 - **Categories are created only on General → Spell Categories.** Filters → Categories, where a player
   is most likely to be thinking about categories, shows them and links to their spells but offers no
   way to make one. Accepted by the owner on 2026-09-21.
