@@ -690,11 +690,27 @@ local function overrideList(ctx, cfg, key, heading, blurb)
             local fcCtx = FC.ProfileContext()
             local out = {}
             for i, id in ipairs(sortedIds(cfg.filter[key])) do
-                out[i] = { id = id, note = overrideNote(cfg, id, fcCtx, key) }
+                -- TWO THINGS CAN NEED SAYING under one entry, and the more serious goes
+                -- first. overrideNote explains what this override DOES against the categories;
+                -- CA.Note says the entry can never match at all (issue #15), which makes the
+                -- first note moot -- an id no aura carries has no verdict to explain. Joined
+                -- rather than chosen between, so neither is silently dropped.
+                local note = NS.CastAura.Note(id)
+                local why  = overrideNote(cfg, id, fcCtx, key)
+                if note and why then note = note .. " " .. why else note = note or why end
+                out[i] = { id = id, note = note }
             end
             return out
         end,
-        onAdd    = function(id) edit(function(set) set[id] = true end) end,
+        -- The same cast -> aura seam the Spell Categories tab takes (issue #15): an id the data
+        -- resolves to an aura is stored as that aura and said so, anything else is stored as
+        -- typed. Both add boxes have the same problem, so they take the same answer rather than
+        -- each growing a copy of the reasoning.
+        onAdd    = function(id)
+            local stored, line = NS.CastAura.ForAdd(id)
+            edit(function(set) set[stored] = true end)
+            if line then NS.Print(line) end
+        end,
         onRemove = function(id) edit(function(set) set[id] = nil end) end,
     })
 end

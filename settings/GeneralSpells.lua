@@ -89,6 +89,10 @@ local Cat = NS.Categories
 -- The compiler, for the overlap guardrail's one question (issue #10 checkpoint 7): which other
 -- categories already claim a spell id. modules/FilterCompiler.lua loads long before this file.
 local FC = NS.FilterCompiler
+-- The cast -> aura lookup (issue #15): what to store when a player types a spell that is CAST
+-- as one id and lands as another, and what to draw under an entry already holding one.
+-- modules/CastAura.lua loads before this file.
+local CA = NS.CastAura
 
 local PAGE = "general"
 local SPELLS = L["Spell Categories"]
@@ -385,10 +389,18 @@ local ID_STRINGS = {
     more      = L["+{count} more"],
 }
 
--- Both widgets' tooltip on every spell ID list: how to add, then where a name can come from. One
--- routed sentence with a `{hint}` token (localization-§1), filled by a function so no `%` in a
--- translation is read as a pattern.
-local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shift-click a spell link into the box, then press Enter or Add. {hint}"]
+-- Both widgets' tooltip on every spell ID list: how to add, that the id has to be the AURA's, then
+-- where a name can come from. One routed sentence with a `{hint}` token (localization-§1), filled
+-- by a function so no `%` in a translation is read as a pattern.
+--
+-- THE AURA SENTENCE IS THIS ADDON'S, AND `{hint}` IS THE LIBRARY'S. NAME_HINT is a localized copy
+-- of `O.ID_NAME_HINT.spell` and tests/test_pages_general.lua pins the two as equal, so that a
+-- translation rewords the tooltip and the widget's own refusal together. The fact that an id has to
+-- be the one the aura carries is not the library's business -- it is true of THIS addon, because
+-- this addon filters on auras -- so it belongs in the sentence this file owns (issue #15,
+-- acceptance criterion 4). modules/CastAura.lua catches the ids it can and says so at add time;
+-- this sentence stands behind the ones it cannot.
+local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shift-click a spell link into the box, then press Enter or Add. The id has to be the one the AURA carries, which is not always the one you cast. {hint}"]
     :gsub("{hint}", function() return NAME_HINT end))
 
 -- ---------------------------------------------------------------------------
@@ -1381,14 +1393,30 @@ local function renderSpells(ctx)
         -- change under this one -- from this very tab, and from another category's Restore.
         entries    = function()
             local out = entriesFor(def)
-            for _, e in ipairs(out) do e.suffix = overlapSuffix(def, e.id) end
+            for _, e in ipairs(out) do
+                e.suffix = overlapSuffix(def, e.id)
+                -- AND A NOTE WHEN THE ENTRY CAN NEVER MATCH (issue #15). The add-time line is chat
+                -- and is gone by the next login; an id stored before this addon could say anything
+                -- about it would otherwise sit here forever looking perfectly normal. A noted entry
+                -- takes a full-width row of its own -- the library's rule, since a note is a second
+                -- line -- so the grid gives one row back per bad id, which is the right price.
+                e.note = CA.Note(e.id)
+            end
             return out
         end,
         -- Adding a starter back includes it again (drops its `false`); anything else is an addition.
         onAdd = function(id)
+            -- THE AURA'S ID, NOT THE CAST'S, WHERE THE DATA KNOWS ONE (issue #15). CA.ForAdd
+            -- answers the id to actually store and the line owed to the player; it rewrites only
+            -- what a real trigger edge resolved, and for everything else hands back exactly what
+            -- was typed. It never refuses -- a boss aura the generator never heard of has to be
+            -- enterable, and silence about an id is not evidence against it.
+            local stored, line = CA.ForAdd(id)
+            id = stored
             editCategory(key, function(mine)
                 if def.spells and def.spells[id] then mine[id] = nil else mine[id] = true end
             end)
+            if line then NS.Print(line) end
             -- INFORM, NEVER REFUSE: the add has already happened above. What the player is told is
             -- which other categories of this aura type also hold the id, and what the compiler does
             -- about it (checkpoint 7).

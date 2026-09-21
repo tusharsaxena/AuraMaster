@@ -70,6 +70,7 @@ Kit.run{
         "test_anchors",
         "test_texttemplate",
         "test_style",
+        "test_castaura",
         "test_timedspells",
         "test_style_bars",
         "test_style_icons",
