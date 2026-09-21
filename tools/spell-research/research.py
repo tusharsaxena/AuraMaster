@@ -1607,6 +1607,146 @@ def _trail(entry: dict, target: int | None) -> str:
     return "   -- %s (%s, %d candidate%s)" % (name, how, n, "" if n == 1 else "s")
 
 
+# ---------------------------------------------------------------------------
+# The shipped-id cross-check (--check-shipped)
+# ---------------------------------------------------------------------------
+#
+# WHAT IT IS FOR. `--emit` derives the two CC buckets and diffs them; nothing checked the OTHER
+# nine shipped lists at all, and nothing checked any list for the failure that actually bites:
+# an id that is no longer what the file says it is. Three ways that happens, and this catches all
+# three mechanically over every shipped id:
+#
+#   a. THE ID DOES NOT EXIST. It was mistyped, or Blizzard deleted the spell. It draws as
+#      "Unknown spell N" in the editor and matches nothing.
+#   b. THE ID APPLIES NO AURA. It is the CAST of an ability whose aura carries a different id --
+#      issue #15's whole subject. Five shipped ids were in this state when the check was written.
+#   c. THE ID IS NOW A DIFFERENT SPELL. Every list carries trailing comments naming its ids, and
+#      an id whose current name disagrees with the name beside it has either been reused across an
+#      expansion or was transcribed wrong. `format_diff`'s docstring says a rename "cannot be
+#      detected against the shipped file, which stores no names" -- it does store them, in those
+#      comments, and this is what reads them.
+#
+# WHAT IT CANNOT CATCH, said plainly so the gate is not read as more than it is: whether an id is
+# in the RIGHT category, and whether it is the aura a player actually sees rather than some other
+# aura the same spell applies. Both need a human or a live client. See docs/scope.md.
+
+# One class line inside a `spells({ ... })` block, with whatever trailing comment follows it.
+SHIPPED_LINE = re.compile(
+    r"^\s*(?P<class>[A-Z]+)\s*=\s*\{(?P<ids>[^}]*)\}\s*,?(?:\s*--\s*(?P<comment>[^\n]*))?",
+    re.MULTILINE,
+)
+
+# Every `spells({ ... })` block, whatever category it belongs to -- not just the CC buckets
+# CATEGORY_BLOCK narrows to.
+ANY_SPELLS_BLOCK = re.compile(r"spells\s*=\s*spells\(\{(?P<body>.*?)\}\)", re.DOTALL)
+
+# A parenthetical inside a comment name: "Fear (the AURA; 5782 is the cast)" -> "Fear". The notes
+# this file carries are for a human, and stripping them is what makes a positional match possible.
+COMMENT_ASIDE = re.compile(r"\s*\([^)]*\)")
+
+
+def read_shipped_named(path: Path) -> list[dict]:
+    """Every id `defaults/Categories.lua` ships, with the name its trailing comment gives it.
+
+    Returns one record per id: `{"id", "class", "comment"}`, where `comment` is the name from the
+    trailing list or None.
+
+    THE POSITIONAL MATCH IS ONLY TAKEN WHEN IT IS SAFE. A trailing comment is a comma-separated
+    list meant to line up with the ids, and it usually does -- but it is prose maintained by hand
+    and a line whose counts disagree is not evidence of anything. Such a line contributes its ids
+    with no name rather than a guessed one, so the existence and aura checks still run over it and
+    only the name check is skipped. Guessing the alignment would invent mismatches on exactly the
+    lines a human had already found hard to keep straight.
+    """
+    out: list[dict] = []
+    if not path.exists():
+        return out
+    text = path.read_text(encoding="utf-8")
+    for block in ANY_SPELLS_BLOCK.finditer(text):
+        for line in SHIPPED_LINE.finditer(block.group("body")):
+            ids = [int(t) for t in re.findall(r"\d+", line.group("ids"))]
+            names: list[str] = []
+            comment = line.group("comment")
+            if comment:
+                # STRIP THE ASIDES BEFORE SPLITTING, not after. An aside may contain a comma --
+                # "Fear (the AURA; 5782 is the cast, issue #15)" -- and splitting first turns one
+                # name into two, which takes the line out of alignment and silently drops it from
+                # the name check. That is how this check first passed a line reading "Ancestral
+                # Guidance" against 32182, which is Heroism.
+                names = [part.strip() for part in COMMENT_ASIDE.sub("", comment).split(",")]
+            aligned = len(names) == len(ids)
+            for i, spell in enumerate(ids):
+                out.append({"id": spell, "class": line.group("class"),
+                            "comment": names[i] if aligned else None})
+    return out
+
+
+def check_shipped(cache: dict[str, Path], categories_path: Path) -> tuple[str, int]:
+    """Cross-check every shipped id against the build. Returns `(report, failures)`."""
+    records = read_shipped_named(categories_path)
+    if not records:
+        return ("No shipped ids found at %s.\n" % categories_path, 0)
+
+    log("Reading SpellName ...")
+    names = read_names(cache["SpellName"])
+    log("Reading SpellEffect for APPLY_AURA ...")
+    appliers = read_aura_appliers(cache["SpellEffect"])
+
+    missing, no_aura, renamed = [], [], []
+    seen: set[int] = set()
+    for rec in records:
+        spell = rec["id"]
+        current = names.get(spell)
+        first = spell not in seen
+        seen.add(spell)
+        # EXISTENCE AND THE AURA TEST ARE PROPERTIES OF THE ID, so they are asked once -- an id on
+        # three lists would otherwise be reported three times and the report would read as three
+        # problems. THE NAME CHECK IS A PROPERTY OF THE LINE and is asked at EVERY occurrence: the
+        # comment beside an id is written per list, and deduping it hides a wrong name on the
+        # second list behind a right one on the first. That is not hypothetical -- this check
+        # passed a line reading "Ancestral Guidance" against 32182, which is Heroism, because the
+        # id had already been seen in an earlier category.
+        if current is None or current == "":
+            if first:
+                missing.append(rec)
+            continue
+        if first and spell not in appliers:
+            no_aura.append(dict(rec, current=current))
+        want = rec["comment"]
+        if want and want.lower() != current.lower():
+            renamed.append(dict(rec, current=current))
+
+    lines = ["# Shipped-id cross-check", "",
+             "%d distinct id(s) in `%s`." % (len(seen), categories_path), ""]
+
+    def section(title, rows, fmt):
+        lines.append("## %s — %d" % (title, len(rows)))
+        lines.append("")
+        if not rows:
+            lines.append("None.")
+        else:
+            for row in rows:
+                lines.append("- " + fmt(row))
+        lines.append("")
+
+    section("Ids the build does not name", missing,
+            lambda r: "`%d` (%s) — absent from SpellName. Mistyped, or the spell is gone."
+                      % (r["id"], r["class"]))
+    section("Ids that apply no aura of their own", no_aura,
+            lambda r: "`%d` %s (%s) — draws a row and matches nothing. See issue #15 and "
+                      "`--emit-cast-aura`." % (r["id"], r["current"], r["class"]))
+    section("Ids whose name disagrees with the comment beside them", renamed,
+            lambda r: "`%d` (%s) — the file says **%s**, the build says **%s**."
+                      % (r["id"], r["class"], r["comment"], r["current"]))
+
+    named = sum(1 for r in records if r["comment"])
+    lines.append("Name checks ran over %d of %d id slots; the rest sit on lines whose comment does "
+                 "not line up with its ids, where a positional match would invent mismatches."
+                 % (named, len(records)))
+    lines.append("")
+    return ("\n".join(lines), len(missing) + len(no_aura) + len(renamed))
+
+
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="research.py",
@@ -1628,6 +1768,10 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
                         help="report added / removed / regrouped against the shipped lists (default)")
     parser.add_argument("--emit", action="store_true",
                         help="print a paste-ready Lua fragment on stdout")
+    parser.add_argument("--check-shipped", action="store_true",
+                        help="cross-check every id in defaults/Categories.lua against the build: "
+                             "ids the build does not name, ids that apply no aura, and ids whose "
+                             "name disagrees with the comment beside them")
     parser.add_argument("--emit-cast-aura", action="store_true",
                         help="print defaults/CastToAura.lua on stdout (issue #15). A different "
                              "question from --emit over the same tables: which player-castable ids "
@@ -1642,7 +1786,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    if not (args.diff or args.emit or args.emit_cast_aura or args.bundle):
+    if not (args.diff or args.emit or args.emit_cast_aura or args.check_shipped or args.bundle):
         args.diff = True  # a bare run reports; it never emits something that looks authoritative
 
     date = args.date
@@ -1687,6 +1831,19 @@ def main(argv: list[str] | None = None) -> int:
         fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     cache = {table: fetch_table(table, build, args.cache_dir, args.refresh, args.replay)
              for table, _why in TABLES}
+
+    if args.check_shipped:
+        # Its own pipeline and its own exit, like --emit-cast-aura: it reads the shipped file and
+        # two tables, and the CC derivation's coverage gate has nothing to say about it.
+        report, failures = check_shipped(cache, args.categories)
+        print(report)
+        if failures:
+            log("Cross-check: %d finding(s). Nothing here is fatal on its own -- an id that "
+                "applies no aura may still be one only a live client can settle (issue #15)."
+                % failures)
+        else:
+            log("Cross-check: clean.")
+        return 0
 
     if args.emit_cast_aura:
         # ITS OWN PIPELINE, AND IT RETURNS HERE. The CC derivation below answers a different

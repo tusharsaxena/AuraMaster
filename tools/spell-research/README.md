@@ -27,6 +27,15 @@ python3 tools/spell-research/research.py --diff
 # the date is pasted into defaults/Categories.lua as provenance, so it has to name a real run.
 python3 tools/spell-research/research.py --emit --date 2026-09-20
 
+# Cross-check every id defaults/Categories.lua ships, against the build (issue #15). Three
+# questions, over all of them and not just the two CC buckets: does the build still name this id,
+# does it apply an aura of its own, and does its name still agree with the comment beside it?
+python3 tools/spell-research/research.py --check-shipped
+
+# The cast -> aura table, defaults/CastToAura.lua, whole. A different question from --emit over the
+# same tables: which player-castable ids apply no aura, and what aura they actually land.
+python3 tools/spell-research/research.py --emit-cast-aura --date 2026-09-20 > defaults/CastToAura.lua
+
 # Freeze a run: gzipped raw exports, SOURCES.md, derived.json, DIFF.md
 python3 tools/spell-research/research.py --bundle docs/spell-research/2026-09-20
 
@@ -132,6 +141,29 @@ Two steps exist solely because of this:
   which is live. Guessing (lowest id, say) is a *silent* wrong answer, and silent under-coverage is
   this design's stated failure mode; a surplus id is a *visible* one that costs a row in the editor
   and never matches. Prune them at the diff, which is where the judgment belongs anyway.
+
+## The shipped-id cross-check (`--check-shipped`)
+
+`--diff` derives the two CC buckets and compares them. Nothing checked the **other nine** shipped
+lists, and nothing checked any list for the failure that actually bites: an id that is no longer
+what the file says it is. This does, mechanically, over every id in `defaults/Categories.lua`:
+
+* **The build does not name it** — mistyped, or the spell is gone. It draws as *Unknown spell N*.
+* **It applies no aura of its own** — it is the CAST of an ability whose aura carries a different
+  id. Five shipped ids were in this state when the check was written; see issue #15.
+* **Its name disagrees with the comment beside it** — the id has been reused across an expansion,
+  or was transcribed wrong. `format_diff` used to say a rename "cannot be detected against the
+  shipped file, which stores no names". It does store them, in those trailing comments.
+
+**The name check is positional and is only taken when it is safe.** A trailing comment is a
+comma-separated list meant to line up with the ids on its line, and usually does — but it is prose
+maintained by hand, and a line whose counts disagree is not evidence of anything. Such a line
+contributes its ids with no name, so the first two checks still run over it and only the name check
+is skipped. About 117 of 255 id slots currently carry an alignable name.
+
+**What it cannot tell you**, so the gate is not read as more than it is: whether an id is in the
+RIGHT category, and whether it is the aura a player actually *sees* rather than some other aura the
+same spell applies. Both need a human or a live client — `docs/scope.md` says why.
 
 ## The bucket map
 
