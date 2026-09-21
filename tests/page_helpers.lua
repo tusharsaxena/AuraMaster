@@ -39,7 +39,45 @@ return function(NS, m)
         return since(mark)
     end
 
-    --- A structural refresh, then the next show: the page draws again from the current state.
+    --- Widen the canvas every later render is laid out against.
+    ---
+    --- The kit's AceGUI fake gives a ScrollFrame's content a flat `original_width = 400`
+    --- (tests/_kit/mock_base.lua) -- a fixture, not a model of Blizzard's settings canvas, and
+    --- nothing in the kit claims otherwise. OptionsScroll's always-shown-scrollbar patch then takes
+    --- its 20px gutter off it, so a list measures 380px of content under test.
+    ---
+    --- That matters from LibKa0s v1.50.0, which made `columns` a MAXIMUM: O.IdList measures the
+    --- content width at draw time and drops toward one column when the count cannot be paid for
+    --- (the icon style's two-column floor is 520px). At the fixture's 380 every multi-column list
+    --- in every consumer's harness collapses to one column -- which is the library behaving
+    --- correctly on a number the harness made up.
+    ---
+    --- A suite asserting how a list PACKS therefore has to say what canvas it is packing into.
+    --- Call this before the render with a width that can pay for the columns under test.
+    function P.canvasWidth(px)
+        -- Every scroll this fake has ALREADY handed out, because EnsureScroll caches one per page
+        -- and the first render has usually happened by the time a case calls this. `width` is what
+        -- the always-shown-scrollbar patch leaves after its gutter and is what O.IdList reads, so
+        -- both it and the pre-gutter `original_width` are set.
+        for _, w in ipairs(ace.__created) do
+            if w.type == "ScrollFrame" and type(w.content) == "table" then
+                w.content.original_width = px
+                w.content.width = px
+            end
+        end
+        -- And every scroll handed out from here on.
+        local create = ace.Create
+        function ace:Create(wtype, ...)
+            local w = create(self, wtype, ...)
+            if wtype == "ScrollFrame" and type(w.content) == "table" then
+                w.content.original_width = px
+                w.content.width = px
+            end
+            return w
+        end
+    end
+
+    --- A structural refresh, then the next show: the page draws again from the current state.
     function P.rerender(page)
         NS.Helpers.RefreshAllPanels()
         return P.show(page)

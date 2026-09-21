@@ -458,6 +458,12 @@ test("general → spell categories: the list draws two columns, filled row-major
     m.__spells[118038] = { name = "bravo", iconID = 1 }
     m.__spells[424242] = { name = "alpha", iconID = 1 }
     NS.SetByPath("categorySpells", { defensives = { [424242] = true } })
+    -- SAY WHAT CANVAS THIS PACKS INTO. From LibKa0s v1.50.0 `columns` is a maximum, fitted to
+    -- the measured content width, and the kit's ScrollFrame fixture is 400 (380 of content
+    -- after OptionsScroll's gutter) -- under the icon style's 520px two-column floor, so the
+    -- library would correctly draw ONE column and this case would be asserting the fixture
+    -- rather than the packing. 700 pays for two columns in either style; see P.canvasWidth.
+    P.canvasWidth(700)
     local drawn = drawnEntries(P.rerender("General"))
     assertTrue(#drawn >= 4, "the four named defensives are drawn")
     -- The by-name order first: alpha, bravo, charlie, delta.
