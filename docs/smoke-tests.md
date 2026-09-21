@@ -1081,16 +1081,17 @@ nothing. Nothing in the client can answer the mapping, so the addon carries it i
      whitelist → the same chat line. If that id also has a verdict note, the two are joined, with
      the never-matches sentence first.
 
-185. **The probe (temporary).** Five ids in the shipped category lists apply no aura of their own,
-     and **none of them can be fixed from the data** — not one has an `EffectTriggerSpell` edge, so
-     all the generator can offer is same-name candidates, which are not evidence. Only the live
-     client can settle them. See the block below the suite for exactly what to run.
+185. **The four corrected shipped ids.** Five ids in the shipped lists were the CAST, not the aura,
+     and none could be fixed from the data — not one has an `EffectTriggerSpell` edge. A temporary
+     `/am probe` settled four against a live client on 2026-09-21 and was then deleted. Confirm each
+     now matches:
 
-     `/am probe` dumps every readable aura on you, your target, your focus and your pet to the
-     **debug log** (not chat — a chat frame wraps long lines and loses the start). Open it with
-     `/am debug` and copy the block out of its copy box.
+     * **Levitate** on yourself → a container covering *Utility* shows it. (`1706` → `111759`)
+     * **Fear** on the dummy → a *Hard CC* debuff container shows it. (`5782` → `118699`)
+     * **Spirit Link Totem**, standing in it → the container covering it shows it. (`98007` → `325174`)
+     * **Ursol's Vortex**, dummy inside it → a *Soft CC* container shows it. (`102793` → `127797`)
 
-     Sanity-check it first: with any buff on you, `/am probe` → chat says how many lines it wrote,
-     and the debug log holds a `---- /am probe ----` block with one line per aura carrying its
-     `id=`, name, duration and source. In combat it refuses with a line telling you to leave combat,
-     because aura data is secret there.
+     **`35546` Fatal Flourish is knowingly still the cast id** and matches nothing. It applies no
+     aura, has no trigger edge, and the probe found nothing to observe — it reads as a proc that
+     fires and vanishes. Left in place so the record that the slow exists is not lost. If you ever
+     see a lasting Fatal Flourish debuff on a target, note its id and it can be settled.

@@ -13,8 +13,8 @@ local _, NS = ...
 --                          nothing here at all
 --                       "Created 'Affixes', empty. Add spells to it below..." <- the answer line
 --                       ---- Make a new category ---------------------------------------------
---                       [New category's name][ Aura type ▾ ]
---                       [ Create category ]
+--                       [New category's name][ Create category ]
+--                       [ Aura type ▾ ]
 --                       ---- Spells in this category ----------------------------------------
 --                       [Add a spell ____________________________][ Add ]
 --                       (X) <icon> Ironbark (102342)             <- a starter, until its X hides it
@@ -616,8 +616,16 @@ local function sizeCategoryDropdown(dd)
     if type(fs) == "table" and fs.SetJustifyH then fs:SetJustifyH("LEFT") end
 end
 
-local function categoryCell(defs, def)
-    return { make = function(_, parent, rel)
+--- The Category picker.
+---
+--- `wide` when it is alone on its line, which is every branch but the shipped one that puts
+--- Restore beside it (owner, from the live panel, 2026-09-22). A half-width dropdown with empty
+--- space to its right read as though a control had failed to draw; a category's name is also the
+--- longest string on the line, and `(yours)` plus the `[Buffs]` marker were being truncated on a
+--- narrow canvas for no reason. RenderGrid hands a wide item `rel = nil`, which is what
+--- `SetFullWidth` below keys off.
+local function categoryCell(defs, def, wide)
+    return { wide = wide, make = function(_, parent, rel)
         local list, order = {}, {}
         for i, d in ipairs(defs) do
             list[d.key] = categoryLabel(d)
@@ -627,7 +635,7 @@ local function categoryCell(defs, def)
         dd:SetLabel(L["Category"])
         dd:SetList(list, order)
         dd:SetValue(def.key)
-        dd:SetRelativeWidth(rel or 0.5)
+        if rel then dd:SetRelativeWidth(rel) else dd:SetFullWidth(true) end
         sizeCategoryDropdown(dd)
         -- The answer line is not cleared here. It goes with the category it was about -- a
         -- "Deleted 'X'" or a refusal standing over a different category's controls would read as a
@@ -714,8 +722,8 @@ end
 --     "Aura Master cannot read 1 of this profile's saved categories..."
 --     [ Forget unreadable categories ]
 --     ---- Make a new category ------------------------------------------------
---     [ New category's name _____ ]     [ Aura type v ]
---     [ Create category ]
+--     [ New category's name _____ ]     [ Create category ]
+--     [ Aura type v ]
 --     ---- Spells in this category -------------------------------------------
 --
 -- THE LAYOUT, JUSTIFIED. The owner asked for simple and obvious, so this adds FOUR controls and no
@@ -1095,8 +1103,19 @@ local function renderManage(ctx, def)
     renderBroken(ctx)
     if scroll then H.AddSpacer(scroll, SECTION_GAP) end
     H.Section(ctx, L["Make a new category"])
-    H.RenderGrid(ctx, { newNameCell(), newTypeCell() })
-    H.RenderGrid(ctx, { createCell() })
+    -- NAME AND CREATE ON ONE LINE, AURA TYPE UNDER THEM (owner, from the live panel, 2026-09-22).
+    -- It pairs the box with the button that consumes it, the way Rename pairs with Delete above,
+    -- and it leaves Aura type on its own line where a dropdown reads as a setting rather than as
+    -- the second half of a form.
+    --
+    -- IT DOES PUT THE SUBMIT ABOVE AN INPUT, which is the one thing to know about this order: a
+    -- player who reads strictly top to bottom meets Create before Aura type. That is survivable
+    -- because the type has a value from the moment the block draws -- it defaults to Buffs and
+    -- cannot be empty -- so pressing Create without having looked at it creates a buff category
+    -- rather than failing. The name is the only field that can be empty, and it is the one on the
+    -- button's own line.
+    H.RenderGrid(ctx, { newNameCell(), createCell() })
+    H.RenderGrid(ctx, { newTypeCell() })
 end
 
 -- ---------------------------------------------------------------------------
@@ -1304,7 +1323,7 @@ local function renderSpells(ctx)
         -- the tab read correctly here -- there is no spell list, so there is nothing to add to or
         -- take out of -- and leaves the slots to their own block.
         H.TextRow(ctx, L["Weapon enchants matches the temporary enchants on your weapons rather than a list of spells, so there is nothing to add or remove here. The weapon slots it reads are below."])
-        H.RenderGrid(ctx, { categoryCell(defs, def) })
+        H.RenderGrid(ctx, { categoryCell(defs, def, true) })
         renderManage(ctx, def)
         return renderEnchant(ctx)
     end
@@ -1313,7 +1332,7 @@ local function renderSpells(ctx)
     -- drops the button, leaving the dropdown the whole width of that line.
     if Cat.IsUserCategory(def) then
         H.TextRow(ctx, L["The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."])
-        H.RenderGrid(ctx, { categoryCell(defs, def) })
+        H.RenderGrid(ctx, { categoryCell(defs, def, true) })
     else
         H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."])
         -- Restore on the dropdown's line (feedback #3): with the checkboxes gone (B2) a removed

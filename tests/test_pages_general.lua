@@ -734,6 +734,39 @@ local function lineOf(ws, w)
 end
 
 --- The profile's one user category's key, or nil.
+-- The tab's LAYOUT, as the owner arranged it from the live panel (2026-09-22):
+--
+--     [ Category ................................ ]   <- the whole row
+--     [ Rename ] [ Delete ]
+--     ---- Make a new category ----
+--     [ New category's name ] [ Create category ]
+--     [ Aura type ]
+--
+-- Pinned because every other case on this tab finds its widgets by LABEL, which is exactly what a
+-- layout change does not disturb -- the arrangement could drift back with the whole suite green.
+test("general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)", function()
+    local NS, _, P, ws = spells()
+    local picker = P.find(ws, "Dropdown", NS.L["Category"])
+    -- The shipped branch puts Restore beside the picker, so make a user category first: that is
+    -- the branch with nothing to share the line with.
+    assertTrue(picker ~= nil, "the picker is drawn")
+    local m = manage(NS, ws, P)
+    m.newName:__fire("OnEnterPressed", "Cooldowns I watch")
+    m.create:__fire("OnClick")
+    ws = P.rerender("General")
+    picker = P.find(ws, "Dropdown", NS.L["Category"])
+    -- red under the half-width picker, which left empty space where a control looked like it had
+    -- failed to draw and truncated "(yours)" off a long name for no reason
+    assertTrue(picker.fullWidth == true, "the picker takes the whole row when nothing shares it")
+
+    local m2 = manage(NS, ws, P)
+    local nameLine = lineOf(ws, m2.newName)
+    -- red under the previous arrangement, which paired the name with Aura type and gave Create a
+    -- line of its own
+    assertEqual(lineOf(ws, m2.create), nameLine, "Create sits beside the box it consumes")
+    assertTrue(lineOf(ws, m2.auraType) > nameLine, "Aura type is on its own line under them")
+end)
+
 local function onlyUserKey(NS)
     local found
     for key in pairs(NS.db.profile.userCategories) do
