@@ -518,6 +518,8 @@ local SECTIONS = {
 }
 
 --- Whether `path` is one of the whole-section paths (a test seam: tests/test_schema.lua).
+--- Test-only today: the only readers are tests/test_schema.lua:309-310 and
+--- tests/test_schema_paths.lua:407,412. Kept deliberately; not a deletion candidate.
 function NS.IsSection(path)
     return SECTIONS[path] ~= nil
 end
