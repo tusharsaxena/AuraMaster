@@ -40,7 +40,7 @@ it against `git log`, trust git over the table, continue at the first row that i
 | P6 navigation fix + See spells + info icons | N-3 N-4 N-5 | AM | done | 4087784 | every page now records its category, not just container pages |
 | P7 Categories tab readability | T-2 T-3 | AM | done | 6b2981e | blurb one rank per line; T-3 overtaken, enchant row re-homed |
 | P8 Bars/Icons tab restructure | S-1 | AM | done | 2880b6e | Size folded into a renamed General; Icons deliberately unchanged, reason documented |
-| P10 spark appearance in clip mode | SP-1 SP-2 | AM | done | 0b4b0c9 | backdrop is half-opaque, so BLEND not colour-match |
+| P10 spark appearance in clip mode | SP-1 SP-2 | AM | done | 0b4b0c9 | backdrop is half-opaque, so BLEND not color-match |
 | P9 docs + final battery | all | all | done | 1821ca8 | 10 false statements fixed, six of them unpassable smoke checks |
 
 **Dependency order:** P1, P2, P3, P8, P10 are independent. P4 needs P3. P6 needs P5. P7 needs P2.

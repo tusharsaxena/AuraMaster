@@ -30,7 +30,7 @@ must work live in combat, where every aura value is secret to addon code.
   Spell name and stacks cannot.
 - `options.binding` accepts a prebuilt binding (`C_DurationUtil.CreateDurationTextBinding()`), which
   is the only way to set `SetUpdateInterval`, `SetZeroDurationText` and `SetExpiredText`.
-  `textColor = { curve, property }` recolours the duration text through a colour curve.
+  `textColor = { curve, property }` recolors the duration text through a color curve.
 - Addon code can never combine secret values into one string. `SetFormattedText` accepts secret
   arguments, but addon code can never *obtain* the values (the 12.1 aura APIs raise while auras are
   secret; `docs/midnight-quirks.md`). So one line has to be a **chain of font strings**: one per
@@ -44,12 +44,12 @@ must work live in combat, where every aura value is secret to addon code.
   `SetApplicationCount` with a `C_StringUtil.CreateNumericRuleFormatter` whose breakpoints are
   `{0: ""}, {2: " x%d"}`; `SetDurationText` with the format `" - {} / {} ({})"` (remaining, total,
   remaining %) and a prebuilt binding (`SetUpdateInterval(0.1)`, `SetZeroDurationText("")`,
-  `SetExpiredText("")`); a stepped `C_CurveUtil` colour curve on `RemainingDuration`; and looping
+  `SetExpiredText("")`); a stepped `C_CurveUtil` color curve on `RemainingDuration`; and looping
   AnimationGroups played at dress time.
 - **Folding works.** With the text folded into the engine formats, a timeless buff showed only its
   name, a single stack showed nothing, and 2+ stacks showed ` x5`.
 - `RemainingPercent` arrives on a **0–100** scale, so `%d%%` reads correctly (e.g. `40%`).
-- A stepped colour curve with alternating alpha **blinks the duration text in the last N seconds**,
+- A stepped color curve with alternating alpha **blinks the duration text in the last N seconds**,
   in and out of combat.
 - **Animations started at dress time keep playing through combat and after it.** In combat,
   every call on the button's objects raises *"Attempt to access forbidden object from code tainted by
@@ -84,7 +84,7 @@ must work live in combat, where every aura value is secret to addon code.
 | Centering a multi-piece line | no | needs the chain's width, which is never readable |
 | Loop animations in combat | yes | start at dress time; they run inside the client |
 | Change an animation in combat | no | the button's objects are forbidden to addon code in combat |
-| Blink when running out | yes, on the duration run only | a stepped colour curve with alternating alpha |
+| Blink when running out | yes, on the duration run only | a stepped color curve with alternating alpha |
 | Scale / grow animation | no (breaks layout) | not offered |
 
 ## 3. The template
@@ -165,7 +165,7 @@ The parser returns `{ ok = true, pieces = {…}, single = <bool> }` or
   engine's flow layout like a bar.
 - The **text area** is the element minus the icon and its gap. A clip frame covers it
   (`SetClipsChildren(true)`), so a line wider than the box is cut off at the box edge, never drawn
-  over its neighbour.
+  over its neighbor.
 - **Horizontal justify** (`text.justifyH`):
   - `LEFT`: the first piece anchored to the area's left, each next piece `LEFT` → previous `RIGHT`.
   - `RIGHT`: the last piece anchored to the area's right, each earlier piece `RIGHT` → next `LEFT`.
@@ -181,7 +181,7 @@ The parser returns `{ ok = true, pieces = {…}, single = <bool> }` or
   `iconGap`, `iconZoom` and the composed icon-border block, all as on Bars. The icon placement
   helpers move from `modules/Style_Bars.lua` into `modules/Style.lua` (`Style.LayoutIcon`,
   `Style.IconSizeFor`, `Style.IconInset`), parameterized by the style's template block, so Bars and
-  Text share one implementation. This is a targeted refactor; Bars' behaviour is unchanged and its
+  Text share one implementation. This is a targeted refactor; Bars' behavior is unchanged and its
   tests must stay green without edits.
 - Nothing is drawn around the box (no background, no border). That was the owner's choice,
   2026-09-18.
@@ -189,7 +189,7 @@ The parser returns `{ ok = true, pieces = {…}, single = <bool> }` or
 ## 5. Font
 
 One composed font block for the whole line (`text.font` via `H.FontGroup`: font, size, flags, shadow,
-colour + class-colour companion), applied to every piece, literals included. `text.timeFormat`
+color + class-color companion), applied to every piece, literals included. `text.timeFormat`
 (`blizzard` / `short` / `long`) drives the duration components' `SecondsFormatter`
 (`Compat.CreateSecondsFormatter`, as the Bars and Icons time text use today). Percent components use a
 rule formatter with `%d%%`.
@@ -220,11 +220,11 @@ rule formatter with `%d%%`.
 ### 6.2 Running out (duration run only)
 
 - Reuses the Bars/Icons leaves: `expiringColorOn`, `expiringThreshold`, `expiringColor`.
-- New: `expiringBlink` (bool, default false). When it is on, the colour curve alternates the
-  running-out colour's alpha between full and 0.1 every 0.25 s from the threshold down to 0 (a
+- New: `expiringBlink` (bool, default false). When it is on, the color curve alternates the
+  running-out color's alpha between full and 0.1 every 0.25 s from the threshold down to 0 (a
   stepped curve, as in probe round 1), and the prebuilt binding's `SetUpdateInterval(0.1)` is set so
   the blink is smooth. It is set **only** when blink is on, so the default update cost is unchanged.
-- It applies only to the duration piece. The rest of the line keeps the font colour. The Blink row's
+- It applies only to the duration piece. The rest of the line keeps the font color. The Blink row's
   tooltip says so.
 - It needs a duration token in the template. Without one, the Running-out rows are disabled, with a
   note.
@@ -307,12 +307,12 @@ disabledNotice = … })`, like Bars and Icons.
 | **General** | Size: width (40–600), height (8–80). Template: an EditBox row (`dialogControl = "EditBox"`, like `container.name`) with `validate` = the parser, whose error is the refusal text; below it a read-only **token cheat sheet** (each token, one line each, plus the `[ ]` rule with one example). Placement: horizontal justify, vertical justify, X, Y, and the centering note (§4). |
 | **Font** | the composed font block; time format. |
 | **Icon** | position, size, gap, zoom; the composed icon-border block. |
-| **Animation** | Loop: effect, speed, intensity, bounce height (each row disabled unless its effect uses it). Running out: recolor on/off, threshold, colour, blink. |
+| **Animation** | Loop: effect, speed, intensity, bounce height (each row disabled unless its effect uses it). Running out: recolor on/off, threshold, color, blink. |
 
 - The Containers page's Style dropdown offers Text. `/am set container.text.template "<…>"` goes
   through the same `validate`.
 - Every row has `coverage` honesty per the render-coverage suite: `expiringBlink` is `engine-only`
-  (the preview shows the colour, not the blink); the loop animation plays on placeholders too.
+  (the preview shows the color, not the blink); the loop animation plays on placeholders too.
 
 ## 9. Preview
 
@@ -329,7 +329,7 @@ The same parser output drives both paths, so preview and live cannot drift in st
 | `modules/TextTemplate.lua` (new) | pure parser/compiler (§3); no WoW API; `TT.Compile(template) → result`, `TT.TOKENS` |
 | `modules/Style_Text.lua` (new) | build regions (clip frame, animation frame, piece font strings, icon); dress: layout (§4), fonts (§5), animation (§6.1); bind each piece; `FillPreview` |
 | `modules/Style.lua` | dispatch `"text"` in `Style.Element`; `ElementSize` and `UsesClassColor` text branches; shared icon helpers (moved from Bars); a duration-text helper taking `textFormat` + prebuilt binding + optional blink curve |
-| `modules/Style_Bars.lua` | uses the shared icon helpers (no behaviour change) |
+| `modules/Style_Bars.lua` | uses the shared icon helpers (no behavior change) |
 | `core/Compat.lua` | `Compat.CreateRuleFormatter(breakpoints)`, `Compat.CreateDurationBinding(opts)`, `Compat.BlinkTextColor(threshold, color)`: guarded wrappers, nil on a client without the API |
 | `core/Constants.lua` | `"text"` style + the lists in §7 |
 | `defaults/Profile.lua` | `CONTAINER_TEMPLATE.text`; the fourth starter container (§7.1) |
@@ -385,7 +385,7 @@ Green gate: `lua tests/run.lua`, `luacheck .` 0/0, and lizard with no function a
 2. `$spellname$ $remainingduration$ / $maxduration$ ($remainingpercent$)`, justified Left and then Right.
 3. `$dispeltype$` on a target-debuff Text container: correct type names; no text on typeless debuffs.
 4. Pulse, Blink and Bounce, each through a pull; no overlap while animating.
-5. Running out: the colour, then the blink, in the last N seconds.
+5. Running out: the color, then the blink, in the last N seconds.
 6. The optional icon, Left and Right, with a border.
 7. Invalid templates in the settings box and via `/am set`: each refusal message reads right.
 8. Switching a container Bars → Text → Icons → Text, out of combat: redraws cleanly.
@@ -399,14 +399,14 @@ Green gate: `lua tests/run.lua`, `luacheck .` 0/0, and lizard with no function a
 - Scale/grow animations (they break the chain, §2.3).
 - Centering a multi-piece line (the chain's width is unreadable).
 - A caster/source name token (no engine binding).
-- Per-token fonts or colours.
+- Per-token fonts or colors.
 - Starting, stopping or changing an animation in combat (forbidden by the engine).
 - A box background or border (owner's choice).
 
 ## 15. Standards check
 
 - It follows the existing Bars/Icons patterns: schema rows through the one write seam, composed font
-  and border blocks (options-ui-§16) with class-colour companions (§17), a sub-page registered like
+  and border blocks (options-ui-§16) with class-color companions (§17), a sub-page registered like
   its siblings, and guarded engine calls.
 - The parser is pure and fully unit-tested.
 - It adds no SavedVariables, events or frames outside the engine's buttons.
@@ -489,7 +489,7 @@ any other entry. General → Spell Categories marks starters as toggles (`settin
 - **LibKa0s** (`../LibKa0s`) gains an opt-in IdList spec key **`removeStyle = "icon"`**.
   - With it, every entry draws a small **X button on the LEFT** of the row, before the spell icon
     and name. It uses the atlas **`transmog-icon-remove`** (ConsumableMaster's delete icon), about
-    16 px, with the tooltip *"Remove"* (a `strings.remove` override is honoured).
+    16 px, with the tooltip *"Remove"* (a `strings.remove` override is honored).
   - A click calls `spec.onRemove(id)` and rebuilds the list.
   - Toggle entries are not drawn differently under this style. The host simply sends no `toggle`
     entries.
@@ -511,14 +511,14 @@ any other entry. General → Spell Categories marks starters as toggles (`settin
     then the added spells, all removable.
   - `onRemove(id)`: a starter is stored `false` (hidden), an added spell `nil`. `onToggle` goes away.
   - **Restoring a removed starter:** the existing **"Restore this category's starter list"** button
-    (it clears every edit to the category; unchanged behaviour) **moves to the top**, right under the
+    (it clears every edit to the category; unchanged behavior) **moves to the top**, right under the
     Category dropdown and above *Add a spell*. Re-adding a starter by typing it still works (`onAdd`
     already drops its `false`).
   - The intro sentence changes from "Untick one to leave it out" to "Click X to leave one out;
     Restore brings the starter list back."
   - The restore tooltip says starters come back **and** added spells are removed (as today).
 - **Filters → Overrides** (whitelist/blacklist) also opt in to `removeStyle = "icon"`, so every spell
-  list in the addon looks the same. Their behaviour is unchanged: they only ever had Remove.
+  list in the addon looks the same. Their behavior is unchanged: they only ever had Remove.
 - **Tests:**
   - LibKa0s: both styles; the X on the left; the click routes to onRemove; the default is unchanged.
   - Aura Master `test_pages_general`: no checkbox; X per row; a removed starter is absent from the
@@ -531,8 +531,8 @@ any other entry. General → Spell Categories marks starters as toggles (`settin
 a **muted gold**, from one constant: `C.NOTICE_COLOR = "ffc8a85a"` (`core/Constants.lua`), about
 (0.78, 0.66, 0.35), readable against the dark panel and quieter than the title gold. The notice is
 shared by every container page that declares `disabledNotice`, so Bars, Icons and the new Text page
-all pick it up from this one change. `test_optionssetup`: the notice carries the new colour code.
-The standard sets no colour for page notices; the combat-refusal "gray notice" in options-ui (refusing to open settings in combat) is a
+all pick it up from this one change. `test_optionssetup`: the notice carries the new color code.
+The standard sets no color for page notices; the combat-refusal "gray notice" in options-ui (refusing to open settings in combat) is a
 chat line, not this, so this is not a deviation.
 
 ## B4. Bars time text no longer truncates

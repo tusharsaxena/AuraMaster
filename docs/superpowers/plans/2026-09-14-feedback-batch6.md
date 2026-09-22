@@ -1127,7 +1127,7 @@ where this plan's earlier wording disagrees, the spec wins. In particular the pr
 "blacklist wins" any more.
 
 - [ ] **Step 1: Write the failing tests** — the heading reads `Spell Categories`, not
-      `Custom Categories`; the grid has exactly two columns labelled Show and Hide with no third
+      `Custom Categories`; the grid has exactly two columns labeled Show and Hide with no third
       state reachable; a `spells`-kind row offers a `See spells` link and a token row does not;
       clicking that link calls `NS.GeneralSpells.Select` with the row's key and lands the player on
       General → Spell Categories; both the Categories and Overrides tabs state the priority order;

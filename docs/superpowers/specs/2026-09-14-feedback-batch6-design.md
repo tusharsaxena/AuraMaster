@@ -74,7 +74,7 @@ anything else, so a stale link can never leave the tab on a category it cannot d
 |---|---|
 | `E-1` | New category **kind `enchant`** in `defaults/Categories.lua`: `{ key = "weaponEnchants", kind = "enchant", label = "Weapon enchants", desc = ... }` on `Cat.HELPFUL` |
 | `E-2` | `modules/FilterCompiler.lua` reads the row's state instead of `filter.includeEnchants`: `plan.enchants` is set when the state is **not `"hide"`**, the container's `auraType` is `HELPFUL` and its `unit` is `player`. That is the same rule every other category now follows (`D7`) — Show contributes nothing and the enchants are drawn; only Hide takes them away. **This changes the shipped default: enchants are ON for a new player buff container**, where `defaults/Profile.lua:115` had them off |
-| `E-3` | `splitCategories` skips kind `enchant`, so the row never reaches `hidden` and never contributes an exclusion to the aura group. `excludeCategory` ignores the kind too, as a second line of defence for any future caller |
+| `E-3` | `splitCategories` skips kind `enchant`, so the row never reaches `hidden` and never contributes an exclusion to the aura group. `excludeCategory` ignores the kind too, as a second line of defense for any future caller |
 | `E-4` | The `Weapon enchants` subgroup is removed from *What to show*. `container.filter.includeEnchants` is removed from the schema; `container.filter.hidePermanentEnchants` keeps its path and moves to the Categories tab (`F-5`), still offered for `HELPFUL` and `ENCHANT` |
 | `E-5` | **Schema v3 migration** in `core/Database.lua`, written to PRESERVE what each existing container draws today: `filter.includeEnchants == false` (or absent, which is the template's `false`) → `filter.categories.weaponEnchants = "hide"`; `== true` → `"show"`. The old key is then cleared. Since the template stamped `false`, most existing containers migrate to an explicit `Hide` — truthful about what they draw, and one click from the new default. `ENCHANT`-type containers are untouched; they never read the flag |
 | `E-6` | General → Spell Categories offers `Weapon enchants` in its dropdown. In its place it draws: the three weapon slots as toggles (new profile-wide `enchantSlots`, all on by default), and a line saying the per-container options live on Filters → Categories, with a link back |
@@ -153,7 +153,7 @@ while another shows everything is the normal case.
 | `C-1` | `splitCategories` returns `hidden` alone. A row's state is `hide` or it contributes nothing |
 | `C-2` | `addCategoryGroups` always adds exactly **one** group: the base, minus every hidden category, minus the Overrides whitelist. The per-shown-category loop, and with it the "an aura matching two shown categories appears once, under the first" rule, is deleted |
 | `C-3` | `applyCategory`'s positive path is deleted; what is left is renamed `excludeCategory(con, def, spellEdits)`. `setFlag`'s `soft` parameter goes with it — every remaining call is a negation, so the parameter is dead |
-| `C-4` | A group `label` is no longer a category name. The single group is labelled `"All"`, as the no-category case already was |
+| `C-4` | A group `label` is no longer a category name. The single group is labeled `"All"`, as the no-category case already was |
 | `C-5` | The `maxAuras` row's description stops saying "for each shown category" — there is one group, so the cap is the container's |
 | `C-6` | An empty `spells`-kind category set to Hide still contributes no exclusion (today's `isEmpty` guard). The `conflict` path for an empty SHOWN category is deleted with the shown path |
 
@@ -164,7 +164,7 @@ while another shows everything is the normal case.
 | `D-1` | `container.filter.maxDuration` keeps its path, range and step. Its label becomes `Max duration`; its description states plainly that it is an upper bound and that no lower bound exists |
 | `D-2` | A preset dropdown beside it — `30s · 1m · 5m · 10m · 30m · No limit` — writing the same path through the seam. A stored value matching no preset leaves the dropdown showing nothing rather than snapping the slider |
 | `D-3` | `docs/scope.md` → *Out of reach on this client (12.1)* gains a **minimum duration** entry beside the existing no-duration one |
-| `D-4` | A GitHub issue records the request and the engine limit, labelled `state:will-not-do` + `severity:low` |
+| `D-4` | A GitHub issue records the request and the engine limit, labeled `state:will-not-do` + `severity:low` |
 
 ## 8. The double tooltip
 

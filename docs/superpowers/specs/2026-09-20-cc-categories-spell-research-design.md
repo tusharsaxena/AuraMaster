@@ -42,7 +42,7 @@ button and the `Cat.IsSpellCategory` surface with no new machinery.
 **No schema bump.** `Cat.DefaultStates()` is the source of the container template's
 `filter.categories`, and its header already promises that a key added in a later version reaches
 every stored container through the ordinary backfill. Two new keys defaulting to `"show"` change no
-stored container's behaviour.
+stored container's behavior.
 
 Counts move 34 → 36 categories; debuffs 17 → 19.
 
@@ -68,7 +68,7 @@ debuffs on the player. The engine therefore receives a group with **no effective
 which draws every debuff on the unit and neuters every other Hide on the tab. That is exactly the
 failure fix round 3 diagnosed and closed, re-entering through a new door.
 
-**The fix, as shipped.** The predicate is already implicit in `identityWarning`: Blizzard honours
+**The fix, as shipped.** The predicate is already implicit in `identityWarning`: Blizzard honors
 spell ids for buffs on friendly units and debuffs on hostile ones
 (`AuraContainerUtil.CanApplyIdentityCandidateFilters`). This spec originally lifted it into **one**
 named surface, `FC.IdsHonored(unit, auraType)`, and gated on that. Implementation found that one
@@ -143,7 +143,7 @@ target is friendly) and `target`/`HELPFUL` unhonored (dropping the very group fi
 for) — the same conditionality, treated two opposite ways, in one function. The owner ruled the
 predicate splits: the warning keeps the CAN-ever question, and **only UNCONDITIONALLY honored ids may
 let an `uncategorized` Show supersede the catch-all**. Every `target`/`focus` answer on the gate is
-therefore false, however common the favourable case is in play.
+therefore false, however common the favorable case is in play.
 
 **Ruling 2 — the spells-kind Show residual is ACCEPTED, documented, and not suppressed.** A
 `spells`-kind **shown** category compiles to a group whose only constraint beyond the base aura-type
@@ -187,7 +187,7 @@ TDD, regression first:
    `uncategorizedDebuffs` Shown, asserting no unconstrained group is emitted and the catch-all
    behaves as it did before the categories existed. This fails against today's compiler the moment
    A1 lands, which is the point.
-2. **Hostile-target behaviour** — Show and Hide for each new row on a `target` container, asserting
+2. **Hostile-target behavior** — Show and Hide for each new row on a `target` container, asserting
    `includeSpellIDs` / `excludeSpellIDs` as the other `spells` categories are asserted.
 3. **Both predicates** — a direct unit/aura-type truth table each (`FC.IdsHonored`, the CAN-ever one;
    `FC.IdsAlwaysHonored`, the gate one), plus the implication `certain → can-ever` asserted over the

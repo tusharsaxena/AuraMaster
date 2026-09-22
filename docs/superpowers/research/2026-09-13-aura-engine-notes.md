@@ -231,7 +231,7 @@ The atlases (`Blizzard_FrameXMLUtil/AuraUtil.lua:5-10`) are per-type colored art
   - For a true recolor, use `style = CustomAsset` with a `customDispelAssetMap` that points every
     key (Magic … None) at the neutral `ui-debuff-border-default-noicon` atlas, plus the color map.
     CustomAsset's `SetVertexColor(1, 1, 1, 1)` (:455) runs before the color map (:472), so the map
-    wins. That atlas's own tint (grey or white) is not in the source. **UNSETTLED — in-game check
+    wins. That atlas's own tint (gray or white) is not in the source. **UNSETTLED — in-game check
     required:** CustomAsset plus the default-noicon atlas plus our map shows the chosen swatch
     color.
 - Either way, the General → Dispel Colors tab need not say "bars only".

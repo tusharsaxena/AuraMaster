@@ -71,124 +71,20 @@ end)
 
 -- ── US English across the addon's own files (localization-§5, the canonical lists) ─────────────
 
--- localization-§5 · US English is the source dialect. Copy BOTH lists whole.
--- BRITISH: lowercase substrings, matched case-insensitively.
--- ALLOWED: correct US words that contain a BRITISH substring; removed as WHOLE WORDS first.
-local BRITISH = {
-  -- -our → -or
-  "colour", "behaviour", "favour", "honour", "neighbour", "armour", "flavour",
-  "labour", "rumour", "humour", "endeavour", "rigour", "vigour", "saviour",
-  -- -re → -er
-  "centre", "centring", "metre", "fibre", "calibre", "theatre", "manoeuvre",
-  -- -ce → -se
-  "defence", "licence", "offence", "pretence", "practis",
-  -- -ise / -isation → -ize / -ization, and the -yse verbs
-  "initialis", "normalis", "generalis", "specialis", "optimis", "customis",
-  "serialis", "summaris", "utilis", "organis", "authoris", "prioritis",
-  "alphabetis", "categoris", "sanitis", "visualis", "minimis", "maximis",
-  "itemis", "randomis", "tokenis", "capitalis", "localis", "modularis",
-  "standardis", "memois", "recognis", "analys", "paralys", "synthesis",
-  "emphasis",
-  -- a doubled consonant before a suffix, where US English keeps one
-  "cancelled", "cancelling", "cancellable", "labelled", "labelling",
-  "travelled", "travelling", "modelled", "modelling", "signalled",
-  "signalling", "levelled", "levelling", "fuelled", "fuelling", "totalled",
-  "totalling", "fulfil",
-  -- -ogue → -og
-  "catalogue", "dialogue", "analogue",
-  -- no family, just British
-  "grey", "artefact", "whilst", "amongst", "learnt", "ageing", "enquir",
-  "acknowledgement", "judgement", "sceptic", "mould", "sulphur", "programme",
-}
-
-local ALLOWED = {
-  "analysis", "analyses", "analyst", "analysts",
-  "organism", "organisms", "organist",
-  "specialist", "specialists", "generalist", "generalists",
-  "optimism", "optimist", "optimists", "optimistic", "optimistically",
-  "paralysis", "paralyses", "synthesis", "syntheses", "emphasis", "emphases",
-  "fulfill", "fulfills", "fulfilled", "fulfilling", "fulfillment",
-  "programmer", "programmers", "programmed",
-}
-
-local ALLOWED_SET = {}
-for _, w in ipairs(ALLOWED) do ALLOWED_SET[w] = true end
-
---- Every file this repo authors itself. Frozen bundles sit one level deeper and are not globbed.
-local function ownFiles()
-  local files = {}
-  local function add(list)
-    for _, p in ipairs(list) do
-      files[#files + 1] = p
-    end
-  end
-  add(glob("*.md"))
-  add(glob("*.toc"))
-  add(glob("docs/*.md"))
-  add(glob("docs/perf-analysis/*.md"))
-  add(glob("docs/automated-tests/README.md"))
-  add(glob("core/*.lua"))
-  add(glob("settings/*.lua"))
-  add(glob("modules/*.lua"))
-  add(glob("defaults/*.lua"))
-  add(glob("locales/*.lua"))
-  add(glob("tests/*.lua"))
-
-  local skip = { ["docs/test-cases.md"] = true, ["tests/test_docs.lua"] = true }
-  local kept = {}
-  for _, p in ipairs(files) do
-    if not skip[p] and not p:match("^tests/_kit/") then
-      kept[#kept + 1] = p
-    end
-  end
-  return kept
-end
-
---- The British substrings found on one line, after ALLOWED words are removed as WHOLE words.
-local function britishOn(line)
-  local hits = {}
-  local kept = {}
-  for word in line:gmatch("%a+") do
-    local lw = word:lower()
-    if not ALLOWED_SET[lw] then
-      kept[#kept + 1] = lw
-    end
-  end
-  local text = " " .. table.concat(kept, " ") .. " "
-  for _, sub in ipairs(BRITISH) do
-    if text:find(sub, 1, true) then
-      hits[#hits + 1] = sub
-    end
-  end
-  return hits
-end
-
-test("the addon's own files use US spellings (localization-§5's canonical lists)", function()
-  local paths = ownFiles()
-  assertTrue(#paths > 20, "the glob found almost nothing (" .. #paths .. ") -- run from the root")
-
-  local offenders, report = 0, {}
-  for _, path in ipairs(paths) do
-    local lineNo = 0
-    for line in (readFile(path) .. "\n"):gmatch("([^\n]*)\n") do
-      lineNo = lineNo + 1
-      for _, sub in ipairs(britishOn(line)) do
-        offenders = offenders + 1
-        local reported = #report
-        if reported < 12 then report[reported + 1] = path .. ":" .. lineNo .. " " .. sub end
-      end
-    end
-  end
-  assertEqual(offenders, 0, "en-US is this collection's source dialect: " .. table.concat(report, "; "))
-end)
-
-test("the spelling gate is falsifiable: it flags a British word and passes its US twin", function()
-  -- red under: emptying BRITISH, or matching ALLOWED as a substring instead of a whole word.
-  assertTrue(#britishOn("the bar colour is grey") == 2, "two British spellings must be reported")
-  assertEqual(#britishOn("the bar color is gray"), 0, "their US forms must pass")
-  assertEqual(#britishOn("an analysis of the cooldown"), 0, "an ALLOWED word must pass")
-  assertTrue(#britishOn("it was analysed") == 1, "analysed must not hide behind analysis")
-end)
+-- ── The US-English gate is the KIT's now ──────────────────────────────────────────────
+--
+-- It used to live here: a BRITISH list, an ALLOWED list, a walk over the addon's own files, and
+-- the cases over them. All of it is gone, replaced by one line in tests/run.lua declaring
+-- `{ name = "test_prose", dir = "tests/_kit/" }` (LibKa0s kit revision 24). localization-5 says
+-- wire the kit's gate or your own and NEVER both, because two gates over one rule is two copies
+-- of a list each required to be carried whole -- and the collection proved the cost: seven repos
+-- had written this by hand under three different filenames before the kit shipped one.
+--
+-- COVERAGE WENT UP ON THE SWAP. This file's version walked a glob of the addon's own source. The
+-- kit's reads the tracked set out of git, so the TOC, the docs, the locale files and .luacheckrc
+-- are held to the same rule, and its exclusions are a named list rather than whatever the glob
+-- happened to miss. Anything this repo must NOT correct goes in tests/prose_waivers.lua, per file
+-- and per word, with the reason beside it.
 
 -- ── The Tier 2 documentation map agrees with docs/ ─────────────────────────────────────────────
 

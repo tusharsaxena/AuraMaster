@@ -8,7 +8,7 @@ picker and New in the band above the strip (#2), Restore beside the Category dro
 dropdown-chosen sections shown rather than dimmed through a new LibKa0s opt-in (#4, with its release,
 the re-vendor into all eleven consumers and the adoptions), trimmed token output and built-in Text
 templates with a preview (#5), weapon enchants as a buff category only with a schema v5 migration
-(#6), bars' background colored by dispel type and the Text-colour research gate (#7), a TEST marker on
+(#6), bars' background colored by dispel type and the Text-color research gate (#7), a TEST marker on
 the handle (#8), a right-click on the handle's "?" that opens the Containers page on that container
 (#9), and Show all / Hide all on Filters → Categories (#10).
 
@@ -306,7 +306,7 @@ difference is resolved in **Decisions this plan pins down** below, never silentl
   on an old profile). An enchant-only buff container compiles to **no aura groups and the enchant
   slots**, so `finishWarnings` no longer adds "These filters can never match anything" when
   `plan.enchants` is set (measured: without that change the migrated container shows the warning).
-- **D-7, colour by dispel type, and the §7 stop-and-flag.**
+- **D-7, color by dispel type, and the §7 stop-and-flag.**
   - **Bars (implemented, Task 11):** `bars.bgColorMode` (`"static"` | `"dispel"`, default `"static"`),
     a second `AddDispelTypeTexture` on `am.bg` with the same options as the fill. The engine colors a
     typeless aura from the map's `"None"` key (`GetDispelTypeMapKey` → `"None"`) and otherwise leaves
@@ -4651,7 +4651,7 @@ schema-version bump.
 
 `docs/ARCHITECTURE.md`:
 - Lines 105–107 become the lines below. This also fixes Task 11's leftover General 19 / six / Bars 71;
-  the total 235 held then only because Task 11's −1 and +1 cancelled.
+  the total 235 held then only because Task 11's −1 and +1 canceled.
 
 ```markdown
 `NS.Schema` holds **240** rows across seven pages: General 18 (its Dispel Colors tab's five and its
@@ -6295,28 +6295,28 @@ Task 19 has already run.
    Rename the locale key, and update every doc and test that names it.
 2. **Preview box, done PrettyChat's way.** PrettyChat (`../PrettyChat/settings/Panel.lua`, the
    `previewInput` block) uses an AceGUI `EditBox` with `SetLabel(L["Preview"])`, `SetFullWidth(true)`
-   and `SetDisabled(true)`. Its text is the rendered line with colour codes left live, so the
-   colours show, and it carries a tooltip.
+   and `SetDisabled(true)`. Its text is the rendered line with color codes left live, so the
+   colors show, and it carries a tooltip.
    - Replace the plain "Preview: …" text line with such a box, under the Custom template field.
-   - The box text is `Text.PreviewLine`'s output. Where the line's options call for colour
-     (the font colour, and Task 12's coloured dispel word when it is on), the box shows it.
+   - The box text is `Text.PreviewLine`'s output. Where the line's options call for color
+     (the font color, and Task 12's colored dispel word when it is on), the box shows it.
    - Escape a literal `|` the way PrettyChat does, so a stray pipe cannot break the box.
    - Built through the page's existing helpers (`H.AttachTooltip`, and so on); no raw frames.
-   - It refreshes whenever the template, the built-in choice or a colour option changes, as the
+   - It refreshes whenever the template, the built-in choice or a color option changes, as the
      old line did.
 3. **Cheat sheet with two headed, bulleted lists and spacing:**
    - **Tokens**: one bullet per token, the gold `$token$` then its meaning. Same content as
      today, one line each.
    - **Rules**: one bullet each for `[ ]` hiding its text with the token, escapes (`[[`, `]]`,
      `$$`), how brackets and escapes combine, and text outside `[ ]` always showing. Put each
-     example on the bullet's own continuation line, in the gold token colour.
+     example on the bullet's own continuation line, in the gold token color.
    - A blank-line gap before each heading.
    - The bullet is the `•` character. Localization rules allow only ASCII apart from the em dash,
      so if the locale test refuses `•`, use `-`, or draw the bullet as a texture-free `|TInterface...|t`.
      Prefer `-` for simplicity.
 4. Tests (with "red under:" comments):
    - the heading reads Text Template;
-   - the Preview is a disabled EditBox labelled Preview, whose text is `Text.PreviewLine`'s output;
+   - the Preview is a disabled EditBox labeled Preview, whose text is `Text.PreviewLine`'s output;
    - the cheat sheet has a Tokens heading, a Rules heading and one bullet per token;
    - the preview text refreshes after a template change.
 5. Docs: settings-panel.md, and smoke section T's items that describe this section, match the new
@@ -6324,7 +6324,7 @@ Task 19 has already run.
 
 6. **The "Not in use" notice goes muted red** (owner, 2026-09-19: "Make this text a muted red
    color - on bars, icons and text pages (all tabs)").
-   - One constant colours it on all three pages: `C.NOTICE_COLOR` in core/Constants.lua, used by
+   - One constant colors it on all three pages: `C.NOTICE_COLOR` in core/Constants.lua, used by
      settings/OptionsSetup.lua's drawDisabledNotice. Change it from muted gold `ffc8a85a` to muted
      red `ffcc6666`, about (0.80, 0.40, 0.40): readable on the dark panel and quieter than an
      error red.

@@ -124,11 +124,11 @@ Two steps exist solely because of this:
   area trigger may bridge" — fitted to the single case, Freezing Trap, that had failed, and by
   construction blind to the summon and spell-script shapes. It left Storm Bolt, Ring of Frost,
   Blinding Light, Holy Word: Chastise and Capacitor Totem out of the derived pool **while the
-  coverage gate reported PASS**, which is the exact failure the gate exists to prevent. Generalising
+  coverage gate reported PASS**, which is the exact failure the gate exists to prevent. Generalizing
   it to effects 179, 28 and 3 would have caught them at 547 ids of mostly noise, because `DUMMY` is
   not evidence of anything. Family is evidence.
 
-  Every bridged id is still **labelled** — `"source": "bridge"` in `derived.json`,
+  Every bridged id is still **labeled** — `"source": "bridge"` in `derived.json`,
   `**[family bridge — name match inside the family, check it]**` in the diff, `(family bridge)` in
   the emitted Lua — because a shared name inside a shared family is still weaker than a directed
   edge. `--emit` goes further and **segregates** them: inside each class key the directly derived
@@ -200,7 +200,7 @@ The gate's first version held ten hard-CC and six soft-CC names, and every one o
 the implementation of the day already produced. **A gate assembled that way can only ever report
 PASS.** It certifies that the tool still does what it did, which is not the question anyone is
 asking. It duly reported PASS over a derived set missing Storm Bolt, Ring of Frost, Blinding Light,
-Holy Word: Chastise and Capacitor Totem — five of the most recognisable stuns in the game — because
+Holy Word: Chastise and Capacitor Totem — five of the most recognizable stuns in the game — because
 the area-trigger fence on the name bridge could not see them.
 
 A gate that cannot fail is worse than no gate: no gate leaves a reviewer suspicious, a passing gate
@@ -258,7 +258,7 @@ populations cleanly, and seven is a simple majority of thirteen.
 - **The player pool is broad by construction.** A derived list can contain a spell no player casts
   in practice. Removing it is a diff decision, and the bundle records the removal.
 - **Bridged ids are name matches inside a shared spell family**, which is weaker evidence than a
-  directed edge. Every one is labelled in all three outputs. Check them.
+  directed edge. Every one is labeled in all three outputs. Check them.
 - **Pet crowd control is outside the pool.** Axe Toss (89766) and Seduction (6358) *are* in
   `SkillLineAbility`, with `ClassMask` 0 and a pet skill line — 761 and 931 for the felguard, 205 for
   the succubus — and the pool keeps a `ClassMask`-0 row only when its skill line is one of the

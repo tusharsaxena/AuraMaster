@@ -56,13 +56,13 @@ lays the line out **stacked**:
 
 Move the **container dropdown** and the **New container** button out of the tab content, to sit
 **above the tab strip**, matching the banner the Filters / Layout / Bars / Icons / Text sub-pages
-use (the same helper). Behaviour is unchanged. Tests assert that the order is banner, then tabs.
+use (the same helper). Behavior is unchanged. Tests assert that the order is banner, then tabs.
 
 ## 3. Spell Categories: Restore beside the Category dropdown
 
 Put **"Restore this category's starter list"** on the **same row, to the right of the Category
 dropdown** (`H.RenderGrid` cells: dropdown plus button). Today it sits under the dropdown. The
-behaviour is unchanged; the test asserts that both are in the same grid row, the button second.
+behavior is unchanged; the test asserts that both are in the same grid row, the button second.
 
 ## 4. Sections chosen by a dropdown are shown, not dimmed (LibKa0s widget + adoption)
 
@@ -94,11 +94,11 @@ dropdown, so it belongs in the library:
 - **Every other Ka0s addon:** a sweep for `disabledIf` predicates keyed on one dropdown's value
   that gate a whole subsection. Each hit is adopted, or reported as not a fit (for example, a single
   row dimmed by a checkbox stays dimmed: this is for dropdown-chosen **sections**).
-- A dimmed row the standard requires to stay visible (a colour swatch, anti-pattern #74) is not a
+- A dimmed row the standard requires to stay visible (a color swatch, anti-pattern #74) is not a
   section and is left alone.
 - **Standard check:** options-ui governs disabled-vs-hidden. If it requires dimming rather than
   hiding for this shape, **stop and flag** before implementing: either a deviation row, or an
-  upstream change to the standard (the owner asked for this behaviour collection-wide, so the
+  upstream change to the standard (the owner asked for this behavior collection-wide, so the
   upstream route is the likely one).
 
 ## 5. Templates: token output and built-in templates
@@ -161,26 +161,26 @@ enchants).
   folded: the FilterCompiler enchant path becomes the category path only; Containers page choices;
   `/am new` words; the `ENCHANT_UNIT` warning; the preview; Style_* enchant-specific binds.
 
-## 7. Colour by dispel type (debuffs)
+## 7. Color by dispel type (debuffs)
 
 - **Text style:** a new option **Color by → Font color / Dispel type** (debuff containers only).
-  With Dispel type, each piece's text colour follows the aura's dispel type from the profile's
-  Dispel Colors, and falls back to the font colour when the aura has no type.
+  With Dispel type, each piece's text color follows the aura's dispel type from the profile's
+  Dispel Colors, and falls back to the font color when the aura has no type.
   - The engine binding is `AddDispelTypeTexture`-style for regions; for text, research the
-    supported binding. `SetDispelTypeText` writes text, not colour, so the plan must find a
-    colour path: a colour curve keyed by dispel type, or `customDispelColorCurve` on a region
+    supported binding. `SetDispelTypeText` writes text, not color, so the plan must find a
+    color path: a color curve keyed by dispel type, or `customDispelColorCurve` on a region
     behind the text.
-  - **If there is no engine path to colour text by dispel type in combat, stop and report.** Offer a
-    dispel-coloured backdrop or edge on the Text box instead.
+  - **If there is no engine path to color text by dispel type in combat, stop and report.** Offer a
+    dispel-colored backdrop or edge on the Text box instead.
 - **Bars style:** the fill already has Color by → Dispel type. **Add the same for the bar
-  background** (`bgColorMode`), using the same map and the same fallback to the background colour.
+  background** (`bgColorMode`), using the same map and the same fallback to the background color.
 - **The fallback when there is no dispel type** (owner decision): the normal bar / background /
-  text colour.
+  text color.
 - **Mystic Touch and similar debuffs show no type because they have none.** The engine reports a
   dispel type only for dispellable categories (Magic, Curse, Disease, Poison, Bleed, Enrage);
-  Mystic Touch is not dispellable, so it takes the fallback colour. A settings tooltip says so.
-- **Tests:** option rows only on debuff containers; the bindings carry the colour map and fallback;
-  the preview shows the Magic stand-in colour as Bars does today.
+  Mystic Touch is not dispellable, so it takes the fallback color. A settings tooltip says so.
+- **Tests:** option rows only on debuff containers; the bindings carry the color map and fallback;
+  the preview shows the Magic stand-in color as Bars does today.
 
 ## 8. Test mode shows in the unlocked anchor
 
@@ -193,7 +193,7 @@ handle label text or tag shown iff `NS.State.testMode`.
 
 Right-clicking the **?** on an unlocked container's handle opens the settings panel to the
 **Containers** page with **that container** selected in the banner dropdown. Left-click keeps its
-current behaviour. It uses the existing panel-open seam (`/am config` path) and
+current behavior. It uses the existing panel-open seam (`/am config` path) and
 `NS.State.activeContainerId`. In combat it's refused, the same as opening settings today (the
 options-ui combat refusal line). Tests: the right-click handler selects the id and opens the page;
 refused under lockdown.
@@ -211,11 +211,11 @@ button sets exactly its section's keys, leaves the other section alone, and make
 2. **#5 token output**, then **#5 built-in templates**, then **#1 stacked Center** (it uses #5's
    Center template).
 3. **#6 enchant migration**: a schema step, so it's the riskiest single item.
-4. **#7 dispel colours**: the text colour path is a research gate.
+4. **#7 dispel colors**: the text color path is a research gate.
 5. **#9** handle right-click.
 6. **#4**: LibKa0s widget, release, re-vendor to all consumers, adoption in AuraMaster +
    PartyFrameEnhanced + the sweep's hits. This is the largest item and spans repos.
 
-**In-game checks owed after:** Center rows above the head; the `( )` space gone; the dispel-colour
+**In-game checks owed after:** Center rows above the head; the `( )` space gone; the dispel-color
 text path (if found); the enchant migration on a real profile; the switched sections in each
 adopting addon.
