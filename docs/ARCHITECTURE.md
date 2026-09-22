@@ -71,16 +71,16 @@ the library is absent, exercised by `tests/degraded_env.lua`.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 43 authored Lua files under them: one locale, 15 core, 3 defaults, 12
-modules and 12 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 47 authored Lua files under them: one locale, 16 core, 3 defaults, 14
+modules and 13 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
 `settings/GeneralSpells.lua` before `settings/General.lua`, which registers its rows after its own.
 The Settings tree's order is the TOC's own registration order (`N-2`): General, then Containers,
-then its four sub-pages — Filters, Layout, Bars, Icons, each marked with `NS.SubPageLabel`'s indent
-(`D6`, `settings/OptionsSetup.lua`) — then Profiles.
+then its five sub-pages — Filters, Layout, Bars, Icons and Text, each marked with
+`NS.SubPageLabel`'s indent (`D6`, `settings/OptionsSetup.lua`) — then Profiles.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
 profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one

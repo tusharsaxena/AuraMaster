@@ -652,6 +652,16 @@ badge and any count quoted in the docs must agree with it.
 - style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
 - style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
 
+### test_castaura.lua (7)
+
+- castaura: an id the table has never heard of is stored exactly as typed
+- castaura: a trigger-derived id is rewritten to its aura, and the player is told
+- castaura: a name-derived id is NOT rewritten — the candidates are offered
+- castaura: a stored entry that can never match carries a note
+- castaura: an absent or empty table says nothing about any id
+- castaura: the help lines come with a severity — red for never-matches, the caller's for its own line
+- castaura: a non-number is not resolved
+
 ### test_timedspells.lua (19)
 
 - timed: nothing is needed until a container shows only timeless auras
@@ -1039,7 +1049,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: the stub's composers emit the paths and types the live composers do
 
-### test_pages_general.lua (65)
+### test_pages_general.lua (67)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1067,6 +1077,7 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+- general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)
 - general → spell categories: the create form makes a category, shows it, and it is usable at once
 - general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide
 - general → spell categories: a shipped category draws no controls, no heading and no sentence (owner 2026-09-21)
@@ -1083,7 +1094,8 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: the answer line ends when the page leaves the screen
 - general → spell categories: Weapon enchants has a lead-in, and its slots have a heading of their own
 - general → spell categories: a claimed-by tooltip says when the other category is one the player made
-- general → spell categories: two other claimants read '(also in 2)', and the tooltip names both
+- general → spell categories: the mark's color says which of the two things it has to say
+- general → spell categories: two other claimants are both named, in the mark and the tooltip
 - general → spell categories: one unreadable record reads in the singular
 - general → spell categories: a profile that refuses the sweep is said out loud, not only logged
 - general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
@@ -1141,7 +1153,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (45)
+### test_pages_filters.lua (47)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1173,6 +1185,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
 - filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
+- filters: the Overrides lists pack two entries to a row, row-major
 - filters: an Overrides name the game cannot find adds nothing and says why on the add line
 - filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once
 - filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from
@@ -1183,6 +1196,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: a blacklisted spell in a Show category names that category as overridden
 - filters: a whitelisted spell every one of its categories would hide names them as overridden
 - filters: a blacklisted spell a Hide category would also hide gets no note
+- filters: an entry with a verdict keeps its place in the two-column grid
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
 - filters: Show all and Hide all head the Blizzard and Spell Categories sections, and no other (feedback #10)
@@ -1424,6 +1438,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 74 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 59 |
+| test_castaura.lua | 7 |
 | test_timedspells.lua | 19 |
 | test_style_bars.lua | 62 |
 | test_style_icons.lua | 28 |
@@ -1438,9 +1453,9 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 65 |
+| test_pages_general.lua | 67 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 45 |
+| test_pages_filters.lua | 47 |
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
@@ -1458,4 +1473,4 @@ badge and any count quoted in the docs must agree with it.
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 1 |
-| **Total** | **1244** |
+| **Total** | **1255** |

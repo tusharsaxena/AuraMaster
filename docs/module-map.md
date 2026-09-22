@@ -66,12 +66,14 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | File | Responsibility |
 |---|---|
 | `defaults/Categories.lua` | The 17 buff and 19 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, `enchant` for `weaponEnchants`, and `uncategorized` for `uncategorized` and `uncategorizedDebuffs`), the starter spell lists — eleven `spells`-kind categories, nine buff and the two debuff ones issue #11 added (`hardCC`, `softCC`, derived by `tools/spell-research/research.py` against build 12.1.0.69875) — `For`/`Find`/`IsSpellCategory`/`AuraTypeOf`/`DefaultStates`/`EnchantOnlyStates`/`LabelOf` (THE labeling rule: a shipped label routed through `NS.L`, a player's own name never), and the user-category registry (issue #10): the records' load pass `SyncUserCategories`, the acts `CreateUserCategory`/`RenameUserCategory`/`DeleteUserCategory`/`ForgetUnusableUserRecords`, the key machinery `NewUserKey`/`IsUserKey`/`UserKeysInUse`/`UserCategoryOrder`/`HasUserRecord`, and the name rules `SanitizeUserName`/`CharCount`/`USER_NAME_MAX` |
+| `defaults/CastToAura.lua` | **Generated** by `tools/spell-research/research.py --emit-cast-aura` against build 12.1.0.69875, never hand-edited: `NS.CastToAura.REWRITE`, the 58 cast ids whose aura the DB2 data names outright, and `NS.CastToAura.CHOICES`, the 590 whose candidates are only name matches and are never resolved for the player. Ids the panel can say nothing useful about are left out |
 | `defaults/Profile.lua` | `NS.defaults` (profile and global), `NS.CONTAINER_TEMPLATE`, `NS.STARTER_CONTAINERS` — the one place a default is hardcoded |
 
 ## `modules/` (TOC order)
 
 | File | Responsibility |
 |---|---|
+| `modules/CastAura.lua` | Reads `defaults/CastToAura.lua` for the add boxes: `CA.Resolve` (nothing, a rewrite, or a list to choose from), `CA.ForAdd` (the id to store plus the chat line owed, the one seam both the Spell Categories tab and the Filters Overrides lists add through), and what a row says for itself — `CA.SuggestTag`, `CA.Help` and `CA.Note`. It informs and never refuses: the add always happens |
 | `modules/TimedSpells.lua` | Learns which buff spell ids carry a duration while auras are readable, for "only auras without a duration"; listens through AceEvent only while a container needs it and auras are readable, and announces what it learned on the bus |
 | `modules/FilterCompiler.lua` | Pure: one container's filter settings → aura groups (filter strings + candidate filters), enchant slots and warnings, with the profile's spell-category edits handed in through `ctx` (`FC.ProfileContext`); `Signature`, `StructureKey`; the two identity-gate predicates `FC.IdsHonored` (can the engine EVER honor spell ids on this unit and aura type — what `identityWarning` picks its sentence from) and `FC.IdsAlwaysHonored` (are they CERTAIN to be applied — buffs on the player and pet alone, the gate an `uncategorized` Show group must clear in both `Compile` and `ExplainSpell`); `FC.ClaimingCategories`, `ExplainSpell`'s own answer to "which categories hold this id", published for the panel's overlap guardrail |
 | `modules/TextTemplate.lua` | Pure: the Text style's template language. `TT.Compile` turns a template into ordered pieces (literal, name, stacks, dispel, duration run), memoized; `TT.Validate` is the Template row's `validate`; `TT.ForDraw` draws a refused stored template as the default |
@@ -116,8 +118,8 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves, and `P.suggestions()`, which reads the ID lists' suggestion dropdown), for the `test_pages_*` suites |
 | `tests/region_recorder.lua` | Not a suite: a stand-in frame region that records every method called on it, so the style suites can tell one region's paint from another's (the kit hands a frame back as its own texture) |
 | `tests/engine_recorder.lua` | Not a suite: makes a recorder button answer its dispel bindings the way the client's `CustomAuraButton` does (every `Set*` / `Add*` binding ends in a full apply pass; `ClearDispelTypeTextures` only empties the list) |
-| `text_apis.lua` | Not a suite: the Text style's client APIs as recording stand-ins, installed from a fresh environment's `before` |
-| `region_builder.lua` | Not a suite: a recorder that builds recorders, so each piece of a chain records its own calls |
+| `tests/text_apis.lua` | Not a suite: the Text style's client APIs as recording stand-ins, installed from a fresh environment's `before` |
+| `tests/region_builder.lua` | Not a suite: a recorder that builds recorders, so each piece of a chain records its own calls |
 | `tests/border_strips.lua` | Not a suite: reads an element border as `Style.ApplyBorder` draws it, its four Solid strips and its backdrop frame (B2-3); gives a kit frame recorder textures (`recorderTextures`) so the outline's and the handle's strips read apart |
 | `tests/test_*.lua` | One suite per subject, in the order `tests/run.lua` declares them; the cases are enumerated in the generated `docs/test-cases.md` |
 
@@ -141,6 +143,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_disabled.lua` | The stand-down conformance suite (slash-commands-§7): the registration set, the live timer set, the shown frames, the SavedVariables writes and the printed lines, before and after the switch — plus the slash surface, the launcher's two buttons and the two-hold latch |
 | `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, the derived points and inherited flow, the preview extent, pending and forbidden frames, the drag handle |
 | `test_style.lua` | `modules/Style*.lua` and `modules/Preview.lua`: element sizes, preview layout, engine bindings |
+| `test_castaura.lua` | `modules/CastAura.lua`: the resolve of a cast id to its aura or its candidates, the one add seam both add boxes use, and the tag, help and note a row wears |
 | `test_timedspells.lua` | `modules/TimedSpells.lua`: readable-state listening, the bus announcement, learning out of combat, feeding the timeless filter |
 | `test_style_bars.lua` | `modules/Style_Bars.lua`: every bar setting reaching the region it paints, icon side and gap, drain direction, texts, bindings, preview fill |
 | `test_style_icons.lua` | `modules/Style_Icons.lua`: the art inside its border, the aspect crop, the cooldown swipe, the dispel border, texts, bindings, preview fill |
