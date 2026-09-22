@@ -80,6 +80,36 @@ test("castaura: an absent or empty table says nothing about any id", function()
     assertNil(CA2.Note(115151), "an empty table reads the same as an absent one")
 end)
 
+-- The mark is ONE glyph with ONE color, so the severity is a per-ENTRY answer and the harsher of
+-- the two wins: an id that can never match is red whatever else its list has to add, and the
+-- caller's own line colors the mark only when there is nothing more serious to say.
+--
+-- red under: a Help that hands back lines and no severity at all, which is what v1.51.0 shipped --
+-- "this can never match" and "another category has it too" looked identical until the tooltip was
+-- opened, which is the complaint this answers (owner, 2026-09-22).
+test("castaura: the help lines come with a severity — red for never-matches, the caller's for its own line", function()
+    local _, CA = fresh(STUB)
+    local lines, severity = CA.Help(115151)
+    assertTrue(lines ~= nil and lines[1]:find("119611", 1, true) ~= nil, "the never-matches line is still first")
+    assertEqual(severity, CA.HELP_ALERT, "an id no aura carries is the red case")
+
+    local also = "Also in: Defensive cooldowns"
+    local both, sevBoth = CA.Help(115151, also, CA.HELP_WARN)
+    assertEqual(both[2], also, "the caller's line still follows it")
+    assertEqual(sevBoth, CA.HELP_ALERT, "and never-matches still outranks it")
+
+    local warn, sevWarn = CA.Help(12345, also, CA.HELP_WARN)
+    assertEqual(warn[1], also, "an ordinary id carries only the caller's line")
+    assertEqual(sevWarn, CA.HELP_WARN, "which is the yellow case")
+
+    -- The Filters page's override verdict: something to say, and neither of the two severities.
+    local plain, sevPlain = CA.Help(12345, "Hidden here by the blacklist.")
+    assertTrue(plain ~= nil and plain[1] ~= nil, "a caller with no severity still gets its line")
+    assertNil(sevPlain, "and the mark keeps the library's own tint")
+
+    assertNil(CA.Help(12345), "nothing to say at all, no lines and no mark to color")
+end)
+
 test("castaura: a non-number is not resolved", function()
     local _, CA = fresh(STUB)
     assertNil(CA.Resolve("115151"), "a string id resolves to nothing rather than raising")

@@ -695,10 +695,25 @@ local function overrideList(ctx, cfg, key, heading, blurb)
                 -- CA.Note says the entry can never match at all (issue #15), which makes the
                 -- first note moot -- an id no aura carries has no verdict to explain. Joined
                 -- rather than chosen between, so neither is silently dropped.
-                local note = NS.CastAura.Note(id)
-                local why  = overrideNote(cfg, id, fcCtx, key)
-                if note and why then note = note .. " " .. why else note = note or why end
-                out[i] = { id = id, note = note }
+                --
+                -- THEY GO IN THE "?" MARK, NOT IN A `note`, for the reason the Spell Categories
+                -- list moved them there (LibKa0s v1.51.0; modules/CastAura.lua's CA.Help): a note
+                -- is a full-width second line, so the library gives a noted entry a row of ITS
+                -- OWN whatever the column count (`entryNoted`,
+                -- libs/LibKa0s/OptionsWidgets.lua:3167-3174) -- and this list asks for two
+                -- columns, so every entry with a verdict punched a hole through the grid the
+                -- `columns` note above bought. The mark costs a fixed 18px and leaves every row
+                -- the same shape. The SENTENCES are unchanged: each was already a whole statement
+                -- about the entry ("Hidden here by the blacklist, overriding ..."), which reads as
+                -- a tooltip line exactly as it read as an inline one, and the entry's name is the
+                -- tooltip's own title rather than something these sentences ever carried.
+                --
+                -- AND NO SEVERITY IS PASSED for the verdict line. Red is for an entry that can
+                -- never match and yellow for the Spell Categories guardrail's "also in"; an
+                -- override verdict is neither -- it is this list doing exactly its job -- so such
+                -- a mark keeps the library's own gold. CA.Help still reddens the mark by itself
+                -- when the never-matches line is one of the two.
+                out[i] = { id = id, help = NS.CastAura.Help(id, overrideNote(cfg, id, fcCtx, key)) }
             end
             return out
         end,

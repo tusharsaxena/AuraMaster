@@ -407,15 +407,16 @@ local function entryTooltip(m, lbl)
     return table.concat(lines, "\n")
 end
 
---- The lines an entry's "?" help mark carries, joined; "" for a mark with nothing behind it, and
---- nil when the entry was not drawn at all.
+--- The Icon carrying entry `id`'s "?" help mark, and whether that entry was drawn at all — which
+--- entryHelp and entryHelpTint below both read, because the mark's LINES and its TINT are two
+--- claims about one widget (the severity, 2026-09-22) and both have to walk the row the same way.
 ---
 --- WALKED IN ORDER, because a Flow row holds TWO entries at two columns and each has its own mark.
 --- The library draws [X] [?] [label] per entry, so the mark in force when a label is reached is the
 --- one belonging to it -- picking "the first Icon in the row" would answer the left entry's mark
 --- for the right entry's label. `__helpLines` is what the library records on the Icon (v1.51.0);
 --- the kit's fake has no texture and no tooltip to hover, so it is the only way to read one.
-local function entryHelp(ws, id)
+local function entryMark(ws, id)
     for _, row in ipairs(ws) do
         local mark
         for _, kid in ipairs(row.children or {}) do
@@ -424,13 +425,33 @@ local function entryHelp(ws, id)
             elseif kid.type == "InteractiveLabel" and type(kid.text) == "string" then
                 local drawn = kid.text:match("%((%d+)%)|r") or kid.text:match("^Unknown spell (%d+)")
                 if drawn and tonumber(drawn) == id then
-                    if not (mark and mark.__helpLines) then return "" end
-                    return table.concat(mark.__helpLines, "\n")
+                    return mark, true
                 end
             end
         end
     end
     return nil
+end
+
+--- The lines an entry's "?" help mark carries, joined; "" for a mark with nothing behind it, and
+--- nil when the entry was not drawn at all.
+local function entryHelp(ws, id)
+    local mark, drawn = entryMark(ws, id)
+    if not drawn then return nil end
+    if not (mark and mark.__helpLines) then return "" end
+    return table.concat(mark.__helpLines, "\n")
+end
+
+--- The color `id`'s mark was tinted, as a comparable string, or nil when it drew no mark.
+---
+--- COMPARED, NEVER SPELLED OUT. The library owns the numbers (ID_HELP_TINT and ID_HELP_DIM,
+--- libs/LibKa0s/OptionsWidgets.lua:1956-1958, and the severity tints beside them), and a case that
+--- restated them here would go red on a palette change that broke nothing. What the page promises
+--- is that the three severities do not LOOK alike, so that is what is asserted.
+local function entryHelpTint(ws, id)
+    local mark = entryMark(ws, id)
+    if not (mark and mark.__helpTint) then return nil end
+    return table.concat(mark.__helpTint, ",")
 end
 
 --- Every id the IdList drew, in the order it drew them.
@@ -1281,6 +1302,39 @@ test("general → spell categories: a claimed-by tooltip says when the other cat
     NS.GeneralSpells.Select(key)
     assertTrue(entryTooltip(m, entry(P.rerender("General"), 424242))
         :find("Also in: " .. NS.L["Defensive cooldowns"], 1, true) ~= nil)
+end)
+
+-- The owner's rule for the glyph's color (2026-09-22): red for an entry that can never match,
+-- yellow for one another category also claims, dimmed for an entry with nothing to say.
+--
+-- red under one gold tint for every mark that has lines, which is what LibKa0s v1.51.0 drew: the
+-- severity is the whole of what tells a BROKEN entry apart from a merely noteworthy one without
+-- opening a tooltip, and until it existed the two were the same pixel.
+--
+-- The generated table is replaced rather than read (tests/test_castaura.lua says why): a case
+-- pinned to a real Blizzard build's cast->aura edge would go red on a re-generation that changed
+-- nothing about this page.
+test("general → spell categories: the mark's color says which of the two things it has to say", function()
+    local NS, _, P = spells()
+    NS.CastToAura = { REWRITE = { [424242] = 424243 }, CHOICES = {} }
+    local key = NS.Categories.CreateUserCategory("Immunities", "HELPFUL")
+    NS.SetByPath("categorySpells", {
+        [key] = { [424242] = true, [424244] = true, [424245] = true },
+        defensives = { [424244] = true },
+    })
+    NS.GeneralSpells.Select(key)
+    local ws = P.rerender("General")
+    local never = entryHelpTint(ws, 424242)   -- stored as a cast id: it can never match
+    local also  = entryHelpTint(ws, 424244)   -- Defensive cooldowns claims it too
+    local quiet = entryHelpTint(ws, 424245)   -- nothing to say, so a dimmed, hoverless mark
+    assertTrue(never ~= nil and also ~= nil and quiet ~= nil, "all three entries drew a mark")
+    assertTrue(never ~= also, "never-matches and also-in are not the same color")
+    assertTrue(also ~= quiet, "and neither is the entry with nothing behind its mark")
+    assertTrue(never ~= quiet, "nor is the broken one")
+    -- The lines are unchanged by any of it: the color is a summary of them, never a replacement.
+    assertTrue(entryHelp(ws, 424242):find("424243", 1, true) ~= nil, "the red mark names the aura to use")
+    assertTrue(entryHelp(ws, 424244):find(NS.L["Defensive cooldowns"], 1, true) ~= nil, "the yellow one names the category")
+    assertEqual(entryHelp(ws, 424245), "", "and the dim one says nothing at all")
 end)
 
 test("general → spell categories: two other claimants are both named, in the mark and the tooltip", function()

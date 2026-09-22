@@ -14,7 +14,7 @@ is a defect in this doc (documentation-§3).
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | Containers | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| - Filters (sub-page of Containers, `N-2`) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict note; sort order and cap (per group). Tabs vary with the aura type |
+| - Filters (sub-page of Containers, `N-2`) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group). Tabs vary with the aura type |
 | - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through |
 | - Bars (sub-page of Containers, `N-2`) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
 | - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
@@ -480,7 +480,10 @@ section, each the library's `IdList` in spell mode over `container.filter.whitel
 candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
 words, `NS.GeneralSpells`), each entry with an X at the left of each entry. Each set is written whole through the seam's carve-out;
 the lists are not schema rows, so the page's Defaults leaves them alone. Each entry also carries a
-trailing **note** under its name (LibKa0s v1.36.0's `O.IdList` `note`, `K-3`), built from
+**"?" help mark** between its X and its name (LibKa0s v1.51.0's `O.IdList` `entry.help`, `K-3`;
+it was a full-width `note` under the name until 2026-09-22, which cost such an entry its place in
+the two-column grid — the library gives a noted entry a row of its own whatever the column count).
+Hovering it gives the entry's name and the sentence, built from
 `FC.ExplainSpell` sparingly: it fires only when a category genuinely disagrees with the list's
 verdict, or the id sits on both lists, and never claims what the aura will finally do — a duration cap
 or Cast by can still keep it off screen even where the lists and categories alone would draw it. Batch

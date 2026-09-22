@@ -64,13 +64,59 @@ end
 
 --- The line an IdList drew for spell `id`: its label, and the X at the line's left
 --- (`removeStyle = "icon"`, B2).
+---
+--- WALKED PER CHILD, not by position. Two things moved under this helper's feet: these lists pack
+--- two entries to a Flow row (`columns = 2`), so the right-hand entry was never at `children[2]`
+--- at all; and since LibKa0s v1.51.0 an entry that has something to say draws a "?" mark BETWEEN
+--- its X and its name, so the Icon immediately before a label may be the mark rather than the X.
+--- The mark is the Icon that records `__helpTint` (libs/LibKa0s/OptionsWidgets.lua:2860-2861),
+--- which is exactly how tests/test_pages_general.lua tells the two Icons apart.
 local function entry(ws, id)
     for _, w in ipairs(ws) do
-        local lbl = w.children and w.children[2]
-        if lbl and lbl.type == "InteractiveLabel" then
-            local t = lbl.text or ""
-            if t:find("(" .. id .. ")|r", 1, true) or t == "Unknown spell " .. id then
-                return lbl, w.children[1]
+        local kids = w.children or {}
+        for i, lbl in ipairs(kids) do
+            if lbl.type == "InteractiveLabel" and type(lbl.text) == "string" then
+                local t = lbl.text
+                if t:find("(" .. id .. ")|r", 1, true) or t == "Unknown spell " .. id then
+                    local x = kids[i - 1]
+                    if x and x.__helpTint then x = kids[i - 2] end
+                    return lbl, x
+                end
+            end
+        end
+    end
+    return nil
+end
+
+--- The lines entry `id`'s "?" help mark carries, joined; "" for a mark with nothing behind it, and
+--- nil when the entry drew no mark at all — which on this page means the LIST it sits in had
+--- nothing to say about anything, since `listHasHelp` is asked once per list
+--- (libs/LibKa0s/OptionsWidgets.lua:2830-2836) and a list with no help draws no marks.
+---
+--- `nth` picks between the two lists: the Whitelist draws first, so an id sitting on both is the
+--- first match on the whitelist and the second on the blacklist.
+---
+--- WALKED IN ORDER for the reason tests/test_pages_general.lua gives: the library draws
+--- [X] [?] [label] per entry, two entries to a row, so the mark in force when a label is reached
+--- is the one belonging to it.
+local function entryHelp(ws, id, nth)
+    local seen = 0
+    for _, w in ipairs(ws) do
+        local mark
+        for _, kid in ipairs(w.children or {}) do
+            if kid.type == "Icon" and kid.__helpTint then
+                mark = kid
+            elseif kid.type == "InteractiveLabel" and type(kid.text) == "string" then
+                local drawn = kid.text:match("%((%d+)%)|r") or kid.text:match("^Unknown spell (%d+)")
+                if drawn and tonumber(drawn) == id then
+                    seen = seen + 1
+                    if seen == (nth or 1) then
+                        if not mark then return nil end
+                        if not mark.__helpLines then return "" end
+                        return table.concat(mark.__helpLines, "\n")
+                    end
+                end
+                mark = nil   -- the next entry in this row brings its own
             end
         end
     end
@@ -763,7 +809,10 @@ test("filters: a spell on both lists gets a note on its blacklist entry saying t
     NS.SetByPath("container.filter.whitelist", { [500] = true }, 1)
     NS.SetByPath("container.filter.blacklist", { [500] = true }, 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, NS.L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]))
+    -- In the MARK now, not on a line of its own (LibKa0s v1.51.0). The blacklist's entry for this
+    -- id is the SECOND the page draws for it, the whitelist having drawn the first.
+    assertFalse(P.hasText(ws, "outranks the blacklist"), "nothing is drawn under the entry")
+    assertTrue(entryHelp(ws, 500, 2):find(NS.L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."], 1, true) ~= nil)
 end)
 
 -- red under: the whitelist entry not reporting that it is also blacklisted
@@ -772,7 +821,8 @@ test("filters: a spell on both lists gets a note on its whitelist entry naming t
     NS.SetByPath("container.filter.whitelist", { [500] = true }, 1)
     NS.SetByPath("container.filter.blacklist", { [500] = true }, 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, NS.L["Also on the blacklist, but the whitelist outranks it — still shown here."]))
+    assertFalse(P.hasText(ws, "Also on the blacklist"), "nothing is drawn under the entry")
+    assertTrue(entryHelp(ws, 500, 1):find(NS.L["Also on the blacklist, but the whitelist outranks it — still shown here."], 1, true) ~= nil)
 end)
 
 -- red under: a blacklisted spell that a Show category would rescue not reporting the conflict
@@ -781,7 +831,7 @@ test("filters: a blacklisted spell in a Show category names that category as ove
     NS.SetByPath("container.filter.blacklist", { [900001] = true }, 1)
     NS.SetByPath("categorySpells", { defensives = { [900001] = true } })
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, ("overriding %s (set to Show)"):format(NS.L["Defensive cooldowns"])))
+    assertTrue(entryHelp(ws, 900001):find(("overriding %s (set to Show)"):format(NS.L["Defensive cooldowns"]), 1, true) ~= nil)
 end)
 
 -- red under: a whitelisted spell whose categories all say Hide not reporting the conflict
@@ -791,7 +841,7 @@ test("filters: a whitelisted spell every one of its categories would hide names 
     NS.SetByPath("categorySpells", { defensives = { [900002] = true } })
     NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, ("overriding %s (set to Hide)"):format(NS.L["Defensive cooldowns"])))
+    assertTrue(entryHelp(ws, 900002):find(("overriding %s (set to Hide)"):format(NS.L["Defensive cooldowns"]), 1, true) ~= nil)
 end)
 
 -- red under: a blacklisted spell in a Hide-only category getting a spurious note (the blacklist and
@@ -802,7 +852,45 @@ test("filters: a blacklisted spell a Hide category would also hide gets no note"
     NS.SetByPath("categorySpells", { defensives = { [900003] = true } })
     NS.SetByPath("container.filter.categories.defensives", "hide", 1)
     local ws = P.tab("filters", "overrides")
-    assertFalse(P.hasText(ws, "overriding"), "the blacklist and the category agree")
+    -- READ THE MARK, not the drawn text. Once the sentence lives in a tooltip, a hasText check for
+    -- it can only ever pass, so the "no verdict here" claim has to be made where the verdict now
+    -- is: `listHasHelp` is asked once per list, and this list has nothing to say about anything in
+    -- it, so it draws no mark at all rather than a dimmed one.
+    assertTrue(entry(ws, 900003) ~= nil, "the entry is drawn")
+    assertNil(entryHelp(ws, 900003), "the blacklist and the category agree, so there is no mark")
+    assertFalse(P.hasText(ws, "overriding"), "and nothing under it either")
+end)
+
+-- THE WHOLE REASON THE SENTENCES MOVED INTO THE MARK. A `note` is a full-width second line, so the
+-- library gives a noted entry a row of ITS OWN whatever the column count (`entryNoted`,
+-- libs/LibKa0s/OptionsWidgets.lua:3167-3174) -- which on a list that asked for two columns meant
+-- every entry with a verdict punched a hole through the grid, the exact complaint the help mark
+-- was introduced to answer (owner, 2026-09-22).
+--
+-- red under a `note`: these two entries land on rows of their own and the grid is not a grid.
+test("filters: an entry with a verdict keeps its place in the two-column grid", function()
+    local NS, _, P = filters()
+    -- Both are claimed by a Show category, so the blacklist has a verdict to state about EACH --
+    -- one noted entry alone would still pair with nothing and prove less.
+    NS.SetByPath("categorySpells", { defensives = { [900001] = true, [900002] = true } })
+    NS.SetByPath("container.filter.blacklist", { [900001] = true, [900002] = true }, 1)
+    -- The canvas the columns fit into, as the packing case above sets it: the kit's fixture is
+    -- under the icon style's floor for two columns, and unarmed the library correctly draws one.
+    P.canvasWidth(700)
+    local ws = P.tab("filters", "overrides")
+    local rowOf = {}
+    for r, w in ipairs(ws) do
+        for _, kid in ipairs(w.children or {}) do
+            if kid.type == "InteractiveLabel" and type(kid.text) == "string" then
+                local drawn = kid.text:match("^Unknown spell (%d+)")
+                if drawn then rowOf[tonumber(drawn)] = r end
+            end
+        end
+    end
+    assertTrue(rowOf[900001] ~= nil and rowOf[900002] ~= nil, "both blacklisted ids are drawn")
+    assertEqual(rowOf[900001], rowOf[900002], "and share one row, as every other pair of entries does")
+    assertTrue(entryHelp(ws, 900001):find("overriding", 1, true) ~= nil, "the verdict is in the mark")
+    assertFalse(P.hasText(ws, "overriding"), "and on no line of its own")
 end)
 
 -- Fix round 2 of batch 7 retired "Only these categories" (D8) entirely, and with it went the one
@@ -826,7 +914,7 @@ test("filters: an uncategorized blacklisted spell warns that no category hides i
     P.show("Filters")
     NS.SetByPath("container.filter.blacklist", { [900005] = true }, 2)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, "no category here hides it"),
+    assertTrue(entryHelp(ws, 900005):find("no category here hides it", 1, true) ~= nil,
         "no category claims it, but the ordinary catch-all would still draw it")
 end)
 
@@ -837,7 +925,7 @@ test("filters: a whitelisted spell no category claims, on a buff container, name
     NS.SetByPath("container.filter.whitelist", { [900004] = true }, 1)
     NS.SetByPath("container.filter.categories.uncategorized", "hide", 1)
     local ws = P.tab("filters", "overrides")
-    assertTrue(P.hasText(ws, "overriding Uncategorized (set to Hide)"),
+    assertTrue(entryHelp(ws, 900004):find("overriding Uncategorized (set to Hide)", 1, true) ~= nil,
         "the counterfactual is rank 4 (Uncategorized itself says Hide), not the generic rank-5 case")
 end)
 

@@ -117,6 +117,25 @@ function CA.SuggestTag(id)
     return nil
 end
 
+-- THE MARK IS ONE GLYPH WITH ONE COLOR, so severity is a per-ENTRY question and these two names
+-- are the whole of the answer this addon has (owner, 2026-09-22): RED for an entry that can never
+-- match -- a stored id no aura carries, which is a BROKEN entry rather than a remark about a
+-- working one -- and YELLOW for the overlap guardrail's "also in" line, which is worth noticing
+-- and is not a fault. Anything else a list has to say keeps the library's own gold
+-- (ID_HELP_TINT), and an entry with nothing to say keeps its dimmed, hoverless mark
+-- (ID_HELP_DIM, libs/LibKa0s/OptionsWidgets.lua:1956-1958).
+--
+-- THE VALUES LIVE HERE, IN ONE PLACE, because the LIBRARY is what reads them: a host writes one
+-- on `entry.helpSeverity` and the list resolves it to a tint. Both pages that set one take it
+-- from these two names (settings/GeneralSpells.lua, settings/Filters.lua), so if the library's
+-- spelling ever moves, these two lines are the whole of the change.
+-- The library's own level names (LibKa0s v1.52.0, `entry.helpLevel`), not this addon's. They are
+-- re-exported under these constants so a caller reads intent rather than a bare string, but the
+-- VALUES are the library's -- an invented vocabulary here would have to be translated at every
+-- call site, which is where a mismatch hides.
+CA.HELP_ALERT = "blocked"
+CA.HELP_WARN  = "info"
+
 --- The lines an entry's "?" mark shows, or nil (LibKa0s v1.51.0's `entry.help`).
 ---
 --- THIS REPLACED A `note`, AND THE REASON IS THE GRID. A note is a full-width second line, so the
@@ -128,7 +147,14 @@ end
 --- `extra` is whatever the CALLER has to add for this list -- the overlap guardrail's "also in"
 --- line on the Spell Categories tab, the override verdict on the Filters page. It goes AFTER the
 --- never-matches line, because an id no aura carries has no verdict worth explaining.
-function CA.Help(id, extra)
+---
+--- THE SEVERITY COMES BACK BESIDE THE LINES, as a second return, because the caller has to put it
+--- on the entry while the rule for which one WINS belongs here: the never-matches line is ALERT
+--- whatever else was added, and `extraSeverity` colors the mark only when that line is absent.
+--- It is the same ordering the lines themselves are in, stated once instead of copied into each
+--- page. A caller with nothing to claim about its own line passes none, and the mark keeps the
+--- library's gold -- which is what the Filters page's override verdict does.
+function CA.Help(id, extra, extraSeverity)
     local lines = {}
     --- Append `s` when it is a non-empty string. Written out rather than inlined because
     --- `lines[#lines + 1] = s` on a line with an `if` hides the whole statement from lizard
@@ -138,7 +164,10 @@ function CA.Help(id, extra)
         local n = #lines
         lines[n + 1] = s
     end
-    add(CA.Note(id))
+    -- Held, because it is also the ANSWER to which severity this entry wears: a line here IS the
+    -- never-matches sentence, and nothing a caller adds outranks a stored id that cannot match.
+    local note = CA.Note(id)
+    add(note)
     if type(extra) == "table" then
         local n = #extra
         for i = 1, n do
@@ -148,7 +177,11 @@ function CA.Help(id, extra)
         add(extra)
     end
     if not lines[1] then return nil end
-    return lines
+    -- THE LEVEL RIDES ON THE LINES, because that is where the library reads it:
+    -- `entryHelpLevel` takes `entry.help.level` (libs/LibKa0s/OptionsWidgets.lua:2953-2959), not a
+    -- sibling field on the entry. One table is one thing to hand back and one thing to set.
+    lines.level = note and CA.HELP_ALERT or extraSeverity
+    return lines, lines.level
 end
 
 --- The gray second line an ALREADY-STORED entry gets, or nil.

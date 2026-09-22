@@ -1417,7 +1417,12 @@ local function renderSpells(ctx)
                 -- two-column grid. The mark costs a fixed 18px, says both, and leaves every row
                 -- the same shape as every other. The count is gone from the row with the suffix:
                 -- the mark is where a reader now looks, and the names were always in the tooltip.
-                e.help = CA.Help(e.id, overlapLine(def, e.id))
+                -- AND THE MARK IS COLORED BY WHICH OF THE TWO IT IS SAYING (owner, 2026-09-22):
+                -- red for an entry that can never match, yellow for one another category also
+                -- claims, and the library's dim for an entry with neither. CA.Help decides
+                -- between them, because the precedence is its own ordering rule and not this
+                -- page's; all this call does is name the severity of the line IT adds.
+                e.help = CA.Help(e.id, overlapLine(def, e.id), CA.HELP_WARN)
             end
             return out
         end,
