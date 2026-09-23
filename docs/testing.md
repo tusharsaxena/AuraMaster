@@ -92,7 +92,11 @@ Suites worth knowing by name:
 - **`tests/test_vendor_sync.lua`** — `libs/LibKa0s/` and `tests/_kit/` are byte-identical to the
   LibKa0s tag named in `CLAUDE.md`. With no `../LibKa0s` checkout beside this repo it records a
   **skip with its reason**, not a pass (testing-§11).
-- **`tests/_kit/test_eol.lua`** — the working tree agrees with `.gitattributes`.
+- **`tests/_kit/test_eol.lua`** — the working tree agrees with `.gitattributes`, and `.gitattributes`
+  is line-endings-§5's canonical body.
+- **`tests/_kit/test_layout_cap.lua`** — every authored `.lua` over layout-§1's 1500-line cap is in
+  the `### Files over the 1500-line cap` census in `docs/ARCHITECTURE.md`, with a terminal state,
+  and no census row outlives its breach.
 
 ## The degraded environment
 

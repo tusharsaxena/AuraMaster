@@ -106,5 +106,6 @@ Kit.run{
         "test_vendor_sync",
         "test_lintconfig",
         { name = "test_eol", dir = "tests/_kit/" },
+        { name = "test_layout_cap", dir = "tests/_kit/" },
     },
 }

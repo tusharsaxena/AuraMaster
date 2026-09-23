@@ -1382,15 +1382,34 @@ badge and any count quoted in the docs must agree with it.
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
 - locale: every value is ASCII, the em dash excepted (T-1)
 
-### test_docs.lua (7)
+### test_docs.lua (5)
 
 - README.md carries no angle-bracket argument placeholders
-- the addon's own files use US spellings (localization-§5's canonical lists)
-- the spelling gate is falsifiable: it flags a British word and passes its US twin
 - every Tier 2 documentation-map row agrees with docs/
 - every .md under docs/ appears in the documentation map
 - docs: every file:line citation names an existing file and a non-blank line inside it
 - docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
+
+### test_prose.lua (18)
+
+- prose: no authored file carries a British spelling from localization-5's published list
+- prose: the gate carries localization-5's two lists whole, and nothing of its own
+- prose: the exclusions this repository declared suppressed 3 of 148 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: no path this repository narrows the gate by is loaded by a TOC
+- prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
+- prose self-test: the carve-out suppresses the named generated folder, and only it
+- prose self-test: a path the carve-out does not name is not covered by one that looks like it
+- prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+- prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+- prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+- prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+- prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+- prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+- prose self-test: each list is refused on the matching rule its own scan uses
+- prose self-test: the scan and the refusals read the added exclusions through one reader
+- prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+- prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+- prose self-test: a malformed waived is a failure, not a silence
 
 ### test_surface_parity.lua (4)
 
@@ -1413,9 +1432,26 @@ badge and any count quoted in the docs must agree with it.
 - lintconfig: no source file carries a bare inline luacheck ignore
 - lintconfig: no length operator shares its line with a keyword or brace lizard must see
 
-### test_eol.lua (1)
+### test_eol.lua (2)
 
 - eol: every tracked file carries the terminator .gitattributes declares for it
+- eol: .gitattributes is line-endings-5's canonical body for this repo kind
+
+### test_layout_cap.lua (13)
+
+- layoutcap: every authored file over the 1500-line cap is named in the census
+- layoutcap: no census row outlives the breach it records
+- layoutcap: every over-cap census row carries one of layout-1's three terminal states
+- layoutcap: the census and the exempt set agree about which paths were exempted
+- layoutcap: an empty census is written as a result rather than left standing empty
+- layoutcap self-test: the parser reads the census nested under the register, and stops there
+- layoutcap self-test: a census outside its register, or at the wrong level, is not read
+- layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+- layoutcap self-test: a census row that outlives its breach is reported
+- layoutcap self-test: an over-cap row that names no terminal state is reported
+- layoutcap self-test: the census and the exempt set are held to naming the same paths
+- layoutcap self-test: a census that states nothing is told apart from one that states none
+- layoutcap self-test: the exempt set takes folders as well as paths
 
 ## Totals
 
@@ -1468,9 +1504,11 @@ badge and any count quoted in the docs must agree with it.
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
-| test_docs.lua | 7 |
+| test_docs.lua | 5 |
+| test_prose.lua | 18 |
 | test_surface_parity.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
-| test_eol.lua | 1 |
-| **Total** | **1255** |
+| test_eol.lua | 2 |
+| test_layout_cap.lua | 13 |
+| **Total** | **1285** |
