@@ -69,7 +69,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 `LibKa0s-Item-1.0` and `LibKa0s-Widgets-1.0` arrive with the whole-folder copy (library-stack-§7)
 and are not bound by name here; the addon handles no items. `LibKa0s-Schema-1.0` (new in v1.55.0)
 arrives the same way and is not adopted yet: this addon still runs its own settings schema
-(`docs/revendor/2026-09-23/03_DECISIONS.md`, D4). Every setup file degrades to a stub when
+(issue #21, `docs/revendor/2026-09-23/03_DECISIONS.md` D4). Every setup file degrades to a stub when
 the library is absent, exercised by `tests/degraded_env.lua`.
 
 ## Module Map
