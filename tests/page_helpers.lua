@@ -77,7 +77,7 @@ return function(NS, m)
         end
     end
 
-    --- A structural refresh, then the next show: the page draws again from the current state.
+    --- A structural refresh, then the next show: the page draws again from the current state.
     function P.rerender(page)
         NS.Helpers.RefreshAllPanels()
         return P.show(page)

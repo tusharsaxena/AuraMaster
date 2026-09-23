@@ -296,7 +296,7 @@ test("container: deleting a container disables its engine and hides its anchor",
     local NS = fresh()
     local inst = NS.ContainerManager.instances[2]
     local e = inst.engine
-    -- Kit frames start hidden: show it first, or the IsShown assertion below could never fail.
+    -- Shown first, whatever the kit's CreateFrame default, so the IsShown assertion below can fail.
     inst.anchor:Show()
     NS.ContainerManager.Delete(2)
     assertFalse(e.__enabled)

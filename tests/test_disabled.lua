@@ -122,21 +122,66 @@ end
 -- code under test for the expected answer would pass on any wording at all.
 local REFUSAL = "Ka0s Aura Master is disabled — enable it with /am enable"
 
+-- ---------------------------------------------------------------------------
+-- What is on screen, and whose it is
+-- ---------------------------------------------------------------------------
+--
+-- The kit builds a frame SHOWN, as the client's CreateFrame does (kit revision 26), so its
+-- `__shownFrames()` survey lists two kinds of frame this suite must not count as "ours on screen".
+--
+-- The CLIENT'S OWN: UIParent, the chat frame and AceAddon's event frame exist before a line of this
+-- addon loads and are shown whether it runs or not. They are recorded before the addon's files load
+-- (`client`, below), with UIParent named outright because a kit that builds it hidden would leave
+-- it out of that snapshot.
+--
+-- A CHILD OF A HIDDEN FRAME: shown by its own flag and never drawn. The client's `IsVisible` walks
+-- the parent chain; the kit's answers the frame's own flag (revision 26's docs say so). Stand-down
+-- hides a container's anchor, not every button under it, which is what the client needs and all a
+-- stand-down should do. So "on screen" here is what the client means by it: shown, and every
+-- ancestor up to a client root shown too. A frame of ours with no parent is judged by its own flag.
+
+--- The frames of this build that exist before the addon loads, as a set.
+local function clientFrames(mocks)
+    local set = { [mocks.UIParent] = true }
+    for _, f in ipairs(mocks.__shownFrames()) do set[f] = true end
+    return set
+end
+
+--- Every frame of OURS the client would draw right now, in creation order.
+local function onScreen(mocks, client)
+    local out = {}
+    for _, f in ipairs(mocks.__shownFrames()) do
+        if not client[f] then
+            local p = f.__parent
+            while p and not client[p] and p.__shown do p = p.__parent end
+            if p == nil or client[p] then
+                local n = #out
+                out[n + 1] = f
+            end
+        end
+    end
+    return out
+end
+
 --- Bring the addon up enabled and take the three baseline snapshots step 1 asks for. `broker`
---- installs the LibDataBroker / LibDBIcon fakes so the launcher's OnClick can be driven.
+--- installs the LibDataBroker / LibDBIcon fakes so the launcher's OnClick can be driven. The last
+--- return is the client's own frames, for `onScreen`.
 local function baseline(broker)
     local rec = { objects = {} }
-    local opts = broker and { before = function(mocks)
+    local client
+    local opts = { before = function(mocks)
+        client = clientFrames(mocks)
+        if not broker then return end
         local LDB = mocks.LibStub:NewLibrary("LibDataBroker-1.1", 4)
         LDB.NewDataObject = function(_, name, obj) rec.objects[name] = obj; return obj end
         LDB.GetDataObjectByName = function(_, name) return rec.objects[name] end
         local Icon = mocks.LibStub:NewLibrary("LibDBIcon-1.0", 45)
         Icon.Register, Icon.Show, Icon.Hide = function() end, function() end, function() end
         Icon.IsRegistered = function() return true end
-    end } or nil
+    end }
     local NS, mocks = fresh(opts)
     mocks.__fireTimers()
-    return NS, mocks, regs(mocks), mocks.__timers(), mocks.__shownFrames(), rec
+    return NS, mocks, regs(mocks), mocks.__timers(), onScreen(mocks, client), rec, client
 end
 
 --- Disable through the SINGLE WRITE SEAM — never by calling the teardown directly. The checkbox and
@@ -222,14 +267,16 @@ test("disabled: nothing is left armed, and nothing arms itself afterwards", func
 end)
 
 test("disabled: every frame that was shown is hidden, at the source", function()
-    local NS, mocks, _, _, F_on = baseline()
+    local NS, mocks, _, _, F_on, _, client = baseline()
     assertTrue(#F_on > 0, "the baseline draws something")
     disable(NS)
 
+    local after = {}
+    for _, f in ipairs(onScreen(mocks, client)) do after[f] = true end
     for _, f in ipairs(F_on) do
-        assertFalse(f.__shown and true or false, "a frame shown at baseline is still shown")
+        assertFalse(after[f] or false, "a frame shown at baseline is still shown")
     end
-    assertEqual(#mocks.__shownFrames(), 0, "something of ours is still on screen")
+    assertEqual(#onScreen(mocks, client), 0, "something of ours is still on screen")
 
     -- AT THE SOURCE, not imperatively: a hidden frame comes back on a combat transition or a target
     -- swap unless the show ladder itself answers no. red under: make standDown hide the anchors
@@ -238,7 +285,7 @@ test("disabled: every frame that was shown is hidden, at the source", function()
         assertFalse((inst:ShouldShow()), "the show ladder says yes while the addon is off")
         inst:ApplyVisibility()
     end
-    assertEqual(#mocks.__shownFrames(), 0, "a visibility pass re-showed a container")
+    assertEqual(#onScreen(mocks, client), 0, "a visibility pass re-showed a container")
 end)
 
 -- ---------------------------------------------------------------------------
@@ -246,7 +293,7 @@ end)
 -- ---------------------------------------------------------------------------
 
 test("disabled: firing every baseline event writes nothing, says nothing and shows nothing", function()
-    local NS, mocks, R_on = baseline()
+    local NS, mocks, R_on, _, _, _, client = baseline()
     local lines = capture(mocks)
     disable(NS)
     mocks.__fireTimers()
@@ -279,7 +326,7 @@ test("disabled: firing every baseline event writes nothing, says nothing and sho
 
     assertEqual(#mocks.__svWrites(), 0, "a game event wrote SavedVariables while the addon was off")
     assertEqual(#plain(lines), 0, "a game event printed while the addon was off: " .. dump(plain(lines)))
-    assertEqual(#mocks.__shownFrames(), 0, "a game event showed a frame while the addon was off")
+    assertEqual(#onScreen(mocks, client), 0, "a game event showed a frame while the addon was off")
 end)
 
 -- ---------------------------------------------------------------------------
@@ -371,7 +418,7 @@ end)
 -- ---------------------------------------------------------------------------
 
 test("disabled: the launcher's left-click is refused and its right-click still opens the panel", function()
-    local NS, mocks, _, _, _, rec = baseline(true)
+    local NS, mocks, _, _, _, rec, client = baseline(true)
     local lines = capture(mocks)
     local opened = 0
     NS.OpenOptionsPanel = function() opened = opened + 1 end
@@ -392,7 +439,7 @@ test("disabled: the launcher's left-click is refused and its right-click still o
     assertEqual(#p_, 1, "the left click answered " .. dump(p_))
     assertEqual(p_[1], REFUSAL)
     assertEqual(#mocks.__svWrites(), 0, "a disabled launcher click wrote SavedVariables")
-    assertEqual(#mocks.__shownFrames(), 0, "a disabled launcher click showed a frame")
+    assertEqual(#onScreen(mocks, client), 0, "a disabled launcher click showed a frame")
     assertEqual(opened, 0)
 
     -- RIGHT-CLICK IS UNCHANGED in either state: it opens the panel, which slash-commands-§7 lists

@@ -72,7 +72,8 @@ return function()
         function f:AddItemEnchantment(slot, opts)
             record(self, "AddItemEnchantment", slot, opts)
             local frame = M.__stubFrame()
-            frame.__enchantSlot = slot
+            -- The engine's own child, as in the client: it is drawn only while the engine is.
+            frame.__enchantSlot, frame.__parent = slot, self
             return frame
         end
         function f:GetAuraGroupFrameCount(key)
