@@ -30,10 +30,17 @@ local _, NS = ...
 local Secrets = {}
 NS.Secrets = Secrets
 
+-- IsSecret, CanAccess and IsSafeKey are LibKa0s-Compat-1.0's guards when the library is present.
+-- The bodies below are their degraded arm, and a DELIBERATE DUPLICATION: for a guard, "the library
+-- is absent" is not "the client has no secrets system", so a stub answering IsSecret -> false on a
+-- 12.x client would send a secret into a comparison. See LibKa0s docs/api/Compat/version-1-docs.md,
+-- "Degradation". IsReadableNumber and NumberOr are this addon's own, over whichever arm is wired.
+local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
+
 --- Whether `v` is a secret value. False on a client without the secrets system.
 --- @param v any
 --- @return boolean
-function Secrets.IsSecret(v)
+Secrets.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
     local fn = _G.issecretvalue
     if not fn then return false end
     return fn(v) and true or false
@@ -43,7 +50,7 @@ end
 --- comparison or arithmetic on it is legal. A plain value always answers true.
 --- @param v any
 --- @return boolean
-function Secrets.CanAccess(v)
+Secrets.CanAccess = CompatLib and CompatLib.CanAccess or function(v)
     local fn = _G.canaccessvalue
     if fn then return fn(v) and true or false end
     return not Secrets.IsSecret(v)
@@ -73,7 +80,7 @@ end
 --- aura as "not on the list".
 --- @param v any
 --- @return boolean
-function Secrets.IsSafeKey(v)
+Secrets.IsSafeKey = CompatLib and CompatLib.IsSafeKey or function(v)
     if v == nil then return false end
     return not Secrets.IsSecret(v)
 end

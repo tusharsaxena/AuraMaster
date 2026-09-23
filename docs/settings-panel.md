@@ -605,8 +605,8 @@ or one of the many debuffs that carry none, class debuffs such as Judgment or Co
 keeps the surface's own color (the map's
 `None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
-(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the pandemic-window time color is a step color curve over
-remaining time, at the player's own seconds threshold (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the pandemic-window highlight is an additive wash the engine
+(`Compat.CreateSecondsFormatter`, `core/Compat.lua:180`); the pandemic-window time color is a step color curve over
+remaining time, at the player's own seconds threshold (`Compat.ExpiringTextColor`, `core/Compat.lua:202`); the pandemic-window highlight is an additive wash the engine
 shows only while the aura can be refreshed without loss, a window the game finds per spell (the threshold does not move it).
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a

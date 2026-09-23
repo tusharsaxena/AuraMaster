@@ -17,8 +17,8 @@ marked as such rather than listed as a requirement.
 
 - **World of Warcraft (Retail).** Single `## Interface: 120100` line in `AuraMaster.toc:1` — Retail
   only. The addon needs the 12.1 aura container engine: `CM.Init` asks
-  `Compat.EnsureAuraContainer` (`core/Compat.lua:28`), which loads Blizzard's on-demand aura
-  container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:19`). On a client
+  `Compat.EnsureAuraContainer` (`core/Compat.lua:34`), which loads Blizzard's on-demand aura
+  container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:25`). On a client
   without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:568`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
@@ -32,7 +32,7 @@ marked as such rather than listed as a requirement.
   ordering, not as things to download (library-stack).
 - **No optional integration.** Nothing in the addon checks whether another addon is loaded before
   using it. The only add-on-loaded check is `Compat.EnsureAuraContainer`'s own
-  (`core/Compat.lua:28`), and it asks only about Blizzard's `Blizzard_AuraContainer`. The frame
+  (`core/Compat.lua:34`), and it asks only about Blizzard's `Blizzard_AuraContainer`. The frame
   anchor re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:122`) whatever the addon is.
 
 ## Development — the contributor toolchain

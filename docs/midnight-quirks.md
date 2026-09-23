@@ -19,7 +19,7 @@ table key, index it or run `#` on it.
 - `core/Secrets.lua` is the only file that asks whether a value is secret (`IsSecret`, `CanAccess`,
   `IsReadableNumber`, `IsSafeKey`), and it degrades to "nothing is secret" on a client without
   `issecretvalue` / `canaccessvalue`.
-- `Compat.AurasAreSecret()` (`core/Compat.lua:40`) wraps `C_Secrets.ShouldAurasBeSecret()` and gates
+- `Compat.AurasAreSecret()` (`core/Compat.lua:46`) wraps `C_Secrets.ShouldAurasBeSecret()` and gates
   everything that would touch an aura or an aura button.
 - The one place that does read auras, `modules/TimedSpells.lua`, runs only when that answers false,
   and checks every field through `core/Secrets.lua` before comparing or keying on it.

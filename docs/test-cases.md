@@ -426,7 +426,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (23)
+### test_compat.lua (26)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -451,12 +451,18 @@ badge and any count quoted in the docs must agree with it.
 - compat: the blink curve alternates the running-out color's alpha every quarter second, then the normal color
 - compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global
 - compat: spell info comes from C_Spell, and the pre-11.0 global only when C_Spell is absent
+- compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
+- compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
+- compat: without LibKa0s spell info is the major's absent answer, one nil
 
-### test_secrets.lua (3)
+### test_secrets.lua (6)
 
 - secrets: without the client's secrets system nothing is secret and every value is readable
 - secrets: issecretvalue alone decides access when canaccessvalue is absent, as a strict boolean
 - secrets: canaccessvalue, when the client has it, overrides the secret test
+- secrets: the guard trio answers the pinned matrix, one strict boolean each
+- secrets: with LibKa0s present the three guards ARE LibKa0s-Compat-1.0's
+- secrets: without LibKa0s the host's guard bodies answer the same pinned matrix
 
 ### test_bus.lua (8)
 
@@ -1414,12 +1420,13 @@ badge and any count quoted in the docs must agree with it.
 - prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
 - prose self-test: a malformed waived is a failure, not a silence
 
-### test_surface_parity.lua (5)
+### test_surface_parity.lua (6)
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
 - parity: the Options stub carries every helper the host calls, off the load path as a no-op
 - parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls
+- parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires
 - parity: the Slash stub carries every dispatcher member the addon calls
 
 ### test_vendor_sync.lua (3)
@@ -1470,8 +1477,8 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 94 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 51 |
-| test_compat.lua | 23 |
-| test_secrets.lua | 3 |
+| test_compat.lua | 26 |
+| test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
@@ -1510,9 +1517,9 @@ badge and any count quoted in the docs must agree with it.
 | test_locale.lua | 6 |
 | test_docs.lua | 5 |
 | test_prose.lua | 18 |
-| test_surface_parity.lua | 5 |
+| test_surface_parity.lua | 6 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1289** |
+| **Total** | **1296** |

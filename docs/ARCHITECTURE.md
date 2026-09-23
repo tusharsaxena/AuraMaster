@@ -49,7 +49,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.55.0 | Eleven modules wired, one setup file each — table below |
+| LibKa0s v1.55.0 | Twelve modules wired, one setup file each — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -62,13 +62,14 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |
 | `LibKa0s-Launcher-1.0` | `core/LauncherSetup.lua` | `NS.Launcher` — the one LibDataBroker object, registered with LibDBIcon under the folder name |
 | `LibKa0s-Slash-1.0` | `settings/Slash.lua` | the `/am` dispatcher over `NS.COMMANDS` |
+| `LibKa0s-Compat-1.0` | `core/Compat.lua`, `core/Secrets.lua` | `NS.Compat.GetSpellInfo` (behind this addon's number-only guard) and `NS.Secrets.IsSecret` / `CanAccess` / `IsSafeKey`. Without the library the reader answers `nil` and the guards run this addon's own bodies, a deliberate duplication (a guard stub answering "nothing is secret" on a 12.x client would raise in combat) |
 | `LibKa0s-Bus-1.0` | `core/Bus.lua` | `NS.MSG`, through `Bus.Catalog` only (the strict catalog); `NS.BusLib`, the resolved major or its stub. The stand-down record is not taken: `NS.NewBusTarget` stays this addon's own untracked factory (issue #20) |
 | `LibKa0s-Options-1.0` | `settings/OptionsSetup.lua` | `NS.Helpers` (the panel shell, flow engine, composers, and the `ChoiceGrid` and `IdList` widgets the Filters and General pages draw) |
 
 `LibKa0s-Item-1.0` and `LibKa0s-Widgets-1.0` arrive with the whole-folder copy (library-stack-§7)
-and are not bound by name here; the addon handles no items. `LibKa0s-Compat-1.0` and
-`LibKa0s-Schema-1.0` (new in v1.55.0) arrive the same way and are not adopted yet: this addon
-still runs its own `core/Compat.lua` and settings schema. Every setup file degrades to a stub when
+and are not bound by name here; the addon handles no items. `LibKa0s-Schema-1.0` (new in v1.55.0)
+arrives the same way and is not adopted yet: this addon still runs its own settings schema
+(`docs/revendor/2026-09-23/03_DECISIONS.md`, D4). Every setup file degrades to a stub when
 the library is absent, exercised by `tests/degraded_env.lua`.
 
 ## Module Map

@@ -2,6 +2,12 @@ local _, NS = ...
 NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
 
+-- LibKa0s-Compat-1.0 carries the version-variant readers two or more Ka0s addons wrote alike. Of
+-- the members here, only GetSpellInfo is one of them (the secret guards it also carries are wired in
+-- core/Secrets.lua); every other shim in this file is this addon's alone. Absent, a reader answers
+-- the major's documented no-rung value (LibKa0s docs/api/Compat/version-1-docs.md, "Degradation").
+local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
+
 -- core/Compat.lua — every client API this addon reaches that is new in 12.x, version-variant, or
 -- an enum the engine publishes (compat). Feature modules call these wrappers, never the globals, so a
 -- renamed enum or a moved function is a one-file fix and a headless run degrades to plain answers.
@@ -309,20 +315,15 @@ function Compat.GetMouseFocus()
     return nil
 end
 
---- A spell's name and icon, or nil. C_Spell on Retail; the pre-11.0 global as the fallback.
+--- A spell's name and icon first, or one nil. LibKa0s-Compat-1.0's reader: C_Spell on Retail, the
+--- pre-11.0 global (its rank dropped) as the fallback. A hit answers six values, `name, iconID,
+--- castTime, minRange, maxRange, spellID`, and every caller here reads the first. This addon keeps
+--- its number-only domain in front of the call (the major also takes a name or a link). Without the
+--- library it answers nil, the major's documented no-rung value.
 --- @param id number
---- @return string|nil name, number|string|nil icon
+--- @return string|nil name, number|nil icon
 function Compat.GetSpellInfo(id)
     if type(id) ~= "number" then return nil end
-    local cs = _G.C_Spell
-    if cs and cs.GetSpellInfo then
-        local info = cs.GetSpellInfo(id)
-        if info then return info.name, info.iconID end
-        return nil
-    end
-    if _G.GetSpellInfo then
-        local name, _, icon = _G.GetSpellInfo(id)
-        return name, icon
-    end
+    if CompatLib then return CompatLib.GetSpellInfo(id) end
     return nil
 end

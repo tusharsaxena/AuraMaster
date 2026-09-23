@@ -42,6 +42,8 @@ Kit.setSurfaceSource{
     ["LibKa0s-Launcher-1.0"] = NS.Launcher,
     -- A library table, not an instance: this host calls Bus.Catalog alone.
     ["LibKa0s-Bus-1.0"]      = mocks.LibStub("LibKa0s-Bus-1.0", true),
+    -- A library table too: core/Compat.lua and core/Secrets.lua wire its members one by one.
+    ["LibKa0s-Compat-1.0"]   = mocks.LibStub("LibKa0s-Compat-1.0", true),
 }
 
 AM_TEST = Kit.expose{

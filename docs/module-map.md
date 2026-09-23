@@ -54,7 +54,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a four-member local pool (`New`, `Acquire`, `ReleaseAll`, `Counts`) | Conventional |
 | `core/LifecycleSetup.lua` | `LibKa0s-Lifecycle-1.0` seam: the ONE latch behind both reasons to be inert — `NS.lifecycle`, `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, and the `standDown` / `standUp` pair the whole addon goes down and comes back up through | **Load-bearing**: before `core/PerfSetup.lua`, which takes the instance as its `lifecycle` field |
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, the `perf` hold on that latch, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
-| `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsReadableNumber`, `IsSafeKey` | Conventional |
+| `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsSafeKey` (`LibKa0s-Compat-1.0`'s guards, this file's bodies their library-absent arm), `IsReadableNumber`, `NumberOr` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/LauncherSetup.lua` | `LibKa0s-Launcher-1.0` seam: `NS.Launcher`, the one broker object behind both the minimap button and a broker display. Left-click toggles test mode (rung (b)), right-click opens the panel | Conventional: `Register()` is called from `OnInitialize` after `InitDB`, and every click resolves at call time |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
@@ -136,7 +136,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_container.lua` | `modules/Container.lua` against the recorded engine: call order, update in place vs rebuild (the growth corner included), the show ladder, preview |
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, an apply error that leaves the rest of the pass running, followers re-applied, combat and secrecy deferral |
 | `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
-| `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue` |
+| `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue`; one pinned matrix over the library arm and the degraded one |
 | `test_bus.lua` | `core/Bus.lua`: the message catalog (strict live, plain degraded), a target per receiver, one sender per message |
 | `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; test mode is session-only and unlocking keeps real auras drawing |
 | `test_lifecycle.lua` | `core/AuraMaster.lua`: the lifecycle events and the three AceDB profile handlers, fired through AceEvent |
