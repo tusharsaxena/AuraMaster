@@ -50,7 +50,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `testMode`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
 | `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin` (the skin seam, published for a future standalone window; nothing consumes it today), the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
-| `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
+| `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names (strict, through `LibKa0s-Bus-1.0`'s `Catalog`), `NS.BusLib` | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a four-member local pool (`New`, `Acquire`, `ReleaseAll`, `Counts`) | Conventional |
 | `core/LifecycleSetup.lua` | `LibKa0s-Lifecycle-1.0` seam: the ONE latch behind both reasons to be inert — `NS.lifecycle`, `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, and the `standDown` / `standUp` pair the whole addon goes down and comes back up through | **Load-bearing**: before `core/PerfSetup.lua`, which takes the instance as its `lifecycle` field |
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, the `perf` hold on that latch, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
@@ -137,7 +137,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, an apply error that leaves the rest of the pass running, followers re-applied, combat and secrecy deferral |
 | `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
 | `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue` |
-| `test_bus.lua` | `core/Bus.lua`: the message catalog, a target per receiver, one sender per message |
+| `test_bus.lua` | `core/Bus.lua`: the message catalog (strict live, plain degraded), a target per receiver, one sender per message |
 | `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; test mode is session-only and unlocking keeps real auras drawing |
 | `test_lifecycle.lua` | `core/AuraMaster.lua`: the lifecycle events and the three AceDB profile handlers, fired through AceEvent |
 | `test_disabled.lua` | The stand-down conformance suite (slash-commands-§7): the registration set, the live timer set, the shown frames, the SavedVariables writes and the printed lines, before and after the switch — plus the slash surface, the launcher's two buttons and the two-hold latch |

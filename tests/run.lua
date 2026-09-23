@@ -40,6 +40,8 @@ Kit.setSurfaceSource{
     ["LibKa0s-DebugLog-1.0"] = NS.DebugLog,
     ["LibKa0s-Slash-1.0"]    = NS.Slash and NS.Slash.__cli,
     ["LibKa0s-Launcher-1.0"] = NS.Launcher,
+    -- A library table, not an instance: this host calls Bus.Catalog alone.
+    ["LibKa0s-Bus-1.0"]      = mocks.LibStub("LibKa0s-Bus-1.0", true),
 }
 
 AM_TEST = Kit.expose{

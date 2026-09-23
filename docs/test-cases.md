@@ -458,9 +458,12 @@ badge and any count quoted in the docs must agree with it.
 - secrets: issecretvalue alone decides access when canaccessvalue is absent, as a strict boolean
 - secrets: canaccessvalue, when the client has it, overrides the secret test
 
-### test_bus.lua (5)
+### test_bus.lua (8)
 
 - bus: every message name carries this addon's prefix and no two share one
+- bus: the catalog is exactly these four keys and wire names
+- bus: a key the catalog never declared raises, for a publisher as well as a subscriber
+- bus: without LibKa0s the catalog is the same four pairs, as a plain table
 - bus: two receivers on their own targets both hear one message, with its payload
 - bus: CONTAINERS_CHANGED goes out once per registry act, and never for a refused one
 - bus: world entry and each combat edge send one VISIBILITY_CHANGED; a unit swap sends none
@@ -1411,11 +1414,12 @@ badge and any count quoted in the docs must agree with it.
 - prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
 - prose self-test: a malformed waived is a failure, not a silence
 
-### test_surface_parity.lua (4)
+### test_surface_parity.lua (5)
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
 - parity: the Options stub carries every helper the host calls, off the load path as a no-op
+- parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls
 - parity: the Slash stub carries every dispatcher member the addon calls
 
 ### test_vendor_sync.lua (3)
@@ -1468,7 +1472,7 @@ badge and any count quoted in the docs must agree with it.
 | test_containermanager.lua | 51 |
 | test_compat.lua | 23 |
 | test_secrets.lua | 3 |
-| test_bus.lua | 5 |
+| test_bus.lua | 8 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 10 |
 | test_anchors.lua | 74 |
@@ -1506,9 +1510,9 @@ badge and any count quoted in the docs must agree with it.
 | test_locale.lua | 6 |
 | test_docs.lua | 5 |
 | test_prose.lua | 18 |
-| test_surface_parity.lua | 4 |
+| test_surface_parity.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1285** |
+| **Total** | **1289** |
