@@ -95,7 +95,7 @@ NS.COMMANDS = {
 -- usual reason to reach for either is that something is misbehaving.
 --
 -- WHAT IS REFUSED: this addon's OWN feature verbs, on one line, through the library's
--- `DisabledLine()`. That is §2's SHOULD, and the wording is the collection's rather than ours -- one
+-- `DisabledLine()`. That is slash-commands-§2's SHOULD, and the wording is the collection's rather than ours -- one
 -- spelling across eleven addons, which is why it is not an L[] key here.
 --
 -- AND THE REFUSAL IS NOT THE STAND-DOWN. The addon being genuinely inert is slash-commands-§7 and
@@ -119,7 +119,7 @@ end
 --- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
 --- container they mean -- they are part of reading and repairing settings, not features. Neither
 --- draws, hides, creates or deletes anything: `containers` prints a list, and `select` moves one
---- integer of session state. §2's list is what a refusal may never be turned on, not a ceiling on
+--- integer of session state. slash-commands-§2's list is what a refusal may never be turned on, not a ceiling on
 --- what stays live.
 local function liveVerbs()
     local out = { "containers", "select" }

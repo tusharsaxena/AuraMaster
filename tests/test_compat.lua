@@ -500,3 +500,46 @@ test("compat: spell info comes from C_Spell, and the pre-11.0 global only when C
         assertEqual(icon, 999)
     end)
 end)
+
+test("compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss", function()
+    local legacy = function(id)
+        if id == 774 then return "Legacy", "Rank 1", 999 end
+    end
+    with({ { "GetSpellInfo", legacy } }, function(NS)
+        local name, icon = NS.Compat.GetSpellInfo(774)
+        assertEqual(name, "Rejuvenation")
+        assertEqual(icon, 136081)
+        -- red under: a miss spread as more than one value into a caller's argument list
+        assertEqual(select("#", NS.Compat.GetSpellInfo(1)), 1, "no such spell")
+        assertEqual(select("#", NS.Compat.GetSpellInfo("774")), 1, "a string id")
+        assertEqual(select("#", NS.Compat.GetSpellInfo(nil)), 1, "no id")
+        assertNil((NS.Compat.GetSpellInfo(nil)))
+    end)
+    with({ { "C_Spell", nil }, { "GetSpellInfo", legacy } }, function(NS)
+        local name, icon = NS.Compat.GetSpellInfo(774)
+        assertEqual(name, "Legacy")
+        assertEqual(icon, 999)
+    end)
+end)
+
+test("compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil", function()
+    local legacy = function(id)
+        if id == 774 then return "Legacy", "Rank 1", 999 end
+    end
+    with({ { "GetSpellInfo", legacy } }, function(NS)
+        -- red under: the host body answering (name, icon) instead of delegating to LibKa0s-Compat-1.0
+        assertEqual(select("#", NS.Compat.GetSpellInfo(774)), 6, "name, iconID, castTime, minRange, maxRange, spellID")
+    end)
+    with({ { "C_Spell", nil }, { "GetSpellInfo", legacy } }, function(NS)
+        assertEqual(select("#", NS.Compat.GetSpellInfo(2)), 1, "the legacy global knows no such spell")
+        assertEqual(select("#", NS.Compat.GetSpellInfo(774)), 6, "the legacy hit, remapped")
+    end)
+end)
+
+test("compat: without LibKa0s spell info is the major's absent answer, one nil", function()
+    local NS2 = dofile("tests/degraded_env.lua")()
+    -- red under: the degraded reader re-implementing the C_Spell rung (the mock carries 774)
+    assertEqual(select("#", NS2.Compat.GetSpellInfo(774)), 1)
+    assertNil((NS2.Compat.GetSpellInfo(774)))
+    assertNil((NS2.Compat.GetSpellInfo("774")))
+end)

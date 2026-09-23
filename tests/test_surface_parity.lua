@@ -55,6 +55,36 @@ test("parity: the Options stub carries every helper the host calls, off the load
     })
 end)
 
+test("parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls", function()
+    local NS2 = loadDegraded()
+    assertTrue(type(NS2.BusLib) == "table", "core/Bus.lua published its degraded arm")
+    T.assertSurfaceParity(NS2.BusLib, "LibKa0s-Bus-1.0", {
+        -- The stand-down record's constructor. This host takes Catalog alone and keeps its own
+        -- untracked factory (core/Bus.lua, NS.NewBusTarget; docs/revendor/2026-09-23-v1.55.0/03_DECISIONS.md
+        -- D2), so nothing here calls New and a stub copy of it would be a member with no caller.
+        "New",
+    })
+end)
+
+-- LibKa0s-Compat-1.0's nine members sit on two host tables here: GetSpellInfo on NS.Compat, the three
+-- guards on NS.Secrets. Two calls, each ignoring what the other carries, so a member the major gains
+-- later is ignored by neither and fails one of them until this host decides where it goes.
+local COMPAT_READERS = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
+                         "GetSpecialization", "GetSpecializationInfo" }
+
+test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires", function()
+    local NS2 = loadDegraded()
+    T.assertSurfaceParity(NS2.Compat, "LibKa0s-Compat-1.0", {
+        -- The guards live on NS.Secrets (the call below).
+        "IsSecret", "CanAccess", "IsSafeKey",
+        -- Readers with no caller here: this addon reads no spell name, texture or cooldown and no
+        -- spec apart from GetSpellInfo's name.
+        "GetSpellName", "GetSpellTexture", "GetSpellCooldown", "GetSpecialization",
+        "GetSpecializationInfo",
+    })
+    T.assertSurfaceParity(NS2.Secrets, "LibKa0s-Compat-1.0", COMPAT_READERS)
+end)
+
 test("parity: the Slash stub carries every dispatcher member the addon calls", function()
     local NS2 = loadDegraded()
     assertTrue(type(NS.Slash.__cli) == "table" and type(NS2.Slash.__cli) == "table")

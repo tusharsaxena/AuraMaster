@@ -13,7 +13,7 @@ local _, NS = ...
 -- (options-ui-§17), declared `source = "unit"`: the class is that of the unit the container tracks,
 -- snapshotted once per apply (modules/Container.lua's SnapshotClass, modules/Style.lua's
 -- Style.Color), so a player container reads the player's. The two pandemic-window swatches are PALETTE
--- definitions — one color per state — and carry no companion, the one exemption §17 makes. The
+-- definitions — one color per state — and carry no companion, the one exemption options-ui-§17 makes. The
 -- dispel type colors are the profile's, on General → Dispel Colors (settings/GeneralSpells.lua).
 
 local L = NS.L

@@ -11,8 +11,11 @@ A shim is the one entry point a feature module calls in place of a new-in-12.x, 
 enum-valued client API, so a renamed enum or a moved function is a one-file fix, and a headless run
 (where none of these globals exist) degrades to a plain answer (compat). Retail only: every shim
 covers a cross-**patch** difference, never a game flavor. What LibKa0s already supplies — the TOC
-metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`) and the secret-safe stringifier
-(`LibKa0s-Core-1.0`) — is not repeated here.
+metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`), the secret-safe stringifier
+(`LibKa0s-Core-1.0`), and the spell-info reader and the three secret guards
+(`LibKa0s-Compat-1.0`) — is not repeated here. Shim 16 delegates to that last major behind this
+addon's number-only guard; the guards are wired in `core/Secrets.lua`, whose own bodies are only
+their library-absent arm.
 
 ## The shims
 
@@ -33,7 +36,7 @@ metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`) and the secret-safe str
 | 13 | `CreateSecondsFormatter(format)` | `C_StringUtil.CreateSecondsFormatter` plus its setup (pcall); Blizzard's step curve from `C_CurveUtil.CreateCurve` | `nil` (the engine's own format); no curve → a `Days` maximum | The engine formats a secret duration the addon never sees | `modules/Style.lua` |
 | 14 | `ExpiringTextColor(threshold, expiring, normal)` | `C_CurveUtil.CreateColorCurve` step curve over `DurationTextBindingProperty.RemainingDuration` | `nil` (text keeps its font color) | Recolor the time text in the last seconds without comparing a secret | `modules/Style.lua` |
 | 15 | `GetMouseFocus()` | `GetMouseFoci()[1]`, then the pre-11.0 `GetMouseFocus` | `nil` | `GetMouseFocus` was removed in 11.0 | `modules/FramePicker.lua` |
-| 16 | `GetSpellInfo(id)` | `C_Spell.GetSpellInfo` → name, `iconID`; then the old global | `nil` | The spell list editor's labels | `settings/Filters.lua` |
+| 16 | `GetSpellInfo(id)` | `LibKa0s-Compat-1.0`'s `GetSpellInfo` (`C_Spell.GetSpellInfo`, then the old global with its rank dropped): `name, iconID, castTime, minRange, maxRange, spellID`, callers read `name`; a non-number id answers `nil` here, before the library | `nil` (also the answer without the library: the major's documented no-rung value) | Spell names for the spell lists' sort and the cast-aura and overlap messages | `settings/GeneralSpells.lua`, `modules/CastAura.lua` |
 | 17 | `EnsureAuraContainer()` | `C_AddOns.LoadAddOn("Blizzard_AuraContainer")` when it is not loaded (pcall), then `HasAuraContainer()` | `HasAuraContainer()` | `Blizzard_AuraContainer` is load-on-demand: until it loads, neither `CustomAuraContainerTemplate` nor the enums shims 3–7 read exist (`docs/midnight-quirks.md`) | `modules/ContainerManager.lua` (`CM.Init`) |
 | 18 | `DurationProperty(member)` | `Enum.DurationTextBindingProperty[member]` | `nil` | Each `{}` of a Text-style duration run names the property it reads | `modules/Style.lua` |
 | 19 | `CreateRuleFormatter(breakpoints)` | `C_StringUtil.CreateNumericRuleFormatter` + `SetBreakpoints` (pcall) | `nil` | The Text style's stack count (hidden below 2) and its percent components (`%d`, rounded by `step = 1`; a client refusing `step` gets plain `%d`) | `modules/Style.lua`, `modules/Style_Text.lua` |

@@ -40,6 +40,10 @@ Kit.setSurfaceSource{
     ["LibKa0s-DebugLog-1.0"] = NS.DebugLog,
     ["LibKa0s-Slash-1.0"]    = NS.Slash and NS.Slash.__cli,
     ["LibKa0s-Launcher-1.0"] = NS.Launcher,
+    -- A library table, not an instance: this host calls Bus.Catalog alone.
+    ["LibKa0s-Bus-1.0"]      = mocks.LibStub("LibKa0s-Bus-1.0", true),
+    -- A library table too: core/Compat.lua and core/Secrets.lua wire its members one by one.
+    ["LibKa0s-Compat-1.0"]   = mocks.LibStub("LibKa0s-Compat-1.0", true),
 }
 
 AM_TEST = Kit.expose{
@@ -106,5 +110,6 @@ Kit.run{
         "test_vendor_sync",
         "test_lintconfig",
         { name = "test_eol", dir = "tests/_kit/" },
+        { name = "test_layout_cap", dir = "tests/_kit/" },
     },
 }

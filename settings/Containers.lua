@@ -18,7 +18,7 @@ local _, NS = ...
 -- THE PICKER AND NEW CONTAINER SIT IN THE BAND ABOVE THE STRIP (feedback #2, 2026-09-19), in the
 -- library's chrome block (Helpers.ContainerHeader, settings/OptionsSetup.lua): the identity controls
 -- options-ui-§14 puts there, on one row. The acts on the selected container — Name, Enabled,
--- Duplicate, Delete, Copy settings from — stay on the page's one tab, which §14 then names General.
+-- Duplicate, Delete, Copy settings from — stay on the page's one tab, which options-ui-§14 then names General.
 -- This retired the page's options-ui-§14 deviation (docs/ARCHITECTURE.md). The block is drawn anew
 -- on every render, so a Delete's two refreshes cannot lose it; the widgets of the render before are
 -- released after each render (releaseStale), never during one.

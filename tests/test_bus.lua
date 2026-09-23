@@ -46,6 +46,49 @@ test("bus: every message name carries this addon's prefix and no two share one",
     assertEqual(count, 4, "the four messages docs/ARCHITECTURE.md catalogs")
 end)
 
+-- The declaration, pinned literally: every NS.MSG.X read and every pairs() walk sees exactly these
+-- four keys with exactly these wire names, whoever builds the table.
+local CATALOG = {
+    CONTAINERS_CHANGED   = "Ka0s_AuraMaster_ContainersChanged",
+    CONFIG_CHANGED       = "Ka0s_AuraMaster_ConfigChanged",
+    VISIBILITY_CHANGED   = "Ka0s_AuraMaster_VisibilityChanged",
+    TIMED_SPELLS_CHANGED = "Ka0s_AuraMaster_TimedSpellsChanged",
+}
+
+--- Assert `msg` holds exactly CATALOG's pairs, both ways.
+local function assertCatalog(msg, label)
+    for key, name in pairs(CATALOG) do
+        -- red under: a key renamed, dropped, or its wire string changed
+        assertEqual(msg[key], name, label .. ": " .. key)
+    end
+    for key in pairs(msg) do
+        assertTrue(CATALOG[key] ~= nil, label .. ": an undeclared key " .. tostring(key))
+    end
+end
+
+test("bus: the catalog is exactly these four keys and wire names", function()
+    assertCatalog(T.NS.MSG, "live")
+end)
+
+test("bus: a key the catalog never declared raises, for a publisher as well as a subscriber", function()
+    local MSG = T.NS.MSG
+    -- red under: NS.MSG built as a plain table again (LibKa0s-Bus-1.0's Catalog not applied), where
+    -- a mistyped key reads nil and SendMessage(nil) fires nothing, silently
+    local ok, err = pcall(function() return MSG.CONTAINER_CHANGED end)
+    assertTrue(not ok, "reading an undeclared key raised")
+    assertTrue(tostring(err):find("CONTAINER_CHANGED", 1, true) ~= nil, "the error names the key: " .. tostring(err))
+    local function put(t, k, v) t[k] = v end
+    ok = pcall(put, MSG, "NEW_MESSAGE", "Ka0s_AuraMaster_NewMessage")
+    assertTrue(not ok, "adding a key after load raised")
+end)
+
+test("bus: without LibKa0s the catalog is the same four pairs, as a plain table", function()
+    local NS2 = dofile("tests/degraded_env.lua")()
+    assertCatalog(NS2.MSG, "degraded")
+    -- red under: the degraded arm raising or returning nil for the declaration
+    assertEqual(NS2.MSG.NO_SUCH_KEY, nil, "the degraded read of an undeclared key is nil, not a raise")
+end)
+
 test("bus: two receivers on their own targets both hear one message, with its payload", function()
     local NS = T.NS
     local probe = "Ka0s_AuraMaster_TestProbe"

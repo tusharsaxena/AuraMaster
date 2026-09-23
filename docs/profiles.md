@@ -50,7 +50,7 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
 - **A reset** empties the profile. `seeded` goes back to `false` with it, so the starter containers
   come back — a reset is "as installed", not "nothing".
 - **Logging (debug-logging-§10).** A reset or a copy is AceDB replacing the profile whole, not a write
-  through the seam, so its handler logs it once. A reset's line carries no row count, which §10
+  through the seam, so its handler logs it once. A reset's line carries no row count, which debug-logging-§10
   allows. A reset re-seeds the starter containers, so counting the rows not at default would
   overcount. AceDB also gives no hook before the wipe, so the Profiles page's Reset Profile cannot
   cheaply snapshot the rows it is about to change. Reset all's bulk bracket wraps the profile reset

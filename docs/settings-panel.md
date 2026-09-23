@@ -72,7 +72,7 @@ band holds **the picker itself** (options-ui-§14):
   picker and **New container** on one row, drawn by `Helpers.ContainerHeader` through the library's
   `PageHeader` chrome block (feedback #2, 2026-09-19; `PageBanner` draws exactly one dropdown). The acts
   on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
-  one tab, which §14 then names **General**. The block is drawn on every render, so a Delete's two
+  one tab, which options-ui-§14 then names **General**. The block is drawn on every render, so a Delete's two
   refreshes cannot lose it, and the widgets of the render before are released after each render.
 - **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
   **Copy settings from**'s source and Layout's *Another container* all read
@@ -605,8 +605,8 @@ or one of the many debuffs that carry none, class debuffs such as Judgment or Co
 keeps the surface's own color (the map's
 `None` entry, `Style.DispelColorMap`); every `timeFormat` hands the engine a
 `SecondsFormatter` that rounds up, Blizzard's being a copy of the engine's own
-(`Compat.CreateSecondsFormatter`, `core/Compat.lua:174`); the pandemic-window time color is a step color curve over
-remaining time, at the player's own seconds threshold (`Compat.ExpiringTextColor`, `core/Compat.lua:196`); the pandemic-window highlight is an additive wash the engine
+(`Compat.CreateSecondsFormatter`, `core/Compat.lua:180`); the pandemic-window time color is a step color curve over
+remaining time, at the player's own seconds threshold (`Compat.ExpiringTextColor`, `core/Compat.lua:202`); the pandemic-window highlight is an additive wash the engine
 shows only while the aura can be refreshed without loss, a window the game finds per spell (the threshold does not move it).
 
 The Background subgroup is a bar group, not options-ui-§16's background clause. That clause gives a
