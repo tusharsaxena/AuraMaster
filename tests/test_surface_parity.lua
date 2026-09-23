@@ -60,7 +60,7 @@ test("parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls"
     assertTrue(type(NS2.BusLib) == "table", "core/Bus.lua published its degraded arm")
     T.assertSurfaceParity(NS2.BusLib, "LibKa0s-Bus-1.0", {
         -- The stand-down record's constructor. This host takes Catalog alone and keeps its own
-        -- untracked factory (core/Bus.lua, NS.NewBusTarget; docs/revendor/2026-09-23/03_DECISIONS.md
+        -- untracked factory (core/Bus.lua, NS.NewBusTarget; docs/revendor/2026-09-23-v1.55.0/03_DECISIONS.md
         -- D2), so nothing here calls New and a stub copy of it would be a member with no caller.
         "New",
     })

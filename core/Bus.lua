@@ -16,7 +16,7 @@ local AceEvent = LibStub("AceEvent-3.0")
 -- mistyped NS.MSG key then raises at the call site for a publisher too, where AceEvent's SendMessage
 -- would have fired nil silently. Only Catalog is taken. The major's stand-down record is not: the
 -- factory below stays untracked, because every receiver here stands down by hand in its own module
--- and the settings receiver is setup that survives (docs/revendor/2026-09-23/03_DECISIONS.md, D2).
+-- and the settings receiver is setup that survives (docs/revendor/2026-09-23-v1.55.0/03_DECISIONS.md, D2).
 --
 -- Degraded (the payload is missing): the Catalog half of the major's untracked-target stub
 -- (LibKa0s docs/api/Bus/version-1-docs.md, "Worked example"). It hands back this file's own table,
