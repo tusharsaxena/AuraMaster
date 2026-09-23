@@ -72,7 +72,7 @@ band holds **the picker itself** (options-ui-§14):
   picker and **New container** on one row, drawn by `Helpers.ContainerHeader` through the library's
   `PageHeader` chrome block (feedback #2, 2026-09-19; `PageBanner` draws exactly one dropdown). The acts
   on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
-  one tab, which §14 then names **General**. The block is drawn on every render, so a Delete's two
+  one tab, which options-ui-§14 then names **General**. The block is drawn on every render, so a Delete's two
   refreshes cannot lose it, and the widgets of the render before are released after each render.
 - **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
   **Copy settings from**'s source and Layout's *Another container* all read

@@ -218,7 +218,7 @@ end)
 test("general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through", function()
     local NS, m = general()
     local d = m.StaticPopupDialogs.AURAMASTER_RESET_ALL
-    -- red under: rewording the one sentence §12 fixes for every addon's global reset
+    -- red under: rewording the one sentence options-ui-§12 fixes for every addon's global reset
     assertEqual(d.text, "Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded — your other profiles are not affected.")
     assertEqual(d.timeout, 0, "it waits for an answer")
     assertTrue(d.hideOnEscape, "Escape is a No")

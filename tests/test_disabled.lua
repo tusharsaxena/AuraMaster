@@ -353,7 +353,7 @@ test("disabled: this addon's own feature verbs refuse on one line and reach no w
     disable(NS)
     mocks.__resetSvWrites()
 
-    -- This addon ADOPTS §2's SHOULD, so the suite pins that choice: a later pass that quietly let
+    -- This addon ADOPTS slash-commands-§2's SHOULD, so the suite pins that choice: a later pass that quietly let
     -- the feature verbs act would redden here rather than drift.
     for _, line in ipairs({ "new target debuffs icons", "delete " .. id, "lock", "unlock", "pick",
                             "resetposition", "forgettimed" }) do

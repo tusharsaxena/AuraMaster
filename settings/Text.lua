@@ -33,7 +33,7 @@ local _, NS = ...
 -- rows dims with them: the Placement notes are gray at all times, and the Text Template block's
 -- Preview line and cheat sheet are grayed for that render (`dim`/`token`), so nothing on an inert
 -- tab reads brighter than the controls it describes. The font and icon-border blocks
--- are composed (options-ui-§16) with class-color companions (§17) resolved to the tracked unit's
+-- are composed (options-ui-§16) with class-color companions (options-ui-§17) resolved to the tracked unit's
 -- class, as on the Bars page; the pandemic-window time swatch is a palette color and carries none.
 
 local L = NS.L
