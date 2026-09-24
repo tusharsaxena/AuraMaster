@@ -24,7 +24,7 @@
 - Addon gates after any `Categories.lua` change: `/home/tushar/.claude/wow-addon/bin/ka0s-bounded luacheck .` = 0/0 and `… ka0s-bounded lua5.1 tests/run.lua` = 0 failed.
 - Python tests run with `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'`.
 - Default logs folder: `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`.
-- Per-log cache: `~/.cache/auramaster-spell-research/logs/` (outside the repo).
+- **Every output artifact lives in the repo** (owner ruling, 2026-09-24): the bundle under `docs/spell-research/<date>-logs/`, including `evidence.json` with exact per-spec **player counts**. **Salted hashes never enter the repo**: only the per-log cache and the salt, which hold them, stay outside, at `~/.cache/auramaster-spell-research/`. Counts derived from the hashes (distinct players) are what the repo carries.
 - DB2 cache: `--db2-cache` flag, default `tools/spell-research/.cache` (the path `research.py` uses); the worktree has none, so real runs pass `--db2-cache /mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/tools/spell-research/.cache` or let `research.fetch_table` download.
 
 ## Review Focus
@@ -190,7 +190,7 @@ def split_fields(payload: str) -> list:
   - The cache JSON contains no `Player-` substring; the salt file is created once and reused.
   - Non-`WoWCombatLog-*.txt` files in the folder are ignored.
 - [ ] **Step 2: Run; FAIL.**
-- [ ] **Step 3: Implement** `sid_cache.py`; write cache JSON atomically (`.part` then `replace`). `logs.py scan` builds `spec_to_class` via `sid_db2.load_spec_map` (Task 4) — until Task 4 lands, accept `--spec-map-json` for tests only is NOT needed; order Task 4 before wiring the CLI's DB2 call, or have the CLI import lazily. Implement the CLI subcommand skeleton with `argparse` subparsers; `scan` prints the summary and writes `--out` (default `~/.cache/auramaster-spell-research/evidence.json`).
+- [ ] **Step 3: Implement** `sid_cache.py`; write cache JSON atomically (`.part` then `replace`). `logs.py scan` builds `spec_to_class` via `sid_db2.load_spec_map` (Task 4) — until Task 4 lands, accept `--spec-map-json` for tests only is NOT needed; order Task 4 before wiring the CLI's DB2 call, or have the CLI import lazily. Implement the CLI subcommand skeleton with `argparse` subparsers; `scan` prints the summary and writes `--out` (required when not called from `propose`; the slash command and SID-10 point it at `docs/spell-research/<date>-logs/evidence.json`, **in the repo**). `evidence.json` holds counts only (applications, distinct players, shapes, recast medians, dates) per `(class, spec, auraType, spellId)` — never a hash or GUID.
 - [ ] **Step 4: Run; PASS.**
 - [ ] **Step 5: Commit** — `SID-3: Cache per-log evidence and merge a folder scan`.
 
@@ -293,7 +293,7 @@ class Flag:
 **Interfaces:**
 - Consumes: everything above.
 - Produces: `dictionary_rows(agg, spec_map, names, shipped, suggestions) -> list[dict]` (one row per `(class, spec, auraType, spellId)`, keys: `class, spec, spec_id, spell_id, name, aura_type, applications, players, self_pct, single_pct, group_pct, recast_median_s, first_seen, last_seen, category, suggested_category, rule`), `write_bundle(out_dir: Path, date: str, rows, proposals, flags, shipped, sources: dict) -> list[Path]`. CLI: `logs.py propose --date YYYY-MM-DD --bundle docs/spell-research/<date>-logs [--evidence FILE] [--db2-cache DIR] [--categories defaults/Categories.lua] [--cast-to-aura defaults/CastToAura.lua] [--decisions tools/spell-research/decisions.json] [--min-apps 20] [--min-players 3]` — `--date` is required (never `datetime.now()`, like `research.py`).
-- Bundle files (CRLF): `dictionary/auras.json`, `dictionary/auras.csv`, `dictionary/AURAS.md`, `dictionary/non-player.csv`, `CURRENT_CATEGORIES.md`, `CORRECTIONS.md`, `PROPOSED_ADDITIONS.md`, `FLAGS.md`, `SOURCES.md`, and `proposals.json` (the machine-readable queue the slash command walks: corrections first, then additions, each ordered by applications descending, each with its `proposal_key`).
+- Bundle files (CRLF), all committed to the repo: `evidence.json` (from scan), `dictionary/auras.json`, `dictionary/auras.csv`, `dictionary/AURAS.md`, `dictionary/non-player.csv`, `CURRENT_CATEGORIES.md`, `CORRECTIONS.md`, `PROPOSED_ADDITIONS.md`, `FLAGS.md`, `SOURCES.md`, and `proposals.json` (the machine-readable queue the slash command walks: corrections first, then additions, each ordered by applications descending, each with its `proposal_key`).
 
 - [ ] **Step 1: Failing tests** from the fixture end to end (scan fixture → propose into a temp dir):
   - `auras.csv`, `AURAS.md` and `auras.json` carry the same row set; a two-spec aura is two rows; nothing from pets/creatures; below-bar auras present.
@@ -338,7 +338,7 @@ class Flag:
 - [ ] **Step 2: FAIL (until wiring is complete), then fix any wiring gaps; PASS.**
 - [ ] **Step 3: Write the slash command** `.claude/commands/aura-spells-review.md`. Frontmatter: `description: Review combat-log evidence for AuraMaster's spell categories and apply the owner's rulings`, `argument-hint: [logs-folder]`. Body, in order:
   1. Confirm cwd is the AuraMaster repo and the tree is clean.
-  2. Run `python3 tools/spell-research/logs.py scan --logs "${ARGUMENTS:-<default folder>}" --db2-cache <…>` **in the background** (it can take ~20 min on a first run; later runs read only new logs), then `logs.py propose --date <today YYYY-MM-DD> --bundle docs/spell-research/<today>-logs`.
+  2. Run `python3 tools/spell-research/logs.py scan --logs "${ARGUMENTS:-<default folder>}" --db2-cache <…> --out docs/spell-research/<today>-logs/evidence.json` **in the background** (it can take ~20 min on a first run; later runs read only new logs), then `logs.py propose --date <today YYYY-MM-DD> --bundle docs/spell-research/<today>-logs`.
   3. Tell the owner the counts (corrections, additions, flags) and the paths of the dictionary and review files.
   4. Walk `proposals.json` **one proposal at a time**, corrections first: show the evidence line, the proposed change, the suggested category, rule and reason; ask with AskUserQuestion: **Accept / Change category (then ask which) / Reject (optional reason)**. Record each answer immediately with `logs.py decide …` (never hand-edit JSON). Allow "stop here" — rulings so far are saved; the rest stay pending for the next run.
   5. `logs.py apply --bundle …`; then `ka0s-bounded luacheck .` and `ka0s-bounded lua5.1 tests/run.lua`; if red, show it and stop without committing.
@@ -352,7 +352,7 @@ class Flag:
 Not a code task; it proves the tool on the 30 GB archive so the owner's first review starts immediately.
 
 - [ ] **Step 1:** `python3 tools/spell-research/logs.py scan --logs "/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive" --db2-cache /mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/tools/spell-research/.cache` (background; ~20 min). Record wall time, files, bytes, skipped, unattributed.
-- [ ] **Step 2:** `logs.py propose --date 2026-09-24 --bundle /tmp/claude-1000/sid-dryrun/2026-09-24-logs …` — to a scratch path, **not** the repo (the real bundle is written by the owner's review run).
+- [ ] **Step 2:** `logs.py propose --date 2026-09-24 --bundle docs/spell-research/2026-09-24-logs …` — **into the repo** (owner ruling: all output artifacts in the repo), with `scan --out docs/spell-research/2026-09-24-logs/evidence.json`. Commit the bundle as `SID-10: Record the first combat-log evidence bundle (2026-09-24)` after checking it holds no `Player-` string, no unit name and no hash. The owner's first review run re-uses this bundle (it re-proposes into the same folder and adds `DECISIONS.md`).
 - [ ] **Step 3:** Check: Restoration `114052` Ascendance appears under `SHAMAN / Restoration` in the dictionary; `CORRECTIONS.md` proposes it for Offensive cooldowns; Astral Shift `108271` is `confirmed`. Report counts of corrections/additions/flags and any crash or suspicious result; fix bugs found (each fix with a failing test first, committed as `SID-10: …`).
 
 ---
