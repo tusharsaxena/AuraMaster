@@ -20,12 +20,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:552
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:564
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:268
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:280
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -167,7 +167,7 @@ after they were hidden; a visibility pass alone leaves them as they are.
 |---|---|
 | File load | Every file in TOC order; the options category registers its pages; LSM registration |
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
-| `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them; `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
+| `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them (a disabled login builds none: the stand-up builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
 | `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
@@ -190,7 +190,8 @@ seam. Under `MustDefer`, an instance that leaves the registry is parked rather t
 `Container:Park` disables its engine and hides only the preview and handle. The next `FlushPending`
 that may touch frames destroys every parked instance before it applies; a parked id that returns
 first is revived in place and redrawn at once. A profile switch, copy or reset
-(`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception: ids are reused across profiles, so
+(`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception (and while the addon is stood down
+it builds nothing; the stand-up syncs): ids are reused across profiles, so
 under `MustDefer` every kept or revived instance is parked, and `Container:ShouldShow` keeps it off
 until the deferred apply rebuilds it for the new data. One that leaves the registry on a profile
 change is marked `staleData` as it parks, so a Create or Duplicate that reuses its id before that

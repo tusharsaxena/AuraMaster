@@ -521,3 +521,117 @@ test("disabled: a profile switch to an enabled profile stands the addon back up"
     assertFalse(NS.IsStoodDown(), "the new profile has the addon enabled")
     assertEqual(#regsOn(mocks, NS.addon), 8)
 end)
+
+-- ---------------------------------------------------------------------------
+-- 11. Coming up disabled: nothing is built until the stand-up
+-- ---------------------------------------------------------------------------
+--
+-- Every case above starts enabled and stands down. These two start DOWN: a login with the stored
+-- switch off, and a profile switch made while it is off. Built frames are the record here, counted
+-- at CreateFrame, because an anchor the kit starts shown (revision 26) would draw even while empty.
+
+--- A fresh environment whose Default profile is stored disabled, with CreateFrame spied for the
+--- container anchors from before the first file loads. `extra` adds stored profiles.
+local function loginDisabled(extra)
+    local profiles = { Default = { enabled = false } }
+    for name, p in pairs(extra or {}) do profiles[name] = p end
+    local made = { 0 }
+    local NS, mocks = fresh({
+        savedVariables = { profiles = profiles },
+        before = function(m)
+            local orig = m.CreateFrame
+            m.CreateFrame = function(frameType, name, ...)
+                if type(name) == "string" and name:find("AuraMasterAnchor", 1, true) == 1 then
+                    made[1] = made[1] + 1
+                end
+                return orig(frameType, name, ...)
+            end
+        end,
+    })
+    return NS, mocks, made
+end
+
+local function instanceCount(NS)
+    local n = 0
+    for _ in pairs(NS.ContainerManager.instances) do n = n + 1 end
+    return n
+end
+
+test("disabled: a disabled login builds no container frame", function()
+    local NS, mocks, made = loginDisabled()
+    assertTrue(NS.IsStoodDown(), "the stored switch is off")
+    -- red under: CM.Init building before the latch check
+    assertEqual(made[1], 0, "a disabled login built an anchor")
+    assertEqual(instanceCount(NS), 0, "a disabled login holds a live container")
+    assertEqual(#mocks.__timers(), 0, "a disabled login armed a timer")
+
+    -- The stand-up builds what the login did not, and draws it.
+    enable(NS)
+    mocks.__fireTimers()
+    local list = NS.Database.GetContainers()
+    assertTrue(#list > 0, "the starters are stored")
+    assertEqual(made[1], #list, "one anchor per stored container")
+    for _, c in ipairs(list) do
+        local inst = NS.ContainerManager.instances[c.id]
+        assertTrue(inst ~= nil, "container " .. c.id .. " was built on enable")
+        assertTrue(inst.engine ~= nil and inst.engine.__enabled, "container " .. c.id .. " draws")
+    end
+end)
+
+test("disabled: a profile switch while disabled builds nothing until enable", function()
+    local raid = {
+        enabled = false, seeded = true, nextContainerId = 10,
+        containers = { [9] = { name = "Raid", unit = "player", auraType = "HELPFUL", style = "icons" } },
+        containerOrder = { 9 },
+    }
+    local NS, mocks, made = loginDisabled({ Raid = raid })
+    made[1] = 0
+
+    NS.db:SetProfile("Raid")
+    mocks.__fireTimers()
+    assertTrue(NS.IsStoodDown(), "the Raid profile is stored disabled too")
+    -- red under: CM.Announce syncing while the addon is stood down
+    assertEqual(made[1], 0, "a disabled profile switch built an anchor")
+    assertEqual(instanceCount(NS), 0, "a disabled profile switch holds a live container")
+
+    enable(NS)
+    mocks.__fireTimers()
+    assertEqual(made[1], 1, "the stand-up builds the Raid profile's one container")
+    local inst = NS.ContainerManager.instances[9]
+    assertTrue(inst ~= nil and inst.engine ~= nil and inst.engine.__enabled, "container 9 draws")
+    assertEqual(instanceCount(NS), 1)
+end)
+
+test("disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked", function()
+    -- Built while running, for the OLD container 1 (unit focus); then down, then a switch to a
+    -- profile whose container 1 is someone else. The stand-up comes in combat, where no apply may
+    -- run, so the instance under the reused id must not draw the old container's data.
+    local raid = {
+        enabled = false, seeded = true, nextContainerId = 2,
+        containers = { [1] = { name = "Raid", unit = "player", auraType = "HELPFUL", style = "icons" } },
+        containerOrder = { 1 },
+    }
+    local NS, mocks = fresh({ savedVariables = { profiles = { Raid = raid } } })
+    local CM = NS.ContainerManager
+    assertTrue(NS.SetByPath("container.unit", "focus", 1))
+    mocks.__fireTimers()
+    local inst = CM.instances[1]
+    assertEqual(inst.unit, "focus")
+
+    NS.SetByPath("enabled", false)
+    mocks.__fireTimers()
+    NS.db:SetProfile("Raid")
+    mocks.__fireTimers()
+    assertTrue(NS.IsStoodDown(), "the Raid profile is stored disabled")
+
+    mocks.__lockdown = true
+    enable(NS)
+    assertTrue(CM.instances[1] == inst, "the id is kept")
+    -- red under: the stand-up's CM.Sync forgetting the profile switch it skipped while down
+    assertFalse(inst.engine.__enabled, "the old container's engine does not draw under the new one's id")
+
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertEqual(inst.unit, "player", "rebuilt for the Raid profile's container 1")
+    assertTrue(inst.engine.__enabled, "and drawing")
+end)

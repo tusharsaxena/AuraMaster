@@ -43,7 +43,8 @@ function addon:OnEnable()
     -- The panel and the dispatcher are SETUP and come up in either state; everything else is a
     -- FEATURE and comes up only if the addon is actually running (slash-commands-§7). A disabled
     -- addon that registered its events at login and unregistered them a moment later would still
-    -- have been watching for that moment, and would draw a container before hiding it.
+    -- have been watching for that moment, and would draw a container before hiding it. CM.Init reads
+    -- the latch itself: a disabled login builds no container frame, and the stand-up builds them.
     if not NS.IsStoodDown() then
         self:RegisterLifecycleEvents()
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
@@ -162,8 +163,8 @@ end
 
 local function rebuildProfile()
     -- The registry still follows the new profile while the addon is down -- its containers are the
-    -- ones the stand-up will build -- but nothing below the panel refresh draws or registers, because
-    -- the show ladder and CM.Init both read the latch.
+    -- ones the stand-up will build -- but nothing below the panel refresh draws, builds or registers,
+    -- because the show ladder and CM.Announce both read the latch.
     if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end

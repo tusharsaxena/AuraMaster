@@ -19,7 +19,7 @@ marked as such rather than listed as a requirement.
   only. The addon needs the 12.1 aura container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:34`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:25`). On a client
-  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:587`) and draws
+  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:604`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
@@ -33,7 +33,7 @@ marked as such rather than listed as a requirement.
 - **No optional integration.** Nothing in the addon checks whether another addon is loaded before
   using it. The only add-on-loaded check is `Compat.EnsureAuraContainer`'s own
   (`core/Compat.lua:34`), and it asks only about Blizzard's `Blizzard_AuraContainer`. The frame
-  anchor re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:122`) whatever the addon is.
+  anchor re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:123`) whatever the addon is.
 
 ## Development — the contributor toolchain
 

@@ -32,7 +32,7 @@ only the tree entry is marked.
   descriptor (`get`/`set`/`applyDefault` over the write seam, `rowsForPage` over
   `NS.SchemaForPage`, `skipRestoreAll`, `resetProfile`, `scheduleTimer`, the color codec) and the
   library draws the canvas, header, tab strip, two-column flow and widgets. The parent category
-  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:52`) and every body is built on its first
+  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:53`) and every body is built on its first
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.

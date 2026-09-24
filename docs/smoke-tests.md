@@ -327,7 +327,10 @@ page under the header.
     `/am list`, `/am get` and `/am set` still read and repair settings; `/am lock` answers
     `Ka0s Aura Master is disabled — enable it with /am enable` on one line; **left-clicking the
     minimap button** answers that same one line and changes nothing, while **right-clicking** still
-    opens the panel. Then `/reload` while disabled → it comes up disabled and still answers `/am`.
+    opens the panel. Then `/reload` while disabled → it comes up disabled and still answers `/am`,
+    and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
+    `/dump AuraMasterAnchor1` is nil. `/am enable` draws every container at once. Switch to another
+    profile while disabled and back, then `/am enable` → its containers draw.
 59. **Disable it in combat.** Enter combat with containers shown, `/am disable` → the containers'
     engines go quiet at once and the anchors finish hiding when combat ends; no taint warning either
     side of the transition.

@@ -68,7 +68,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 - **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:39`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:180`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:192`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
@@ -210,7 +210,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:89-101`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:90-102`).
 
 ## Weapon enchants
 

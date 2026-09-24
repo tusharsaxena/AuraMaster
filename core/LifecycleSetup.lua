@@ -105,6 +105,9 @@ local function standUp()
     if NS.TimedSpells and NS.TimedSpells.StandUp then NS.TimedSpells.StandUp() end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.ContainerManager then
+        -- Build (or revive) what a disabled login or a profile switch made while down never built,
+        -- before the visibility pass that shows it.
+        if NS.ContainerManager.Sync then NS.ContainerManager.Sync() end
         if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
         -- The addon's own request: a player change held by the stand-down keeps its notice.
         if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end

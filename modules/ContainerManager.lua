@@ -70,6 +70,9 @@ end
 -- CM.Announce queues rebuilds it for that data, re-places and re-shows its anchor, and unparks it.
 local retiring = {}       -- [id] = parked instance
 local dormant = {}        -- [id] = destroyed instance, kept for its id's return
+-- A profile change CM.Announce skipped while the addon was stood down. The stand-up's CM.Sync reads
+-- it as its `profileChanged`, so a stand-up in combat still parks every id the switch reused.
+local profileMovedWhileDown = false
 
 --- Put a parked or dormant instance back in the registry. It draws again at once (Park disabled its
 --- engine; the apply that re-enables it is itself deferred) unless it must stay parked: `hold` (a
@@ -104,6 +107,8 @@ end
 --- and destroy — or, under lockdown, park — the one for every container that is gone.
 --- `profileChanged` (the AceDB profile callbacks) also parks every kept id while an apply must wait.
 function CM.Sync(profileChanged)
+    profileChanged = profileChanged or profileMovedWhileDown
+    profileMovedWhileDown = false
     local defer = CM.MustDefer()
     local hold = defer and profileChanged or false
     local wanted = {}
@@ -142,10 +147,17 @@ function CM.__retiring() return retiring end
 function CM.__dormant() return dormant end
 
 --- The registry changed: follow it, re-apply everything, and tell whoever is listening.
---- `profileChanged` is passed by NS.OnProfileChanged (see CM.Sync).
+--- `profileChanged` is passed by NS.OnProfileChanged (see CM.Sync). A stood-down addon builds
+--- nothing: the stand-up's own CM.Sync builds what the registry holds then, and is told of a profile
+--- change made meanwhile. The message still goes out, so an open settings panel re-renders its
+--- container list.
 function CM.Announce(profileChanged)
-    CM.Sync(profileChanged)
-    CM.RequestApply()
+    if NS.IsStoodDown() then
+        profileMovedWhileDown = profileMovedWhileDown or profileChanged or false
+    else
+        CM.Sync(profileChanged)
+        CM.RequestApply()
+    end
     NS.bus:SendMessage(NS.MSG.CONTAINERS_CHANGED)
 end
 
@@ -584,13 +596,18 @@ end
 --- Whether this file is subscribed (a test seam).
 function CM.__listening() return ev ~= nil end
 
---- Build every container and start listening. Called once from core/AuraMaster.lua's OnEnable, and
---- only when the addon is actually running -- a stood-down addon subscribes to nothing.
+--- Build every container and start listening. Called once from core/AuraMaster.lua's OnEnable; it
+--- builds and subscribes only when the addon is actually running. A stood-down addon subscribes to
+--- nothing and builds no frame: the stand-up (core/LifecycleSetup.lua) syncs the registry then.
 function CM.Init()
     if not NS.Compat.EnsureAuraContainer() then
         print_(L["This client has no aura container API (Retail 12.1 or later is required); containers will not be drawn."])
     end
-    if not NS.IsStoodDown() then CM.StartListening() end
+    if NS.IsStoodDown() then
+        if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
+        return
+    end
+    CM.StartListening()
     CM.Sync()
     CM.RequestApply(nil, true)   -- the startup build: a reload in combat changed no setting
     CM.FlushPending()
