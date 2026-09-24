@@ -30,6 +30,8 @@ APPLY_AURA_EFFECTS = frozenset({research.APPLY_AURA_EFFECT, 35, 119, 128})
 AURA_SIGNALS = {
     8: ("periodic_heal", 0),          # SPELL_AURA_PERIODIC_HEAL
     31: ("speed_up", 1),              # SPELL_AURA_MOD_INCREASE_SPEED (a snare is 33, not this)
+    39: ("immunity", 0),              # SPELL_AURA_SCHOOL_IMMUNITY (Divine Shield 642, Ice Block)
+    40: ("immunity", 0),              # SPELL_AURA_DAMAGE_IMMUNITY
     52: ("crit_up", 1),               # SPELL_AURA_MOD_CRIT_PERCENT
     56: ("transform", 0),             # SPELL_AURA_TRANSFORM
     65: ("haste_up", 1),              # SPELL_AURA_MOD_CASTING_SPEED_NOT_STACK

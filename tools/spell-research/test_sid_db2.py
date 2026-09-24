@@ -70,7 +70,8 @@ class AuraSignalsTest(unittest.TestCase):
         # SID-10, the real run: Blessing of Protection 1022 carries MOD_INCREASE_SPEED (31) with 0
         # base points (a talent's placeholder; the real rows follow), and rule R4 filed it, Blessing
         # of Sacrifice and Blessing of Freedom under Movement. 900600: MOD_SPEED_ALWAYS (129) at 0.
-        self.assertEqual(self.signals(1022, 900600), {1022: set(), 900600: set()})
+        # (1022's SCHOOL_IMMUNITY row, misc 1 = physical, is `immunity` since SID-11.)
+        self.assertEqual(self.signals(1022, 900600), {1022: {"immunity"}, 900600: set()})
 
     def test_recklessness_crit_spell_modifier_is_crit_up(self):
         # ADD_FLAT_MODIFIER (107) on SpellModOp 7 (CritChance), +20.
@@ -104,6 +105,15 @@ class AuraSignalsTest(unittest.TestCase):
         # int both would be 0, and neither sign rule would pass.
         self.assertEqual(self.signals(900500), {900500: {"haste_up", "damage_taken_down"}})
 
+    def test_divine_shield_school_immunity_is_immunity(self):
+        # SID-11. The real rows (build 12.1.0.69875): Effect 6, EffectAura 39 SCHOOL_IMMUNITY,
+        # misc 127 and 126 (school masks), 0 points; aura 485 is no signal.
+        self.assertEqual(self.signals(642), {642: {"immunity"}})
+
+    def test_damage_immunity_is_immunity(self):
+        # 900700: EffectAura 40 DAMAGE_IMMUNITY.
+        self.assertEqual(self.signals(900700), {900700: {"immunity"}})
+
     def test_only_requested_spells_are_returned_and_each_is_present(self):
         out = self.signals(108271, 424242)
         self.assertEqual(set(out), {108271, 424242})
@@ -111,7 +121,7 @@ class AuraSignalsTest(unittest.TestCase):
 
     def test_the_constant_table_names_only_known_signals(self):
         known = {"damage_taken_down", "absorb", "damage_up", "haste_up", "crit_up", "rating_up",
-                 "stat_pct_up", "speed_up", "periodic_heal", "transform"}
+                 "stat_pct_up", "speed_up", "periodic_heal", "transform", "immunity"}
         names = {signal for signal, _sign in sid_db2.AURA_SIGNALS.values()}
         names |= set(sid_db2.SPELL_MOD_SIGNALS.values())
         self.assertLessEqual(names, known)
@@ -120,6 +130,8 @@ class AuraSignalsTest(unittest.TestCase):
         self.assertEqual(sid_db2.AURA_SIGNALS[193], ("haste_up", 1))
         self.assertEqual(sid_db2.AURA_SIGNALS[31][0], "speed_up")
         self.assertEqual(sid_db2.AURA_SIGNALS[8][0], "periodic_heal")
+        self.assertEqual(sid_db2.AURA_SIGNALS[39], ("immunity", 0))
+        self.assertEqual(sid_db2.AURA_SIGNALS[40], ("immunity", 0))
         self.assertEqual(sid_db2.APPLY_AURA_EFFECTS, frozenset({6, 35, 119, 128}))
 
 

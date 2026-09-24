@@ -459,8 +459,11 @@ SHORT_RECAST = 30.0      # R6, R7
 
 TANK_ROLE = 0  # ChrSpecialization.Role: 0 tank, 1 healer, 2 damage (build 12.1.0.69875)
 
-DEFENSIVE_SIGNALS = frozenset({"damage_taken_down", "absorb"})
-RAID_SIGNALS = frozenset({"damage_taken_down", "absorb", "periodic_heal"})
+# `immunity` (SID-11): SCHOOL_IMMUNITY / DAMAGE_IMMUNITY, Divine Shield 642's only defensive row.
+DEFENSIVE_SIGNALS = frozenset({"damage_taken_down", "absorb", "immunity"})
+# `group_haste_up` (SID-11) is derived, not read from DB2: a haste_up aura whose applications land
+# in group bursts at R2's share (Bloodlust 2825, Heroism, Time Warp). _facts() adds it.
+RAID_SIGNALS = frozenset({"damage_taken_down", "absorb", "periodic_heal", "group_haste_up"})
 # "A damage, haste, crit, mastery or versatility increase". stat_pct_up (a primary-stat percent,
 # e.g. Pillar of Frost's Strength) is a damage increase too; rating_up covers the four ratings.
 OFFENSIVE_SIGNALS = frozenset({"damage_up", "haste_up", "crit_up", "rating_up", "stat_pct_up"})
@@ -472,6 +475,7 @@ _SIGNAL_WORDS = {
     "periodic_heal": "heals over time", "damage_up": "raises damage done", "haste_up": "raises haste",
     "crit_up": "raises critical strike", "rating_up": "raises a secondary stat",
     "stat_pct_up": "raises a primary stat", "speed_up": "raises movement speed",
+    "immunity": "grants immunity", "group_haste_up": "raises haste for the whole group",
 }
 
 CATEGORY_LABELS = {
@@ -553,10 +557,13 @@ def _facts(stats, signals, in_pool, tank_only):
     if apps <= 0:
         return None
     self_, single, other = stats.get("self", 0), stats.get("single", 0), stats.get("other", 0)
-    return _Facts(apps=apps, self_=self_ / apps, single=single / apps,
-                  group=max(apps - self_ - single - other, 0) / apps, bursts=stats.get("group", 0),
-                  recast=stats.get("recast"), signals=set(signals or ()), in_pool=in_pool,
-                  tank_only=tank_only)
+    group = max(apps - self_ - single - other, 0) / apps
+    signals = set(signals or ())
+    if "haste_up" in signals and group >= GROUP_SHARE:
+        signals.add("group_haste_up")
+    return _Facts(apps=apps, self_=self_ / apps, single=single / apps, group=group,
+                  bursts=stats.get("group", 0), recast=stats.get("recast"), signals=signals,
+                  in_pool=in_pool, tank_only=tank_only)
 
 
 def meets_category(category, stats, signals, in_pool, tank_only):

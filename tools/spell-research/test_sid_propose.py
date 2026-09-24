@@ -479,6 +479,26 @@ class SuggestRuleTest(unittest.TestCase):
                                   {"periodic_heal"}, True, False)
         self.check(got, "raidCDs", "R2", "high", "heals")
 
+    def test_r1_self_immunity_is_defensive(self):
+        # SID-11: Divine Shield 642 (SCHOOL_IMMUNITY) carries no damage-taken or absorb row.
+        got = sid_propose.suggest(shape(self_=100, recast=300.0), {"immunity"}, True, False)
+        self.check(got, "defensives", "R1", "high", "100%", "immunity", "Defensive cooldowns")
+
+    def test_an_immunity_onto_others_is_not_r1(self):
+        # Blessing of Protection 1022 (SCHOOL_IMMUNITY, physical) goes onto another player.
+        got = sid_propose.suggest(shape(self_=10, single=90, recast=300.0), {"immunity"}, True, False)
+        self.assertEqual(got[:2], ("support", "R5"))
+
+    def test_r2_haste_in_group_bursts_is_a_raid_cooldown(self):
+        # SID-11: Bloodlust 2825 (MELEE_SLOW +30) lands on the whole group at once.
+        got = sid_propose.suggest(shape(apps=100, group=5, recast=600.0), {"haste_up"}, True, False)
+        self.check(got, "raidCDs", "R2", "high", "100%", "5+ players", "haste", "Raid cooldowns")
+
+    def test_haste_mostly_single_is_not_group_haste(self):
+        # Power Infusion: haste onto one other player stays Support.
+        got = sid_propose.suggest(shape(single=100, recast=120.0), {"haste_up"}, True, False)
+        self.assertEqual(got[:2], ("support", "R5"))
+
     def test_r3_self_haste_with_a_long_recast_is_offensive(self):
         got = sid_propose.suggest(shape(self_=95, single=5, recast=120.0), {"haste_up"}, True, False)
         self.check(got, "offensiveCDs", "R3", "high", "95%", "haste", "120", "Offensive cooldowns")
@@ -928,3 +948,35 @@ class Sid11HotRecastTest(unittest.TestCase):
         props = sid_propose.moves(agg, SID11_SPEC_MAP, self.NAMES, self.SHIPPED, self.SIGNALS,
                                   set(self.NAMES))
         self.assertEqual(props, [])
+
+
+class Sid11LustAndImmunityTest(unittest.TestCase):
+    """Bloodlust-shaped and Divine Shield-shaped logs, scanned, reach R2 and R1."""
+
+    def ruled(self, agg, spell_id, name, signals):
+        return sid_propose._Ruled(agg, SID11_SPEC_MAP, {spell_id: name}, {spell_id: signals},
+                                  {spell_id}, None, sid_propose.Thresholds())
+
+    def test_bloodlust_group_burst_is_a_raid_cooldown(self):
+        shamans = [(_guid(0x400 + i), ELE) for i in range(3)]
+        body = []
+        for c, (guid, _spec) in enumerate(shamans):
+            for k in range(3):  # three pulls, 10 minutes apart, 20 players each (the caster first)
+                t = T0 + c * 3600 + k * 600
+                body.append(_aura(t, guid, guid, 2825, "Bloodlust"))
+                body += [_aura(t + 0.01 * (j + 1), guid, _guid(0xB00 + j), 2825, "Bloodlust")
+                         for j in range(19)]
+        agg = scanned(self, shamans, body)
+        ruled = self.ruled(agg, 2825, "Bloodlust", {"haste_up"})
+        got = ruled.suggest("SHAMAN", 2825)
+        self.assertEqual(got[:3], ("raidCDs", "R2", "high"))
+        self.assertIn("raises haste", got[3])
+
+    def test_divine_shield_is_a_defensive_cooldown(self):
+        paladins = [(_guid(0x500 + i), PALADIN_PROT) for i in range(3)]
+        body = [_aura(T0 + c * 3600 + k * 300, guid, guid, 642, "Divine Shield")
+                for c, (guid, _spec) in enumerate(paladins) for k in range(8)]
+        agg = scanned(self, paladins, body)
+        got = self.ruled(agg, 642, "Divine Shield", {"immunity"}).suggest("PALADIN", 642)
+        self.assertEqual(got[:3], ("defensives", "R1", "high"))
+        self.assertIn("immunity", got[3])

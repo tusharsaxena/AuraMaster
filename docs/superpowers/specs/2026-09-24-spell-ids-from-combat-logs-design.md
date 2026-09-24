@@ -107,8 +107,8 @@ category) is already in `decisions.json` is not proposed again.
 
 | Rule | Evidence | Suggestion | Confidence |
 |---|---|---|---|
-| R1 | DB2: the aura reduces damage taken or absorbs, and target shape is ≥ 90 % `self` | Defensive cooldowns | high |
-| R2 | ≥ 30 % of applications are `group`, and DB2 shows damage reduction or healing | Raid cooldowns | high |
+| R1 | DB2: the aura reduces damage taken, absorbs, or grants immunity (SCHOOL_IMMUNITY 39, DAMAGE_IMMUNITY 40: Divine Shield), and target shape is ≥ 90 % `self` | Defensive cooldowns | high |
+| R2 | ≥ 30 % of applications are `group`, and DB2 shows damage reduction or healing, or a haste increase (`group_haste_up`: Bloodlust) | Raid cooldowns | high |
 | R3 | ≥ 90 % `self`; DB2 shows a damage, haste, crit, mastery or versatility increase; median recast ≥ 60 s | Offensive cooldowns | high |
 | R4 | DB2: movement speed increase, or the cast is a teleport or leap | Movement | high |
 | R5 | ≥ 70 % `single` onto another player, and the aura is not tagged Blizzard `EXTERNAL_DEFENSIVE` | Support | medium |
