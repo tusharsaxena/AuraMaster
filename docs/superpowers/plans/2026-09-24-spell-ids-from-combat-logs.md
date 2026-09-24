@@ -362,3 +362,67 @@ Not a code task; it proves the tool on the 30 GB archive so the owner's first re
 - Spec coverage: stage 1 → Tasks 1–3; DB2 inputs → 4; corrections/flags/evidence bar/decisions → 5; rules/moves/additions → 6; dictionary + review set + SOURCES → 7; decisions/apply/DECISIONS.md → 8; slash command, docs, gitignore → 9; run cost/first run → 10. Debuff cross-check → 5. Privacy → 2 and 7 tests. Cast id ≠ aura id → 4 (`aura_to_family`) and 5.
 - Names are consistent across tasks: `FileAggregate`, `AuraStats`, `scan_file`, `scan_dir`, `merge`, `load_spec_map`, `aura_signals`, `shipped_categories`, `cast_aura_candidates`, `aura_to_family`, `player_pool`, `open_db2`, `Proposal`, `Flag`, `proposal_key`, `suggest`, `dictionary_rows`, `write_bundle`, `load_decisions`, `record`, `apply`.
 - Distinct-player counts are exact across files (salted hashes in the local cache only); no GUID or hash reaches the repo. Task 3 tests that a player seen in two logs counts once.
+
+---
+
+## Addendum (2026-09-24, after the SID-10 dry run) — owner rulings and tasks SID-11..SID-14
+
+The dry run (32 GB, 202 logs) produced 43 corrections, 2,046 additions and 129 flags. The owner ruled:
+
+1. **Fix the rule gaps first** (SID-11).
+2. **Filter and fold the additions** (SID-12): ask only high/medium-confidence additions; fold item effects into one class-neutral proposal each; low-confidence Utility suggestions stay in the dictionary only.
+3. **Review by spreadsheet, not one question at a time** (SID-13, SID-14): the tool writes one CSV of every correction and addition; the owner fills in the last column (Approve/Reject) and hands the sheet back; the tool applies it in one shot.
+
+### Task 11 (SID-11): Rule fixes, test-first
+
+- **External self-copy.** An aura logged on the caster AND on one other player at the same timestamp (within 0.1 s, same caster, same aura) is one external application: count it as `single`, not `self` + `single`. Pin with Power Infusion 10060, Blessing of Sacrifice 6940, Guardian Spirit 47788 shapes in a fixture; each must reach R5 (Support) unless a stronger rule applies.
+- **HoT recast timing.** R6's recast median must be measured per caster across all targets (time between successive applications of that aura by that caster, to anyone), not only self-applications. Pin: a HoT applied every 8 s to different targets has median 8 s and reaches R6; Rejuvenation/Riptide/Lifebloom-shaped fixtures must no longer be proposed as Healing → Support moves.
+- **Lust and immunity signals.** Add `group_haste_up` (a haste aura applied in group bursts) → R2 Raid cooldowns; add an `immunity` signal (DB2 aura 39 SCHOOL_IMMUNITY, verify against Divine Shield 642 in the real cache, and 40 DAMAGE_IMMUNITY) → R1 Defensive cooldowns when mostly self. Pin Bloodlust 2825-shaped and Divine Shield-shaped fixtures.
+- **Cosmetics.** Pluralise correctly ("9 categories", "1 application / 1 player").
+- Commit: `SID-11: …` (one or more commits).
+
+### Task 12 (SID-12): Filter and fold additions
+
+- Additions are **proposed** (enter the review) only at confidence high or medium. Low-confidence (R9 Utility) suggestions remain in the dictionary's `suggested_category`/`rule` columns and are counted in `PROPOSED_ADDITIONS.md`'s summary, but are not proposals.
+- **Item effects fold**: an R8 (Consumables) addition applied by several classes becomes ONE proposal with class `ALL` (the class key the addon already uses for class-neutral entries), evidence summed across classes (player counts summed per class, exact since a character has one class).
+- `PROPOSED_ADDITIONS.md` shows before/after counts (raw candidates, dropped as low confidence, folded).
+- Tests: a low-confidence addition is not proposed but is in the dictionary; an item effect seen by 3 classes yields one ALL proposal with summed evidence.
+
+### Task 13 (SID-13): The review sheet `REVIEW.csv`
+
+`logs.py propose` also writes `REVIEW.csv` (CRLF, UTF-8 with BOM so it opens cleanly in Excel) into the bundle. **One row per spell id per change**, corrections first (ordered by applications), then additions grouped by recommended category. Columns, in this order:
+
+| column | content |
+|---|---|
+| `row_id` | stable id `R0001…`, unique in the sheet |
+| `spell_id` | the aura id this row is about |
+| `spell_name` | DB2 name |
+| `type` | `correction-add` (add this id to an existing entry), `deletion` (remove this listed id — the delete half of a replace, or a stale/wrong id), `move` (move this listed id to another category), `addition` (new aura into a category) |
+| `class` | class token, or `ALL` |
+| `current_category` | the category it is in today (blank for additions) |
+| `proposed_category` | where it would go (for deletion: blank). **Editable**: the owner may overwrite it with another category key or label before approving |
+| `specs` | e.g. `Restoration 1126/53; Elemental 693/73` (applications/players) |
+| `applications` | total |
+| `players` | distinct players |
+| `context` | one plain sentence: why (e.g. "listed 114051 is Enhancement's; Restoration applies 114052 under the same name"; "applied to 5+ players at once and reduces damage taken"), plus the rule id |
+| `confidence` | high / medium / low |
+| `proposal_key` | the proposal this row belongs to (several rows may share one) |
+| `decision` | **empty — last column**; the owner writes `Approve` or `Reject` (case-insensitive; `A`/`R`, `Y`/`N` accepted) |
+
+- A replace proposal becomes one `deletion` row plus one `correction-add` row per proposed id, so the owner can approve the add and reject the delete independently.
+- A header comment is not possible in CSV, so `REVIEW.md` in the bundle explains the columns, the allowed decision values, and how to hand the sheet back.
+- Tests: rows cover every proposal; replace splits into deletion + adds; column order exact; BOM + CRLF; no player data.
+
+### Task 14 (SID-14): Ingest the filled sheet — `logs.py ingest`
+
+`logs.py ingest --bundle DIR --csv FILLED.csv --date YYYY-MM-DD [--categories defaults/Categories.lua]`:
+
+- Validates the sheet against the bundle's `REVIEW.csv` by `row_id` + `spell_id` + `type` (a mismatched or unknown row is an error listing the rows); blank decisions are left pending (reported, not an error); an unrecognised decision value is an error; an edited `proposed_category` must be a known category key or label.
+- Records every Approve/Reject in `decisions.json` at **row granularity** (key = `proposal_key` + `#` + `spell_id` + `#` + `type`), so a rejected row is never asked again and an approved one is applied.
+- Applies approved rows with the SID-8 line rewriter (per id: add, delete, move), writes `DECISIONS.md`, and prints a change summary. Idempotent.
+- The slash command `.claude/commands/aura-spells-review.md` is updated to this flow: (1) scan + propose, (2) tell the owner where `REVIEW.csv` is and stop; (3) when the owner hands back the filled sheet (path given as the command argument `apply <path>`), run `ingest`, then the addon gates (`ka0s-bounded luacheck .`, `ka0s-bounded lua5.1 tests/run.lua`), and commit `defaults/Categories.lua`, `decisions.json` and the bundle.
+- Tests: an end-to-end run on fixtures — propose, fill the sheet programmatically (approve the Ascendance add, reject its deletion), ingest — leaves `114051` AND `114052` in the fixture's offensiveCDs SHAMAN line; a second ingest changes nothing; a sheet with an unknown row_id fails without writing.
+
+### After SID-14 (main session)
+
+Re-run `scan` (cached, fast) and `propose` into **`docs/spell-research/2026-09-24-logs/`** in the repo, check it for player data, commit it with `REVIEW.csv`, and give the owner the path.
