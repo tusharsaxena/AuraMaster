@@ -799,12 +799,25 @@ def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, de
 
 
 def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
-              thresholds=None, pool_names=None):
+              thresholds=None, pool_names=None, summary=None):
     """Addition proposals: above-bar player BUFFs in no `spells` category, with a category by rule.
 
-    An aura named like a spell the class already lists (in a BUFF category) is left to
-    corrections(), which proposes it as a replace or an add. No proposal when the rules give no
+    An aura named like a spell the class (or an ALL line) already lists (in a BUFF category) is left
+    to corrections(), which proposes it as a replace or an add. No proposal when the rules give no
     category, or one the file lacks.
+
+    SID-12 (the owner's ruling after the SID-10 dry run):
+    - Only high- or medium-confidence suggestions are proposed. A low one (R9 Utility) stays in the
+      dictionary's suggested_category column (suggestions()) and is only counted here.
+    - Item effects fold: an aura R8 calls an item or consumable effect for two or more classes is
+      ONE proposal under class ALL (the addon's class-neutral key), its evidence the union of those
+      classes' specs (named "CLASS Spec") and its players the per-class sum, exact because a
+      character has one class. The bar is met by the sum, so classes under it alone still count.
+
+    `summary`, when a dict, is filled with the before/after counts PROPOSED_ADDITIONS.md shows:
+    raw (per-class candidates above the bar, the pre-SID-12 output), low (of those, dropped as low
+    confidence), folded (of those, merged into an ALL proposal), all (ALL proposals made), ruled
+    (proposals already in decisions.json) and proposed (returned).
     """
     ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds(),
                    pool_names)
@@ -815,24 +828,69 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
         if cat.get("aura", "BUFF") == "BUFF":
             for klass, ids in cat["classes"].items():
                 listed_names.update((klass, names[sid].lower()) for sid in ids if names.get(sid))
-    out = []  # type: List[Proposal]
+    per_class = []  # type: List[Proposal]
+    items = OrderedDict()  # type: Dict[int, List[Tuple[str, _Total, str]]]
     for (klass, sid) in sorted(ruled.rows):
         if sid in listed:
             continue
         name = ruled.name(klass, sid)
-        if not name or (klass, name.lower()) in listed_names:
-            continue
-        total = ruled.total(klass, sid)
-        if not ruled.meets(total):
+        # An ALL line's name is every class's: corrections() reads it from every class's evidence.
+        if (not name or (klass, name.lower()) in listed_names
+                or (ALL_CLASSES, name.lower()) in listed_names):
             continue
         target, rule, confidence, reason = ruled.suggest(klass, sid)
         if target is None or target not in keys:
             continue
-        out.append(Proposal(
+        total = ruled.total(klass, sid)
+        if rule == "R8":
+            items.setdefault(sid, []).append((klass, total, name))
+        if not ruled.meets(total):
+            continue
+        per_class.append(Proposal(
             type="addition", category=target, from_category="", klass=klass, name=name, listed=[],
             proposed=[sid], evidence={sid: ruled.evidence(klass, sid)}, rule=rule, reason=reason,
             confidence=confidence, applications=total.apps))
-    return _ordered(out, decisions)
+    folds = {sid: seen for sid, seen in items.items() if len(seen) >= 2}
+    out = [p for p in per_class
+           if not (p.rule == "R8" and p.proposed[0] in folds)
+           and _CONFIDENCE_RANK[p.confidence] >= _CONFIDENCE_RANK["medium"]]
+    made = []  # type: List[Proposal]
+    for sid, seen in folds.items():
+        total = _Total(sum(t.apps for _k, t, _n in seen), sum(t.players for _k, t, _n in seen), "")
+        if ruled.meets(total):
+            made.append(_folded(ruled, sid, seen, total))
+    result = _ordered(out + made, decisions)
+    if summary is not None:
+        summary.update({
+            "raw": len(per_class),
+            "low": sum(1 for p in per_class if p.confidence == "low"),
+            "folded": sum(1 for p in per_class if p.rule == "R8" and p.proposed[0] in folds),
+            "all": len(made),
+            "ruled": len(out) + len(made) - len(result),
+            "proposed": len(result)})
+    return result
+
+
+def _folded(ruled, sid, seen, total):
+    # type: (_Ruled, int, List[Tuple[str, _Total, str]], _Total) -> Proposal
+    """One class-neutral (ALL) Consumables proposal for an item effect several classes applied."""
+    classes = [klass for klass, _t, _n in seen]
+    evidence = {}  # type: Dict[str, Tuple[int, int]]
+    for klass in classes:
+        for spec, v in ruled.evidence(klass, sid).items():
+            evidence["%s %s" % (klass, spec)] = v
+    spellings = Counter()  # type: Counter
+    for _k, t, n in seen:
+        spellings[n] += t.apps
+    name = ruled.names.get(sid) or _top_name(spellings)
+    reason = ("Applied by %s (%s) with %s / %s; not in any of their player-castable spell pools, "
+              "so an item or consumable effect → %s."
+              % (plural(len(classes), "class"), ", ".join(classes),
+                 plural(total.apps, "application"), plural(total.players, "player"),
+                 CATEGORY_LABELS["consumables"]))
+    return Proposal(type="addition", category="consumables", from_category="", klass=ALL_CLASSES,
+                    name=name, listed=[], proposed=[sid], evidence={sid: evidence}, rule="R8",
+                    reason=reason, confidence="high", applications=total.apps)
 
 
 def suggestions(agg, spec_map, signals, pool, cast_candidates=None, pool_names=None, names=None):

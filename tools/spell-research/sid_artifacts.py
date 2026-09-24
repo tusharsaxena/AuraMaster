@@ -317,7 +317,18 @@ def _corrections_md(date, corr, label, th):
     return "\n".join(out)
 
 
-def _additions_md(date, adds, label, shipped, th):
+def _addition_counts_line(c):
+    # type: (dict) -> str
+    """SID-12's before/after: raw candidates, the low-confidence drop, the fold, ruled, proposed."""
+    return ("%s above the bar in no category: %s dropped as low confidence (R9 Utility; they stay in "
+            "the dictionary's suggested_category and rule columns); %s folded into %s; %s; %s."
+            % (_n(c.get("raw", 0), "candidate"), c.get("low", 0),
+               _n(c.get("folded", 0), "item-effect candidate"),
+               _n(c.get("all", 0), "class-neutral (ALL) proposal"),
+               "%d already ruled" % c.get("ruled", 0), "%d proposed" % c.get("proposed", 0)))
+
+
+def _additions_md(date, adds, label, shipped, th, counts=None):
     order = [cat["key"] for cat in shipped]
     groups = {}  # type: Dict[str, list]
     for p in adds:
@@ -329,6 +340,8 @@ def _additions_md(date, adds, label, shipped, th):
            "(R1-R9, the spec's table), a reason in plain words and a confidence."
            % (_n(th["min_applications"], "application"), _n(th["min_players"], "player")), "",
            "%s in %s." % (_n(len(adds), "addition"), _n(len(keys), "category")), ""]
+    if counts:
+        out += [_addition_counts_line(counts), ""]
     if not adds:
         out.append("No additions.")
     for key in keys:
@@ -488,15 +501,17 @@ def _sources_md(date, sources, counts):
 # --- the bundle ---------------------------------------------------------------------------------
 
 def write_bundle(out_dir, date, rows, proposals, flags, shipped, sources, non_player=None,
-                 names=None, class_players=None):
-    # type: (Path, str, list, list, list, list, dict, Optional[dict], Optional[dict], Optional[dict]) -> List[Path]
+                 names=None, class_players=None, addition_counts=None):
+    # type: (Path, str, list, list, list, list, dict, Optional[dict], Optional[dict], Optional[dict], Optional[dict]) -> List[Path]
     """Write the dictionary and the review set into out_dir; return the paths written.
 
     proposals: sid_propose Proposals (corrections -- replace/add/move -- and additions), already
     free of ruled keys. flags: sid_propose Flags. sources: {"summary" (evidence.json's), "db2_build",
     "db2_tables", "thresholds", "categories", "cast_to_aura", "decisions", "decisions_count",
     "evidence"}. non_player: the aggregate's non_player tally; names: DB2 spell names (for listed
-    ids never seen); class_players: exact distinct casters per (class, aura type, spell id).
+    ids never seen); class_players: exact distinct casters per (class, aura type, spell id);
+    addition_counts: sid_propose.additions()' summary (raw, low, folded, all, ruled, proposed),
+    stated in PROPOSED_ADDITIONS.md when given.
     evidence.json is scan's to write and is not touched here.
     """
     out_dir = Path(out_dir)
@@ -521,7 +536,8 @@ def write_bundle(out_dir, date, rows, proposals, flags, shipped, sources, non_pl
         _write(out_dir / "CURRENT_CATEGORIES.md",
                _current_md(date, rows, shipped, flags, proposals, names, class_players)),
         _write(out_dir / "CORRECTIONS.md", _corrections_md(date, corr, label, th)),
-        _write(out_dir / "PROPOSED_ADDITIONS.md", _additions_md(date, adds, label, shipped, th)),
+        _write(out_dir / "PROPOSED_ADDITIONS.md", _additions_md(date, adds, label, shipped, th,
+                                                                 addition_counts)),
         _write(out_dir / "FLAGS.md", _flags_md(date, flags, label)),
         _write(out_dir / "SOURCES.md", _sources_md(date, sources, counts)),
         _write(out_dir / "proposals.json", _json_text({

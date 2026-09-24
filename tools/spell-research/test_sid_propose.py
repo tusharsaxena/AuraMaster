@@ -1033,3 +1033,94 @@ class Sid11WeightedMedianTest(unittest.TestCase):
     def test_a_heavy_spec_wins(self):
         self.assertEqual(sid_propose._weighted_median([(7.77, 16619), (43.41, 124), (68.92, 343)]),
                          7.77)
+
+
+# --- SID-12: filter and fold the additions ---------------------------------------------------------
+
+ARCANE = 62
+FOLD_SPEC_MAP = {**SPEC_MAP, ARCANE: {"class": "MAGE", "name": "Arcane", "role": 2}}
+
+
+class Sid12FilterFoldTest(unittest.TestCase):
+    """Additions are proposed only at high or medium confidence; an item effect (R8) applied by
+    several classes becomes one class-neutral ALL proposal with the classes' evidence summed."""
+
+    NAMES = {**NAMES, **{900300: "Well Fed", 900500: "Battle Stance", 900200: "Sprint"}}
+    SIGNALS = {900300: set(), 900500: set(), 900200: {"speed_up"}}
+    POOL = {900200, 900500}
+
+    def additions(self, rows, decisions=None, summary=None, json_path=False):
+        agg = agg_of(rows)
+        if json_path:
+            agg = via_evidence_json(agg)
+        return sid_propose.additions(agg, FOLD_SPEC_MAP, self.NAMES, RULE_SHIPPED, self.SIGNALS,
+                                     self.POOL, decisions=decisions or {}, summary=summary)
+
+    # Half self, half onto one other player, no DB2 signal: R9 Utility at low confidence.
+    LOW = ("WARRIOR", ARMS, "BUFF", 900500,
+           rows_st(60, 4, self_=30, single=30, name="Battle Stance"))
+    SPRINT = ("WARRIOR", ARMS, "BUFF", 900200, rows_st(60, 4, self_=60, recast=60.0, tag="s",
+                                                       name="Sprint"))
+
+    def well_fed(self, cls, spec, apps, players):
+        return (cls, spec, "BUFF", 900300,
+                rows_st(apps, players, self_=apps, recast=300.0, tag=cls, name="Well Fed"))
+
+    def test_a_low_confidence_addition_is_not_proposed_but_is_in_the_dictionary(self):
+        summary = {}
+        props = self.additions([self.LOW, self.SPRINT], summary=summary)
+        self.assertEqual([p.proposed for p in props], [[900200]])
+        got = sid_propose.suggestions(agg_of([self.LOW]), FOLD_SPEC_MAP, self.SIGNALS, self.POOL)
+        self.assertEqual(got[("WARRIOR", 900500)][:3], ("utility", "R9", "low"))
+        self.assertEqual(summary, {"raw": 2, "low": 1, "folded": 0, "all": 0, "ruled": 0,
+                                   "proposed": 1})
+
+    def test_an_item_effect_of_three_classes_is_one_all_proposal_with_summed_evidence(self):
+        rows = [self.well_fed("WARRIOR", ARMS, 40, 4), self.well_fed("SHAMAN", RESTO, 30, 3),
+                self.well_fed("MAGE", ARCANE, 10, 2)]
+        for json_path in (False, True):
+            summary = {}
+            props = self.additions(rows, summary=summary, json_path=json_path)
+            self.assertEqual(len(props), 1, props)
+            p = props[0]
+            self.assertEqual((p.type, p.category, p.klass, p.name, p.listed, p.proposed, p.rule,
+                              p.confidence, p.applications),
+                             ("addition", "consumables", "ALL", "Well Fed", [], [900300], "R8",
+                              "high", 80))
+            self.assertEqual(p.evidence, {900300: {"WARRIOR Arms": (40, 4),
+                                                   "SHAMAN Restoration": (30, 3),
+                                                   "MAGE Arcane": (10, 2)}})
+            self.assertIn("3 classes", p.reason)
+            self.assertIn("80 applications / 9 players", p.reason)
+            self.assertTrue(p.reason.endswith("→ Consumables."), p.reason)
+            self.assertEqual(sid_propose.proposal_key(p), "addition|consumables|ALL|well fed|900300")
+            # WARRIOR and SHAMAN were candidates on their own; MAGE (10 applications) was not.
+            self.assertEqual(summary, {"raw": 2, "low": 0, "folded": 2, "all": 1, "ruled": 0,
+                                       "proposed": 1})
+
+    def test_classes_under_the_bar_alone_fold_into_one_above_it(self):
+        rows = [self.well_fed("WARRIOR", ARMS, 12, 2), self.well_fed("SHAMAN", RESTO, 12, 2)]
+        props = self.additions(rows)
+        self.assertEqual([(p.klass, p.applications) for p in props], [("ALL", 24)])
+        self.assertIn("24 applications / 4 players", props[0].reason)
+
+    def test_an_item_effect_of_one_class_stays_with_that_class(self):
+        props = self.additions([self.well_fed("WARRIOR", ARMS, 40, 4)])
+        self.assertEqual([(p.klass, p.rule) for p in props], [("WARRIOR", "R8")])
+
+    def test_a_ruled_all_proposal_is_not_returned_and_is_counted(self):
+        rows = [self.well_fed("WARRIOR", ARMS, 40, 4), self.well_fed("SHAMAN", RESTO, 30, 3)]
+        summary = {}
+        decisions = {"addition|consumables|ALL|well fed|900300": {"ruling": "reject"}}
+        self.assertEqual(self.additions(rows, decisions, summary), [])
+        self.assertEqual(summary["ruled"], 1)
+        self.assertEqual(summary["proposed"], 0)
+
+    def test_an_item_effect_listed_under_all_by_name_is_left_to_corrections(self):
+        shipped = RULE_SHIPPED + [{"key": "consumables2", "label": "c", "aura": "BUFF",
+                                   "classes": {"ALL": [900301]}}]
+        names = {**self.NAMES, 900301: "Well Fed"}
+        rows = [self.well_fed("WARRIOR", ARMS, 40, 4), self.well_fed("SHAMAN", RESTO, 30, 3)]
+        props = sid_propose.additions(agg_of(rows), FOLD_SPEC_MAP, names, shipped, self.SIGNALS,
+                                      self.POOL)
+        self.assertEqual(props, [])

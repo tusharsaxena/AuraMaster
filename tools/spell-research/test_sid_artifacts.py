@@ -483,6 +483,57 @@ class ProposeCliTest(unittest.TestCase):
         self.assertIn("logs.py scan", proc.stderr)
 
 
+class Sid12AdditionCountsTest(unittest.TestCase):
+    """PROPOSED_ADDITIONS.md states the filter and fold: raw candidates, dropped as low confidence,
+    folded into class-neutral proposals, already ruled, proposed."""
+
+    def write(self, counts):
+        tmp = Path(tempfile.mkdtemp(prefix="sid-counts-"))
+        self.addCleanup(shutil.rmtree, str(tmp), True)
+        p = sid_propose.Proposal(
+            type="addition", category="consumables", from_category="", klass="ALL", name="Well Fed",
+            listed=[], proposed=[900300], evidence={900300: {"WARRIOR Arms": (40, 4),
+                                                             "SHAMAN Restoration": (30, 3)}},
+            rule="R8", reason="A reason.", confidence="high", applications=70)
+        shipped = [{"key": "consumables", "label": "Consumables", "aura": "BUFF", "classes": {}}]
+        sid_artifacts.write_bundle(tmp, "2026-09-24", [], [p], [], shipped,
+                                   {"thresholds": {"min_applications": 20, "min_players": 3}},
+                                   addition_counts=counts)
+        return (tmp / "PROPOSED_ADDITIONS.md").read_text(encoding="utf-8")
+
+    def test_the_before_and_after_counts(self):
+        text = self.write({"raw": 2046, "low": 1500, "folded": 300, "all": 40, "ruled": 1,
+                           "proposed": 285})
+        self.assertIn("2046 candidates above the bar", text)
+        self.assertIn("1500 dropped as low confidence", text)
+        self.assertIn("300 item-effect candidates folded into 40 class-neutral (ALL) proposals",
+                      text)
+        self.assertIn("1 already ruled", text)
+        self.assertIn("285 proposed", text)
+        self.assertIn("\n\n1 addition in 1 category.\n\n2046 candidates", text)
+        self.assertIn("285 proposed.\n\n## ", text)
+        self.assertIn("suggested_category", text)
+        self.assertIn("- **Well Fed** (900300) · ALL — WARRIOR Arms 40 apps / 4 players; "
+                      "SHAMAN Restoration 30 apps / 3 players — R8 — high", text)
+
+    def test_the_counts_read_singular(self):
+        text = self.write({"raw": 1, "low": 1, "folded": 1, "all": 1, "ruled": 0, "proposed": 1})
+        self.assertIn("1 candidate above the bar", text)
+        self.assertIn("1 item-effect candidate folded into 1 class-neutral (ALL) proposal", text)
+
+    def test_no_counts_no_line(self):
+        self.assertNotIn("candidates above the bar", self.write(None))
+
+    def test_the_cli_bundle_states_the_counts(self):
+        run = Run(1, 1)
+        self.addCleanup(run.close)
+        self.assertRegex(run.read("PROPOSED_ADDITIONS.md"),
+                         r"\d+ candidates? above the bar in no category: \d+ dropped as low "
+                         r"confidence")
+        self.assertRegex(run.out, r"Additions from \d+ candidates?: \d+ low confidence "
+                                  r"\(dictionary only\), \d+ folded into \d+ ALL proposals?")
+
+
 if __name__ == "__main__":
     unittest.main()
 

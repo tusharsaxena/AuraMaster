@@ -396,7 +396,11 @@ again. The category suggestion rules R1 to R9 are the spec's table, implemented 
   one of confirmed, unverified, stale or wrong id.
 - `CORRECTIONS.md`: replace, add and move proposals for listed ids.
 - `PROPOSED_ADDITIONS.md`: new auras above the bar, grouped by recommended category, each with a
-  rule and a one-sentence reason.
+  rule and a one-sentence reason. Only high- and medium-confidence suggestions are proposed; a
+  low-confidence one (R9 Utility) stays in the dictionary's `suggested_category` column. An item
+  effect (R8) applied by two or more classes is one proposal under class `ALL`, its evidence and
+  player counts summed across the classes. The summary line gives the counts before and after:
+  candidates, dropped as low confidence, folded, already ruled, proposed.
 - `FLAGS.md`: unverified and stale ids, below-the-bar sightings, and the crowd-control debuff
   cross-check (report only, never proposed).
 - `SOURCES.md`: logs scanned, date range, bytes, skipped lines, DB2 build and thresholds.

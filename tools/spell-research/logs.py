@@ -126,12 +126,14 @@ def cmd_propose(args):
                                   _aura_ids(agg, "DEBUFF"))
     th = sid_propose.Thresholds(min_applications=args.min_apps, min_players=args.min_players)
 
+    addition_counts = {}  # type: dict
     proposals = (sid_propose.corrections(agg, spec_map, names, shipped, family, decisions, th,
                                          cc_ids=cc_ids)
                  + sid_propose.moves(agg, spec_map, names, shipped, signals, pool, candidates,
                                      decisions, th, pool_names=pool_names)
                  + sid_propose.additions(agg, spec_map, names, shipped, signals, pool, candidates,
-                                         decisions, th, pool_names=pool_names))
+                                         decisions, th, pool_names=pool_names,
+                                         summary=addition_counts))
     flags = sid_propose.flags(agg, spec_map, names, shipped, family, cc_ids, th)
     rows = sid_artifacts.dictionary_rows(
         agg, spec_map, names, shipped,
@@ -155,10 +157,14 @@ def cmd_propose(args):
     }
     sid_artifacts.write_bundle(bundle, args.date, rows, proposals, flags, shipped, sources,
                                non_player=agg.non_player, names=names,
-                               class_players=class_players)
+                               class_players=class_players, addition_counts=addition_counts)
     corr = sum(1 for p in proposals if p.type in sid_artifacts.CORRECTION_TYPES)
     print("Proposed into %s: corrections %d, additions %d, flags %d; dictionary rows %d"
           % (bundle, corr, len(proposals) - corr, len(flags), len(rows)))
+    print("Additions from %s: %d low confidence (dictionary only), %d folded into %s"
+          % (sid_propose.plural(addition_counts.get("raw", 0), "candidate"),
+             addition_counts.get("low", 0), addition_counts.get("folded", 0),
+             sid_propose.plural(addition_counts.get("all", 0), "ALL proposal")))
     print("Review: %s, %s; queue: %s; dictionary: %s"
           % (bundle / "CORRECTIONS.md", bundle / "PROPOSED_ADDITIONS.md",
              bundle / "proposals.json", bundle / "dictionary" / "AURAS.md"))
