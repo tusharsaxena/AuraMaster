@@ -101,5 +101,17 @@ class AcceptanceRun(unittest.TestCase):
         self.assertEqual(self.lua.read_bytes(), after)
 
 
+class FormulaWording(unittest.TestCase):
+    """The README states the owner's formula verbatim (spec: "per spec, and cast by a player,
+    not an NPC"); the source of a SPELL_AURA_APPLIED line is the caster."""
+
+    def test_readme_states_the_owners_formula(self):
+        readme = (HERE / "README.md").read_text(encoding="utf-8")
+        formula = "**per spec, and cast by a player, not an NPC**"
+        self.assertTrue(formula in readme, "README.md does not state " + formula)
+        self.assertFalse("applied by a player, not an NPC" in readme,
+                         "README.md still words the formula as 'applied by a player'")
+
+
 if __name__ == "__main__":
     unittest.main()

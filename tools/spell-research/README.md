@@ -318,7 +318,7 @@ proposal in turn and commits the result. The subcommands also run on their own.
 
 ### The formula
 
-An aura counts when it is **per spec, and applied by a player, not an NPC**: a
+An aura counts when it is **per spec, and cast by a player, not an NPC**: a
 `SPELL_AURA_APPLIED` line whose source GUID starts `Player-` and whose source flags carry both the
 player type bit (`0x400`) and the player-controlled bit (`0x100`). The spec comes from the source's
 `COMBATANT_INFO` earlier in the same file. Before one arrives, the application goes under spec
