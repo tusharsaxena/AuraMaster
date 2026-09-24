@@ -300,6 +300,28 @@ class Evidence(unittest.TestCase):
         med = {r["spellId"]: r["recastMedian"] for r in ev["auras"]}
         self.assertEqual(med, {1: 90.0, 2: None})
 
+    def test_evidence_carries_exact_cross_spec_and_per_spec_player_counts(self):
+        # Per-row counts cannot be merged; these two tables carry the unions the propose stage needs.
+        agg = sid_scan.FileAggregate()
+        agg.per_spec[RESTO] = {(BUFF, 1): stats(players={"h1", "h2"}), (BUFF, 2): stats(players={"h3"})}
+        agg.per_spec[ELE] = {(BUFF, 1): stats(players={"h2", "h4"})}
+        ev = sid_cache.evidence_to_json(agg, {})
+        cp = {(r["class"], r["auraType"], r["spellId"]): r["players"] for r in ev["classPlayers"]}
+        self.assertEqual(cp, {("SHAMAN", BUFF, 1): 3, ("SHAMAN", BUFF, 2): 1})
+        sp = {(r["class"], r["spec"]): r["players"] for r in ev["specPlayers"]}
+        self.assertEqual(sp, {RESTO: 3, ELE: 2})
+        for h in ("h1", "h2", "h3", "h4"):
+            self.assertNotIn(h, json.dumps(ev))
+        back = sid_cache.evidence_from_json(json.loads(json.dumps(ev)))
+        self.assertEqual(back.class_players, cp)
+        self.assertEqual(back.spec_players, sp)
+
+    def test_evidence_without_the_player_tables_still_reads(self):
+        ev = sid_cache.evidence_to_json(sid_scan.FileAggregate(), {})
+        del ev["classPlayers"], ev["specPlayers"]
+        back = sid_cache.evidence_from_json(ev)
+        self.assertEqual((back.class_players, back.spec_players), ({}, {}))
+
     def test_evidence_round_trips_into_an_aggregate(self):
         agg, _summary, ev = self.evidence()
         back = sid_cache.evidence_from_json(json.loads(json.dumps(ev)))

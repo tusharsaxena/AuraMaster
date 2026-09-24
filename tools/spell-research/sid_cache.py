@@ -20,6 +20,7 @@ import os
 import re
 import statistics
 from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
@@ -30,7 +31,8 @@ DEFAULT_CACHE_DIR = Path.home() / ".cache" / "auramaster-spell-research"
 
 # Bump when the cached aggregate's meaning changes, so old entries are re-read.
 CACHE_VERSION = 1
-EVIDENCE_VERSION = 1
+# 2: adds classPlayers and specPlayers (exact distinct-player unions; see evidence_to_json).
+EVIDENCE_VERSION = 2
 
 SALT_BYTES = 32
 
@@ -233,13 +235,43 @@ def _spec_order(key):
     return (key[0], -1 if key[1] is None else key[1])
 
 
+@dataclass
+class EvidenceAggregate(FileAggregate):
+    """A FileAggregate read back from evidence.json, with the exact unions the rows cannot give.
+
+    class_players: (class, auraType, spellId) -> distinct casters across every spec of the class.
+    spec_players:  (class, spec) -> distinct casters applying any aura in that spec.
+    Both are empty for an evidence.json written before EVIDENCE_VERSION 2.
+    """
+    class_players: Dict[tuple, int] = field(default_factory=dict)
+    spec_players: Dict[tuple, int] = field(default_factory=dict)
+
+
+def player_unions(agg):
+    # type: (FileAggregate) -> Tuple[Dict[tuple, int], Dict[tuple, int]]
+    """({(class, auraType, spellId): n}, {(class, spec): n}): distinct casters, from the real sets."""
+    by_aura, by_spec = {}, {}  # type: Dict[tuple, set], Dict[tuple, set]
+    for (cls, spec), auras in agg.per_spec.items():
+        seen = by_spec.setdefault((cls, spec), set())
+        for (aura_type, spell_id), st in auras.items():
+            by_aura.setdefault((cls, aura_type, spell_id), set()).update(st.players)
+            seen.update(st.players)
+    return ({k: len(v) for k, v in by_aura.items()}, {k: len(v) for k, v in by_spec.items()})
+
+
 def evidence_to_json(agg, summary):
     # type: (FileAggregate, dict) -> dict
     """The evidence written into the repo: one row per (class, spec, auraType, spellId).
 
     Counts only: `players` is the number of distinct casters. No hash, GUID or
     unit name appears. Recast is reduced to its median and sample count.
+
+    Per-row counts cannot be unioned once the casters are gone, so two tables carry the unions
+    the propose stage needs, computed here from the real caster sets: `classPlayers` (distinct
+    casters of an aura across every spec of the class: the evidence bar) and `specPlayers`
+    (distinct casters of a spec across every aura: which specs the logs cover).
     """
+    class_players, spec_players = player_unions(agg)
     rows = []
     for spec_key in sorted(agg.per_spec, key=_spec_order):
         cls, spec = spec_key
@@ -262,18 +294,24 @@ def evidence_to_json(agg, summary):
         "lines": agg.lines, "skipped": agg.skipped, "unattributed": agg.unattributed,
         "firstDate": agg.first_date, "lastDate": agg.last_date,
         "auras": rows, "nonPlayer": non_player,
+        "classPlayers": [{"class": c, "auraType": t, "spellId": i, "players": n}
+                         for (c, t, i), n in sorted(class_players.items())],
+        "specPlayers": [{"class": c, "spec": sp, "players": spec_players[(c, sp)]}
+                        for (c, sp) in sorted(spec_players, key=_spec_order)],
     }
 
 
 def evidence_from_json(d):
-    # type: (dict) -> FileAggregate
+    # type: (dict) -> EvidenceAggregate
     """Rebuild an aggregate from evidence.json for the propose stage.
 
     `players` becomes a set of opaque placeholders of the recorded size, so
-    len() gives the distinct-player count (it cannot be merged further), and
+    len() gives the row's distinct-player count; a union of two rows' sets is
+    NOT a distinct count (every row shares '#0'..), so the exact unions come
+    from classPlayers / specPlayers into class_players / spec_players.
     `recast_samples` holds the recorded median alone, so its median is exact.
     """
-    agg = FileAggregate(lines=d["lines"], skipped=d["skipped"], unattributed=d["unattributed"],
+    agg = EvidenceAggregate(lines=d["lines"], skipped=d["skipped"], unattributed=d["unattributed"],
                         first_date=d["firstDate"], last_date=d["lastDate"])
     for r in d["auras"]:
         median = r.get("recastMedian")
@@ -286,4 +324,8 @@ def evidence_from_json(d):
     for r in d["nonPlayer"]:
         agg.non_player[(r["auraType"], r["spellId"])] = {
             "names": Counter(r["names"]), "applications": r["applications"]}
+    for r in d.get("classPlayers", ()):
+        agg.class_players[(r["class"], r["auraType"], r["spellId"])] = r["players"]
+    for r in d.get("specPlayers", ()):
+        agg.spec_players[(r["class"], r["spec"])] = r["players"]
     return agg

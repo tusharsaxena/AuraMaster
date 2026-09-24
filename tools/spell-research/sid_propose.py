@@ -5,7 +5,10 @@ spell names, CastToAura families) and the shipped `spells`-kind categories. Outp
 
 - corrections(): Proposal objects for existing entries. Evidence is grouped by CLASS and
   LOWER-CASED SPELL NAME (the entry's class key plus the DB2 name of the listed id), so a listed id
-  and the ids the logs show under the same name are compared directly.
+  and the ids the logs show under the same name are compared directly. A listed id's own evidence
+  joins its group under whatever name the logs spell it (a spell renamed since the logs, or a log
+  spelling that differs from DB2), so "never applied" means never applied by the class as that
+  aura type, under any name.
     * replace -- the listed id is never applied by the class while a same-name aura is.
     * add     -- a same-name aura under another id is applied above the evidence bar and the
                  listed id stays (it is applied, or the candidate exception keeps it).
@@ -22,7 +25,7 @@ standard library only; nothing here writes a file.
 """
 
 import datetime
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
@@ -101,20 +104,34 @@ def spec_name(spec_map, spec):
     return info["name"] if info and info.get("name") else str(spec)
 
 
+def _class_names(agg, aura_type):
+    # type: (object, Optional[str]) -> Dict[Tuple[str, str, int], Counter]
+    """{(class, aura type, spell_id): spellings summed over every spec of the class}."""
+    out = {}  # type: Dict[Tuple[str, str, int], Counter]
+    for (cls, _spec), auras in agg.per_spec.items():
+        for (atype, spell_id), st in auras.items():
+            if aura_type is None or atype == aura_type:
+                out.setdefault((cls, atype, spell_id), Counter()).update(st.names)
+    return out
+
+
 def evidence_index(agg, spec_map, aura_type=None):
     """{(class, name lower-cased): {spell_id: {spec_id: entry}}}, one entry per spec that applied it.
 
     entry: {"spec": spec name, "apps", "players" (distinct casters), "first_seen", "last_seen",
-    "player_set"}. player_set holds the aggregate's in-memory caster ids so a total across specs can
-    count a player seen in two specs once; it is never serialised. `aura_type` ("BUFF"/"DEBUFF")
-    keeps only that aura type. The name is the aura's most common spelling in the logs.
+    "player_set"}. player_set holds the aggregate's caster ids so a total across specs can count a
+    player seen in two specs once; it is never serialised (from evidence.json the sets are
+    placeholders and the exact union comes from the aggregate's class_players instead). `aura_type`
+    ("BUFF"/"DEBUFF") keeps only that aura type. The name is the aura's most common spelling across
+    every spec of the class, so each (class, spell_id) lands in exactly one group.
     """
+    names = _class_names(agg, aura_type)
     out = {}  # type: Dict[Tuple[str, str], Dict[int, Dict[Optional[int], dict]]]
     for (cls, spec), auras in agg.per_spec.items():
         for (atype, spell_id), st in auras.items():
             if aura_type is not None and atype != aura_type:
                 continue
-            name = _top_name(st.names)
+            name = _top_name(names[(cls, atype, spell_id)])
             if not name or not st.applications:
                 continue
             by_spec = out.setdefault((cls, name.lower()), {}).setdefault(spell_id, {})
@@ -139,12 +156,15 @@ class _Total:
     last_seen: str
 
 
-def _total(by_spec):
-    # type: (Dict[Optional[int], dict]) -> _Total
-    players = set()  # type: Set[str]
-    for e in by_spec.values():
-        players |= e["player_set"]
-    return _Total(sum(e["apps"] for e in by_spec.values()), len(players),
+def _total(by_spec, players=None):
+    # type: (Dict[Optional[int], dict], Optional[int]) -> _Total
+    """Totals across specs; `players`, when given, is the exact class-wide distinct count."""
+    if players is None:
+        seen = set()  # type: Set[str]
+        for e in by_spec.values():
+            seen |= e["player_set"]
+        players = len(seen)
+    return _Total(sum(e["apps"] for e in by_spec.values()), players,
                   max((e["last_seen"] for e in by_spec.values()), default=""))
 
 
@@ -157,11 +177,16 @@ def spec_player_counts(agg):
     # type: (object) -> Dict[tuple, int]
     """{(class, spec): distinct players seen applying ANY aura}: which specs the logs cover.
 
-    From evidence.json the caster sets are placeholders of each aura's recorded size, so the count
-    is the largest single-aura count: a lower bound, which only ever keeps the exception longer.
+    From evidence.json (whose caster sets are placeholders) the exact count is the aggregate's
+    spec_players; only an evidence.json older than that table falls back to the largest
+    single-aura count, a lower bound, which only ever keeps the exception longer.
     """
+    exact = getattr(agg, "spec_players", None) or {}
     out = {}
     for key, auras in agg.per_spec.items():
+        if key in exact:
+            out[key] = exact[key]
+            continue
         seen = set()  # type: Set[str]
         for st in auras.values():
             seen |= set(st.players)
@@ -192,6 +217,12 @@ class _Review:
         self.family = aura_to_family or {}
         self.th = th
         self.indexes = {t: evidence_index(agg, spec_map, t) for t in AURA_TYPES}
+        # {aura type: {(class, spell_id): by_spec}}: a listed id's evidence under any spelling.
+        self.by_id = {t: {(cls, sid): by_spec for (cls, _n), ids in idx.items()
+                          for sid, by_spec in ids.items()}
+                      for t, idx in self.indexes.items()}
+        # Exact class-wide distinct players from evidence.json; empty for an in-memory aggregate.
+        self.class_players = getattr(agg, "class_players", None) or {}
         self.coverage = spec_player_counts(agg)
         self.cutoff = _cutoff(agg.last_date, th.stale_days)
         self.proposals = []  # type: List[Proposal]
@@ -199,7 +230,9 @@ class _Review:
 
     def run(self):
         for cat in self.shipped:
-            index = self.indexes.get(cat.get("aura", "BUFF"), {})
+            atype = cat.get("aura", "BUFF")
+            index = self.indexes.get(atype, {})
+            by_id = self.by_id.get(atype, {})
             for klass, ids in cat["classes"].items():
                 groups = OrderedDict()  # type: Dict[str, Tuple[str, List[int]]]
                 for spell_id in ids:
@@ -208,7 +241,11 @@ class _Review:
                         continue  # no DB2 name: nothing to match the logs against
                     groups.setdefault(name.lower(), (name, []))[1].append(spell_id)
                 for name_l, (name, listed) in groups.items():
-                    self.group(cat["key"], klass, name, listed, index.get((klass, name_l), {}))
+                    ev = dict(index.get((klass, name_l), {}))
+                    for sid in listed:  # applied under another spelling: still applied
+                        if sid not in ev and (klass, sid) in by_id:
+                            ev[sid] = by_id[(klass, sid)]
+                    self.group(cat["key"], klass, atype, name, listed, ev)
         return self
 
     def meets(self, total):
@@ -218,8 +255,9 @@ class _Review:
     def flag(self, kind, category, klass, spell_id, detail):
         self.flags.append(Flag(kind, category, klass, spell_id, self.names.get(spell_id, ""), detail))
 
-    def group(self, category, klass, name, listed, ev):
-        totals = {sid: _total(by_spec) for sid, by_spec in ev.items()}
+    def group(self, category, klass, atype, name, listed, ev):
+        totals = {sid: _total(by_spec, self.class_players.get((klass, atype, sid)))
+                  for sid, by_spec in ev.items()}
         for sid in sorted(ev):
             if not self.meets(totals[sid]):
                 self.flag("below_bar", category, klass, sid,
@@ -309,7 +347,8 @@ class _Review:
                 for n, c in st.names.items():
                     slot["names"][n] = slot["names"].get(n, 0) + c
         for (cls, sid), slot in sorted(per_class.items()):
-            total = _Total(slot["apps"], len(slot["players"]), "")
+            players = self.class_players.get((cls, "DEBUFF", sid), len(slot["players"]))
+            total = _Total(slot["apps"], players, "")
             if not self.meets(total):
                 continue
             self.flags.append(Flag(

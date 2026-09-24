@@ -15,6 +15,9 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
+import json  # noqa: E402
+
+import sid_cache  # noqa: E402
 import sid_propose  # noqa: E402
 from sid_scan import AuraStats, FileAggregate  # noqa: E402
 
@@ -69,6 +72,11 @@ def agg_of(rows, first="2026-06-01", last="2026-09-20"):
     return agg
 
 
+def via_evidence_json(agg):
+    """The production path: the aggregate written to evidence.json and read back."""
+    return sid_cache.evidence_from_json(json.loads(json.dumps(sid_cache.evidence_to_json(agg, {}))))
+
+
 def run(agg, decisions=None, cc_ids=frozenset()):
     props = sid_propose.corrections(agg, SPEC_MAP, NAMES, SHIPPED, FAMILY, decisions or {})
     flags = sid_propose.flags(agg, SPEC_MAP, NAMES, SHIPPED, FAMILY, cc_ids)
@@ -96,6 +104,16 @@ class EvidenceIndexTest(unittest.TestCase):
         agg = agg_of([("SHAMAN", ELE, "DEBUFF", 188389, stats("Flame Shock", 50, 3))])
         self.assertEqual(sid_propose.evidence_index(agg, SPEC_MAP, "BUFF"), {})
 
+    def test_an_id_spelled_differently_per_spec_lands_in_one_group(self):
+        # The group name is the id's most common spelling across the class, not per spec.
+        agg = agg_of([
+            ("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall", 50, 5)),
+            ("WARRIOR", ARMS, "BUFF", 871, stats("Shield Wall (old)", 10, 2, tag="a")),
+        ])
+        idx = sid_propose.evidence_index(agg, SPEC_MAP)
+        self.assertEqual(set(idx[("WARRIOR", "shield wall")][871]), {PROT, ARMS})
+        self.assertNotIn(("WARRIOR", "shield wall (old)"), idx)
+
     def test_unknown_spec_is_named_unknown(self):
         agg = agg_of([("SHAMAN", None, "BUFF", 114052, stats("Ascendance", 5, 1))])
         idx = sid_propose.evidence_index(agg, SPEC_MAP)
@@ -119,6 +137,8 @@ class AscendanceTest(unittest.TestCase):
         self.assertEqual(p.evidence[114052], {"Restoration": (212, 9)})
         self.assertEqual(p.rule, "evidence")
         self.assertEqual(p.applications, 212)
+        # Kept alive by the exception only: the listed id is unproven, so the add is medium.
+        self.assertEqual(p.confidence, "medium")
 
     def test_too_few_players_of_a_spec_keeps_the_exception(self):
         # Two Enhancement players are below the 3-player bar: not enough to say the spec never applies it.
@@ -159,7 +179,34 @@ class AddTest(unittest.TestCase):
         self.assertEqual([(p.type, p.category, p.klass, p.listed, p.proposed) for p in props],
                          [("add", "defensives", "WARRIOR", [871], [900001])])
         self.assertEqual(props[0].evidence[871], {"Protection": (50, 5)})
+        self.assertEqual(props[0].confidence, "high")
         self.assertNotIn(("unverified", "defensives", "WARRIOR", 871), flag_set(flags))
+
+    def test_listed_id_applied_under_another_spelling_is_not_never_applied(self):
+        # 871 is applied 500 times, but the logs spell it differently from DB2 (a rename between the
+        # old logs and the current build). It is applied, so it is kept: an add, never a replace.
+        rows = [("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall (old)", 500, 9)),
+                ("WARRIOR", ARMS, "BUFF", 900001, stats("Shield Wall", 30, 4, tag="a"))]
+        props, flags = run(agg_of(rows))
+        self.assertEqual([(p.type, p.listed, p.proposed, p.confidence) for p in props],
+                         [("add", [871], [900001], "high")])
+        self.assertEqual(props[0].evidence[871], {"Protection": (500, 9)})
+        self.assertNotIn("never", props[0].reason)
+        self.assertNotIn(("unverified", "defensives", "WARRIOR", 871), flag_set(flags))
+
+    def test_listed_id_applied_under_another_spelling_alone_is_not_unverified(self):
+        rows = [("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall (old)", 500, 9))]
+        props, flags = run(agg_of(rows))
+        self.assertEqual(props, [])
+        self.assertNotIn(("unverified", "defensives", "WARRIOR", 871), flag_set(flags))
+
+    def test_listed_id_applied_only_as_the_other_aura_type_is_still_never_applied(self):
+        # A DEBUFF sighting of 871 says nothing about the BUFF the category lists.
+        rows = [("WARRIOR", PROT, "DEBUFF", 871, stats("Shield Wall", 500, 9)),
+                ("WARRIOR", ARMS, "BUFF", 900001, stats("Shield Wall", 30, 4, tag="a"))]
+        props, _flags = run(agg_of(rows))
+        self.assertEqual([(p.type, p.listed, p.proposed) for p in props],
+                         [("replace", [871], [900001])])
 
 
 class EvidenceBarTest(unittest.TestCase):
@@ -185,12 +232,52 @@ class EvidenceBarTest(unittest.TestCase):
         self.assertEqual(props, [])
         self.assertIn(("below_bar", "defensives", "WARRIOR", 900001), flag_set(flags))
 
+    def test_players_are_distinct_across_specs_from_evidence_json(self):
+        # Two Arms and two OTHER Fury players: 4 distinct, above the bar, on the evidence.json path too.
+        rows = [("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall", 50, 5)),
+                ("WARRIOR", ARMS, "BUFF", 900001, stats("Shield Wall", 15, 2, tag="a")),
+                ("WARRIOR", 72, "BUFF", 900001, stats("Shield Wall", 15, 2, tag="f"))]
+        props, flags = run(via_evidence_json(agg_of(rows)))
+        self.assertEqual([(p.type, p.proposed) for p in props], [("add", [900001])])
+        self.assertNotIn(("below_bar", "defensives", "WARRIOR", 900001), flag_set(flags))
+
+    def test_the_same_players_in_two_specs_from_evidence_json_count_once(self):
+        rows = [("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall", 50, 5)),
+                ("WARRIOR", ARMS, "BUFF", 900001, stats("Shield Wall", 15, 2, tag="x")),
+                ("WARRIOR", 72, "BUFF", 900001, stats("Shield Wall", 15, 2, tag="x"))]
+        props, flags = run(via_evidence_json(agg_of(rows)))
+        self.assertEqual(props, [])
+        below = [f for f in flags if f.kind == "below_bar" and f.spell_id == 900001]
+        self.assertIn("30 applications / 2 players", below[0].detail)
+
     def test_thresholds_are_parameters(self):
         rows = [("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall", 50, 5)),
                 ("WARRIOR", ARMS, "BUFF", 900001, stats("Shield Wall", 19, 2, tag="a"))]
         th = sid_propose.Thresholds(min_applications=10, min_players=2)
         props = sid_propose.corrections(agg_of(rows), SPEC_MAP, NAMES, SHIPPED, FAMILY, {}, th)
         self.assertEqual([p.proposed for p in props], [[900001]])
+
+
+class EvidenceJsonCoverageTest(unittest.TestCase):
+    def test_spec_coverage_is_exact_from_evidence_json(self):
+        # Four Enhancement players, two per aura, none shared: the spec is covered (>= 3 players), so
+        # the candidate exception lifts and 114051 is replaced, on the evidence.json path as in memory.
+        rows = [AscendanceTest.RESTO_ROW,
+                ("SHAMAN", ENH, "BUFF", 999001, stats("Lightning Shield", 40, 2, tag="n")),
+                ("SHAMAN", ENH, "BUFF", 999002, stats("Maelstrom", 40, 2, tag="m")),
+                ("SHAMAN", ELE, "BUFF", 1219480, stats("Ascendance", 88, 4, tag="e"))]
+        for agg in (agg_of(rows), via_evidence_json(agg_of(rows))):
+            self.assertEqual(sid_propose.spec_player_counts(agg)[("SHAMAN", ENH)], 4)
+            props, _flags = run(agg)
+            self.assertEqual([p.type for p in props if p.klass == "SHAMAN"], ["replace"])
+
+    def test_cc_unlisted_counts_players_across_specs_from_evidence_json(self):
+        rows = [("WARRIOR", ARMS, "DEBUFF", 900777, stats("Storm Bolt", 20, 2, tag="a")),
+                ("WARRIOR", 72, "DEBUFF", 900777, stats("Storm Bolt", 20, 2, tag="f"))]
+        _props, flags = run(via_evidence_json(agg_of(rows)), cc_ids={900777})
+        cc = [f for f in flags if f.kind == "cc_unlisted"]
+        self.assertEqual([f.spell_id for f in cc], [900777])
+        self.assertIn("40 applications / 4 players", cc[0].detail)
 
 
 class UnverifiedTest(unittest.TestCase):
