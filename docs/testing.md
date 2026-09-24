@@ -88,7 +88,8 @@ Suites worth knowing by name:
   this, where existence alone passes. It is a heuristic, not a proof: whether the cited code still
   does what the prose says is still for review to decide.
 - **`tests/test_lintconfig.lua`** — `.luacheckrc` carries no blanket suppression, so `0/0` is a
-  statement about the code.
+  statement about the code, and every `read_globals` name is one some authored file reads as a
+  global, so a retired API (anti-pattern #10) cannot be declared back into lint-clean.
 - **`tests/test_vendor_sync.lua`** — `libs/LibKa0s/` and `tests/_kit/` are byte-identical to the
   LibKa0s tag named in `CLAUDE.md`. With no `../LibKa0s` checkout beside this repo it records a
   **skip with its reason**, not a pass (testing-§11).

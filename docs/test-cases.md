@@ -1492,13 +1492,14 @@ badge and any count quoted in the docs must agree with it.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_lintconfig.lua (5)
+### test_lintconfig.lua (6)
 
 - lintconfig: .luacheckrc sets no top-level ignore
 - lintconfig: .luacheckrc switches no warning class off wholesale
 - lintconfig: every files[...] ignore is narrowed to a file or a name
 - lintconfig: no source file carries a bare inline luacheck ignore
 - lintconfig: no length operator shares its line with a keyword or brace lizard must see
+- lintconfig: every read_globals name is referenced as a global by some authored file
 
 ### test_eol.lua (2)
 
@@ -1578,7 +1579,7 @@ badge and any count quoted in the docs must agree with it.
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
 | test_vendor_sync.lua | 3 |
-| test_lintconfig.lua | 5 |
+| test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1347** |
+| **Total** | **1348** |

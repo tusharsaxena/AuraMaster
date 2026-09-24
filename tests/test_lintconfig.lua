@@ -15,6 +15,9 @@
 --
 -- The last case applies the same rule to the complexity gate: no line may hide code from lizard
 -- behind a length operator (see "The complexity gate stays sighted" below).
+--
+-- The final case holds `read_globals` to names some authored file reads as a global (see
+-- "read_globals stays honest" below): a stale entry, worst of all a retired API, would lint clean.
 
 local T = _G.AM_TEST
 local test, fail = T.test, T.fail
@@ -274,5 +277,89 @@ test("lintconfig: no length operator shares its line with a keyword or brace liz
   if hits[1] then
     fail(#hits .. " line(s) hide code from lizard behind a `#`; move what follows the length onto its own "
       .. "line or into a local: " .. table.concat(hits, ", "), 2)
+  end
+end)
+
+-- ── read_globals stays honest ────────────────────────────────────────────────────────────────────
+-- A read_globals entry is a promise that some authored file reads that client global. An entry
+-- nothing reads is not harmless: declaring a retired global (GetSpellInfo, anti-pattern #10) lets a
+-- regression back to it lint clean.
+
+local AUTHORED_PREFIXES = { "core/", "modules/", "settings/", "defaults/", "locales/" }
+
+--- The authored files a read_globals name may be read from: the addon's source trees and the test
+--- tree's own top-level .lua files (never tests/_kit/, which is the library's).
+local function authoredLua()
+  local out = {}
+  for _, path in ipairs(trackedLua()) do
+    local keep = path:find("^tests/[^/]+%.lua$") ~= nil
+    for _, prefix in ipairs(AUTHORED_PREFIXES) do
+      if path:find(prefix, 1, true) == 1 then keep = true end
+    end
+    if keep then
+      out[#out + 1] = path
+    end
+  end
+  out[#out + 1] = "tests/test_lintconfig.lua"
+  return out
+end
+
+--- Does this line's code (strings blanked, trailing comment gone) read `name` as a bare global —
+--- not as a `.field` or a `:method`, not as part of a longer identifier, and not as the key of a
+--- `name = value` table field (a mock's `{ GetSpellInfo = function ... }` reads nothing).
+local function readsGlobal(code, name)
+  local padded = " " .. code .. " "
+  local start = 1
+  while true do
+    local i, j = padded:find(name, start, true)
+    if not i then return false end
+    local before, after = padded:sub(i - 1, i - 1), padded:sub(j + 1, j + 1)
+    local isKey = padded:find("^%s*=[^=]", j + 1) ~= nil
+    if not before:find("[%w_%.:]") and not after:find("[%w_]") and not isKey then return true end
+    start = j + 1
+  end
+end
+
+-- The scanner's own cases: { line, name, is it a global read? }.
+local READS_GLOBAL_CASES = {
+  { "local t = GetTime()", "GetTime", true },
+  { "if GetTime() == t then", "GetTime", true },
+  { "NS.Compat.GetSpellInfo(id)", "GetSpellInfo", false },
+  { "C_AddOns:GetAddOnMetadata(x)", "GetAddOnMetadata", false },
+  { "local x = C_Timer2", "C_Timer", false },
+  { "m.C_AddOns = { GetAddOnMetadata = f }", "GetAddOnMetadata", false },
+  { 'f("GameTooltip")', "GameTooltip", false },
+  { "x = 1 -- GetSpellInfo is retired", "GetSpellInfo", false },
+}
+
+test("lintconfig: every read_globals name is referenced as a global by some authored file", function()
+  -- red under: the four stale entries (GameTooltip, C_Spell, GetAddOnMetadata, GetSpellInfo)
+  for _, case in ipairs(READS_GLOBAL_CASES) do
+    if readsGlobal(codeOf(case[1]), case[2]) ~= case[3] then
+      fail("read_globals gate: the global-reference scanner itself is wrong on `" .. case[1] .. "`", 2)
+    end
+  end
+  local declared = rawget(loadConfig(), "read_globals")
+  if type(declared) ~= "table" or not declared[1] then
+    fail("read_globals gate: .luacheckrc declares no read_globals list, so this gate cannot run", 2)
+  end
+  local unread = {}
+  for _, name in ipairs(declared) do unread[name] = true end
+  for _, path in ipairs(authoredLua()) do
+    for line in io.lines(path) do
+      local code = codeOf(line)
+      for name in pairs(unread) do
+        if readsGlobal(code, name) then unread[name] = nil end
+      end
+    end
+  end
+  local stale = {}
+  for name in pairs(unread) do
+    stale[#stale + 1] = name
+  end
+  table.sort(stale)
+  if stale[1] then
+    fail(".luacheckrc read_globals declares names no authored file reads as a global; take them off "
+      .. "the list: " .. table.concat(stale, ", "), 2)
   end
 end)
