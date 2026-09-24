@@ -61,6 +61,7 @@ Kit.run{
         "test_setups",
         "test_launcher",
         "test_database",
+        "test_migrations",
         "test_schema",
         "test_schema_paths",
         "test_filtercompiler",

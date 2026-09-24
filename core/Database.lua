@@ -829,7 +829,11 @@ local eachProfile = Database.EachProfile
 
 -- The account-wide schema ladder, in order, one row per version. v1 is the shape the addon shipped
 -- with; each stored-shape change adds a row here in the same change (toc-file-§2). Containers live in
--- every profile, so a step walks them all, not only the active one.
+-- every profile, so a step walks them all, not only the active one: that is savedvariables-§1's
+-- per-profile rule (v2.65.0), a profile-scoped step runs over every stored profile in the raw
+-- `db.sv.profiles` and is never gated by the account-wide stamp alone. Every step is also
+-- idempotent against a fresh default profile, because a fresh install (stamp 0) runs all of them,
+-- and so does an account whose stamp AceDB stripped at logout for equalling the default.
 local SCHEMA_STEPS = {
     { to = 2, apply = function(db)
         eachProfile(db, function(p, name)
@@ -887,24 +891,44 @@ local SCHEMA_STEPS = {
     end },
 }
 
---- Current schema version: the last step's `to`, or 1. A test seam: tests/test_database.lua calls
---- it; production (NS.RunMigrations) walks SCHEMA_STEPS directly.
+--- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).
 function Database.CurrentSchemaVersion()
     local last = SCHEMA_STEPS[#SCHEMA_STEPS]
-    return last and last.to or 1
+    return last and last.to or 0
+end
+
+--- The runner's target (savedvariables-§1): the stamp a fully migrated account carries.
+NS.SCHEMA_VERSION = Database.CurrentSchemaVersion()
+
+--- Climb the ladder from `g.schemaVersion`. The runner owns the stamp and advances it only past a
+--- step that returned without raising: a step that raises stops the climb with the stamp where it
+--- was, prints one line, and the next load retries from that step. Answers true when every step
+--- the stamp had not passed ran clean.
+local function climbLadder(g)
+    -- 0, not the current version: AceDB backfills the declared default onto a legacy account with
+    -- no stamp and strips a stored stamp equal to it at logout, and 0 is safe against both.
+    g.schemaVersion = g.schemaVersion or 0
+    for _, step in ipairs(SCHEMA_STEPS) do
+        if g.schemaVersion < step.to then
+            local ok, err = pcall(step.apply, NS.db)
+            if not ok then
+                NS.Printf(NS.L["%s: migration to schema v%s failed; your settings were left as they were. %s"],
+                    NS.name, step.to, err)
+                return false
+            end
+            if NS.Debug then NS.Debug("Migrate", "v%s -> v%s", g.schemaVersion, step.to) end
+            g.schemaVersion = step.to
+        end
+    end
+    return true
 end
 
 function NS.RunMigrations()
     local g = NS.db and NS.db.global
     if not g then return end
-    g.schemaVersion = g.schemaVersion or 1
-    for _, step in ipairs(SCHEMA_STEPS) do
-        if g.schemaVersion < step.to then
-            step.apply(NS.db)
-            if NS.Debug then NS.Debug("Migrate", "v%s -> v%s", g.schemaVersion, step.to) end
-            g.schemaVersion = step.to
-        end
-    end
+    -- A failed step leaves the stamp alone, and the rest of the load still runs below, so the addon
+    -- loads on whatever the completed steps left.
+    climbLadder(g)
     g.timedSpells = g.timedSpells or {}
     -- THE USER-CATEGORY SYNC RUNS AFTER THE WHOLE LADDER AND BEFORE PrepareProfile, and neither half
     -- of that is cosmetic (issue #10 checkpoint 3).

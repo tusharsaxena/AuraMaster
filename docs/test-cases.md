@@ -151,6 +151,15 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
+### test_migrations.lua (6)
+
+- migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
+- migrations: a legacy v1 account with NO stamp runs every step
+- migrations: a stored stamp survives the logout strip, so the next build's step runs
+- migrations: every step is idempotent on a fresh default profile
+- migrations: a step that raises leaves the stamp where it was and the addon loads
+- migrations: an inactive profile is migrated too
+
 ### test_schema.lua (29)
 
 - schema: every row validates against defaults/Profile.lua
@@ -1363,7 +1372,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)
 - defaults: one Healing category holds both retired healing lists, where Core healing was
 - defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
-- defaults: the global schema stamp defaults to 1, never the current version
+- defaults: the global schema stamp defaults to 0, never the current version
 - defaults: StatesShowing hides every buff category but the ones named, and leaves the debuff ones at Show
 - defaults: no shipped category key sits in the reserved 'user' namespace
 - defaults: SanitizeUserName strips the escape character and control characters, trims and caps
@@ -1489,6 +1498,7 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 14 |
 | test_launcher.lua | 21 |
 | test_database.lua | 91 |
+| test_migrations.lua | 6 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 94 |
@@ -1539,4 +1549,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1313** |
+| **Total** | **1319** |

@@ -35,14 +35,14 @@ otherwise (`docs/profiles.md`).
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `schemaVersion` | number | `1` | The migration stamp (savedvariables-§1). Defaults to 1, not the current version: AceDB fills an absent key before `RunMigrations` reads it |
+| `schemaVersion` | number | `0` | The migration stamp (savedvariables-§1), owned by `NS.RunMigrations`. Defaults to 0, never the current version: AceDB backfills the default onto a legacy account with no stamp, and strips a stored value equal to its default at logout; 0 is safe against both. See Migration path |
 | `minimap` | table | `{ hide = false }` | **LibDBIcon-1.0's own table**, handed straight to `:Register` (launcher-§3). `hide` is the Minimap button row's storage; `minimapPos` is written by LibDBIcon when the player drags the button. Global, not profile, on purpose: a profile switch must not move the player's buttons. Surviving a reset is a separate guarantee and a property of the setting rather than of the store (launcher-§3): neither `Reset all settings` nor General's **Defaults** button may un-hide a button the player hid, and the second of those would have, so the options descriptor vetoes the row. Nothing seeds it but this declaration (architecture-§5) |
 | `timedSpells` | map | `{}` | `[spellId] = true` for every buff `modules/TimedSpells.lua` has seen carry a duration; account-wide because it is a fact about the game. Learned data, not a setting: written at runtime only by its owner, `modules/TimedSpells.lua` (`TS.Scan` learns, `TS.Forget` behind `/am forgettimed` empties it), and backfilled on load by `NS.RunMigrations`. Named in `docs/ARCHITECTURE.md` → Settings Schema (architecture-§5) |
 
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:128`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:132`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -177,7 +177,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:255`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:259`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -319,9 +319,30 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:833`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:837`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
+
+The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
+
+- **The runner owns the stamp.** `NS.RunMigrations` is the only writer of `global.schemaVersion`,
+  and its target is `NS.SCHEMA_VERSION` (`Database.CurrentSchemaVersion()`, the last step's `to`).
+- **The default is 0.** `defaults/Profile.lua` declares `schemaVersion = 0`, and a new step never
+  changes it. AceDB backfills a declared default onto a legacy account with no stamp, so a
+  current-version default would read every old database as already migrated. AceDB also strips a
+  stored value equal to its default at logout, so a stamp equal to a non-zero default would vanish
+  and the next build's step would be skipped. 0 is safe against both.
+- **The stamp advances only past a clean step.** Each step runs as `pcall(step.apply, NS.db)`. A
+  step that raises stops the ladder with the stamp where it was, prints one chat line
+  (`<addon>: migration to schema vN failed; your settings were left as they were. <error>`), and
+  the rest of `NS.InitDB` still runs, so the addon loads on what the completed steps left. The next
+  load retries from the failed step.
+- **Per profile.** A step walks every stored profile through `eachProfile` (the raw `sv.profiles`,
+  the inactive ones included), never the active profile alone, and is never gated by the
+  account-wide stamp alone.
+- **Idempotent on a fresh default profile.** A fresh install starts at stamp 0 and runs every step
+  over its default profile before `Database.PrepareProfile` seeds the starter containers, so each
+  step must leave that profile unchanged (`tests/test_migrations.lua`).
 
 - **Schema v1** is the shape the addon shipped with at 0.1.0.
 - **Schema v2** (`Database.MigrateV2`) runs over **every** stored profile: AceDB's raw

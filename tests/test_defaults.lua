@@ -354,10 +354,12 @@ test("defaults: a container draws in the Medium strata, the default UI's own lay
     assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "MEDIUM")
 end)
 
-test("defaults: the global schema stamp defaults to 1, never the current version", function()
-    -- red under: defaulting the stamp to the current schema version — AceDB fills an absent key
-    -- before NS.RunMigrations reads it, so every old database would read as already migrated
-    assertEqual(NS.defaults.global.schemaVersion, 1)
+test("defaults: the global schema stamp defaults to 0, never the current version", function()
+    -- red under: defaulting the stamp to 1 or to the current schema version. AceDB fills an absent
+    -- key before NS.RunMigrations reads it (a current-version default reads every old database as
+    -- already migrated), and strips a stored value equal to its default at logout (a stamp equal
+    -- to a non-zero default is lost). 0 is safe against both (savedvariables-§1, v2.65.0).
+    assertEqual(NS.defaults.global.schemaVersion, 0)
     assertEqual(type(NS.defaults.global.timedSpells), "table")
     assertEqual(next(NS.defaults.global.timedSpells), nil, "nothing learned by default")
 end)

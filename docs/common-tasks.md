@@ -213,14 +213,17 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:833`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:837`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure
    function over one profile table, as `Database.MigrateV2` is, so a test can run it over a raw one.
    Test the stored value with `== nil`, never `or` (savedvariables-§5).
-3. `RunMigrations` calls the step, stamps its `to`, logs one `[Migrate]` line, and then
-   `PrepareProfile` backfills whatever the step did not set.
+3. `RunMigrations` calls the step under `pcall`, stamps its `to` only if it returned without
+   raising, logs one `[Migrate]` line, and then `PrepareProfile` backfills whatever the step did not
+   set. `NS.SCHEMA_VERSION` follows the new last step by itself; `defaults/Profile.lua`'s
+   `schemaVersion` stays 0 (savedvariables-§1). The step must leave a fresh default profile
+   unchanged, because a fresh install runs the whole ladder.
 4. A case in `tests/test_database.lua` with a v1-shaped profile (and a second, inactive profile), and
    the migration in `docs/schema.md`.
 

@@ -82,10 +82,14 @@ NS.defaults.profile = {
 }
 
 NS.defaults.global = {
-    -- Account-wide schema stamp (savedvariables-§1). Defaults to 1, NOT the current version: AceDB
-    -- fills an absent key the moment the section is read, which happens before NS.RunMigrations, so a
-    -- default of the current number would stamp every old database as already migrated.
-    schemaVersion = 1,
+    -- Account-wide schema stamp (savedvariables-§1, v2.65.0), owned by NS.RunMigrations, whose
+    -- target is NS.SCHEMA_VERSION. Defaults to 0, NOT the current version, for two AceDB reasons:
+    -- it backfills a declared default onto a legacy account with no stamp (a current-version
+    -- default would read every old database as already migrated), and it strips a stored value
+    -- equal to its default at logout (a stamp equal to a non-zero default would be lost, and the
+    -- next build's step skipped). 0 is safe against both. Raising the schema adds a step to
+    -- core/Database.lua's SCHEMA_STEPS; this value stays 0.
+    schemaVersion = 0,
 
     -- Spell ids modules/TimedSpells.lua has seen carry a duration. Account-wide on purpose: whether a
     -- spell is timed is a fact about the game, not a preference, and a character learns it for all.
