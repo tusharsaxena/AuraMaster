@@ -369,6 +369,28 @@ class CrowdControlCrossCheckTest(unittest.TestCase):
         _props, flags = run(agg_of(rows), cc_ids=self.CC)
         self.assertNotIn("cc_unlisted", {f.kind for f in flags})
 
+    def test_a_same_name_debuff_without_a_cc_mechanic_is_never_proposed_into_a_cc_list(self):
+        # SID-10, the real run: Rake's bleed 155722 was proposed into hardCC beside the stun
+        # 163505, the Binding Shot tether 117405 beside the stun, Moonfire's DoT into softCC. The
+        # CC lists are research.py's DB2-mechanic method; logs may only add an id DB2 calls CC.
+        rows = [("WARRIOR", ARMS, "DEBUFF", 5246, stats("Intimidating Shout", 40, 4)),
+                ("WARRIOR", ARMS, "DEBUFF", 900779, stats("Intimidating Shout", 400, 9, tag="d"))]
+        agg = agg_of(rows)
+        props = sid_propose.corrections(agg, SPEC_MAP, NAMES, SHIPPED, FAMILY, {}, cc_ids=self.CC)
+        self.assertEqual(props, [])
+        props = sid_propose.corrections(agg, SPEC_MAP, NAMES, SHIPPED, FAMILY, {},
+                                        cc_ids=self.CC | {900779})
+        self.assertEqual([(p.type, p.category, p.proposed) for p in props],
+                         [("add", "hardCC", [900779])])
+
+    def test_a_never_applied_cc_id_with_only_a_non_cc_sibling_is_unverified_not_replaced(self):
+        rows = [("WARRIOR", ARMS, "DEBUFF", 900779, stats("Intimidating Shout", 400, 9))]
+        agg = agg_of(rows)
+        props = sid_propose.corrections(agg, SPEC_MAP, NAMES, SHIPPED, FAMILY, {}, cc_ids=self.CC)
+        self.assertEqual(props, [])
+        flags = sid_propose.flags(agg, SPEC_MAP, NAMES, SHIPPED, FAMILY, self.CC)
+        self.assertIn(("unverified", "hardCC", "WARRIOR", 5246), flag_set(flags))
+
     def test_a_cc_listed_under_another_class_is_listed(self):
         # The addon's filter ignores the class key: an id listed under any class is in the category.
         shipped = SHIPPED[:3] + [{"key": "softCC", "label": "S", "aura": "DEBUFF",

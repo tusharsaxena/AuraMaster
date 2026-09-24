@@ -215,8 +215,11 @@ def _cutoff(last_date, days):
 class _Review:
     """One pass over the shipped categories; collects both proposals and flags."""
 
-    def __init__(self, agg, spec_map, names, shipped, aura_to_family, th):
+    def __init__(self, agg, spec_map, names, shipped, aura_to_family, th, cc_ids=None):
         self.spec_map = spec_map
+        # Crowd-control ids by DB2 mechanic; None = unknown, no filter. A CC category only ever
+        # takes an id DB2 calls CC (its lists are research.py's mechanic method).
+        self.cc_ids = None if cc_ids is None else set(cc_ids)
         self.names = names
         self.shipped = shipped
         self.family = aura_to_family or {}
@@ -250,6 +253,9 @@ class _Review:
                     for sid in listed:  # applied under another spelling: still applied
                         if sid not in ev and (klass, sid) in by_id:
                             ev[sid] = by_id[(klass, sid)]
+                    if cat["key"] in CC_CATEGORIES and self.cc_ids is not None:
+                        # A same-name DoT or tether is not the crowd control (Rake's bleed).
+                        ev = {sid: e for sid, e in ev.items() if sid in listed or sid in self.cc_ids}
                     self.group(cat["key"], klass, atype, name, listed, ev)
         return self
 
@@ -370,9 +376,15 @@ def _ids(ids):
 _FLAG_ORDER = {"unverified": 0, "stale": 1, "below_bar": 2, "cc_unlisted": 3}
 
 
-def corrections(agg, spec_map, names, shipped, aura_to_family, decisions=None, thresholds=None):
-    """Replace and Add proposals for listed entries, most-applied first, minus ruled keys."""
-    review = _Review(agg, spec_map, names, shipped, aura_to_family, thresholds or Thresholds()).run()
+def corrections(agg, spec_map, names, shipped, aura_to_family, decisions=None, thresholds=None,
+                cc_ids=None):
+    """Replace and Add proposals for listed entries, most-applied first, minus ruled keys.
+
+    `cc_ids` (DB2's crowd-control ids, as for flags()) keeps a same-name id without a CC mechanic
+    out of hardCC and softCC; None applies no such filter.
+    """
+    review = _Review(agg, spec_map, names, shipped, aura_to_family, thresholds or Thresholds(),
+                     cc_ids).run()
     ruled = decisions or {}
     out = [p for p in review.proposals if proposal_key(p) not in ruled]
     out.sort(key=lambda p: (-p.applications, p.category, p.klass, p.name.lower()))
@@ -385,7 +397,8 @@ def flags(agg, spec_map, names, shipped, aura_to_family, cc_ids=frozenset(), thr
     `cc_ids` is the set of spell ids DB2 gives a crowd-control mechanic (research.BUCKET_MECHANICS'
     mechanics); the caller derives it, so this module stays free of SpellEffect reads.
     """
-    review = _Review(agg, spec_map, names, shipped, aura_to_family, thresholds or Thresholds()).run()
+    review = _Review(agg, spec_map, names, shipped, aura_to_family, thresholds or Thresholds(),
+                     cc_ids).run()
     review.cc_unlisted(agg, set(cc_ids))
     return sorted(review.flags, key=lambda f: (_FLAG_ORDER.get(f.kind, 9), f.category, f.klass,
                                                f.spell_id))

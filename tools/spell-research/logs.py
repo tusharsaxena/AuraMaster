@@ -126,7 +126,8 @@ def cmd_propose(args):
                                   _aura_ids(agg, "DEBUFF"))
     th = sid_propose.Thresholds(min_applications=args.min_apps, min_players=args.min_players)
 
-    proposals = (sid_propose.corrections(agg, spec_map, names, shipped, family, decisions, th)
+    proposals = (sid_propose.corrections(agg, spec_map, names, shipped, family, decisions, th,
+                                         cc_ids=cc_ids)
                  + sid_propose.moves(agg, spec_map, names, shipped, signals, pool, candidates,
                                      decisions, th, pool_names=pool_names)
                  + sid_propose.additions(agg, spec_map, names, shipped, signals, pool, candidates,
