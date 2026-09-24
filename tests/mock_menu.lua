@@ -43,8 +43,9 @@ return function(mocks)
         end
         --- The entry whose text starts with `prefix`, or nil.
         function menu.Find(self, prefix)
+            local n = #prefix
             for _, e in ipairs(self.entries) do
-                if e.text:sub(1, #prefix) == prefix then return e end
+                if e.text:sub(1, n) == prefix then return e end
             end
         end
         --- Whether an entry draws checked, as the client asks it.
