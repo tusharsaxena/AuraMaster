@@ -57,14 +57,14 @@ test("perf: suspend makes the addon inert without a reload, and resume restores 
     NS.SetByPath("container.filter.durationMode", "timeless", 1)   -- TimedSpells now listens
     NS.Perf.Suspend()
     assertTrue(NS.Perf.suspended)
-    assertTrue(NS.TimedSpells.__events().__events.UNIT_AURA == nil, "the timed-spell scan stopped too")
+    assertTrue(NS.TimedSpells.unitFrame.__unitEvents.UNIT_AURA == nil, "the timed-spell scan stopped too")
     assertEqual(next(NS.addon.__events), nil, "every lifecycle event unregistered")
     for _, e in ipairs(mocks.__engines) do assertFalse(e.__enabled, "an engine is still enabled") end
     NS.ContainerManager.ApplyVisibility()
     for _, e in ipairs(mocks.__engines) do assertFalse(e.__enabled, "visibility re-enabled an engine") end
     NS.Perf.Resume()
     assertFalse(NS.Perf.suspended)
-    assertTrue(NS.TimedSpells.__events().__events.UNIT_AURA ~= nil, "and resumed")
+    assertTrue(NS.TimedSpells.unitFrame.__unitEvents.UNIT_AURA ~= nil, "and resumed")
     assertTrue(NS.addon.__events.PLAYER_TARGET_CHANGED ~= nil)
     assertTrue(mocks.__engines[1].__enabled)
 end)

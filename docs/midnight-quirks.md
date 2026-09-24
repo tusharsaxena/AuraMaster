@@ -244,8 +244,9 @@ the failing one is skipped and nothing is reported. Every name this addon regist
 so the failure is latent: it would only show up once a patch retires one of them.
 
 **What this addon does.** Every registration goes through `NS.SafeRegisterEvent`, which is
-`LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`). That covers the eight lifecycle
-events (`LIFECYCLE_EVENTS` in `core/AuraMaster.lua`), the timed-spell gate and its `UNIT_AURA`
+`LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`), or its unit-event twin
+`NS.SafeRegisterUnitEvent`. That covers the eight lifecycle events (`LIFECYCLE_EVENTS` in
+`core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
 (`modules/TimedSpells.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
 (`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
 line adds `rejected events: …` when that list is not empty, and a name refused while logging is on

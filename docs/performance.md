@@ -21,10 +21,10 @@ timers keep their handle, and a stand-down cancels them rather than leaving them
 
 ### The timed-spell listener's cost
 
-`modules/TimedSpells.lua` hears `UNIT_AURA` through AceEvent on its own target (events-frames-taint-§1).
-The vendored AceEvent has no `RegisterUnitEvent`, so the event arrives bare, for every unit, raid
-members and nameplates included, where a private frame's unit-filtered registration would have let
-the client drop them.
+`modules/TimedSpells.lua` hears `UNIT_AURA` on the module's one private frame, `TS.unitFrame`,
+registered with `RegisterUnitEvent` for `player` and `pet` only (events-frames-taint-§1's carve-out;
+the vendored AceEvent has no `RegisterUnitEvent`). The client drops every other unit's event, raid
+members and nameplates included, before any Lua runs.
 
 - **The gate bounds it.** `UNIT_AURA` is registered only while a container needs the scan, the addon
   is not suspended, there is no combat lockdown and auras are not secret. `PLAYER_REGEN_DISABLED`
@@ -32,11 +32,13 @@ the client drop them.
   `InCombatLockdown()` still reads false in the handler. In combat and in every
   secret stretch (encounters, keys, PvP matches, restricted maps) it is not registered at all, so the
   cost there is **zero**.
-- **Registered and readable, each event costs** one AceEvent dispatch, one `Secrets.IsSafeKey` and
-  one string compare, with no allocation. Only a player or pet event arms the 0.5 s scan.
-- **The volume is not bounded.** In a city, or a raid group between pulls, out-of-combat `UNIT_AURA`
-  can exceed the ~1000 events/min guide figure (events-frames-taint-§1). The work per event is small
-  and fixed; the in-game figure is recorded below.
+- **Registered and readable, each event costs** one `OnEvent` call, one `Secrets.IsSafeKey` and one
+  string compare (kept as defense in depth), with no allocation, and only for the player's and pet's
+  own aura changes. The first arms the 0.5 s scan; the rest fall on its latch. Offline
+  (`unitAuraFiltered`): 0.00027 ms/iter, 0 B/iter on the development machine.
+- **The volume is now the player's and pet's.** Before this frame (AuraMaster-R-03) the listener
+  heard every unit's `UNIT_AURA`, which in a city or a raid group between pulls can exceed the ~1000
+  events/min guide figure (events-frames-taint-§1). The in-game figure is recorded below.
 
 | Where | Out-of-combat `UNIT_AURA`/min (`/etrace`) | Recorded |
 |---|---|---|
@@ -154,7 +156,7 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `probeOverheadOff` | The hottest bracketed path with capture off |
 | `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
 | `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9) |
-| `unitAuraOther` | TimedSpells' `UNIT_AURA` handler for a unit it never scans (`nameplate1`); must allocate 0 B/iter and arm no scan |
+| `unitAuraFiltered` | TimedSpells' unit frame, dispatched as the client does from its `RegisterUnitEvent` unit list: a `nameplate1` `UNIT_AURA` must never reach the handler, which must be registered for exactly `player,pet`; the measured loop is a player `UNIT_AURA` with its scan already queued, which must allocate 0 B/iter and arm no further timer |
 
 **What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
 makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it

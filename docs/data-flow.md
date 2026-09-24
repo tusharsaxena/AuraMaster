@@ -205,12 +205,14 @@ banner lists containers.
 ## Learning timed buffs
 
 `modules/TimedSpells.lua` listens only while an enabled buff container uses "only auras without a
-duration" and the addon is not suspended. It registers through AceEvent on its own target:
+duration" and the addon is not suspended. The gate events go through AceEvent on its own target:
 `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED` and `ADDON_RESTRICTION_STATE_CHANGED` all re-check
 one gate, and `UNIT_AURA` is registered only while that gate is open (no combat lockdown, auras not
 secret). `PLAYER_REGEN_DISABLED` closes it on the event itself: it fires before the lockdown begins.
-The vendored AceEvent has no unit filter, so `UNIT_AURA` arrives for every unit; the handler proves
-the unit a safe key and keeps only the player and pet. Such an event, or the gate reopening,
+The vendored AceEvent has no unit filter, so `UNIT_AURA` goes on the module's one private frame
+(`TS.unitFrame`, events-frames-taint-§1's carve-out), registered with `RegisterUnitEvent` for the
+player and pet only; the handler still proves the unit a safe key and compares it, as defense in
+depth. Such an event, or the gate reopening,
 schedules a scan half a second later, bracketed `timedScan`. A scan that comes due after the gate
 closed (in combat, or while auras are secret) is dropped, and the gate reopening schedules a fresh
 one. The scan runs only when `Compat.AurasAreSecret()` is false, reads the player's and pet's buffs

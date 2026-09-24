@@ -15,6 +15,28 @@ local function withAuras(mocks, list)
     }
 end
 
+--- The unit tokens UNIT_AURA is registered for on the module's own frame (events-frames-taint-§1's
+--- carve-out), or nil while it is not registered or the frame was never built.
+local function auraUnits(NS)
+    local f = NS.TimedSpells.unitFrame
+    return f and f.__unitEvents.UNIT_AURA
+end
+
+--- The frame's OnEvent, called as the client calls it: `handler(event, unit)`. Kept across an
+--- unregistration, as a delivery already in flight would be.
+local function auraHandler(NS)
+    local f = NS.TimedSpells.unitFrame
+    return function(event, unit) f.__scripts.OnEvent(f, event, unit) end
+end
+
+--- Whether any AceEvent target (not a frame) holds a UNIT_AURA registration.
+local function aceUnitAura(mocks)
+    for _, r in ipairs(mocks.__registrations()) do
+        if r.kind == "event" and r.event == "UNIT_AURA" then return true end
+    end
+    return false
+end
+
 test("timed: nothing is needed until a container shows only timeless auras", function()
     local NS = fresh()
     assertFalse(NS.TimedSpells.Needed())
@@ -22,18 +44,46 @@ test("timed: nothing is needed until a container shows only timeless auras", fun
     assertTrue(NS.TimedSpells.Needed())
 end)
 
-test("timed: it hears UNIT_AURA through AceEvent only while needed and readable", function()
+test("timed: it hears UNIT_AURA only while needed and readable", function()
     -- red under: TS.Sync registering UNIT_AURA regardless of TS.Needed().
     local NS = fresh()
-    local ev = NS.TimedSpells.__events()
-    assertTrue(ev.__events.UNIT_AURA == nil, "heard while no container needs it")
+    assertTrue(auraUnits(NS) == nil, "heard while no container needs it")
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
-    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard once a container needs it")
+    assertTrue(auraUnits(NS) ~= nil, "not heard once a container needs it")
     NS.SetByPath("container.filter.durationMode", "any", 1)
-    assertTrue(ev.__events.UNIT_AURA == nil, "still heard once nothing needs it")
+    assertTrue(auraUnits(NS) == nil, "still heard once nothing needs it")
+end)
+
+test("timedspells: UNIT_AURA is registered for player and pet only, on the module's own frame", function()
+    -- red under: events:RegisterEvent('UNIT_AURA')
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    local units = auraUnits(NS)
+    assertTrue(units ~= nil, "UNIT_AURA is not registered on the module's frame")
+    assertEqual(table.concat(units, ","), "player,pet")
+    assertTrue(NS.TimedSpells.__events().__events.UNIT_AURA == nil, "UNIT_AURA still rides AceEvent")
+    assertFalse(aceUnitAura(mocks), "an AceEvent target still holds UNIT_AURA")
+end)
+
+test("timedspells: disable unregisters the unit frame and enable reuses it", function()
+    local NS, mocks = fresh()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    local frame = NS.TimedSpells.unitFrame
+    assertTrue(frame ~= nil, "no unit frame was built")
+    -- red under: TS.Stop without the hand-written unregistration (UnregisterAllEvents on the AceEvent
+    -- target never reaches a private frame).
+    NS.SetByPath("enabled", false)
+    assertTrue(auraUnits(NS) == nil, "the unit frame still watches UNIT_AURA while disabled")
+    assertFalse(aceUnitAura(mocks))
+    -- red under: a frame built per Sync (events-frames-taint-§1: reused across cycles).
+    NS.SetByPath("enabled", true)
+    assertTrue(NS.TimedSpells.unitFrame == frame, "enable built a second frame")
+    assertEqual(table.concat(auraUnits(NS) or {}, ","), "player,pet")
 end)
 
 test("timed: UNIT_AURA for another unit schedules nothing", function()
+    -- The frame's registration already filters to player and pet; the handler's own check is
+    -- defense in depth, driven here by calling the frame's OnEvent directly.
     -- red under: onUnitAura without its unit filter.
     local secretUnit = false   -- while true, the client reports the unit "player" as a secret value
     local NS, mocks = fresh({ before = function(m)
@@ -41,7 +91,7 @@ test("timed: UNIT_AURA for another unit schedules nothing", function()
     end })
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
     mocks.__fireTimers()   -- drain the sync's own scan and the apply it queued
-    local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+    local onUnitAura = auraHandler(NS)
     local before = #mocks.__timers
     onUnitAura("UNIT_AURA", "nameplate1")
     assertEqual(#mocks.__timers, before, "a nameplate's aura change scheduled a scan")
@@ -59,23 +109,23 @@ test("timed: combat drops UNIT_AURA and its end restores it with a scan", functi
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
     mocks.__fireTimers()
     local ev = NS.TimedSpells.__events()
-    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard before combat")
+    assertTrue(auraUnits(NS) ~= nil, "not heard before combat")
     -- The client fires PLAYER_REGEN_DISABLED before its combat lockdown begins, so InCombatLockdown()
     -- still answers false inside the handler (docs/midnight-quirks.md, "Combat state").
     -- red under: syncAuraListen reading InCombatLockdown alone at the PLAYER_REGEN_DISABLED edge.
     mocks.__lockdown = false
     mocks.__inCombat = true
     ev.__events.PLAYER_REGEN_DISABLED("PLAYER_REGEN_DISABLED")
-    assertTrue(ev.__events.UNIT_AURA == nil, "still heard in combat")
+    assertTrue(auraUnits(NS) == nil, "still heard in combat")
     -- red under: syncAuraListen ignoring InCombatLockdown.
     mocks.__lockdown = true
     ev.__events.ADDON_RESTRICTION_STATE_CHANGED("ADDON_RESTRICTION_STATE_CHANGED")
-    assertTrue(ev.__events.UNIT_AURA == nil, "a mid-combat restriction change reopened it")
+    assertTrue(auraUnits(NS) == nil, "a mid-combat restriction change reopened it")
     mocks.__lockdown = false
     mocks.__inCombat = false
     local before = #mocks.__timers
     ev.__events.PLAYER_REGEN_ENABLED("PLAYER_REGEN_ENABLED")
-    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard again after combat")
+    assertTrue(auraUnits(NS) ~= nil, "not heard again after combat")
     assertEqual(#mocks.__timers, before + 1, "reopening scheduled one scan")
 end)
 
@@ -91,7 +141,7 @@ test("timed: a scan queued before combat is dropped in combat, and the gate reop
     local heard = { 0 }
     NS.NewBusTarget():RegisterMessage(NS.MSG.TIMED_SPELLS_CHANGED, function() heard[1] = heard[1] + 1 end)
     local ev = NS.TimedSpells.__events()
-    local onUnitAura = ev.__events.UNIT_AURA   -- kept: combat unregisters it
+    local onUnitAura = auraHandler(NS)   -- kept: combat unregisters it
     onUnitAura("UNIT_AURA", "player")   -- the player's buffs changed: a scan is queued
     -- red under: scanTick without its readable-state gate (the lockdown check).
     mocks.__inCombat, mocks.__lockdown = true, true
@@ -124,13 +174,13 @@ test("timed: secret auras out of combat keep UNIT_AURA unregistered until the re
     mocks.__lockdown = false
     NS.SetByPath("container.filter.durationMode", "timeless", 1)   -- its CONFIG_CHANGED syncs
     local ev = NS.TimedSpells.__events()
-    assertTrue(ev.__events.UNIT_AURA == nil, "the settings-driven sync heard while auras are secret")
+    assertTrue(auraUnits(NS) == nil, "the settings-driven sync heard while auras are secret")
     mocks.__fireTimers()
-    assertTrue(ev.__events.UNIT_AURA == nil, "heard while auras are secret")
+    assertTrue(auraUnits(NS) == nil, "heard while auras are secret")
     mocks.__aurasSecret = false
     local before = #mocks.__timers
     ev.__events.ADDON_RESTRICTION_STATE_CHANGED("ADDON_RESTRICTION_STATE_CHANGED")
-    assertTrue(ev.__events.UNIT_AURA ~= nil, "not heard once the restriction lifted")
+    assertTrue(auraUnits(NS) ~= nil, "not heard once the restriction lifted")
     assertEqual(#mocks.__timers, before + 1, "reopening scheduled one scan")
 end)
 
@@ -252,7 +302,7 @@ test("timed: a burst of the player's aura changes queues one scan", function()
     local NS, mocks = fresh()
     NS.SetByPath("container.filter.durationMode", "timeless", 1)
     mocks.__fireTimers(); mocks.__fireTimers()
-    local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+    local onUnitAura = auraHandler(NS)
     local before = #mocks.__timers
     onUnitAura("UNIT_AURA", "player")
     onUnitAura("UNIT_AURA", "pet")
@@ -298,7 +348,7 @@ test("timed: a scan tick the gate drops is never bracketed; one that reads is, o
         return note(key, ...)
     end
     P.on = true
-    local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
+    local onUnitAura = auraHandler(NS)
     onUnitAura("UNIT_AURA", "player")
     mocks.__lockdown = true
     mocks.__fireTimers()
@@ -340,7 +390,7 @@ test("timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, a
     assertTrue(NS.SetByPath("container.filter.durationMode", "timeless", 1))
     mocks.__fireTimers()
     local ev = NS.TimedSpells.__events()
-    assertTrue(ev.__events.UNIT_AURA == nil, "UNIT_AURA registered on a client that refuses it")
+    assertTrue(auraUnits(NS) == nil, "UNIT_AURA registered on a client that refuses it")
     assertTrue(ev.__events.PLAYER_REGEN_DISABLED ~= nil, "the gate events were lost with it")
     local seen = 0
     for _, name in ipairs(NS.RejectedEvents) do

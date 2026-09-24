@@ -224,6 +224,24 @@ test("disabled: every registration the addon owns is UNREGISTERED, not gated", f
     assertEqual(dumpRegs(regs(mocks)), "{message:Ka0s_AuraMaster_ContainersChangedx1}")
 end)
 
+test("disabled: TimedSpells' private unit frame is in the census while enabled and gone when disabled", function()
+    -- The one permitted private frame (events-frames-taint-§1): UNIT_AURA for player and pet, on a
+    -- frame AceEvent's UnregisterAllEvents never reaches, so the stand-down must drop it by hand.
+    -- No starter uses the "only without a duration" mode, so the case turns it on first.
+    local NS, mocks = baseline()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    local frame = NS.TimedSpells.unitFrame
+    assertTrue(frame ~= nil, "no unit frame while a timeless container is enabled")
+    assertEqual(dump(regsOn(mocks, frame)), "{unit:UNIT_AURA | unit:UNIT_AURA}")
+    local R = regs(mocks)
+    assertEqual(R["unit:UNIT_AURA:player"], 1, "player row: " .. dumpRegs(R))
+    assertEqual(R["unit:UNIT_AURA:pet"], 1, "pet row: " .. dumpRegs(R))
+    disable(NS)
+    -- red under: TS.Stop without its hand-written unregistration of the unit frame.
+    assertEqual(#regsOn(mocks, frame), 0, "the unit frame still watches " .. dump(regsOn(mocks, frame)))
+    assertEqual(dumpRegs(regs(mocks)), "{message:Ka0s_AuraMaster_ContainersChangedx1}")
+end)
+
 test("disabled: what MUST survive does — the dispatcher, the panel, AceDB and the launcher", function()
     local NS, mocks = baseline()
     local lines = capture(mocks)
