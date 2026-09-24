@@ -58,7 +58,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (91)
+### test_database.lua (73)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -133,6 +133,9 @@ badge and any count quoted in the docs must agree with it.
 - v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
+
+### test_database_categories.lua (18)
+
 - v6: MigrateV6 stamps the user-category store, and a second run changes nothing
 - v6: a profile that predates user categories climbs the ladder and stays valid
 - user categories: one round-trips through a reload, with its spells
@@ -1460,7 +1463,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 139 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 3 of 141 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1530,7 +1533,8 @@ badge and any count quoted in the docs must agree with it.
 | test_loadorder.lua | 8 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 21 |
-| test_database.lua | 91 |
+| test_database.lua | 73 |
+| test_database_categories.lua | 18 |
 | test_migrations.lua | 6 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |

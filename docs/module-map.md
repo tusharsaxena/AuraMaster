@@ -134,7 +134,8 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 |---|---|
 | `test_loadorder.lua` | The TOC's load-bearing positions; the runners' load lists derived from the TOC and the XML |
 | `test_setups.lua` | The LibKa0s seams' addon-side wiring (printer, media, env, debug flag) and a real library-absent load |
-| `test_database.lua` | `core/Database.lua`: seeding once, repair of ids, order and wrong-typed sections, backfill that keeps a stored `false`, the migration runner and schema v2 over every stored profile, the no-AceDB fallback, and the user-category store (round trip, sync order, the reserved namespace both acts rest on, the cross-profile delete sweep and the profile copy it skips) |
+| `test_database.lua` | `core/Database.lua`: seeding once, repair of ids, order and wrong-typed sections, backfill that keeps a stored `false`, the migration runner and schema v2 over every stored profile and the no-AceDB fallback |
+| `test_database_categories.lua` | `core/Database.lua`'s user-category store, peeled out of `test_database.lua` (issue #17): the v6 stamp, round trip through a reload, sync order, profile switches, key collisions, rename and the reserved namespace both acts rest on, the cross-profile delete sweep and the profile copy it skips |
 | `test_schema.lua` | `settings/Schema.lua`: every row resolves, class-color companions, the container-relative path model, the carve-outs |
 | `test_schema_paths.lua` | `settings/Schema.lua` in depth: the write seam's order, the relative and absolute path models, registration and validation, carve-outs, whole sections, `CheckWrite`, `ApplyDefault`, the session rows |
 | `test_filtercompiler.lua` | `modules/FilterCompiler.lua`: settings in, aura groups and warnings out |

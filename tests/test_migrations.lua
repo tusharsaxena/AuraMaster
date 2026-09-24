@@ -3,9 +3,9 @@
 -- and advances it only past a step that returned without raising, every stored profile is
 -- migrated, and every step is idempotent against a fresh default profile.
 --
--- Its own suite rather than more cases in tests/test_database.lua, which is already over
--- layout-§1's 1500-line cap (issue #17): the census row says the next change that grows that file
--- carries the peel, and a migration-runner suite is a seam of its own.
+-- Its own suite rather than more cases in tests/test_database.lua: a migration-runner suite is a
+-- seam of its own, and that file has already had its user-category cases peeled out to stay under
+-- layout-§1's 1500-line cap (issue #17).
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertNil =

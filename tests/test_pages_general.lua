@@ -753,7 +753,7 @@ end)
 
 -- ── 'Your categories': create, rename, delete and the shipped lock (issue #10 checkpoint 6) ────
 --
--- The acts themselves are pinned in tests/test_database.lua, including both refusals. What these
+-- The acts themselves are pinned in tests/test_database_categories.lua, including both refusals. What these
 -- cases own is the PANEL: that the block draws the controls the owner asked for, that it draws them
 -- only where they mean something, and that the destructive one asks first.
 
@@ -1399,7 +1399,7 @@ test("general → spell categories: a profile that refuses the sweep is said out
     local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
     NS.GeneralSpells.Select(key)
     -- A stored profile whose container table raises on any read. The delete is recoverable rather
-    -- than atomic (tests/test_database.lua pins that), so it still goes -- but "Deleted 'Affixes'"
+    -- than atomic (tests/test_database_categories.lua pins that), so it still goes -- but "Deleted 'Affixes'"
     -- alone claims a little more than happened.
     NS.db.sv.profiles.Broken = {
         seeded = true, nextContainerId = 2, containerOrder = { 1 },
