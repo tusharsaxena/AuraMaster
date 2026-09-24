@@ -49,7 +49,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:47`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:108`, `:116` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:113`, `:121` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:307-311` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:350-393` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:328` | The show ladder over every container, on combat transitions, world entry and the master rows |
@@ -100,13 +100,13 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:87`) calls `addon:UnregisterLifecycleEvents()` — the eight
+So `standDown` (`core/LifecycleSetup.lua:88`) calls `addon:UnregisterLifecycleEvents()` — the eight
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
 own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopListening()`,
 `FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:100`) re-registers the events, subscribes again, builds any container
+(`core/LifecycleSetup.lua:101`) re-registers the events, subscribes again, builds any container
 the addon never built while down, and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
 field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.

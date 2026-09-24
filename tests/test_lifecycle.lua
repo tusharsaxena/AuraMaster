@@ -257,3 +257,83 @@ test("lifecycle: the degraded latch stands up and down only on an edge", functio
     assertEqual(calls.PLAYER_ENTERING_WORLD, 1, "the stand-up registered once")
     assertEqual(#lifecycleRegs(NS2, mocks2), 8, "every lifecycle event is back")
 end)
+
+-- ── one bad event name (events-frames-taint-§1) ──────────────────────────────────────────────
+
+local BAD = "ADDON_RESTRICTION_STATE_CHANGED"
+
+--- How many times `name` appears in `list`.
+local function occurrences(list, name)
+    local n = 0
+    for _, v in ipairs(list or {}) do
+        if v == name then n = n + 1 end
+    end
+    return n
+end
+
+--- A fresh environment whose client refuses BAD. `noEventUtils` models a client without
+--- C_EventUtils, so the library falls to its probe-frame rung.
+local function badEventEnv(noEventUtils)
+    return fresh({ before = function(m)
+        m.__badEvents = { [BAD] = true }
+        if noEventUtils then m.C_EventUtils = nil end
+    end })
+end
+
+--- Assert the other seven lifecycle events are held by NS.addon, BAD is recorded exactly once
+--- across a disable/enable cycle, and the [Init] summary names it.
+local function assertOneBadName(NS, mocks)
+    local held = {}
+    for _, event in ipairs(lifecycleRegs(NS, mocks)) do held[event] = true end
+    for event in pairs(LIFECYCLE) do
+        if event ~= BAD then assertTrue(held[event], event .. " was lost to the bad name") end
+    end
+    NS.db.profile.enabled = false
+    NS.SyncEnabled()
+    NS.db.profile.enabled = true
+    NS.SyncEnabled()
+    assertEqual(occurrences(NS.RejectedEvents, BAD), 1, "the rejected name is recorded once")
+    NS.DebugLog:SetEnabled(true)
+    local line = tostring(NS.DebugLog:FindLine("[Init]"))
+    assertTrue(line:find("rejected events: " .. BAD, 1, true) ~= nil, "the [Init] line: " .. line)
+    NS.DebugLog:SetEnabled(false)
+end
+
+test("lifecycle: one bad event name leaves the other seven registered and is recorded", function()
+    -- red under: bare self:RegisterEvent
+    local NS, mocks = badEventEnv(false)
+    assertOneBadName(NS, mocks)
+end)
+
+test("lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung", function()
+    -- red under: bare self:RegisterEvent
+    local NS, mocks = badEventEnv(true)
+    assertOneBadName(NS, mocks)
+end)
+
+test("lifecycle: a rejection while logging is on is traced at the moment it happens", function()
+    local NS, mocks = fresh()
+    NS.DebugLog:SetEnabled(true)
+    mocks.__badEvents = { [BAD] = true }
+    NS.db.profile.enabled = false
+    NS.SyncEnabled()
+    NS.db.profile.enabled = true
+    NS.SyncEnabled()
+    -- red under: rejects recorded silently, visible only at the next [Init]
+    assertTrue(NS.DebugLog:FindLine("event " .. BAD .. " rejected by this client") ~= nil)
+    NS.DebugLog:SetEnabled(false)
+end)
+
+test("lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest", function()
+    local NS2, mocks2 = dofile("tests/degraded_env.lua")()
+    rawset(_G, "AuraMasterDB", nil)
+    mocks2.__badEvents = { [BAD] = true }
+    NS2.addon:OnInitialize()
+    NS2.addon:OnEnable()
+    mocks2.__fireTimers()
+    -- red under: a stub without the pcall rung (OnEnable raises before this line)
+    assertEqual(occurrences(NS2.RejectedEvents, BAD), 1)
+    local held = {}
+    for _, event in ipairs(lifecycleRegs(NS2, mocks2)) do held[event] = true end
+    assertTrue(held.PLAYER_ENTERING_WORLD and held.UNIT_PET and held.ADDON_LOADED, "the rest registered")
+end)

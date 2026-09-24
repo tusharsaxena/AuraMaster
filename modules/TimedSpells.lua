@@ -32,6 +32,8 @@ local scanTimer = nil      -- the queued scan's handle, so TS.Stop can cancel it
 local listening = false    -- whether UNIT_AURA is registered right now
 local SCAN_UNITS = { "player", "pet" }
 local MAX_INDEX = 40
+-- The events that open and close the UNIT_AURA gate (syncAuraListen).
+local GATE_EVENTS = { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "ADDON_RESTRICTION_STATE_CHANGED" }
 
 -- Game events, on a target of their own: apart from the message target below, so
 -- UnregisterAllEvents can never touch a message registration.
@@ -122,9 +124,10 @@ end
 local function syncAuraListen(event)
     local open = event ~= "PLAYER_REGEN_DISABLED" and readable()
     if open and not listening then
-        events:RegisterEvent("UNIT_AURA", onUnitAura)
-        listening = true
-        scheduleScan()
+        -- Listening only if the registration took: a client that refuses UNIT_AURA leaves the
+        -- queued scan to find `listening` false and drop itself (events-frames-taint-§1).
+        listening = NS.SafeRegisterEvent(events, "UNIT_AURA", onUnitAura, NS.RejectedEvents)
+        if listening then scheduleScan() end
     elseif not open and listening then
         events:UnregisterEvent("UNIT_AURA")
         listening = false
@@ -147,9 +150,9 @@ end
 --- (slash-commands-§7): a stood-down addon registers nothing, for either reason it is down.
 function TS.Sync()
     if not (TS.Needed() and not NS.IsStoodDown()) then return TS.Stop() end
-    events:RegisterEvent("PLAYER_REGEN_DISABLED", syncAuraListen)
-    events:RegisterEvent("PLAYER_REGEN_ENABLED", syncAuraListen)
-    events:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", syncAuraListen)
+    for _, event in ipairs(GATE_EVENTS) do
+        NS.SafeRegisterEvent(events, event, syncAuraListen, NS.RejectedEvents)
+    end
     syncAuraListen()
     scheduleScan()
 end

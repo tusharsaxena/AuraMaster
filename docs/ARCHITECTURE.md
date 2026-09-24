@@ -331,8 +331,8 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:380` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:169` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:168` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:380` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:172` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:171` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:584` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
@@ -422,7 +422,7 @@ checkbox reflects what the player chose and a later reload draws the button wher
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:60` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:61` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:62-63` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
@@ -434,8 +434,18 @@ checkbox reflects what the player chose and a later reload draws the button wher
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:249-253` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:264`) and
-is not addon code. The eight `core/AuraMaster.lua` registrations live in one function,
-`RegisterLifecycleEvents`, so the stand-down and the stand-up remove and restore the same list.
+is not addon code. The eight `core/AuraMaster.lua` registrations are one module-level list,
+`LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
+stand-down and the stand-up remove and restore the same list.
+
+**Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
+is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row
+above and the stand-down's pending `PLAYER_REGEN_ENABLED`. A name the client does not know costs only
+itself: the rest of the block still registers, and the name is appended once to `NS.RejectedEvents`.
+Where a player sees it: the `[Init]` line that `/am debug` writes adds `rejected events: A, B` when
+the list is not empty (`core/DebugLogSetup.lua`), and a name refused while logging is on is traced as
+`[Init] event <NAME> rejected by this client` when it happens. What a refused name costs is written
+up in `docs/midnight-quirks.md` ("An unknown event name raises").
 
 **Every row in this table is gone while the addon is stood down** — unregistered, not gated. The one
 exception is `PLAYER_REGEN_ENABLED`, which a stand-down that combat refused re-registers on its own

@@ -333,3 +333,25 @@ test("timed: a client without the aura API learns nothing and raises nothing", f
     assertTrue(ok, tostring(learned))
     assertEqual(learned, 0)
 end)
+
+test("timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, and the rest loads", function()
+    -- red under: bare events:RegisterEvent (the raise takes TS.Sync, and the settings write, with it)
+    local NS, mocks = fresh({ before = function(m) m.__badEvents = { UNIT_AURA = true } end })
+    assertTrue(NS.SetByPath("container.filter.durationMode", "timeless", 1))
+    mocks.__fireTimers()
+    local ev = NS.TimedSpells.__events()
+    assertTrue(ev.__events.UNIT_AURA == nil, "UNIT_AURA registered on a client that refuses it")
+    assertTrue(ev.__events.PLAYER_REGEN_DISABLED ~= nil, "the gate events were lost with it")
+    local seen = 0
+    for _, name in ipairs(NS.RejectedEvents) do
+        if name == "UNIT_AURA" then seen = seen + 1 end
+    end
+    assertEqual(seen, 1, "UNIT_AURA recorded once")
+    -- red under: `listening` set regardless of the registration's answer (the queued scan would
+    -- read, and learn the timed buff below)
+    withAuras(mocks, { { spellId = 1459, duration = 3600 } })
+    ev.__events.PLAYER_REGEN_ENABLED("PLAYER_REGEN_ENABLED")
+    mocks.__fireTimers()
+    assertEqual(NS.TimedSpells.Count(), 0, "a scan ran with nothing listening")
+    assertTrue(NS.ContainerManager.Count() > 0, "the rest of the addon loaded")
+end)

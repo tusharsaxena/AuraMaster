@@ -210,7 +210,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:90-102`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:112-124`).
 
 ## Weapon enchants
 
@@ -235,6 +235,35 @@ enchants with it, and the setting's description says so.
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
   aura buttons (`modules/Container.lua:446`).
+
+## An unknown event name raises
+
+**The restriction.** Registering a name the client does not know raises `Attempt to register unknown
+event "<NAME>"` instead of being ignored. In a block of plain `RegisterEvent` calls, every event after
+the failing one is skipped and nothing is reported. Every name this addon registers is valid on 12.1,
+so the failure is latent: it would only show up once a patch retires one of them.
+
+**What this addon does.** Every registration goes through `NS.SafeRegisterEvent`, which is
+`LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`). That covers the eight lifecycle
+events (`LIFECYCLE_EVENTS` in `core/AuraMaster.lua`), the timed-spell gate and its `UNIT_AURA`
+(`modules/TimedSpells.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
+(`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
+line adds `rejected events: …` when that list is not empty, and a name refused while logging is on
+is traced right away, as `[Init] event <NAME> rejected by this client`.
+
+**The trade, taken on purpose (events-frames-taint-§1).** The library asks the client first:
+`C_EventUtils.IsEventValid` when it is there, and a private probe frame when it is not. A refused name
+never reaches AceEvent, so on a client that does not know an event, the addon loses what that event
+would have told it and keeps everything else:
+
+- a refused lifecycle event loses its own handler's trigger;
+- a refused `UNIT_AURA` leaves the timed-spell scan not listening (the "without a duration" filter
+  stops learning new spells);
+- a refused `PLAYER_REGEN_ENABLED` leaves the stand-down's secure half unheld, so it is retried on the
+  next stand-down or stand-up rather than when combat ends.
+
+Losing one of those is survivable. Losing the whole block is not. Without LibKa0s, the `Core` stub has
+only the `pcall` step and no front gate, as the library's degradation note prescribes.
 
 ## Smaller API moves this addon absorbs
 

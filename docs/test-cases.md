@@ -482,7 +482,7 @@ badge and any count quoted in the docs must agree with it.
 - state: the session flags start off, are never saved, and a reload starts them clean
 - state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)
 
-### test_lifecycle.lua (11)
+### test_lifecycle.lua (15)
 
 - lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
@@ -495,6 +495,10 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
+- lifecycle: one bad event name leaves the other seven registered and is recorded
+- lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
+- lifecycle: a rejection while logging is on is traced at the moment it happens
+- lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
 
 ### test_anchors.lua (74)
 
@@ -674,7 +678,7 @@ badge and any count quoted in the docs must agree with it.
 - castaura: the help lines come with a severity — red for never-matches, the caller's for its own line
 - castaura: a non-number is not resolved
 
-### test_timedspells.lua (19)
+### test_timedspells.lua (20)
 
 - timed: nothing is needed until a container shows only timeless auras
 - timed: it hears UNIT_AURA through AceEvent only while needed and readable
@@ -695,6 +699,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a scan tick the gate drops is never bracketed; one that reads is, once
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
+- timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, and the rest loads
 
 ### test_style_bars.lua (62)
 
@@ -1488,12 +1493,12 @@ badge and any count quoted in the docs must agree with it.
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
-| test_lifecycle.lua | 11 |
+| test_lifecycle.lua | 15 |
 | test_anchors.lua | 74 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 59 |
 | test_castaura.lua | 7 |
-| test_timedspells.lua | 19 |
+| test_timedspells.lua | 20 |
 | test_style_bars.lua | 62 |
 | test_style_icons.lua | 28 |
 | test_style_text.lua | 54 |
@@ -1529,4 +1534,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1303** |
+| **Total** | **1308** |

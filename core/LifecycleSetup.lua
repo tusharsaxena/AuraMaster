@@ -67,13 +67,14 @@ local function holdPending()
     if pendingHeld then return end
     local addon = NS.addon
     if not (addon and addon.RegisterEvent) then return end
-    pendingHeld = true
-    addon:RegisterEvent(PENDING_EVENT, function()
+    -- Held only if the registration took. A client that refused the name leaves the hold untaken
+    -- (the name is in NS.RejectedEvents), and the secure half is retried on the next stand-down or up.
+    pendingHeld = NS.SafeRegisterEvent(addon, PENDING_EVENT, function()
         -- Released FIRST: the registration is permitted only while work is owed, and a handler that
         -- unregistered itself after re-arming would keep a registration nothing is waiting on.
         releasePending()
         if NS.IsStoodDown() and not applySecure() then holdPending() end
-    end)
+    end, NS.RejectedEvents)
 end
 
 -- ---------------------------------------------------------------------------

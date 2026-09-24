@@ -92,10 +92,18 @@ NS.DebugLog = lib:New({
         local schemaVer = NS.db and NS.db.global and NS.db.global.schemaVersion
         local profile = NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()
         local containers = NS.ContainerManager and NS.ContainerManager.Count and NS.ContainerManager.Count()
-        return ("%s v%s, schema v%s, profile '%s', %s container(s)"):format(
+        local line = ("%s v%s, schema v%s, profile '%s', %s container(s)"):format(
             NS.SafeToString(NS.name), NS.SafeToString(NS.Version and NS.Version() or NS.version),
             NS.SafeToString(schemaVer or "?"), NS.SafeToString(profile or "?"),
             NS.SafeToString(containers or "?"))
+        -- Where a player sees the event names this client refused (events-frames-taint-§1). Read at
+        -- call time: the library calls this each time logging turns on.
+        local rejected = NS.RejectedEvents or {}
+        local count = #rejected
+        if count > 0 then
+            line = line .. ", rejected events: " .. table.concat(rejected, ", ")
+        end
+        return line
     end,
 
     -- The Master controls tab's console row mirrors the window, so `/am debug` has to move the

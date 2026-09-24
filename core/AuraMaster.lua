@@ -53,27 +53,32 @@ function addon:OnEnable()
     if NS.CreateOptionsPanel then NS.CreateOptionsPanel() end
 end
 
---- Every event the addon registers. Extracted so the perf probe's resume restores exactly what suspend
---- removed (core/PerfSetup.lua), instead of a hand-kept copy of this list.
-function addon:RegisterLifecycleEvents()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnEnterWorld")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED", "OnCombatChanged")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnCombatChanged")
-    self:RegisterEvent("PLAYER_TARGET_CHANGED", "OnUnitSwap")
-    self:RegisterEvent("PLAYER_FOCUS_CHANGED", "OnUnitSwap")
-    self:RegisterEvent("UNIT_PET", "OnUnitPet")
-    self:RegisterEvent("ADDON_LOADED", "OnAddonLoaded")
+--- Every event the addon itself registers, and the method each is registered to. ONE list, read by
+--- both the stand-up and the stand-down, so the two cannot drift apart.
+local LIFECYCLE_EVENTS = {
+    { "PLAYER_ENTERING_WORLD", "OnEnterWorld" },
+    { "PLAYER_REGEN_DISABLED", "OnCombatChanged" },
+    { "PLAYER_REGEN_ENABLED", "OnCombatChanged" },
+    { "PLAYER_TARGET_CHANGED", "OnUnitSwap" },
+    { "PLAYER_FOCUS_CHANGED", "OnUnitSwap" },
+    { "UNIT_PET", "OnUnitPet" },
+    { "ADDON_LOADED", "OnAddonLoaded" },
     -- Fires when aura secrecy starts or stops; a rebuild queued while auras were secret runs here.
-    self:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionChanged")
+    { "ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionChanged" },
+}
+
+--- Register the lifecycle events. Extracted so the stand-up restores exactly what the stand-down
+--- removed (core/LifecycleSetup.lua). Each goes through NS.SafeRegisterEvent: a name this client
+--- does not know costs only itself and is recorded in NS.RejectedEvents (events-frames-taint-§1).
+function addon:RegisterLifecycleEvents()
+    for _, e in ipairs(LIFECYCLE_EVENTS) do
+        NS.SafeRegisterEvent(self, e[1], e[2], NS.RejectedEvents)
+    end
 end
 
 function addon:UnregisterLifecycleEvents()
-    for _, event in ipairs({
-        "PLAYER_ENTERING_WORLD", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-        "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED", "UNIT_PET", "ADDON_LOADED",
-        "ADDON_RESTRICTION_STATE_CHANGED",
-    }) do
-        self:UnregisterEvent(event)
+    for _, e in ipairs(LIFECYCLE_EVENTS) do
+        self:UnregisterEvent(e[1])
     end
 end
 
