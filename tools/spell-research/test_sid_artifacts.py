@@ -377,6 +377,31 @@ class DictionaryRowsTest(unittest.TestCase):
         self.assertEqual((buff["suggested_category"], buff["rule"]), ("defensives", "R1"))
 
 
+class CurrentCategoriesAllTest(unittest.TestCase):
+    """CURRENT_CATEGORIES.md: an ALL entry is confirmed by any class's evidence (SID-10)."""
+
+    def test_an_all_entry_is_confirmed_from_every_class(self):
+        spec_map = {71: {"class": "WARRIOR", "name": "Arms", "role": 2},
+                    264: {"class": "SHAMAN", "name": "Restoration", "role": 1}}
+        shipped = [{"key": "hardCC", "label": "Hard CC", "aura": "DEBUFF",
+                    "classes": {"ALL": [20549]}}]
+        agg = FileAggregate(first_date="2026-09-01", last_date="2026-09-20")
+        for key, n in ((("WARRIOR", 71), 30), (("SHAMAN", 264), 12)):
+            agg.per_spec[key] = {("DEBUFF", 20549): AuraStats(
+                names=Counter({"War Stomp": n}), applications=n,
+                players={"%s%d" % (key[0], i) for i in range(3)}, single=n,
+                first_seen="2026-09-01", last_seen="2026-09-20")}
+        rows = sid_artifacts.dictionary_rows(agg, spec_map, {}, shipped, {})
+        text = sid_artifacts._current_md("2026-09-24", rows, shipped, [], [], {20549: "War Stomp"},
+                                         {("WARRIOR", "DEBUFF", 20549): 3,
+                                          ("SHAMAN", "DEBUFF", 20549): 3})
+        line = next(l for l in text.split("\n") if "| 20549 |" in l)
+        self.assertIn("| confirmed |", line)
+        self.assertIn("42 apps / 6 players", line)
+        self.assertIn("SHAMAN Restoration 12/3", line)
+        self.assertIn("WARRIOR Arms 30/3", line)
+
+
 class QueueOrderTest(unittest.TestCase):
     """write_bundle orders the queue: corrections first, then additions, each most-applied first
     (given out of order here, interleaved, so a one-way or missing sort fails)."""

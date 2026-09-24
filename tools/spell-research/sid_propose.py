@@ -52,6 +52,10 @@ LEVELLING_SPEC_NAME = "Initial"
 
 UNKNOWN_SPEC = "unknown"
 
+# A Categories.lua class key that lists the id for every class (racials, flasks): its evidence is the
+# union of every class's, each spec named with its class ("SHAMAN Restoration").
+ALL_CLASSES = "ALL"
+
 
 @dataclass
 class Thresholds:
@@ -249,7 +253,10 @@ class _Review:
                         continue  # no DB2 name: nothing to match the logs against
                     groups.setdefault(name.lower(), (name, []))[1].append(spell_id)
                 for name_l, (name, listed) in groups.items():
-                    ev = dict(index.get((klass, name_l), {}))
+                    if klass == ALL_CLASSES:
+                        ev = self.all_classes(index, by_id, name_l, listed)
+                    else:
+                        ev = dict(index.get((klass, name_l), {}))
                     for sid in listed:  # applied under another spelling: still applied
                         if sid not in ev and (klass, sid) in by_id:
                             ev[sid] = by_id[(klass, sid)]
@@ -259,6 +266,33 @@ class _Review:
                     self.group(cat["key"], klass, atype, name, listed, ev)
         return self
 
+    @staticmethod
+    def all_classes(index, by_id, name_l, listed):
+        """An ALL entry's evidence: every class's, keyed (class, spec), spec names class-prefixed."""
+        ev = {}  # type: Dict[int, Dict[tuple, dict]]
+
+        def take(cls, sid, by_spec):
+            for spec, e in by_spec.items():
+                ev.setdefault(sid, {})[(cls, spec)] = dict(e, spec="%s %s" % (cls, e["spec"]))
+
+        for (cls, n), ids in index.items():
+            if n == name_l:
+                for sid, by_spec in ids.items():
+                    take(cls, sid, by_spec)
+        for (cls, sid), by_spec in by_id.items():  # a listed id under another spelling
+            if sid in listed and not any(k[0] == cls for k in ev.get(sid, {})):
+                take(cls, sid, by_spec)
+        return ev
+
+    def players(self, klass, atype, sid):
+        # type: (str, str, int) -> Optional[int]
+        """Exact distinct casters from evidence.json; for ALL the per-class sum (a character has
+        one class, so the classes' caster sets are disjoint). None for an in-memory aggregate."""
+        if klass != ALL_CLASSES:
+            return self.class_players.get((klass, atype, sid))
+        counts = [n for (c, t, i), n in self.class_players.items() if t == atype and i == sid]
+        return sum(counts) if counts else None
+
     def meets(self, total):
         # type: (_Total) -> bool
         return total.apps >= self.th.min_applications and total.players >= self.th.min_players
@@ -267,8 +301,7 @@ class _Review:
         self.flags.append(Flag(kind, category, klass, spell_id, self.names.get(spell_id, ""), detail))
 
     def group(self, category, klass, atype, name, listed, ev):
-        totals = {sid: _total(by_spec, self.class_players.get((klass, atype, sid)))
-                  for sid, by_spec in ev.items()}
+        totals = {sid: _total(by_spec, self.players(klass, atype, sid)) for sid, by_spec in ev.items()}
         for sid in sorted(ev):
             if not self.meets(totals[sid]):
                 self.flag("below_bar", category, klass, sid,
@@ -281,7 +314,7 @@ class _Review:
         if not new_ids:
             for sid in never:
                 self.flag("unverified", category, klass, sid,
-                          "no %s player applied it or any aura named %s" % (klass, name))
+                          "no %s applied it or any aura named %s" % (_who(klass), name))
             return
         covering = {spec for by_spec in ev.values() for spec in by_spec}
         kept, replaceable = [], []
@@ -297,13 +330,14 @@ class _Review:
         applications = sum(totals[sid].apps for sid in new_ids)
         if replaceable:
             ptype, plisted, confidence = "replace", replaceable, "high"
-            reason = ("%s never applied by any %s player, while %s applied %s %d times"
-                      % (_ids(replaceable), klass, _ids(new_ids), name, applications))
+            reason = ("%s never applied by any %s, while %s applied %s %d times"
+                      % (_ids(replaceable), _who(klass), _ids(new_ids), name, applications))
         else:
             ptype, plisted = "add", list(listed)
             confidence = "medium" if kept else "high"
             reason = ("%s applied %s %d times under %s, which is not listed"
-                      % (klass, name, applications, _ids(new_ids)))
+                      % ("Players" if klass == ALL_CLASSES else klass, name, applications,
+                         _ids(new_ids)))
         evidence = {sid: _spec_evidence(ev.get(sid, {})) for sid in list(plisted) + new_ids}
         self.proposals.append(Proposal(
             type=ptype, category=category, from_category="", klass=klass, name=name,
@@ -366,6 +400,11 @@ class _Review:
                 "cc_unlisted", "", cls, sid, self.names.get(sid) or _top_name(slot["names"]),
                 "%d applications / %d players; DB2 gives it a crowd-control mechanic, and it is in "
                 "neither hardCC nor softCC" % (total.apps, total.players)))
+
+
+def _who(klass):
+    # type: (str) -> str
+    return "player" if klass == ALL_CLASSES else "%s player" % klass
 
 
 def _ids(ids):

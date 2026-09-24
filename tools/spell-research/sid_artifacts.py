@@ -351,8 +351,28 @@ def _class_evidence(rows):
     return out
 
 
+def _all_classes_evidence(rows, class_players):
+    """{(aura type, spell id): the ALL-entry view}: every class's rows, specs class-prefixed, and
+    the per-class exact player counts summed (a character has one class)."""
+    out = {}  # type: Dict[Tuple[str, int], dict]
+    per_class = {}  # type: Dict[Tuple[str, int, str], int]
+    for r in rows:
+        e = out.setdefault((r["aura_type"], r["spell_id"]), {"apps": 0, "specs": []})
+        e["apps"] += r["applications"]
+        e["specs"].append("%s %s %d/%d" % (r["class"], r["spec"], r["applications"], r["players"]))
+        key = (r["aura_type"], r["spell_id"], r["class"])
+        per_class[key] = max(per_class.get(key, 0), r["players"])
+    for (atype, sid, cls), most in per_class.items():
+        e = out[(atype, sid)]
+        exact = class_players.get((cls, atype, sid))
+        e["players"] = e.get("players", 0) + (exact if exact is not None else most)
+        e["exact"] = e.get("exact", True) and exact is not None
+    return out
+
+
 def _current_md(date, rows, shipped, flags, proposals, names, class_players):
     evidence = _class_evidence(rows)
+    all_evidence = _all_classes_evidence(rows, class_players)
     flagged = {(f.kind, f.category, f.klass, f.spell_id): f for f in flags}
     replaced = {}  # type: Dict[Tuple[str, str, int], list]
     for p in proposals:
@@ -371,10 +391,14 @@ def _current_md(date, rows, shipped, flags, proposals, names, class_players):
                 "", "| Class | Id | Name | Status | Evidence |", "|---|---|---|---|---|"]
         for klass, ids in cat["classes"].items():
             for sid in ids:
-                ev = evidence.get((klass, atype, sid))
                 key = (cat["key"], klass, sid)
-                if ev:
+                if klass == sid_propose.ALL_CLASSES:
+                    ev = all_evidence.get((atype, sid))
+                    players = ev["players"] if ev and ev["exact"] else None
+                else:
+                    ev = evidence.get((klass, atype, sid))
                     players = class_players.get((klass, atype, sid))
+                if ev:
                     who = (_n(players, "player") if players is not None
                            else "at least %s" % _n(ev["players"], "player"))
                     detail = "%s / %s (%s)" % (_n(ev["apps"], "app"), who, ", ".join(ev["specs"]))
@@ -391,7 +415,7 @@ def _current_md(date, rows, shipped, flags, proposals, names, class_players):
                 else:
                     status = "unverified"
                     flag = flagged.get(("unverified",) + key)
-                    detail = flag.detail if flag else "no %s player applied it" % klass
+                    detail = flag.detail if flag else "no %s applied it" % sid_propose._who(klass)
                 out.append("| %s | %d | %s | %s | %s |" % (
                     klass, sid, _cell(names.get(sid) or "—"), status, _cell(detail)))
     return "\n".join(out)

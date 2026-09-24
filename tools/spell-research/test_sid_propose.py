@@ -209,6 +209,39 @@ class AddTest(unittest.TestCase):
                          [("replace", [871], [900001])])
 
 
+class AllClassesTest(unittest.TestCase):
+    """A class key of ALL (racials, flasks) lists the id for every class: its evidence is the union
+    of every class's (SID-10: War Stomp, applied 336 times by seven classes, read "no ALL player
+    applied it", because no log player is of a class called ALL)."""
+
+    NAMES = {**NAMES, 20549: "War Stomp", 900881: "War Stomp"}
+    SHIPPED = [{"key": "hardCC", "label": "Hard CC", "aura": "DEBUFF", "classes": {"ALL": [20549]}}]
+    ROWS = [("WARRIOR", ARMS, "DEBUFF", 20549, stats("War Stomp", 30, 3)),
+            ("SHAMAN", RESTO, "DEBUFF", 20549, stats("War Stomp", 30, 3, tag="s"))]
+
+    def review(self, agg, th=None):
+        th = th or sid_propose.Thresholds(min_applications=50, min_players=5)
+        props = sid_propose.corrections(agg, SPEC_MAP, self.NAMES, self.SHIPPED, {}, {}, th)
+        flags = sid_propose.flags(agg, SPEC_MAP, self.NAMES, self.SHIPPED, {}, frozenset(), th)
+        return props, flags
+
+    def test_an_all_entry_applied_by_several_classes_is_confirmed_above_the_bar(self):
+        # 60 applications from 3 + 3 players: over a bar of 50 / 5 only as the union.
+        for agg in (agg_of(self.ROWS), via_evidence_json(agg_of(self.ROWS))):
+            props, flags = self.review(agg)
+            self.assertEqual(props, [])
+            self.assertEqual({(f.kind, f.klass, f.spell_id) for f in flags}, set())
+
+    def test_an_all_entry_never_applied_is_replaced_by_the_sibling_any_class_applies(self):
+        rows = [("WARRIOR", ARMS, "DEBUFF", 900881, stats("War Stomp", 40, 4)),
+                ("SHAMAN", RESTO, "DEBUFF", 900881, stats("War Stomp", 40, 4, tag="s"))]
+        props, _flags = self.review(via_evidence_json(agg_of(rows)))
+        self.assertEqual([(p.type, p.klass, p.listed, p.proposed, p.applications) for p in props],
+                         [("replace", "ALL", [20549], [900881], 80)])
+        self.assertEqual(props[0].evidence[900881],
+                         {"SHAMAN Restoration": (40, 4), "WARRIOR Arms": (40, 4)})
+
+
 class EvidenceBarTest(unittest.TestCase):
     def _check(self, apps, players):
         rows = [("WARRIOR", PROT, "BUFF", 871, stats("Shield Wall", 50, 5)),
