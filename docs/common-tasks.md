@@ -202,7 +202,7 @@ from, and mixing them silently is how a diff stops meaning anything.
 4. A label routed by value (a `core/Constants.lua` `*_LABELS` table, a category label) still needs its
    `enUS` key; `NS.Choices` looks them up with `L[…]`, and every site that draws a category name asks
    `Cat.LabelOf`. The one exemption is a **user category's** name: it is the player's own text, it has
-   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/Categories.lua`). The exemption,
+   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/UserCategories.lua`). The exemption,
    what it covers and what it deliberately does not, is `docs/ARCHITECTURE.md` → *Locale routing, and
    its one exemption*.
 

@@ -1491,7 +1491,7 @@ end)
 test("user categories: deleting one leaves a COPY of it in another profile entirely alone", function()
     -- AceDB's profile copy duplicates userCategories wholesale, so two profiles can legitimately hold
     -- a record under ONE key, each with its own name, list and containers. The eager sweep therefore
-    -- skips any profile that still holds a record of its own (defaults/Categories.lua's
+    -- skips any profile that still holds a record of its own (defaults/UserCategories.lua's
     -- forgetUserKey). red under: sweeping by key alone, which would silently gut the other profile's
     -- category and leave its record pointing at nothing.
     local NS = fresh()
