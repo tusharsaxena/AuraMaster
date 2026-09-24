@@ -121,9 +121,10 @@ end
 local Lifecycle = LibStub and LibStub("LibKa0s-Lifecycle-1.0", true)
 
 if not Lifecycle then
-    -- Degrade, never error. Without the library there is no latch, so the stored path answers the
-    -- one question the rest of the addon asks — which keeps the show ladder honest and leaves
-    -- modules/Container.lua's step 0 reading the same seam on every build.
+    -- Degrade, never error. Without the library there is no hold registry, so a local one-hold
+    -- latch, fed from the stored path by SyncEnabled, answers the one question the rest of the
+    -- addon asks — which keeps the show ladder honest and leaves modules/Container.lua's step 0
+    -- reading the same seam on every build.
     --
     -- EDGE-TRIGGERED, LIKE THE LIBRARY. `down` is the stub's one-hold latch and starts where the
     -- library's empty latch starts, up: the load-time SyncEnabled of an enabled install is then a
