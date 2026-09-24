@@ -88,6 +88,16 @@ class AuraSignalsTest(unittest.TestCase):
         # DOWN and rating DOWN, none of which is a signal; only its crit row counts.
         self.assertEqual(self.signals(900200, 900300), {900200: set(), 900300: {"crit_up"}})
 
+    def test_a_crit_spell_modifier_needs_positive_points(self):
+        # 900400: ADD_FLAT_MODIFIER (107) on SpellModOp 7 with -10 and with 0: a crit penalty or
+        # nothing, never crit_up.
+        self.assertEqual(self.signals(900400), {900400: set()})
+
+    def test_fractional_base_points_keep_their_sign(self):
+        # 900500: MELEE_SLOW (193) +0.5 and MOD_DAMAGE_PERCENT_TAKEN (87) -0.5. Truncated to an
+        # int both would be 0, and neither sign rule would pass.
+        self.assertEqual(self.signals(900500), {900500: {"haste_up", "damage_taken_down"}})
+
     def test_only_requested_spells_are_returned_and_each_is_present(self):
         out = self.signals(108271, 424242)
         self.assertEqual(set(out), {108271, 424242})
@@ -157,6 +167,23 @@ class ShippedCategoriesTest(unittest.TestCase):
         theirs = sorted(r["id"] for r in research.read_shipped_named(real))
         self.assertEqual(ours, theirs)
 
+    def test_a_spells_category_without_its_own_table_is_skipped(self):
+        # "noTable" says kind = "spells" but has no spells({ ... }) before the next category's
+        # key; the next spells block belongs to "withTable" and must not be read as noTable's.
+        text = CATEGORIES.read_text(encoding="utf-8").replace(
+            '        key = "offensiveCDs", kind = "spells"',
+            '        key = "noTable", kind = "spells", label = "No table of its own",\n'
+            '    },\n'
+            '    {\n'
+            '        key = "offensiveCDs", kind = "spells"', 1)
+        self.assertIn("noTable", text)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "Categories.lua"
+            path.write_text(text, encoding="utf-8")
+            cats = sid_db2.shipped_categories(path)
+        self.assertEqual([c["key"] for c in cats], ["defensives", "offensiveCDs", "hardCC"])
+        self.assertEqual(cats[1]["classes"], {"WARRIOR": [1719, 107574], "SHAMAN": [114051]})
+
     def test_missing_file_is_empty(self):
         self.assertEqual(sid_db2.shipped_categories(HERE / "no-such-file.lua"), [])
 
@@ -168,15 +195,20 @@ class CastToAuraTest(unittest.TestCase):
         self.assertEqual(cands[172], [146739])
         self.assertEqual(cands[98008], [98007])
         self.assertEqual(cands[53], [245689, 319065])
-        self.assertEqual(set(cands), {172, 98008, 53, 114050, 900050})
+        self.assertEqual(set(cands), {172, 98008, 53, 114050, 900050, 900060, 900070})
 
     def test_aura_to_family_maps_every_aura_to_its_siblings(self):
         family = sid_db2.aura_to_family(sid_db2.cast_aura_candidates(CAST_TO_AURA))
         self.assertEqual(family[114052], set(ASCENDANCE))
         self.assertEqual(family[114051], set(ASCENDANCE))
         self.assertEqual(family[98007], {98007})
-        # An aura two casts can land is in both families.
+        # An aura two casts can land is in both families (the union).
         self.assertEqual(family[146739], {146739, 900051})
+        # Its larger family is read first and a smaller one after: an overwrite would lose
+        # 900062 and 900063.
+        self.assertEqual(family[900061], {900061, 900062, 900063, 900071})
+        self.assertEqual(family[900062], {900061, 900062, 900063})
+        self.assertEqual(family[900071], {900061, 900071})
         self.assertNotIn(114050, family)
 
     def test_the_real_file_has_the_ascendance_family(self):
