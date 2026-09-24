@@ -10,10 +10,14 @@ player can actually be hit by, buckets them by the crowd-control **mechanic the 
 stamps on them**, and prints either a diff against what the addon ships today or a paste-ready Lua
 fragment.
 
-**It never writes `defaults/Categories.lua`.** Part C's narrowing rule is that the author accepts
+**`research.py` never writes `defaults/Categories.lua`.** Part C's narrowing rule is that the author accepts
 the diff per change. A generator that edited the shipped file would turn a judgment call into a
 rubber stamp, and the limitations at the bottom of this page are exactly the cases where that
 judgment is the only thing standing between the addon and a wrong list.
+
+Its sibling `logs.py` answers a different question from the owner's combat logs (which aura id a
+spec actually gets) and does write `defaults/Categories.lua`, but only through `logs.py apply` and
+only for proposals the owner has ruled on; see *Combat-log evidence* at the end of this page.
 
 ## Running it
 
@@ -297,3 +301,129 @@ afterwards:
 
 `docs` is already `.pkgmeta`-ignored, so none of it reaches a player. `ANALYSIS.md` — the write-up of
 what was accepted and why — is written by hand beside them, as in every other bundle here.
+
+## Combat-log evidence (`logs.py`)
+
+`research.py` says which aura ids a spell *could* land; only the combat log says which one a given
+spec actually gets. The owner's case: Offensive cooldowns listed Ascendance as `114051`, and
+Restoration Shaman never receives that id; Restoration gets `114052`, so a container showing only
+cooldowns drew nothing. `logs.py` mines the owner's combat logs for the aura ids **players** of
+each spec apply, proposes corrections and additions for the `spells` categories of
+`defaults/Categories.lua`, and applies only the ones the owner rules on. Design of record:
+`docs/superpowers/specs/2026-09-24-spell-ids-from-combat-logs-design.md`.
+
+The review is normally driven by the `/aura-spells-review` slash command
+(`.claude/commands/aura-spells-review.md`), which runs the four subcommands below, asks about each
+proposal in turn and commits the result. The subcommands also run on their own.
+
+### The formula
+
+An aura counts when it is **per spec, and applied by a player, not an NPC**: a
+`SPELL_AURA_APPLIED` line whose source GUID starts `Player-` and whose source flags carry both the
+player type bit (`0x400`) and the player-controlled bit (`0x100`). The spec comes from the source's
+`COMBATANT_INFO` earlier in the same file. Before one arrives, the application goes under spec
+`unknown` within the class if the class is known, and is otherwise counted as unattributed and
+kept out of the per-spec dictionary. Pets, totems, guardians and creatures go to a separate
+non-player tally, never into the evidence.
+
+### Running it
+
+```sh
+# 1. Scan: stream every WoWCombatLog-*.txt in the folder (only logs not already cached) into
+#    evidence.json. --logs defaults to the RaiderIO archive folder. About 20 minutes over 30 GB
+#    the first time, and only the new logs after that.
+python3 tools/spell-research/logs.py scan \
+  --logs "/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive" \
+  --out docs/spell-research/2026-09-24-logs/evidence.json
+
+# 2. Propose: the dictionary and the review set, into the same bundle. --date is required and
+#    never taken from the clock.
+python3 tools/spell-research/logs.py propose --date 2026-09-24 \
+  --bundle docs/spell-research/2026-09-24-logs
+
+# 3. Decide: record one ruling on one proposal key (from the bundle's proposals.json). The only
+#    writer of tools/spell-research/decisions.json. --ruling is accept, reject or move (with
+#    --category: accept into a different category).
+python3 tools/spell-research/logs.py decide --bundle docs/spell-research/2026-09-24-logs \
+  --key 'replace|offensiveCDs|SHAMAN|ascendance|114052' --ruling accept --date 2026-09-24
+
+# 4. Apply: rewrite the ruled class lines of defaults/Categories.lua and write the bundle's
+#    DECISIONS.md. Unruled proposals are left alone.
+python3 tools/spell-research/logs.py apply --bundle docs/spell-research/2026-09-24-logs
+```
+
+The key in step 3 is illustrative: copy the real one from `proposals.json` (it is also printed in
+`CORRECTIONS.md` and `PROPOSED_ADDITIONS.md`), and quote it, since it contains `|`. Every
+subcommand takes `--help`. `scan` and `propose` read the DB2 tables from `--db2-cache` (default
+`tools/spell-research/.cache/`, the cache `research.py` fills; a missing table is downloaded).
+`propose`, `decide` and `apply` take `--categories` and `--decisions` (and `propose` also
+`--cast-to-aura`) to work on copies, which is what the tests do.
+
+**`logs.py apply` is the only path that writes `defaults/Categories.lua`**, and it writes only
+proposals with a ruling in `decisions.json`. It rewrites just the affected class lines, keeps their
+order and trailing comments, inserts a class line in canonical class order when the category has
+none, and puts a provenance comment naming the bundle above each changed line. A second `apply`
+changes nothing. Run the addon's green gate after it, as for any `Categories.lua` change.
+
+### Thresholds
+
+| What | Default | Where |
+|---|---|---|
+| Evidence bar for a proposal | ≥ 20 applications from ≥ 3 distinct players | `propose --min-apps`, `--min-players` |
+| Group burst (target shape `group`) | the same caster and aura onto ≥ 5 distinct players within 1.0 s | `sid_scan.BURST_TARGETS`, `BURST_WINDOW` |
+| Recast samples | at most 200 intervals per aura | `sid_scan.RECAST_SAMPLE_CAP` |
+| Stale | not applied in the newest 60 days of the scanned range while a same-name sibling is | `sid_propose.DEFAULT_STALE_DAYS` |
+
+Below the bar an aura is still in the dictionary, and reported in `FLAGS.md` when it is listed; it
+is never proposed. A key already in `decisions.json`, accepted or rejected, is never proposed
+again. The category suggestion rules R1 to R9 are the spec's table, implemented in
+`sid_propose.py`.
+
+### The artifacts
+
+`propose` writes the bundle `docs/spell-research/<date>-logs/`, all of it committed:
+
+- `evidence.json`: the merged per-spec evidence from `scan` (counts only).
+- `dictionary/auras.json`, `auras.csv`, `AURAS.md`: every aura that matches the formula, one row
+  per `(class, spec, aura type, spell id)`, whatever its count and whether or not it is in a
+  category, with applications, distinct players, `self`/`single`/`group` shares, median recast,
+  first and last seen, current category, and suggested category with its rule.
+- `dictionary/non-player.csv`: the pet, totem and guardian tally.
+- `CURRENT_CATEGORIES.md`: every shipped id of every `spells` category with its evidence status,
+  one of confirmed, unverified, stale or wrong id.
+- `CORRECTIONS.md`: replace, add and move proposals for listed ids.
+- `PROPOSED_ADDITIONS.md`: new auras above the bar, grouped by recommended category, each with a
+  rule and a one-sentence reason.
+- `FLAGS.md`: unverified and stale ids, below-the-bar sightings, and the crowd-control debuff
+  cross-check (report only, never proposed).
+- `SOURCES.md`: logs scanned, date range, bytes, skipped lines, DB2 build and thresholds.
+- `proposals.json`: the review queue, corrections then additions, most-applied first.
+- `DECISIONS.md`: written by `apply`, this review's rulings and the lines they changed.
+
+The durable record of rulings is `tools/spell-research/decisions.json`.
+
+### Privacy
+
+No player name, realm or GUID reaches any output or committed file: the repo carries classes,
+specs and counts only. Distinct-player counts stay exact across logs because the **per-log cache**
+stores each aura's players as salted hashes (`sha256(salt + GUID)`, truncated), where the salt is
+32 random bytes made once. The cache and the salt live outside the repo, in
+`~/.cache/auramaster-spell-research/` (`scan --cache` to move it), and no hash ever enters a
+bundle. A log is re-read when its size or modification time changes, so a log the client is still
+writing is never served stale.
+
+### The code
+
+| File | Stage |
+|---|---|
+| `sid_scan.py` | Line parsing, the player filter, spec tracking, per-file aggregates, target shapes, recast |
+| `sid_cache.py` | The per-log cache and the merge of per-file aggregates |
+| `sid_db2.py` | DB2 signals per aura, the spec map, the player pool, the shipped categories, CastToAura candidates |
+| `sid_propose.py` | Corrections, additions, flags, the category rules, the evidence bar, decisions suppression |
+| `sid_artifacts.py` | The dictionary and the review set |
+| `sid_decide.py` | `decisions.json`, `DECISIONS.md`, and the `Categories.lua` line rewriter |
+| `logs.py` | The command line: `scan`, `propose`, `decide`, `apply` |
+
+Tests: `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'`, one `test_sid_*.py`
+per module plus `test_sid_e2e.py`, the acceptance run: scan, propose, decide and apply through the
+real command line on the fixtures in `fixtures/`, ending with `114052` in Offensive cooldowns.

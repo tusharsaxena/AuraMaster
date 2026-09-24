@@ -10,7 +10,7 @@ marked as such rather than listed as a requirement.
 | Group | Who needs it | Short answer |
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
-| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). **Python 3** only if you run the spell-research generator. |
+| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). **Python 3** only if you run the spell-research tools. |
 | Release / assets | Nobody, locally | None. |
 
 ## Runtime (in-game) — what a player needs
@@ -46,6 +46,8 @@ marked as such rather than listed as a requirement.
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:68`, `:80` and `:93` (`sed`), `:80` and `:165` (`grep`), `:100` (`date`), `:77` (`head`), `:80` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
 | POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:41` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
 | `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the Hard CC / Soft CC spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
+| `python3` (same install) | **3.8** or newer | the combat-log evidence tool, `tools/spell-research/logs.py` and its `sid_*.py` modules, which mine the owner's combat logs for the aura ids each spec applies and drive the `/aura-spells-review` command. Not part of the green gate | `tools/spell-research/logs.py:1` is `#!/usr/bin/env python3`; it and the `sid_*.py` modules import only the standard library (`argparse`, `csv`, `dataclasses`, `hashlib`, `json`, `statistics`, `pathlib`, …) plus `research.py` as a module. Its tests are `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'` |
+| a folder of combat logs (optional) | — | `logs.py scan`'s input: the `WoWCombatLog-*.txt` files the client writes with advanced combat logging on. Default `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`, any other folder with `--logs`. Only the owner's review needs it; nothing else reads it. Its per-log cache and salt live outside the repo, in `~/.cache/auramaster-spell-research/` | `tools/spell-research/logs.py` (`DEFAULT_LOGS`), `tools/spell-research/sid_cache.py` (`DEFAULT_CACHE_DIR`) |
 | a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
 | POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, `lua tests/run.lua -j N` / `-j auto`; `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
 
@@ -98,7 +100,8 @@ git -C ../LibKa0s rev-parse --short v1.55.0   # verify: prints a commit
 
 - **LuaFileSystem.** Not used; the kit lists directories by shelling out. `luacheck` pulls it in for
   itself, which is LuaRocks' business rather than this addon's.
-- **Any Python package.** `tools/spell-research/research.py` is standard library only, on purpose:
+- **Any Python package.** `tools/spell-research/research.py` is standard library only, on purpose
+  (and so is `logs.py` with its `sid_*.py` modules, for the same reason):
   Ubuntu 24.04 marks its Python EXTERNALLY-MANAGED (PEP 668), so a single `pip install` in that
   generator would have dragged a virtualenv or a pipx recipe into a tool that runs a handful of
   times per expansion. The complexity suite's `lizard` is installed through pipx (above) and is a
