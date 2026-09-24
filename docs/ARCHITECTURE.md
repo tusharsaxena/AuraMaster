@@ -828,8 +828,8 @@ return value.
 
 Every `.md` under `docs/` appears in exactly one table below (documentation-§3). Frozen and
 generated directories are named once and never enumerated: `docs/audits/`, `docs/reviews/`,
-`docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/revendor/<date>/`,
-`docs/spell-research/<date>/`, `docs/superpowers/`.
+`docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/revendor/<date>-v<tag>/` (a
+span bundle is `<date>-v<A>-v<B>/`), `docs/superpowers/`.
 
 ### Required (documentation-§3, Tier 1)
 
@@ -867,7 +867,9 @@ generated directories are named once and never enumerated: `docs/audits/`, `docs
 
 ### Addon-specific (documentation-§3, Tier 3)
 
-None.
+| Doc | Covers |
+|---|---|
+| `spell-research/` | Frozen per-build derivation bundles written by `tools/spell-research/research.py`; the dated bundles are not enumerated |
 
 ## Documented deviations
 
