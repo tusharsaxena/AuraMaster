@@ -973,7 +973,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (46)
+### test_slash_verbs.lua (49)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1014,6 +1014,9 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
 - slash verbs: /am resetposition and /am forgettimed do their act and say so
+- slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true
+- slash verbs: the old path global.minimap.hide is not a setting, and nothing is written
+- slash verbs: a legacy store's minimap.hide reads through the renamed path with no migration
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
@@ -1435,7 +1438,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 137 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 3 of 138 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1529,7 +1532,7 @@ badge and any count quoted in the docs must agree with it.
 | test_framepicker.lua | 14 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 25 |
-| test_slash_verbs.lua | 46 |
+| test_slash_verbs.lua | 49 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
@@ -1555,4 +1558,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1325** |
+| **Total** | **1328** |

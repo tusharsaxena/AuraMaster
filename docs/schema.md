@@ -208,19 +208,23 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 ## How the schema paths map onto this shape
 
 A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`), absolute into
-`global` — which **one** row is, `global.minimap.hide` — or
+`global` — which **one** row is, `global.minimap.shown` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:132`). `NS.DefaultFor(path)` reads the
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:139`). `NS.DefaultFor(path)` reads the
 same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
 
-`global.minimap.hide` is the exception, and it is one branch in each seam rather than a second
-resolver: `NS.GetSetting` answers `not hide`, `NS.SetByPath` stores `not value` and calls
-`NS.Launcher:SetShown`, and `NS.DefaultFor` inverts `NS.defaults.global.minimap.hide` so the
-shipped default still comes from the one declaration. The path is spelled verbatim and carries no
-profile prefix, because the table is LibDBIcon's and lives outside any profile. Its `effect` is
+`global.minimap.shown` is the exception, and it is one branch in each seam rather than a second
+resolver. The path is the CLI name and reads in the row's own sense, true while the button shows;
+the storage is LibDBIcon's own `global.minimap.hide`, which never moves (no `shown` key is stored,
+so no SavedVariables migration exists — anti-pattern #81). `NS.GetSetting` answers `not hide`,
+`NS.SetByPath` stores `not value` and calls `NS.Launcher:SetShown`, and `NS.DefaultFor` inverts
+`NS.defaults.global.minimap.hide` so the shipped default still comes from the one declaration. The
+path is spelled once, as `NS.MINIMAP_PATH` in `settings/Schema.lua`, verbatim and with no profile
+prefix, because the table is LibDBIcon's and lives outside any profile. The storage key is not a
+path: `/am get global.minimap.hide` answers `Setting not found`. Its `effect` is
 `"none"`: the button is not a container, and the seam already moved it.
 
 **Some category rows are registered at runtime.** `container.filter.categories.<key>` has one row per

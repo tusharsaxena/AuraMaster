@@ -23,6 +23,11 @@ eight-or-more trigger (documentation-§3).
   the launcher's left click (`core/LauncherSetup.lua`, rung (b), launcher-§2), so the minimap
   button, the verb and the General → Master controls *Test mode* checkbox are three doors onto one
   `Preview.SetTestMode` and print the same line.
+- **One path is not the profile's.** The Minimap button row's CLI path is `global.minimap.shown`,
+  which reads in the row's sense: `/am get global.minimap.shown` answers true while the button
+  shows, and `/am set global.minimap.shown false` hides it. The storage is LibDBIcon's own
+  `global.minimap.hide`, inverted once in `settings/Schema.lua` (launcher-§3); the storage key is
+  not a path, so `/am get global.minimap.hide` answers `Setting not found`.
 - **`NS.COMMANDS` is the addon's own**, an ordered array of positional triples `{name, desc, fn}`,
   passed *into* the library. The landing page renders the same table through `Slash.LandingRows`
   (`settings/About.lua`), so the page and `/am help` cannot drift.
@@ -117,7 +122,7 @@ migrated. Addressing the container by its number works as before.
 
 A path beginning `container.` resolves against the **selected** container — the one the settings
 banner last chose, or `/am select`, or the first container when nothing has been chosen this session
-(`NS.ActiveContainer`, `settings/Schema.lua:132`). So `/am set container.bars.width 300` means the
+(`NS.ActiveContainer`, `settings/Schema.lua:139`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
 `settings/Slash.lua:505`), so a value never reads as the only one. `/am containers` then `/am select`

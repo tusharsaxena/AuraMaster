@@ -116,7 +116,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — `docs/schema.md`). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:711`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:718`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -134,9 +134,9 @@ Almost every row belongs to one container, so container rows use a **relative pa
 `container.bars.width` resolves against the container the settings banner has selected
 (`NS.State.activeContainerId`), falling back to the first one. Addon-wide rows keep absolute paths
 (`enabled`, `hideBlizzardBuffs`). **One row resolves outside the profile entirely:**
-`global.minimap.hide` is LibDBIcon's own key in the GLOBAL store, so the seam answers and writes
-it directly, inverting on the way (the row says shown, the key says hidden) and telling
-`NS.Launcher` so the button moves at once. A row's `default` is never typed in a page file —
+`global.minimap.shown` names LibDBIcon's own key in the GLOBAL store, `global.minimap.hide`, so the
+seam answers and writes it directly, inverting on the way (the path and the row say shown, the
+stored key says hidden) and telling `NS.Launcher` so the button moves at once. A row's `default` is never typed in a page file —
 `NS.RegisterSchemaRows` stamps it from `defaults/Profile.lua`, and `NS.ValidateSchema` proves every
 path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the
 profile-wide `categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
@@ -333,7 +333,7 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:380` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:384` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:584` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
@@ -407,8 +407,8 @@ from `OnInitialize` after `InitDB`, and is idempotent.
 | Label | `Ka0s Aura Master` — the **brand name in plain text** (launcher-§1). What a broker display prints in its row, beside the other ten Ka0s addons, so it is spelled the way they are. Deliberately not the TOC `## Title` (a Title may carry color escapes) and not the folder name |
 | Left click | **Rung (b)**: toggles test mode, by calling `NS.Slash.ToggleTestMode` — the same host verb a bare `/am test` runs, which switches it through `Preview.SetTestMode`. The launcher holds no copy of the mode. **While the addon is disabled** the left click is refused by `LibKa0s-Launcher-1.0`'s own gate (minor 2), fed by the descriptor's `isEnabled` and `disabledLine` (the dispatcher's refusal line); right-click is never gated |
 | Right click | Always `NS.OpenOptionsPanel()`. Neither button is reassignable and there is no setting for either |
-| Visibility | The **Minimap button** row, `global.minimap.hide`, in the global store (launcher-§3, `docs/settings-panel.md`) |
-| Survives every reset | A per-installation display preference, like the button's position, so **no** reset the panel runs may move it — neither *Reset all settings* nor the General page's **Defaults** button. The one veto is `vetoedFromPanelReset` in the options descriptor's `applyDefault`, the library's single reset seam. `/am reset global.minimap.hide` is deliberately **not** vetoed: that is the player naming this one row |
+| Visibility | The **Minimap button** row. Its CLI path is `global.minimap.shown`, which answers true while the button shows; its storage is LibDBIcon's own `global.minimap.hide`, in the global store, never a second `shown` key (launcher-§3, anti-pattern #81, `docs/settings-panel.md`) |
+| Survives every reset | A per-installation display preference, like the button's position, so **no** reset the panel runs may move it — neither *Reset all settings* nor the General page's **Defaults** button. The one veto is `vetoedFromPanelReset` in the options descriptor's `applyDefault`, the library's single reset seam. `/am reset global.minimap.shown` is deliberately **not** vetoed: that is the player naming this one row |
 
 **Rung (b) because the addon has a test mode.** This addon has no primary window; its preview is
 the session-only test mode, switched by the Master controls *Test mode* checkbox (unlocking no

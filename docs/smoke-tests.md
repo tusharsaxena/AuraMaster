@@ -575,8 +575,12 @@ nothing).
     the button stays hidden and the checkbox stays unticked. Now press General's own **Defaults**
     button → still hidden, still unticked, while every other General row on the page goes back to
     its default. Whether the button is shown is a per-installation preference, like the angle you
-    dragged it to, so no reset moves it. `/am reset global.minimap.hide` — you naming that one row —
+    dragged it to, so no reset moves it. `/am reset global.minimap.shown` — you naming that one row —
     → it comes back.
+    **From chat, in the shown sense:** `/am get global.minimap.shown` → `true` while the button
+    shows; `/am set global.minimap.shown false` → the button hides; `/reload` → still hidden;
+    `/am reset global.minimap.shown` → it comes back. `/am get global.minimap.hide` → `Setting not
+    found` (the storage key is not a path).
 92. **A broker display, if one is installed.** With Titan Panel, Bazooka or ElvUI data texts, add
     *Ka0s Aura Master* as a plugin → one row labeled exactly that, **grouped with the other Ka0s
     addons** rather than filed under `A`, the same logo, **no empty value cell beside it**, and its

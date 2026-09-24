@@ -19,7 +19,7 @@ local NS = T.NS
 local fresh = dofile("tests/fresh_env.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
-local MINIMAP_PATH = "global.minimap.hide"
+local MINIMAP_PATH = "global.minimap.shown"
 
 --- A client with both broker libraries: an environment, plus the recorder they wrote into.
 ---

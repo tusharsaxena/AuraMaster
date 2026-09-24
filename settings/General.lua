@@ -32,10 +32,11 @@ local _, NS = ...
 -- the launcher's left-click also use. Off after a reload, ended when combat starts, refused in
 -- combat, and ended by Reset all settings (the row's default is false).
 --
--- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.hide`, and that is not an
--- oversight of the empty prefix above: the table is LibDBIcon's own and lives in the GLOBAL store,
--- outside any profile (launcher-§3). The row says SHOWN and the key says HIDDEN;
--- settings/Schema.lua inverts once, at the write seam.
+-- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.shown` (NS.MINIMAP_PATH,
+-- published by settings/Schema.lua), and that is not an oversight of the empty prefix above: the
+-- table is LibDBIcon's own and lives in the GLOBAL store, outside any profile (launcher-§3). The
+-- path reads in the row's SHOWN sense; the stored key is LibDBIcon's `hide`, and settings/Schema.lua
+-- inverts once, at its read and write seams.
 
 local L = NS.L
 local H = NS.Helpers
@@ -45,8 +46,8 @@ local GS = NS.GeneralSpells
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
 -- Session state, like the console row: the path names no stored leaf.
 local TEST_MODE_PATH = "state.testMode"
--- VERBATIM: the global store, outside the profile prefix (launcher-§3).
-local MINIMAP_PATH = "global.minimap.hide"
+-- VERBATIM: the global store, outside the profile prefix (launcher-§3). Spelled once, in Schema.lua.
+local MINIMAP_PATH = NS.MINIMAP_PATH
 
 local masterRows, masterTail = H.MasterControls({
     prefix           = "",

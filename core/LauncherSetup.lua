@@ -28,10 +28,11 @@ local addonName, NS = ...
 -- table captured here would be the one nothing writes to. The library resolves it at Register time.
 --
 -- THE ROW THAT SHOWS AND HIDES IT IS NOT HERE. It is a composed Master controls row
--- (settings/General.lua's `minimapPath`), stored at `db.global.minimap.hide` in the GLOBAL store —
--- global so a profile switch does not move the player's buttons (launcher-§3). The row's label says
--- SHOWN and LibDBIcon's key says HIDDEN, so settings/Schema.lua's seam inverts once, in one place,
--- and calls NS.Launcher:SetShown from there.
+-- (settings/General.lua's `minimapPath`), whose path is `global.minimap.shown` and whose storage is
+-- `db.global.minimap.hide` in the GLOBAL store — global so a profile switch does not move the
+-- player's buttons (launcher-§3). The row's label and path say SHOWN and LibDBIcon's key says
+-- HIDDEN, so settings/Schema.lua's seam inverts once, in one place, and calls NS.Launcher:SetShown
+-- from there.
 --
 -- AND IT SURVIVES EVERY RESET — a PROPERTY of the setting, not a consequence of the global store
 -- (launcher-§3, standard v2.54.0). Whether the button is shown is a per-installation display

@@ -46,7 +46,7 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
   banner; Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:274`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:281`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -118,7 +118,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every container's drag handle and a faint outline one element in size, and live auras keep drawing; an unlocked container shows whatever its visibility rule, so one set to *In combat* can still be found and moved. Locking hides them |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
-| Minimap button | `global.minimap.hide` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label says SHOWN and the stored key says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.hide` still restores it |
+| Minimap button | `global.minimap.shown` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label and the path say SHOWN (`global.minimap.shown` is true while the button shows) and the stored key, LibDBIcon's `global.minimap.hide`, says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.shown` still restores it |
 | Test mode | `state.testMode` | bool, session | Every container shows its placeholder auras, without unlocking; never written to the profile (below) |
 
 **Test mode** (`state.testMode`, bool, session) sits beside Minimap button, composed from

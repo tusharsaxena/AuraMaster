@@ -625,6 +625,49 @@ test("slash verbs: /am resetposition and /am forgettimed do their act and say so
     assertNil(NS2.db.global.timedSpells[774])
 end)
 
+-- ── the minimap row: the CLI path reads in its shown sense (launcher-§3) ──────────────────────
+
+test("slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    -- red under: the path spelled hide
+    assertEqual(dump(slash(NS2, lines, "get global.minimap.shown")), "{global.minimap.shown = true}")
+    assertEqual(dump(slash(NS2, lines, "set global.minimap.shown false")), "{global.minimap.shown = false}")
+    -- The STORAGE did not move: LibDBIcon's own `hide`, inverted once at the seam.
+    assertEqual(NS2.db.global.minimap.hide, true)
+    assertEqual(NS2.Launcher:IsShown(), false)
+    assertEqual(dump(slash(NS2, lines, "reset global.minimap.shown")), "{global.minimap.shown = true}")
+    assertEqual(NS2.db.global.minimap.hide, false)
+end)
+
+test("slash verbs: the old path global.minimap.hide is not a setting, and nothing is written", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    local sent = announcements(NS2)
+    -- red under: the path spelled hide
+    assertEqual(dump(slash(NS2, lines, "get global.minimap.hide")), "{Setting not found: global.minimap.hide}")
+    assertEqual(dump(slash(NS2, lines, "set global.minimap.hide true")), "{Setting not found: global.minimap.hide}")
+    assertEqual(dump(slash(NS2, lines, "reset global.minimap.hide")), "{Setting not found: global.minimap.hide}")
+    assertEqual(NS2.db.global.minimap.hide, false)
+    assertEqual(sent[1], 0)
+end)
+
+test("slash verbs: a legacy store's minimap.hide reads through the renamed path with no migration", function()
+    -- A SavedVariables file written before the rename: LibDBIcon's own table, `hide` and a drag.
+    local NS2, mocks = fresh({ savedVariables = { global = { minimap = { hide = true, minimapPos = 200 } } } })
+    local lines = capture(mocks)
+    -- red under: the path spelled hide
+    assertEqual(dump(slash(NS2, lines, "get global.minimap.shown")), "{global.minimap.shown = false}")
+    assertEqual(NS2.Launcher:IsShown(), false, "the button stays hidden")
+    assertEqual(NS2.db.global.minimap.minimapPos, 200, "the drag is untouched")
+    slash(NS2, lines, "set global.minimap.shown true")
+    slash(NS2, lines, "set global.minimap.shown false")
+    -- The raw SV, not the AceDB view: no `shown` key is ever stored (anti-pattern #81).
+    assertNil(_G.AuraMasterDB.global.minimap.shown)
+    assertEqual(_G.AuraMasterDB.global.minimap.hide, true)
+    assertEqual(_G.AuraMasterDB.global.minimap.minimapPos, 200)
+end)
+
 -- ── the degradation stub ──────────────────────────────────────────────────────────────────────
 
 --- The degraded environment, initialized so it has a database and containers.

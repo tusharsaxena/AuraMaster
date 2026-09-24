@@ -79,7 +79,7 @@ end)
 test("options: the General page leads with Master controls, in canonical order", function()
     local rows = NS.SchemaForPage("general")
     local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole",
-                   "global.minimap.hide", "state.testMode" }
+                   "global.minimap.shown", "state.testMode" }
     for i, path in ipairs(want) do
         assertEqual(rows[i].path, path)
         assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)

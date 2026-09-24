@@ -52,17 +52,24 @@ local NO_CONTAINER = L["No container exists yet — create one on Containers."]
 -- THE MINIMAP ROW IS THE ONE PATH THAT IS NOT THE PROFILE'S (launcher-§3).
 --
 -- Every other absolute path in this schema resolves against `db.profile`, which is why resolveRoot
--- needs no root argument. This one resolves against `db.global`, and it is spelled `global.minimap.
--- hide` VERBATIM -- the composer takes the path unprefixed for exactly that reason. The scope is the
--- decision: a minimap button belongs to the installation, so a profile switch must not move it and
--- Reset all settings, a profile reset, must not un-hide one the player deliberately hid.
+-- needs no root argument. This one resolves against `db.global`, and its path is spelled
+-- `global.minimap.shown` VERBATIM -- the composer takes the path unprefixed for exactly that reason.
+-- The scope is the decision: a minimap button belongs to the installation, so a profile switch must
+-- not move it and Reset all settings, a profile reset, must not un-hide one the player deliberately hid.
 --
--- AND THE SENSE INVERTS. The row is labeled "Minimap button" and means SHOWN; the stored key is
--- LibDBIcon's own `hide`, which the library writes too when the player uses its menu. Storing the
--- library's key is what keeps there being ONE record of one state (anti-pattern #81); the inversion
--- is the whole cost of that, and it is paid HERE, once, in the read seam and the write seam, rather
--- than at each of the three places that reach it (the checkbox, `/am set`, `/am reset`).
-local MINIMAP_PATH = "global.minimap.hide"
+-- THE PATH IS A NAME, NOT A STORAGE ADDRESS, AND THE SENSE INVERTS BETWEEN THEM. The row is labeled
+-- "Minimap button" and its path, the CLI name, reads in the row's own sense: `global.minimap.shown`
+-- answers true while the button shows (launcher-§3). The stored key is LibDBIcon's own
+-- `db.global.minimap.hide`, which the library writes too when the player uses its menu, and it does
+-- not move: storing the library's key is what keeps there being ONE record of one state
+-- (anti-pattern #81), so no `shown` key is ever stored and no SavedVariables migration exists. The
+-- inversion is the whole cost of that, and it is paid HERE, once, in the read seam and the write
+-- seam, rather than at each of the three places that reach it (the checkbox, `/am set`, `/am reset`).
+--
+-- Published as NS.MINIMAP_PATH because this file loads before settings/OptionsSetup.lua and
+-- settings/General.lua, which read it rather than spelling the path a second and third time.
+local MINIMAP_PATH = "global.minimap.shown"
+NS.MINIMAP_PATH = MINIMAP_PATH
 
 --- LibDBIcon's table inside the global store, or nil before core/Database.lua has built NS.db.
 local function minimapStore()
@@ -159,7 +166,7 @@ end
 --- The shipped default for `path` — from the container template for a `container.` path, from the
 --- profile defaults otherwise. A deep copy, so a caller can never mutate the template.
 function NS.DefaultFor(path)
-    -- Inverted off the ONE declaration, defaults/Profile.lua's `global.minimap.hide = false`,
+    -- Inverted off the ONE declaration, defaults/Profile.lua's stored `global.minimap.hide = false`,
     -- rather than typed as `true` here: one hardcoded default, as for every other row.
     if path == MINIMAP_PATH then
         local g = NS.defaults and NS.defaults.global

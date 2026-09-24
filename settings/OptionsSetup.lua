@@ -30,10 +30,10 @@ local PARENT_TITLE = "Ka0s Aura Master"
 --
 -- The veto is the descriptor's `applyDefault`, which is the library's SINGLE reset seam — both
 -- O.RestoreDefaults (a page's Defaults) and O.RestoreAllDefaults call it and nothing else — so one
--- clause covers both resets and any reset walk added later. `/am reset global.minimap.hide` is NOT
+-- clause covers both resets and any reset walk added later. `/am reset global.minimap.shown` is NOT
 -- vetoed and must not be: that is the player naming this one row, which is how they bring a hidden
 -- button back, and settings/Slash.lua's descriptor carries its own applyDefault for exactly that.
-local MINIMAP_PATH = "global.minimap.hide"
+local MINIMAP_PATH = NS.MINIMAP_PATH -- settings/Schema.lua spells it once; it loads first
 
 local function vetoedFromPanelReset(row)
     return row.path == MINIMAP_PATH
