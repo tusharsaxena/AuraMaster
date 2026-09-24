@@ -19,12 +19,17 @@ spell names, CastToAura families) and the shipped `spells`-kind categories. Outp
 - flags(): Flag objects, report only, never proposals: unverified, stale, below_bar (a sighting of a
   listed spell under the evidence bar) and cc_unlisted (a player-applied crowd-control debuff in
   neither hardCC nor softCC).
+- suggest(): the spec's category rules R1-R9, first match wins, over one aura's class-wide target
+  shape, recast and DB2 signals. moves() applies it to listed BUFF entries (a move is medium
+  confidence at most, and never from a debuff category); additions() to above-bar player BUFFs in
+  no `spells` category.
 
 Anything whose proposal_key() is already in decisions.json is not proposed again. Python 3.8+
 standard library only; nothing here writes a file.
 """
 
 import datetime
+import statistics
 from collections import Counter, OrderedDict
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Set, Tuple
@@ -384,3 +389,298 @@ def flags(agg, spec_map, names, shipped, aura_to_family, cc_ids=frozenset(), thr
     review.cc_unlisted(agg, set(cc_ids))
     return sorted(review.flags, key=lambda f: (_FLAG_ORDER.get(f.kind, 9), f.category, f.klass,
                                                f.spell_id))
+
+
+# --- SID-6: category rules R1-R9, moves and additions ---------------------------------------------
+
+# Rule thresholds (the spec's table). Shares are of the aura's applications across every spec of
+# the class. The scanner counts a burst ONCE in `group` and absorbs its companions, so `group` is a
+# count of bursts, not of applications; the applications inside bursts are the rest,
+# applications - self - single, and that is the group share.
+SELF_SHARE = 0.90        # R1, R3, R7
+GROUP_SHARE = 0.30       # R2
+SINGLE_SHARE = 0.70      # R5
+OTHERS_SHARE = 0.50      # R6 "applied mostly to others": more than half not on the caster
+LONG_RECAST = 60.0       # R3: median seconds between self-applications
+SHORT_RECAST = 30.0      # R6, R7
+
+TANK_ROLE = 0  # ChrSpecialization.Role: 0 tank, 1 healer, 2 damage (build 12.1.0.69875)
+
+DEFENSIVE_SIGNALS = frozenset({"damage_taken_down", "absorb"})
+RAID_SIGNALS = frozenset({"damage_taken_down", "absorb", "periodic_heal"})
+# "A damage, haste, crit, mastery or versatility increase". stat_pct_up (a primary-stat percent,
+# e.g. Pillar of Frost's Strength) is a damage increase too; rating_up covers the four ratings.
+OFFENSIVE_SIGNALS = frozenset({"damage_up", "haste_up", "crit_up", "rating_up", "stat_pct_up"})
+MOVEMENT_SIGNALS = frozenset({"speed_up"})
+HEALING_SIGNALS = frozenset({"periodic_heal", "absorb"})
+
+_SIGNAL_WORDS = {
+    "damage_taken_down": "reduces damage taken", "absorb": "absorbs damage",
+    "periodic_heal": "heals over time", "damage_up": "raises damage done", "haste_up": "raises haste",
+    "crit_up": "raises critical strike", "rating_up": "raises a secondary stat",
+    "stat_pct_up": "raises a primary stat", "speed_up": "raises movement speed",
+}
+
+CATEGORY_LABELS = {
+    "defensives": "Defensive cooldowns", "raidCDs": "Raid cooldowns",
+    "offensiveCDs": "Offensive cooldowns", "movement": "Movement", "support": "Support",
+    "healing": "Healing", "activeMitigation": "Active mitigation", "consumables": "Consumables",
+    "utility": "Utility",
+}
+
+_CONFIDENCE_RANK = {"low": 0, "medium": 1, "high": 2}
+
+
+@dataclass
+class _Facts:
+    apps: int
+    self_: float      # shares, 0..1
+    single: float
+    group: float      # applications inside bursts
+    bursts: int
+    recast: Optional[float]
+    signals: Set[str]
+    in_pool: bool
+    tank_only: bool
+
+
+def _pct(share):
+    return "%d%%" % round(share * 100)
+
+
+def _says(f, wanted):
+    return " and ".join(_SIGNAL_WORDS[s] for s in sorted(f.signals & wanted))
+
+
+def _recast(f):
+    return "recast about %gs" % f.recast
+
+
+# (rule id, predicate, category, confidence, reason) in the spec's table order; the first match
+# wins. Each reason names the evidence it rests on, in plain words, and ends with the category.
+_RULES = (
+    ("R1", lambda f: f.signals & DEFENSIVE_SIGNALS and f.self_ >= SELF_SHARE,
+     "defensives", "high",
+     lambda f: "%s self-applied and DB2 says it %s" % (_pct(f.self_), _says(f, DEFENSIVE_SIGNALS))),
+    ("R2", lambda f: f.group >= GROUP_SHARE and f.signals & RAID_SIGNALS,
+     "raidCDs", "high",
+     lambda f: "%s of applications land on 5+ players at once (%d bursts) and DB2 says it %s"
+     % (_pct(f.group), f.bursts, _says(f, RAID_SIGNALS))),
+    ("R3", lambda f: (f.self_ >= SELF_SHARE and f.signals & OFFENSIVE_SIGNALS
+                      and f.recast is not None and f.recast >= LONG_RECAST),
+     "offensiveCDs", "high",
+     lambda f: "%s self-applied, DB2 says it %s, %s"
+     % (_pct(f.self_), _says(f, OFFENSIVE_SIGNALS), _recast(f))),
+    ("R4", lambda f: f.signals & MOVEMENT_SIGNALS,
+     "movement", "high",
+     lambda f: "DB2 says it raises movement speed"),
+    ("R5", lambda f: f.single >= SINGLE_SHARE,
+     "support", "medium",
+     lambda f: "%s of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not "
+     "readable offline, so an external defensive is not excluded)" % _pct(f.single)),
+    ("R6", lambda f: (f.signals & HEALING_SIGNALS and 1 - f.self_ > OTHERS_SHARE
+                      and f.recast is not None and f.recast < SHORT_RECAST),
+     "healing", "medium",
+     lambda f: "DB2 says it %s, %s applied to others, %s"
+     % (_says(f, HEALING_SIGNALS), _pct(1 - f.self_), _recast(f))),
+    ("R7", lambda f: (f.tank_only and f.self_ >= SELF_SHARE
+                      and f.recast is not None and f.recast < SHORT_RECAST),
+     "activeMitigation", "medium",
+     lambda f: "only tank specs apply it, %s self-applied, %s" % (_pct(f.self_), _recast(f))),
+    ("R8", lambda f: not f.in_pool,
+     "consumables", "high",
+     lambda f: "not in the player-castable spell pool, so an item or consumable effect"),
+)
+
+
+def suggest(stats, signals, in_pool, tank_only):
+    # type: (dict, Set[str], bool, bool) -> Tuple[Optional[str], str, str, str]
+    """(category key or None, rule id, confidence, reason sentence) for one aura, by rules R1-R9.
+
+    stats: {"applications", "self", "single", "group" (bursts), "recast" (median seconds or None)},
+    summed over every spec of the class. signals: sid_db2.aura_signals' names for the aura.
+    in_pool: the aura (or the cast it comes from) is player-castable. tank_only: every spec that
+    applied it is a tank spec.
+    """
+    apps = stats.get("applications", 0)
+    if apps <= 0:
+        return None, "R9", "low", "No applications, so no suggestion."
+    self_, single = stats.get("self", 0), stats.get("single", 0)
+    f = _Facts(apps=apps, self_=self_ / apps, single=single / apps,
+               group=max(apps - self_ - single, 0) / apps, bursts=stats.get("group", 0),
+               recast=stats.get("recast"), signals=set(signals or ()), in_pool=in_pool,
+               tank_only=tank_only)
+    for rule, predicate, category, confidence, reason in _RULES:
+        if predicate(f):
+            return category, rule, confidence, "%s → %s." % (reason(f), CATEGORY_LABELS[category])
+    shape_words = "%s self, %s single, %s group" % (_pct(f.self_), _pct(f.single), _pct(f.group))
+    if not self_ and not single:
+        return None, "R9", "low", "No rule matched (%s), so no suggestion." % shape_words
+    return "utility", "R9", "low", "No rule matched (%s) → Utility." % shape_words
+
+
+def _class_rows(agg, aura_type):
+    # type: (object, str) -> Dict[Tuple[str, int], List[Tuple[Optional[int], object]]]
+    """{(class, spell_id): [(spec, AuraStats), ...]} for one aura type."""
+    out = {}  # type: Dict[Tuple[str, int], List[Tuple[Optional[int], object]]]
+    for (cls, spec), auras in agg.per_spec.items():
+        for (atype, sid), st in auras.items():
+            if atype == aura_type and st.applications:
+                out.setdefault((cls, sid), []).append((spec, st))
+    return out
+
+
+def _stats_of(rows):
+    """suggest()'s stats summed over specs. The recast median pools every spec's samples; from
+    evidence.json each spec carries only its own median, so there it is a median of medians."""
+    samples = [x for _spec, st in rows for x in st.recast_samples]
+    return {"applications": sum(st.applications for _s, st in rows),
+            "self": sum(st.self_ for _s, st in rows),
+            "single": sum(st.single for _s, st in rows),
+            "group": sum(st.group for _s, st in rows),
+            "recast": round(statistics.median(samples), 2) if samples else None}
+
+
+def _tank_only(rows, spec_map):
+    specs = {spec for spec, _st in rows if spec is not None}
+    return bool(specs) and all(spec_map.get(s, {}).get("role") == TANK_ROLE for s in specs)
+
+
+def _castable(pool, cast_candidates):
+    # type: (Iterable[int], Optional[Dict[int, List[int]]]) -> Set[int]
+    """The pool plus every aura a pooled cast lands (CastToAura): the pool holds cast ids."""
+    out = set(pool or ())
+    for cast, auras in (cast_candidates or {}).items():
+        if cast in out:
+            out.update(auras)
+    return out
+
+
+class _Ruled:
+    """Shared state of moves() and additions(): evidence per (class, id), the bar, the rules."""
+
+    def __init__(self, agg, spec_map, names, signals, pool, cast_candidates, th):
+        self.spec_map = spec_map
+        self.names = names
+        self.signals = signals or {}
+        self.castable = _castable(pool, cast_candidates)
+        self.th = th
+        self.rows = _class_rows(agg, "BUFF")
+        self.class_players = getattr(agg, "class_players", None) or {}
+
+    def total(self, klass, sid):
+        rows = self.rows[(klass, sid)]
+        players = self.class_players.get((klass, "BUFF", sid))
+        if players is None:
+            seen = set()  # type: Set[str]
+            for _spec, st in rows:
+                seen |= set(st.players)
+            players = len(seen)
+        return _Total(sum(st.applications for _s, st in rows), players, "")
+
+    def meets(self, total):
+        return total.apps >= self.th.min_applications and total.players >= self.th.min_players
+
+    def suggest(self, klass, sid):
+        rows = self.rows[(klass, sid)]
+        return suggest(_stats_of(rows), self.signals.get(sid, set()), sid in self.castable,
+                       _tank_only(rows, self.spec_map))
+
+    def evidence(self, klass, sid):
+        return {spec_name(self.spec_map, spec): (st.applications, len(st.players))
+                for spec, st in sorted(self.rows[(klass, sid)],
+                                       key=lambda r: -1 if r[0] is None else r[0])}
+
+    def name(self, klass, sid):
+        if self.names.get(sid):
+            return self.names[sid]
+        spellings = Counter()  # type: Counter
+        for _spec, st in self.rows[(klass, sid)]:
+            spellings.update(st.names)
+        return _top_name(spellings)
+
+
+def _spells_keys(shipped):
+    return {cat["key"] for cat in shipped}
+
+
+def _category_ids(shipped):
+    # type: (list) -> Dict[str, Set[int]]
+    """{category key: every id listed under any class} (the addon's filter ignores the class)."""
+    return {cat["key"]: {sid for ids in cat["classes"].values() for sid in ids} for cat in shipped}
+
+
+def _ordered(props, decisions):
+    ruled = decisions or {}
+    out = [p for p in props if proposal_key(p) not in ruled]
+    out.sort(key=lambda p: (-p.applications, p.category, p.klass, p.name.lower()))
+    return out
+
+
+def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
+          thresholds=None):
+    """Move proposals: a listed BUFF entry whose evidence suggests another category.
+
+    Only above-bar entries, only a suggestion of at least medium confidence, only into a category
+    the file has and that does not already list the id; the move itself is medium at most (the
+    spec). Debuff categories are never moved: log evidence only cross-checks them.
+    """
+    ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds())
+    listed_in = _category_ids(shipped)
+    out = []  # type: List[Proposal]
+    for cat in shipped:
+        if cat.get("aura", "BUFF") != "BUFF":
+            continue
+        for klass, ids in cat["classes"].items():
+            for sid in ids:
+                if (klass, sid) not in ruled.rows:
+                    continue
+                total = ruled.total(klass, sid)
+                if not ruled.meets(total):
+                    continue
+                target, rule, confidence, reason = ruled.suggest(klass, sid)
+                if (target is None or target == cat["key"] or target not in listed_in
+                        or sid in listed_in[target] or _CONFIDENCE_RANK[confidence] < 1):
+                    continue
+                out.append(Proposal(
+                    type="move", category=target, from_category=cat["key"], klass=klass,
+                    name=ruled.name(klass, sid), listed=[sid], proposed=[sid],
+                    evidence={sid: ruled.evidence(klass, sid)}, rule=rule, reason=reason,
+                    confidence="medium", applications=total.apps))
+    return _ordered(out, decisions)
+
+
+def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
+              thresholds=None):
+    """Addition proposals: above-bar player BUFFs in no `spells` category, with a category by rule.
+
+    An aura named like a spell the class already lists (in a BUFF category) is left to
+    corrections(), which proposes it as a replace or an add. No proposal when the rules give no
+    category, or one the file lacks.
+    """
+    ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds())
+    listed = set().union(*_category_ids(shipped).values()) if shipped else set()
+    keys = _spells_keys(shipped)
+    listed_names = set()  # type: Set[Tuple[str, str]]
+    for cat in shipped:
+        if cat.get("aura", "BUFF") == "BUFF":
+            for klass, ids in cat["classes"].items():
+                listed_names.update((klass, names[sid].lower()) for sid in ids if names.get(sid))
+    out = []  # type: List[Proposal]
+    for (klass, sid) in sorted(ruled.rows):
+        if sid in listed:
+            continue
+        name = ruled.name(klass, sid)
+        if not name or (klass, name.lower()) in listed_names:
+            continue
+        total = ruled.total(klass, sid)
+        if not ruled.meets(total):
+            continue
+        target, rule, confidence, reason = ruled.suggest(klass, sid)
+        if target is None or target not in keys:
+            continue
+        out.append(Proposal(
+            type="addition", category=target, from_category="", klass=klass, name=name, listed=[],
+            proposed=[sid], evidence={sid: ruled.evidence(klass, sid)}, rule=rule, reason=reason,
+            confidence=confidence, applications=total.apps))
+    return _ordered(out, decisions)

@@ -378,5 +378,252 @@ class CrowdControlCrossCheckTest(unittest.TestCase):
         self.assertNotIn("cc_unlisted", {f.kind for f in flags})
 
 
+
+# --- SID-6: category rules, moves and additions ------------------------------------------------------
+
+def shape(apps=100, self_=0, single=0, group=0, recast=None):
+    """A suggest() stats dict. Applications neither self nor single landed inside a burst."""
+    return {"applications": apps, "self": self_, "single": single, "group": group, "recast": recast}
+
+
+class SuggestRuleTest(unittest.TestCase):
+    """One test per rule; each checks category, rule id, confidence and the evidence in the reason."""
+
+    def check(self, got, category, rule, confidence, *words):
+        self.assertEqual(got[:3], (category, rule, confidence))
+        for w in words:
+            self.assertIn(w, got[3])
+
+    def test_r1_self_damage_reduction_is_defensive(self):
+        got = sid_propose.suggest(shape(self_=95, single=5), {"damage_taken_down"}, True, False)
+        self.check(got, "defensives", "R1", "high", "95%", "reduces damage taken", "Defensive cooldowns")
+
+    def test_r1_absorb_counts_too(self):
+        got = sid_propose.suggest(shape(self_=100), {"absorb"}, True, False)
+        self.check(got, "defensives", "R1", "high", "absorbs")
+
+    def test_r2_group_damage_reduction_is_a_raid_cooldown(self):
+        # 40 applications in 4 bursts of ten: 40 % of applications are group.
+        got = sid_propose.suggest(shape(self_=60, group=4), {"damage_taken_down"}, True, False)
+        self.check(got, "raidCDs", "R2", "high", "40%", "5+ players", "reduces damage taken",
+                   "Raid cooldowns")
+
+    def test_r2_takes_a_group_heal_before_r6(self):
+        got = sid_propose.suggest(shape(self_=10, single=50, group=4, recast=10.0),
+                                  {"periodic_heal"}, True, False)
+        self.check(got, "raidCDs", "R2", "high", "heals")
+
+    def test_r3_self_haste_with_a_long_recast_is_offensive(self):
+        got = sid_propose.suggest(shape(self_=95, single=5, recast=120.0), {"haste_up"}, True, False)
+        self.check(got, "offensiveCDs", "R3", "high", "95%", "haste", "120", "Offensive cooldowns")
+
+    def test_r3_needs_a_recast_of_a_minute(self):
+        got = sid_propose.suggest(shape(self_=95, single=5, recast=20.0), {"haste_up"}, True, False)
+        self.assertNotEqual(got[1], "R3")
+        got = sid_propose.suggest(shape(self_=95, single=5, recast=None), {"haste_up"}, True, False)
+        self.assertNotEqual(got[1], "R3")
+
+    def test_r4_speed_is_movement(self):
+        got = sid_propose.suggest(shape(self_=100, recast=30.0), {"speed_up"}, True, False)
+        self.check(got, "movement", "R4", "high", "movement speed", "Movement")
+
+    def test_r5_single_other_player_is_support(self):
+        got = sid_propose.suggest(shape(self_=20, single=80, recast=120.0), set(), True, False)
+        self.check(got, "support", "R5", "medium", "80%", "one other player", "EXTERNAL_DEFENSIVE",
+                   "Support")
+
+    def test_r6_periodic_heal_mostly_on_others_with_a_short_recast_is_healing(self):
+        got = sid_propose.suggest(shape(self_=40, single=60, recast=10.0), {"periodic_heal"}, True, False)
+        self.check(got, "healing", "R6", "medium", "heals over time", "60%", "10", "Healing")
+
+    def test_r6_needs_a_short_recast(self):
+        got = sid_propose.suggest(shape(self_=40, single=60, recast=45.0), {"periodic_heal"}, True, False)
+        self.assertNotEqual(got[1], "R6")
+
+    def test_r7_tank_only_self_short_recast_is_active_mitigation(self):
+        got = sid_propose.suggest(shape(self_=95, single=5, recast=15.0), set(), True, True)
+        self.check(got, "activeMitigation", "R7", "medium", "tank", "95%", "15", "Active mitigation")
+
+    def test_r7_needs_tank_only(self):
+        got = sid_propose.suggest(shape(self_=95, single=5, recast=15.0), set(), True, False)
+        self.assertNotEqual(got[1], "R7")
+
+    def test_r8_outside_the_player_pool_is_a_consumable(self):
+        got = sid_propose.suggest(shape(self_=100, recast=300.0), set(), False, False)
+        self.check(got, "consumables", "R8", "high", "player-castable", "Consumables")
+
+    def test_r9_nothing_else_is_utility(self):
+        got = sid_propose.suggest(shape(self_=50, single=50), set(), True, False)
+        self.check(got, "utility", "R9", "low", "Utility")
+
+    def test_r9_no_suggestion_without_self_or_single_evidence(self):
+        got = sid_propose.suggest(shape(self_=0, single=0, group=10), set(), True, False)
+        self.assertEqual(got[:3], (None, "R9", "low"))
+
+    def test_first_match_wins_r1_before_r3(self):
+        got = sid_propose.suggest(shape(self_=100, recast=180.0), {"damage_taken_down", "haste_up"},
+                                  True, False)
+        self.assertEqual(got[1], "R1")
+
+    def test_no_applications_is_no_suggestion(self):
+        self.assertIsNone(sid_propose.suggest(shape(apps=0), {"speed_up"}, True, False)[0])
+
+
+def rows_st(apps, players, self_=0, single=0, group=0, recast=None, tag="", name="X"):
+    st = stats(name, apps, players, tag=tag)
+    st.self_, st.single, st.group = self_, single, group
+    st.recast_samples = [] if recast is None else [recast]
+    return st
+
+
+RULE_SHIPPED = SHIPPED + [
+    {"key": k, "label": k, "aura": "BUFF", "classes": {}}
+    for k in ("activeMitigation", "raidCDs", "healing", "support", "movement", "utility", "consumables")
+]
+POOL = {871, 1719, 900001, 900100, 900101, 900200, 900300, 900400}
+
+
+class MovesTest(unittest.TestCase):
+    NAMES = {**NAMES, **{900100: "Rallying Cry"}}
+    SHIPPED = [{"key": "defensives", "label": "D", "aura": "BUFF", "classes": {"WARRIOR": [871, 900100]}},
+               {"key": "raidCDs", "label": "R", "aura": "BUFF", "classes": {}},
+               {"key": "hardCC", "label": "H", "aura": "DEBUFF", "classes": {"WARRIOR": [5246]}}]
+    SIGNALS = {871: {"damage_taken_down"}, 900100: {"damage_taken_down"}, 5246: set()}
+
+    def moves(self, rows, decisions=None):
+        return sid_propose.moves(agg_of(rows), SPEC_MAP, self.NAMES, self.SHIPPED, self.SIGNALS, POOL,
+                                 decisions=decisions or {})
+
+    GROUP_ROWS = [("WARRIOR", ARMS, "BUFF", 900100,
+                   rows_st(100, 5, self_=60, group=4, recast=180.0, name="Rallying Cry")),
+                  ("WARRIOR", PROT, "BUFF", 871, rows_st(50, 5, self_=50, recast=180.0, tag="p"))]
+
+    def test_a_group_defensive_moves_to_raid_cooldowns_at_medium(self):
+        props = self.moves(self.GROUP_ROWS)
+        self.assertEqual([(p.type, p.from_category, p.category, p.klass, p.listed, p.proposed, p.rule)
+                          for p in props],
+                         [("move", "defensives", "raidCDs", "WARRIOR", [900100], [900100], "R2")])
+        p = props[0]
+        self.assertEqual(p.confidence, "medium")  # R2 is high; a move is medium at most
+        self.assertEqual(p.name, "Rallying Cry")
+        self.assertEqual(p.evidence[900100], {"Arms": (100, 5)})
+        self.assertEqual(p.applications, 100)
+        self.assertIn("40%", p.reason)
+        self.assertEqual(sid_propose.proposal_key(p), "move|raidCDs|WARRIOR|rallying cry|900100")
+
+    def test_a_ruled_move_is_not_returned(self):
+        decisions = {"move|raidCDs|WARRIOR|rallying cry|900100": {"ruling": "reject"}}
+        self.assertEqual(self.moves(self.GROUP_ROWS, decisions), [])
+
+    def test_below_the_bar_never_moves(self):
+        rows = [("WARRIOR", ARMS, "BUFF", 900100,
+                 rows_st(19, 5, self_=11, group=1, recast=180.0, name="Rallying Cry"))]
+        self.assertEqual(self.moves(rows), [])
+
+    def test_a_low_confidence_suggestion_never_moves(self):
+        rows = [("WARRIOR", PROT, "BUFF", 871, rows_st(50, 5, self_=25, single=25))]
+        self.SIGNALS = {**self.SIGNALS, **{871: set()}}
+        self.assertEqual(self.moves(rows), [])
+
+    def test_debuff_categories_never_move(self):
+        rows = [("WARRIOR", ARMS, "DEBUFF", 5246, rows_st(100, 5, self_=0, single=100))]
+        self.assertEqual(self.moves(rows), [])
+
+    def test_already_in_the_suggested_category_is_no_move(self):
+        shipped = [dict(self.SHIPPED[0]),
+                   {"key": "raidCDs", "label": "R", "aura": "BUFF", "classes": {"PRIEST": [900100]}}]
+        props = sid_propose.moves(agg_of(self.GROUP_ROWS), SPEC_MAP, self.NAMES, shipped, self.SIGNALS,
+                                  POOL)
+        self.assertEqual(props, [])
+
+
+class AdditionsTest(unittest.TestCase):
+    NAMES = {**NAMES, **{900200: "Sprint", 900300: "Well Fed", 900400: "Spell Reflection"}}
+    SIGNALS = {900200: {"speed_up"}, 900300: set(), 900400: set(), 114052: {"haste_up"}}
+
+    def additions(self, rows, decisions=None, pool=POOL, candidates=None, shipped=None):
+        return sid_propose.additions(agg_of(rows), SPEC_MAP, self.NAMES, shipped or RULE_SHIPPED,
+                                     self.SIGNALS, pool, cast_candidates=candidates,
+                                     decisions=decisions or {})
+
+    SPRINT = ("WARRIOR", ARMS, "BUFF", 900200, rows_st(60, 4, self_=60, recast=60.0, name="Sprint"))
+
+    def test_an_above_bar_buff_in_no_category_is_an_addition(self):
+        props = self.additions([self.SPRINT])
+        self.assertEqual([(p.type, p.category, p.from_category, p.klass, p.name, p.listed, p.proposed,
+                           p.rule, p.confidence) for p in props],
+                         [("addition", "movement", "", "WARRIOR", "Sprint", [], [900200], "R4", "high")])
+        self.assertEqual(props[0].evidence, {900200: {"Arms": (60, 4)}})
+        self.assertIn("movement speed", props[0].reason)
+        self.assertEqual(sid_propose.proposal_key(props[0]), "addition|movement|WARRIOR|sprint|900200")
+
+    def test_below_the_bar_is_nothing(self):
+        rows = [("WARRIOR", ARMS, "BUFF", 900200, rows_st(19, 4, self_=19, name="Sprint"))]
+        self.assertEqual(self.additions(rows), [])
+
+    def test_a_ruled_addition_is_nothing(self):
+        decisions = {"addition|movement|WARRIOR|sprint|900200": {"ruling": "reject"}}
+        self.assertEqual(self.additions([self.SPRINT], decisions), [])
+
+    def test_a_listed_id_or_a_debuff_is_no_addition(self):
+        rows = [("WARRIOR", PROT, "BUFF", 871, rows_st(50, 5, self_=50, recast=180.0)),
+                ("WARRIOR", ARMS, "DEBUFF", 900200, rows_st(60, 4, self_=0, single=60, name="Sprint"))]
+        self.assertEqual(self.additions(rows), [])
+
+    def test_listed_under_another_class_is_no_addition(self):
+        # The addon's filter ignores the class key: an id listed under any class is in the category.
+        shipped = RULE_SHIPPED + [{"key": "x", "label": "x", "aura": "BUFF", "classes": {"ROGUE": [900200]}}]
+        self.assertEqual(self.additions([self.SPRINT], shipped=shipped), [])
+
+    def test_a_same_name_sibling_of_a_listed_spell_is_left_to_corrections(self):
+        # 114052 is Ascendance, and SHAMAN lists 114051: corrections proposes it, not additions.
+        rows = [("SHAMAN", RESTO, "BUFF", 114052, rows_st(212, 9, self_=212, recast=180.0,
+                                                          name="Ascendance"))]
+        self.assertEqual(self.additions(rows), [])
+
+    def test_outside_the_pool_is_a_consumable(self):
+        # No DB2 signal: a stat-raising potion would match R3 first (the table order), so R8 is
+        # pinned on a buff no earlier rule claims.
+        rows = [("WARRIOR", ARMS, "BUFF", 900300,
+                 rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
+        props = self.additions(rows, pool=set())
+        self.assertEqual([(p.category, p.rule) for p in props], [("consumables", "R8")])
+
+    def test_an_aura_whose_cast_is_in_the_pool_is_player_castable(self):
+        # Shield Block's aura (132404) is not in the pool; its cast (2565) is. CastToAura links them.
+        rows = [("WARRIOR", ARMS, "BUFF", 900300,
+                 rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
+        props = self.additions(rows, pool={2565}, candidates={2565: [900300]})
+        self.assertNotEqual([p.rule for p in props], ["R8"])
+
+    def test_tank_only_uses_the_spec_roles(self):
+        rows = [("WARRIOR", PROT, "BUFF", 900400,
+                 rows_st(80, 5, self_=78, single=2, recast=15.0, name="Spell Reflection"))]
+        self.assertEqual([(p.category, p.rule) for p in self.additions(rows)],
+                         [("activeMitigation", "R7")])
+        rows.append(("WARRIOR", ARMS, "BUFF", 900400,
+                     rows_st(20, 3, self_=20, recast=15.0, tag="a", name="Spell Reflection")))
+        self.assertNotIn("R7", [p.rule for p in self.additions(rows)])
+
+    def test_shapes_sum_across_specs(self):
+        # Neither spec alone is 30 % group; together they are 40 %.
+        rows = [("WARRIOR", ARMS, "BUFF", 900400,
+                 rows_st(50, 3, self_=50, name="Spell Reflection")),
+                ("WARRIOR", 72, "BUFF", 900400,
+                 rows_st(50, 3, self_=10, group=4, tag="f", name="Spell Reflection"))]
+        self.SIGNALS = {**self.SIGNALS, **{900400: {"absorb"}}}
+        props = self.additions(rows)
+        self.assertEqual([(p.category, p.rule) for p in props], [("raidCDs", "R2")])
+        self.assertEqual(props[0].evidence[900400], {"Arms": (50, 3), "Fury": (50, 3)})
+
+    def test_a_suggested_category_the_file_lacks_is_no_addition(self):
+        self.assertEqual(self.additions([self.SPRINT], shipped=SHIPPED), [])
+
+    def test_through_evidence_json(self):
+        props = sid_propose.additions(via_evidence_json(agg_of([self.SPRINT])), SPEC_MAP, self.NAMES,
+                                      RULE_SHIPPED, self.SIGNALS, POOL)
+        self.assertEqual([(p.category, p.rule) for p in props], [("movement", "R4")])
+
+
 if __name__ == "__main__":
     unittest.main()
