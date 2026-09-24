@@ -107,8 +107,20 @@ for _, row in ipairs(masterRows) do
     if row.path == TEST_MODE_PATH then
         -- Bound to the one switch, which refuses a start in combat, sends the visibility pass
         -- itself and re-syncs this checkbox (a refused start reads false again).
+        --
+        -- AND A START IS REFUSED WHILE THE ADDON IS DISABLED (slash-commands-§7, launcher-§2), the
+        -- same refusal `/am test` and the launcher's left click answer: the dispatcher's one line,
+        -- then a panel refresh so the checkbox reads off again. Turning it OFF stays allowed, since
+        -- stopping a preview is not a feature.
         row.get = function() return NS.State.testMode end
-        row.set = function(v) NS.Preview.SetTestMode(v) end
+        row.set = function(v)
+            if v and NS.IsDisabled() then
+                if NS.Slash and NS.Slash.DisabledLine then NS.Print(NS.Slash.DisabledLine()) end
+                if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+                return
+            end
+            NS.Preview.SetTestMode(v)
+        end
         row.default = false
         row.onChange = function() end
     end

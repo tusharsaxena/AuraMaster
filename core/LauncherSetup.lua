@@ -108,18 +108,19 @@ NS.Launcher = Launcher:New({
     -- LEFT-CLICK, AND ITS PRESENCE IS THE RUNG. The same host verb a bare `/am test` runs, so the
     -- launcher, the verb and the Test mode checkbox are three doors onto one switch.
     --
-    -- AND IT IS REFUSED WHILE THE ADDON IS DISABLED (launcher-§2, slash-commands-§7). Rung (b)'s
-    -- left-click drives the preview switch, which is a FEATURE, so a disabled addon answers the one
-    -- refusal line and DOES NOTHING ELSE -- in particular it writes no SavedVariables, which is the
-    -- failure the audit found on a button with no gate at all: a click that rewrites the stored tree
-    -- of an addon the player switched off. The line is the library's, fetched through the dispatcher
-    -- rather than re-spelled here. RIGHT-CLICK IS UNCHANGED in either state: `openSettings` above
-    -- opens the panel, which slash-commands-§7 lists among the things that SURVIVE a stand-down.
+    -- AND IT IS REFUSED WHILE THE ADDON IS DISABLED (launcher-§2, slash-commands-§7), by the
+    -- LIBRARY's gate rather than a hand-written one here: LibKa0s-Launcher-1.0 (minor 2) asks
+    -- `isEnabled` on every left click and, where it answers false, prints `disabledLine` and never
+    -- calls `onClick`. Rung (b)'s left-click drives the preview switch, which is a FEATURE, so a
+    -- disabled addon answers the one refusal line and DOES NOTHING ELSE -- in particular it writes
+    -- no SavedVariables. The line is the dispatcher's own, so the button, `/am test` and the Test
+    -- mode checkbox refuse in the same words. RIGHT-CLICK IS NEVER GATED: `openSettings` above opens
+    -- the panel, which slash-commands-§7 lists among the things that SURVIVE a stand-down.
+    isEnabled = function() return not (NS.IsDisabled and NS.IsDisabled()) end,
+    disabledLine = function()
+        return NS.Slash and NS.Slash.DisabledLine and NS.Slash.DisabledLine() or ""
+    end,
     onClick = function()
-        if NS.IsDisabled and NS.IsDisabled() then
-            if NS.Slash and NS.Slash.DisabledLine then NS.Print(NS.Slash.DisabledLine()) end
-            return
-        end
         if NS.Slash and NS.Slash.ToggleTestMode then NS.Slash.ToggleTestMode() end
     end,
 

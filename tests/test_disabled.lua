@@ -481,7 +481,8 @@ test("disabled: the launcher's left-click is refused and its right-click still o
     local obj = rec.objects.AuraMaster
     assertTrue(obj ~= nil and obj.OnClick ~= nil, "the launcher stays registered while disabled")
 
-    -- red under: drop the NS.IsDisabled guard in core/LauncherSetup.lua's onClick. Rung (b)'s left
+    -- red under: drop isEnabled/disabledLine from core/LauncherSetup.lua's descriptor, so the
+    -- library's left-click gate (LibKa0s-Launcher-1.0 minor 2) has nothing to ask. Rung (b)'s left
     -- button drives the preview switch, which is a feature — and a click with no gate at all
     -- rewrites the stored tree of an addon the player switched off.
     obj.OnClick(obj, "LeftButton")
@@ -496,6 +497,31 @@ test("disabled: the launcher's left-click is refused and its right-click still o
     -- among the things that survive a stand-down.
     obj.OnClick(obj, "RightButton")
     assertEqual(opened, 1, "right-click must still open the panel")
+end)
+
+test("disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line", function()
+    local NS, mocks = baseline()
+    local lines = capture(mocks)
+    disable(NS)
+    clear(lines)
+
+    -- The third door onto the switch. `/am test` and the launcher's left click already refuse, so
+    -- the checkbox (reached through the one write seam, as the panel reaches it) must too, or a tick
+    -- while stood down brings the addon back up in test mode.
+    -- red under: row.set bound straight to Preview.SetTestMode
+    NS.SetByPath("state.testMode", true)
+    assertFalse(NS.State.testMode, "a disabled panel tick started test mode")
+    local p = plain(lines)
+    assertEqual(#p, 1, "the tick answered " .. dump(p))
+    assertEqual(p[1], REFUSAL)
+    assertEqual(p[1], strip(NS.Slash.DisabledLine()), "the dispatcher's own line")
+
+    -- Turning it OFF is not a feature and stays allowed while disabled.
+    NS.State.testMode = true
+    clear(lines)
+    NS.SetByPath("state.testMode", false)
+    assertFalse(NS.State.testMode, "turning test mode off was refused while disabled")
+    assertFalse(said(plain(lines), REFUSAL), "turning it off printed the refusal: " .. dump(plain(lines)))
 end)
 
 -- ---------------------------------------------------------------------------

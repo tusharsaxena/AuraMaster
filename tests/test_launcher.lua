@@ -167,6 +167,32 @@ function()
     assertNil(rawget(NS2.db.profile, "testMode"), "nothing stored")
 end)
 
+test("launcher: the disabled gate is the library's — the descriptor carries isEnabled and disabledLine",
+function()
+    -- launcher-§2's disabled rung (b) is written once, in LibKa0s-Launcher-1.0 (minor 2), and fed by
+    -- the host's two descriptor fields. The host's onClick holds no gate of its own.
+    local f = assert(io.open("core/LauncherSetup.lua", "r"))
+    local src = f:read("*a")
+    f:close()
+    -- red under: the descriptor without the two fields (the hand gate inside onClick instead)
+    assertTrue(src:find("\n%s*isEnabled%s*=%s*function") ~= nil, "descriptor.isEnabled")
+    assertTrue(src:find("\n%s*disabledLine%s*=%s*function") ~= nil, "descriptor.disabledLine")
+    local body = src:match("\n%s*onClick%s*=%s*function%(%)(.-)\n%s*end,")
+    assertTrue(body ~= nil, "onClick found")
+    assertNil(body:find("IsDisabled", 1, true), "onClick reads NS.IsDisabled itself: " .. tostring(body))
+
+    -- And by behavior: disabled, the left click never reaches the host's action.
+    local NS2, rec = withBroker()
+    local reached = 0
+    NS2.Slash.ToggleTestMode = function() reached = reached + 1 end
+    NS2.SetByPath("enabled", false)
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    assertEqual(reached, 0, "a disabled left click reached ToggleTestMode")
+    NS2.SetByPath("enabled", true)
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    assertEqual(reached, 1, "an enabled left click reaches ToggleTestMode")
+end)
+
 test("launcher: the RIGHT click opens the settings panel, whatever the left button does", function()
     local NS2, rec = withBroker()
     local opened = 0

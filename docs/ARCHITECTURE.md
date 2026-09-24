@@ -379,6 +379,8 @@ do nothing else (slash-commands-§2). Everything else keeps working, the bare `/
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
 gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
 `liveVerbs` naming the live set as data; a verb added to `NS.COMMANDS` refuses by default.
+The Master controls **Test mode** checkbox and the launcher's left click refuse a start the same way,
+on the same line; turning test mode off stays allowed.
 
 Dispatch, the host verbs, the container-relative paths and the degraded path: `docs/slash-dispatch.md`.
 
@@ -402,7 +404,7 @@ from `OnInitialize` after `InitDB`, and is idempotent.
 | Registered as | `AuraMaster` — the **folder name**, on both registrations, because LibDBIcon keys the button's saved position by it |
 | Icon | `C.LOGO_ICON_PATH`, the same file `## IconTexture` names (launcher-§4) |
 | Label | `Ka0s Aura Master` — the **brand name in plain text** (launcher-§1). What a broker display prints in its row, beside the other ten Ka0s addons, so it is spelled the way they are. Deliberately not the TOC `## Title` (a Title may carry color escapes) and not the folder name |
-| Left click | **Rung (b)**: toggles test mode, by calling `NS.Slash.ToggleTestMode` — the same host verb a bare `/am test` runs, which switches it through `Preview.SetTestMode`. The launcher holds no copy of the mode |
+| Left click | **Rung (b)**: toggles test mode, by calling `NS.Slash.ToggleTestMode` — the same host verb a bare `/am test` runs, which switches it through `Preview.SetTestMode`. The launcher holds no copy of the mode. **While the addon is disabled** the left click is refused by `LibKa0s-Launcher-1.0`'s own gate (minor 2), fed by the descriptor's `isEnabled` and `disabledLine` (the dispatcher's refusal line); right-click is never gated |
 | Right click | Always `NS.OpenOptionsPanel()`. Neither button is reassignable and there is no setting for either |
 | Visibility | The **Minimap button** row, `global.minimap.hide`, in the global store (launcher-§3, `docs/settings-panel.md`) |
 | Survives every reset | A per-installation display preference, like the button's position, so **no** reset the panel runs may move it — neither *Reset all settings* nor the General page's **Defaults** button. The one veto is `vetoedFromPanelReset` in the options descriptor's `applyDefault`, the library's single reset seam. `/am reset global.minimap.hide` is deliberately **not** vetoed: that is the player naming this one row |

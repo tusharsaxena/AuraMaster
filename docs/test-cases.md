@@ -33,7 +33,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_launcher.lua (20)
+### test_launcher.lua (21)
 
 - launcher: one broker object, of type launcher, registered with LibDBIcon under the FOLDER name
 - launcher: Register is idempotent, so a second call builds no second button
@@ -41,6 +41,7 @@ badge and any count quoted in the docs must agree with it.
 - launcher: the icon file ships as an uncompressed 32-bit 128x128 TGA
 - launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)
 - launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses
+- launcher: the disabled gate is the library's — the descriptor carries isEnabled and disabledLine
 - launcher: the RIGHT click opens the settings panel, whatever the left button does
 - minimap row: composed, stored not session, default SHOWN, in its canonical position
 - minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
@@ -914,7 +915,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: any other key passes through and the pick continues
 - picker: a new pick waits for the buttons to be released again before it can pick
 
-### test_disabled.lua (17)
+### test_disabled.lua (18)
 
 - disabled: enabled, the addon registers a non-empty set
 - disabled: every registration the addon owns is UNREGISTERED, not gated
@@ -927,6 +928,7 @@ badge and any count quoted in the docs must agree with it.
 - disabled: every reserved verb answers, and the bare /am opens the panel
 - disabled: this addon's own feature verbs refuse on one line and reach no write seam
 - disabled: the launcher's left-click is refused and its right-click still opens the panel
+- disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line
 - disabled: re-enabling restores the registration set, from the settings as they are NOW
 - disabled: releasing one hold does not stand up an addon the other still holds down
 - disabled: a profile switch to an enabled profile stands the addon back up
@@ -1485,7 +1487,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 7 |
 | test_setups.lua | 14 |
-| test_launcher.lua | 20 |
+| test_launcher.lua | 21 |
 | test_database.lua | 91 |
 | test_schema.lua | 29 |
 | test_schema_paths.lua | 36 |
@@ -1509,7 +1511,7 @@ badge and any count quoted in the docs must agree with it.
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 14 |
-| test_disabled.lua | 17 |
+| test_disabled.lua | 18 |
 | test_slash.lua | 25 |
 | test_slash_verbs.lua | 42 |
 | test_bulklog.lua | 20 |
@@ -1537,4 +1539,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1311** |
+| **Total** | **1313** |

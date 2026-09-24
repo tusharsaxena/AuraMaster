@@ -327,7 +327,9 @@ page under the header.
     `/am list`, `/am get` and `/am set` still read and repair settings; `/am lock` answers
     `Ka0s Aura Master is disabled — enable it with /am enable` on one line; **left-clicking the
     minimap button** answers that same one line and changes nothing, while **right-clicking** still
-    opens the panel. Then `/reload` while disabled → it comes up disabled and still answers `/am`,
+    opens the panel; ticking **General → Master controls → Test mode** answers that same one line
+    and the box stays unticked (after `/am enable`, the box and the left click both toggle test
+    mode). Then `/reload` while disabled → it comes up disabled and still answers `/am`,
     and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
     `/dump AuraMasterAnchor1` is nil. `/am enable` draws every container at once. Switch to another
     profile while disabled and back, then `/am enable` → its containers draw.
