@@ -638,5 +638,23 @@ class AdditionsTest(unittest.TestCase):
         self.assertEqual([(p.category, p.rule) for p in props], [("movement", "R4")])
 
 
+
+class SuggestionsTest(unittest.TestCase):
+    """suggestions(): the rule-based category of every player BUFF, for the dictionary's columns."""
+
+    def test_every_buff_gets_its_rule_and_debuffs_none(self):
+        agg = agg_of([
+            ("WARRIOR", ARMS, "BUFF", 900200, rows_st(60, 4, self_=60, recast=60.0, name="Sprint")),
+            ("WARRIOR", ARMS, "BUFF", 871, rows_st(2, 1, self_=2, name="Shield Wall")),
+            ("SHAMAN", ELE, "DEBUFF", 188389, stats("Flame Shock", 50, 3)),
+        ])
+        got = sid_propose.suggestions(agg, SPEC_MAP, {900200: {"speed_up"},
+                                                      871: {"damage_taken_down"}}, POOL)
+        self.assertEqual(set(got), {("WARRIOR", 900200), ("WARRIOR", 871)})
+        self.assertEqual(got[("WARRIOR", 900200)][:3], ("movement", "R4", "high"))
+        # Below the evidence bar still gets a suggestion: the dictionary shows every aura.
+        self.assertEqual(got[("WARRIOR", 871)][:2], ("defensives", "R1"))
+        self.assertIn("reduces damage taken", got[("WARRIOR", 871)][3])
+
 if __name__ == "__main__":
     unittest.main()

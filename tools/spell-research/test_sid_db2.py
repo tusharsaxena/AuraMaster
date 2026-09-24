@@ -242,6 +242,25 @@ class PlayerPoolTest(unittest.TestCase):
         self.assertEqual(pool, {108271, 2825, 61295, 114050, 114051})
 
 
+class CcSpellIdsTest(unittest.TestCase):
+    """cc_spell_ids: the requested ids DB2 gives a crowd-control mechanic (research.BUCKET_MECHANICS)."""
+
+    def test_effect_or_spell_level_mechanic_at_base_difficulty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            write_csv(d / "SpellEffect.csv", "ID,DifficultyID,Effect,EffectMechanic,SpellID",
+                      ["1,0,6,12,853",      # Stunned at the effect level
+                       "2,0,6,0,339",
+                       "3,16,6,12,900001",  # a raid-difficulty row only: not base
+                       "4,0,6,15,900002",   # mechanic 15 (Bleeding) is not crowd control
+                       "5,0,6,12,900003"])  # CC, but not requested
+            write_csv(d / "SpellCategories.csv", "ID,DifficultyID,Mechanic,SpellID",
+                      ["1,0,7,339"])        # Rooted at the spell level
+            got = sid_db2.cc_spell_ids(d / "SpellEffect.csv", d / "SpellCategories.csv",
+                                       {853, 339, 900001, 900002, 188389})
+        self.assertEqual(got, {853, 339})
+
+
 class OpenDb2Test(unittest.TestCase):
     def fill(self, cache, build):
         for table, _why in research.TABLES:

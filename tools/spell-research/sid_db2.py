@@ -97,6 +97,28 @@ def aura_signals(spell_effect_csv: Path, spell_ids: Iterable[int]) -> Dict[int, 
     return out
 
 
+def cc_spell_ids(spell_effect_csv: Path, spell_categories_csv: Path,
+                 spell_ids: Iterable[int]) -> Set[int]:
+    """The requested spells DB2 gives a crowd-control mechanic, for the cc_unlisted cross-check.
+
+    research.py's own method: the base-difficulty mechanic at the effect level
+    (SpellEffect.EffectMechanic) or the spell level (SpellCategories.Mechanic), matched against
+    every mechanic in research.BUCKET_MECHANICS (hard and soft CC alike).
+    """
+    wanted = set(spell_ids)
+    cc = set()  # type: Set[int]
+    for mapping in research.BUCKET_MECHANICS.values():
+        cc |= set(mapping)
+    out: Set[int] = set()
+    for path, column in ((spell_effect_csv, "EffectMechanic"), (spell_categories_csv, "Mechanic")):
+        for row in research.iter_csv(path):
+            spell = research.as_int(row.get("SpellID"))
+            if (spell in wanted and research.base_difficulty(row)
+                    and research.as_int(row.get(column)) in cc):
+                out.add(spell)
+    return out
+
+
 # --- specs, names, player pool --------------------------------------------------------------------
 
 def load_spec_map(chr_spec_csv: Path) -> Dict[int, dict]:

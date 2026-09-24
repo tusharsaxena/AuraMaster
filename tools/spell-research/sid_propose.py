@@ -684,3 +684,10 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
             proposed=[sid], evidence={sid: ruled.evidence(klass, sid)}, rule=rule, reason=reason,
             confidence=confidence, applications=total.apps))
     return _ordered(out, decisions)
+
+
+def suggestions(agg, spec_map, signals, pool, cast_candidates=None):
+    """{(class, spell_id): suggest()'s (category or None, rule, confidence, reason)} for every
+    player BUFF, whatever its count: the dictionary's suggested-category column."""
+    ruled = _Ruled(agg, spec_map, {}, signals, pool, cast_candidates, Thresholds())
+    return {key: ruled.suggest(*key) for key in sorted(ruled.rows)}
