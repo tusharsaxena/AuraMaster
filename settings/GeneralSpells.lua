@@ -521,7 +521,7 @@ end
 -- because that is the row's identity in `/am list` and in the write log, not a thing to decorate.
 --
 -- The name is the player's own text, so the token is substituted through a FUNCTION replacement,
--- exactly as CATEGORY_MARKER's is: a `%` in a name is an ordinary character (defaults/Categories.lua
+-- exactly as CATEGORY_MARKER's is: a `%` in a name is an ordinary character (defaults/UserCategories.lua
 -- keeps it deliberately) and must never be read as a gsub directive.
 --
 -- IN MUTED GOLD, and the marker is its own locale string for the same reason the aura type's
@@ -848,7 +848,7 @@ StaticPopupDialogs["AURAMASTER_DELETE_CATEGORY"] = {
         local ok, why, failed = Cat.DeleteUserCategory(data)
         if not ok then return say(why) end
         -- A PARTIAL SWEEP IS SAID OUT LOUD. The act is deliberately recoverable rather than atomic
-        -- (defaults/Categories.lua's sweepUserKey), so a stored profile whose table is malformed
+        -- (defaults/UserCategories.lua's sweepUserKey), so a stored profile whose table is malformed
         -- costs only its own leaves -- but "deleted" then means slightly less than it says, and
         -- before this the difference reached NS.Debug and nothing else. It is never a failure of the
         -- delete, so the line still leads with what went; what is left is inert and named as such.

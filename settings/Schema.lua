@@ -195,7 +195,7 @@ end
 ---
 --- APPENDS, unless `beforePath` names a row already registered, in which case the new rows are
 --- INSERTED in front of it in order. The insert exists for issue #10's user categories
---- (defaults/Categories.lua's Cat.SyncUserCategories) and it is not a convenience: settings/
+--- (defaults/UserCategories.lua's Cat.SyncUserCategories) and it is not a convenience: settings/
 --- Filters.lua's renderCategories draws each grid in SCHEMA order, not in `Cat.For` order, and
 --- `weaponEnchants` and `uncategorized` share the `custom` grid with every spell-list row -- so a
 --- user category's row appended to the end of NS.Schema would draw BELOW Uncategorized and break

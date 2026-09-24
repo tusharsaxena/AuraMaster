@@ -77,6 +77,9 @@ core\Database.lua
 # LOAD-BEARING: Categories before Profile — the container template's category states are built
 # from the category lists.
 defaults\Categories.lua
+# LOAD-BEARING: UserCategories directly after Categories — it takes the NS.Categories table that
+# file creates as a file-scope upvalue.
+defaults\UserCategories.lua
 # Conventional: a generated lookup, read at add time by settings/GeneralSpells.lua.
 defaults\CastToAura.lua
 defaults\Profile.lua

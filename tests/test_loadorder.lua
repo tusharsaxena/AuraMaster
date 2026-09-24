@@ -46,6 +46,7 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/PerfSetup.lua", "core/AuraMaster.lua" },
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },
+        { "defaults/Categories.lua", "defaults/UserCategories.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },
         { "modules/TextTemplate.lua", "modules/Style_Text.lua" },

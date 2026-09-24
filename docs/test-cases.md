@@ -1192,7 +1192,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (47)
+### test_pages_filters.lua (48)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1204,6 +1204,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: the max-duration description says there is no minimum
 - filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
 - filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
+- filters: the Dispel Types grid draws no 4th cell, blank or otherwise
 - filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
@@ -1358,7 +1359,7 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (29)
+### test_defaults.lua (30)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
@@ -1385,6 +1386,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: a user category materializes among the spell lists, above Weapon enchants, Uncategorized still last
 - defaults: schema order tracks Cat.For order per aura type, user categories included
 - defaults: a user category's name is unrouted by design, and its description is not
+- defaults: a sync canonicalizes a stored user name in the store, not only at the draw
 - defaults: a corrupt user record is skipped and left on disk, never coerced
 - defaults: a record outside the reserved namespace cannot hijack a shipped category
 - defaults: a user category's name is shown as typed even when it is a shipped locale key
@@ -1533,7 +1535,7 @@ badge and any count quoted in the docs must agree with it.
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 67 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 47 |
+| test_pages_filters.lua | 48 |
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
@@ -1542,7 +1544,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 29 |
+| test_defaults.lua | 30 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 6 |
@@ -1553,4 +1555,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1323** |
+| **Total** | **1325** |

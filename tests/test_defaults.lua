@@ -50,7 +50,7 @@ end
 -- is no longer exempted here.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
 -- userCategories and userCategoryOrder (issue #10 checkpoint 3) join categorySpells here for the
--- same reason: they are maps the PLAYER fills, written by defaults/Categories.lua's create and
+-- same reason: they are maps the PLAYER fills, written by defaults/UserCategories.lua's create and
 -- rename acts rather than by a settings row, so there is no row for a row-shaped test to find.
 local PROFILE_CARVE_OUTS = set({ "categorySpells", "userCategories", "userCategoryOrder" })
 
@@ -401,7 +401,7 @@ end
 test("defaults: no shipped category key sits in the reserved 'user' namespace", function()
     -- red under: a category added to defaults/Categories.lua with a key like `userFavorites`. The
     -- prefix is what guarantees a generated user key can never shadow a shipped one, so it is a
-    -- promise about THIS file, not about the generator (defaults/Categories.lua's Cat.NewUserKey).
+    -- promise about THIS file, not about the generator (defaults/UserCategories.lua's Cat.NewUserKey).
     for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do
         for _, def in ipairs(list) do
             assertTrue(def.key:find("^user") == nil, def.key .. " takes the reserved user namespace")
@@ -412,7 +412,7 @@ end)
 test("defaults: SanitizeUserName strips the escape character and control characters, trims and caps", function()
     local s = Cat.SanitizeUserName
     -- red under: storing a name that can open a color, texture or hyperlink escape in the grid row
-    -- and the tooltip the label reaches (defaults/Categories.lua's note above the function).
+    -- and the tooltip the label reaches (defaults/UserCategories.lua's note above the function).
     assertEqual(s("|cffff0000Mine|r"), "cffff0000Miner")
     assertEqual(s("Big\tCDs"), "BigCDs")
     assertEqual(s("  Raid cooldowns  "), "Raid cooldowns")
@@ -546,6 +546,23 @@ test("defaults: a user category's name is unrouted by design, and its descriptio
     -- red under: building the description out of the name, which would drag the player's text into
     -- the one field the guard still checks
     assertTrue(defined[def.desc], "the description is a shipped string and stays routed: " .. def.desc)
+end)
+
+test("defaults: a sync canonicalizes a stored user name in the store, not only at the draw", function()
+    -- A characterization (AM-13, before Cat.SyncUserCategories was split into phases): the
+    -- materialize phase writes the sanitized name back to the record and stamps its key.
+    local NS2 = fresh()
+    local p = NS2.db.profile
+    p.userCategories = { userpadded = { name = "  Padded  ", auraType = "HARMFUL" } }
+    p.userCategoryOrder = { "userpadded" }
+    assertEqual(NS2.Categories.SyncUserCategories(p), 1)
+    -- red under: sanitizing only the definition's label, which leaves two versions of one name
+    assertEqual(p.userCategories.userpadded.name, "Padded", "the stored name is canonical")
+    assertEqual(p.userCategories.userpadded.key, "userpadded", "and the record carries its key")
+    assertEqual(NS2.Categories.Find("HARMFUL", "userpadded").label, "Padded")
+    assertEqual(NS2.FindSchemaRow("container.filter.categories.userpadded").label, "Padded")
+    assertEqual(NS2.CONTAINER_TEMPLATE.filter.categories.userpadded, "show")
+    assertEqual(NS2.ValidateSchema(), 0)
 end)
 
 test("defaults: a corrupt user record is skipped and left on disk, never coerced", function()

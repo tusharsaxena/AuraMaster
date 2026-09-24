@@ -126,7 +126,7 @@ end
 local STATE_DESC = L["Show: this category shows the aura, even if another of its categories says Hide. Hide: this category alone never shows it — a Show on another of its categories still can."]
 
 --- One category's Show/Hide row. EXPORTED because a user category's row (issue #10 checkpoint 3,
---- defaults/Categories.lua's Cat.SyncUserCategories) has to be built by this exact function rather
+--- defaults/UserCategories.lua's Cat.SyncUserCategories) has to be built by this exact function rather
 --- than by a second one written to look like it: the two would otherwise drift in `grid`,
 --- `skipRender`, `printLabel`, `auraTypes`, `values` or the shape of `desc`, and every one of those
 --- is read by code whose correctness rests on not being able to tell a user row from a shipped one.
@@ -487,6 +487,48 @@ local function bulkButtons(ctx, rows, gridKey)
           onClick = function() setGrid(rows, "hide", gridKey) end })
 end
 
+--- The Spell Categories grid (kind `custom`): heading, bulk buttons, the editable-list blurb, the
+--- grid with its extra column, hidePermanentEnchants under it and the two gated notes.
+local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
+    H.Section(ctx, g.heading)
+    bulkButtons(ctx, mine, g.key)
+    if customGridHasEditableList(mine) then
+        H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
+    end
+    H.ChoiceGrid(ctx, { rows = markedRows(mine), columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
+    if hideRow then
+        H.TextRow(ctx, WEAPON_ENCHANT_TIE)
+        H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
+    end
+    if auraType == "HARMFUL" and customGridHasEditableList(mine) then
+        H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
+    end
+    if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
+        H.TextRow(ctx, UNCATEGORIZED_NOTE)
+    end
+end
+
+--- The Blizzard Categories grid: heading, bulk buttons, then the grid with its extra column.
+local function renderBlizzardGrid(ctx, g, mine)
+    -- Its heading drawn here rather than by ChoiceGrid, so Show all / Hide all sit
+    -- between the heading and the grid (feedback #10). N-5: only this grid gets the
+    -- extra column.
+    H.Section(ctx, g.heading)
+    bulkButtons(ctx, mine, g.key)
+    H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
+end
+
+--- Every other grid: the grid alone, its heading drawn by ChoiceGrid.
+local function renderPlainGrid(ctx, g, mine)
+    -- Dispel Types and Who Cast It: no bulk buttons, and no extraColumn at all, so they
+    -- draw no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
+    -- every cell() call answer nil), which keeps their rows the width they always were.
+    H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
+end
+
+--- Grid key -> its drawer; a key not listed draws as `renderPlainGrid`.
+local GRID_RENDER = { custom = renderCustomGrid, blizzard = renderBlizzardGrid }
+
 --- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell Categories grid (kind
 --- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three
 --- separate gates, deliberately, because the three sentences stopped being true together the moment
@@ -508,36 +550,7 @@ local function renderCategories(ctx, cfg, rows)
             end
         end
         if mine[1] then
-            if g.key == "custom" then
-                H.Section(ctx, g.heading)
-                bulkButtons(ctx, mine, g.key)
-                if customGridHasEditableList(mine) then
-                    H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
-                end
-                H.ChoiceGrid(ctx, { rows = markedRows(mine), columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
-                if hideRow then
-                    H.TextRow(ctx, WEAPON_ENCHANT_TIE)
-                    H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
-                end
-                if auraType == "HARMFUL" and customGridHasEditableList(mine) then
-                    H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
-                end
-                if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
-                    H.TextRow(ctx, UNCATEGORIZED_NOTE)
-                end
-            elseif g.key == "blizzard" then
-                -- Its heading drawn here rather than by ChoiceGrid, so Show all / Hide all sit
-                -- between the heading and the grid (feedback #10). N-5: only this grid gets the
-                -- extra column.
-                H.Section(ctx, g.heading)
-                bulkButtons(ctx, mine, g.key)
-                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
-            else
-                -- Dispel Types and Who Cast It: no bulk buttons, and no extraColumn at all, so they
-                -- draw no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
-                -- every cell() call answer nil), which keeps their rows the width they always were.
-                H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
-            end
+            (GRID_RENDER[g.key] or renderPlainGrid)(ctx, g, mine, cfg, auraType, hideRow)
         end
     end
 end

@@ -277,6 +277,18 @@ test("filters: a debuff container's Categories tab is Blizzard Categories, Spell
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 
+test("filters: the Dispel Types grid draws no 4th cell, blank or otherwise", function()
+    local NS, _, _, ws = categories(2)
+    -- A characterization (AM-13, before renderCategories went table-dispatched): the plain grids
+    -- pass no extraColumn at all, so their lines stay three cells wide.
+    -- red under: the plain-grid branch passing CATEGORY_EXTRA and letting the cell answer nil
+    for _, key in ipairs({ "dispels", "magic", "curse", "disease", "poison", "bleed" }) do
+        local line = gridLine(NS, ws, key)
+        assertTrue(line ~= nil, key .. " draws a grid line")
+        assertNil(line[4], key .. " carries no extra cell")
+    end
+end)
+
 test("filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)", function()
     local NS, _, P = filters()
     local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")

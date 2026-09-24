@@ -75,11 +75,12 @@ the library is absent, exercised by `tests/degraded_env.lua`.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 47 authored Lua files under them: one locale, 16 core, 3 defaults, 14
+`settings/` (layout-§1) — 48 authored Lua files under them: one locale, 16 core, 4 defaults, 14
 modules and 13 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
-`defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states),
+`defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
+`defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
 `settings/GeneralSpells.lua` before `settings/General.lua`, which registers its rows after its own.
 The Settings tree's order is the TOC's own registration order (`N-2`): General, then Containers,
@@ -171,7 +172,7 @@ schema row addresses the registry itself; the row each member GETS is an ordinar
   that is minted once and never moves) and `userCategoryOrder` (declaration order, their only
   ordering source). The member's spell list is not part of the registry — it is
   `categorySpells[key]`, the same carve-out every other category's edits live in.
-- **Registry writer:** `defaults/Categories.lua`. `Cat.CreateUserCategory`, `Cat.RenameUserCategory`,
+- **Registry writer:** `defaults/UserCategories.lua`. `Cat.CreateUserCategory`, `Cat.RenameUserCategory`,
   `Cat.DeleteUserCategory` and `Cat.ForgetUnusableUserRecords` make every membership change, and
   `Cat.NewUserKey` mints the key for `Create` and has no other caller. Nothing else writes a record,
   and **nothing anywhere writes `rec.auraType` but `Create`**, which is what makes a category's aura

@@ -85,7 +85,7 @@ path it walks, for when something about it has to be changed or debugged.
    `NS.CategoryRow` in front of that aura type's Weapon enchants or Uncategorized row.
    `Cat.CreateUserCategory` then runs `Database.PrepareProfile`, so every stored container carries the
    key before the Filters grid is next drawn — without it the grid would light neither Show nor Hide.
-4. **Where to hook a change:** the acts and the sync are `defaults/Categories.lua`; the block that
+4. **Where to hook a change:** the acts and the sync are `defaults/UserCategories.lua`; the block that
    draws them is `settings/GeneralSpells.lua`; the row shape is `settings/Filters.lua`'s
    `NS.CategoryRow`. Never add a second labeling rule — every site that shows a category's name asks
    `Cat.LabelOf`, and the panel's `(yours)` marker (`NS.GeneralSpells.MarkedName`) wraps that answer.

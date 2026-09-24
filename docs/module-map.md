@@ -19,7 +19,8 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
    below may read at file load.
 3. **`core/`** — namespace, then the seams in the order their consumers need them (below).
 4. **`defaults/`** — `Categories.lua` before `Profile.lua`, because the container template's
-   `filter.categories` is built from the category lists.
+   `filter.categories` is built from the category lists, and `UserCategories.lua` directly after
+   `Categories.lua`, because it takes the `NS.Categories` table as a file-scope upvalue.
 5. **`modules/`** — `TextTemplate.lua` before `Style_Text.lua` (a file-scope upvalue), and
    `Style.lua` before `Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, which decorate
    `NS.Style` at file scope. The rest reach each other only at call time.
@@ -65,7 +66,8 @@ category collapse and the `weaponEnchants` category row — both over every stor
 
 | File | Responsibility |
 |---|---|
-| `defaults/Categories.lua` | The 17 buff and 19 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, `enchant` for `weaponEnchants`, and `uncategorized` for `uncategorized` and `uncategorizedDebuffs`), the starter spell lists — eleven `spells`-kind categories, nine buff and the two debuff ones issue #11 added (`hardCC`, `softCC`, derived by `tools/spell-research/research.py` against build 12.1.0.69875) — `For`/`Find`/`IsSpellCategory`/`AuraTypeOf`/`DefaultStates`/`EnchantOnlyStates`/`LabelOf` (THE labeling rule: a shipped label routed through `NS.L`, a player's own name never), and the user-category registry (issue #10): the records' load pass `SyncUserCategories`, the acts `CreateUserCategory`/`RenameUserCategory`/`DeleteUserCategory`/`ForgetUnusableUserRecords`, the key machinery `NewUserKey`/`IsUserKey`/`UserKeysInUse`/`UserCategoryOrder`/`HasUserRecord`, and the name rules `SanitizeUserName`/`CharCount`/`USER_NAME_MAX` |
+| `defaults/Categories.lua` | The 17 buff and 19 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, `enchant` for `weaponEnchants`, and `uncategorized` for `uncategorized` and `uncategorizedDebuffs`), the starter spell lists — eleven `spells`-kind categories, nine buff and the two debuff ones issue #11 added (`hardCC`, `softCC`, derived by `tools/spell-research/research.py` against build 12.1.0.69875) — and `For`/`Find`/`IsSpellCategory`/`AuraTypeOf`/`DefaultStates`/`StatesShowing`/`EnchantOnlyStates` |
+| `defaults/UserCategories.lua` | The user-category registry (issue #10), extending `NS.Categories`: the records' load pass `SyncUserCategories` (four phases: teardown, insertion anchors, materialize, register rows), the acts `CreateUserCategory`/`RenameUserCategory`/`DeleteUserCategory`/`ForgetUnusableUserRecords`, the key machinery `NewUserKey`/`IsUserKey`/`UserKeysInUse`/`UserCategoryOrder`/`HasUserRecord`/`UnusableUserRecords`, `LabelOf` (THE labeling rule: a shipped label routed through `NS.L`, a player's own name never) and the name rules `SanitizeUserName`/`CharCount`/`USER_NAME_MAX` |
 | `defaults/CastToAura.lua` | **Generated** by `tools/spell-research/research.py --emit-cast-aura` against build 12.1.0.69875, never hand-edited: `NS.CastToAura.REWRITE`, the 58 cast ids whose aura the DB2 data names outright, and `NS.CastToAura.CHOICES`, the 590 whose candidates are only name matches and are never resolved for the player. Ids the panel can say nothing useful about are left out |
 | `defaults/Profile.lua` | `NS.defaults` (profile and global), `NS.CONTAINER_TEMPLATE`, `NS.STARTER_CONTAINERS` — the one place a default is hardcoded |
 
@@ -169,7 +171,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_pages_profiles.lua` | `settings/Profiles.lua`: the table it registers, how often it opens the dialog and into what, when it opts out |
 | `test_envsetup.lua` | `core/EnvSetup.lua` on both arms (live and library-absent): which manifest `NS.Meta` reads, what `NS.Version` answers |
 | `test_poolsetup.lua` | `core/PoolSetup.lua`: the library seam, and a library-absent fallback that recycles exactly as the library does |
-| `test_defaults.lua` | `defaults/Profile.lua` and `defaults/Categories.lua`: the shape invariants the code relies on, the user-category namespace, key generator and name rules, and where a materialized definition sits in its list |
+| `test_defaults.lua` | `defaults/Profile.lua`, `defaults/Categories.lua` and `defaults/UserCategories.lua`: the shape invariants the code relies on, the user-category namespace, key generator and name rules, and where a materialized definition sits in its list |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |
 | `test_debuglogsetup.lua` | `core/DebugLogSetup.lua`: the descriptor this addon owns (flag, `[Init]` summary, chat acknowledgment, visibility refresh) and its stub |
 | `test_launcher.lua` | The launcher (launcher-§1..§5): one object registered twice under the folder name, the icon file's own TGA header, rung (b)'s left click driving the lock through the seam, right-click opening the panel, the Minimap button row's inverting get/set, the two reserved verbs, and three degraded hosts |

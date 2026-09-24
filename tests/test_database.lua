@@ -1365,7 +1365,7 @@ test("user categories: a new key collides with nothing shipped and with nothing 
     local NS = fresh()
     local mine = NS.Categories.CreateUserCategory("Mine", "HELPFUL")
     -- A key living in a profile this session is not running: exactly the case a per-profile counter
-    -- cannot see, and the reason the scan is account-wide (defaults/Categories.lua's Cat.NewUserKey).
+    -- cannot see, and the reason the scan is account-wide (defaults/UserCategories.lua's Cat.NewUserKey).
     NS.db.sv.profiles.Elsewhere = { userCategories = { userzzzzzzzzzz = { key = "userzzzzzzzzzz", name = "Theirs", auraType = "HARMFUL" } } }
     local taken = NS.Categories.UserKeysInUse(NS.db)
     assertTrue(taken[mine], "the active profile's key")
@@ -1428,7 +1428,7 @@ end)
 
 -- ── user categories: deletion and cleanup (issue #10 checkpoint 5) ─────────────────────────────
 --
--- Cleanup is EAGER, across every stored profile, and the argument is in defaults/Categories.lua
+-- Cleanup is EAGER, across every stored profile, and the argument is in defaults/UserCategories.lua
 -- above `forgetUserKey`. These cases are the other half of it: eager is only correct if it reaches
 -- the profiles nobody is logged into AND leaves everything that is not this category alone.
 

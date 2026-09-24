@@ -62,7 +62,7 @@ NS.defaults.profile = {
     --   userCategories    [key] = { key = key, name = "<the player's text>", auraType = "HELPFUL"|"HARMFUL" }
     --   userCategoryOrder { key, key, ... } -- declaration order, the ONLY ordering source
     -- There is no `spells` field on a record: a user category's list is `categorySpells[key]` like
-    -- every other category's edits, because defaults/Categories.lua materializes the definition with
+    -- every other category's edits, because defaults/UserCategories.lua materializes the definition with
     -- an empty starter list and modules/FilterCompiler.lua's FC.CategorySpells is already defined as
     -- starters plus edits. Both are MAPS THE PLAYER FILLS, so the template holds them empty and the
     -- backfill has nothing to fill into them (core/Database.lua's Backfill header); AceDB may drop
