@@ -138,8 +138,12 @@ test("loadorder: the offline perf runner and the degraded list derive from the T
     local perf = readFile("tests/perf.lua")
     assertTrue(perf:find("Loader.tocFiles", 1, true) ~= nil)
     assertTrue(perf:find("Loader.xmlFiles", 1, true) ~= nil)
-    assertTrue(readFile("tests/degraded_env.lua"):find("Loader.tocFiles", 1, true) ~= nil)
-    assertTrue(readFile("tests/fresh_env.lua"):find("Loader.tocFiles", 1, true) ~= nil)
+    -- The two environment builders load the runner's lists, which the case above pins to the TOC
+    -- and the XML; re-deriving them per build re-read both files for every environment.
+    assertTrue(readFile("tests/degraded_env.lua"):find("Loader.loadAll(T.loadedAddonFiles", 1, true) ~= nil)
+    local fresh = readFile("tests/fresh_env.lua")
+    assertTrue(fresh:find("Loader.loadAll(T.loadedLibFiles", 1, true) ~= nil)
+    assertTrue(fresh:find("Loader.loadAll(T.loadedAddonFiles", 1, true) ~= nil)
 end)
 
 test("loadorder: the library registered — NS.Perf is the real probe, not the stub", function()

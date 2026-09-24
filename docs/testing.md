@@ -106,7 +106,11 @@ out**, so every setup file takes its real degradation stub — the options stub 
 load, the slash stub has to answer, the perf stub has to carry every member the addon calls
 (testing-§8). Suites compare that environment against the live one; nothing hand-stubs a namespace
 member to test it. `tests/fresh_env.lua` builds an isolated, fully loaded environment for any suite
-that mutates state, so suite order cannot change a result.
+that mutates state, so suite order cannot change a result. Both builders reuse the runner's one
+`Loader`, mock builder and load lists (`AM_TEST.Loader`, `AM_TEST.buildMocks`,
+`AM_TEST.loadedLibFiles` / `loadedAddonFiles`): a build re-RUNS the cached chunks and never re-reads
+a file, which is what keeps the gate fast (testing-§14). A builder that `dofile`s its own
+`tests/_kit/loader.lua` gets an empty chunk cache and re-parses the whole tree per environment.
 
 ## The case inventory and the badge
 

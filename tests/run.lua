@@ -50,6 +50,10 @@ AM_TEST = Kit.expose{
     NS = NS, mocks = mocks,
     loadedAddonFiles = ADDON_FILES,
     loadedLibFiles   = LIB_FILES,
+    -- The one Loader and mock builder of this process, so every fresh environment reuses the
+    -- compiled-chunk cache and the parsed mock stack instead of re-reading both (tests/fresh_env.lua
+    -- says why). The builder hands back a fresh mock on every call (tests/_kit/mock_base.lua).
+    Loader = Loader, buildMocks = buildMocks,
 }
 
 -- Suites, in load-order-sensitive order. `dir` is explicit, so Kit.run asserts the inventory: a
