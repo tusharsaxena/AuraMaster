@@ -372,7 +372,7 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine a container is deleted without error
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 
-### test_containermanager.lua (51)
+### test_containermanager.lua (53)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -401,6 +401,8 @@ badge and any count quoted in the docs must agree with it.
 - manager: a profile copy in combat keeps a reused id parked until the deferred apply rebuilds it
 - manager: a parked id revived by a profile change in combat stays parked until the deferred apply
 - manager: an id a later Create reuses after a profile reset while auras are secret stays parked until the deferred apply
+- manager: an id that returns out of combat revives its destroyed instance
+- manager: an id a profile reset hands out again out of combat revives its destroyed instance
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 - manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
@@ -1401,9 +1403,9 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_prose.lua (18)
 
-- prose: no authored file carries a British spelling from localization-5's published list
-- prose: the gate carries localization-5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 148 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: no authored file carries a British spelling from localization-§5's published list
+- prose: the gate carries localization-§5's two lists whole, and nothing of its own
+- prose: the exclusions this repository declared suppressed 3 of 136 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1446,13 +1448,13 @@ badge and any count quoted in the docs must agree with it.
 ### test_eol.lua (2)
 
 - eol: every tracked file carries the terminator .gitattributes declares for it
-- eol: .gitattributes is line-endings-5's canonical body for this repo kind
+- eol: .gitattributes is line-endings-§5's canonical body for this repo kind
 
 ### test_layout_cap.lua (13)
 
 - layoutcap: every authored file over the 1500-line cap is named in the census
 - layoutcap: no census row outlives the breach it records
-- layoutcap: every over-cap census row carries one of layout-1's three terminal states
+- layoutcap: every over-cap census row carries one of layout-§1's three terminal states
 - layoutcap: the census and the exempt set agree about which paths were exempted
 - layoutcap: an empty census is written as a result rather than left standing empty
 - layoutcap self-test: the parser reads the census nested under the register, and stops there
@@ -1476,7 +1478,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 94 |
 | test_container.lua | 51 |
-| test_containermanager.lua | 51 |
+| test_containermanager.lua | 53 |
 | test_compat.lua | 26 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
@@ -1522,4 +1524,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1296** |
+| **Total** | **1298** |

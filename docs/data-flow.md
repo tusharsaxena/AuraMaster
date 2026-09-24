@@ -20,12 +20,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:533
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:552
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:249
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:268
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -194,8 +194,10 @@ first is revived in place and redrawn at once. A profile switch, copy or reset
 under `MustDefer` every kept or revived instance is parked, and `Container:ShouldShow` keeps it off
 until the deferred apply rebuilds it for the new data. One that leaves the registry on a profile
 change is marked `staleData` as it parks, so a Create or Duplicate that reuses its id before that
-apply (a reset rewinds the id counter) revives it still parked. Create and delete are refused in
-combat on every surface this addon owns. Reset all is not: it is Profiles → Reset Profile, so in
+apply (a reset rewinds the id counter) revives it still parked. A destroyed instance is kept dormant
+under its id, never dropped: an id that returns out of combat revives it, marked `staleData`, and the
+queued apply rebuilds it for the new data, so no second `AuraMasterAnchor<id>` is ever built.
+Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is Profiles → Reset Profile, so in
 combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open panel, because every
 banner lists containers.
 

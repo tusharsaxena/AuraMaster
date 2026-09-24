@@ -51,22 +51,30 @@ end
 -- TEARDOWN WAITS FOR COMBAT TO END. Destroying a container hides its anchor and the engine under it,
 -- which must not happen under lockdown. A container that leaves the registry while CM.MustDefer() is
 -- true is PARKED instead (disabled, nothing hidden) and kept here until the next FlushPending that
--- may touch frames destroys it. A parked id that comes back first is revived, not rebuilt: a second
--- AuraMasterAnchor<id> global would be a second frame for the same container.
+-- may touch frames destroys it. A parked id that comes back first is revived, not rebuilt.
 --
--- A PROFILE CHANGE REUSES IDS. A reset reseeds the starters from id 1, and a switch or copy lands on
--- a profile with its own id 1, so an instance kept (or revived) under its id may be built for a
--- different container than the one now stored there. Under CM.MustDefer() every such instance stays
--- parked — engine disabled, nothing hidden, and ContainerClass:ShouldShow keeps it off through every
--- visibility pass — until the deferred apply rebuilds it for the new data and unparks it. An
--- instance a profile change sends to `retiring` is marked `staleData` too: a reset rewinds the id
--- counter, so a later Create or Duplicate in the same window can hand its id out again.
+-- A DESTROYED INSTANCE IS KEPT, NOT DROPPED. Frames are never freed in WoW, so a destroyed container
+-- is kept DORMANT under its id (engine retired, anchor hidden and unpointed), and an id that comes
+-- back revives it rather than building a second anchor, engine, blocker, outline, handle and preview
+-- pool over a new AuraMasterAnchor<id> global. CreateFrame("Frame", "AuraMasterAnchor"..id) so runs
+-- once per id per session, however often the id leaves and returns.
+--
+-- A PROFILE CHANGE REUSES IDS. A reset reseeds the starters from id 1 and rewinds the id counter, and
+-- a switch or copy lands on a profile with its own id 1, so an instance kept (or revived) under its
+-- id may be built for a different container than the one now stored there. Under CM.MustDefer()
+-- every such instance stays parked — engine disabled, nothing hidden, and ContainerClass:ShouldShow
+-- keeps it off through every visibility pass — until the deferred apply rebuilds it for the new data
+-- and unparks it. An instance a profile change sends to `retiring` is marked `staleData` too: a
+-- reset rewinds the id counter, so a later Create or Duplicate in the same window can hand its id
+-- out again. A dormant instance always comes back `staleData`: whatever its id names now, the apply
+-- CM.Announce queues rebuilds it for that data, re-places and re-shows its anchor, and unparks it.
 local retiring = {}       -- [id] = parked instance
+local dormant = {}        -- [id] = destroyed instance, kept for its id's return
 
---- Put a parked instance back in the registry. It draws again at once (Park disabled its engine;
---- the apply that re-enables it is itself deferred) unless it must stay parked: `hold` (a profile
---- change under MustDefer) or `staleData` (a profile change parked it), when the data under its id
---- may be another container's.
+--- Put a parked or dormant instance back in the registry. It draws again at once (Park disabled its
+--- engine; the apply that re-enables it is itself deferred) unless it must stay parked: `hold` (a
+--- profile change under MustDefer) or `staleData` (a profile change parked it, or it was dormant),
+--- when the data under its id may be another container's.
 local function revive(id, inst, hold)
     retiring[id] = nil
     inst.parked = (hold or inst.staleData) or nil
@@ -74,13 +82,19 @@ local function revive(id, inst, hold)
     inst:ApplyVisibility()
 end
 
---- Keep, revive or build the instance for stored container `id`. `hold` parks a kept one.
+--- Keep, revive (a parked or a dormant one) or build the instance for stored container `id`. `hold`
+--- parks a kept one.
 local function follow(id, hold)
     local inst = CM.instances[id]
     if inst then
         if hold then inst:Park() end
     elseif retiring[id] then
         revive(id, retiring[id], hold)
+    elseif dormant[id] then
+        local d = dormant[id]
+        dormant[id] = nil
+        d.staleData = true
+        revive(id, d, hold)
     else
         CM.instances[id] = NS.Container.New(id)
     end
@@ -106,21 +120,26 @@ function CM.Sync(profileChanged)
                 retiring[id] = inst
             else
                 inst:Destroy()
+                dormant[id] = inst
             end
         end
     end
 end
 
---- Destroy every parked instance. Only called when frames may be touched.
+--- Destroy every parked instance and keep it dormant. Only called when frames may be touched.
 local function destroyParked()
     for id, inst in pairs(retiring) do
         inst:Destroy()
         retiring[id] = nil
+        dormant[id] = inst
     end
 end
 
 --- The parked instances, by id (a test seam; production never reads it).
 function CM.__retiring() return retiring end
+
+--- The destroyed instances kept for their id's return, by id (a test seam; production never reads it).
+function CM.__dormant() return dormant end
 
 --- The registry changed: follow it, re-apply everything, and tell whoever is listening.
 --- `profileChanged` is passed by NS.OnProfileChanged (see CM.Sync).
