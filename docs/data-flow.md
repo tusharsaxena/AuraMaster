@@ -15,7 +15,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:718
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:790
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)

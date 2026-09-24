@@ -160,7 +160,7 @@ badge and any count quoted in the docs must agree with it.
 - migrations: a step that raises leaves the stamp where it was and the addon loads
 - migrations: an inactive profile is migrated too
 
-### test_schema.lua (29)
+### test_schema.lua (33)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -191,6 +191,10 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write runs the normalize hook of every row under it, with the target id
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 - schema: a row's own refusal reason travels as the third return of SetByPath and CheckWrite
+- schema: with LibKa0s the bracket, registry and validator are the library's
+- schema: the library's registry follows an insert and a removal
+- schema: without LibKa0s the host arm still answers
+- schema: -0 over 0 is still no change under SameValue
 
 ### test_schema_paths.lua (36)
 
@@ -1045,7 +1049,7 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: a session row written in a bracket is counted through its own get
 - bulklog: each act starts its own count and its own error mark
 - bulklog: an error inside a nested bracket marks the outer act's one line
-- bulklog: Bulk.Run stays silent only when its act answers true, the profile reset's signal
+- bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
 ### test_optionssetup.lua (18)
@@ -1508,7 +1512,7 @@ badge and any count quoted in the docs must agree with it.
 | test_launcher.lua | 21 |
 | test_database.lua | 91 |
 | test_migrations.lua | 6 |
-| test_schema.lua | 29 |
+| test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 94 |
 | test_container.lua | 51 |
@@ -1558,4 +1562,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1328** |
+| **Total** | **1332** |

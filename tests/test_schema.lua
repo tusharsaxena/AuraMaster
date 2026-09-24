@@ -18,7 +18,8 @@ test("schema: the validator is falsifiable — an unresolvable path and a missin
     local NS2 = fresh()
     NS2.RegisterSchemaRows({
         { path = "container.bars.noSuchLeaf", page = "bars", group = "Size", type = "number" },
-        { path = "container.bars.width", page = "bars", type = "number" },
+        -- A path no shipped row has: LibKa0s-Schema's Validate would also count a duplicate (#21).
+        { path = "container.filter.whitelist", page = "bars", type = "number" },
     })
     assertEqual(NS2.ValidateSchema(), 2)
 end)
@@ -368,4 +369,90 @@ test("schema: a row's own refusal reason travels as the third return of SetByPat
     local okName, _, whyName = NS2.SetByPath("container.name", "   ", 1)
     assertFalse(okName)
     assertNil(whyName)
+end)
+
+-- ── LibKa0s-Schema-1.0 (issue #21): the primitives, registry, bracket and validator are the library's ─
+
+local loadDegraded = dofile("tests/degraded_env.lua")
+
+--- Record every [Set] line, rendered without its tag, with debug on.
+local function captureSet(NS2)
+    NS2.State.debug = true
+    local lines = {}
+    NS2.Debug = function(tag, fmt, ...)
+        if tag ~= "Set" then return end
+        lines[#lines + 1] = fmt:format(...)
+    end
+    return lines
+end
+
+test("schema: with LibKa0s the bracket, registry and validator are the library's", function()
+    local S = NS.SchemaRuntime
+    -- red under: the host copies on the live path
+    assertTrue(type(S) == "table", "the Schema instance is published")
+    assertTrue(NS.Bulk.Begin == S.BulkBegin, "Bulk.Begin is the instance's")
+    assertTrue(NS.Bulk.End == S.BulkEnd, "Bulk.End is the instance's")
+    assertTrue(NS.Bulk.Run == S.BulkRun, "Bulk.Run is the instance's")
+    assertTrue(S.AllRows() == NS.Schema, "the instance holds the live schema array by reference")
+    for _, row in ipairs(NS.Schema) do
+        assertTrue(NS.FindSchemaRow(row.path) == S.FindRow(row.path), "FindRow answers " .. row.path)
+        assertTrue(S.FindRow(row.path) == row, "and it answers the row itself: " .. row.path)
+    end
+    assertEqual(NS.ValidateSchema(), 0)
+    local errors, resolved, missing = S.Validate({ pages = { general = true } })
+    assertTrue(errors > 0 and resolved == 0 and missing == 0, "the instance's Validate is the one asked")
+end)
+
+test("schema: the library's registry follows an insert and a removal", function()
+    local NS2 = fresh()
+    local S = NS2.SchemaRuntime
+    NS2.RegisterSchemaRows({
+        { path = "container.bars.width.am15", page = "bars", group = "Size", type = "number" },
+    }, "container.bars.width")
+    local at
+    for i, row in ipairs(NS2.Schema) do
+        if row.path == "container.bars.width.am15" then at = i end
+    end
+    assertEqual(NS2.Schema[at + 1].path, "container.bars.width", "inserted in front of beforePath")
+    assertTrue(S.FindRow("container.bars.width.am15") == NS2.Schema[at])
+    assertEqual(NS2.UnregisterSchemaRows(function(row) return row.path == "container.bars.width.am15" end), 1)
+    -- red under: UnregisterSchemaRows not re-indexing the instance (the removed row still answers)
+    assertNil(NS2.FindSchemaRow("container.bars.width.am15"))
+    assertNil(S.FindRow("container.bars.width.am15"))
+end)
+
+test("schema: without LibKa0s the host arm still answers", function()
+    local NS2 = loadDegraded()
+    rawset(_G, "AuraMasterDB", nil)
+    NS2.addon:OnInitialize()
+    assertNil(NS2.SchemaRuntime, "no instance without the library")
+    assertTrue(NS2.SetByPath("alpha", 0.5))
+    assertEqual(NS2.db.profile.alpha, 0.5)
+    assertTrue(NS2.FindSchemaRow("alpha") ~= nil)
+    local lines = captureSet(NS2)
+    NS2.Bulk.Run("copy", "degraded", function()
+        NS2.SetByPath("alpha", 0.25)
+        NS2.SetByPath("alpha", 0.25)                    -- no change: not counted
+    end)
+    assertEqual(table.concat(lines, " | "), "copy degraded: 1 rows")
+    -- The act that reset the profile says so on `info`, the library's contract (JC-9).
+    NS2.Bulk.Run("reset", "whole", function(info)
+        NS2.SetByPath("alpha", 0.5)
+        info.profileReset = true
+    end)
+    assertEqual(#lines, 1, "a profile reset act logs no bulk line")
+    assertEqual(NS2.ValidateSchema(), 0)
+end)
+
+test("schema: -0 over 0 is still no change under SameValue", function()
+    local NS2 = fresh()
+    assertTrue(NS2.SchemaRuntime ~= nil, "the library's SameValue is the one in use")
+    local CM = NS2.ContainerManager
+    CM.ResetPositions()                                  -- settle: the stagger writes -0 for the first
+    local c1 = NS2.Database.FindContainer(1)
+    c1.position.y = 0                                    -- a plain 0 where the stagger writes -0
+    local lines = captureSet(NS2)
+    CM.ResetPositions()
+    -- red under: numbers compared by their tostring, where "-0" ~= "0"
+    assertEqual(table.concat(lines, " | "), "reset positions: 0 rows")
 end)

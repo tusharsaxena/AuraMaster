@@ -42,8 +42,34 @@ local _, NS = ...
 -- half of it moved. So a closed list of sections (SECTIONS below) can be written whole through this
 -- same seam: backfilled from the template, carve-outs normalized, every row under it validated, and
 -- only then stored — all of it or none — with one debug line and one CONFIG_CHANGED.
+--
+-- WHAT IS THE LIBRARY'S AND WHAT IS NOT (issue #21)
+-- -------------------------------------------------
+-- With LibKa0s present, LibKa0s-Schema-1.0 supplies the machinery under the rows: the path
+-- primitives (SplitPath, Read, Write), the registry (FindRow, AddRows, Reindex), the bulk bracket
+-- (BulkBegin, BulkEnd, BulkRun, BulkAdd, InBulk), SameValue as the tally's change test, and Validate.
+-- The WRITE SEAM stays this file's: NS.SetByPath, not the library's Set, because its front branches
+-- (the minimap inversion, the spell-set carve-outs, the all-or-nothing whole-section writes, and
+-- NS.CheckWrite's dry run that mirrors them) have no row-shaped equivalent there, and a library-less
+-- build keeps this seam anyway (docs/schema.md, "Write seam: why AuraMaster keeps SetByPath"). The
+-- host bodies of everything the library now supplies stay below as the library-absent arm, which
+-- tests/degraded_env.lua exercises.
 
 NS.Schema = NS.Schema or {}
+
+local SchemaLib = LibStub and LibStub("LibKa0s-Schema-1.0", true)
+
+-- ONE instance per addon, over the live NS.Schema array by reference (both the Options and Slash
+-- descriptors hold that same array). No resolveRoot and no announce: nothing here calls S.Set or
+-- S.Get. `debug` and `print` are read at call time, so a sink installed later (or a test's capture)
+-- is the one that speaks.
+local S = SchemaLib and SchemaLib:New({
+    rows  = NS.Schema,
+    debug = function(...) if NS.Debug then return NS.Debug(...) end end,
+    print = function(line) if NS.Print then NS.Print(line) end end,
+})
+-- The instance, or nil in a library-less build: a test seam (tests/test_schema.lua).
+NS.SchemaRuntime = S
 
 local CONTAINER = "container"
 local L = NS.L
@@ -90,11 +116,14 @@ end
 -- Path plumbing
 -- ---------------------------------------------------------------------------
 
+-- The host bodies below are the library-absent arm; with LibKa0s the three locals after them are
+-- the library's SplitPath, Read and Write (Write takes the value before `first`, hence the shim).
+--
 -- Memoized: the set of paths is closed (the schema's own plus whatever the CLI is handed), while a
 -- slider drag re-resolves one path many times a second.
 local splitCache = {}
 
-local function splitPath(path)
+local function hostSplitPath(path)
     local parts = splitCache[path]
     if parts then return parts end
     parts = {}
@@ -105,7 +134,7 @@ local function splitPath(path)
     return parts
 end
 
-local function readFrom(root, parts, first)
+local function hostReadFrom(root, parts, first)
     local node = root
     local last = #parts
     for i = first, last do
@@ -115,7 +144,7 @@ local function readFrom(root, parts, first)
     return node
 end
 
-local function writeInto(root, parts, first, value)
+local function hostWriteInto(root, parts, first, value)
     local node = root
     local last = #parts - 1
     for i = first, last do
@@ -124,6 +153,14 @@ local function writeInto(root, parts, first, value)
         node = node[key]
     end
     node[parts[#parts]] = value
+end
+
+local splitPath = SchemaLib and SchemaLib.SplitPath or hostSplitPath
+local readFrom = SchemaLib and SchemaLib.Read or hostReadFrom
+local writeInto = hostWriteInto
+if SchemaLib then
+    local libWrite = SchemaLib.Write
+    writeInto = function(root, parts, first, value) return libWrite(root, parts, value, first) end
 end
 
 local function copy(v) return NS.Database.DeepCopy(v) end
@@ -185,16 +222,33 @@ end
 -- The index and registration
 -- ---------------------------------------------------------------------------
 
+-- The host index is the library-absent arm; with LibKa0s the instance's FindRow and Reindex answer.
 local index = {}
 
-local function reindex()
+local function hostReindex()
     for k in pairs(index) do index[k] = nil end
     for _, row in ipairs(NS.Schema) do index[row.path] = row end
 end
 
-function NS.FindSchemaRow(path)
+local function hostFindRow(path)
     if type(path) ~= "string" then return nil end
     return index[path]
+end
+
+local reindex = S and S.Reindex or hostReindex
+local findRow = S and S.FindRow or hostFindRow
+
+function NS.FindSchemaRow(path)
+    return findRow(path)
+end
+
+--- The position of the row at `path` in NS.Schema, or nil when no row has it.
+local function indexOf(path)
+    if type(path) ~= "string" then return nil end
+    for i, row in ipairs(NS.Schema) do
+        if row.path == path then return i end
+    end
+    return nil
 end
 
 --- Add a page's rows. Every non-session row's `default` is stamped from defaults/Profile.lua here,
@@ -215,20 +269,18 @@ end
 --- @param beforePath string|nil
 function NS.RegisterSchemaRows(rows, beforePath)
     if type(rows) ~= "table" then return end
-    local at
-    if type(beforePath) == "string" then
-        for i, row in ipairs(NS.Schema) do
-            if row.path == beforePath then
-                at = i
-                break
-            end
-        end
-    end
+    local at = indexOf(beforePath)
     for _, row in ipairs(rows) do
         if not row.sessionOnly and type(row.path) == "string" then
             local d = NS.DefaultFor(row.path)
             if d ~= nil then row.default = d end
         end
+    end
+    if S then
+        S.AddRows(rows, at)   -- `at` nil appends; AddRows re-indexes
+        return
+    end
+    for _, row in ipairs(rows) do
         if at then
             table.insert(NS.Schema, at, row)
             at = at + 1
@@ -309,7 +361,7 @@ end
 function NS.GetSetting(path, containerId)
     if type(path) ~= "string" then return nil end
     if path == MINIMAP_PATH then return minimapShown() end
-    local row = index[path]
+    local row = findRow(path)
     if row and row.sessionOnly then
         if row.get then return row.get() end
         return nil
@@ -393,10 +445,14 @@ local CARVE_OUTS = {
 -- to 0. An act an error stopped still logs its one line, ending " (stopped by an error)". If any
 -- level reports `info.profileReset`, AceDB replaced the profile whole and NS.OnProfileReset
 -- (core/AuraMaster.lua) logs it, so the bracket logs nothing.
+--
+-- With LibKa0s, NS.Bulk is the Schema instance's own BulkBegin / BulkEnd / BulkRun, the tally is its
+-- BulkAdd and the mute test its InBulk: the same contract, one copy of it in the collection. The host
+-- bracket below is the library-absent arm, and it keeps the library's shape exactly, `info` included:
+-- a Run act that reset the profile sets `info.profileReset = true`.
 local bulk = { depth = 0, rows = 0, profileReset = false, failed = false }
 
 local Bulk = {}
-NS.Bulk = Bulk
 
 --- Open a bracket. The Options and Slash descriptors' `bulkBegin`.
 function Bulk.Begin()
@@ -417,21 +473,36 @@ function Bulk.End(act, scope, _, err, info)
     end
 end
 
---- Run `fn` as one bulk act under the host's own bracket (CopyFrom, ResetPositions, the degraded
---- Reset all). A begun bracket always closes, so the mute cannot stick: `fn` runs under pcall, End
---- runs once, then an error is re-raised unchanged. `fn` returns true when it reset the profile.
+--- Run `fn(info)` as one bulk act under the bracket (CopyFrom, ResetPositions, the degraded Reset
+--- all). A begun bracket always closes, so the mute cannot stick: `fn` runs under pcall, End runs
+--- once, then an error is re-raised unchanged. `fn` sets `info.profileReset = true` when it reset
+--- the profile (the library's BulkRun contract); what it returns is ignored.
 function Bulk.Run(act, scope, fn)
     local info = { profileReset = false }
     Bulk.Begin()
-    local ok, err = pcall(function() info.profileReset = fn() == true end)
-    Bulk.End(act, scope, nil, err, info)
+    local ok, err = pcall(fn, info)
+    local mark = nil
+    if not ok then mark = err == nil and true or err end
+    Bulk.End(act, scope, nil, mark, info)
     if not ok then error(err, 0) end
 end
 
+NS.Bulk = S and { Begin = S.BulkBegin, End = S.BulkEnd, Run = S.BulkRun } or Bulk
+
+--- Whether a bulk bracket is open: the seam's mute test and its cue to tally.
+local inBulk = S and S.InBulk or function() return bulk.depth > 0 end
+
+-- The library's stored-value equality, when present: `==` first, so -0 over 0 is no change, then
+-- tables by content. The spell-id sets compare correctly by content because normalizeIdSet has
+-- integer-keyed them before any write compares them.
+local SameValue = SchemaLib and SchemaLib.SameValue
+
 --- Whether storing `new` over `old` changes the stored value. This is the bracket's tally test.
 --- Numbers compare by `==`, so -0 over 0 is no change; Signature's tostring would call them
---- different, and CM.ResetPositions' stagger writes -0 for the first container.
+--- different, and CM.ResetPositions' stagger writes -0 for the first container. With LibKa0s it is
+--- SameValue's answer; the Signature compare below is the library-absent arm.
 local function changes(old, new)
+    if SameValue then return not SameValue(old, new) end
     if type(old) == "number" and type(new) == "number" then return old ~= new end
     local Sig = NS.FilterCompiler.Signature
     return Sig(old) ~= Sig(new)
@@ -444,10 +515,11 @@ local function rowChanges(row, root, parts, first, value)
 end
 
 --- Inside a bracket, add `n` changed rows to the tally. Called where a write stores, so the tally
---- is what was stored. Outside a bracket it does nothing.
-local function tally(n)
+--- is what was stored. Outside a bracket it does nothing. With LibKa0s it is the instance's BulkAdd.
+local function hostTally(n)
     if bulk.depth > 0 then bulk.rows = bulk.rows + n end
 end
+local tally = S and S.BulkAdd or hostTally
 
 -- ---------------------------------------------------------------------------
 -- The write seam
@@ -460,7 +532,7 @@ end
 local function announceWrite(section, containerId, path, value, sessionOnly, logged)
     -- Logged ONCE, here, with the format deferred into the sink (debug-logging-§10). Inside a bulk
     -- bracket it is muted: the write was tallied where it stored, and the act logs one line.
-    if NS.Debug and not (logged or bulk.depth > 0) then NS.Debug("Set", "%s = %s", path, value) end
+    if NS.Debug and not (logged or inBulk()) then NS.Debug("Set", "%s = %s", path, value) end
     -- The ONE sender of CONFIG_CHANGED (architecture-§4). `containerId` is nil for a global row;
     -- `path` lets modules/ContainerManager.lua read the row's `effect` and skip an apply it needs not.
     if NS.bus and not sessionOnly then
@@ -487,9 +559,9 @@ end
 local function writeMinimap(value)
     local t = minimapStore()
     if not t then return false, L["Setting not found: %s"]:format(MINIMAP_PATH) end
-    local row = index[MINIMAP_PATH]
+    local row = findRow(MINIMAP_PATH)
     value = not not value
-    local changed = bulk.depth > 0 and t.hide ~= (not value)
+    local changed = inBulk() and t.hide ~= (not value)
     t.hide = not value
     if NS.Launcher then NS.Launcher:SetShown(value) end
     if changed then tally(1) end
@@ -505,7 +577,7 @@ local function writeCarveOut(path, value, containerId)
     local parts = splitPath(path)
     local root, first, id = resolveRoot(parts, containerId)
     if not root then return false, NO_CONTAINER end
-    local changed = bulk.depth > 0 and changes(readFrom(root, parts, first), v)
+    local changed = inBulk() and changes(readFrom(root, parts, first), v)
     writeInto(root, parts, first, v)
     if changed then tally(1) end
     announceWrite("filters", id, path, v, false, false)
@@ -621,7 +693,7 @@ end
 --- The section's one [Set] line, built only when the debug flag is on (debug-logging-§4, §9).
 --- Inside a bulk bracket it logs nothing: writeSection tallied the write where it stored.
 local function logSection(path, v)
-    if bulk.depth > 0 then return end
+    if inBulk() then return end
     if NS.State and NS.State.debug and NS.Debug then
         NS.Debug("Set", "%s = %s", path, renderSection(v))
     end
@@ -652,7 +724,7 @@ local function writeSection(path, value, containerId, sec)
     normalizeSectionRows(path, v, depth, id)
     local old = readFrom(root, parts, first)
     writeInto(root, parts, first, v)
-    if bulk.depth > 0 then tally(countSectionChanges(path, old, v, depth)) end
+    if inBulk() then tally(countSectionChanges(path, old, v, depth)) end
     fireSectionChanges(path, old, v, depth, id)
     logSection(path, v)
     announceWrite(sec, id, path, nil, false, true)
@@ -690,7 +762,7 @@ local function writeRow(row, path, value, containerId)
     end
     if parts and not root then return false, NO_CONTAINER end
     if row.normalize then value = row.normalize(value, id) end
-    local changed = bulk.depth > 0 and rowChanges(row, root, parts, first, value)
+    local changed = inBulk() and rowChanges(row, root, parts, first, value)
     local old = previousValue(row, root, parts, first)
     if row.sessionOnly then
         -- No database write by definition; the row's own set() IS its storage.
@@ -722,7 +794,7 @@ function NS.SetByPath(path, value, containerId)
     local sec = SECTIONS[path]
     if sec then return writeSection(path, value, containerId, sec) end
 
-    local row = index[path]
+    local row = findRow(path)
     if not row then return false, L["Setting not found: %s"]:format(path) end
     local ok, err, id, stored, old = writeRow(row, path, value, containerId)
     if not ok then return false, err, id end
@@ -744,7 +816,7 @@ end
 --- the write targets, as writeRow hands it), and (for a stored row) the container exists. A row's
 --- normalize never refuses, so it is not run.
 local function checkRow(path, value, containerId)
-    local row = index[path]
+    local row = findRow(path)
     if not row then return false, L["Setting not found: %s"]:format(path) end
     local root, id
     if not row.sessionOnly then
@@ -815,8 +887,26 @@ local VALID_PAGES = {
 }
 local VALID_TYPES = { bool = true, number = true, string = true, color = true }
 
+--- Where a row's path resolves in the defaults, for the library's Validate: the container template
+--- for a `container.` row, the global defaults for a `global.` row, the profile defaults otherwise.
+--- The minimap row answers through NS.DefaultFor, because its path is a name and not the stored key
+--- (the stored key is LibDBIcon's inverted `hide`), so it is handed a one-key root holding the
+--- inverted default, read at the path's last segment.
+local function defaultsRoot(parts, row)
+    if row.path == MINIMAP_PATH then
+        local last = #parts
+        return { [parts[last]] = NS.DefaultFor(MINIMAP_PATH) }, last
+    end
+    local defaults = NS.defaults
+    if parts[1] == CONTAINER then return NS.CONTAINER_TEMPLATE, 2 end
+    if parts[1] == "global" then return defaults, 1 end
+    return defaults and defaults.profile, 1
+end
+
 --- Prove the schema against the defaults. Returns the number of failing rows — 0 on a healthy
---- load, which is what the headless suite asserts.
+--- load, which is what the headless suite asserts. With LibKa0s it is the instance's Validate (its
+--- shape errors plus its unresolved paths, a duplicate path included); the loop below is the
+--- library-absent arm.
 ---
 --- Three checks per row: a known `page` and `type`, a `group` (a row without one belongs to no tab,
 --- options-ui-§13), and — unless session-only — a `path` that resolves against the container
@@ -824,6 +914,12 @@ local VALID_TYPES = { bool = true, number = true, string = true, color = true }
 --- on a key nothing reads, and nothing anywhere would say so.
 --- @return number
 function NS.ValidateSchema()
+    if S then
+        local errors, _, missing = S.Validate({
+            types = VALID_TYPES, pages = VALID_PAGES, defaultsRoot = defaultsRoot,
+        })
+        return errors + missing
+    end
     local out = NS.Print
     local failed = 0
     local function fail(row, why)

@@ -211,7 +211,7 @@ A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`
 `global` — which **one** row is, `global.minimap.shown` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:139`). `NS.DefaultFor(path)` reads the
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:176`). `NS.DefaultFor(path)` reads the
 same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
@@ -301,8 +301,10 @@ rewrites a set of rows wholesale. That covers a page's Defaults and Reset all (t
 `ContainerManager.CopyFrom` and `ContainerManager.ResetPositions` (`NS.Bulk.Run`). While a bracket
 is open, the seam's two log sites, the per-write `[Set]` line and the section line, are muted. Each
 write instead tallies the rows it changed at the moment it stores them, before any `onChange` runs,
-so the count is what was stored even when an `onChange` raises. Numbers compare by `==`, so a `-0`
-over a `0` is no change; anything else compares by `FilterCompiler.Signature`. A section write
+so the count is what was stored even when an `onChange` raises. The change test is
+LibKa0s-Schema-1.0's `SameValue`: `==` first, so a `-0` over a `0` is no change, then tables by
+content. A library-less build compares numbers by `==` and anything else by
+`FilterCompiler.Signature`. A section write
 counts each row and carve-out under it that changed. The act then logs one
 `[Set] <act> <scope>: N rows` line, such as `[Set] reset bars: 2 rows`,
 `[Set] copy container 2→1 (all): 14 rows` or `[Set] reset positions: 3 rows`. N is the rows actually
@@ -313,7 +315,34 @@ counter, so a bracket inside another sums into it and the act logs once. An act 
 end, such as `[Set] reset bars: 1 rows (stopped by an error)`. The mute is then released and the
 error re-raised unchanged. When any level reports `info.profileReset`, the bracket logs nothing and
 `NS.OnProfileReset` logs the reset as `[Set] reset profile '<name>' to defaults`, with no count
-(`docs/profiles.md` says why).
+(`docs/profiles.md` says why). An act run through `NS.Bulk.Run(act, scope, fn)` reports that it
+reset the profile by setting `info.profileReset = true` on the `info` table `fn` is handed; what `fn`
+returns is ignored.
+
+With LibKa0s present the bracket is LibKa0s-Schema-1.0's: `NS.Bulk.Begin`, `End` and `Run` are the
+Schema instance's `BulkBegin`, `BulkEnd` and `BulkRun`, the seam tallies through its `BulkAdd` and
+tests its `InBulk`. The same instance supplies the path primitives (`SplitPath`, `Read`, `Write`), the
+row index behind `NS.FindSchemaRow` (`FindRow`, re-indexed by `AddRows` and `Reindex`), and the shape
+check behind `NS.ValidateSchema` (`Validate`, its shape errors plus its unresolved paths). The
+library's registry keeps the FIRST row registered on a duplicate path, and its `Validate` reports the
+duplicate. The instance is published as `NS.SchemaRuntime` for the tests. The host bodies of all of
+it stay in `settings/Schema.lua` as the library-absent arm, which `tests/degraded_env.lua` exercises.
+
+### Write seam: why AuraMaster keeps SetByPath
+
+Issue #21 set two triggers for re-evaluating the write seam: LibKa0s-Schema-1.0 gaining the
+post-validate `row.normalize` hook, and a second addon needing it. Both fired (Schema minor 2,
+ConsumableMaster). The decision is to keep `NS.SetByPath` and **not** adopt the library's `S.Set`.
+
+- `NS.SetByPath` has front branches with no row-shaped equivalent in `S.Set`: the minimap row's
+  inversion onto LibDBIcon's `hide` in the global store, the spell-set carve-outs' whole-set
+  normalizers, and the all-or-nothing whole-section writes. `NS.CheckWrite` is a dry run that must
+  mirror all three.
+- A library-less build keeps the host seam in any case. Adopting `S.Set` would give the live and the
+  degraded build two different write paths for the same rows.
+
+**Re-check trigger:** LibKa0s-Schema gains a resolve hook for container-relative paths plus section
+writes, or the standard makes Set adoption a requirement.
 
 `NS.CheckWrite(path, value, id)` answers whether `NS.SetByPath` would store a value. It runs the same
 checks on a copy (a row's `validate`, a carve-out's normalizer, or a section's backfill, carve-outs

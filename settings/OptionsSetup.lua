@@ -281,16 +281,17 @@ if not lib then
     -- Kept although it is reached at call time: `/am resetall` is a recovery path, and the player
     -- whose panel will not open is the one who needs it.
     -- One bulk act, like the library's: the session rows are written muted, and the profile reset
-    -- is logged once, by NS.OnProfileReset (debug-logging-§10).
+    -- is logged once, by NS.OnProfileReset (debug-logging-§10). The act says it reset the profile on
+    -- `info`, the BulkRun contract (settings/Schema.lua's NS.Bulk).
     Helpers.RestoreAllDefaults = function()
-        NS.Bulk.Run("reset", "all", function()
+        NS.Bulk.Run("reset", "all", function(info)
             for _, row in ipairs(NS.Schema or {}) do
                 if not vetoedFromResetAll(row) then NS.ApplyDefault(row) end
             end
             local db = NS.db
-            if not (db and db.ResetProfile) then return false end
+            if not (db and db.ResetProfile) then return end
             db:ResetProfile()
-            return true
+            info.profileReset = true
         end)
     end
 

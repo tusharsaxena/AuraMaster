@@ -266,14 +266,16 @@ test("schema paths: RegisterSchemaRows stamps a resolvable row's default, and le
     assertEqual(#NS2.Schema, count, "a non-table is ignored")
     NS2.RegisterSchemaRows({
         { path = "nextContainerId", page = "general", group = "G", type = "number", default = 42 },
-        { path = "locked", page = "general", group = "G", type = "string", sessionOnly = true, default = "mine" },
+        -- Not `locked` or any other shipped row's path: LibKa0s-Schema's registry is first-registered-
+        -- wins on a duplicate path (issue #21), so a duplicate would answer the shipped row here.
+        { path = "seeded", page = "general", group = "G", type = "string", sessionOnly = true, default = "mine" },
         { path = "container.bars.noSuchLeaf", page = "bars", group = "G", type = "number", default = 7 },
     })
     assertEqual(#NS2.Schema, count + 3)
     -- red under: RegisterSchemaRows keeping the composer's default
     assertEqual(NS2.FindSchemaRow("nextContainerId").default, NS2.defaults.profile.nextContainerId)
-    -- red under: RegisterSchemaRows stamping session rows too (this one's path resolves: it would read true)
-    assertEqual(NS2.FindSchemaRow("locked").default, "mine")
+    -- red under: RegisterSchemaRows stamping session rows too (this one's path resolves: it would read false)
+    assertEqual(NS2.FindSchemaRow("seeded").default, "mine")
     -- red under: stamping `d` even when DefaultFor answers nil
     assertEqual(NS2.FindSchemaRow("container.bars.noSuchLeaf").default, 7, "nothing to stamp from")
 end)
@@ -284,18 +286,26 @@ test("schema paths: ValidateSchema fails an unknown page, an unknown type and an
     NS2.Print = function(line)
         printed[#printed + 1] = line
     end
+    local n = #NS2.Schema
+    -- Paths no shipped row has: LibKa0s-Schema's Validate also reports a duplicate path (issue #21),
+    -- which is not the check this case is about.
     NS2.RegisterSchemaRows({
         { path = "nextContainerId", page = "nope", group = "G", type = "number" },
         { path = "seeded", page = "general", group = "G", type = "table" },
-        { path = "enabled", page = "general", group = "", type = "bool" },
+        { path = "containerOrder", page = "general", group = "", type = "bool" },
         -- Neither of these is a failure: a session row need not resolve, and profiles is a page.
         { path = "state.unresolved", page = "general", group = "G", type = "bool", sessionOnly = true },
-        { path = "hideBlizzardBuffs", page = "profiles", group = "G", type = "bool" },
+        { path = "containers", page = "profiles", group = "G", type = "bool" },
     })
     -- red under: any one of the three checks dropped, or the sessionOnly exemption dropped
     assertEqual(NS2.ValidateSchema(), 3)
-    assertEqual(table.concat(printed, " | "), "schema error: nextContainerId: unknown page nope"
-        .. " | schema error: seeded: unknown type table | schema error: enabled: no group")
+    -- The lines are LibKa0s-Schema's Validate's, which names each row by position and path.
+    local function line(i, path, msg)
+        return ("|cffff0000schema error|r: row #%d (%s): %s"):format(n + i, path, msg)
+    end
+    assertEqual(table.concat(printed, " | "), line(1, "nextContainerId", "invalid `page` = nope")
+        .. " | " .. line(2, "seeded", "invalid `type` = table")
+        .. " | " .. line(3, "containerOrder", "missing or empty `group`"))
 end)
 
 test("schema paths: SchemaForPage keeps declaration order and drops hidden rows and rows the container's type does not take", function()
