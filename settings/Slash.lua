@@ -467,10 +467,16 @@ cli = SlashLib:New({
     -- parser) each indented, the shape slash-commands-§6 gives a failed parse, with no echo after.
     set          = function(path, v) return NS.SetByPath(path, v) end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
-    -- A row with no meaningful default (the container name's `noReset`) answers false, and CliReset
-    -- prints NO_DEFAULT ("<path> has no default to restore") instead of echoing the unchanged value
-    -- as if the reset had worked.
-    applyDefault = function(row) return NS.ApplyDefault(row) end,
+    -- Only a row with no meaningful default (the container name's `noReset`) answers false, and
+    -- CliReset prints NO_DEFAULT ("<path> has no default to restore"). CliReset discards err, so a
+    -- seam refusal (no container yet) prints its own reason here and answers nil, not false: that
+    -- row HAS a default, and NO_DEFAULT would misreport it.
+    applyDefault = function(row)
+        local ok, err, why = NS.ApplyDefault(row)
+        if ok ~= false or not err then return ok end
+        print(err)
+        if why then print("  " .. why) end
+    end,
     allRows      = function() return NS.Schema end,
     groupKey     = function(row) return row.page end,
     -- The same bulk pair the Options descriptor takes (LibKa0s-Slash minor 8): CliResetAll writes

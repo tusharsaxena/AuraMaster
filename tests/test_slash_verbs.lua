@@ -277,6 +277,18 @@ test("slash verbs: /am reset container.name prints the library's no-default line
     assertEqual(NS2.Database.FindContainer(1).name, "Player buffs")
 end)
 
+test("slash verbs: /am reset with no container prints the seam's reason, not the no-default line", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    deleteAll(NS2)
+    local SlashLib = mocks.LibStub("LibKa0s-Slash-1.0")
+    local out = dump(slash(NS2, lines, "reset container.bars.width"))
+    -- red under: the descriptor's applyDefault handing the seam's refusal to CliReset as false,
+    -- which prints NO_DEFAULT for a row that has a default and drops the real reason
+    assertEqual(out:find(SlashLib.STRINGS.NO_DEFAULT:format("container.bars.width"), 1, true), nil, out)
+    assertTrue(out:find(MISSING_ROW, 1, true) ~= nil, out)
+end)
+
 test("slash verbs: set and reset reach a session row, which never lands in the profile", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)

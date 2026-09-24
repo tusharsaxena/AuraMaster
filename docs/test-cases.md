@@ -973,7 +973,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (44)
+### test_slash_verbs.lua (45)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -992,6 +992,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: a value the parser takes but the seam refuses prints the refusal and no echo of the unchanged value
 - slash verbs: /am set with a refused value prints INVALID and the row's reason once each, and does not echo the unchanged value
 - slash verbs: /am reset container.name prints the library's no-default line once
+- slash verbs: /am reset with no container prints the seam's reason, not the no-default line
 - slash verbs: set and reset reach a session row, which never lands in the profile
 - slash verbs: reset restores the selected container's row only, and its echo carries no note
 - slash verbs: set on a global row writes the profile through the seam
@@ -1525,7 +1526,7 @@ badge and any count quoted in the docs must agree with it.
 | test_framepicker.lua | 14 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 25 |
-| test_slash_verbs.lua | 44 |
+| test_slash_verbs.lua | 45 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
@@ -1551,4 +1552,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1321** |
+| **Total** | **1322** |
