@@ -201,7 +201,8 @@ local function placeIcon(am, s, pos, size)
 end
 
 --- The icon at `pos` ("LEFT" | "RIGHT") of the animated frame, and the text area beside it; with no
---- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (feedback #1): a stacked Center's box holds several rows, and "line height" is one of them, not the
+--- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (feedback #1): a
+--- stacked Center's box holds several rows, and "line height" is one of them, not the
 --- whole stack. The text area is anchored FIRST, from plain arithmetic, and the icon block after it,
 --- guarded as Style.Bind guards a binding (smoke batch 2, item 7): a client call the icon or its
 --- border refuses costs the icon alone (hidden, and reported through Style.ReportError), never the
