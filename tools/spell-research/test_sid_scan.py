@@ -438,8 +438,9 @@ class ScanFileRecast(unittest.TestCase):
         self.assertEqual(st.recast_samples, [90.0])
 
     def test_single_self_application_has_no_sample(self):
-        # B's one application (23:10:52) is followed by B's refresh (23:12:30): one recast of 98 s.
-        self.assertEqual(scan_fixture().per_spec[ELE][(BUFF, 1219480)].recast_samples, [98.0])
+        # B's one application (23:10:52) is followed by B's refresh ON B (23:12:30): a refresh on
+        # the caster is no recast (SID-11 review), so still no sample.
+        self.assertEqual(scan_fixture().per_spec[ELE][(BUFF, 1219480)].recast_samples, [])
         lines = [aura_line("23:00:01.0000", A, A, 7777)]
         self.assertEqual(synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)].recast_samples, [])
 
@@ -491,6 +492,28 @@ class ScanFileRecast(unittest.TestCase):
         st = agg.per_spec[RESTO][(BUFF, 7777)]
         self.assertEqual((st.applications, st.recast_samples), (1, []))
         self.assertNotIn((BUFF, 7777), agg.non_player)
+
+    def test_a_self_proc_refreshing_itself_is_no_recast(self):
+        # SID-11 review: a proc or a stack re-triggering on its caster (Coagulopathy, Crimson
+        # Scourge, Painbringer) logs SPELL_AURA_REFRESH on the caster every few seconds. That is
+        # not the caster re-casting; counted, it put 14 tank procs into R7 Active mitigation.
+        lines = [aura_line("23:00:00.0000", A, A, 7777)]
+        lines += [aura_line("23:00:%02d.0000" % (4 * i), A, A, 7777)
+                  .replace("SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH") for i in range(1, 10)]
+        lines.append(aura_line("23:01:00.0000", A, A, 7777))
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual(st.recast_samples, [60.0])
+        self.assertEqual((st.applications, st.self_), (2, 2))
+
+    def test_a_refresh_by_a_same_spec_player_who_never_applied_it_is_ignored(self):
+        # A applied it; C (same class and spec, so the same AuraStats) only refreshes it.
+        lines = [aura_line("23:00:00.0000", A, "Player-1-00000010", 7777)]
+        lines += [aura_line("23:00:%02d.0000" % (8 * i), C, "Player-1-00000010", 7777)
+                  .replace("SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH") for i in range(1, 4)]
+        text = (combatant_line("23:00:00.0000", A, 264) + combatant_line("23:00:00.0000", C, 264)
+                + "".join(lines))
+        st = sid_scan.scan_file(TempLog(self, text).path, SPEC_TO_CLASS).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual((st.applications, st.recast_samples), (1, []))
 
     def test_recasts_onto_pets_count_too(self):
         lines = [aura_line("23:00:00.0000", A, "Pet-0-1-1-1-1-00000001", 7777, dest_flags="0x1111"),
@@ -566,6 +589,24 @@ class ScanFileExternalSelfCopy(unittest.TestCase):
         agg = synthetic(self, lines)
         self.assertEqual(agg.per_spec[RESTO][(BUFF, 7777)].self_, 1)
         self.assertEqual(agg.per_spec[RESTO][(BUFF, 7778)].single, 1)
+
+    def test_a_second_self_application_in_one_moment_stays_counted(self):
+        # Only the first self-application of a moment is the copy.
+        lines = [aura_line("23:00:01.0000", A, A, 7777), aura_line("23:00:01.0200", A, A, 7777),
+                 aura_line("23:00:01.0500", A, "Player-1-00000010", 7777)]
+        self.assertEqual(self.shape_of(lines, 7777), (2, 1, 1, 0))
+
+    def test_the_copy_is_the_first_self_application_across_a_burst_window_edge(self):
+        # The moment's first self (00.95) sits in the burst window opened at 00.00; its second
+        # self (01.02) opens the next window, which grows into a burst. The fold stays with the
+        # first self, outside that burst: P10 single, the copy folded, one group of five.
+        lines = [aura_line("23:00:00.0000", A, "Player-1-00000010", 7777),
+                 aura_line("23:00:00.9500", A, A, 7777),
+                 aura_line("23:00:01.0200", A, A, 7777),
+                 aura_line("23:00:01.0300", A, "Player-1-00000020", 7777)]
+        lines += [aura_line("23:00:01.%d000" % (i + 2), A, "Player-1-000000%d0" % (i + 3), 7777)
+                  for i in range(3)]
+        self.assertEqual(self.shape_of(lines, 7777), (6, 0, 1, 1))
 
     def test_a_pair_that_grows_into_a_burst_is_one_group_of_every_application(self):
         lines = self.pair("23:00:01", 7777)

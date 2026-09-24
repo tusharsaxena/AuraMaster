@@ -13,7 +13,7 @@ scan_file() folds one log into a FileAggregate: per (class, spec) and per
 (aura type, spell id), the applications, distinct casters, target shapes
 (self / single / group burst / other units) and a capped sample of recast
 intervals (one caster's successive casts of the aura, onto any target, a
-SPELL_AURA_REFRESH included).
+SPELL_AURA_REFRESH onto another unit included).
 Only auras whose source is a player character count toward it (the owner's
 formula: per spec, and cast by a player, not an NPC); everything else lands
 in a separate non-player tally.
@@ -239,8 +239,10 @@ RECAST_SAME_CAST = 0.5
 # Sacrifice and Guardian Spirit log a copy on the caster).
 SELF_COPY_WINDOW = 0.1
 
-# The only events a scan decodes; every other line is counted and passed over. A refresh (the same
-# caster re-casting an aura its target still holds: a rolling HoT) is a recast, never an application.
+# The only events a scan decodes; every other line is counted and passed over. A refresh onto another
+# unit (the same caster re-casting an aura its target still holds: a rolling HoT) is a recast, never
+# an application. A refresh on the caster itself is not: a proc or a stack re-triggering (Coagulopathy,
+# Crimson Scourge, Painbringer) logs one every few seconds, which is no cast at all (SID-11 review).
 _AURA_PREFIX = b"SPELL_AURA_APPLIED,"
 _REFRESH_PREFIX = b"SPELL_AURA_REFRESH,"
 _COMBATANT_PREFIX = b"COMBATANT_INFO,"
@@ -396,14 +398,15 @@ class _FileScan:
         self.recast(app.source, key, st, when)
 
     def refresh(self, raw):
-        """A player's refresh of an aura it already applied in this file (same spec) is a recast."""
+        """A player's refresh, onto another unit, of an aura it already applied in this file (same
+        spec) is a recast. A refresh on the caster is a proc or stack re-trigger: never a sample."""
         ev = parse_event(raw)
         app = parse_aura_applied(ev[2]) if ev is not None else None
         when = _clock_seconds(raw, ev[0]) if app is not None else None
         if when is None:
             self.agg.skipped += 1
             return
-        if not is_player_source(app.source, app.source_flags):
+        if app.dest == app.source or not is_player_source(app.source, app.source_flags):
             return
         cls = self.tracker.class_of(app.source)
         if cls is None:
@@ -477,7 +480,7 @@ class _FileScan:
 
     def recast(self, source, key, st, when):
         """Seconds between one caster's successive casts of the aura, onto any target (SID-11):
-        applications and refreshes alike.
+        applications and refreshes onto another unit alike.
 
         Applications less than RECAST_SAME_CAST after the previous one belong to its cast.
         """
@@ -499,7 +502,7 @@ def scan_file(path, spec_to_class):
     when a COMBATANT_INFO earlier in this file gave its caster a spec that
     spec_to_class maps to a class; otherwise it is counted in `unattributed`.
     Non-player sources (pets, totems, guardians, NPCs, controlled players)
-    go to `non_player`. Only SPELL_AURA_APPLIED, SPELL_AURA_REFRESH (recast only) and
+    go to `non_player`. Only SPELL_AURA_APPLIED, SPELL_AURA_REFRESH (recast only, onto another unit) and
     COMBATANT_INFO lines are decoded; a malformed one, a line with no timestamp separator, or an
     unterminated final line is counted in `skipped`.
     """

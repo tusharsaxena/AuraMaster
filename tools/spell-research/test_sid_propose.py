@@ -950,6 +950,26 @@ class Sid11HotRecastTest(unittest.TestCase):
         self.assertEqual(props, [])
 
 
+class Sid11SelfProcRefreshTest(unittest.TestCase):
+    """SID-11 review: a tank's self-only proc that refreshes itself every few seconds is not
+    recast every few seconds, so it stays out of R7 Active mitigation (Coagulopathy 391481)."""
+
+    def test_a_self_proc_refreshing_itself_stays_out_of_r7(self):
+        tanks = [(_guid(0x600 + i), PALADIN_PROT) for i in range(3)]
+        body = []
+        for c, (guid, _spec) in enumerate(tanks):
+            for k in range(8):  # applied once a minute, refreshed on the tank every 4 s
+                t = T0 + c * 3600 + k * 60
+                body.append(_aura(t, guid, guid, 391481, "Coagulopathy"))
+                body += [_aura(t + 4 * j, guid, guid, 391481, "Coagulopathy")
+                         .replace("SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH") for j in range(1, 12)]
+        agg = scanned(self, tanks, body)
+        ruled = sid_propose._Ruled(agg, SID11_SPEC_MAP, {391481: "Coagulopathy"}, {391481: set()},
+                                   {391481}, None, sid_propose.Thresholds())
+        self.assertEqual(sid_propose._stats_of(ruled.rows[("PALADIN", 391481)])["recast"], 60.0)
+        self.assertEqual(ruled.suggest("PALADIN", 391481)[:2], ("utility", "R9"))
+
+
 class Sid11LustAndImmunityTest(unittest.TestCase):
     """Bloodlust-shaped and Divine Shield-shaped logs, scanned, reach R2 and R1."""
 
@@ -998,6 +1018,8 @@ class Sid11PluralTest(unittest.TestCase):
     def test_plural_helper(self):
         self.assertEqual(sid_propose.plural(1, "time"), "1 time")
         self.assertEqual(sid_propose.plural(21, "time"), "21 times")
+        self.assertEqual(sid_propose.plural(0, "time"), "0 times")
+        self.assertEqual(sid_propose.plural(0, "category"), "0 categories")
         self.assertEqual(sid_propose.plural(9, "category"), "9 categories")
 
 
