@@ -59,9 +59,14 @@ Streams each log as bytes, line by line. Never loads a file into memory.
   - `players` = count of distinct source GUIDs (the GUIDs themselves are not kept in the output);
   - target shape counts: `self` (dest == source), `single` (one other player), `group` (the same
     caster applied the same aura to ≥ 5 distinct players within 1.0 s — the application that opens a
-    burst is counted once as `group`, its companions are absorbed);
-  - `recast` median seconds between successive self-applications by the same caster (a rough
-    cooldown), from at most the first 200 intervals per aura to bound memory;
+    burst is counted once as `group`, its companions are absorbed). An external that the client
+    also logs on its caster (the same caster and aura on itself and on exactly one other player
+    within 0.1 s: Power Infusion, Blessing of Sacrifice, Guardian Spirit) is ONE `single`
+    application, not `self` + `single` (owner ruling, 2026-09-24);
+  - `recast` median seconds between successive casts of the aura by the same caster, onto any
+    target (applications under 0.5 s apart are one cast), a rough cooldown, from at most the first
+    200 intervals per aura to bound memory. Measured on self-applications alone, a HoT cast onto
+    other players had no recast and failed R6 (owner ruling, 2026-09-24);
   - `firstSeen` / `lastSeen` log dates (from the file name stamp, not the line).
 - **Per-log cache.** Each log's aggregates are written as JSON to
   `~/.cache/auramaster-spell-research/logs/<name>-<size>-<mtime>.json` (outside the repo). A re-scan

@@ -30,11 +30,13 @@ from sid_scan import AuraStats, FileAggregate
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "auramaster-spell-research"
 
 # Bump when the cached aggregate's meaning changes, so old entries are re-read.
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 # 2: `other` (applications onto a unit that is no player) split out of `single` (SID-10).
+# 3: an external's self-copy is one `single` application; recast is per caster onto any target (SID-11).
 # 2: adds classPlayers and specPlayers (exact distinct-player unions; see evidence_to_json).
-EVIDENCE_VERSION = 3
+EVIDENCE_VERSION = 4
 # 3: rows carry `other`; `single` and `group` count player targets only.
+# 4: the SID-11 scan: self-copies folded into `single`, recastMedian per caster onto any target.
 
 SALT_BYTES = 32
 

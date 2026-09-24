@@ -11,7 +11,8 @@ skipped, never fatal.
 
 scan_file() folds one log into a FileAggregate: per (class, spec) and per
 (aura type, spell id), the applications, distinct casters, target shapes
-(self / single / group burst) and a capped sample of self-recast intervals.
+(self / single / group burst / other units) and a capped sample of recast
+intervals (one caster's successive casts of the aura, onto any target).
 Only auras whose source is a player character count toward it (the owner's
 formula: per spec, and cast by a player, not an NPC); everything else lands
 in a separate non-player tally.
@@ -224,8 +225,18 @@ SpecKey = tuple  # (class_token e.g. "SHAMAN", spec_id int | None); None = "unkn
 BURST_TARGETS = 5
 BURST_WINDOW = 1.0
 
-# Self-recast intervals kept per aura (per spec), to bound memory.
+# Recast intervals kept per aura (per spec), to bound memory.
 RECAST_SAMPLE_CAP = 200
+
+# One cast, for the recast interval: the same caster's applications of the same aura less than
+# this many seconds after the previous one (a burst, a self-copy). The shortest global cooldown is
+# 0.75 s, so a real recast is always further apart.
+RECAST_SAME_CAST = 0.5
+
+# An external self-copy (SID-11): the same caster's aura on itself AND on exactly one other player
+# within this many seconds is ONE application onto that player (Power Infusion, Blessing of
+# Sacrifice and Guardian Spirit log a copy on the caster).
+SELF_COPY_WINDOW = 0.1
 
 # The only two events a scan decodes; every other line is counted and passed over.
 _AURA_PREFIX = b"SPELL_AURA_APPLIED,"
@@ -244,7 +255,7 @@ class AuraStats:
     single: int = 0                                   # one other player, not part of a burst
     group: int = 0                                    # bursts, counted once per burst
     other: int = 0                                    # onto a unit that is no player (pet, NPC)
-    recast_samples: List[float] = field(default_factory=list)
+    recast_samples: List[float] = field(default_factory=list)  # seconds between one caster's casts
     first_seen: str = ""
     last_seen: str = ""
 
@@ -292,7 +303,7 @@ def _extend_dates(first, last, date):
 class _Burst:
     """One open burst window for a (caster, aura)."""
 
-    __slots__ = ("start", "stats", "dests", "self_", "single", "converted")
+    __slots__ = ("start", "stats", "dests", "self_", "single", "converted", "collapsed")
 
     def __init__(self, start, stats):
         self.start = start
@@ -301,6 +312,20 @@ class _Burst:
         self.self_ = 0
         self.single = 0
         self.converted = False
+        self.collapsed = 0  # self-copies taken out of `applications` while this window is open
+
+
+class _Moment:
+    """The applications of one (caster, aura) within SELF_COPY_WINDOW: a possible self-copy."""
+
+    __slots__ = ("start", "stats", "self_burst", "others", "collapsed")
+
+    def __init__(self, start, stats):
+        self.start = start
+        self.stats = stats
+        self.self_burst = None  # the burst window the self-application was counted in
+        self.others = set()  # type: Set[str]
+        self.collapsed = False
 
 
 class _FileScan:
@@ -311,7 +336,8 @@ class _FileScan:
         self.tracker = SpecTracker(spec_to_class)
         self.stamp_date = stamp_date
         self.bursts = {}      # (source, aura key) -> _Burst
-        self.last_self = {}   # (source, aura key) -> seconds of the last self-application
+        self.moments = {}     # (source, aura key) -> _Moment
+        self.last_cast = {}   # (source, aura key) -> [start of the last cast, its last application]
 
     def line(self, raw):
         agg = self.agg
@@ -362,8 +388,7 @@ class _FileScan:
         st.players.add(app.source)
         st.first_seen, st.last_seen = _extend_dates(st.first_seen, st.last_seen, date)
         self.shape(app, key, st, when)
-        if app.dest == app.source:
-            self.recast(app.source, key, st, when)
+        self.recast(app.source, key, st, when)
 
     def shape(self, app, key, st, when):
         is_self = app.dest == app.source
@@ -389,14 +414,57 @@ class _FileScan:
             st.self_ -= burst.self_
             st.single -= burst.single
             st.group += 1
+            st.applications += burst.collapsed  # inside a burst a self-copy is a group application
+            burst.collapsed = 0
             burst.converted = True
+            return
+        self.self_copy(app, burst_key, st, when, is_self, burst)
+
+    def self_copy(self, app, moment_key, st, when, is_self, burst):
+        """Fold an external's copy on its caster into the one application onto the other player.
+
+        The moment opens at its first application; while it holds the caster plus exactly one other
+        player, the self-application is taken out of `applications` and `self`. A second other
+        player in the same moment puts it back: that is a small group, not an external.
+        """
+        moment = self.moments.get(moment_key)
+        if moment is None or moment.stats is not st or not (0 <= when - moment.start <= SELF_COPY_WINDOW):
+            moment = self.moments[moment_key] = _Moment(when, st)
+        if is_self:
+            if moment.self_burst is not None:
+                return  # a second self-application in one moment: leave it counted
+            moment.self_burst = burst
+        else:
+            moment.others.add(app.dest)
+        home = moment.self_burst
+        external = home is not None and len(moment.others) == 1
+        if external and not moment.collapsed and not home.converted:
+            st.applications -= 1
+            st.self_ -= 1
+            home.self_ -= 1
+            home.collapsed += 1
+            moment.collapsed = True
+        elif moment.collapsed and not external:
+            moment.collapsed = False
+            if home.collapsed > 0:  # else a burst has already counted it back as a group application
+                st.applications += 1
+                st.self_ += 1
+                home.self_ += 1
+                home.collapsed -= 1
 
     def recast(self, source, key, st, when):
+        """Seconds between one caster's successive casts of the aura, onto any target (SID-11).
+
+        Applications less than RECAST_SAME_CAST after the previous one belong to its cast.
+        """
         recast_key = (source, key)
-        prev = self.last_self.get(recast_key)
-        self.last_self[recast_key] = when
-        if prev is not None and when > prev and len(st.recast_samples) < RECAST_SAMPLE_CAP:
-            st.recast_samples.append(round(when - prev, 4))
+        last = self.last_cast.get(recast_key)
+        if last is not None and 0 <= when - last[1] < RECAST_SAME_CAST:
+            last[1] = when
+            return
+        self.last_cast[recast_key] = [when, when]
+        if last is not None and when > last[0] and len(st.recast_samples) < RECAST_SAMPLE_CAP:
+            st.recast_samples.append(round(when - last[0], 4))
 
 
 def scan_file(path, spec_to_class):

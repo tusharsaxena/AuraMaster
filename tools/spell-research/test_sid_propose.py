@@ -778,3 +778,153 @@ class SuggestionsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# --- SID-11: the rule fixes, from a scanned log to a suggestion ----------------------------------
+
+import shutil  # noqa: E402
+import tempfile  # noqa: E402
+
+import sid_scan  # noqa: E402
+
+DRUID_RESTO, PRIEST_DISC, PALADIN_HOLY, PALADIN_PROT = 105, 256, 65, 66
+SID11_SPEC_MAP = {
+    DRUID_RESTO: {"class": "DRUID", "name": "Restoration", "role": 1},
+    PRIEST_DISC: {"class": "PRIEST", "name": "Discipline", "role": 1},
+    257: {"class": "PRIEST", "name": "Holy", "role": 1},
+    PALADIN_HOLY: {"class": "PALADIN", "name": "Holy", "role": 1},
+    PALADIN_PROT: {"class": "PALADIN", "name": "Protection", "role": 0},
+    RESTO: {"class": "SHAMAN", "name": "Restoration", "role": 1},
+    ELE: {"class": "SHAMAN", "name": "Elemental", "role": 2},
+}
+SID11_SPEC_TO_CLASS = {spec: info["class"] for spec, info in SID11_SPEC_MAP.items()}
+
+
+def _clock(seconds):
+    h, rest = divmod(seconds, 3600)
+    m, s = divmod(rest, 60)
+    return "%02d:%02d:%07.4f" % (h, m, s)
+
+
+def _guid(n):
+    return "Player-1-%08X" % n
+
+
+def _aura(seconds, source, dest, spell_id, name, dest_flags="0x514"):
+    return ('9/23/2026 %s  SPELL_AURA_APPLIED,%s,"Src-Realm-US",0x511,0x80000000,%s,"Dst-Realm-US",'
+            '%s,0x80000000,%d,"%s",0x8,BUFF\r\n' % (_clock(seconds), source, dest, dest_flags,
+                                                     spell_id, name))
+
+
+def _combatant(guid, spec):
+    stats22 = ",".join(str(100 + i) for i in range(22))
+    return "9/23/2026 20:00:00.0000  COMBATANT_INFO,%s,0,%s,%d,[],(0,0,0,0),[],[],0\r\n" % (
+        guid, stats22, spec)
+
+
+def scanned(test, casters, body):
+    """Scan a synthetic log: casters [(guid, spec)], body lines. Returns the FileAggregate."""
+    tmp = tempfile.mkdtemp(prefix="sid-propose-")
+    test.addCleanup(shutil.rmtree, tmp, True)
+    path = Path(tmp) / "WoWCombatLog-092326_200000.txt"
+    text = "".join(_combatant(g, s) for g, s in casters) + "".join(body)
+    path.write_bytes(text.encode("utf-8"))
+    return sid_scan.scan_file(path, SID11_SPEC_TO_CLASS)
+
+
+T0 = 20 * 3600 + 60  # 20:01:00
+
+
+def externals(spell_id, name, spec, casts=8, self_first=True):
+    """Three casters, each casting an external `casts` times, 2 min apart, each logged twice:
+    once on the target, once on the caster (the copy), 0.05 s apart."""
+    casters = [(_guid(0x100 + i), spec) for i in range(3)]
+    body = []
+    for c, (guid, _spec) in enumerate(casters):
+        for k in range(casts):
+            t = T0 + c * 3 + k * 120
+            target = _guid(0x900 + k % 4)
+            pair = [_aura(t, guid, guid, spell_id, name), _aura(t + 0.05, guid, target, spell_id, name)]
+            body += pair if self_first else pair[::-1]
+    return casters, sorted(body, key=lambda line: line[10:23])
+
+
+class Sid11ExternalsReachSupportTest(unittest.TestCase):
+    """Power Infusion 10060, Blessing of Sacrifice 6940, Guardian Spirit 47788: R5 Support."""
+
+    def suggest(self, klass, spell_id, name, spec, signals, self_first=True):
+        casters, body = externals(spell_id, name, spec, self_first=self_first)
+        agg = scanned(self, casters, body)
+        ruled = sid_propose._Ruled(agg, SID11_SPEC_MAP, {spell_id: name}, {spell_id: signals},
+                                   {spell_id}, None, sid_propose.Thresholds())
+        stats = sid_propose._stats_of(ruled.rows[(klass, spell_id)])
+        self.assertEqual((stats["applications"], stats["self"], stats["single"]), (24, 0, 24))
+        return ruled.suggest(klass, spell_id)
+
+    def test_power_infusion(self):
+        # DB2: MELEE_SLOW +20 (haste_up). Never self-applied, so not R3.
+        got = self.suggest("PRIEST", 10060, "Power Infusion", PRIEST_DISC, {"haste_up"})
+        self.assertEqual(got[:3], ("support", "R5", "medium"))
+        self.assertIn("100%", got[3])
+
+    def test_blessing_of_sacrifice(self):
+        # DB2: SCHOOL_ABSORB (absorb) and a 0-point speed row (no signal since SID-10).
+        got = self.suggest("PALADIN", 6940, "Blessing of Sacrifice", PALADIN_HOLY, {"absorb"},
+                           self_first=False)
+        self.assertEqual(got[:2], ("support", "R5"))
+
+    def test_guardian_spirit(self):
+        got = self.suggest("PRIEST", 47788, "Guardian Spirit", 257, set())
+        self.assertEqual(got[:2], ("support", "R5"))
+
+
+def hot_log(spell_id, name, spec, casters=3, casts=10, every=8.0, self_every=0):
+    """Each caster applies a HoT every `every` seconds to another player (or itself every
+    `self_every`-th cast), the way Rejuvenation, Riptide and Lifebloom show up in the logs."""
+    who = [(_guid(0x200 + i), spec) for i in range(casters)]
+    body = []
+    for c, (guid, _spec) in enumerate(who):
+        for k in range(casts):
+            t = T0 + c * 600 + k * every
+            dest = guid if self_every and k % self_every == 0 else _guid(0xA00 + k % 5)
+            body.append(_aura(t, guid, dest, spell_id, name))
+    return who, body
+
+
+class Sid11HotRecastTest(unittest.TestCase):
+    """A HoT's recast is per caster onto anyone: it meets R6, so Healing never moves to Support."""
+
+    SHIPPED = [{"key": "healing", "label": "Healing", "aura": "BUFF",
+                "classes": {"DRUID": [774, 33763], "SHAMAN": [61295]}},
+               {"key": "support", "label": "Support", "aura": "BUFF", "classes": {}}]
+    NAMES = {774: "Rejuvenation", 33763: "Lifebloom", 61295: "Riptide"}
+    SIGNALS = {774: {"periodic_heal"}, 33763: {"periodic_heal"}, 61295: {"periodic_heal"}}
+
+    def test_a_hot_every_8s_onto_others_has_an_8s_median_and_meets_r6(self):
+        who, body = hot_log(774, "Rejuvenation", DRUID_RESTO)
+        agg = scanned(self, who, body)
+        ruled = sid_propose._Ruled(agg, SID11_SPEC_MAP, self.NAMES, self.SIGNALS, set(self.NAMES),
+                                   None, sid_propose.Thresholds())
+        stats = sid_propose._stats_of(ruled.rows[("DRUID", 774)])
+        self.assertEqual(stats["recast"], 8.0)
+        self.assertTrue(ruled.fits("healing", "DRUID", 774))
+
+    def test_rejuvenation_riptide_lifebloom_are_not_moved_to_support(self):
+        druids, rejuv = hot_log(774, "Rejuvenation", DRUID_RESTO, every=6.0, self_every=7)
+        _d, bloom = hot_log(33763, "Lifebloom", DRUID_RESTO, every=12.0)
+        shamans = [(_guid(0x300 + i), RESTO) for i in range(3)]
+        riptide = []
+        for c, (guid, _spec) in enumerate(shamans):
+            for k in range(10):
+                riptide.append(_aura(T0 + 5000 + c * 600 + k * 7.0, guid, _guid(0xA00 + k % 5),
+                                     61295, "Riptide"))
+        agg = scanned(self, druids + shamans, sorted(rejuv + bloom + riptide,
+                                                     key=lambda line: line[10:23]))
+        ruled = sid_propose._Ruled(agg, SID11_SPEC_MAP, self.NAMES, self.SIGNALS, set(self.NAMES),
+                                   None, sid_propose.Thresholds())
+        for klass, sid in (("DRUID", 774), ("DRUID", 33763), ("SHAMAN", 61295)):
+            self.assertEqual(ruled.suggest(klass, sid)[:2], ("support", "R5"), sid)  # R5 first...
+            self.assertTrue(ruled.fits("healing", klass, sid), sid)                  # ...R6 holds
+        props = sid_propose.moves(agg, SID11_SPEC_MAP, self.NAMES, self.SHIPPED, self.SIGNALS,
+                                  set(self.NAMES))
+        self.assertEqual(props, [])

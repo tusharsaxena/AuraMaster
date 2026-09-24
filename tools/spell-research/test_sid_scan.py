@@ -440,8 +440,38 @@ class ScanFileRecast(unittest.TestCase):
     def test_single_self_application_has_no_sample(self):
         self.assertEqual(scan_fixture().per_spec[ELE][(BUFF, 1219480)].recast_samples, [])
 
-    def test_applications_onto_others_are_not_recasts(self):
+    def test_two_casters_applications_are_not_one_casters_recast(self):
+        # Earth Shield 974: A onto B, then C onto A. Recast is per caster.
         self.assertEqual(scan_fixture().per_spec[RESTO][(BUFF, 974)].recast_samples, [])
+
+    def test_a_hot_recast_onto_different_targets_is_measured(self):
+        # SID-11: a HoT applied every 8 s, each time to another player, never to the caster.
+        # Measured on self-applications only, it had no recast, failed R6 and was proposed
+        # Healing -> Support.
+        lines = [aura_line("23:00:%02d.0000" % (i * 8), A, "Player-1-000000%d0" % (i % 4 + 1), 7777)
+                 for i in range(6)]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual(st.recast_samples, [8.0] * 5)
+
+    def test_a_recast_mixes_self_and_other_targets(self):
+        lines = [aura_line("23:00:00.0000", A, A, 7777),
+                 aura_line("23:00:06.0000", A, "Player-1-00000010", 7777),
+                 aura_line("23:00:16.0000", A, A, 7777)]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual(st.recast_samples, [6.0, 10.0])
+
+    def test_one_cast_onto_many_targets_is_one_recast(self):
+        # A burst (0.1 s apart) and a self-copy are one cast: no near-zero samples.
+        lines = [aura_line("23:00:01.%d000" % i, A, "Player-1-000000%d0" % i, 7777) for i in range(6)]
+        lines += [aura_line("23:00:11.%d000" % i, A, "Player-1-000000%d0" % i, 7777) for i in range(6)]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual(st.recast_samples, [10.0])
+
+    def test_recasts_onto_pets_count_too(self):
+        lines = [aura_line("23:00:00.0000", A, "Pet-0-1-1-1-1-00000001", 7777, dest_flags="0x1111"),
+                 aura_line("23:00:12.0000", A, "Pet-0-1-1-1-1-00000001", 7777, dest_flags="0x1111")]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual(st.recast_samples, [12.0])
 
     def test_samples_are_capped(self):
         lines = ["9/23/2026 23:%02d:%02d.0000  " % divmod(i * 2, 60) + aura_line("x", A, A, 7777).split("  ", 1)[1]
@@ -456,6 +486,74 @@ class ScanFileRecast(unittest.TestCase):
                 + aura_line("00:00:30.0000", A, A, 7777).replace("9/23/2026", "9/24/2026"))
         st = sid_scan.scan_file(TempLog(self, text).path, SPEC_TO_CLASS).per_spec[RESTO][(BUFF, 7777)]
         self.assertEqual(st.recast_samples, [60.0])
+
+
+class ScanFileExternalSelfCopy(unittest.TestCase):
+    """SID-11: an external logged on the caster AND one other player at once is one application.
+
+    Power Infusion 10060, Blessing of Sacrifice 6940 and Guardian Spirit 47788 show up in the logs
+    as two SPELL_AURA_APPLIED lines at the same moment from the same caster: one on the target, one
+    on the caster. Counted as self + single, R5 (70% single) never saw them.
+    """
+
+    def pair(self, stamp, spell_id, dest="Player-1-00000010", self_first=True, gap="0500"):
+        a = aura_line("%s.0000" % stamp, A, A, spell_id)
+        b = aura_line("%s.%s" % (stamp, gap), A, dest, spell_id)
+        if not self_first:
+            a = aura_line("%s.0000" % stamp, A, dest, spell_id)
+            b = aura_line("%s.%s" % (stamp, gap), A, A, spell_id)
+        return [a, b]
+
+    def shape_of(self, lines, spell_id):
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, spell_id)]
+        return (st.applications, st.self_, st.single, st.group)
+
+    def test_power_infusion_self_copy_is_one_single(self):
+        lines = self.pair("23:00:01", 10060) + self.pair("23:02:01", 10060)
+        self.assertEqual(self.shape_of(lines, 10060), (2, 0, 2, 0))
+
+    def test_blessing_of_sacrifice_other_first_then_self(self):
+        lines = self.pair("23:00:01", 6940, self_first=False)
+        self.assertEqual(self.shape_of(lines, 6940), (1, 0, 1, 0))
+
+    def test_guardian_spirit_on_the_same_timestamp(self):
+        lines = self.pair("23:00:01", 47788, gap="0000")
+        self.assertEqual(self.shape_of(lines, 47788), (1, 0, 1, 0))
+
+    def test_more_than_a_tenth_of_a_second_apart_is_two_applications(self):
+        lines = self.pair("23:00:01", 10060, gap="2000")
+        self.assertEqual(self.shape_of(lines, 10060), (2, 1, 1, 0))
+
+    def test_self_and_two_others_at_once_is_not_an_external(self):
+        lines = self.pair("23:00:01", 7777) + [aura_line("23:00:01.0800", A, "Player-1-00000020", 7777)]
+        self.assertEqual(self.shape_of(lines, 7777), (3, 1, 2, 0))
+
+    def test_another_casters_application_is_no_copy(self):
+        lines = [aura_line("23:00:01.0000", A, A, 7777),
+                 aura_line("23:00:01.0500", C, "Player-1-00000010", 7777)]
+        text = combatant_line("23:00:00.0000", A, 264) + combatant_line("23:00:00.0000", C, 264) + "".join(lines)
+        st = sid_scan.scan_file(TempLog(self, text).path, SPEC_TO_CLASS).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual((st.applications, st.self_, st.single), (2, 1, 1))
+
+    def test_another_aura_is_no_copy(self):
+        lines = [aura_line("23:00:01.0000", A, A, 7777),
+                 aura_line("23:00:01.0500", A, "Player-1-00000010", 7778)]
+        agg = synthetic(self, lines)
+        self.assertEqual(agg.per_spec[RESTO][(BUFF, 7777)].self_, 1)
+        self.assertEqual(agg.per_spec[RESTO][(BUFF, 7778)].single, 1)
+
+    def test_a_pair_that_grows_into_a_burst_is_one_group_of_every_application(self):
+        lines = self.pair("23:00:01", 7777)
+        lines += [aura_line("23:00:01.%d000" % (i + 5), A, "Player-1-000000%d0" % (i + 2), 7777)
+                  for i in range(3)]
+        self.assertEqual(self.shape_of(lines, 7777), (5, 0, 0, 1))
+
+    def test_shapes_stay_consistent_through_json(self):
+        lines = self.pair("23:00:01", 10060)
+        agg = synthetic(self, lines)
+        back = sid_scan.aggregate_from_json(sid_scan.aggregate_to_json(agg))
+        st = back.per_spec[RESTO][(BUFF, 10060)]
+        self.assertEqual((st.applications, st.self_, st.single), (1, 0, 1))
 
 
 class ScanFileCountsAndDates(unittest.TestCase):

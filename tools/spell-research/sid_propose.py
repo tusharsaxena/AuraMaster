@@ -454,7 +454,7 @@ SELF_SHARE = 0.90        # R1, R3, R7
 GROUP_SHARE = 0.30       # R2
 SINGLE_SHARE = 0.70      # R5
 OTHERS_SHARE = 0.50      # R6 "applied mostly to others": more than half not on the caster
-LONG_RECAST = 60.0       # R3: median seconds between self-applications
+LONG_RECAST = 60.0       # R3: median seconds between one caster's casts (any target)
 SHORT_RECAST = 30.0      # R6, R7
 
 TANK_ROLE = 0  # ChrSpecialization.Role: 0 tank, 1 healer, 2 damage (build 12.1.0.69875)
