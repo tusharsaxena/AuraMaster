@@ -504,8 +504,8 @@ def _sources_md(date, sources, counts):
 # --- the bundle ---------------------------------------------------------------------------------
 
 def write_bundle(out_dir, date, rows, proposals, flags, shipped, sources, non_player=None,
-                 names=None, class_players=None, addition_counts=None):
-    # type: (Path, str, list, list, list, list, dict, Optional[dict], Optional[dict], Optional[dict], Optional[dict]) -> List[Path]
+                 names=None, class_players=None, addition_counts=None, decisions=None):
+    # type: (Path, str, list, list, list, list, dict, Optional[dict], Optional[dict], Optional[dict], Optional[dict], Optional[dict]) -> List[Path]
     """Write the dictionary and the review set into out_dir; return the paths written.
 
     proposals: sid_propose Proposals (corrections -- replace/add/move -- and additions), already
@@ -514,7 +514,8 @@ def write_bundle(out_dir, date, rows, proposals, flags, shipped, sources, non_pl
     "evidence"}. non_player: the aggregate's non_player tally; names: DB2 spell names (for listed
     ids never seen); class_players: exact distinct casters per (class, aura type, spell id);
     addition_counts: sid_propose.additions()' summary (raw, low, folded, all, ruled, proposed),
-    stated in PROPOSED_ADDITIONS.md when given.
+    stated in PROPOSED_ADDITIONS.md when given; decisions: decisions.json, whose row rulings keep
+    those rows off REVIEW.csv.
     evidence.json is scan's to write and is not touched here.
     """
     out_dir = Path(out_dir)
@@ -547,7 +548,7 @@ def write_bundle(out_dir, date, rows, proposals, flags, shipped, sources, non_pl
             "date": date, "thresholds": th,
             "proposals": [proposal_dict(p) for p in corr + adds]})),
     ]
-    review = sid_review.review_rows(proposals, shipped, names, class_players)
+    review = sid_review.review_rows(proposals, shipped, names, class_players, decisions)
     written += [
         _write(out_dir / "REVIEW.csv", sid_review.csv_text(review)),
         _write(out_dir / "REVIEW.md", sid_review.review_md(date, review, shipped)),

@@ -24,8 +24,9 @@ spell names, CastToAura families) and the shipped `spells`-kind categories. Outp
   confidence at most, and never from a debuff category); additions() to above-bar player BUFFs in
   no `spells` category.
 
-Anything whose proposal_key() is already in decisions.json is not proposed again. Python 3.8+
-standard library only; nothing here writes a file.
+Anything already ruled in decisions.json is not proposed again: its proposal_key() is there (a
+`logs.py decide` ruling), or the row_key() of every one of its review-sheet rows is (`logs.py
+ingest`). Python 3.8+ standard library only; nothing here writes a file.
 """
 
 import datetime
@@ -108,6 +109,47 @@ def proposal_key(p):
     """The decisions.json key: type|category|class|name lower-cased|sorted proposed ids."""
     return "%s|%s|%s|%s|%s" % (p.type, p.category, p.klass, p.name.lower(),
                                ",".join(map(str, sorted(p.proposed))))
+
+
+# The review sheet (sid_review) splits a proposal into rows, one per spell id per change, and the
+# owner rules each row on its own (SID-14). decisions.json keys such a ruling by row_key().
+
+
+def review_changes(p):
+    # type: (Proposal) -> List[Tuple[str, int, str, str]]
+    """[(row type, spell id, current category, proposed category)]: a proposal's review rows.
+
+    replace: a `deletion` per listed id, then a `correction-add` per proposed id; add: a
+    `correction-add` per new id; move: a `move` per id; addition: an `addition` per id.
+    """
+    if p.type == "replace":
+        return ([("deletion", sid, p.category, "") for sid in p.listed]
+                + [("correction-add", sid, p.category, p.category) for sid in p.proposed])
+    if p.type == "add":
+        return [("correction-add", sid, p.category, p.category)
+                for sid in p.proposed if sid not in p.listed]
+    if p.type == "move":
+        return [("move", sid, p.from_category, p.category) for sid in p.proposed]
+    return [("addition", sid, "", p.category) for sid in p.proposed]
+
+
+def row_key(key, spell_id, row_type):
+    # type: (str, int, str) -> str
+    """The decisions.json key of one review row: proposal key # spell id # row type."""
+    return "%s#%d#%s" % (key, int(spell_id), row_type)
+
+
+def is_ruled(p, decisions):
+    # type: (Proposal, Optional[dict]) -> bool
+    """True when decisions.json rules the whole proposal (its key, from `logs.py decide`) or every
+    one of its review rows (row keys, from `logs.py ingest`)."""
+    if not decisions:
+        return False
+    key = proposal_key(p)
+    if key in decisions:
+        return True
+    rows = review_changes(p)
+    return bool(rows) and all(row_key(key, sid, rtype) in decisions for rtype, sid, _c, _t in rows)
 
 
 # --- evidence ---------------------------------------------------------------------------------
@@ -439,8 +481,7 @@ def corrections(agg, spec_map, names, shipped, aura_to_family, decisions=None, t
     """
     review = _Review(agg, spec_map, names, shipped, aura_to_family, thresholds or Thresholds(),
                      cc_ids).run()
-    ruled = decisions or {}
-    out = [p for p in review.proposals if proposal_key(p) not in ruled]
+    out = [p for p in review.proposals if not is_ruled(p, decisions)]
     out.sort(key=lambda p: (-p.applications, p.category, p.klass, p.name.lower()))
     return out
 
@@ -756,8 +797,7 @@ def _category_ids(shipped):
 
 
 def _ordered(props, decisions):
-    ruled = decisions or {}
-    out = [p for p in props if proposal_key(p) not in ruled]
+    out = [p for p in props if not is_ruled(p, decisions)]
     out.sort(key=lambda p: (-p.applications, p.category, p.klass, p.name.lower()))
     return out
 

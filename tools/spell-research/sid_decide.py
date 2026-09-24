@@ -23,6 +23,14 @@ Ruling semantics (the plan, SID-8):
     move (ruling)     the same, into the category chosen at decide time ("accept, elsewhere")
     reject            nothing, and the key is suppressed forever
 
+Review by sheet (SID-14, `logs.py ingest`): the owner rules the rows of the bundle's REVIEW.csv, so
+decisions.json also holds row keys, `<proposal key>#<spell id>#<row type>` (sid_propose.row_key),
+with the same entry shape (record_many() writes a whole sheet's rulings at once). plan_rows() /
+apply_rows() apply them per id: a deletion removes the id, a correction-add or addition adds it to
+the ruled category, a move does both; an approved deletion and approved adds of one proposal into
+the same category are one in-place replace. sheet_decisions_md() is DECISIONS.md for that review,
+derived from decisions.json alone so a second ingest writes the same bytes.
+
 Python 3.8+ standard library only.
 """
 
@@ -34,6 +42,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import research
+import sid_propose
 
 RULINGS = ("accept", "reject", "move")
 
@@ -87,13 +96,8 @@ def _write_atomic(path, text):
         raise
 
 
-def record(path, key, ruling, category=None, reason="", date=None):
-    # type: (Path, str, str, Optional[str], str, Optional[str]) -> dict
-    """Record (or replace) the ruling for one proposal key; return the entry written.
-
-    `date` is required (YYYY-MM-DD; never taken from the clock). A `move` ruling needs the
-    category it moves into.
-    """
+def _entry(ruling, category=None, reason="", date=None, key="x"):
+    # type: (str, Optional[str], str, Optional[str], str) -> dict
     if ruling not in RULINGS:
         raise ValueError("ruling must be one of %s, got %r" % ("/".join(RULINGS), ruling))
     if not research.DATE_RE.match(date or ""):
@@ -102,11 +106,36 @@ def record(path, key, ruling, category=None, reason="", date=None):
         raise ValueError("a move ruling needs the category it moves into")
     if not key:
         raise ValueError("an empty proposal key")
-    path = Path(path)
-    decisions = load_decisions(path)
     entry = {"ruling": ruling, "reason": reason or "", "date": date}
     if category:
         entry["category"] = category
+    return entry
+
+
+def record_many(path, entries):
+    # type: (Path, Dict[str, dict]) -> Dict[str, dict]
+    """Record (or replace) many rulings in one write: {key: {"ruling", "category"?, "reason"?,
+    "date"}}. Every entry is checked first (ValueError, nothing written); return them as written."""
+    checked = {key: _entry(e.get("ruling", ""), e.get("category"), e.get("reason", ""),
+                           e.get("date"), key)
+               for key, e in entries.items()}
+    path = Path(path)
+    decisions = load_decisions(path)
+    decisions.update(checked)
+    _write_atomic(path, json.dumps(decisions, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+    return checked
+
+
+def record(path, key, ruling, category=None, reason="", date=None):
+    # type: (Path, str, str, Optional[str], str, Optional[str]) -> dict
+    """Record (or replace) the ruling for one proposal key; return the entry written.
+
+    `date` is required (YYYY-MM-DD; never taken from the clock). A `move` ruling needs the
+    category it moves into.
+    """
+    entry = _entry(ruling, category, reason, date, key)
+    path = Path(path)
+    decisions = load_decisions(path)
     decisions[key] = entry
     _write_atomic(path, json.dumps(decisions, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
     return entry
@@ -306,6 +335,137 @@ def apply(categories_lua, decisions, proposals, bundle_rel):
     if changes:
         research.write_repo_text(categories_lua, lua.text())
     return changes
+
+
+# --- the review sheet's rows (SID-14) -----------------------------------------------------------
+
+def row_key_of(row):
+    # type: (dict) -> str
+    """The decisions.json key of a REVIEW.csv row (sid_propose.row_key)."""
+    return sid_propose.row_key(row["proposal_key"], row["spell_id"], row["type"])
+
+
+def sheet_entries(ruled, date, reason="review sheet"):
+    # type: (list, str, str) -> Dict[str, dict]
+    """decisions.json entries for sid_review.ingest()'s ruled rows, keyed by row key (proposal key #
+    spell id # row type). Approve is `accept` into the row's proposed category, or `move` when the
+    owner edited it to another one; Reject is `reject`. The row id rides along in the reason."""
+    out = {}  # type: Dict[str, dict]
+    for row, decision, target in ruled:
+        entry = {"ruling": "reject", "date": date, "reason": "%s %s" % (reason, row["row_id"])}
+        if decision == "approve":
+            entry["ruling"] = "accept" if target == row["proposed_category"] else "move"
+            if target:
+                entry["category"] = target
+        out[row_key_of(row)] = entry
+    return out
+
+
+def plan_rows(categories_lua, decisions, rows, bundle_rel):
+    # type: (Path, dict, List[dict], str) -> Tuple[str, List[str]]
+    """(Categories.lua's new text, the change log) for the review-sheet rows ruled in `decisions`
+    (row keys); nothing is written. Rows without a ruling, and rejected rows, change nothing.
+
+    Per row: `deletion` removes the id from its class line in current_category; `correction-add`
+    and `addition` add it to the ruled category; `move` removes it from current_category and adds
+    it to the ruled category. Within one proposal an approved deletion and approved adds into the
+    same category are one in-place replace (the new ids take the deleted id's place). Every target
+    category is checked before anything is edited; ValueError names an unknown one.
+    """
+    categories_lua = Path(categories_lua)
+    text = categories_lua.read_bytes().decode("utf-8")
+    lua = _Lua(text)
+    provenance = "-- %%s: combat-log evidence, %s (SID)" % bundle_rel
+    groups = []  # type: List[Tuple[str, str, Dict[str, list], Dict[str, list], list]]
+    by_key = {}  # type: Dict[str, int]
+    for row in rows:
+        entry = decisions.get(row_key_of(row))
+        if not isinstance(entry, dict) or entry.get("ruling") not in ("accept", "move"):
+            continue
+        rtype, sid = row["type"], int(row["spell_id"])
+        target = entry.get("category") or row["proposed_category"]
+        pkey = row["proposal_key"]
+        if pkey not in by_key:
+            by_key[pkey] = len(groups)
+            groups.append((pkey, row["class"], {}, {}, []))
+        _k, _c, dels, adds, moves = groups[by_key[pkey]]
+        if rtype == "deletion":
+            lua.block(row["current_category"])
+            dels.setdefault(row["current_category"], []).append(sid)
+        elif rtype == "move":
+            lua.block(row["current_category"])
+            lua.block(target)
+            moves.append((row["current_category"], target, sid))
+        else:
+            lua.block(target)
+            adds.setdefault(target, []).append(sid)
+    changes = []  # type: List[str]
+
+    def log(cat, klass, sign, ids, key):
+        if ids:
+            changes.append("%s %s: %s%s (%s)" % (cat, klass, sign, _joined(ids), key))
+
+    for pkey, klass, dels, adds, moves in groups:
+        for cat, ids in dels.items():
+            if cat in adds:
+                removed, added = lua.replace(cat, klass, ids, adds.pop(cat), provenance)
+                log(cat, klass, "-", removed, pkey)
+                log(cat, klass, "+", added, pkey)
+            else:
+                log(cat, klass, "-", lua.remove(cat, klass, ids), pkey)
+        for cat, ids in adds.items():
+            log(cat, klass, "+", lua.insert(cat, klass, ids, provenance), pkey)
+        for source, target, sid in moves:
+            log(source, klass, "-", lua.remove(source, klass, [sid]), pkey)
+            log(target, klass, "+", lua.insert(target, klass, [sid], provenance), pkey)
+    return (lua.text() if changes else text), changes
+
+
+def apply_rows(categories_lua, decisions, rows, bundle_rel):
+    # type: (Path, dict, List[dict], str) -> List[str]
+    """plan_rows(), then write Categories.lua when anything changed; return the change log."""
+    text, changes = plan_rows(categories_lua, decisions, rows, bundle_rel)
+    if changes:
+        research.write_repo_text(Path(categories_lua), text)
+    return changes
+
+
+def sheet_decisions_md(date, decisions, rows):
+    # type: (str, dict, List[dict]) -> str
+    """DECISIONS.md for a review by sheet: every row of the bundle's REVIEW.csv with its ruling
+    (or pending). Derived from decisions.json alone, so a second ingest writes the same bytes."""
+    ruled = [(row, decisions.get(row_key_of(row))) for row in rows]
+    count = {"accept": 0, "move": 0, "reject": 0}
+    for _row, e in ruled:
+        if isinstance(e, dict) and e.get("ruling") in count:
+            count[e["ruling"]] += 1
+    pending = sum(1 for _row, e in ruled if not isinstance(e, dict))
+    lines = ["# Decisions -- %s" % date, "",
+             "The owner's rulings on this bundle's review sheet (`REVIEW.csv`), copied from "
+             "`tools/spell-research/decisions.json` (the durable record; one entry per sheet row, "
+             "keyed `<proposal key>#<spell id>#<row type>`). `logs.py ingest` applied the accept "
+             "and move rulings to `defaults/Categories.lua`; a rejected row is never asked again.",
+             "", "Accepted %d, accepted into another category %d, rejected %d, pending %d."
+             % (count["accept"], count["move"], count["reject"], pending), "",
+             "| Row | Ruling | Type | Class | Spell id | Spell | Category | Date | Proposal |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    for row, e in ruled:
+        if not isinstance(e, dict):
+            continue
+        category = e.get("category") or row["proposed_category"] or row["current_category"]
+        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s | `%s` |" % tuple(_cell(v) for v in (
+            row["row_id"], e.get("ruling", ""), row["type"], row["class"], row["spell_id"],
+            row["spell_name"], category, e.get("date", ""), row["proposal_key"])))
+    if not any(isinstance(e, dict) for _row, e in ruled):
+        lines.append("| - | - | - | - | - | - | - | - | - |")
+    return "\n".join(lines) + "\n"
+
+
+def write_sheet_decisions_md(bundle, date, decisions, rows):
+    # type: (Path, str, dict, List[dict]) -> Path
+    path = Path(bundle) / "DECISIONS.md"
+    research.write_repo_text(path, sheet_decisions_md(date, decisions, rows))
+    return path
 
 
 # --- DECISIONS.md -------------------------------------------------------------------------------

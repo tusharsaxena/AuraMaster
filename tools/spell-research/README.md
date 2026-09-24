@@ -313,8 +313,11 @@ each spec apply, proposes corrections and additions for the `spells` categories 
 `docs/superpowers/specs/2026-09-24-spell-ids-from-combat-logs-design.md`.
 
 The review is normally driven by the `/aura-spells-review` slash command
-(`.claude/commands/aura-spells-review.md`), which runs the four subcommands below, asks about each
-proposal in turn and commits the result. The subcommands also run on their own.
+(`.claude/commands/aura-spells-review.md`): it runs `scan` and `propose` and points the owner at the
+bundle's `REVIEW.csv`; the owner fills in the sheet's `decision` column and hands it back with
+`/aura-spells-review apply <path>`, which runs `ingest`, the addon gates and the commit. The
+subcommands also run on their own; `decide` and `apply` rule and apply one proposal at a time
+instead of a sheet.
 
 ### The formula
 
@@ -341,29 +344,37 @@ python3 tools/spell-research/logs.py scan \
 python3 tools/spell-research/logs.py propose --date 2026-09-24 \
   --bundle docs/spell-research/2026-09-24-logs
 
-# 3. Decide: record one ruling on one proposal key (from the bundle's proposals.json). The only
+# 3. Ingest the filled review sheet: check it against the bundle's REVIEW.csv (by row_id, spell_id
+#    and type; any mismatch, unknown row, unrecognized decision or unknown edited category fails
+#    the whole run before anything is written), record each Approve/Reject in decisions.json by
+#    row, apply the approved rows to defaults/Categories.lua and write the bundle's DECISIONS.md.
+#    Blank decisions stay pending. A second ingest of the same sheet changes nothing.
+python3 tools/spell-research/logs.py ingest --bundle docs/spell-research/2026-09-24-logs \
+  --csv ~/REVIEW-filled.csv --date 2026-09-25
+
+# Or, one proposal at a time: decide records one ruling on one proposal key (from the bundle's proposals.json). The only
 #    writer of tools/spell-research/decisions.json. --ruling is accept, reject or move (with
 #    --category: accept into a different category).
 python3 tools/spell-research/logs.py decide --bundle docs/spell-research/2026-09-24-logs \
   --key 'replace|offensiveCDs|SHAMAN|ascendance|114052' --ruling accept --date 2026-09-24
 
-# 4. Apply: rewrite the ruled class lines of defaults/Categories.lua and write the bundle's
+# ... and apply rewrites the ruled class lines of defaults/Categories.lua and write the bundle's
 #    DECISIONS.md. Unruled proposals are left alone.
 python3 tools/spell-research/logs.py apply --bundle docs/spell-research/2026-09-24-logs
 ```
 
-The key in step 3 is illustrative: copy the real one from `proposals.json` (it is also printed in
+The key given to `decide` is illustrative: copy the real one from `proposals.json` (it is also printed in
 `CORRECTIONS.md` and `PROPOSED_ADDITIONS.md`), and quote it, since it contains `|`. Every
 subcommand takes `--help`. `scan` and `propose` read the DB2 tables from `--db2-cache` (default
 `tools/spell-research/.cache/`, the cache `research.py` fills; a missing table is downloaded).
-`propose`, `decide` and `apply` take `--categories` and `--decisions` (and `propose` also
+`propose`, `decide`, `apply` and `ingest` take `--categories` and `--decisions` (and `propose` also
 `--cast-to-aura`) to work on copies, which is what the tests do.
 
-**`logs.py apply` is the only path that writes `defaults/Categories.lua`**, and it writes only
-proposals with a ruling in `decisions.json`. It rewrites just the affected class lines, keeps their
+**`logs.py apply` and `logs.py ingest` are the only paths that write `defaults/Categories.lua`**,
+and they write only what has a ruling in `decisions.json`. It rewrites just the affected class lines, keeps their
 order and trailing comments, inserts a class line in canonical class order when the category has
 none, and puts a provenance comment naming the bundle above each changed line. A second `apply`
-changes nothing. Run the addon's green gate after it, as for any `Categories.lua` change.
+or `ingest` changes nothing. Run the addon's green gate after it, as for any `Categories.lua` change.
 
 ### Thresholds
 
@@ -377,7 +388,8 @@ changes nothing. Run the addon's green gate after it, as for any `Categories.lua
 
 Below the bar an aura is still in the dictionary, and reported in `FLAGS.md` when it is listed; it
 is never proposed. A key already in `decisions.json`, accepted or rejected, is never proposed
-again. The category suggestion rules R1 to R9 are the spec's table, implemented in
+again; a sheet row ruled by `ingest` (keyed `<proposal key>#<spell id>#<row type>`) is never put on
+the sheet again, and a proposal whose rows are all ruled is not proposed again. The category suggestion rules R1 to R9 are the spec's table, implemented in
 `sid_propose.py`.
 
 ### The artifacts
@@ -413,7 +425,8 @@ again. The category suggestion rules R1 to R9 are the spec's table, implemented 
   `specs`, `applications`, `players`, `context`, `confidence`, `proposal_key` and, last,
   `decision`, where the owner writes `Approve` or `Reject` (`A`/`R`, `Y`/`N` accepted).
 - `REVIEW.md`: explains the sheet's columns, the decision values and how to hand it back.
-- `DECISIONS.md`: written by `apply`, this review's rulings and the lines they changed.
+- `DECISIONS.md`: written by `ingest` (every sheet row with its ruling) or by `apply` (this
+  review's proposal rulings and the lines they changed).
 
 The durable record of rulings is `tools/spell-research/decisions.json`.
 
@@ -436,9 +449,12 @@ writing is never served stale.
 | `sid_db2.py` | DB2 signals per aura, the spec map, the player pool, the shipped categories, CastToAura candidates |
 | `sid_propose.py` | Corrections, additions, flags, the category rules, the evidence bar, decisions suppression |
 | `sid_artifacts.py` | The dictionary and the review set |
-| `sid_decide.py` | `decisions.json`, `DECISIONS.md`, and the `Categories.lua` line rewriter |
-| `logs.py` | The command line: `scan`, `propose`, `decide`, `apply` |
+| `sid_review.py` | The review sheet: `REVIEW.csv` and `REVIEW.md`, and reading and checking a filled sheet |
+| `sid_decide.py` | `decisions.json` (by proposal and by sheet row), `DECISIONS.md`, and the `Categories.lua` line rewriter |
+| `logs.py` | The command line: `scan`, `propose`, `decide`, `apply`, `ingest` |
 
 Tests: `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'`, one `test_sid_*.py`
 per module plus `test_sid_e2e.py`, the acceptance run: scan, propose, decide and apply through the
-real command line on the fixtures in `fixtures/`, ending with `114052` in Offensive cooldowns.
+real command line on the fixtures in `fixtures/`, ending with `114052` in Offensive cooldowns, and
+the sheet run: propose, fill `REVIEW.csv` (approve Ascendance's add, reject its deletion), ingest,
+ending with both `114051` and `114052` listed.

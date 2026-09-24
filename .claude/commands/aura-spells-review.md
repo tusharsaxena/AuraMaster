@@ -1,37 +1,49 @@
 ---
-description: Review combat-log evidence for AuraMaster's spell categories and apply the owner's rulings
-argument-hint: [logs-folder]
+description: Review combat-log evidence for AuraMaster's spell categories by review sheet, and apply the owner's rulings
+argument-hint: [logs-folder] | apply <filled REVIEW.csv>
 ---
 
 # /aura-spells-review
 
 Mine the owner's combat logs for the aura ids players of each spec actually apply, propose
-corrections to `defaults/Categories.lua`'s `spells` categories and additions to them, ask the owner
-about each proposal one at a time, and apply only what the owner rules. Design of record:
-`docs/superpowers/specs/2026-09-24-spell-ids-from-combat-logs-design.md`; the tool is
-`tools/spell-research/logs.py` (documented in `tools/spell-research/README.md`, "Combat-log
-evidence").
+corrections to `defaults/Categories.lua`'s `spells` categories and additions to them, and hand the
+owner **one review sheet**, `REVIEW.csv`, to rule on in a spreadsheet. When the owner hands the
+filled sheet back, apply it in one shot. Design of record:
+`docs/superpowers/specs/2026-09-24-spell-ids-from-combat-logs-design.md` (and the plan's addendum,
+"review by spreadsheet"); the tool is `tools/spell-research/logs.py` (documented in
+`tools/spell-research/README.md`, "Combat-log evidence").
+
+The command has two modes, chosen by `$ARGUMENTS`:
+
+- **Propose** (`$ARGUMENTS` empty or a logs folder): steps 1 to 3, then stop and wait for the
+  owner. When the folder is empty, use the default,
+  `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`.
+- **Apply** (`$ARGUMENTS` is `apply <path>`, the owner's filled copy of `REVIEW.csv`): steps 1, 4,
+  5 and 6.
 
 Rules that hold throughout:
 
-- **`logs.py apply` is the only writer of `defaults/Categories.lua`**, and it applies only rulings
-  recorded in `tools/spell-research/decisions.json`. Never edit either file by hand.
-- **Every ruling goes through `logs.py decide`.** Never hand-edit `decisions.json`.
+- **Only `logs.py ingest` (or `logs.py apply`) writes `defaults/Categories.lua`**, and only for
+  rulings recorded in `tools/spell-research/decisions.json`. Never edit either file by hand.
+- **Rulings come from the owner's sheet, through `logs.py ingest`.** Never hand-edit
+  `decisions.json`, and never fill in a decision the owner did not write.
 - **No player name, realm or GUID** goes into anything you write, show in a commit or paste into
   the conversation. The bundle carries only classes, specs and counts.
-- Arguments: `$ARGUMENTS` is the logs folder. When it is empty, use the default,
-  `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`.
 
 ## 1. Preconditions
 
 1. Confirm the working directory is the AuraMaster repo: `AuraMaster.toc` and
    `tools/spell-research/logs.py` both exist at the root. If not, stop and say so.
-2. Confirm the tree is clean: `git status --porcelain` prints nothing. If it does not, show it and
+2. Confirm the tree is clean apart from the bundle this review writes: `git status --porcelain`
+   prints nothing, or (apply mode) only paths under `docs/spell-research/`. Otherwise show it and
    stop; the review commits at the end and must not sweep up unrelated work.
-3. Take today's date once, `date +%F`, and use that same `<date>` for every step below. The bundle
-   is `docs/spell-research/<date>-logs`.
+3. Take today's date once, `date +%F`, and use that same `<date>` for every step below.
+   - Propose mode: the bundle is `docs/spell-research/<date>-logs`.
+   - Apply mode: the bundle is the one the sheet came from, the newest
+     `docs/spell-research/*-logs/` holding a `REVIEW.csv` (ask the owner if more than one could
+     be meant). `<date>` is still today's: it is the rulings' date.
 
-## 2. Scan and propose
+## 2. Scan and propose (propose mode)
 
 Run the scan **in the background** (the first run over the full archive takes about 20 minutes;
 later runs read only the logs that are new or changed since, from the per-log cache in
@@ -51,69 +63,46 @@ skipped, unattributed), then:
 python3 tools/spell-research/logs.py propose --date <date> --bundle docs/spell-research/<date>-logs
 ```
 
-If either command exits non-zero, show its output and stop.
+If either command exits non-zero, show its output and stop. Rows the owner already ruled in an
+earlier sheet are not on the new one (a rejected row is never asked again).
 
-**Resuming a review started earlier today:** if `docs/spell-research/<date>-logs/proposals.json`
-already exists and `decisions.json` already holds rulings for some of its keys, do **not** re-run
-`propose` (it drops ruled keys from the queue, and `apply` then could not apply them). Skip straight
-to step 4 and walk only the keys that `decisions.json` does not yet hold.
-
-## 3. Tell the owner what there is
+## 3. Hand the owner the sheet, and stop (propose mode)
 
 From `propose`'s output, give the counts of corrections, additions and flags, and the paths:
 
+- **the review sheet: `docs/spell-research/<date>-logs/REVIEW.csv`**, explained in `REVIEW.md`
+  beside it: one row per spell id per change; the owner writes `Approve` or `Reject` (`A`/`R`,
+  `Y`/`N`) in the last column, `decision`, may overwrite `proposed_category` with another category
+  key or label, and leaves a row blank to keep it pending. A replace is a `deletion` row plus a
+  `correction-add` row per new id, ruled independently.
 - the dictionary: `docs/spell-research/<date>-logs/dictionary/AURAS.md` (and `auras.csv`);
 - the review set: `CORRECTIONS.md`, `PROPOSED_ADDITIONS.md`, `FLAGS.md`, `CURRENT_CATEGORIES.md`,
   `SOURCES.md` in the bundle.
 
-Flags are report-only; they are never asked about. The dictionary is never reviewed item by item.
+Tell the owner to save the filled sheet as CSV (UTF-8) and hand it back with
+`/aura-spells-review apply <path>`. **Then stop.** Do not ask about the rows one by one, and do
+not commit: the bundle stays in the working tree until the sheet comes back.
 
-## 4. Walk the proposals, one at a time
-
-Read `docs/spell-research/<date>-logs/proposals.json`. Its `proposals` list is already in review
-order: corrections first (`section: "correction"`, types `replace` / `add` / `move`), then additions
-(`section: "addition"`), each most-applied first. For each proposal whose `key` is not already in
-`tools/spell-research/decisions.json`:
-
-1. Show it in a few lines: the type, the category (and `from_category` for a move), the class and
-   spell name, the listed ids and the proposed ids, the evidence per id and spec (`applications /
-   players`), the rule, the reason and the confidence. Keep it to what `proposals.json` says.
-2. Ask with **AskUserQuestion**, one question, three options:
-   - **Accept** — the proposal as written.
-   - **Change category** — then ask a second question for the category, offering the `spells`
-     categories of `defaults/Categories.lua` (the keys `CURRENT_CATEGORIES.md` lists, e.g.
-     `offensiveCDs`, `defensives`, `raidCDs`).
-   - **Reject** — then ask for an optional reason (the owner may leave it blank). A rejected key is
-     never proposed again.
-   The owner may also answer **stop here**: the rulings made so far are saved, and the rest stay
-   pending for the next run. Go to step 5.
-3. Record the answer **immediately**, before showing the next proposal:
-
-   ```sh
-   # Accept
-   python3 tools/spell-research/logs.py decide --bundle docs/spell-research/<date>-logs \
-     --key '<key>' --ruling accept --date <date>
-   # Change category
-   python3 tools/spell-research/logs.py decide --bundle docs/spell-research/<date>-logs \
-     --key '<key>' --ruling move --category <categoryKey> --date <date>
-   # Reject
-   python3 tools/spell-research/logs.py decide --bundle docs/spell-research/<date>-logs \
-     --key '<key>' --ruling reject --reason '<reason>' --date <date>
-   ```
-
-   Quote the key: it contains `|`. If `decide` exits non-zero, show the message and ask again.
-
-## 5. Apply and gate
-
-If the owner made no ruling at all this session, there is nothing to apply or commit: say so and
-stop (the bundle stays uncommitted in the working tree for the next run to reuse).
+## 4. Ingest the filled sheet (apply mode)
 
 ```sh
-python3 tools/spell-research/logs.py apply --bundle docs/spell-research/<date>-logs
+python3 tools/spell-research/logs.py ingest --bundle docs/spell-research/<bundle date>-logs \
+  --csv '<path>' --date <date>
 ```
 
-It prints each line change and writes `DECISIONS.md` into the bundle. Then run the addon gates
-through the bounded runner:
+It checks the sheet against the bundle's `REVIEW.csv` by `row_id`, `spell_id` and `type`, records
+every Approve/Reject in `decisions.json` (one entry per row), applies the approved rows to
+`defaults/Categories.lua`, writes `DECISIONS.md` into the bundle, and prints each line change and
+a summary (approved, rejected, pending, line changes). If it exits non-zero (an unknown or
+mismatched row, an unrecognized decision value, an edited category that is not a `spells` category
+key or label), nothing was written: show its message, ask the owner to fix the sheet, and stop.
+
+If the sheet ruled nothing (every decision blank), there is nothing to apply or commit: say so and
+stop.
+
+## 5. Gate (apply mode)
+
+Run the addon gates through the bounded runner:
 
 ```sh
 /home/tushar/.claude/wow-addon/bin/ka0s-bounded luacheck .
@@ -123,17 +112,18 @@ through the bounded runner:
 luacheck must report 0 warnings / 0 errors and the suite 0 failed. **If either is red, show the
 output and stop without committing**; the owner decides what happens next.
 
-## 6. Commit
+## 6. Commit (apply mode)
 
 Before staging, check the bundle holds no `Player-` string:
-`grep -rl 'Player-' docs/spell-research/<date>-logs` must print nothing.
+`grep -rl 'Player-' docs/spell-research/<bundle date>-logs` must print nothing. The owner's filled
+sheet is not committed; the rulings live in `decisions.json` and `DECISIONS.md`.
 
 Stage exactly these paths and commit:
 
 ```sh
-git add defaults/Categories.lua tools/spell-research/decisions.json docs/spell-research/<date>-logs
-git commit -m "Spell categories: apply combat-log rulings (<date>)"
+git add defaults/Categories.lua tools/spell-research/decisions.json docs/spell-research/<bundle date>-logs
+git commit -m "Spell categories: apply combat-log review sheet (<date>)"
 ```
 
-The body lists the counts (accepted, moved, rejected, still pending) and the line changes `apply`
-printed. Do not push.
+The body lists the counts `ingest` printed (approved, rejected, pending) and its line changes. Do
+not push.

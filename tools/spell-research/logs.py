@@ -15,6 +15,9 @@ Subcommands:
              (accept / reject / move into a chosen category); the only writer of that file.
     apply    Apply the bundle's ruled proposals to defaults/Categories.lua (the only writer of
              that file; unruled proposals are left alone) and write the bundle's DECISIONS.md.
+    ingest   Read the owner's filled copy of the bundle's REVIEW.csv, check it against the
+             bundle's, record each Approve/Reject in decisions.json by row, apply the approved
+             rows to defaults/Categories.lua and write the bundle's DECISIONS.md.
 
 The per-log cache and its salt live outside the repo (default
 ~/.cache/auramaster-spell-research/). Python 3.8+ standard library only.
@@ -158,7 +161,8 @@ def cmd_propose(args):
     }
     sid_artifacts.write_bundle(bundle, args.date, rows, proposals, flags, shipped, sources,
                                non_player=agg.non_player, names=names,
-                               class_players=class_players, addition_counts=addition_counts)
+                               class_players=class_players, addition_counts=addition_counts,
+                               decisions=decisions)
     corr = sum(1 for p in proposals if p.type in sid_artifacts.CORRECTION_TYPES)
     print("Proposed into %s: corrections %d, additions %d, flags %d; dictionary rows %d"
           % (bundle, corr, len(proposals) - corr, len(flags), len(rows)))
@@ -227,6 +231,56 @@ def cmd_apply(args):
     return 0
 
 
+def cmd_ingest(args):
+    """Check the owner's filled sheet against the bundle's REVIEW.csv, record every Approve/Reject
+    in decisions.json by row, apply the approved rows to Categories.lua, write DECISIONS.md. Every
+    check runs before anything is written; a second run with the same sheet changes nothing."""
+    if not research.DATE_RE.match(args.date or ""):
+        raise SystemExit("logs.py ingest: --date must be YYYY-MM-DD, got %r" % args.date)
+    import sid_db2
+    import sid_review
+
+    bundle = Path(args.bundle)
+    sheet = bundle / "REVIEW.csv"
+    if not sheet.exists():
+        raise SystemExit("logs.py ingest: no review sheet at %s; run `logs.py propose` first"
+                         % sheet)
+    try:
+        rows = sid_review.read_sheet(sheet)
+        filled = sid_review.read_sheet(args.csv)
+    except (OSError, ValueError) as exc:
+        raise SystemExit("logs.py ingest: %s" % exc)
+    shipped = sid_db2.shipped_categories(Path(args.categories))
+    try:
+        result = sid_review.ingest(rows, filled, shipped)
+    except sid_review.SheetError as exc:
+        raise SystemExit("logs.py ingest: %s\nNothing was written." % exc)
+    entries = sid_decide.sheet_entries(result.ruled, args.date)
+    decisions = load_decisions(args.decisions)
+    merged = dict(decisions)
+    merged.update(entries)
+    try:
+        text, changes = sid_decide.plan_rows(Path(args.categories), merged, rows, _shown(bundle))
+    except ValueError as exc:
+        raise SystemExit("logs.py ingest: %s\nNothing was written." % exc)
+    if any(decisions.get(k) != e for k, e in entries.items()):
+        sid_decide.record_many(args.decisions, entries)
+    if changes:
+        research.write_repo_text(Path(args.categories), text)
+    md = None
+    if any(sid_decide.row_key_of(r) in merged for r in rows):
+        date = _bundle_queue(bundle)["date"] if (bundle / "proposals.json").exists() else args.date
+        md = sid_decide.write_sheet_decisions_md(bundle, date, merged, rows)
+    for change in changes:
+        print(change)
+    approved = sum(1 for _r, d, _t in result.ruled if d == "approve")
+    print("Ingested %s: %d approved, %d rejected, %d pending; %s to %s.%s"
+          % (Path(args.csv).name, approved, len(result.ruled) - approved, len(result.pending),
+             sid_propose.plural(len(changes), "line change"), args.categories,
+             " Wrote %s" % md if md else ""))
+    return 0
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="logs.py", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="command", metavar="command")
@@ -290,6 +344,19 @@ def build_parser():
     app.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
                      help="the owner's rulings (default: tools/spell-research/decisions.json)")
     app.set_defaults(func=cmd_apply)
+
+    ing = sub.add_parser("ingest", help="apply the owner's filled review sheet (REVIEW.csv)")
+    ing.add_argument("--bundle", type=Path, required=True,
+                     help="bundle folder holding REVIEW.csv; DECISIONS.md is written there")
+    ing.add_argument("--csv", type=Path, required=True,
+                     help="the filled copy of the bundle's REVIEW.csv")
+    ing.add_argument("--date", required=True,
+                     help="the rulings' date, YYYY-MM-DD (required; never taken from the clock)")
+    ing.add_argument("--categories", type=Path, default=DEFAULT_CATEGORIES,
+                     help="the file to rewrite (default: defaults/Categories.lua)")
+    ing.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
+                     help="the owner's rulings (default: tools/spell-research/decisions.json)")
+    ing.set_defaults(func=cmd_ingest)
     return p
 
 

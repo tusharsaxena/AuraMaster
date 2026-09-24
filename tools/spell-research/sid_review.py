@@ -4,6 +4,11 @@ The owner reviews by spreadsheet (the ruling after the SID-10 dry run): `logs.py
 REVIEW.csv into the bundle, one row per spell id per change, the owner writes Approve or Reject in
 its last column and hands the sheet back for `logs.py ingest` to apply in one shot.
 
+Ingest (SID-14): read_sheet() reads a sheet (the bundle's own or the owner's filled copy, with or
+without the BOM), and ingest() checks the filled sheet against the bundle's by row_id + spell_id +
+type, reads each decision and resolves an edited proposed_category; every problem is collected
+and raised together as a SheetError, so nothing is written from a sheet that is wrong anywhere.
+
 Row types:
     correction-add  add this id to an existing entry (an `add` proposal's new ids, and the add half
                     of a `replace`)
@@ -21,7 +26,8 @@ library only.
 
 import csv
 import io
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import sid_propose
 
@@ -101,30 +107,25 @@ def _queue(proposals, shipped):
     return corr + adds
 
 
-def _changes(p):
-    """[(row type, spell id, current category, proposed category)] for one proposal."""
-    if p.type == "replace":
-        return ([("deletion", sid, p.category, "") for sid in p.listed]
-                + [("correction-add", sid, p.category, p.category) for sid in p.proposed])
-    if p.type == "add":
-        return [("correction-add", sid, p.category, p.category)
-                for sid in p.proposed if sid not in p.listed]
-    if p.type == "move":
-        return [("move", sid, p.from_category, p.category) for sid in p.proposed]
-    return [("addition", sid, "", p.category) for sid in p.proposed]
+def review_rows(proposals, shipped, names=None, class_players=None, decisions=None):
+    # type: (list, list, Optional[dict], Optional[dict], Optional[dict]) -> List[dict]
+    """The sheet's rows (dicts keyed by COLUMNS) for sid_propose Proposals, in review order.
 
-
-def review_rows(proposals, shipped, names=None, class_players=None):
-    # type: (list, list, Optional[dict], Optional[dict]) -> List[dict]
-    """The sheet's rows (dicts keyed by COLUMNS) for sid_propose Proposals, in review order."""
+    A row already ruled in `decisions` (its sid_propose.row_key() is there, from an earlier
+    `logs.py ingest`) is left out, so a rejected row is never asked again; row ids number the rows
+    that remain.
+    """
     names = names or {}
     class_players = class_players or {}
+    decisions = decisions or {}
     aura_of = {cat["key"]: cat.get("aura", "BUFF") for cat in shipped}
     rows = []  # type: List[dict]
     for p in _queue(proposals, shipped):
         aura_type = aura_of.get(p.from_category if p.type == "move" else p.category, "BUFF")
         key = sid_propose.proposal_key(p)
-        for rtype, sid, current, proposed in _changes(p):
+        for rtype, sid, current, proposed in sid_propose.review_changes(p):
+            if sid_propose.row_key(key, sid, rtype) in decisions:
+                continue
             by_spec = p.evidence.get(sid) or {}
             rows.append({
                 "row_id": "R%04d" % (len(rows) + 1),
@@ -212,3 +213,119 @@ def review_md(date, rows, shipped, csv_name="REVIEW.csv"):
             "## Categories", "", "| Key | Label |", "|---|---|"]
     out += ["| `%s` | %s |" % (cat["key"], cat["label"]) for cat in shipped]
     return "\n".join(out)
+
+
+# --- ingest: the filled sheet ------------------------------------------------------------------
+
+class SheetError(ValueError):
+    """The filled sheet does not fit the bundle's; `problems` lists every row at fault."""
+
+    def __init__(self, problems):
+        # type: (List[str]) -> None
+        self.problems = list(problems)
+        ValueError.__init__(self, "the review sheet has %s:\n  %s" % (
+            sid_propose.plural(len(self.problems), "problem"), "\n  ".join(self.problems)))
+
+
+class Ingest(NamedTuple):
+    ruled: List[Tuple[dict, str, str]]   # (the bundle's row, "approve"|"reject", target category)
+    pending: List[str]                   # row ids with no decision (blank, or left out)
+
+
+def read_sheet(path):
+    # type: (Path) -> List[dict]
+    """The rows of a review sheet as {column: text}, in file order; a leading BOM and either line
+    ending are accepted. ValueError when it is not UTF-8 or lacks one of COLUMNS."""
+    path = Path(path)
+    try:
+        text = path.read_bytes().decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError("%s is not UTF-8 (%s); save it as CSV UTF-8" % (path, exc))
+    reader = csv.DictReader(io.StringIO(text, newline=""))
+    header = [h.strip() for h in (reader.fieldnames or [])]
+    missing = [c for c in COLUMNS if c not in header]
+    if missing:
+        raise ValueError("%s lacks the column%s %s" % (path, "" if len(missing) == 1 else "s",
+                                                        ", ".join(missing)))
+    reader.fieldnames = header
+    rows = []
+    for raw in reader:
+        row = {c: (raw.get(c) or "").strip() for c in COLUMNS}
+        if any(row.values()):
+            rows.append(row)
+    return rows
+
+
+def resolve_category(text, shipped):
+    # type: (str, list) -> Optional[str]
+    """The `spells` category key a sheet cell names, by key or label (case and surrounding blanks
+    ignored); None when it names none."""
+    want = (text or "").strip().lower()
+    for cat in shipped:
+        if want in (cat["key"].lower(), (cat.get("label") or "").strip().lower()):
+            return cat["key"]
+    return None
+
+
+def _same_id(a, b):
+    try:
+        return int(str(a).strip()) == int(str(b).strip())
+    except ValueError:
+        return False
+
+
+def ingest(bundle_rows, filled_rows, shipped):
+    # type: (List[dict], List[dict], list) -> Ingest
+    """Check the filled sheet against the bundle's and read its rulings.
+
+    A row whose row_id the bundle lacks, whose spell_id or type differs from the bundle's row, that
+    appears twice, whose decision is not a recognized value, or whose edited proposed_category is
+    not a `spells` category key or label of `shipped` (or is filled in on a deletion) is a problem;
+    all problems are raised together as a SheetError. A blank decision, or a row left out of the
+    filled sheet, is pending. The target of an approved row is its proposed_category (as edited);
+    a deletion's is "".
+    """
+    by_id = {r["row_id"]: r for r in bundle_rows}
+    problems = []  # type: List[str]
+    seen = set()  # type: set
+    ruled = []  # type: List[Tuple[dict, str, str]]
+    for filled in filled_rows:
+        rid = filled.get("row_id", "")
+        mine = by_id.get(rid)
+        if mine is None:
+            problems.append("%s: not a row of the bundle's REVIEW.csv" % (rid or "(no row_id)"))
+            continue
+        if rid in seen:
+            problems.append("%s: appears more than once" % rid)
+            continue
+        seen.add(rid)
+        if not _same_id(filled.get("spell_id"), mine["spell_id"]) or \
+                filled.get("type", "").strip() != mine["type"]:
+            problems.append("%s: spell_id/type %s/%s does not match the bundle's %s/%s" % (
+                rid, filled.get("spell_id"), filled.get("type"), mine["spell_id"], mine["type"]))
+            continue
+        try:
+            decision = decision_of(filled.get("decision"))
+        except ValueError as exc:
+            problems.append("%s: %s" % (rid, exc))
+            continue
+        edited = (filled.get("proposed_category") or "").strip()
+        target = mine["proposed_category"]
+        if edited and edited != target:
+            if mine["type"] == "deletion":
+                problems.append("%s: a deletion takes no proposed_category (got %r)"
+                                % (rid, edited))
+                continue
+            target = resolve_category(edited, shipped)
+            if target is None:
+                problems.append("%s: proposed_category %r is not a `spells` category key or "
+                                "label (known: %s)" % (rid, edited,
+                                                       ", ".join(c["key"] for c in shipped)))
+                continue
+        if decision is not None:
+            ruled.append((mine, decision, target))
+    if problems:
+        raise SheetError(problems)
+    decided = {row["row_id"] for row, _d, _t in ruled}
+    return Ingest(ruled=ruled, pending=[r["row_id"] for r in bundle_rows
+                                        if r["row_id"] not in decided])
