@@ -29,14 +29,16 @@ APPLY_AURA_EFFECTS = frozenset({research.APPLY_AURA_EFFECT, 35, 119, 128})
 # -1 negative, +1 positive, 0 any value.
 AURA_SIGNALS = {
     8: ("periodic_heal", 0),          # SPELL_AURA_PERIODIC_HEAL
-    31: ("speed_up", 0),              # SPELL_AURA_MOD_INCREASE_SPEED (a snare is 33, not this)
+    31: ("speed_up", 1),              # SPELL_AURA_MOD_INCREASE_SPEED (a snare is 33, not this)
     52: ("crit_up", 1),               # SPELL_AURA_MOD_CRIT_PERCENT
     56: ("transform", 0),             # SPELL_AURA_TRANSFORM
     65: ("haste_up", 1),              # SPELL_AURA_MOD_CASTING_SPEED_NOT_STACK
     69: ("absorb", 0),                # SPELL_AURA_SCHOOL_ABSORB
     79: ("damage_up", 1),             # SPELL_AURA_MOD_DAMAGE_PERCENT_DONE
     87: ("damage_taken_down", -1),    # SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN (Astral Shift: -40)
-    129: ("speed_up", 0),             # SPELL_AURA_MOD_SPEED_ALWAYS
+    129: ("speed_up", 1),             # SPELL_AURA_MOD_SPEED_ALWAYS
+    # Both speed rows need positive points: Blessing of Protection 1022, Sacrifice 6940 and Freedom
+    # 1044 carry a 31 row at 0 (a talent fills it in), which is no speed increase (SID-10).
     137: ("stat_pct_up", 1),          # SPELL_AURA_MOD_TOTAL_STAT_PERCENTAGE
     189: ("rating_up", 1),            # SPELL_AURA_MOD_RATING (crit/haste/mastery/versatility)
     193: ("haste_up", 1),             # SPELL_AURA_MELEE_SLOW, all haste (Bloodlust: +30)

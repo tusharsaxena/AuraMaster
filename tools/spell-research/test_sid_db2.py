@@ -66,6 +66,12 @@ class AuraSignalsTest(unittest.TestCase):
     def test_dash_is_speed_up(self):
         self.assertEqual(self.signals(1850), {1850: {"speed_up"}})
 
+    def test_a_zero_point_speed_row_is_no_speed_up(self):
+        # SID-10, the real run: Blessing of Protection 1022 carries MOD_INCREASE_SPEED (31) with 0
+        # base points (a talent's placeholder; the real rows follow), and rule R4 filed it, Blessing
+        # of Sacrifice and Blessing of Freedom under Movement. 900600: MOD_SPEED_ALWAYS (129) at 0.
+        self.assertEqual(self.signals(1022, 900600), {1022: set(), 900600: set()})
+
     def test_recklessness_crit_spell_modifier_is_crit_up(self):
         # ADD_FLAT_MODIFIER (107) on SpellModOp 7 (CritChance), +20.
         self.assertEqual(self.signals(1719), {1719: {"crit_up"}})
