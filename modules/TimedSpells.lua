@@ -28,6 +28,7 @@ local TS = NS.TimedSpells
 local Perf = NS.Perf
 
 local scanScheduled = false
+local scanTimer = nil      -- the queued scan's handle, so TS.Stop can cancel it
 local listening = false    -- whether UNIT_AURA is registered right now
 local SCAN_UNITS = { "player", "pet" }
 local MAX_INDEX = 40
@@ -103,7 +104,10 @@ end
 local function scheduleScan()
     if scanScheduled then return end
     scanScheduled = true
-    C_Timer.After(0.5, scanTick)
+    scanTimer = C_Timer.NewTimer(0.5, function()
+        scanTimer = nil
+        scanTick()
+    end)
 end
 
 --- UNIT_AURA arrives for every unit. The payload is secret while auras are, so the unit is proven a
@@ -127,10 +131,16 @@ local function syncAuraListen(event)
     end
 end
 
---- Stop listening (perf suspend, and any time no container needs it).
+--- Stop listening (perf suspend, and any time no container needs it). A scan already queued is
+--- canceled with it, and `scanScheduled` reset so the next gate opening can queue a fresh one.
 function TS.Stop()
     events:UnregisterAllEvents()
     listening = false
+    if scanTimer then
+        scanTimer:Cancel()
+        scanTimer = nil
+    end
+    scanScheduled = false
 end
 
 --- Start or stop listening, from what the containers need right now. THE LATCH WINS
@@ -160,8 +170,9 @@ function TS.StartListening()
 end
 
 --- Everything this file has registered, gone: the two subscriptions and whatever UNIT_AURA gate
---- TS.Sync last opened. A scan already queued is dropped by scanTick's `listening` guard rather than
---- canceled -- C_Timer.After hands back no handle to cancel.
+--- TS.Sync last opened, and the scan it may have queued: TS.Stop cancels that timer rather than
+--- leaving it armed to wake up and find the latch. scanTick's `listening` guard stays as defense in
+--- depth.
 function TS.StandDown()
     TS.Stop()
     bus:UnregisterAllMessages()

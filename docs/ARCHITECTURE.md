@@ -331,9 +331,9 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:380` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:159` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:551` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:158` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:574` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:380` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:169` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:377` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:168` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:584` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -459,9 +459,9 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 | | |
 |---|---|
 | The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
-| `modules/TimedSpells.lua` | `TS.StandDown()`: its `UNIT_AURA` gate and its two bus subscriptions |
+| `modules/TimedSpells.lua` | `TS.StandDown()`: its `UNIT_AURA` gate, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
-| The coalescing apply timer | `CM.RequestApply` returns immediately, so nothing re-arms |
+| The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
 | Every container | `ContainerClass:ShouldShow` answers no at **step 0**, so the engine is disabled, the preview and handle hidden and the anchor hidden |
 | Blizzard's buff and debuff frames | reparented back where they belong: an addon that is not running must not still be hiding them |
@@ -517,7 +517,7 @@ return value.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:223-227`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:192`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:196`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
   button's ancestry (`modules/Container.lua:446`).

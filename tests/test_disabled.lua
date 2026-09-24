@@ -250,8 +250,8 @@ end)
 test("disabled: nothing is left armed, and nothing arms itself afterwards", function()
     local NS, mocks = baseline()
     disable(NS)
-    -- Drain whatever one-shot was already in flight when the switch flipped: C_Timer.After hands
-    -- back no handle, so a tick already queued cannot be canceled, only made to find nothing.
+    -- Nothing needs draining: a one-shot in flight when the switch flipped is canceled by the
+    -- stand-down (the next case). Firing the queue anyway proves nothing re-arms from it.
     mocks.__fireTimers()
 
     -- red under: drop the NS.IsStoodDown guard at the top of CM.RequestApply, which re-arms the
@@ -264,6 +264,38 @@ test("disabled: nothing is left armed, and nothing arms itself afterwards", func
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     NS.bus:SendMessage(NS.MSG.CONFIG_CHANGED, { path = "alpha" })
     assertEqual(#mocks.__timers(), 0, "a stood-down addon armed a timer")
+end)
+
+test("disabled: a queued apply and a queued scan are canceled, not left armed", function()
+    local NS, mocks = baseline()
+    local CM = NS.ContainerManager
+    -- A 'timeless' container, so TimedSpells opens its UNIT_AURA gate.
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    assertEqual(#mocks.__timers(), 0, "the baseline settled")
+
+    -- Arm both one-shots: the coalescing apply and the timed-spell scan.
+    NS.SetByPath("container.bars.width", 180, 1)
+    mocks.__fire("UNIT_AURA", "player")
+    assertEqual(#mocks.__timers(), 2, "the apply and the scan are both armed")
+
+    disable(NS)
+    -- red under: C_Timer.After -- no handle, so both would stay queued to wake up and find the latch.
+    -- The kit's NewTimer:Cancel takes a handle out of the live set (revision 17).
+    assertEqual(#mocks.__timers(), 0, "a queued one-shot is still going to wake up")
+
+    -- The stand-up's own RequestApply(nil, true) is not swallowed by a `scheduled` left set on the
+    -- way down: it arms a fresh flush, and that flush applies.
+    local passes, realFlush = 0, CM.FlushPending
+    CM.FlushPending = function(...)
+        local n = realFlush(...)
+        if n > 0 then passes = passes + 1 end
+        return n
+    end
+    enable(NS)
+    mocks.__fireTimers()
+    CM.FlushPending = realFlush
+    assertEqual(passes, 1, "the stand-up's apply pass")
 end)
 
 test("disabled: every frame that was shown is hidden, at the source", function()

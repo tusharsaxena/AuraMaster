@@ -68,7 +68,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 - **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:39`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:192`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:196`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).

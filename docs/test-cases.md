@@ -907,12 +907,13 @@ badge and any count quoted in the docs must agree with it.
 - picker: any other key passes through and the pick continues
 - picker: a new pick waits for the buttons to be released again before it can pick
 
-### test_disabled.lua (15)
+### test_disabled.lua (16)
 
 - disabled: enabled, the addon registers a non-empty set
 - disabled: every registration the addon owns is UNREGISTERED, not gated
 - disabled: what MUST survive does — the dispatcher, the panel, AceDB and the launcher
 - disabled: nothing is left armed, and nothing arms itself afterwards
+- disabled: a queued apply and a queued scan are canceled, not left armed
 - disabled: every frame that was shown is hidden, at the source
 - disabled: firing every baseline event writes nothing, says nothing and shows nothing
 - disabled: every reserved verb answers, and the bare /am opens the panel
@@ -1500,7 +1501,7 @@ badge and any count quoted in the docs must agree with it.
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 14 |
-| test_disabled.lua | 15 |
+| test_disabled.lua | 16 |
 | test_slash.lua | 25 |
 | test_slash_verbs.lua | 42 |
 | test_bulklog.lua | 20 |
@@ -1528,4 +1529,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1302** |
+| **Total** | **1303** |

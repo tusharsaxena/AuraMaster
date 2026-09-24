@@ -32,6 +32,7 @@ CM.instances = CM.instances or {}
 local pending = {}        -- [id] = true
 local pendingAll = false
 local scheduled = false
+local flushTimer = nil     -- the coalescing timer's handle, so a stand-down can cancel it
 local userPending = false -- a pending request is the player's own, so a deferral of it is announced
 local shownReason = nil   -- the cause the deferral notice last named: nil, "combat" or "secret"
 
@@ -183,7 +184,10 @@ function CM.RequestApply(id, system)
     if not system then userPending = true end
     if not scheduled then
         scheduled = true
-        C_Timer.After(0, CM.FlushPending)
+        flushTimer = C_Timer.NewTimer(0, function()
+            flushTimer = nil
+            CM.FlushPending()
+        end)
     end
 end
 
@@ -278,6 +282,12 @@ end
 --- containers were applied. `edge` names the event that asked ("regen" for PLAYER_REGEN_ENABLED);
 --- the coalescing timer passes nothing.
 function CM.FlushPending(edge)
+    -- A flush run directly (the startup build, an event edge) makes the queued one redundant: cancel
+    -- it, so `flushTimer` always names the one live coalescing timer, the one a stand-down cancels.
+    if flushTimer then
+        flushTimer:Cancel()
+        flushTimer = nil
+    end
     scheduled = false
     -- The latch, not a flag of this file's own: a stood-down addon applies nothing, for either
     -- reason it is down (slash-commands-§7). Stand-up's own RequestApply drains the queue.
@@ -582,14 +592,21 @@ function CM.StartListening()
     end
 end
 
---- Drop every subscription this file owns, and the queue behind them. What was pending is not kept:
---- the stand-up rebuilds from the settings AS THEY ARE THEN, never from a snapshot taken on the way
---- down (performance-§6).
+--- Drop every subscription this file owns, the queue behind them, and the coalescing timer that would
+--- have flushed it: canceled, not left armed to wake up and find the latch (slash-commands-§7).
+--- `scheduled` goes down with it, or the stand-up's own RequestApply(nil, true) would be swallowed.
+--- What was pending is not kept: the stand-up rebuilds from the settings AS THEY ARE THEN, never
+--- from a snapshot taken on the way down (performance-§6).
 function CM.StopListening()
     if ev then
         ev:UnregisterAllMessages()
         ev = nil
     end
+    if flushTimer then
+        flushTimer:Cancel()
+        flushTimer = nil
+    end
+    scheduled = false
     pending, pendingAll, userPending = {}, false, false
 end
 
