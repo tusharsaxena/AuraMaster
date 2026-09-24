@@ -12,6 +12,24 @@ return function(NS, m)
     local P = {}
     local ace = m.LibStub("AceGUI-3.0")
 
+    -- The strip each page's last render drew, recorded off the library's TabStrip as it is called:
+    -- the tab list the render handed it, in strip order, by ctx. NS.Helpers IS the library instance
+    -- (settings/OptionsSetup.lua), and the library's own tabbed page reaches TabStrip through that
+    -- same instance, so this sees every strip whoever draws it. Weak-keyed: a ctx outlives no env.
+    local drawn = setmetatable({}, { __mode = "k" })
+    local strip = NS.Helpers.TabStrip
+    NS.Helpers.TabStrip = function(ctx, spec, ...)
+        if type(ctx) == "table" and type(spec) == "table" then drawn[ctx] = spec.tabs end
+        return strip(ctx, spec, ...)
+    end
+
+    --- The tabs `ctx`'s last render drew, as `{ key, label }` in strip order (empty when none).
+    function P.drawnTabs(ctx)
+        local out = {}
+        for i, t in ipairs(drawn[ctx] or {}) do out[i] = { key = t.key, label = t.label } end
+        return out
+    end
+
     --- Every widget created since `mark`, not yet released.
     local function since(mark)
         local out = {}
@@ -136,10 +154,11 @@ return function(NS, m)
         return false
     end
 
-    --- Click the tab `key` on a container page and answer what that render drew.
+    --- Click the tab `key` on a container page and answer what that render drew. The button is the
+    --- library's strip ledger (`ctx.__tabKids`, in strip order).
     function P.tab(pageKey, key)
         local ctx = NS.Helpers.__pageCtx[pageKey]
-        for i, t in ipairs(ctx.__tabs) do
+        for i, t in ipairs(P.drawnTabs(ctx)) do
             if t.key == key then
                 return P.during(function() ctx.__tabKids[i]:__fire("OnClick") end)
             end
@@ -150,8 +169,22 @@ return function(NS, m)
     --- The tab keys a container page's last render drew, in order.
     function P.tabKeys(pageKey)
         local out = {}
-        for i, t in ipairs(NS.Helpers.__pageCtx[pageKey].__tabs or {}) do out[i] = t.key end
+        for i, t in ipairs(P.drawnTabs(NS.Helpers.__pageCtx[pageKey])) do out[i] = t.key end
         return out
+    end
+
+    --- The page banner's Dropdown on `ctx`, or nil: the live AceGUI Dropdown whose frame is the
+    --- first thing the library's chrome ledger (`ctx.__chromeKids`) lists, which is where
+    --- O.PageBanner records it.
+    function P.banner(ctx)
+        local first = ctx and (ctx.__chromeKids or {})[1]
+        if first == nil then return nil end
+        local last = #ace.__created
+        for i = last, 1, -1 do
+            local w = ace.__created[i]
+            if w.type == "Dropdown" and w.frame == first and not w.__released then return w end
+        end
+        return nil
     end
 
     --- Visit every tab of a container page in strip order, calling `fn(key, widgets)` with what

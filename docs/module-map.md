@@ -167,6 +167,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_pages_bars.lua` | `settings/Bars.lua` through its widgets: tabs (the Icon tab among them), the not-drawn-as-bars notice with every control disabled, sliders and swatches, Defaults |
 | `test_pages_icons.lua` | `settings/Icons.lua` through its widgets: tabs, the not-drawn-as-icons notice with every control disabled, rows, Defaults |
 | `test_pages_text.lua` | `settings/Text.lua` through its widgets: the tabs, the notice and disabled rows for another style, the Template box and its refusal text (panel and `/am set`), the cheat sheet, the Justify note, the centering note, the rows the effect and the template dim, Defaults |
+| `test_pages_tabs.lua` | Every tabbed page's render from the outside, across the seven pages: the strip's tab keys and labels in order, the active tab healing after a container switch, the muted-red notice above disabled rows, the Filters warnings above the rows, the empty registry's placeholder tab and line, the Containers picker+create band, and the live Dropdown and Button counts staying flat across re-renders |
 | `test_pages_about.lua` | `settings/About.lua`: the command list, the Notes line and the logo, and when each is read |
 | `test_pages_profiles.lua` | `settings/Profiles.lua`: the table it registers, how often it opens the dialog and into what, when it opts out |
 | `test_envsetup.lua` | `core/EnvSetup.lua` on both arms (live and library-absent): which manifest `NS.Meta` reads, what `NS.Version` answers |

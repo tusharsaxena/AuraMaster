@@ -1343,6 +1343,16 @@ badge and any count quoted in the docs must agree with it.
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
 - text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
 
+### test_pages_tabs.lua (7)
+
+- tabs: each of the seven pages draws its tab keys and labels in order
+- tabs: a container switch that takes the active tab away heals the strip to its first tab
+- tabs: Bars, Icons and Text on a mismatched style draw the muted-red notice above every row, drawn disabled
+- tabs: the Filters page draws the engine's warnings above the tab's rows
+- tabs: with no containers every per-container page draws one placeholder tab and the empty-registry line
+- tabs: the Containers page's band holds the picker and New container, out of the tab body
+- tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
+
 ### test_pages_about.lua (3)
 
 - about: the landing page lists every slash command, in /am help's own words
@@ -1551,6 +1561,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 29 |
+| test_pages_tabs.lua | 7 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1566,4 +1577,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1336** |
+| **Total** | **1343** |

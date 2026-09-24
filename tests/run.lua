@@ -97,6 +97,7 @@ Kit.run{
         "test_pages_bars",
         "test_pages_icons",
         "test_pages_text",
+        "test_pages_tabs",
         "test_pages_about",
         "test_pages_profiles",
         "test_envsetup",
