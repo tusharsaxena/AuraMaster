@@ -462,20 +462,15 @@ cli = SlashLib:New({
     -- The schema seams. SetByPath rather than a bare write, so a CLI change takes the path a panel
     -- change takes — the [Set] line, the row's onChange, CONFIG_CHANGED and the panel re-sync.
     get          = function(path) return NS.GetSetting(path) end,
-    -- A refusal with its row's reason (the Text template's parser) prints the reason indented
-    -- under it, the shape slash-commands-§6 gives a failed parse.
-    set          = function(path, v)
-        local ok, err, why = NS.SetByPath(path, v)
-        if not ok and err then print(err) end
-        if not ok and why then print("  " .. why) end
-    end,
+    -- The seam's answer, returned whole (LibKa0s-Slash minor 15): a refusal answers `false, err,
+    -- why` and CliSet prints it as INVALID, then err and the row's reason (the Text template's
+    -- parser) each indented, the shape slash-commands-§6 gives a failed parse, with no echo after.
+    set          = function(path, v) return NS.SetByPath(path, v) end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
-    -- A row with no meaningful default (the container name's `noReset`) is refused with a reason:
-    -- say it, or `/am reset` would echo the unchanged value as if the reset had worked.
-    applyDefault = function(row)
-        local ok, why = NS.ApplyDefault(row)
-        if ok == false and why then print(why) end
-    end,
+    -- A row with no meaningful default (the container name's `noReset`) answers false, and CliReset
+    -- prints NO_DEFAULT ("<path> has no default to restore") instead of echoing the unchanged value
+    -- as if the reset had worked.
+    applyDefault = function(row) return NS.ApplyDefault(row) end,
     allRows      = function() return NS.Schema end,
     groupKey     = function(row) return row.page end,
     -- The same bulk pair the Options descriptor takes (LibKa0s-Slash minor 8): CliResetAll writes

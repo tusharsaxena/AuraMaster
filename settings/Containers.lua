@@ -61,8 +61,9 @@ local ROWS = {
         -- name, so a rename queues no apply and, in combat, announces no deferral.
         onChange = function() CM.NotifyRenamed() end, effect = "none",
         -- A name has no meaningful default (owner, 2026-09-13): neither this page's Defaults nor
-        -- `/am reset` restores it, and `/am reset` says why. The template's name still backfills.
-        noReset = true, noResetReason = L["A container's name has no default."],
+        -- `/am reset` restores it, and `/am reset` prints the library's no-default line. The
+        -- template's name still backfills.
+        noReset = true,
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",

@@ -776,12 +776,12 @@ end
 
 --- Restore one row to its shipped default, through the same seam everything else writes through.
 --- A row flagged `noReset` has no meaningful default (a container's name): no reset restores it —
---- not a page's Defaults, not `/am reset` — and the refusal carries the row's `noResetReason` for
---- the CLI to print. Its template value still backfills a new container.
---- @return boolean|nil ok, string|nil why
+--- not a page's Defaults, not `/am reset` — and it answers false, which `/am reset` prints as the
+--- library's NO_DEFAULT line. Its template value still backfills a new container.
+--- @return boolean|nil ok, string|nil err, string|nil why
 function NS.ApplyDefault(row)
     if type(row) ~= "table" or row.path == nil then return false end
-    if row.noReset then return false, row.noResetReason end
+    if row.noReset then return false end
     if row.default == nil then return false end
     return NS.SetByPath(row.path, copy(row.default))
 end

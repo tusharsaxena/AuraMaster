@@ -252,8 +252,9 @@ announces nothing at all. Master `scale` is deliberately unmarked: `SetScale` ru
 
 A few row fields are this addon's own, beyond the library's row shape. Each has one named reader:
 
-- `noReset`, with `noResetReason`: the restore walk skips the row, and `NS.ApplyDefault` refuses it
-  and returns that reason (`container.name`; `/am reset container.name` prints it).
+- `noReset`: the restore walk skips the row, and `NS.ApplyDefault` refuses it by answering false
+  (`container.name`; `/am reset container.name` prints LibKa0s-Slash's `NO_DEFAULT` line,
+  "container.name has no default to restore").
 - `printLabel`: `/am get` and `/am list` print the value's label before the stored value
   (`formatValue` in `settings/Slash.lua`; the Filters category rows).
 - `grid`: the `ChoiceGrid` on Filters → Categories that draws the row (`blizzard`, `custom`, `dispel`

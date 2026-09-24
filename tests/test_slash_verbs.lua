@@ -238,7 +238,7 @@ test("slash verbs: set writes a color in the stored {r, g, b, a} shape; get deco
         "{container.bars.barColor = {0.50, 1.00, 1.00, 1.00}  (Player buffs)}")
 end)
 
-test("slash verbs: a value the parser takes but the seam refuses prints the seam's reason, then the unchanged value", function()
+test("slash verbs: a value the parser takes but the seam refuses prints the refusal and no echo of the unchanged value", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("select 2")
@@ -246,12 +246,35 @@ test("slash verbs: a value the parser takes but the seam refuses prints the seam
     NS2.Slash:OnSlash("set container.attach.container 1")
     NS2.Slash:OnSlash("select 1")
     NS2.Slash:OnSlash("set container.attach.mode container")
-    -- red under: the descriptor's set swallowing SetByPath's error
+    -- red under: the descriptor's set swallowing SetByPath's answer (the unchanged value echoes)
     assertEqual(dump(slash(NS2, lines, "set container.attach.container 2")),
-        "{Invalid value for container.attach.container | container.attach.container = 0  (Player buffs)}")
+        "{Invalid value for container.attach.container}")
     deleteAll(NS2)
     assertEqual(dump(slash(NS2, lines, "set container.bars.width 300")),
-        "{" .. MISSING_ROW .. " | container.bars.width = nil}")
+        "{Invalid value for container.bars.width |   " .. MISSING_ROW .. "}")
+end)
+
+test("slash verbs: /am set with a refused value prints INVALID and the row's reason once each, and does not echo the unchanged value", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.State.SetActiveContainer(1)
+    local before = NS2.Database.FindContainer(1).text.template
+    local why = NS2.L["$%s$ appears twice — each token can be used once."]:format("spellname")
+    -- red under: the host wrapper printing and returning nil
+    assertEqual(dump(slash(NS2, lines, "set container.text.template $spellname$[ $spellname$]")),
+        "{Invalid value for container.text.template |   " .. why .. "}")
+    assertEqual(NS2.Database.FindContainer(1).text.template, before)
+end)
+
+test("slash verbs: /am reset container.name prints the library's no-default line once", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.State.SetActiveContainer(1)
+    local SlashLib = mocks.LibStub("LibKa0s-Slash-1.0")
+    -- red under: the host's applyDefault printing the row's reason and returning nil (an echo follows)
+    assertEqual(dump(slash(NS2, lines, "reset container.name")),
+        "{" .. SlashLib.STRINGS.NO_DEFAULT:format("container.name") .. "}")
+    assertEqual(NS2.Database.FindContainer(1).name, "Player buffs")
 end)
 
 test("slash verbs: set and reset reach a session row, which never lands in the profile", function()

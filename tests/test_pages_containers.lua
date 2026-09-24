@@ -288,13 +288,14 @@ test("containers: the Name box renames the selected container, trimmed, and no o
 end)
 
 test("containers: /am reset container.name says a name has no default and changes nothing", function()
-    local NS, _, P = containers()
+    local NS, mocks, P = containers()
     local lines = P.chat()
     local msgs = P.messages()
     NS.Slash:OnSlash("reset container.name")
+    local want = mocks.LibStub("LibKa0s-Slash-1.0").STRINGS.NO_DEFAULT:format("container.name")
     local said = false
     for _, l in ipairs(lines) do
-        if l:find("A container's name has no default.", 1, true) then said = true end
+        if l:find(want, 1, true) then said = true end
     end
     -- red under: the Slash descriptor's applyDefault dropping ApplyDefault's refusal (a silent no-op)
     assertTrue(said, "the refusal is printed: " .. table.concat(lines, " | "))

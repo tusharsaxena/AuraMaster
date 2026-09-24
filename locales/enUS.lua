@@ -305,7 +305,6 @@ L["Hide the default debuff frame. Applied out of combat."] = "Hide the default d
 L["Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded — your other profiles are not affected."] = "Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded — your other profiles are not affected."
 L["All settings reset to defaults."] = "All settings reset to defaults."
 L["Cannot reset settings — the settings helpers failed to load."] = "Cannot reset settings — the settings helpers failed to load."
-L["A container's name has no default."] = "A container's name has no default."
 L["No containers yet. Click New container, or type /am new."] = "No containers yet. Click New container, or type /am new."
 L["Cooldown"] = "Cooldown"
 L["The width of one icon."] = "The width of one icon."
