@@ -515,8 +515,8 @@ end)
 Sl.__cli = cli
 
 --- The one refusal line, built by the library from `brandName` and `slash`. Published because the
---- launcher's refused left-click prints THIS line rather than a second spelling of it
---- (launcher-§2, slash-commands-§7).
+--- panel's refused Test mode tick (settings/General.lua) prints THIS line rather than a second
+--- spelling of it (slash-commands-§7).
 function Sl.DisabledLine()
     return cli.DisabledLine and cli:DisabledLine() or ""
 end
@@ -527,9 +527,19 @@ function Sl.LandingRows() return cli:LandingRows() end
 
 function Sl.OnSlash(_, msg) cli:OnSlash(msg) end
 
---- Toggle test mode -- what a bare `/am test` runs, published so the launcher's left click
---- (core/LauncherSetup.lua, rung (b)) drives the SAME switch and prints the same line. The mode lives
---- once, in NS.State.testMode, written only by Preview.SetTestMode.
+-- THE LAUNCHER MENU'S THREE HANDLERS (launcher-§2, LibKa0s-Launcher-1.0 minor 4). The right-click
+-- menu's Enabled, Locked and Test mode entries (core/LauncherSetup.lua) call these, and each is the
+-- verb's OWN handler rather than a second path to the same setting, so the menu confirms, refuses
+-- and prints exactly as the slash command does.
+
+--- Enable or disable -- what `/am enable` / `/am disable` run.
+function Sl.SetEnabled(on) runEnabled(on and true or false) end
+
+--- Flip the lock -- what `/am lock` / `/am unlock` run, handed the state the lock moves TO.
+function Sl.ToggleLock() runLock(not NS.GetSetting("locked")) end
+
+--- Toggle test mode -- what a bare `/am test` runs. The mode lives once, in NS.State.testMode,
+--- written only by Preview.SetTestMode.
 function Sl.ToggleTestMode() runTest("") end
 
 function Sl.Register()

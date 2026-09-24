@@ -41,7 +41,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Test mode:** placeholder auras drawn through the same `Style` code, switched by the Master
-  controls *Test mode* checkbox, `/am test` or the minimap button's left click; session-only and
+  controls *Test mode* checkbox, `/am test` or the minimap button's right-click menu; session-only and
   ended when combat starts. Unlocking only makes containers draggable, and live auras keep drawing.
 - **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
 - **Profiles** through AceDB, with a Profiles sub-page.

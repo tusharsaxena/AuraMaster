@@ -34,21 +34,25 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_launcher.lua (26)
+### test_launcher.lua (30)
 
 - launcher: one broker object, of type launcher, registered with LibDBIcon under the FOLDER name
 - launcher: Register is idempotent, so a second call builds no second button
 - launcher: the icon is this addon's own 128 logo — the file ## IconTexture names
 - launcher: the icon file ships as an uncompressed 32-bit 128x128 TGA
-- launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)
-- launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses
-- launcher: the disabled gate is the library's — the descriptor carries isEnabled and disabledLine
-- launcher: the RIGHT click opens the settings panel, whatever the left button does
-- launcher tooltip: the descriptor passes version, isLocked, isTestMode and leftClickLabel, and no hook
+- launcher: the descriptor passes the three toggle pairs this addon has, and no retired field
+- launcher: the LEFT click opens the settings panel and changes nothing else
+- launcher: the LEFT click opens the panel while disabled too — it is where the addon is re-enabled
+- launcher menu: titled with the brand, entries Enabled, Locked, Test mode, in that order
+- launcher menu: every checkbox reads the live state when the menu opens
+- launcher menu: Enabled calls the enable/disable handler, and prints what /am disable prints
+- launcher menu: Locked calls the lock/unlock handler, and prints what /am unlock prints
+- launcher menu: Test mode calls the /am test handler, through the switch the checkbox uses
+- launcher menu: while disabled, Locked and Test mode are grayed and Enabled stays live
+- launcher menu: on a client without MenuUtil the right click opens the settings panel
 - launcher tooltip: enabled, locked, test mode off — the whole block, in the library's order
 - launcher tooltip: every state is read on the show — unlock and test mode change the next hover
-- launcher tooltip: shown while disabled, with the disabled hint naming /am enable
-- launcher tooltip: the left-click label is the addon's locale string, read on every show
+- launcher tooltip: shown while disabled, with the same two hints
 - minimap row: composed, stored not session, default SHOWN, in its canonical position
 - minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
 - minimap row: one record of one state — LibDBIcon writes the very table the row writes
@@ -57,7 +61,7 @@ badge and any count quoted in the docs must agree with it.
 - minimap row: /am set and /am reset reach it through the same seam, inverted the same way
 - verbs: /am enable and /am disable are aliases of the Enable row's path, holding no state
 - verbs: the dispatcher answers while the addon is disabled, or the pair is one-way
-- verbs: the launcher's click, /am test and the Test mode checkbox are three doors onto one switch
+- verbs: the launcher's menu, /am test and the Test mode checkbox are three doors onto one switch
 - launcher: a host with neither broker library does not raise, and still records the choice
 - launcher: with LibDataBroker but no LibDBIcon, the broker plugin still exists
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
@@ -954,7 +958,7 @@ badge and any count quoted in the docs must agree with it.
 - disabled: firing every baseline event writes nothing, says nothing and shows nothing
 - disabled: every reserved verb answers, and the bare /am opens the panel
 - disabled: this addon's own feature verbs refuse on one line and reach no write seam
-- disabled: the launcher's left-click is refused and its right-click still opens the panel
+- disabled: the launcher's left-click opens the panel and its menu grays every feature toggle
 - disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line
 - disabled: re-enabling restores the registration set, from the settings as they are NOW
 - disabled: releasing one hold does not stand up an addon the other still holds down
@@ -1544,7 +1548,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 8 |
 | test_setups.lua | 14 |
-| test_launcher.lua | 26 |
+| test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 18 |
 | test_migrations.lua | 6 |
@@ -1601,4 +1605,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1355** |
+| **Total** | **1359** |

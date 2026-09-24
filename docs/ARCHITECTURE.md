@@ -168,8 +168,8 @@ do nothing else (slash-commands-§2). Everything else keeps working, the bare `/
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
 gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
 `liveVerbs` naming the live set as data; a verb added to `NS.COMMANDS` refuses by default.
-The Master controls **Test mode** checkbox and the launcher's left click refuse a start the same way,
-on the same line; turning test mode off stays allowed.
+The Master controls **Test mode** checkbox refuses a start the same way, on the same line, and the
+launcher menu's *Test mode* entry is grayed; turning test mode off stays allowed.
 
 Dispatch, the host verbs, the container-relative paths and the degraded path: `docs/slash-dispatch.md`.
 
@@ -182,11 +182,14 @@ answers while the addon is disabled (slash-commands-§2). What disabling *does* 
 ## Launcher
 
 One LibDataBroker `launcher` object, built by `core/LauncherSetup.lua` through `LibKa0s-Launcher-1.0`
-and registered with LibDBIcon under the folder name (launcher-§1). Left click toggles test mode
-(rung (b)), right click opens the panel, and the Minimap button row stores LibDBIcon's own
-`global.minimap.hide`. The hover tooltip is the library's (enabled, locked and test-mode status
-and the click hints, drawn while disabled too); the descriptor only answers its questions. Both
-broker libraries are optional. The full table and the reasons:
+and registered with LibDBIcon under the folder name (launcher-§1). Left click opens the settings
+panel; right click opens the library's context menu with three entries, *Enabled*, *Locked* and
+*Test mode*, each wired to the same `NS.Slash` handler its verb runs (launcher-§2, LibKa0s-Launcher
+minor 4; no *Show window*, as the addon has no primary window). While disabled, *Locked* and *Test
+mode* are grayed. The Minimap button row stores LibDBIcon's own `global.minimap.hide`. The hover
+tooltip is the library's (enabled, locked and test-mode status and the fixed click hints, drawn
+while disabled too); the descriptor only answers its questions. Both broker libraries are
+optional. The full table and the reasons:
 `docs/settings-panel.md` → *Launcher*.
 
 ## Event Subscriptions

@@ -59,7 +59,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with six buckets, the `perf` hold on that latch, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
 | `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsSafeKey` (`LibKa0s-Compat-1.0`'s guards, this file's bodies their library-absent arm), `IsReadableNumber`, `NumberOr` | Conventional |
 | `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
-| `core/LauncherSetup.lua` | `LibKa0s-Launcher-1.0` seam: `NS.Launcher`, the one broker object behind both the minimap button and a broker display. Left-click toggles test mode (rung (b)), right-click opens the panel | Conventional: `Register()` is called from `OnInitialize` after `InitDB`, and every click resolves at call time |
+| `core/LauncherSetup.lua` | `LibKa0s-Launcher-1.0` seam: `NS.Launcher`, the one broker object behind both the minimap button and a broker display. Left-click opens the panel; right-click opens the options menu (*Enabled*, *Locked*, *Test mode*, each the slash verb's own handler) | Conventional: `Register()` is called from `OnInitialize` after `InitDB`, and every click resolves at call time |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eight lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
 | `core/Database.lua` | AceDB init (with a no-AceDB fallback), the container accessors (`GetContainers` in display order, `GetContainersByName` for the pickers), `RunMigrations` and the `SCHEMA_STEPS` ladder (v2: `MigrateV2`; v3: `MigrateV3`, the Show/Hide
 category collapse and the `weaponEnchants` category row — both over every stored profile; v4: `MigrateV4`, which folds the retired `filter.onlyShown` toggle into the `uncategorized` categories' Hide; v5: `MigrateV5`, the Weapon enchants aura type retired; v6: `MigrateV6`, the user-category store stamped), `Database.EachProfile` (every stored profile, the inactive ones included — the ladder's own walk, published for `Cat.DeleteUserCategory`'s cross-profile sweep), `PrepareProfile` (the registry's load pass: repair and first-run seeding, which write the registry, `seeded`, backfilled template leaves and `c.id` stamps directly, as architecture-§5 allows a named load pass), `NewContainerData` (the id mint, called only by the registry writer), registry reads, `DeepCopy`/`Backfill`, and `Merge` (a test seam) | Conventional: called from `OnInitialize` |
@@ -119,6 +119,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `tests/wow_mock.lua` | Thin extender over `tests/_kit/mock_base.lua`; the aura engine as an ordered call recorder; a secret-number sentinel with `__layOut` (a laid-out button's size reads secret) and Blizzard's backdrop arithmetic on that size (B2-3) |
 | `tests/fresh_env.lua` | Builds a fresh, fully loaded environment for a suite that mutates state |
 | `tests/degraded_env.lua` | Builds a second environment with LibKa0s absent, so every setup file takes its real fallback |
+| `tests/mock_menu.lua` | A headless `MenuUtil` stand-in, modeled on LibKa0s's repo-local one, so the launcher's right-click menu can be opened and clicked |
 | `tests/perf.lua` | The offline performance scenario runner (outside the green gate) — `docs/performance.md` |
 | `tests/filtercompiler_helpers.lua` | Not a suite: the plan readers (`setOf`, `hasWarning`) that `test_filtercompiler` and `test_filtercompiler_categories` share |
 | `tests/general_page_helpers.lua` | Not a suite: the General page readers (`general`, `spells`, the Spell Categories list walkers `entry` / `entryHelp` / `entryTooltip`, the `marked` label builder, the `spyApply` / `spyPaths` spies) that `test_pages_general` and `test_pages_general_categories` share |
@@ -137,7 +138,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 |---|---|
 | `test_loadorder.lua` | The TOC's load-bearing positions; the runners' load lists derived from the TOC and the XML |
 | `test_setups.lua` | The LibKa0s seams' addon-side wiring (printer, media, env, debug flag) and a real library-absent load |
-| `test_launcher.lua` | The launcher (launcher-§1..§5): one object registered twice under the folder name, the icon file's own TGA header, rung (b)'s left click driving the lock through the seam, right-click opening the panel, the Minimap button row's inverting get/set, the two reserved verbs, and three degraded hosts |
+| `test_launcher.lua` | The launcher (launcher-§1..§5): one object registered twice under the folder name, the icon file's own TGA header, left-click opening the panel, the right-click menu's three entries each reaching its slash verb's handler (through `tests/mock_menu.lua`), the Minimap button row's inverting get/set, the two reserved verbs, and three degraded hosts |
 | `test_database.lua` | `core/Database.lua`: seeding once, repair of ids, order and wrong-typed sections, backfill that keeps a stored `false`, the migration runner and schema v2 over every stored profile and the no-AceDB fallback |
 | `test_database_categories.lua` | `core/Database.lua`'s user-category store, peeled out of `test_database.lua` (issue #17): the v6 stamp, round trip through a reload, sync order, profile switches, key collisions, rename and the reserved namespace both acts rest on, the cross-profile delete sweep and the profile copy it skips |
 | `test_migrations.lua` | `core/Database.lua`'s `NS.RunMigrations` against savedvariables-§1: `NS.SCHEMA_VERSION` is the last step's target, a legacy account with no stamp runs every step, a stored stamp survives the logout strip, every step is idempotent on a fresh default profile, a step that raises leaves the stamp where it was, and an inactive profile is migrated too |
@@ -224,13 +225,13 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:536-537`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:546-547`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:246`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.57.0 | Fourteen modules bound by name — table below |
+| LibKa0s v1.58.0 | Fourteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|

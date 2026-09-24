@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:535`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:545`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -19,10 +19,11 @@ eight-or-more trigger (documentation-§3).
   same combat refusal `config` does (slash-commands-§4, LibKa0s Slash minor 11). `/am help` prints
   the list. An unknown verb prints the library's unknown-command line and then help.
 - **Aliases:** `options` → `config`.
-- **`test` has a second caller.** A bare `/am test` runs through `Sl.ToggleTestMode`, published for
-  the launcher's left click (`core/LauncherSetup.lua`, rung (b), launcher-§2), so the minimap
-  button, the verb and the General → Master controls *Test mode* checkbox are three doors onto one
-  `Preview.SetTestMode` and print the same line.
+- **Three verbs have a second caller.** `enable`/`disable`, `lock`/`unlock` and a bare `test` run
+  through `Sl.SetEnabled`, `Sl.ToggleLock` and `Sl.ToggleTestMode`, published for the launcher's
+  right-click menu (`core/LauncherSetup.lua`, launcher-§2), so the menu's *Enabled*, *Locked* and
+  *Test mode* entries run the verb's own handler and print the verb's own line; the *Test mode*
+  checkbox, the verb and the menu entry are three doors onto one `Preview.SetTestMode`.
 - **One path is not the profile's.** The Minimap button row's CLI path is `global.minimap.shown`,
   which reads in the row's sense: `/am get global.minimap.shown` answers true while the button
   shows, and `/am set global.minimap.shown false` hides it. The storage is LibDBIcon's own

@@ -82,8 +82,9 @@ Suites worth knowing by name:
   the settings as they are then; the `disabled` and `perf` holds release independently. The slash
   step walks every entry in `NS.COMMANDS`: the reserved verbs, the schema CLI, `containers`,
   `select` and the bare `/am` (which opens the panel) answer normally, and only the feature verbs
-  refuse on the collection's one line with no SavedVariables write. The launcher's left-click is
-  refused the same way; its right-click still opens the panel. The negative steps carry testing-§12
+  refuse on the collection's one line with no SavedVariables write. The launcher's left-click still
+  opens the panel; its right-click menu grays *Locked* and *Test mode*, and a grayed entry clicked
+  anyway writes nothing. The negative steps carry testing-§12
   falsification comments.
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the

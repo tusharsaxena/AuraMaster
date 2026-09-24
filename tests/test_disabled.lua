@@ -467,8 +467,9 @@ end)
 -- 8. The launcher
 -- ---------------------------------------------------------------------------
 
-test("disabled: the launcher's left-click is refused and its right-click still opens the panel", function()
+test("disabled: the launcher's left-click opens the panel and its menu grays every feature toggle", function()
     local NS, mocks, _, _, _, rec, client = baseline(true)
+    local menu = dofile("tests/mock_menu.lua")(mocks)
     local lines = capture(mocks)
     local opened = 0
     NS.OpenOptionsPanel = function() opened = opened + 1 end
@@ -477,26 +478,32 @@ test("disabled: the launcher's left-click is refused and its right-click still o
     clear(lines)
 
     -- The BUTTON stays: `minimap.hide` is a per-installation display preference and says nothing
-    -- about whether the addon is running (launcher-§3). What the click does is what changes.
+    -- about whether the addon is running (launcher-§3). What the clicks do is what is pinned.
     local obj = rec.objects.AuraMaster
     assertTrue(obj ~= nil and obj.OnClick ~= nil, "the launcher stays registered while disabled")
 
-    -- red under: drop isEnabled/disabledLine from core/LauncherSetup.lua's descriptor, so the
-    -- library's left-click gate (LibKa0s-Launcher-1.0 minor 2) has nothing to ask. Rung (b)'s left
-    -- button drives the preview switch, which is a feature — and a click with no gate at all
-    -- rewrites the stored tree of an addon the player switched off.
+    -- LEFT-CLICK OPENS THE PANEL in either state (launcher-§2, LibKa0s-Launcher-1.0 minor 4): the
+    -- panel is setup, and slash-commands-§7 lists it among the things that survive a stand-down.
     obj.OnClick(obj, "LeftButton")
-    local p_ = plain(lines)
-    assertEqual(#p_, 1, "the left click answered " .. dump(p_))
-    assertEqual(p_[1], REFUSAL)
+    assertEqual(opened, 1, "left-click must open the panel while disabled")
+    assertEqual(#plain(lines), 0, "the left click printed " .. dump(plain(lines)))
+
+    -- RIGHT-CLICK OPENS THE MENU, whose feature toggles are grayed. red under: a descriptor whose
+    -- isEnabled answers true while disabled, so Test mode stays clickable and a click on it
+    -- rewrites the stored tree of an addon the player switched off.
+    obj.OnClick(obj, "RightButton")
+    local m = menu.last
+    assertTrue(m ~= nil, "the right click opened the menu")
+    assertTrue(m:Find("Enabled").enabled, "Enabled stays live: it is how the addon comes back")
+    assertFalse(m:Find("Locked").enabled, "Locked is grayed")
+    assertFalse(m:Find("Test mode").enabled, "Test mode is grayed")
+    assertEqual(m:Click("Test mode"), nil, "a grayed entry does nothing")
+    m:ForceClick("Test mode")
+    m:ForceClick("Locked")
+    assertFalse(NS.State.testMode, "a disabled menu started test mode")
     assertEqual(#mocks.__svWrites(), 0, "a disabled launcher click wrote SavedVariables")
     assertEqual(#onScreen(mocks, client), 0, "a disabled launcher click showed a frame")
-    assertEqual(opened, 0)
-
-    -- RIGHT-CLICK IS UNCHANGED in either state: it opens the panel, which slash-commands-§7 lists
-    -- among the things that survive a stand-down.
-    obj.OnClick(obj, "RightButton")
-    assertEqual(opened, 1, "right-click must still open the panel")
+    assertEqual(opened, 1, "and the right click opened no panel beside the menu")
 end)
 
 test("disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line", function()
@@ -505,7 +512,7 @@ test("disabled: the panel's Test mode row refuses to start while disabled and pr
     disable(NS)
     clear(lines)
 
-    -- The third door onto the switch. `/am test` and the launcher's left click already refuse, so
+    -- The third door onto the switch. `/am test` and the launcher's grayed menu entry already refuse, so
     -- the checkbox (reached through the one write seam, as the panel reaches it) must too, or a tick
     -- while stood down brings the addon back up in test mode.
     -- red under: row.set bound straight to Preview.SetTestMode

@@ -9,19 +9,20 @@ local addonName, NS = ...
 -- icon, one label and one OnClick. Two click handlers for one feature is anti-pattern #81, and it
 -- cannot be written here because there is only one place to write it.
 --
--- WHAT IS OURS AND NOTHING ELSE: the folder name, the logo, what the left button does, and how the
--- settings panel opens. The object, the click dispatch, the two LibStub lookups and the Show/Hide
--- plumbing are the library's.
+-- WHAT IS OURS AND NOTHING ELSE: the folder name, the logo, how the settings panel opens, and the
+-- accessor-and-toggle pairs for the states this addon has. The object, the click dispatch, the
+-- tooltip, the menu, the two LibStub lookups and the Show/Hide plumbing are the library's.
 --
--- RUNG (b) — THE PREVIEW SWITCH IS THE TEST MODE (launcher-§2). This addon has no primary window;
--- its preview has a switch of its own since unlocking stopped previewing (B1, 2026-09-19): the
--- Master controls Test mode checkbox (settings/General.lua). Left-click therefore toggles test mode,
--- and it does so by calling the SAME host verb a bare `/am test` calls, which switches it through
--- modules/Preview.lua's Preview.SetTestMode — the one writer of NS.State.testMode. No copy of the
--- mode lives here; a second copy is the state that drifts on the next change.
+-- THE TWO BUTTONS (launcher-§2, standard v2.67.0; LibKa0s-Launcher-1.0 minor 4). LEFT-CLICK OPENS THE
+-- SETTINGS PANEL, in either state. RIGHT-CLICK OPENS THE CLIENT'S CONTEXT MENU, one checkbox per
+-- pair passed below: Enabled, Locked, Test mode. There is no Show window entry because this addon
+-- has no primary window — its preview is the test mode (B1, 2026-09-19). While the addon is
+-- disabled the library grays Locked and Test mode; Enabled stays live. Neither button is
+-- reassignable and there is no setting for either.
 --
--- RIGHT-CLICK ALWAYS OPENS THE PANEL, on every addon in the collection, which is what lets the left
--- button be spent on the test mode. Neither button is reassignable and there is no setting for either.
+-- EVERY TOGGLE IS THE SLASH VERB'S OWN HANDLER (settings/Slash.lua's NS.Slash.SetEnabled,
+-- ToggleLock, ToggleTestMode), so the menu, the verb and the settings row are three doors onto one
+-- switch, with one set of refusals and one set of chat lines. No copy of any state lives here.
 --
 -- THE MINIMAP TABLE IS PASSED AS A FUNCTION, not as a table. `NS.db` does not exist at file load —
 -- core/Database.lua builds it in OnInitialize — and AceDB replaces whatever table was there, so a
@@ -103,44 +104,33 @@ NS.Launcher = Launcher:New({
     -- CALL-TIME, for the reason in the header: NS.db is AceDB's and arrives in OnInitialize.
     minimap = function() return NS.db and NS.db.global and NS.db.global.minimap end,
 
-    -- Right-click, always, on every addon in the collection.
+    -- LEFT-CLICK, ALWAYS, in either state: the panel is setup, and it is where a disabled addon is
+    -- switched back on (slash-commands-§7 lists it among what survives a stand-down).
     openSettings = function() NS.OpenOptionsPanel() end,
 
-    -- LEFT-CLICK, AND ITS PRESENCE IS THE RUNG. The same host verb a bare `/am test` runs, so the
-    -- launcher, the verb and the Test mode checkbox are three doors onto one switch.
-    --
-    -- AND IT IS REFUSED WHILE THE ADDON IS DISABLED (launcher-§2, slash-commands-§7), by the
-    -- LIBRARY's gate rather than a hand-written one here: LibKa0s-Launcher-1.0 (minor 2) asks
-    -- `isEnabled` on every left click and, where it answers false, prints `disabledLine` and never
-    -- calls `onClick`. Rung (b)'s left-click drives the preview switch, which is a FEATURE, so a
-    -- disabled addon answers the one refusal line and DOES NOTHING ELSE -- in particular it writes
-    -- no SavedVariables. The line is the dispatcher's own, so the button, `/am test` and the Test
-    -- mode checkbox refuse in the same words. RIGHT-CLICK IS NEVER GATED: `openSettings` above opens
-    -- the panel, which slash-commands-§7 lists among the things that SURVIVE a stand-down.
-    isEnabled = function() return not (NS.IsDisabled and NS.IsDisabled()) end,
-    disabledLine = function()
-        return NS.Slash and NS.Slash.DisabledLine and NS.Slash.DisabledLine() or ""
-    end,
-    onClick = function()
-        if NS.Slash and NS.Slash.ToggleTestMode then NS.Slash.ToggleTestMode() end
-    end,
-
     -- THE STATUS TOOLTIP IS THE LIBRARY'S (launcher-§1, LibKa0s-Launcher-1.0 minor 3). It draws the
-    -- title, Enabled, Locked, Test mode and the two click hints on every hover, disabled or not; the
-    -- fields below only answer its questions, and each is asked on the show, never cached. There is
-    -- no onTooltipShow: this addon has no lines of its own, and a hook that drew a title or a click
-    -- hint would draw a second copy of the library's (anti-pattern #89).
+    -- title, Enabled, Locked, Test mode and the two fixed click hints on every hover, disabled or not;
+    -- the accessors below answer its questions and the menu's, each asked on the show or the open,
+    -- never cached. There is no onTooltipShow: this addon has no lines of its own, and a hook that
+    -- drew a title or a click hint would draw a second copy of the library's (anti-pattern #89).
     --
     -- The version is the TOC's `## Version`, through core/EnvSetup.lua's reader.
     version = function() return NS.Version and NS.Version() end,
-    -- The two states this addon really has, read through the same accessor the Master controls
-    -- rows read (settings/General.lua): Lock frame's `locked` and Test mode's `state.testMode`.
+
+    -- THE OPTIONS MENU'S THREE PAIRS (minor 4), each an accessor the settings rows read and the
+    -- toggle the slash verb runs. The library draws an entry only where BOTH halves are passed.
+    --
+    -- Enabled: the one enabled predicate, and `/am enable` / `/am disable`'s handler, handed the
+    -- state the addon moves TO.
+    isEnabled  = function() return not (NS.IsDisabled and NS.IsDisabled()) end,
+    setEnabled = function(on) NS.Slash.SetEnabled(on) end,
+    -- Locked: the Lock frame row's `locked`, and `/am lock` / `/am unlock`'s handler.
     isLocked   = function() return NS.GetSetting and NS.GetSetting("locked") and true or false end,
-    isTestMode = function() return NS.GetSetting and NS.GetSetting("state.testMode") and true or false end,
-    -- Rung (b)'s left click, in the locale's words (standards ADDONS.md: "(b) test mode"). A
-    -- function, so a locale table filled after this file loads is still the one read. The disabled
-    -- hint needs no `slash`: the library reads `/am enable` out of `disabledLine` above.
-    leftClickLabel = function() return NS.L["Toggle test mode"] end,
+    toggleLock = function() NS.Slash.ToggleLock() end,
+    -- Test mode: the Test mode row's `state.testMode`, and a bare `/am test`'s handler, which
+    -- switches it through modules/Preview.lua's Preview.SetTestMode — the one writer of the mode.
+    isTestMode     = function() return NS.GetSetting and NS.GetSetting("state.testMode") and true or false end,
+    toggleTestMode = function() NS.Slash.ToggleTestMode() end,
 
     -- CALL-TIME forwarders: core/CoreSetup.lua's printer is reclaimed from AceConsole's embed in
     -- core/AuraMaster.lua, which loads after this file.

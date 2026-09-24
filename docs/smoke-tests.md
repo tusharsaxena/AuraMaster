@@ -331,10 +331,10 @@ page under the header.
     combat and summoning a pet all do nothing at all; `/am` still opens the settings panel and
     `/am list`, `/am get` and `/am set` still read and repair settings; `/am lock` answers
     `Ka0s Aura Master is disabled — enable it with /am enable` on one line; **left-clicking the
-    minimap button** answers that same one line and changes nothing, while **right-clicking** still
-    opens the panel; ticking **General → Master controls → Test mode** answers that same one line
-    and the box stays unticked (after `/am enable`, the box and the left click both toggle test
-    mode). Then `/reload` while disabled → it comes up disabled and still answers `/am`,
+    minimap button** still opens the panel, and **right-clicking** it shows Locked and Test mode
+    grayed (`(enable the addon first)`) with only Enabled clickable; ticking **General → Master
+    controls → Test mode** answers that same one line and the box stays unticked (after
+    `/am enable`, the box and the menu's Test mode entry both toggle test mode). Then `/reload` while disabled → it comes up disabled and still answers `/am`,
     and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
     `/dump AuraMasterAnchor1` is nil. `/am enable` draws every container at once. Switch to another
     profile while disabled and back, then `/am enable` → its containers draw.
@@ -565,19 +565,27 @@ nothing).
 87. **The button is there.** A round button wearing that same logo sits on the minimap ring. Drag it
     around the ring → it follows; `/reload` → it is still where you left it. **Hover it** → the
     tooltip reads `Ka0s Aura Master  v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`,
-    `Test mode: On|Off` (green or red, matching General → Master controls), `Left-click: Toggle test
-    mode`, `Right-click: Open settings`, and nothing twice. `/am unlock` or `/am test` → the next
-    hover says so. `/am disable` → hover again: the tooltip still shows, `Enabled: No`, and
-    `Left-click: disabled — /am enable`; `/am enable` puts it back.
-88. **Left-click = test mode.** Left-click the button → every container shows its placeholder
-    auras without unlocking, and General → Master controls → **Test mode** ticks. Left-click again →
-    they go and the checkbox unticks.
-89. **Right-click = settings.** Right-click the button → Settings opens at **Ka0s Aura Master**, and
-    test mode does **not** change.
+    `Test mode: On|Off` (green or red, matching General → Master controls), `Left-click: Open
+    settings`, `Right-click: Options menu`, and nothing twice. `/am unlock` or `/am test` → the next
+    hover says so. `/am disable` → hover again: the tooltip still shows, `Enabled: No`, with the same
+    two hints; `/am enable` puts it back.
+88. **Left-click = settings.** Left-click the button → Settings opens at **Ka0s Aura Master**, and
+    neither the lock nor test mode changes. `/am disable`, left-click again → the panel still opens
+    (it is where you turn the addon back on). `/am enable`.
+89. **Right-click = the options menu.** Right-click the button → a menu titled **Ka0s Aura Master**
+    with exactly three checkboxes, **Enabled**, **Locked**, **Test mode** (no Show window), each
+    ticked to match General → Master controls. Click **Test mode** → the menu closes, every container
+    shows its placeholder auras, chat prints the line `/am test` prints, and the Test mode checkbox
+    ticks; right-click again → Test mode is ticked; click it → they go. Click **Locked** → chat
+    prints what `/am unlock` (or `/am lock`) prints and the handles appear (or go). Click **Enabled**
+    → chat prints what `/am disable` prints and the containers go. Right-click now → **Locked (enable
+    the addon first)** and **Test mode (enable the addon first)** are grayed and do nothing when
+    clicked; **Enabled** is live: click it → the addon comes back with the `/am enable` line. In
+    combat, click Test mode while it is off → the same combat refusal `/am test` prints.
 90. **The checkbox and the button agree, both ways.** Untick General → Master controls → **Minimap
     button** → the button vanishes at once, no reload. Tick it → it comes back **at the same angle**.
-    Now hide it from LibDBIcon's own right-click menu instead → reopen the settings and the checkbox
-    is unticked too.
+    Now hide it from chat instead, `/am set global.minimap.shown false` → reopen the settings and the
+    checkbox is unticked too.
 91. **It survives a profile switch and BOTH resets.** Hide the button, then Profiles → create and
     switch to a new profile → it stays hidden. Switch back, then General → **Reset all settings** →
     the button stays hidden and the checkbox stays unticked. Now press General's own **Defaults**
@@ -592,7 +600,8 @@ nothing).
 92. **A broker display, if one is installed.** With Titan Panel, Bazooka or ElvUI data texts, add
     *Ka0s Aura Master* as a plugin → one row labeled exactly that, **grouped with the other Ka0s
     addons** rather than filed under `A`, the same logo, **no empty value cell beside it**, and its
-    left and right clicks do exactly what the minimap button's do.
+    left click opens the settings and its right click opens the same three-entry menu as the
+    minimap button's.
 93. **Without the libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one chat line naming
     Aura Master and the missing library, **no error frame**, and the addon otherwise works. Rename
     `libs/LibDataBroker-1.1` aside too, `/reload` → the same. Put both back.
@@ -651,7 +660,7 @@ nothing).
      outline and its handle; an EMPTY container can still be dragged by its handle.
 112. **Test mode.** The Master controls checkbox and `/am test` show placeholders without unlocking.
      Pull a mob: test mode ends and the checkbox unticks. `/am test` in combat prints one gray line
-     and starts nothing. The minimap left-click toggles it.
+     and starts nothing. The minimap button's right-click menu toggles it.
 113. **Spell lists.** General → Spell Categories: an X on the left of every row and no checkboxes.
      X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
      the X too, and it removes the spell. Check the X row's height and vertical alignment against the

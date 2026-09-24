@@ -348,7 +348,7 @@ hands it. No control sets it and no row addresses it.
   `db.global.minimap`, the same account-wide table as the Minimap button row's `hide`, so a profile
   switch, copy or reset never touches it (launcher-§3).
 - **Owner:** `core/LauncherSetup.lua`, which hands `db.global.minimap` to `LibKa0s-Launcher-1.0` as the
-  descriptor's `minimap` field, resolved at call time (core/LauncherSetup.lua:104).
+  descriptor's `minimap` field, resolved at call time (core/LauncherSetup.lua:105).
 - **Writers:** LibDBIcon-1.0, when the player drags the button, reached through the LibKa0s-Launcher
   seam, and nothing else. No addon code writes it, and no verb or reset clears it.
 
