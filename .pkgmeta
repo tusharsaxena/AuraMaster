@@ -9,7 +9,8 @@ ignore:
   - .pkgmeta         # dev-only: this file configures the packager; it is not part of the package
   - .gitignore
   - .gitattributes   # dev-only: the repo's line-ending policy (line-endings)
-  - .claude          # dev-only: agent tooling; never loaded by the client
+  # - .claude        # ONLY in a repo that HAS a .claude/ — dev-only agent tooling, never loaded by
+  #                    the client. Copied in when the directory appears, and left out until then.
   - .superpowers     # dev-only: agent tooling; never loaded by the client
   - docs             # holds docs/audits/ and docs/reviews/ too — all dev-only
   - tests
