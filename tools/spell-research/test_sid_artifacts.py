@@ -28,6 +28,7 @@ if str(HERE) not in sys.path:
 import logs  # noqa: E402
 import sid_artifacts  # noqa: E402
 import sid_db2  # noqa: E402
+import sid_propose  # noqa: E402
 from sid_scan import AuraStats, FileAggregate  # noqa: E402
 
 FIXTURES = HERE / "fixtures"
@@ -361,6 +362,68 @@ class DictionaryRowsTest(unittest.TestCase):
         self.assertEqual((hex_row["category"], hex_row["suggested_category"], hex_row["rule"]),
                          ("hardCC", "", ""))
         self.assertIsNone(rows[0]["recast_median_s"])
+
+    def test_a_suggestion_never_reaches_a_debuff_row(self):
+        # A suggestion keyed on the debuff's own (class, id): BUFF rows only, so the Hex row stays
+        # blank, while the BUFF rows of the same call still take theirs.
+        rows = sid_artifacts.dictionary_rows(
+            self.agg(), self.SPEC_MAP, {}, self.SHIPPED,
+            {("SHAMAN", 51514): ("hardCC", "R7", "high", "…"),
+             ("SHAMAN", 108271): ("defensives", "R1", "high", "…")})
+        hex_row = next(r for r in rows if r["spell_id"] == 51514)
+        self.assertEqual(hex_row["aura_type"], "DEBUFF")
+        self.assertEqual((hex_row["suggested_category"], hex_row["rule"]), ("", ""))
+        buff = next(r for r in rows if r["spell_id"] == 108271)
+        self.assertEqual((buff["suggested_category"], buff["rule"]), ("defensives", "R1"))
+
+
+class QueueOrderTest(unittest.TestCase):
+    """write_bundle orders the queue: corrections first, then additions, each most-applied first
+    (given out of order here, interleaved, so a one-way or missing sort fails)."""
+
+    @staticmethod
+    def prop(ptype, name, sid, apps, category="defensives"):
+        listed = [sid + 1] if ptype != "addition" else []
+        return sid_propose.Proposal(
+            type=ptype, category=category, from_category="", klass="SHAMAN", name=name,
+            listed=listed, proposed=[sid], evidence={sid: {"Elemental": (apps, 2)}},
+            rule="evidence" if ptype != "addition" else "R1", reason="A reason.",
+            confidence="high", applications=apps)
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="sid-queue-"))
+        proposals = [self.prop("addition", "Add Low", 800001, 5),
+                     self.prop("replace", "Corr Low", 700001, 3),
+                     self.prop("addition", "Add High", 800003, 40),
+                     self.prop("add", "Corr High", 700003, 30),
+                     self.prop("replace", "Corr Mid", 700005, 12)]
+        shipped = [{"key": "defensives", "label": "Defensive cooldowns", "aura": "BUFF",
+                    "classes": {"SHAMAN": [700002, 700004, 700006]}}]
+        sid_artifacts.write_bundle(self.tmp, "2026-09-24", [], proposals, [], shipped,
+                                   {"thresholds": {"min_applications": 1, "min_players": 1}})
+
+    def tearDown(self):
+        shutil.rmtree(str(self.tmp), ignore_errors=True)
+
+    def read(self, rel):
+        return (self.tmp / rel).read_bytes().decode("utf-8")
+
+    def test_proposals_json_order(self):
+        props = json.loads(self.read("proposals.json"))["proposals"]
+        self.assertEqual([(p["section"], p["name"]) for p in props],
+                         [("correction", "Corr High"), ("correction", "Corr Mid"),
+                          ("correction", "Corr Low"), ("addition", "Add High"),
+                          ("addition", "Add Low")])
+
+    def test_corrections_md_order(self):
+        text = self.read("CORRECTIONS.md")
+        numbered = re.findall(r"^(\d+)\. .* · SHAMAN · (Corr \w+) — ", text, re.M)
+        self.assertEqual(numbered, [("1", "Corr High"), ("2", "Corr Mid"), ("3", "Corr Low")])
+
+    def test_proposed_additions_md_order(self):
+        text = self.read("PROPOSED_ADDITIONS.md")
+        self.assertEqual(re.findall(r"^- \*\*(Add \w+)\*\*", text, re.M),
+                         ["Add High", "Add Low"])
 
 
 class ProposeCliTest(unittest.TestCase):
