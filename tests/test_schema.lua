@@ -6,6 +6,17 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local NS = T.NS
 local fresh = dofile("tests/fresh_env.lua")
+local loadDegraded = dofile("tests/degraded_env.lua")
+--- An environment in `build`: "live" is fresh(), with LibKa0s-Schema's instance under the rows;
+--- "degraded" loads without LibKa0s and runs OnInitialize, so the host arms (ValidateSchema's loop, the
+--- host index) answer. A case the library took over runs in both, so the fallback stays pinned (#21).
+local function inBuild(build)
+    if build == "live" then return fresh() end
+    local NS2 = loadDegraded()
+    rawset(_G, "AuraMasterDB", nil)
+    NS2.addon:OnInitialize()
+    return NS2
+end
 
 -- ── the rows ──────────────────────────────────────────────────────────────────────────────────
 
@@ -14,14 +25,27 @@ test("schema: every row validates against defaults/Profile.lua", function()
 end)
 
 test("schema: the validator is falsifiable — an unresolvable path and a missing group each fail", function()
-    -- red under: ValidateSchema no longer resolving paths, or no longer checking `group`.
-    local NS2 = fresh()
-    NS2.RegisterSchemaRows({
-        { path = "container.bars.noSuchLeaf", page = "bars", group = "Size", type = "number" },
-        -- A path no shipped row has: LibKa0s-Schema's Validate would also count a duplicate (#21).
-        { path = "container.filter.whitelist", page = "bars", type = "number" },
-    })
-    assertEqual(NS2.ValidateSchema(), 2)
+    -- red under: ValidateSchema no longer resolving paths, or no longer checking `group` — in
+    -- either build: the live one runs LibKa0s-Schema's Validate, the degraded one the host loop.
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local printed = {}
+        NS2.Print = function(line)
+            printed[#printed + 1] = line
+        end
+        assertEqual(NS2.ValidateSchema(), 0, build .. ": clean before the bad rows")
+        NS2.RegisterSchemaRows({
+            { path = "container.bars.noSuchLeaf", page = "bars", group = "Size", type = "number" },
+            -- A path no shipped row has: LibKa0s-Schema's Validate would also count a duplicate (#21).
+            { path = "container.filter.whitelist", page = "bars", type = "number" },
+        })
+        assertEqual(NS2.ValidateSchema(), 2, build)
+        if build == "degraded" then
+            assertEqual(table.concat(printed, " | "),
+                "schema error: container.bars.noSuchLeaf: path does not resolve against defaults/Profile.lua"
+                .. " | schema error: container.filter.whitelist: no group")
+        end
+    end
 end)
 
 test("schema: no path is registered twice", function()
@@ -373,8 +397,6 @@ end)
 
 -- ── LibKa0s-Schema-1.0 (issue #21): the primitives, registry, bracket and validator are the library's ─
 
-local loadDegraded = dofile("tests/degraded_env.lua")
-
 --- Record every [Set] line, rendered without its tag, with debug on.
 local function captureSet(NS2)
     NS2.State.debug = true
@@ -403,22 +425,29 @@ test("schema: with LibKa0s the bracket, registry and validator are the library's
     assertTrue(errors > 0 and resolved == 0 and missing == 0, "the instance's Validate is the one asked")
 end)
 
-test("schema: the library's registry follows an insert and a removal", function()
-    local NS2 = fresh()
-    local S = NS2.SchemaRuntime
-    NS2.RegisterSchemaRows({
-        { path = "container.bars.width.am15", page = "bars", group = "Size", type = "number" },
-    }, "container.bars.width")
-    local at
-    for i, row in ipairs(NS2.Schema) do
-        if row.path == "container.bars.width.am15" then at = i end
+test("schema: the registry follows an insert and a removal, the library's and the host's", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local S = NS2.SchemaRuntime
+        assertEqual(S ~= nil, build == "live", build .. ": the instance exists only with the library")
+        NS2.RegisterSchemaRows({
+            { path = "container.bars.width.am15", page = "bars", group = "Size", type = "number" },
+        }, "container.bars.width")
+        local at
+        for i, row in ipairs(NS2.Schema) do
+            if row.path == "container.bars.width.am15" then at = i end
+        end
+        assertEqual(NS2.Schema[at + 1].path, "container.bars.width", build .. ": inserted in front of beforePath")
+        -- red under: the index not rebuilt after an insert (host: RegisterSchemaRows skipping reindex)
+        assertTrue(NS2.FindSchemaRow("container.bars.width.am15") == NS2.Schema[at], build .. ": found after insert")
+        if S then assertTrue(S.FindRow("container.bars.width.am15") == NS2.Schema[at]) end
+        assertEqual(NS2.UnregisterSchemaRows(function(row) return row.path == "container.bars.width.am15" end), 1)
+        -- red under: UnregisterSchemaRows not re-indexing (the removed row still answers)
+        assertNil(NS2.FindSchemaRow("container.bars.width.am15"), build)
+        if S then assertNil(S.FindRow("container.bars.width.am15")) end
+        assertTrue(NS2.FindSchemaRow("container.bars.width") == NS2.Schema[at],
+            build .. ": the row after it still answers")
     end
-    assertEqual(NS2.Schema[at + 1].path, "container.bars.width", "inserted in front of beforePath")
-    assertTrue(S.FindRow("container.bars.width.am15") == NS2.Schema[at])
-    assertEqual(NS2.UnregisterSchemaRows(function(row) return row.path == "container.bars.width.am15" end), 1)
-    -- red under: UnregisterSchemaRows not re-indexing the instance (the removed row still answers)
-    assertNil(NS2.FindSchemaRow("container.bars.width.am15"))
-    assertNil(S.FindRow("container.bars.width.am15"))
 end)
 
 test("schema: without LibKa0s the host arm still answers", function()

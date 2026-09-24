@@ -192,7 +192,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 - schema: a row's own refusal reason travels as the third return of SetByPath and CheckWrite
 - schema: with LibKa0s the bracket, registry and validator are the library's
-- schema: the library's registry follows an insert and a removal
+- schema: the registry follows an insert and a removal, the library's and the host's
 - schema: without LibKa0s the host arm still answers
 - schema: -0 over 0 is still no change under SameValue
 
