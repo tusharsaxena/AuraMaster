@@ -241,8 +241,9 @@ class AuraStats:
     applications: int = 0
     players: Set[str] = field(default_factory=set)   # GUIDs in memory; hashes once serialised
     self_: int = 0                                    # dest == source
-    single: int = 0                                   # one other unit, not part of a burst
+    single: int = 0                                   # one other player, not part of a burst
     group: int = 0                                    # bursts, counted once per burst
+    other: int = 0                                    # onto a unit that is no player (pet, NPC)
     recast_samples: List[float] = field(default_factory=list)
     first_seen: str = ""
     last_seen: str = ""
@@ -366,6 +367,11 @@ class _FileScan:
 
     def shape(self, app, key, st, when):
         is_self = app.dest == app.source
+        if not is_self and not app.dest.startswith("Player-"):
+            # The spec's `single` is one other PLAYER and a burst is 5+ distinct PLAYERS: a pet,
+            # guardian, totem or NPC target (Beast Cleave, Infernal Command) is neither.
+            st.other += 1
+            return
         burst_key = (app.source, key)
         burst = self.bursts.get(burst_key)
         if burst is None or not (0 <= when - burst.start <= BURST_WINDOW) or burst.stats is not st:
@@ -435,7 +441,7 @@ def aggregate_to_json(agg, salt=b""):
                 "auraType": aura_type, "spellId": spell_id, "names": _names_json(st.names),
                 "applications": st.applications,
                 "players": sorted({hash_player(p, salt) for p in st.players}),
-                "self": st.self_, "single": st.single, "group": st.group,
+                "self": st.self_, "single": st.single, "group": st.group, "other": st.other,
                 "recastSamples": list(st.recast_samples),
                 "firstSeen": st.first_seen, "lastSeen": st.last_seen,
             })
@@ -460,7 +466,7 @@ def aggregate_from_json(d):
         for a in row["auras"]:
             auras[(a["auraType"], a["spellId"])] = AuraStats(
                 names=Counter(a["names"]), applications=a["applications"], players=set(a["players"]),
-                self_=a["self"], single=a["single"], group=a["group"],
+                self_=a["self"], single=a["single"], group=a["group"], other=a.get("other", 0),
                 recast_samples=list(a["recastSamples"]),
                 first_seen=a["firstSeen"], last_seen=a["lastSeen"])
     for a in d["nonPlayer"]:

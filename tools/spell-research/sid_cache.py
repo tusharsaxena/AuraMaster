@@ -30,9 +30,11 @@ from sid_scan import AuraStats, FileAggregate
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "auramaster-spell-research"
 
 # Bump when the cached aggregate's meaning changes, so old entries are re-read.
-CACHE_VERSION = 1
+CACHE_VERSION = 2
+# 2: `other` (applications onto a unit that is no player) split out of `single` (SID-10).
 # 2: adds classPlayers and specPlayers (exact distinct-player unions; see evidence_to_json).
-EVIDENCE_VERSION = 2
+EVIDENCE_VERSION = 3
+# 3: rows carry `other`; `single` and `group` count player targets only.
 
 SALT_BYTES = 32
 
@@ -180,6 +182,7 @@ def _merge_stats(into, st):
     into.self_ += st.self_
     into.single += st.single
     into.group += st.group
+    into.other += st.other
     room = sid_scan.RECAST_SAMPLE_CAP - len(into.recast_samples)
     if room > 0:
         into.recast_samples.extend(st.recast_samples[:room])
@@ -280,7 +283,7 @@ def evidence_to_json(agg, summary):
                 "class": cls, "spec": spec, "auraType": aura_type, "spellId": spell_id,
                 "name": _top_name(st.names), "names": {n: st.names[n] for n in sorted(st.names)},
                 "applications": st.applications, "players": len(st.players),
-                "self": st.self_, "single": st.single, "group": st.group,
+                "self": st.self_, "single": st.single, "group": st.group, "other": st.other,
                 "recastMedian": recast_median(st.recast_samples),
                 "recastIntervals": len(st.recast_samples),
                 "firstSeen": st.first_seen, "lastSeen": st.last_seen,
@@ -318,7 +321,7 @@ def evidence_from_json(d):
         agg.per_spec.setdefault((r["class"], r["spec"]), {})[(r["auraType"], r["spellId"])] = AuraStats(
             names=Counter(r["names"]), applications=r["applications"],
             players={"#%d" % i for i in range(r["players"])},
-            self_=r["self"], single=r["single"], group=r["group"],
+            self_=r["self"], single=r["single"], group=r["group"], other=r.get("other", 0),
             recast_samples=[] if median is None else [median],
             first_seen=r["firstSeen"], last_seen=r["lastSeen"])
     for r in d["nonPlayer"]:

@@ -386,8 +386,10 @@ again. The category suggestion rules R1 to R9 are the spec's table, implemented 
 - `evidence.json`: the merged per-spec evidence from `scan` (counts only).
 - `dictionary/auras.json`, `auras.csv`, `AURAS.md`: every aura that matches the formula, one row
   per `(class, spec, aura type, spell id)`, whatever its count and whether or not it is in a
-  category, with applications, distinct players, `self`/`single`/`group` shares, median recast,
-  first and last seen, current category, and suggested category with its rule.
+  category, with applications, distinct players, `self`/`single`/`group`/`other` shares, median
+  recast, first and last seen, current category, and suggested category with its rule. `single`
+  and `group` count player targets only; an application onto a pet, guardian, totem or NPC is
+  `other`.
 - `dictionary/non-player.csv`: the pet, totem and guardian tally.
 - `CURRENT_CATEGORIES.md`: every shipped id of every `spells` category with its evidence status,
   one of confirmed, unverified, stale or wrong id.

@@ -182,8 +182,12 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(list(row), list(sid_artifacts.ROW_KEYS))
         self.assertEqual((row["spec_id"], row["name"], row["applications"], row["players"]),
                          (264, "Ascendance", 2, 1))
-        self.assertEqual((row["self_pct"], row["single_pct"], row["group_pct"]), (100.0, 0.0, 0.0))
+        self.assertEqual((row["self_pct"], row["single_pct"], row["group_pct"], row["other_pct"]),
+                         (100.0, 0.0, 0.0, 0.0))
         self.assertEqual(row["recast_median_s"], 90.0)
+        flame_shock = next(r for r in self.rows() if r["spell_id"] == 188389)  # on a creature
+        self.assertEqual((flame_shock["single_pct"], flame_shock["group_pct"],
+                          flame_shock["other_pct"]), (0.0, 0.0, 100.0))
         self.assertEqual((row["first_seen"], row["last_seen"]), ("2026-09-23", "2026-09-23"))
         self.assertEqual(row["category"], "")   # 114051 is the listed id, not 114052
         astral = next(r for r in self.rows() if r["spell_id"] == 108271)

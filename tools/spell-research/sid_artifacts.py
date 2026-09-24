@@ -32,7 +32,7 @@ import research
 import sid_propose
 
 ROW_KEYS = ("class", "spec", "spec_id", "spell_id", "name", "aura_type", "applications", "players",
-            "self_pct", "single_pct", "group_pct", "recast_median_s", "first_seen", "last_seen",
+            "self_pct", "single_pct", "group_pct", "other_pct", "recast_median_s", "first_seen", "last_seen",
             "category", "suggested_category", "rule")
 
 NON_PLAYER_KEYS = ("aura_type", "spell_id", "name", "applications")
@@ -146,7 +146,7 @@ def dictionary_rows(agg, spec_map, names, shipped, suggestions):
             apps = st.applications
             if not apps:
                 continue
-            in_group = max(apps - st.self_ - st.single, 0)
+            in_group = max(apps - st.self_ - st.single - st.other, 0)
             sugg = suggestions.get((cls, sid)) if aura_type == "BUFF" else None
             suggested, rule = (sugg[0], sugg[1]) if sugg and sugg[0] else ("", "")
             rows.append({
@@ -161,6 +161,7 @@ def dictionary_rows(agg, spec_map, names, shipped, suggestions):
                 "self_pct": _pct(st.self_, apps),
                 "single_pct": _pct(st.single, apps),
                 "group_pct": _pct(in_group, apps),
+                "other_pct": _pct(st.other, apps),
                 "recast_median_s": (round(statistics.median(st.recast_samples), 2)
                                     if st.recast_samples else None),
                 "first_seen": st.first_seen,
@@ -188,7 +189,7 @@ def _auras_md(date, rows):
            "are counted in SOURCES.md only. The same rows are in `auras.csv` and `auras.json`."
            % FORMULA, "",
            "Each entry: **name** (spell id, aura type) — applications / distinct players — target "
-           "shape (self · single · group) and median recast — shipped category, or the rule-based "
+           "shape (self · single · group, and other units: pets, guardians, NPCs) and median recast — shipped category, or the rule-based "
            "suggestion.", "",
            "%s across %s." % (_n(len(rows), "row"), _n(len(classes), "class")), "",
            "## Contents", ""]
@@ -207,6 +208,8 @@ def _auras_md(date, rows):
         recast = row["recast_median_s"]
         shape = "self %g%% · single %g%% · group %g%%" % (
             row["self_pct"], row["single_pct"], row["group_pct"])
+        if row["other_pct"]:
+            shape += " · other units %g%%" % row["other_pct"]
         if recast is not None:
             shape += " · recast %gs" % recast
         if row["category"]:

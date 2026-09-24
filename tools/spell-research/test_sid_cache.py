@@ -211,7 +211,8 @@ class Merge(unittest.TestCase):
         a = sid_scan.FileAggregate(lines=10, skipped=1, unattributed=2,
                                    first_date="2026-09-23", last_date="2026-09-23")
         a.per_spec[RESTO] = {(BUFF, 114052): stats(applications=3, players={"h1", "h2"}, self_=1,
-                                                   single=1, group=1, recast_samples=[90.0])}
+                                                   single=1, group=1, other=1,
+                                                   recast_samples=[90.0])}
         a.non_player[(BUFF, 2645)] = {"names": Counter({"Ghost Wolf": 2}), "applications": 2}
         b = sid_scan.FileAggregate(lines=5, skipped=0, unattributed=1,
                                    first_date="2026-08-01", last_date="2026-09-30")
@@ -225,7 +226,7 @@ class Merge(unittest.TestCase):
         st = m.per_spec[RESTO][(BUFF, 114052)]
         self.assertEqual(st.applications, 7)
         self.assertEqual(st.players, {"h1", "h2", "h3"})
-        self.assertEqual((st.self_, st.single, st.group), (3, 1, 3))
+        self.assertEqual((st.self_, st.single, st.group, st.other), (3, 1, 3, 1))
         self.assertEqual(st.recast_samples, [90.0, 120.0])
         self.assertEqual(st.names, Counter({"Ascendance": 3, "Ascend": 1}))
         self.assertEqual((st.first_seen, st.last_seen), ("2026-08-01", "2026-09-30"))
@@ -322,6 +323,14 @@ class Evidence(unittest.TestCase):
         back = sid_cache.evidence_from_json(ev)
         self.assertEqual((back.class_players, back.spec_players), ({}, {}))
 
+    def test_evidence_rows_carry_other(self):
+        agg = sid_scan.FileAggregate()
+        agg.per_spec[RESTO] = {(BUFF, 114052): stats(applications=3, self_=1, other=2)}
+        row = sid_cache.evidence_to_json(agg, {})["auras"][0]
+        self.assertEqual((row["self"], row["single"], row["other"]), (1, 0, 2))
+        back = sid_cache.evidence_from_json(json.loads(json.dumps(sid_cache.evidence_to_json(agg, {}))))
+        self.assertEqual(back.per_spec[RESTO][(BUFF, 114052)].other, 2)
+
     def test_evidence_round_trips_into_an_aggregate(self):
         agg, _summary, ev = self.evidence()
         back = sid_cache.evidence_from_json(json.loads(json.dumps(ev)))
@@ -331,7 +340,8 @@ class Evidence(unittest.TestCase):
                 b = back.per_spec[spec_key][aura_key]
                 self.assertEqual(b.applications, st.applications)
                 self.assertEqual(len(b.players), len(st.players))
-                self.assertEqual((b.self_, b.single, b.group), (st.self_, st.single, st.group))
+                self.assertEqual((b.self_, b.single, b.group, b.other),
+                                 (st.self_, st.single, st.group, st.other))
                 self.assertEqual(b.names, st.names)
         self.assertEqual(set(back.non_player), set(agg.non_player))
         self.assertEqual((back.unattributed, back.skipped), (agg.unattributed, agg.skipped))

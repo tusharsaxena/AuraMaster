@@ -326,7 +326,8 @@ class ScanFileAttribution(unittest.TestCase):
     def test_debuff_on_a_creature_is_kept_as_a_debuff(self):
         st = scan_fixture().per_spec[RESTO][("DEBUFF", 188389)]
         self.assertEqual(st.applications, 1)
-        self.assertEqual(st.single, 1)
+        # The Training Dummy is no player: `single` is one other PLAYER (the spec), so `other`.
+        self.assertEqual((st.single, st.other), (0, 1))
 
 
 class ScanFileNonPlayer(unittest.TestCase):
@@ -397,6 +398,31 @@ class ScanFileShapes(unittest.TestCase):
         lines += [aura_line("23:00:01.%d000" % (i + 1), A, "Player-1-000000%d0" % i, 7777) for i in range(4)]
         st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
         self.assertEqual((st.self_, st.single, st.group), (0, 0, 1))
+
+    def test_a_pet_or_guardian_target_is_other_never_single(self):
+        # SID-10, the real run: Infernal Command 387552 (onto the warlock's demons, Creature-
+        # guardians) and Beast Cleave 118455 (onto the hunter's Pet-) read as 70%+ single and R5
+        # filed them under Support. `single` is one other PLAYER (the spec).
+        lines = [aura_line("23:00:01.0000", A, "Pet-0-1-1-1-1-00000001", 7777, dest_flags="0x1111"),
+                 aura_line("23:00:05.0000", A, "Creature-0-1-1-1-1-00000002", 7777,
+                           dest_flags="0x2111"),
+                 aura_line("23:00:09.0000", A, "Player-1-00000010", 7777)]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual((st.applications, st.self_, st.single, st.group, st.other), (3, 0, 1, 0, 2))
+
+    def test_only_players_make_a_burst(self):
+        # 3 players and 3 guardians inside a second: not 5 distinct PLAYERS, so no burst.
+        lines = [aura_line("23:00:01.%d000" % i, A, "Player-1-000000%d0" % i, 7777) for i in range(3)]
+        lines += [aura_line("23:00:01.%d000" % (i + 3), A, "Creature-0-1-1-1-1-0000000%d" % i, 7777,
+                            dest_flags="0x2111") for i in range(3)]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual((st.single, st.group, st.other), (3, 0, 3))
+
+    def test_other_round_trips_through_json(self):
+        lines = [aura_line("23:00:01.0000", A, "Pet-0-1-1-1-1-00000001", 7777, dest_flags="0x1111")]
+        agg = synthetic(self, lines)
+        back = sid_scan.aggregate_from_json(sid_scan.aggregate_to_json(agg))
+        self.assertEqual(back.per_spec[RESTO][(BUFF, 7777)].other, 1)
 
     def test_bursts_are_per_caster(self):
         lines = [aura_line("23:00:01.%d000" % i, A if i % 2 else C, "Player-1-000000%d0" % i, 7777)

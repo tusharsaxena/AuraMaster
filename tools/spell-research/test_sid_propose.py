@@ -441,6 +441,17 @@ def shape(apps=100, self_=0, single=0, group=0, recast=None):
     return {"applications": apps, "self": self_, "single": single, "group": group, "recast": recast}
 
 
+class OtherUnitsShareTest(unittest.TestCase):
+    """Applications onto units that are not players (pets, guardians) are neither single nor group."""
+
+    def test_a_pet_buff_is_not_support_and_not_group(self):
+        got = sid_propose.suggest({"applications": 100, "self": 0, "single": 5, "group": 0,
+                                   "other": 95, "recast": 30.0}, set(), True, False)
+        self.assertEqual(got[:2], ("utility", "R9"))
+        self.assertIn("95% other units", got[3])
+        self.assertIn("0% group", got[3])
+
+
 class SuggestRuleTest(unittest.TestCase):
     """One test per rule; each checks category, rule id, confidence and the evidence in the reason."""
 

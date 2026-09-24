@@ -448,7 +448,8 @@ def flags(agg, spec_map, names, shipped, aura_to_family, cc_ids=frozenset(), thr
 # Rule thresholds (the spec's table). Shares are of the aura's applications across every spec of
 # the class. The scanner counts a burst ONCE in `group` and absorbs its companions, so `group` is a
 # count of bursts, not of applications; the applications inside bursts are the rest,
-# applications - self - single, and that is the group share.
+# applications - self - single - other (`other`: onto a pet, guardian or NPC), and that is the group
+# share.
 SELF_SHARE = 0.90        # R1, R3, R7
 GROUP_SHARE = 0.30       # R2
 SINGLE_SHARE = 0.70      # R5
@@ -551,9 +552,9 @@ def _facts(stats, signals, in_pool, tank_only):
     apps = stats.get("applications", 0)
     if apps <= 0:
         return None
-    self_, single = stats.get("self", 0), stats.get("single", 0)
+    self_, single, other = stats.get("self", 0), stats.get("single", 0), stats.get("other", 0)
     return _Facts(apps=apps, self_=self_ / apps, single=single / apps,
-                  group=max(apps - self_ - single, 0) / apps, bursts=stats.get("group", 0),
+                  group=max(apps - self_ - single - other, 0) / apps, bursts=stats.get("group", 0),
                   recast=stats.get("recast"), signals=set(signals or ()), in_pool=in_pool,
                   tank_only=tank_only)
 
@@ -580,7 +581,8 @@ def suggest(stats, signals, in_pool, tank_only):
     # type: (dict, Set[str], bool, bool) -> Tuple[Optional[str], str, str, str]
     """(category key or None, rule id, confidence, reason sentence) for one aura, by rules R1-R9.
 
-    stats: {"applications", "self", "single", "group" (bursts), "recast" (median seconds or None)},
+    stats: {"applications", "self", "single", "group" (bursts), "other" (onto a unit that is no
+    player; optional), "recast" (median seconds or None)},
     summed over every spec of the class. signals: sid_db2.aura_signals' names for the aura.
     in_pool: the aura (or the cast it comes from) is player-castable. tank_only: every spec that
     applied it is a tank spec.
@@ -593,6 +595,9 @@ def suggest(stats, signals, in_pool, tank_only):
         if predicate(f):
             return category, rule, confidence, "%s → %s." % (reason(f), CATEGORY_LABELS[category])
     shape_words = "%s self, %s single, %s group" % (_pct(f.self_), _pct(f.single), _pct(f.group))
+    other = stats.get("other", 0)
+    if other:
+        shape_words += ", %s other units" % _pct(other / f.apps)
     if not self_ and not single:
         return None, "R9", "low", "No rule matched (%s), so no suggestion." % shape_words
     return "utility", "R9", "low", "No rule matched (%s) → Utility." % shape_words
@@ -617,6 +622,7 @@ def _stats_of(rows):
             "self": sum(st.self_ for _s, st in rows),
             "single": sum(st.single for _s, st in rows),
             "group": sum(st.group for _s, st in rows),
+            "other": sum(st.other for _s, st in rows),
             "recast": round(statistics.median(samples), 2) if samples else None}
 
 
