@@ -47,7 +47,7 @@ marked as such rather than listed as a requirement.
 | POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:41` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
 | `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the Hard CC / Soft CC spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
 | a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
-| POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, `lua tests/run.lua -j N` / `-j auto`; `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
+| POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, which `lua tests/run.lua` uses by default (`jobs = "auto"`; `-j N` overrides); `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2. "5.2 will probably work" is false and costs an hour to
@@ -137,8 +137,8 @@ to build, run or test the addon.**
 ## Am I set up correctly?
 
 ```sh
-lua tests/run.lua                                     # the suite — must be green
-lua tests/run.lua -j auto                             # same, fanned across CPUs (testing-§14)
+lua tests/run.lua                                     # the suite, sharded across CPUs — must be green
+lua tests/run.lua -j 1                                # same, serially; must match it (testing-§14)
 luacheck .                                            # must be 0 warnings / 0 errors
 lizard -l lua -x "./libs/*" -x "./tests/_kit/*" .     # the complexity report (release-time)
 ```

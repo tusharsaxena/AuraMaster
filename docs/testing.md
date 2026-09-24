@@ -14,9 +14,16 @@ Both must pass before **every** commit (testing-§4):
 | Syntax-check one file | `luac -p path/to/file.lua` | no output |
 
 `tests/_kit/run-automated-tests.sh --suite lint --suite tests --no-bundle` runs exactly that pair and
-writes nothing, so it may stand in for the two commands. If the serial suite ever passes about ten
-seconds, `lua tests/run.lua -j auto` fans it across CPUs (testing-§14); check it agrees with the
-serial run before relying on it.
+writes nothing, so it may stand in for the two commands.
+
+`lua tests/run.lua` is **sharded by default** (`jobs = "auto"` in `tests/run.lua`, testing-§14):
+contiguous slices of the suite list run in parallel workers and their output is relayed in suite
+order. `lua tests/run.lua -j 1` is the serial run. Measured on a WSL2 `/mnt` checkout (1,348
+cases): serial 13.4–17.0 s wall at about 60% CPU, sharded (16 workers) 5.6–7.1 s. The rule: the
+sharded run MUST match the serial one — the same pass/fail/skip totals, the same case transcript
+and the same exit code (the sharded totals line only adds `(N shards)`). A suite that passes only
+serially depends on state an earlier suite left behind, and that is the bug to fix, not a reason
+to drop back to `-j 1`.
 
 ## The four out-of-game suites and their checkpoints
 

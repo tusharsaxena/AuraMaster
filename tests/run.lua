@@ -58,8 +58,13 @@ AM_TEST = Kit.expose{
 
 -- Suites, in load-order-sensitive order. `dir` is explicit, so Kit.run asserts the inventory: a
 -- tests/test_*.lua on disk but missing here, or listed but absent, takes the run down.
+--
+-- `jobs = "auto"`: the serial gate is past testing-§14's ten seconds, so the suites fan out across
+-- contiguous shards by default; `-j 1` runs them serially. The sharded run must match the serial
+-- one (same totals, same transcript, same exit code) — docs/testing.md has the figures.
 Kit.run{
     dir = "tests/",
+    jobs = "auto",
     suites = {
         "test_loadorder",
         "test_setups",
