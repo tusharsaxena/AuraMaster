@@ -209,3 +209,51 @@ test("lifecycle: a profile switch applies the new profile's Blizzard-frame setti
     -- red under: rebuildProfile without BlizzardFrames.Apply
     assertTrue(NS.BlizzardFrames.IsHidden("BuffFrame"))
 end)
+
+-- ── the degraded latch ───────────────────────────────────────────────────────────────────────
+
+--- The lifecycle events `NS.addon` holds right now, from the mock's registration survey.
+local function lifecycleRegs(NS, mocks)
+    local out = {}
+    for _, r in ipairs(mocks.__registrations()) do
+        if r.target == NS.addon and LIFECYCLE[r.event] then
+            local n = #out
+            out[n + 1] = r.event
+        end
+    end
+    return out
+end
+
+test("lifecycle: the degraded latch stands up and down only on an edge", function()
+    local NS2, mocks2 = dofile("tests/degraded_env.lua")()
+    rawset(_G, "AuraMasterDB", nil)
+    NS2.addon:OnInitialize()
+    NS2.addon:OnEnable()
+    mocks2.__fireTimers()
+    local calls = {}
+    local register = NS2.addon.RegisterEvent
+    rawset(NS2.addon, "RegisterEvent", function(self, event, ...)
+        calls[event] = (calls[event] or 0) + 1
+        return register(self, event, ...)
+    end)
+    local timers = #mocks2.__timers
+    NS2.SyncEnabled()
+    NS2.SyncEnabled()
+    -- red under: the level-triggered stub (every SyncEnabled ran the whole standUp)
+    assertEqual(#mocks2.__timers, timers, "an unchanged SyncEnabled armed an apply timer")
+    assertNil(calls.PLAYER_ENTERING_WORLD, "an unchanged SyncEnabled re-registered the lifecycle events")
+    assertFalse(NS2.IsStoodDown())
+
+    NS2.db.profile.enabled = false
+    NS2.SyncEnabled()
+    assertTrue(NS2.IsStoodDown())
+    assertTrue(NS2.IsDisabled())
+    assertEqual(#lifecycleRegs(NS2, mocks2), 0, "a stood-down addon holds no lifecycle event")
+
+    NS2.db.profile.enabled = true
+    NS2.SyncEnabled()
+    NS2.SyncEnabled()
+    assertFalse(NS2.IsStoodDown())
+    assertEqual(calls.PLAYER_ENTERING_WORLD, 1, "the stand-up registered once")
+    assertEqual(#lifecycleRegs(NS2, mocks2), 8, "every lifecycle event is back")
+end)

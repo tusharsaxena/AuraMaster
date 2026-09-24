@@ -124,12 +124,24 @@ if not Lifecycle then
     -- Degrade, never error. Without the library there is no latch, so the stored path answers the
     -- one question the rest of the addon asks — which keeps the show ladder honest and leaves
     -- modules/Container.lua's step 0 reading the same seam on every build.
+    --
+    -- EDGE-TRIGGERED, LIKE THE LIBRARY. `down` is the stub's one-hold latch and starts where the
+    -- library's empty latch starts, up: the load-time SyncEnabled of an enabled install is then a
+    -- no-op, as it is with LibKa0s-Lifecycle, and a profile switch that agrees with the old one
+    -- costs nothing. A stub that ran standUp on every call re-registered every event and armed an
+    -- apply pass each time. This mirrors the member's edge semantics as a correctness property of
+    -- the degraded path; it is not a library-stack-§7 copy of the member. The two readers answer
+    -- from `down`, not the store, so the show ladder and the last edge always agree.
     NS.lifecycle = nil
     NS.HOLD_DISABLED, NS.HOLD_PERF = "disabled", "perf"
-    function NS.IsStoodDown() return not enabledStored() end
-    function NS.IsDisabled() return not enabledStored() end
+    local down = false
+    function NS.IsStoodDown() return down end
+    function NS.IsDisabled() return down end
     function NS.SyncEnabled()
-        if NS.IsStoodDown() then standDown() else standUp() end
+        local want = not enabledStored()
+        if want == down then return end
+        down = want
+        if want then standDown() else standUp() end
     end
     return
 end

@@ -482,7 +482,7 @@ badge and any count quoted in the docs must agree with it.
 - state: the session flags start off, are never saved, and a reload starts them clean
 - state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)
 
-### test_lifecycle.lua (10)
+### test_lifecycle.lua (11)
 
 - lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
@@ -494,6 +494,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a copied profile is prepared before its containers are built
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
+- lifecycle: the degraded latch stands up and down only on an edge
 
 ### test_anchors.lua (74)
 
@@ -1486,7 +1487,7 @@ badge and any count quoted in the docs must agree with it.
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
-| test_lifecycle.lua | 10 |
+| test_lifecycle.lua | 11 |
 | test_anchors.lua | 74 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 59 |
@@ -1527,4 +1528,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1301** |
+| **Total** | **1302** |
