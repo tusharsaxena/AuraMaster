@@ -239,7 +239,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (94)
+### test_filtercompiler.lua (85)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -326,6 +326,9 @@ badge and any count quoted in the docs must agree with it.
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
+
+### test_filtercompiler_categories.lua (9)
+
 - categories: a user category joins the categorized union, so Uncategorized stops rescuing what it claims
 - categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For
 - categories: ClaimingCategories names every spells-kind category of the aura type that holds an id, in declaration order
@@ -1463,7 +1466,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 141 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 3 of 143 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1538,7 +1541,8 @@ badge and any count quoted in the docs must agree with it.
 | test_migrations.lua | 6 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 94 |
+| test_filtercompiler.lua | 85 |
+| test_filtercompiler_categories.lua | 9 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 53 |
 | test_compat.lua | 27 |

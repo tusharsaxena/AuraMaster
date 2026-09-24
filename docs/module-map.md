@@ -120,6 +120,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `tests/fresh_env.lua` | Builds a fresh, fully loaded environment for a suite that mutates state |
 | `tests/degraded_env.lua` | Builds a second environment with LibKa0s absent, so every setup file takes its real fallback |
 | `tests/perf.lua` | The offline performance scenario runner (outside the green gate) — `docs/performance.md` |
+| `tests/filtercompiler_helpers.lua` | Not a suite: the plan readers (`setOf`, `hasWarning`) that `test_filtercompiler` and `test_filtercompiler_categories` share |
 | `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves, and `P.suggestions()`, which reads the ID lists' suggestion dropdown), for the `test_pages_*` suites |
 | `tests/region_recorder.lua` | Not a suite: a stand-in frame region that records every method called on it, so the style suites can tell one region's paint from another's (the kit hands a frame back as its own texture) |
 | `tests/engine_recorder.lua` | Not a suite: makes a recorder button answer its dispel bindings the way the client's `CustomAuraButton` does (every `Set*` / `Add*` binding ends in a full apply pass; `ClearDispelTypeTextures` only empties the list) |
@@ -139,6 +140,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_schema.lua` | `settings/Schema.lua`: every row resolves, class-color companions, the container-relative path model, the carve-outs |
 | `test_schema_paths.lua` | `settings/Schema.lua` in depth: the write seam's order, the relative and absolute path models, registration and validation, carve-outs, whole sections, `CheckWrite`, `ApplyDefault`, the session rows |
 | `test_filtercompiler.lua` | `modules/FilterCompiler.lua`: settings in, aura groups and warnings out |
+| `test_filtercompiler_categories.lua` | `modules/FilterCompiler.lua` against the player's own categories, peeled out of `test_filtercompiler.lua` (issue #18): a user category in the categorized union, `ClaimingCategories` (the overlap guardrail's one question), and a user category as the only shown category |
 | `test_container.lua` | `modules/Container.lua` against the recorded engine: call order, update in place vs rebuild (the growth corner included), the show ladder, preview |
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, an apply error that leaves the rest of the pass running, followers re-applied, combat and secrecy deferral |
 | `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
