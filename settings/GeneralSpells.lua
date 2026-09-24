@@ -387,8 +387,8 @@ local ID_STRINGS = {
 -- by a function so no `%` in a translation is read as a pattern.
 --
 -- THE AURA SENTENCE IS THIS ADDON'S, AND `{hint}` IS THE LIBRARY'S. NAME_HINT is a localized copy
--- of `O.ID_NAME_HINT.spell` and tests/test_pages_general.lua pins the two as equal, so that a
--- translation rewords the tooltip and the widget's own refusal together. The fact that an id has to
+-- of `O.ID_NAME_HINT.spell` and tests/test_pages_general_categories.lua pins the two as equal, so
+-- that a translation rewords the tooltip and the widget's own refusal together. The fact that an id has to
 -- be the one the aura carries is not the library's business -- it is true of THIS addon, because
 -- this addon filters on auras -- so it belongs in the sentence this file owns (issue #15,
 -- acceptance criterion 4). modules/CastAura.lua catches the ids it can and says so at add time;
@@ -1212,7 +1212,7 @@ end
 --- this addon is therefore still offered as you type, as well as still resolving by name, by id or
 --- by link. Under LibKa0s v1.49.0 that lookup was keyed by the kind TABLE ITSELF, a host table
 --- joined no row, and this tab bought its tooltip at the price of its autocomplete; v1.49.1 is the
---- fix, and tests/test_pages_general.lua pins both halves together.
+--- fix, and tests/test_pages_general_categories.lua pins both halves together.
 local function spellKind(def)
     return {
         base = "spell",
