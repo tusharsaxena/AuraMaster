@@ -125,6 +125,7 @@ BUNDLE_FILES = {
     "evidence.json", "proposals.json", "CURRENT_CATEGORIES.md", "CORRECTIONS.md",
     "PROPOSED_ADDITIONS.md", "FLAGS.md", "SOURCES.md", "dictionary/auras.json",
     "dictionary/auras.csv", "dictionary/AURAS.md", "dictionary/non-player.csv",
+    "REVIEW.csv", "REVIEW.md",
 }
 
 
@@ -306,6 +307,19 @@ class EndToEnd(unittest.TestCase):
 
     def test_the_summary_names_the_counts(self):
         self.assertRegex(self.bundle_run.out, r"corrections \d+, additions \d+, flags \d+")
+        self.assertIn("REVIEW.csv", self.bundle_run.out)
+
+    def test_the_review_sheet_covers_the_queue(self):
+        keys = {p["key"] for p in json.loads(self.bundle_run.read("proposals.json"))["proposals"]}
+        data = (self.bundle_run.bundle / "REVIEW.csv").read_bytes()
+        self.assertTrue(data.startswith(b"\xef\xbb\xbf"))
+        rows = list(csv.DictReader(io.StringIO(data.decode("utf-8-sig"), newline="")))
+        self.assertTrue(rows)
+        self.assertEqual({r["proposal_key"] for r in rows}, keys)
+        asc = [(r["type"], r["spell_id"]) for r in rows
+               if r["proposal_key"] == "replace|offensiveCDs|SHAMAN|ascendance|114052,1219480"]
+        self.assertEqual(asc, [("deletion", "114051"), ("correction-add", "114052"),
+                               ("correction-add", "1219480")])
 
 
 class DefaultBar(unittest.TestCase):

@@ -9,7 +9,8 @@ Subcommands:
              evidence.json (counts only; no player name, realm, GUID or hash).
     propose  Read evidence.json, the DB2 tables and the shipped categories, and write the bundle:
              the per-spec aura dictionary and the review set (CORRECTIONS.md,
-             PROPOSED_ADDITIONS.md, FLAGS.md, ... and proposals.json, the review queue).
+             PROPOSED_ADDITIONS.md, FLAGS.md, ... proposals.json, the review queue, and
+             REVIEW.csv, the review sheet the owner fills in).
     decide   Record the owner's ruling on one proposal key of a bundle in decisions.json
              (accept / reject / move into a chosen category); the only writer of that file.
     apply    Apply the bundle's ruled proposals to defaults/Categories.lua (the only writer of
@@ -165,6 +166,7 @@ def cmd_propose(args):
           % (sid_propose.plural(addition_counts.get("raw", 0), "candidate"),
              addition_counts.get("low", 0), addition_counts.get("folded", 0),
              sid_propose.plural(addition_counts.get("all", 0), "ALL proposal")))
+    print("Review sheet: %s (explained in %s)" % (bundle / "REVIEW.csv", bundle / "REVIEW.md"))
     print("Review: %s, %s; queue: %s; dictionary: %s"
           % (bundle / "CORRECTIONS.md", bundle / "PROPOSED_ADDITIONS.md",
              bundle / "proposals.json", bundle / "dictionary" / "AURAS.md"))

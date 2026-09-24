@@ -405,6 +405,14 @@ again. The category suggestion rules R1 to R9 are the spec's table, implemented 
   cross-check (report only, never proposed).
 - `SOURCES.md`: logs scanned, date range, bytes, skipped lines, DB2 build and thresholds.
 - `proposals.json`: the review queue, corrections then additions, most-applied first.
+- `REVIEW.csv`: the review sheet, UTF-8 with a byte-order mark so Excel opens it cleanly. One row
+  per spell id per change (`correction-add`, `deletion`, `move`, `addition`): corrections first,
+  most-applied first, then additions grouped by recommended category. A replace is a `deletion`
+  row plus a `correction-add` row per new id, so each half is ruled on its own. Columns: `row_id`,
+  `spell_id`, `spell_name`, `type`, `class`, `current_category`, `proposed_category` (editable),
+  `specs`, `applications`, `players`, `context`, `confidence`, `proposal_key` and, last,
+  `decision`, where the owner writes `Approve` or `Reject` (`A`/`R`, `Y`/`N` accepted).
+- `REVIEW.md`: explains the sheet's columns, the decision values and how to hand it back.
 - `DECISIONS.md`: written by `apply`, this review's rulings and the lines they changed.
 
 The durable record of rulings is `tools/spell-research/decisions.json`.

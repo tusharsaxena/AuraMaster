@@ -13,6 +13,8 @@ The bundle is docs/spell-research/<date>-logs/ (committed; CRLF like every file 
     FLAGS.md                    unverified, stale, below-the-bar and the CC cross-check
     SOURCES.md                  what was read: logs, DB2 build, thresholds, skipped lines
     proposals.json              the queue the review command walks: corrections, then additions
+    REVIEW.csv                  the review sheet: one row per spell id per change (sid_review)
+    REVIEW.md                   what the sheet's columns and decision values mean
 
 Nothing here reads a log or a DB2 table: it renders what sid_propose and the evidence already
 hold. Only classes, specs, spell names and counts are written -- never a player, realm or GUID.
@@ -30,6 +32,7 @@ from typing import Dict, List, Optional, Tuple
 
 import research
 import sid_propose
+import sid_review
 
 ROW_KEYS = ("class", "spec", "spec_id", "spell_id", "name", "aura_type", "applications", "players",
             "self_pct", "single_pct", "group_pct", "other_pct", "recast_median_s", "first_seen", "last_seen",
@@ -543,5 +546,10 @@ def write_bundle(out_dir, date, rows, proposals, flags, shipped, sources, non_pl
         _write(out_dir / "proposals.json", _json_text({
             "date": date, "thresholds": th,
             "proposals": [proposal_dict(p) for p in corr + adds]})),
+    ]
+    review = sid_review.review_rows(proposals, shipped, names, class_players)
+    written += [
+        _write(out_dir / "REVIEW.csv", sid_review.csv_text(review)),
+        _write(out_dir / "REVIEW.md", sid_review.review_md(date, review, shipped)),
     ]
     return written
