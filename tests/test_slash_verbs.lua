@@ -403,16 +403,38 @@ test("slash verbs: /am lock and /am unlock go through the seam: unlocked shows t
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     local inst = NS2.ContainerManager.instances[1]
-    assertEqual(dump(slash(NS2, lines, "unlock")), "{Containers unlocked — drag a container by its handle}")
+    assertEqual(dump(slash(NS2, lines, "unlock")), "{locked = false}")
     assertFalse(NS2.db.profile.locked)
     assertTrue(inst.handle:IsShown(), "unlocked: the handle shows")
     -- red under: ShouldShow still reading the lock as the preview
     assertFalse(inst.previewShown, "unlocked: no placeholders")
     assertTrue(inst.engine.__enabled, "unlocked: real auras draw")
-    assertEqual(dump(slash(NS2, lines, "lock")), "{Containers locked}")
+    assertEqual(dump(slash(NS2, lines, "lock")), "{locked = true}")
     assertTrue(NS2.db.profile.locked)
     -- red under: runLock writing profile.locked around the seam (no CONFIG_CHANGED, no visibility pass)
     assertFalse(inst.handle:IsShown(), "locked: the handle goes")
+end)
+
+test("slash verbs: /am enable, /am disable, /am lock, /am unlock echo the stored value in the set shape", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    local SlashLib = mocks.LibStub("LibKa0s-Slash-1.0")
+    --- The line `/am get <path>` prints for `value`: the library's formatter, no private variant.
+    local function setShape(path, value)
+        return SlashLib.FormatKV(path, SlashLib.FormatValue(NS2.FindSchemaRow(path), value))
+    end
+    for _, step in ipairs({ { "disable", "enabled", false }, { "enable", "enabled", true },
+                            { "unlock", "locked", false }, { "lock", "locked", true } }) do
+        local verb, path, value = step[1], step[2], step[3]
+        slash(NS2, lines, verb)
+        assertEqual(NS2.GetSetting(path), value, "/am " .. verb .. " wrote " .. path)
+        local count = #lines
+        -- red under: the prose confirmation
+        assertEqual(lines[count] and strip(lines[count]), strip(setShape(path, value)), "/am " .. verb)
+        assertTrue(lines[count] and lines[count]:find(setShape(path, value), 1, true) ~= nil,
+            "/am " .. verb .. " kept the formatter's colors: " .. tostring(lines[count]))
+        assertEqual(count, 1, "/am " .. verb .. " prints one line")
+    end
 end)
 
 test("slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)", function()

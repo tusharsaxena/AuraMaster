@@ -185,13 +185,23 @@ end
 -- The gray combat refusal (options-ui-§2's canonical shape).
 local function refuse(line) printf("|cff808080%s|r", line) end
 
+--- Confirm a host verb's write the way `/am set` confirms one (slash-commands-§5's set shape): the
+--- stored value read back through the library's own CliGet, so the line is exactly what
+--- `/am get <path>` prints (`enabled = true`), with no private variant of the formatter (§5 MUST
+--- NOT). The degraded stub has no formatter and its CliGet names the missing library, so there the
+--- verb's own sentence (`prose`) is the confirmation.
+local function echo(path, prose)
+    if SlashLib and SlashLib.FormatKV then return cli:CliGet(path) end
+    print(prose)
+end
+
 -- The master switch, through the same seam as General → Master controls' "Enable Aura Master" and
 -- `/am set enabled`: the [Set] line, CONFIG_CHANGED and the visibility pass. Not refused in combat —
 -- the pass flips each engine through its own SetEnabled, which is combat-legal.
 function runEnabled(on)
     local ok, err = NS.SetByPath("enabled", on)
     if not ok then return print(err) end
-    print(on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
+    echo("enabled", on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
 end
 
 function runResetAll()
@@ -280,8 +290,9 @@ function runDelete(rest)
 end
 
 function runLock(locked)
-    NS.SetByPath("locked", locked)
-    print(locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
+    local ok, err = NS.SetByPath("locked", locked)
+    if not ok then return print(err) end
+    echo("locked", locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
 end
 
 -- `/am test` toggles; `on` / `off` set. Through Preview.SetTestMode, the switch the Master controls

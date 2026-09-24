@@ -973,7 +973,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (45)
+### test_slash_verbs.lua (46)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1001,6 +1001,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
 - slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
 - slash verbs: /am lock and /am unlock go through the seam: unlocked shows the handle, and live auras keep drawing (B1)
+- slash verbs: /am enable, /am disable, /am lock, /am unlock echo the stored value in the set shape
 - slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
@@ -1526,7 +1527,7 @@ badge and any count quoted in the docs must agree with it.
 | test_framepicker.lua | 14 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 25 |
-| test_slash_verbs.lua | 45 |
+| test_slash_verbs.lua | 46 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 18 |
 | test_options_descriptor.lua | 19 |
@@ -1552,4 +1553,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1322** |
+| **Total** | **1323** |

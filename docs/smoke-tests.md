@@ -316,9 +316,11 @@ page under the header.
 
 ## O. Master switch from chat
 
-57. Out of combat, `/am disable` → `Aura Master disabled — /am enable turns it back on` and every
-    container hides; General → **Enable Aura Master** is unticked. `/am enable` → `Aura Master
-    enabled` and every enabled container shows again. Repeat both **in combat** → the same lines, no
+57. Out of combat, `/am disable` → `enabled = false` (gold key, white value: the line `/am get enabled`
+    prints, slash-commands-§5's set shape) and every container hides; General → **Enable Aura Master**
+    is unticked. `/am enable` → `enabled = true` and every enabled container shows again; `/am unlock`
+    and `/am lock` confirm the same way, `locked = false` and `locked = true`. Repeat enable and
+    disable **in combat** → the same lines, no
     gray refusal, no "will apply when combat ends" notice and no taint warning; containers stop
     drawing and return at once (the anchors themselves finish hiding when combat ends, step 59).
 58. **The disabled addon is inert, not merely blank** (slash-commands-§7). With it disabled: Blizzard's

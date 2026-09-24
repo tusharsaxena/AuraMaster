@@ -182,14 +182,15 @@ test("slash: /am disable and /am enable write the master switch through the seam
     assertEqual(calls[1] and calls[1].path, "enabled")
     assertEqual(calls[1] and calls[1].value, false)
     assertFalse(NS2.db.profile.enabled)
-    assertTrue(said(lines, "Aura Master disabled — /am enable turns it back on"), lastLine(lines))
+    -- The set shape (slash-commands-§5), read back through the library's CliGet.
+    assertTrue(said(lines, "enabled|r = |cFFFFFFFFfalse|r"), lastLine(lines))
     local on, off = enginesEnabled(NS2)
     assertTrue(on == 0 and off > 0, "the visibility pass disabled every engine")
     NS2.Slash:OnSlash("enable")
     assertEqual(calls[2] and calls[2].path, "enabled")
     assertEqual(calls[2] and calls[2].value, true)
     assertTrue(NS2.db.profile.enabled, "disable then enable round-trips")
-    assertTrue(said(lines, "Aura Master enabled"), lastLine(lines))
+    assertTrue(said(lines, "enabled|r = |cFFFFFFFFtrue|r"), lastLine(lines))
     on, off = enginesEnabled(NS2)
     assertTrue(on > 0 and off == 0, "the visibility pass re-enabled every engine")
 end)
@@ -213,7 +214,7 @@ test("slash: /am enable prints the seam's error instead of the success line", fu
     NS2.Slash:OnSlash("enable")
     assertTrue(said(lines, "the seam said no"), lastLine(lines))
     -- red under: runEnabled printing the success line whatever the seam answered
-    assertFalse(said(lines, "Aura Master enabled"), lastLine(lines))
+    assertFalse(said(lines, "enabled|r = "), lastLine(lines))
     assertEqual(#lines, 1, "one line: the error")
 end)
 
