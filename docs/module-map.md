@@ -127,6 +127,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `tests/engine_recorder.lua` | Not a suite: makes a recorder button answer its dispel bindings the way the client's `CustomAuraButton` does (every `Set*` / `Add*` binding ends in a full apply pass; `ClearDispelTypeTextures` only empties the list) |
 | `tests/text_apis.lua` | Not a suite: the Text style's client APIs as recording stand-ins, installed from a fresh environment's `before` |
 | `tests/region_builder.lua` | Not a suite: a recorder that builds recorders, so each piece of a chain records its own calls |
+| `tests/prose_waivers.lua` | Not a suite: the per-file, per-word waivers the kit's US-English prose gate (`tests/_kit/test_prose.lua`) reads; today it skips the frozen `docs/spell-research/` bundles |
 | `tests/border_strips.lua` | Not a suite: reads an element border as `Style.ApplyBorder` draws it, its four Solid strips and its backdrop frame (B2-3); gives a kit frame recorder textures (`recorderTextures`) so the outline's and the handle's strips read apart |
 | `tests/test_*.lua` | One suite per subject, in the order `tests/run.lua` declares them; the cases are enumerated in the generated `docs/test-cases.md` |
 
@@ -136,8 +137,10 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 |---|---|
 | `test_loadorder.lua` | The TOC's load-bearing positions; the runners' load lists derived from the TOC and the XML |
 | `test_setups.lua` | The LibKa0s seams' addon-side wiring (printer, media, env, debug flag) and a real library-absent load |
+| `test_launcher.lua` | The launcher (launcher-§1..§5): one object registered twice under the folder name, the icon file's own TGA header, rung (b)'s left click driving the lock through the seam, right-click opening the panel, the Minimap button row's inverting get/set, the two reserved verbs, and three degraded hosts |
 | `test_database.lua` | `core/Database.lua`: seeding once, repair of ids, order and wrong-typed sections, backfill that keeps a stored `false`, the migration runner and schema v2 over every stored profile and the no-AceDB fallback |
 | `test_database_categories.lua` | `core/Database.lua`'s user-category store, peeled out of `test_database.lua` (issue #17): the v6 stamp, round trip through a reload, sync order, profile switches, key collisions, rename and the reserved namespace both acts rest on, the cross-profile delete sweep and the profile copy it skips |
+| `test_migrations.lua` | `core/Database.lua`'s `NS.RunMigrations` against savedvariables-§1: `NS.SCHEMA_VERSION` is the last step's target, a legacy account with no stamp runs every step, a stored stamp survives the logout strip, every step is idempotent on a fresh default profile, a step that raises leaves the stamp where it was, and an inactive profile is migrated too |
 | `test_schema.lua` | `settings/Schema.lua`: every row resolves, class-color companions, the container-relative path model, the carve-outs |
 | `test_schema_paths.lua` | `settings/Schema.lua` in depth: the write seam's order, the relative and absolute path models, registration and validation, carve-outs, whole sections, `CheckWrite`, `ApplyDefault`, the session rows |
 | `test_filtercompiler.lua` | `modules/FilterCompiler.lua`: settings in, aura groups and warnings out |
@@ -149,19 +152,19 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_bus.lua` | `core/Bus.lua`: the message catalog (strict live, plain degraded), a target per receiver, one sender per message |
 | `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; test mode is session-only and unlocking keeps real auras drawing |
 | `test_lifecycle.lua` | `core/AuraMaster.lua`: the lifecycle events and the three AceDB profile handlers, fired through AceEvent |
-| `test_disabled.lua` | The stand-down conformance suite (slash-commands-§7): the registration set, the live timer set, the shown frames, the SavedVariables writes and the printed lines, before and after the switch — plus the slash surface, the launcher's two buttons and the two-hold latch |
 | `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, the derived points and inherited flow, the preview extent, pending and forbidden frames, the drag handle |
+| `test_texttemplate.lua` | `modules/TextTemplate.lua`: every template rule with its message, the escapes, case, the compiled pieces, `ForDraw` |
 | `test_style.lua` | `modules/Style*.lua` and `modules/Preview.lua`: element sizes, preview layout, engine bindings |
 | `test_castaura.lua` | `modules/CastAura.lua`: the resolve of a cast id to its aura or its candidates, the one add seam both add boxes use, and the tag, help and note a row wears |
 | `test_timedspells.lua` | `modules/TimedSpells.lua`: readable-state listening, the bus announcement, learning out of combat, feeding the timeless filter |
 | `test_style_bars.lua` | `modules/Style_Bars.lua`: every bar setting reaching the region it paints, icon side and gap, drain direction, texts, bindings, preview fill |
 | `test_style_icons.lua` | `modules/Style_Icons.lua`: the art inside its border, the aspect crop, the cooldown swipe, the dispel border, texts, bindings, preview fill |
 | `test_style_text.lua` | `modules/Style_Text.lua`: the nested frames, the chain's anchors per justify, the measured padding and each piece's justify, the Center fallback, each piece's binding and options, the blink, the loops, the icon, a refused stored template, the chain per shape, the preview fill |
-| `test_texttemplate.lua` | `modules/TextTemplate.lua`: every template rule with its message, the escapes, case, the compiled pieces, `ForDraw` |
 | `test_preview.lua` | `modules/Preview.lua`: how many placeholders are drawn and where, the pool per style, when they are dressed again |
 | `test_render_coverage.lua` | Every Bars, Icons and Text schema row, written to a value other than the one in force, reaches a drawn region on a live button and on a placeholder, unless it declares `coverage` |
 | `test_blizzardframes.lua` | `modules/BlizzardFrames.lua`: reparenting `BuffFrame`/`DebuffFrame` under a hidden parent and back |
 | `test_framepicker.lua` | `modules/FramePicker.lua`: the named-ancestor walk, the outline and label that track the cursor, every way a pick ends, and `PickFor`'s refusals and writes |
+| `test_disabled.lua` | The stand-down conformance suite (slash-commands-§7): the registration set, the live timer set, the shown frames, the SavedVariables writes and the printed lines, before and after the switch — plus the slash surface, the launcher's two buttons and the two-hold latch |
 | `test_slash.lua` | `settings/Slash.lua`: `NS.COMMANDS` and every host verb through the real dispatcher |
 | `test_slash_verbs.lua` | `settings/Slash.lua` verb by verb through the real dispatcher: the help surface, the schema verbs over relative and absolute paths, the host verbs, the degradation stub |
 | `test_bulklog.lua` | debug-logging-§10's bulk rule, act by act: one `[Set]` line per bulk act counting the rows it changed; one line per profile reset or copy |
@@ -183,9 +186,9 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_defaults.lua` | `defaults/Profile.lua`, `defaults/Categories.lua` and `defaults/UserCategories.lua`: the shape invariants the code relies on, the user-category namespace, key generator and name rules, and where a materialized definition sits in its list |
 | `test_perf.lua` | The perf wiring: every bucket reached, a dormant probe free, suspend inert, the degraded stub |
 | `test_debuglogsetup.lua` | `core/DebugLogSetup.lua`: the descriptor this addon owns (flag, `[Init]` summary, chat acknowledgment, visibility refresh) and its stub |
-| `test_launcher.lua` | The launcher (launcher-§1..§5): one object registered twice under the folder name, the icon file's own TGA header, rung (b)'s left click driving the lock through the seam, right-click opening the panel, the Minimap button row's inverting get/set, the two reserved verbs, and three degraded hosts |
 | `test_locale.lua` | `locales/enUS.lua` defines every routed string and nothing unused |
-| `test_docs.lua` | README placeholders, US spelling (localization-§5's lists), the Documentation map both ways, every file:line citation resolving to a non-blank line |
+| `test_docs.lua` | README placeholders, the Documentation map both ways and its Tier 2 rows against `docs/`, and every file:line citation resolving to a non-blank, non-comment line within 3 lines of a name its own sentence gives |
+| `tests/_kit/test_prose.lua` | The US-English prose gate (localization-§5) over every tracked authored file, with this repo's waivers from `tests/prose_waivers.lua` |
 | `test_surface_parity.lua` | Each degradation stub against the live surface it stands in for |
 | `test_vendor_sync.lua` | `libs/LibKa0s/` and `tests/_kit/` against the LibKa0s tag named in `CLAUDE.md` |
 | `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
@@ -227,7 +230,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.55.0 | Twelve modules wired, one setup file each — table below |
+| LibKa0s v1.56.0 | Fourteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -244,9 +247,10 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | `LibKa0s-Bus-1.0` | `core/Bus.lua` | `NS.MSG`, through `Bus.Catalog` only (the strict catalog); `NS.BusLib`, the resolved major or its stub. The stand-down record is not taken: `NS.NewBusTarget` stays this addon's own untracked factory (issue #20) |
 | `LibKa0s-Options-1.0` | `settings/OptionsSetup.lua` | `NS.Helpers` (the panel shell, flow engine, composers, and the `ChoiceGrid` and `IdList` widgets the Filters and General pages draw) |
 | `LibKa0s-Schema-1.0` | `settings/Schema.lua` | `NS.SchemaRuntime`, the one instance over `NS.Schema`: the path primitives, `NS.FindSchemaRow`, `NS.Bulk` and `NS.ValidateSchema` run on it. The write seam stays the host's `NS.SetByPath` (issue #21). Without the library the host bodies answer |
+| `LibKa0s-Widgets-1.0` | `modules/Anchors.lua` | Nothing on `NS`: the container drag handle's strip (`DragHandle`), wearing this addon's strings, painter and callbacks. Without the library no handle is built |
 
-`LibKa0s-Item-1.0` and `LibKa0s-Widgets-1.0` arrive with the whole-folder copy (library-stack-§7)
-and are not bound by name here; the addon handles no items. `LibKa0s-Schema-1.0` runs under the
+`LibKa0s-Item-1.0` arrives with the whole-folder copy (library-stack-§7) and is not bound by name
+here; the addon handles no items. `LibKa0s-Schema-1.0` runs under the
 rows but not the write seam (`docs/schema.md`, "Write seam: why AuraMaster keeps SetByPath").
 Every setup file degrades to a stub when
 the library is absent, exercised by `tests/degraded_env.lua`.

@@ -36,8 +36,8 @@ without a duration, and only out of combat with auras readable. The full pipelin
 ### Libraries
 
 Everything is vendored under `libs/`: LibStub and CallbackHandler, the Ace3 stack, LibSharedMedia,
-the optional LibDataBroker and LibDBIcon, and LibKa0s with twelve modules wired, one setup file each,
-every one of which degrades to a stub when the library is absent. What each library is used for, and
+the optional LibDataBroker and LibDBIcon, and LibKa0s with fourteen modules bound by name, every
+one of which degrades to a stub or a fallback when the library is absent. What each library is used for, and
 what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 
 ## Module Map
