@@ -1,0 +1,1352 @@
+  PASS  loadorder: the TOC lists the locale first and the Profiles page last
+  PASS  loadorder: every TOC path exists, and none is a library
+  PASS  loadorder: the load-bearing pairs are in order, and the TOC says why
+  PASS  loadorder: GeneralDispel loads after GeneralSpells and before General
+  PASS  loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Conventional note
+  PASS  loadorder: the runner loaded exactly the TOC's files and the XML's library files
+  PASS  loadorder: the offline perf runner and the degraded list derive from the TOC too
+  PASS  loadorder: the library registered — NS.Perf is the real probe, not the stub
+  PASS  core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] tag
+  PASS  core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer
+  PASS  core: every close control goes through the one NS.MakeCloseButton wrapper
+  PASS  media: icons and the monospace face resolve inside this addon's folder
+  PASS  env: the version falls back to NS.version where the TOC cannot be read
+  PASS  env: the metadata reader never calls the deprecated global
+  PASS  debug: the logging flag is ours, session-only, and never written to the profile
+  PASS  degraded: without LibKa0s the addon still loads and every seam answers
+  PASS  media: the shipped face and bar textures reach LibSharedMedia, from this addon's folder
+  PASS  core: the degraded printer names the missing library once, on the first line it prints
+  PASS  core: the degraded Printf stringifies every argument before it formats
+  PASS  core: the degraded color resolver keeps the stored alpha, and falls through for a unit with no class
+  PASS  core: every close button is built with this addon's folder, so it can draw the catalog mark
+  PASS  namespace: NS is private — no global — and carries the folder name and the [AM] tag
+  PASS  launcher: one broker object, of type launcher, registered with LibDBIcon under the FOLDER name
+  PASS  launcher: Register is idempotent, so a second call builds no second button
+  PASS  launcher: the icon is this addon's own 128 logo — the file ## IconTexture names
+  PASS  launcher: the icon file ships as an uncompressed 32-bit 128x128 TGA
+  PASS  launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)
+  PASS  launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses
+  PASS  launcher: the disabled gate is the library's — the descriptor carries isEnabled and disabledLine
+  PASS  launcher: the RIGHT click opens the settings panel, whatever the left button does
+  PASS  minimap row: composed, stored not session, default SHOWN, in its canonical position
+  PASS  minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
+  PASS  minimap row: one record of one state — LibDBIcon writes the very table the row writes
+  PASS  minimap row: Reset all settings and a profile switch both leave the button alone
+  PASS  minimap row: the General page's Defaults button leaves the button alone and resets the rest
+  PASS  minimap row: /am set and /am reset reach it through the same seam, inverted the same way
+  PASS  verbs: /am enable and /am disable are aliases of the Enable row's path, holding no state
+  PASS  verbs: the dispatcher answers while the addon is disabled, or the pair is one-way
+  PASS  verbs: the launcher's click, /am test and the Test mode checkbox are three doors onto one switch
+  PASS  launcher: a host with neither broker library does not raise, and still records the choice
+  PASS  launcher: with LibDataBroker but no LibDBIcon, the broker plugin still exists
+  PASS  launcher: with LibKa0s absent the stub answers every member, and the row still stores
+  PASS  parity: the Launcher stub carries every member of the live instance
+  PASS  database: a fresh profile is seeded with the three starter containers, once
+  PASS  database: PrepareProfile is idempotent
+  PASS  database: string ids, dangling order entries and orphans are repaired
+  PASS  database: the backfill fills a missing leaf and keeps a stored false
+  PASS  database: every category key is present on a stored container, at Show (schema v3)
+  PASS  database: category keys are unique across the buff and debuff lists
+  PASS  database: a new container's data is a deep copy of the template with a fresh id
+  PASS  database: the migration runner stamps the schema and creates the timed-spell store
+  PASS  database: an existing SavedVariables file keeps its containers
+  PASS  database: a stored section of the wrong type is replaced from the template on load
+  PASS  database: a non-numeric container key is dropped and the profile loads
+  PASS  database: a string key naming an id already stored as a number is dropped; the numeric key wins
+  PASS  database: a dropped string twin leaves one [Migrate] line naming the key
+  PASS  database: PrepareProfile seeds an empty profile from its own counter, in declaration order
+  PASS  database: PrepareProfile marks a stocked profile seeded, drops a non-table entry and restamps ids
+  PASS  database: a schema version newer than this build is never lowered
+  PASS  database: learned timed spells survive a load
+  PASS  database: without AceDB the addon runs on the raw SavedVariables, keeping what was stored
+  PASS  database: GetContainers follows the stored order and skips an id with no container
+  PASS  database: a string id in the stored order keeps its place
+  PASS  database: a deleted id is never handed out again, not even after a reload
+  PASS  database: NewContainerData takes an id from the counter without registering the container
+  PASS  database: seeded starters share no table with each other or with the template
+  PASS  database: a file from before the seeded flag, the id counter and the order keeps its containers
+  PASS  database v2: spell additions from every container are united in the profile
+  PASS  database v2: a starter is removed profile-wide only when every container that edited it removed it
+  PASS  database v2: an addition beats another container's removal of the same spell
+  PASS  database v2: the two healing lists' spell edits merge under healing
+  PASS  database v2: a container's two healing states merge — show beats hide beats neutral
+  PASS  database v2: dispel colors come from the first dispel-colored container in display order
+  PASS  database v2: with no dispel-colored container the first container's colors win, completed from the defaults
+  PASS  database v2: a stale string twin or a non-numeric container key takes no part in the merge
+  PASS  database v2: a profile with no containers gets the default dispel colors and empty spell lists
+  PASS  database v2: stored Medium strata rises to High and every other strata is kept
+  PASS  database v2: the step is idempotent over a profile it already migrated
+  PASS  database v2: RunMigrations migrates every stored profile, the inactive one included
+  PASS  database v2: RunMigrations logs one [Migrate] line per profile, and a second run is a no-op
+  PASS  database v2: without AceDB the step migrates the one profile there is
+  PASS  database v2: a fresh profile carries the profile-wide spell lists and dispel colors
+  PASS  v3: a container that whitelisted a category hides every other category of its type
+  PASS  v3: a container with no whitelisted category gets every row at show
+  PASS  v3: includeEnchants becomes the weaponEnchants row and the old key is cleared
+  PASS  v3: a HARMFUL container is never given a weaponEnchants row — that category does not exist for debuffs
+  PASS  v3: an ENCHANT container is left alone
+  PASS  v3: a container with a missing or unrecognized auraType is left completely untouched
+  PASS  v3: MigrateV3 is idempotent — a second run changes nothing a first run already decided
+  PASS  v3: a container with no filter.categories table at all converges without an enchant row narrowing it, even once weaponEnchants is a real kind="enchant" category
+  PASS  v3: a narrowed container's filter.whitelist is left untouched — the compiler rescues the shown categories now
+  PASS  v3: uncategorized is left to the ordinary backfill (X-2), not to MigrateV3 itself — UNWHITELISTED branch only
+  PASS  v3: a WHITELISTED (narrowed) container gets uncategorized stamped hide directly from MigrateV3, never left for the backfill
+  PASS  v3: a narrowed container does not gain unlisted auras after migrating — compiled, not just stored
+  PASS  v3: MigrateV3 returns the number of containers it walked
+  PASS  v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
+  PASS  v3: the whitelist lift never sweeps a category the aura type does not have
+  PASS  v6: the current schema version is 6
+  PASS  v3: RunMigrations migrates every stored profile, the inactive one included
+  PASS  v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
+  PASS  v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
+  PASS  v4: a container with the toggle off or absent is untouched
+  PASS  v4: an ENCHANT container with the toggle on is neither converted nor lost — it compiles to no groups, so nothing was ever lost
+  PASS  v4: an unrecognized auraType with the toggle on is genuinely lost, named in lostList, and its dead key still cleared
+  PASS  v4: MigrateV4 is idempotent
+  PASS  v4: a genuinely lost container's notice reaches NS.Print, not just NS.Debug (item 3)
+  PASS  v4: no notice is printed when nothing was lost
+  PASS  database: a fresh profile seeds the Player cooldowns text container last, showing only two buff lists
+  PASS  v5: an ENCHANT container becomes a player buff container showing only Weapon enchants, its look kept (feedback #6)
+  PASS  v5: a whitelist on the ENCHANT container is cleared, so the migrated container draws no buffs (fix round 1, review Important #1)
+  PASS  v5: a container with no filter table at all still converts cleanly (review Minor #2)
+  PASS  v5: only ENCHANT containers are touched, and a second run changes nothing (feedback #6)
+  PASS  v5: RunMigrations converts every stored profile, and the result draws enchants only (feedback #6)
+  PASS  v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
+  PASS  v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
+  PASS  database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
+  PASS  v6: MigrateV6 stamps the user-category store, and a second run changes nothing
+  PASS  v6: a profile that predates user categories climbs the ladder and stays valid
+  PASS  user categories: one round-trips through a reload, with its spells
+  PASS  user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
+  PASS  user categories: the schema row resolves, and the seam reads and writes it per container
+  PASS  user categories: Cat.AuraTypeOf answers for a user category KEY, not only for its definition
+  PASS  user categories: a profile switch swaps the set and leaves no stale definition, row or template key
+  PASS  user categories: a new key collides with nothing shipped and with nothing in any stored profile
+  PASS  user categories: a rename keeps the key, so a container's stored Show/Hide survives it
+  PASS  user categories: a stored record alone protects its spell list from the categorySpells write
+  PASS  user categories: deleting one clears the record, the list and every container's state, in the active profile and in an inactive one
+  PASS  user categories: deleting one leaves a COPY of it in another profile entirely alone
+  PASS  user categories: delete and rename are refused at the ACT for a shipped category, and the aura type has no setter at all
+  PASS  user categories: the reserved namespace is what BOTH the rename and the delete rest on
+  PASS  user categories: a record the sync cannot read can still be got rid of, and taking it leaves a shipped category alone
+  PASS  user categories: a profile the sweep raises on costs its own leaves and nothing else
+  PASS  user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
+  PASS  user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
+  PASS  migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
+  PASS  migrations: a legacy v1 account with NO stamp runs every step
+  PASS  migrations: a stored stamp survives the logout strip, so the next build's step runs
+  PASS  migrations: every step is idempotent on a fresh default profile
+  PASS  migrations: a step that raises leaves the stamp where it was and the addon loads
+  PASS  migrations: an inactive profile is migrated too
+  PASS  schema: every row validates against defaults/Profile.lua
+  PASS  schema: the validator is falsifiable — an unresolvable path and a missing group each fail
+  PASS  schema: no path is registered twice
+  PASS  schema: every row has a label and a group (a row without a group belongs to no tab)
+  PASS  schema: a row's default comes from the template, never from a composer
+  PASS  schema: every color row has its class-color companion next to it, or is a palette swatch
+  PASS  schema: every category of both lists is a row, offered only for its aura type
+  PASS  schema: the Filters page offers the active container's categories and no others
+  PASS  schema: a container path writes the selected container and no other
+  PASS  schema: an explicit container id overrides the selection
+  PASS  schema: with nothing selected, a container path means the first container
+  PASS  schema: a container write with no containers refuses, naming why
+  PASS  schema: an unknown path refuses
+  PASS  schema: every write announces CONFIG_CHANGED once, naming the container
+  PASS  schema: a failed validation writes nothing
+  PASS  schema: renaming to a taken name through the seam stores a unique, trimmed name
+  PASS  schema: a session row is stored by its own set, never in the profile
+  PASS  schema: a session row announces no CONFIG_CHANGED and queues no apply
+  PASS  schema: ApplyDefault restores the shipped value without sharing a table
+  PASS  schema: a spell set is written whole and normalized to positive integer ids
+  PASS  schema: a carve-out's refusal is the locale's sentence
+  PASS  schema: category spell edits keep only real spell categories
+  PASS  schema: the spell lists are one profile-wide set at the absolute path categorySpells (schema v2)
+  PASS  schema: the validator resolves the profile-wide sets, and the dispel swatches are profile rows
+  PASS  schema: a whole section written through the seam replaces it, backfills it, logs once and announces once
+  PASS  schema: a section write refuses a non-section path, a non-table, and a value a row rejects
+  PASS  schema: a section write runs the normalize hook of every row under it, with the target id
+  PASS  schema: CheckWrite answers what SetByPath would, and stores and announces nothing
+  PASS  schema: a row's own refusal reason travels as the third return of SetByPath and CheckWrite
+  PASS  schema: with LibKa0s the bracket, registry and validator are the library's
+  PASS  schema: the registry follows an insert and a removal, the library's and the host's
+  PASS  schema: without LibKa0s the host arm still answers
+  PASS  schema: -0 over 0 is still no change under SameValue
+  PASS  schema paths: the seam validates before it resolves, so a bad value names the value, not the container
+  PASS  schema paths: normalize is handed the resolved id, so a container keeps its own name in any case
+  PASS  schema paths: the seam writes, then reacts, then logs, then announces — each seeing the stored value
+  PASS  schema paths: onChange, the [Set] line and CONFIG_CHANGED all see the normalized value
+  PASS  schema paths: a refused write reacts to nothing, logs nothing and announces nothing
+  PASS  schema paths: a path that is not a string is refused by every seam, naming what was passed
+  PASS  schema paths: a selection naming a container that no longer exists falls back to the first
+  PASS  schema paths: an explicit container id that does not exist is refused, never redirected to the selection
+  PASS  schema paths: an absolute path writes the profile whatever container is named or selected
+  PASS  schema paths: GetSetting reads paths that are not rows, and a container path reads nil with no containers
+  PASS  schema paths: a table value is stored as a copy, so the caller's table can never edit the container
+  PASS  schema paths: a row's validate runs at the seam — the attach target refuses a non-number and a cycle
+  PASS  schema paths: an explicit-id attach write is checked for a loop from the container it writes
+  PASS  schema paths: an explicit-id attach write that would loop is refused, whatever is selected
+  PASS  schema paths: an attach write through the selection still checks the selected container
+  PASS  schema paths: DefaultFor answers the template or the profile defaults, as a copy, never the stored value
+  PASS  schema paths: RegisterSchemaRows stamps a resolvable row's default, and leaves session and unresolved rows alone
+  PASS  schema paths: ValidateSchema fails an unknown page, an unknown type and an empty group, and says which
+  PASS  schema paths: SchemaForPage keeps declaration order and drops hidden rows and rows the container's type does not take
+  PASS  schema paths: Choices keeps the key order and localizes each label, falling back to the key
+  PASS  schema paths: a spell set goes to the container it names, announced as filters and logged once
+  PASS  schema paths: a spell set or a section with no container to land in is refused, naming why
+  PASS  schema paths: category edits drop an empty edit set and store a truthy edit as true
+  PASS  schema paths: exactly the six documented sections are whole-writable
+  PASS  schema paths: a section write fires onChange only for the leaves it changed, with the target id
+  PASS  schema paths: a row under a section that refuses its leaf refuses the whole section — CheckWrite says the same
+  PASS  schema paths: a section write backfills a copy, so the caller's table comes back as it went in
+  PASS  schema paths: a section replaces the stored one from the template, not merges into it, and normalizes its spell sets
+  PASS  schema paths: a section's [Set] line renders the stored table with sorted keys and nested tables elided
+  PASS  schema paths: a section's [Set] line is not even built while debug is off
+  PASS  schema paths: with no containers CheckWrite refuses a container row and passes a global one
+  PASS  schema paths: ApplyDefault is a no-op for nothing, a row with no path, and a row with no default
+  PASS  schema paths: ApplyDefault restores a session row through its own set
+  PASS  schema paths: a session row needs no database — it checks and writes before InitDB has run
+  PASS  schema paths: a session row's validate still guards it
+  PASS  schema paths: a session row with no get reads nil, never the profile
+  PASS  filter: an unfiltered buff container is one HELPFUL group with no candidate filters
+  PASS  filter: a debuff container starts from HARMFUL
+  PASS  filter: cast by me and by others compile to PLAYER and its negation
+  PASS  filter: a max duration becomes the engine's maxDuration candidate filter
+  PASS  filter: 'only timed' is maxDuration = huge, which drops permanent auras
+  PASS  filter: 'only timeless' excludes every learned timed spell and ignores a max duration
+  PASS  filter: 'only timeless' on a debuff container is reported and treated as any duration
+  PASS  filter: showing a token category adds nothing when nothing is hidden — there is always exactly one group (R-3)
+  PASS  filter: hiding a token category negates its token in the catch-all (R-5)
+  PASS  filter: hiding a flag category asks for the opposite value
+  PASS  filter: a dispel category shown includes nothing when nothing is hidden, hidden excludes
+  PASS  filter: two shown categories with nothing hidden still compile to the one, unfiltered group (R-3)
+  PASS  filter: two hidden token categories both negate, in the catch-all (R-5)
+  PASS  filter: a hidden category's spell edits add and remove ids from the catch-all's exclusion
+  PASS  filter: spell edits are the profile's, handed in ctx; a container's own old copy is ignored (schema v2)
+  PASS  filter: both compile sites hand the compiler the profile's spell lists
+  PASS  filter: showing a spell category with every id removed, and nothing hidden, still contributes nothing (R-3)
+  PASS  filter: a shown spell category with every id removed can never match, and is dropped as a conflict (R-6)
+  PASS  filter: categories set to show add no group when nothing is hidden — there is always exactly one
+  PASS  filter: a category set to hide excludes its spells from the catch-all
+  PASS  filter: a token category set to hide negates its token
+  PASS  filter: show and hide are not symmetric — show excludes nothing
+  PASS  filter: a hidden spell category with no ids left contributes no exclusion
+  PASS  filter: the whitelist is its own first group and every other group excludes it
+  PASS  filter: the whitelist beats the blacklist — an id on both lists is shown (R-2)
+  PASS  filter: the blacklist still reaches the catch-all, but never the whitelist group (R-7)
+  PASS  filter: a stray filter.onlyShown key, however it got there, is inert — the compiler never reads it (D8 retired)
+  PASS  filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case
+  PASS  filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)
+  PASS  filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)
+  PASS  filter: a listed aura's own category group is unaffected by Uncategorized either way
+  PASS  filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide
+  PASS  filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
+  PASS  filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
+  PASS  filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite
+  PASS  filter: FC.IdsAlwaysHonored is the CERTAIN predicate — true only for buffs on the player and pet
+  PASS  filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door
+  PASS  filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
+  PASS  filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
+  PASS  filter: a target debuff container still warns 'while the unit is hostile' although the gate dropped its Show group
+  PASS  filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned
+  PASS  explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
+  PASS  explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
+  PASS  explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
+  PASS  explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue
+  PASS  explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized
+  PASS  explain: HARMFUL with a non-empty union on the PLAYER: an unclaimed id is still rank 5, never a rescue the compiler does not compile
+  PASS  explain: HARMFUL with a non-empty union on a TARGET: still rank 5, in lockstep with the gate
+  PASS  explain: HELPFUL on a TARGET: the rescue the accepted cost gives up is not claimed here either
+  PASS  filter: every unit/aura-type combination prints exactly the identity warning it printed before the predicate split
+  PASS  filter: spell lists on your own debuffs are flagged as ignored
+  PASS  filter: spell lists on a target's buffs only apply while it is friendly
+  PASS  filter: the player's own buffs carry no identity warning
+  PASS  filter: the weaponEnchants row decides the enchant slots, and adds no group
+  PASS  filter: the enchant row does nothing on a debuff or a non-player container
+  PASS  filter: the enchant slots the container draws are exactly the profile's, in a fixed order
+  PASS  filter: an enchant-only buff container's slots also come from the profile, falling back to all three
+  PASS  filter: max auras caps each group; 0 means no cap
+  PASS  filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
+  PASS  filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
+  PASS  filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
+  PASS  filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 17 for HARMFUL today
+  PASS  filter: an unknown sort method falls back to Blizzard's default
+  PASS  filter: Signature is independent of key insertion order and sees nested changes
+  PASS  filter: StructureKey tracks the group count, the enchant slots and hide-permanent
+  PASS  filter: the whole plan for four rich containers is unchanged (characterization)
+  PASS  filter: Signature tells a number from its string and a boolean from its name
+  PASS  filter: numeric strings in the duration and cap settings are read as numbers
+  PASS  filter: spell lists accept string ids and drop ids switched off
+  PASS  filter: a category's spell edits accept string ids and ignore keys that are not ids
+  PASS  filter: an unknown aura type compiles as buffs, and only buffs append weapon enchants
+  PASS  filter: the spell-list warning follows the unit and the aura type
+  PASS  filter: 'only timeless' with nothing learned yet filters no ids and warns about none
+  PASS  filter: a hidden spell category with every id removed excludes nothing
+  PASS  filter: a contradiction drops the catch-all without disturbing the whitelist group's key
+  PASS  filter: hiding two categories that contradict on the same flag leaves nothing, and says so
+  PASS  explain: the whitelist beats the blacklist — rank 1, shown
+  PASS  explain: the blacklist alone hides — rank 2
+  PASS  explain: a Show category rescues an aura another category hides — rank 3, shown, both named
+  PASS  explain: an aura whose every category says Hide is hidden — rank 4
+  PASS  explain: an aura in no category is shown, with no categories named — rank 5
+  PASS  explain: a stray filter.onlyShown key does not affect rank 5 — the toggle is retired
+  PASS  explain: a token category is never named — only spells-kind categories are reasoned about
+  PASS  filter: the Player cooldowns starter draws one group per list it shows and no catch-all
+  PASS  filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
+  PASS  categories: a user category joins the categorized union, so Uncategorized stops rescuing what it claims
+  PASS  categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For
+  PASS  categories: ClaimingCategories names every spells-kind category of the aura type that holds an id, in declaration order
+  PASS  categories: ClaimingCategories is the same answer ExplainSpell gives, and the container's filter decides only the state
+  PASS  categories: a user category alone on Show compiles to its group, with its own spell ids on it
+  PASS  categories: a user category with an EMPTY list is the one shape that compiles to nothing, and it warns
+  PASS  categories: an empty user category shown does not take Uncategorized's catch-all down with it
+  PASS  categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility
+  PASS  categories: a user category shown beside a shipped one gets its own group, after it and minus its ids
+  PASS  container: the engine is anchored before its first group and given its unit last
+  PASS  container: a player buff container with enchants adds all three enchant slots
+  PASS  container: a filter change is applied in place, sending only what changed
+  PASS  container: a change of shape retires the engine and builds a new one
+  PASS  container: toggling hide-permanent rebuilds the engine with the new flag
+  PASS  container: a sort-direction change reaches the enchant sort in place
+  PASS  container: a restyle re-dresses every button the engine has made
+  PASS  container: nothing touches the engine while auras are secret, and it catches up after
+  PASS  container: the show ladder — suspend, the master switch, the container switch, visibility
+  PASS  container: test mode previews placeholders through the style code and disables the engine
+  PASS  container: unlocked, a container shows whatever its visibility rule, its engine drawing, under an outline (B1)
+  PASS  container: the unlocked outline under a secret anchor size draws strips and never raises
+  PASS  container: test mode shows the placeholders while locked, whatever the visibility rule (B1)
+  PASS  container: test mode off, a locked container set to never is hidden again (B1)
+  PASS  container: a visibility pass re-dresses no preview element unless the settings changed
+  PASS  container: a new target refreshes only the containers tracking the target
+  PASS  container: Blizzard's load-on-demand aura container is loaded before the first engine
+  PASS  container: on a client without the aura engine nothing is built and preview still works
+  PASS  container: deleting a container disables its engine and hides its anchor
+  PASS  container: an anchor is movable but never saved by the client's layout cache
+  PASS  container: a line holds perLine elements and the spacing between them; 0 per line is unbounded
+  PASS  container: growth normalizes to right and down, and the anchor corner is the one auras grow away from
+  PASS  container: a changed candidate filter is re-sent on the live engine; the filter string is not
+  PASS  container: clearing the last candidate filter sends the engine an empty table, not nil
+  PASS  container: sort, cap and layout changes each send only their own setter
+  PASS  container: a unit change is sent to the live engine once
+  PASS  container: switching style rebuilds the engine even when the filter plan keeps its shape
+  PASS  container: a text template of a new shape rebuilds the engine; one of the same shape restyles it
+  PASS  container: flipping Grow vertically retires the engine and pins the new one at the new corner, before its first group
+  PASS  container: flipping Grow horizontally retires the engine and pins the new one at the new corner, before its first group
+  PASS  container: a spacing, per-line or fill change keeps the corner and updates the engine in place
+  PASS  container: a buff container showing only Weapon enchants draws the engine's three slots and no aura group (feedback #6)
+  PASS  container: an enchant slot the engine refuses costs that slot, not the build
+  PASS  container: an engine call that raises is traced, and the build carries on to the unit
+  PASS  container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses
+  PASS  container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)
+  PASS  container: an instance whose container is gone applies nothing and touches no engine
+  PASS  container: the anchor's scale is the container's times the master's, never below a tenth
+  PASS  container: the anchor's alpha is the container's times the master's
+  PASS  container: out-of-combat visibility shows out of combat and hides in it
+  PASS  container: the class snapshot is the tracked unit's, and nothing for the player
+  PASS  container: a class the client withholds resolves to no class instead of raising
+  PASS  container: a button the engine creates is dressed with the container's class snapshot
+  PASS  container: a live container has a mouse blocker covering its engine, below its buttons
+  PASS  container: a shape change re-anchors the blocker to the new engine
+  PASS  container: raising the anchor's level after the engine exists leaves the blocker strictly below it
+  PASS  container: the blocker follows TakesHover and never takes clicks, matching the live buttons
+  PASS  container: a live click-through flip re-gates the blocker without a rebuild
+  PASS  container: a hidden container hides its blocker along with its engine, and Park hides it too
+  PASS  container: on a client without the aura engine a container is deleted without error
+  PASS  container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
+  PASS  manager: Create appends a container, names it uniquely and announces it
+  PASS  manager: two containers with one name become 'X' and 'X (2)'
+  PASS  manager: deleting a container sends the ones attached to it back to the screen
+  PASS  manager: Rename trims, refuses an empty name and keeps names unique
+  PASS  manager: names that differ only in case are not unique
+  PASS  manager: Duplicate copies every setting under a new id and name, offset on screen
+  PASS  manager: CopyFrom copies the chosen section, never the name or the position
+  PASS  manager: CopyFrom and ResetPositions write through the seam, send no CONTAINERS_CHANGED, and report a rejected write
+  PASS  manager: CopyFrom is all or nothing — a corrupt later section stores and announces nothing
+  PASS  manager: many apply requests in one frame schedule one pass
+  PASS  manager: an apply under combat lockdown waits, says so once, and runs after combat
+  PASS  manager: /am lock and a rename under lockdown print no deferral notice
+  PASS  manager: a master visibility row hides containers at once, with no apply pass
+  PASS  manager: a profile-wide dispel color or spell-list write re-applies every container (G-2, G-3)
+  PASS  manager: disabling a container in combat hides it at once, with no apply and no deferral notice
+  PASS  manager: a deferral out of combat while auras are secret names the restriction, and combat inside it adds no line
+  PASS  manager: the regen edge never escalates the notice; a later held request does
+  PASS  manager: a Blizzard-frame toggle in combat says it waits, once, and applies after combat
+  PASS  manager: a container deleted under lockdown is parked — disabled, nothing hidden — and destroyed after combat
+  PASS  manager: a parked id that comes back before combat ends reuses its instance and draws again
+  PASS  manager: a profile switch under lockdown parks departing containers and tears them down after combat
+  PASS  manager: a profile reset under lockdown parks departing containers and tears them down after combat
+  PASS  manager: a profile reset in combat keeps a reused id parked until the deferred apply rebuilds it
+  PASS  manager: a profile switch in combat keeps a reused id parked until the deferred apply rebuilds it
+  PASS  manager: a profile copy in combat keeps a reused id parked until the deferred apply rebuilds it
+  PASS  manager: a parked id revived by a profile change in combat stays parked until the deferred apply
+  PASS  manager: an id a later Create reuses after a profile reset while auras are secret stays parked until the deferred apply
+  PASS  manager: an id that returns out of combat revives its destroyed instance
+  PASS  manager: an id a profile reset hands out again out of combat revives its destroyed instance
+  PASS  manager: creating or duplicating a container in combat is refused and creates nothing
+  PASS  manager: ResetPositions puts every container back on the screen, staggered
+  PASS  manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
+  PASS  manager: a stale class and a held change of the player's re-apply the container once after the hold
+  PASS  manager: a target swap out of combat re-applies only class-colored containers of that unit
+  PASS  manager: an out-of-combat swap to a same-class target, or NPC to NPC, queues no apply
+  PASS  manager: a class-changing swap queued just before combat applies after it, with no deferral notice
+  PASS  manager: timed spells learned just before combat apply after it, with no deferral notice
+  PASS  manager: /am forgettimed in combat is the player's change, so it says it waits
+  PASS  manager: a player's change held beside the addon's own request is announced once
+  PASS  manager: a reload in combat builds silently and applies once combat ends
+  PASS  manager: a request for one container applies only that one
+  PASS  manager: a flushed queue is empty, and a later request schedules a pass of its own
+  PASS  manager: a held request keeps exactly its container through the hold
+  PASS  manager: a flush with nothing queued traces no deferral, even under lockdown
+  PASS  manager: a container row re-applies its own container; an addon-wide row re-applies every one
+  PASS  manager: a new container is named and staggered by its id; a given position is kept
+  PASS  manager: UniqueName skips every taken suffix, and a blank name becomes Container
+  PASS  manager: deleting a container leaves every other attachment and the selection alone
+  PASS  manager: a duplicate of an attached container keeps its position; an unknown id is refused
+  PASS  manager: a rebuilt engine re-anchors every container attached to it
+  PASS  manager: a client without the aura engine is told once, at startup
+  PASS  apply: an error in one container's Apply does not stop the others or replaceAttached
+  PASS  apply: with no client error handler the pass finishes, then the first error is raised
+  PASS  compat: the aura engine counts as present only with its sort enum and CreateFrame
+  PASS  compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
+  PASS  compat: a LoadAddOn that raises, or no C_AddOns at all, still answers from the enums
+  PASS  compat: AurasAreSecret answers a strict boolean, and false when the client cannot say
+  PASS  compat: every sort key reaches a distinct member of the engine's sort enum
+  PASS  compat: sort direction reads the engine enum, else 1 for reverse and 0 for normal
+  PASS  compat: enchant slots read the engine enum by member, with the client's numbering as fallback
+  PASS  compat: the enchant sort and placement read their enums, else 1
+  PASS  compat: flow axis and direction use AnchorUtil's enums, else pass the name through
+  PASS  compat: the status-bar and dispel-style enums answer nil on a client without them
+  PASS  compat: no duration formatter without C_StringUtil, or when creation fails
+  PASS  compat: a detailed formatter shows two units with a carry, a short one a single unit
+  PASS  compat: every time format rounds a fractional second up, as the cooldown countdown does (I-2)
+  PASS  compat: the Blizzard format copies the engine's default formatter, rounding up (I-2)
+  PASS  compat: without the curve API, or with a curve that refuses a point, the Blizzard format tops out at days
+  PASS  compat: the expiring text color is a step curve from the expiring color to the normal one at the threshold
+  PASS  compat: no curve API, or a curve that refuses a point, gives no text color
+  PASS  compat: a duration property reads the engine enum by member, and nil without it
+  PASS  compat: a rule formatter is built with its breakpoints, and nil without the API or when refused
+  PASS  compat: a duration binding writes nothing for a timeless or expired aura, and refreshes only when asked
+  PASS  compat: the blink curve alternates the running-out color's alpha every quarter second, then the normal color
+  PASS  compat: the mouse focus is the topmost frame GetMouseFoci returns
+  PASS  compat: GetMouseFocus answers from GetMouseFoci and has no pre-11.0 rung
+  PASS  compat: spell info comes from C_Spell, and the pre-11.0 global only when C_Spell is absent
+  PASS  compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
+  PASS  compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
+  PASS  compat: without LibKa0s spell info is the major's absent answer, one nil
+  PASS  secrets: without the client's secrets system nothing is secret and every value is readable
+  PASS  secrets: issecretvalue alone decides access when canaccessvalue is absent, as a strict boolean
+  PASS  secrets: canaccessvalue, when the client has it, overrides the secret test
+  PASS  secrets: the guard trio answers the pinned matrix, one strict boolean each
+  PASS  secrets: with LibKa0s present the three guards ARE LibKa0s-Compat-1.0's
+  PASS  secrets: without LibKa0s the host's guard bodies answer the same pinned matrix
+  PASS  bus: every message name carries this addon's prefix and no two share one
+  PASS  bus: the catalog is exactly these four keys and wire names
+  PASS  bus: a key the catalog never declared raises, for a publisher as well as a subscriber
+  PASS  bus: without LibKa0s the catalog is the same four pairs, as a plain table
+  PASS  bus: two receivers on their own targets both hear one message, with its payload
+  PASS  bus: CONTAINERS_CHANGED goes out once per registry act, and never for a refused one
+  PASS  bus: world entry and each combat edge send one VISIBILITY_CHANGED; a unit swap sends none
+  PASS  bus: a CONFIG_CHANGED the receiver cannot read re-applies the container it names, or every one
+  PASS  state: the session flags start off, are never saved, and a reload starts them clean
+  PASS  state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)
+  PASS  lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
+  PASS  lifecycle: a focus change refreshes the focus containers, a target change the target ones
+  PASS  lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
+  PASS  lifecycle: entering the world runs an apply held while auras were secret
+  PASS  lifecycle: combat starting runs no held apply; combat ending does
+  PASS  lifecycle: a profile switch out of combat rebuilds every container for the new profile at once
+  PASS  lifecycle: every profile event clears the container selection and re-renders the panel once
+  PASS  lifecycle: a copied profile is prepared before its containers are built
+  PASS  lifecycle: a reset profile gets its starters back, numbered from 1 again
+  PASS  lifecycle: a profile switch applies the new profile's Blizzard-frame settings
+  PASS  lifecycle: the degraded latch stands up and down only on an edge
+  PASS  lifecycle: one bad event name leaves the other seven registered and is recorded
+  PASS  lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
+  PASS  lifecycle: a rejection while logging is on is traced at the moment it happens
+  PASS  lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
+  PASS  anchors: a chain that would loop is detected
+  PASS  anchors: a container attaches to another one, and a loop falls back to the screen
+  PASS  anchors: a named frame that does not exist yet waits, and attaches once it does
+  PASS  anchors: a frame that appears during combat is attached when combat ends
+  PASS  anchors: a screen fallback and a skipped resolve are traced
+  PASS  anchors: a forbidden frame, or something that is not a frame, is never a target
+  PASS  anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it
+  PASS  anchors: a drag saves the dragged container's position, rounded, whatever is selected
+  PASS  anchors: a drag saves the position in one write
+  PASS  handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark
+  PASS  handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic
+  PASS  handle: above the anchor when auras grow down, below when up, edge-aligned where they start
+  PASS  handle: at least as wide as its container's element, and as its label with room for the help mark
+  PASS  handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
+  PASS  handle: under lockdown a changed layout does not re-place the handle; the next pass after it does
+  PASS  handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
+  PASS  handle: a visibility pass that changes nothing re-sets no clamp insets
+  PASS  handle: the help mark carries the tooltip and right-click opens the settings on this container
+  PASS  handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
+  PASS  handle: a left-drag that starts on the help mark moves the container as one on the strip does
+  PASS  handle: with no media catalog the help mark falls back to Blizzard's information icon
+  PASS  handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
+  PASS  picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
+  PASS  picker: a forbidden frame under the cursor ends the walk without calling its methods
+  PASS  picker: it arms on release, then a left-click on a named frame picks it
+  PASS  picker: combat starting mid-pick cancels it
+  PASS  picker: Escape cancels
+  PASS  anchors: a screen container sits at its stored point on UIParent, sized to one element
+  PASS  anchors: a container attaches to its target's engine frame at the derived points, or to its anchor before it has one
+  PASS  anchors: a container never attaches to itself or to one that does not exist
+  PASS  anchors: a frame target takes the stored attach point, relative point and offsets
+  PASS  anchors: a frame that refuses the anchor falls back to the screen, cleanly re-placed
+  PASS  anchors: an empty frame name is a screen fallback that waits on nothing
+  PASS  anchors: a waiting container set back to the screen stops waiting
+  PASS  anchors: a waiting container deleted before its frame appears is dropped from the wait
+  PASS  anchors: an add-on loading re-places only the containers still waiting
+  PASS  anchors: a loop among other containers is refused, and the walk still ends
+  PASS  anchors: a chain that ends at a screen container is no loop; one that returns to the start is
+  PASS  anchors: a real, unforbidden frame resolves, even one without IsForbidden; a name that is not a string never does
+  PASS  anchors: a drag with no relative point stores the point for both, and each offset to one decimal
+  PASS  anchors: an anchor that reads back no point writes nothing
+  PASS  handle: the strip names its container, and a container whose settings are gone hides it
+  PASS  handle: an attached container's tooltip says where its offsets are set; a screen one does not
+  PASS  handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
+  PASS  handle: the strip sits fifty levels above its anchor, over the container's elements
+  PASS  handle: a left click on the strip opens nothing; a right click opens this container's settings
+  PASS  anchors: derived points continue a vertical/right/down parent
+  PASS  anchors: derived points continue a vertical/left/down parent
+  PASS  anchors: derived points continue a vertical/right/up parent
+  PASS  anchors: derived points continue a vertical/left/up parent
+  PASS  anchors: derived points continue a horizontal/right/down parent
+  PASS  anchors: derived points continue a horizontal/right/up parent
+  PASS  anchors: derived points continue a horizontal/left/down parent
+  PASS  anchors: derived points continue a horizontal/left/up parent
+  PASS  anchors: an attached container flows as its parent does, and its own flow stays stored
+  PASS  anchors: a chain inherits its root's flow; a broken or looping chain stops where it breaks
+  PASS  anchors: a container attached to another takes derived points from the parent's flow
+  PASS  anchors: a frame-attached container keeps its stored points
+  PASS  anchors: the engine's flow, the placeholders and the handle all read the inherited flow
+  PASS  anchors: detaching a container restores its own stored flow at the next apply
+  PASS  anchors: a write that moves a container's flow re-applies every container following it
+  PASS  anchors: a parent's growth flip rebuilds its follower's engine, pinned at the derived corner, and re-anchors it to the parent's new engine
+  PASS  anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
+  PASS  anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
+  PASS  anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
+  PASS  handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
+  PASS  handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)
+  PASS  handle: a measured width that reads secret falls back to the element's width, never raising (E)
+  PASS  handle: an anchor whose frame level reads secret places the strip from the stored level (E)
+  PASS  handle: an attached container's strip falls back to the stored level when its target's frame level reads secret (E)
+  PASS  anchors: a drag whose offsets read secret saves nothing (E)
+  PASS  handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)
+  PASS  handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
+  PASS  handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
+  PASS  template: an unknown token is refused, naming it and every known token (rule 1)
+  PASS  template: a lone $ with no closing $ is literal text (rule 1)
+  PASS  template: a token used twice is refused (rule 2)
+  PASS  template: a token between two duration tokens is refused, naming it (rule 3)
+  PASS  template: nested and unmatched brackets are refused (rule 4)
+  PASS  template: a [ ] group holds exactly one of stacks, dispel type or the duration run (rule 4)
+  PASS  template: a bracket around the duration run must hold all of it (rule 5)
+  PASS  template: { and } are refused inside the duration run and its bracket, allowed elsewhere (rule 6)
+  PASS  template: an empty template, or one with no token, is refused (rule 7)
+  PASS  template: longer than 200 characters is refused (rule 8)
+  PASS  template: the first broken rule is the one reported
+  PASS  template: [[, ]] and $$ write a literal [, ] and $
+  PASS  template: an odd run of [ opens with its first, an even run is all escapes (]] ]  mirror)
+  PASS  template: tokens are case-insensitive
+  PASS  template: the default template folds its bracket text into the stacks and duration pieces
+  PASS  template: the name alone is one piece, and single
+  PASS  template: a duration run keeps its inner text in the format, one component per token
+  PASS  template: a bracketed duration run carries the bracket text in its format
+  PASS  template: a % in a stacks bracket is doubled in the rule format and kept in pre/post
+  PASS  template: a dispel type keeps its bracket text as pre and post
+  PASS  template: adjacent literals merge into one piece, and none is empty
+  PASS  template: compiled results are memoized per template string
+  PASS  template: Validate answers true, or false and the refusal
+  PASS  template: ForDraw draws a refused stored template as the default one, and says it fell back
+  PASS  template: every built-in compiles, and each aura type's list is the pinned one
+  PASS  template: a stored template matches a built-in by its text and its justify rule, else none
+  PASS  style: an element's size comes from its style's settings
+  PASS  style: a stored-nil leaf falls back to the template's own value
+  PASS  style: a bar's fill and background take their texture, color and opacity from settings
+  PASS  style: the background opacity multiplies onto the background texture
+  PASS  preview: a column of bars grows down from the top left
+  PASS  preview: rows of icons growing left and up wrap after perLine
+  PASS  style: a restyle clears the additive bindings before adding them again
+  PASS  style: a bar binds the engine's timer bar, icon, name, time and stacks
+  PASS  style: an icon binds the cooldown and the dispel border
+  PASS  style: right-click cancel is offered only on your own buffs, and never click-through
+  PASS  style: a preview element is dressed but never bound to the engine
+  PASS  style: a class color keeps the stored alpha; off, the stored swatch is used
+  PASS  style: a target container's class color is the target's, snapshotted at apply
+  PASS  style: a tracked unit whose class lookup raises paints the swatch, and nothing raises
+  PASS  style: a dress that raises still clears its class color, and the error reaches the caller
+  PASS  style: a dress that raises hands the error handler the failing styler's stack
+  PASS  style: a dress that raises a non-string value hands that value on unchanged
+  PASS  style: buttons of one look share one formatter and curve; a new color builds a new curve
+  PASS  style: the Solid border is registered with the media library as the flat white texture
+  PASS  style: a media key resolves through the media library; an unknown, empty, odd or broken one draws the fallback
+  PASS  style: a font the client refuses falls back to the built-in font at the same size and flags
+  PASS  style: each outline setting reaches the font as the client's flag string
+  PASS  style: a font shadow is a one-pixel black drop when on, and no offset when off
+  PASS  style: a text's corner, offsets and justification come from its block, the template filling what is missing
+  PASS  style: a text given a box is as wide as the box less its offset, so its justification has room to show
+  PASS  style: a missing text block leaves its font string untouched
+  PASS  style: a text's color is its own swatch, or the dress's class when its companion is on
+  PASS  style: a missing color paints opaque white rather than raising
+  PASS  style: a border is hidden when off, styled None, or without a positive size
+  PASS  style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
+  PASS  style: a Solid border takes the class color through its companion (B2-3)
+  PASS  style: a Solid border under a secret size draws and never raises (B2-3)
+  PASS  style: another style draws a backdrop on a frame of its own, with its edge, size and color (B2-3)
+  PASS  style: another style applies its backdrop once per edge and size, and again when either moves (B2-3)
+  PASS  style: another style under a secret size keeps its last backdrop and only recolors (B2-3)
+  PASS  style: a backdrop frame first made under a secret size applies nothing until its size reads plain (B2-3)
+  PASS  style: switching between Solid and another style hides the other drawing (B2-3)
+  PASS  style: another style on a client without the backdrop mixin draws nothing and never raises
+  PASS  style: a binding the client lacks is skipped, and one it refuses costs that binding alone
+  PASS  style: a class color is looked for only in the active style's block, text blocks included
+  PASS  style: a dispel color map holds a color per stored type, and nothing for a leaf that is not a color
+  PASS  style: a dispel color map's None entry is the surface's own color, and every entry opaque (feedback #7, item 4)
+  PASS  style: tooltips and click-through decide whether a button takes the mouse at all
+  PASS  style: right-click cancel reaches the player's buffs and their enchant slots, never the player's debuffs, and never when turned off
+  PASS  style: the tooltip anchor and in-combat hiding come from settings, the template filling a missing anchor
+  PASS  style: the time text gets the engine's formatter for its format, and the expiring color at its threshold
+  PASS  style: a placeholder's time text is what its format's formatter writes, the one the engine is handed (B-5)
+  PASS  style: a placeholder running out takes the running-out color, as the engine's curve paints a live one (B-5)
+  PASS  style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)
+  PASS  style: a style leaf left nil draws the template's value, never a literal of its own
+  PASS  style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's
+  PASS  style: hiding the other style's regions never hides the element itself
+  PASS  style: a text element takes its size from its own block, and a missing leaf from the template
+  PASS  style: a text container's class color is looked for in its text block, the font included
+  PASS  style: a duration run's text format has its format string and one component per token, built once
+  PASS  style: a duration run binds its format and binding, recolored only when asked, blinking only when asked
+  PASS  style: a placeholder's seconds are written by the format's formatter, else as whole seconds
+  PASS  style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
+  PASS  style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
+  PASS  castaura: an id the table has never heard of is stored exactly as typed
+  PASS  castaura: a trigger-derived id is rewritten to its aura, and the player is told
+  PASS  castaura: a name-derived id is NOT rewritten — the candidates are offered
+  PASS  castaura: a stored entry that can never match carries a note
+  PASS  castaura: an absent or empty table says nothing about any id
+  PASS  castaura: the help lines come with a severity — red for never-matches, the caller's for its own line
+  PASS  castaura: a non-number is not resolved
+  PASS  timed: nothing is needed until a container shows only timeless auras
+  PASS  timed: it hears UNIT_AURA only while needed and readable
+  PASS  timedspells: UNIT_AURA is registered for player and pet only, on the module's own frame
+  PASS  timedspells: disable unregisters the unit frame and enable reuses it
+  PASS  timed: UNIT_AURA for another unit schedules nothing
+  PASS  timed: combat drops UNIT_AURA and its end restores it with a scan
+  PASS  timed: a scan queued before combat is dropped in combat, and the gate reopening scans again
+  PASS  timed: secret auras out of combat keep UNIT_AURA unregistered until the restriction lifts
+  PASS  timed: learning a spell is announced on the bus to every receiver, and the manager re-applies
+  PASS  timed: a readable scan learns every timed buff once, and skips permanent ones
+  PASS  timed: while auras are secret nothing is read
+  PASS  timed: what was learned reaches the filter as excluded ids, and Forget clears it
+  PASS  timed: Forget traces what it cleared
+  PASS  timed: the pet's timed buffs are learned too
+  PASS  timed: an aura read that raises ends that unit's scan, not the other unit's
+  PASS  timed: a secret spell id or a secret duration is never learned
+  PASS  timed: a burst of the player's aura changes queues one scan
+  PASS  timed: Forget is announced as the player's own change, and the next readable scan learns again
+  PASS  timed: a scan tick the gate drops is never bracketed; one that reads is, once
+  PASS  timed: a disabled container, or one showing debuffs, needs no scan
+  PASS  timed: a client without the aura API learns nothing and raises nothing
+  PASS  timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, and the rest loads
+  PASS  bars: the element takes its configured size, and a left icon is a square of the bar's height
+  PASS  bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
+  PASS  bars: without an icon the bar fills the whole element and the icon is hidden
+  PASS  bars: the background sits under the bar area, never under the icon
+  PASS  bars: the icon zoom crops the texture evenly from every side
+  PASS  bars: draining left, the fill runs from the bar's start to the timer's edge and the spark rides its right end
+  PASS  bars: draining right, the fill runs from the timer's edge to the bar's end and the spark rides its left end
+  PASS  bars: the spark shows unless turned off, twice the bar's height, in its own width and color
+  PASS  bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region
+  PASS  bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge
+  PASS  bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered
+  PASS  bars: with the timeless spark off, the live clipped spark blends normally, not additively
+  PASS  bars: with the timeless spark on, the live spark stays additive over the opaque fill
+  PASS  bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says
+  PASS  bars: the clip-mode blend switch leaves the player's own spark color alone
+  PASS  bars: a missing timeless-spark setting reads the template's
+  PASS  bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it
+  PASS  bars: the texts sit above the spark's clip frame, which sits above the bar
+  PASS  bars: a shown icon border frames the icon's box and the art insets by its size
+  PASS  bars: a right-hand icon insets from the right edge
+  PASS  bars: an icon border turned off, styled None or with no icon draws nothing and insets nothing
+  PASS  bars: the icon border takes the class color through its own companion, and a missing size the template's
+  PASS  bars: class colors paint the fill, background, spark and border with the dress's class, keeping each alpha
+  PASS  bars: the class companions left off paint every surface its stored swatch
+  PASS  bars: a missing bar opacity paints the template's, never a number restated in the composer
+  PASS  bars: a missing border size paints the template's, so a border turned on still shows
+  PASS  bars: a bar border shows only when turned on, with its style, size and color
+  PASS  bars: the refresh-window highlight takes the pandemic color, never a class color
+  PASS  bars: the name stops short of the time text, and runs to the bar's end when the time is hidden
+  PASS  bars: each text shows or hides on its own setting
+  PASS  bars: the stack count sits on the icon, or on the bar when there is no icon
+  PASS  bars: the name and time are laid against the bar, in their configured corners
+  PASS  bars: each text is boxed to its host less its offset: the bar area, or the icon for the stacks on it
+  PASS  bars: beside the name the time is boxed to its format's widest string, so its justify shows and the name keeps its room
+  PASS  bars: beside the name the time is boxed to the measured width of its format's widest string (B4)
+  PASS  bars: a measurer answering no width, refusing the font or raising gives the ems budget and caches nothing
+  PASS  bars: where nothing can be measured the time keeps its ems budget
+  PASS  bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on
+  PASS  bars: a hidden region is never handed to the engine
+  PASS  bars: every shown region is bound to its own engine field
+  PASS  bars: dispel coloring tints the fill through the engine with the stored dispel colors
+  PASS  bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)
+  PASS  bars: a dispel-colored background carries its opacity times its color's alpha on the region, the map opaque
+  PASS  bars: a dispel-colored fill carries its opacity times its color's alpha on the region
+  PASS  bars: a static background and fill keep the opacity on the region and the color's alpha on the color
+  PASS  bars: switching Color by from dispel type back to static paints the bar's own color again
+  PASS  bars: back to static on a button holding no aura, the fill the engine hid shows again
+  PASS  bars: in dispel mode the engine's tint stays the fill's last color
+  PASS  bars: switching Color by from dispel type back to static on the background paints the background's own color again (feedback #7)
+  PASS  bars: back to static on a button holding no aura, the background the engine hid shows again (feedback #7)
+  PASS  bars: the refresh-window highlight is bound only when turned on, and always cleared first
+  PASS  bars: with the time's class color on, the running-out curve returns to the class color, one curve per container
+  PASS  bars: a live re-dress with both borders on under secret geometry draws them and re-binds everything (B2-3)
+  PASS  bars: a border the client refuses costs that border alone: every binding still runs, and it is reported (B2-3)
+  PASS  bars: a preview fill is the remaining fraction of the bar area, net of the icon and its gap
+  PASS  bars: a preview with a missing icon gap measures the template's gap, as the layout does
+  PASS  bars: a missing icon size is the template's, in the layout and in the preview alike
+  PASS  bars: a timeless preview aura draws a full bar with no time text, and an expired one keeps one pixel
+  PASS  bars: preview text shows the name, whole seconds left, and stacks only above one
+  PASS  bars: a preview fill drains from the configured side, spark at its leading edge
+  PASS  bars: a dispel-colored preview paints the Magic color, since no real aura names a type
+  PASS  bars: filling a preview element that was never dressed does nothing and raises nothing
+  PASS  icons: the art sits inside a shown border, inset by the border's size
+  PASS  icons: a hidden border, or the None style, leaves the art edge to edge
+  PASS  icons: a square icon is zoomed evenly from every side
+  PASS  icons: a wide icon is cropped top and bottom, a tall one left and right, never squashed
+  PASS  icons: the border takes its style, size and color, and the dress's class when asked
+  PASS  icons: a missing border size paints the template's, so the border and the art's inset still show
+  PASS  icons: the cooldown draws a swipe in the configured opacity, its edge and direction on their settings
+  PASS  icons: the cooldown turned off hides the swipe and never binds it to the engine
+  PASS  icons: Blizzard's countdown numbers show only when asked for
+  PASS  icons: the time and stack texts are laid against the icon's frame and show on their own settings
+  PASS  icons: the time and stack texts are boxed to the icon's width less their offsets
+  PASS  icons: a hidden text is never handed to the engine; a shown one is, as its own region
+  PASS  icons: the dispel border is the engine's debuff art on harmful auras only
+  PASS  icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)
+  PASS  icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
+  PASS  icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge
+  PASS  icons: a non-square icon's dispel art reaches past it by a sixth of each side
+  PASS  icons: the dispel border turned off is hidden and never bound
+  PASS  icons: turning the dispel border off on a live button keeps it hidden (B-4)
+  PASS  icons: the refresh-window highlight is bound only when on, in the pandemic color
+  PASS  icons: an icon's buttons get the shared mouse behavior
+  PASS  icons: a restyle re-dresses the regions it built, and builds none
+  PASS  icons: a live re-dress with the border on under secret geometry re-binds the highlight and the time color (B2-3)
+  PASS  icons: a border the client refuses costs the border alone: every binding still runs, and it is reported (B2-3)
+  PASS  icons: a live resize under secret geometry runs no backdrop arithmetic (B2-3)
+  PASS  icons: a preview icon's cooldown starts as long ago as its placeholder has run
+  PASS  icons: a timeless preview icon clears its cooldown and shows no time
+  PASS  icons: filling a preview icon that was never dressed does nothing and raises nothing
+  PASS  text style: the element takes its size; clip, animation and text-area frames nest inside it
+  PASS  text style: Left lays the first piece at the area's left and each next piece against the previous one
+  PASS  text style: Right lays the last piece at the area's right and each earlier piece against the next
+  PASS  text style: the vertical justify picks the top, middle or bottom anchor points
+  PASS  text style: each chained piece is pulled back over the previous one by the measured padding (item 8)
+  PASS  text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)
+  PASS  text style: the padding is measured once per font, size and flags (item 8)
+  PASS  text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)
+  PASS  text style: Center centers a one-piece template as one line, exactly as before (feedback #1)
+  PASS  text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)
+  PASS  text style: a stacked line's element grows to its rows; Left and Right keep the stored height (feedback #1)
+  PASS  text style: the vertical justify places the stack at the top, middle or bottom of a taller box (feedback #1)
+  PASS  text style: a line moved off Center draws its literals again (feedback #1)
+  PASS  text style: every piece takes the line's font; a literal takes its text
+  PASS  text style: each engine piece is bound to its own field, a literal to none
+  PASS  text style: stacks bind a rule formatter that hides one stack and folds the bracket text
+  PASS  text style: dispel type binds a text map of every type in the bracket text, nothing without a type
+  PASS  text style: the duration run binds its format, components and a prebuilt binding that writes nothing when timeless
+  PASS  text style: blink binds the blinking curve and a 0.1 s refresh; off, neither
+  PASS  text style: with the font's class color on, the running-out curves return to the class color, one curve per container
+  PASS  text style: a class snapshot that changes in place builds a new curve, never reuses the old class's
+  PASS  text style: a loop setter that raises cannot cost the engine bindings: the fields are bound first
+  PASS  text style: two buttons of one container get distinct prebuilt duration bindings
+  PASS  text style: a live re-dress for a new shape binds the new chain's strings, not the parked chain's
+  PASS  text style: a template without a duration token binds no duration text
+  PASS  text style: a preview dress binds nothing
+  PASS  text style: the three loops are built once, looping as each effect needs, and None plays none
+  PASS  text style: each effect plays its own loop with the speed, fade and height set
+  PASS  text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
+  PASS  text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
+  PASS  text style: an icon on the right insets the area's right edge; none hides it and binds nothing
+  PASS  text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
+  PASS  text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported
+  PASS  text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
+  PASS  text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time
+  PASS  text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)
+  PASS  text style: a refused stored template draws the default one and logs it once
+  PASS  text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
+  PASS  text style: the structure key carries the template's shape, so a live shape change gets new buttons
+  PASS  text style: Style.Element dresses a text container through Style.Text, bound and unbound, without raising
+  PASS  text style: bars, then text, then bars again keeps each style's regions, hidden while the other draws
+  PASS  text style: a placeholder fills each piece as the engine would
+  PASS  text style: a stacked line previews as its field rows, one per line, without its literals (feedback #1)
+  PASS  text style: a placeholder's percent is the nearest whole number, as the engine's step rule rounds it (feedback #5)
+  PASS  text style: a placeholder hides a single stack, a missing dispel type and a timeless duration with their bracket text
+  PASS  text style: a placeholder running out takes the running-out color on its duration piece only
+  PASS  text style: Color the dispel type writes each word in its palette color inside the bracket text (feedback #7)
+  PASS  text style: a colored dispel map is built once per look, and a new palette color rebuilds it (feedback #7)
+  PASS  text style: the dispel tint map is built once per look, and a new palette color rebuilds it too (feedback #7, fix round 1)
+  PASS  text style: the dispel backdrop fills the text area and is tinted through the engine, for a typed aura only (feedback #7)
+  PASS  text style: the dispel edge is four strips of its thickness around the text area, each tinted through the engine (feedback #7)
+  PASS  text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)
+  PASS  text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)
+  PASS  text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
+  PASS  preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
+  PASS  preview: the per-group cap limits the placeholders
+  PASS  preview: a container showing only Weapon enchants previews one placeholder per enchant slot, and its extent agrees (feedback #6)
+  PASS  preview: a shown preview with nothing applied is left alone; an applied one is dressed again in the same frames
+  PASS  preview: a lower cap hides the extra placeholders rather than leaving them drawn
+  PASS  preview: Hide releases every placeholder, and the next Show dresses them again
+  PASS  preview: a container whose settings are gone draws nothing and raises nothing
+  PASS  preview: placeholders paint with the container's class snapshot, as its real buttons do
+  PASS  preview: a vertical layout wraps into a new column one element's width plus the line spacing across
+  PASS  preview: a missing layout block grows down and right from the top left with no spacing
+  PASS  preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
+  PASS  preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)
+  PASS  preview: switching a previewed container from bars to icons re-dresses without error
+  PASS  preview: switching a previewed container from icons to bars re-dresses without error
+  PASS  preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
+  PASS  preview: each style keeps its own pool, and a switch parks the other style's placeholders
+  PASS  preview: a placeholder holds the mouse's hover as its container's buttons do, so no world tooltip shows through (L-3)
+  PASS  preview: the extent covers the placeholder block from the corner it starts at, sized by Preview.Offset (L-4)
+  PASS  preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
+  PASS  preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
+  PASS  preview: a text container's placeholders read its template, each bracket's text hidden with its value
+  PASS  coverage: every Bars row reaches a drawn region, on a live button and on the preview
+  PASS  coverage: every Icons row reaches a drawn region, on a live button and on the preview
+  PASS  coverage: every Text row reaches a drawn region, on a live button and on the preview
+  PASS  blizzard: hiding moves the frame under a hidden parent of ours; restoring puts back the parent it had
+  PASS  blizzard: applying twice remembers the first parent, so a restore never lands on our hidden frame
+  PASS  blizzard: buffs and debuffs are hidden and restored independently
+  PASS  blizzard: a frame the setting never hid is left where it is, whoever moved it
+  PASS  blizzard: a frame that had no parent is restored to UIParent
+  PASS  blizzard: a client without the frame, or a global that is not one, is skipped without raising
+  PASS  blizzard: in combat nothing moves and Apply says it has to wait; with no profile, nothing is waiting
+  PASS  blizzard: a profile switch applies the new profile's choice
+  PASS  picker: the screen and the world are never a target, and the walk ends there
+  PASS  picker: the walk climbs past one of this addon's own frames to a named frame above it
+  PASS  picker: the walk gives up after thirty-two unnamed frames
+  PASS  picker: hovering a named frame outlines it and names it beside the cursor
+  PASS  picker: the label follows the cursor at the UI's scale
+  PASS  picker: over nothing named the outline hides and the label says what to do
+  PASS  picker: a frame the outline may not anchor to hides the outline instead of raising
+  PASS  picker: the outline over a frame of secret size draws strips and never raises
+  PASS  picker: the outline carries the template that lets it outline an aura container
+  PASS  picker: a right-click cancels, and nothing is picked
+  PASS  picker: a left-click over nothing named keeps the pick going
+  PASS  picker: Escape keeps its key from the game for that press only, and cancels
+  PASS  picker: any other key passes through and the pick continues
+  PASS  picker: a new pick waits for the buttons to be released again before it can pick
+  PASS  framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes
+  PASS  disabled: enabled, the addon registers a non-empty set
+  PASS  disabled: every registration the addon owns is UNREGISTERED, not gated
+  PASS  disabled: TimedSpells' private unit frame is in the census while enabled and gone when disabled
+  PASS  disabled: what MUST survive does — the dispatcher, the panel, AceDB and the launcher
+  PASS  disabled: nothing is left armed, and nothing arms itself afterwards
+  PASS  disabled: a queued apply and a queued scan are canceled, not left armed
+  PASS  disabled: every frame that was shown is hidden, at the source
+  PASS  disabled: firing every baseline event writes nothing, says nothing and shows nothing
+  PASS  disabled: every reserved verb answers, and the bare /am opens the panel
+  PASS  disabled: this addon's own feature verbs refuse on one line and reach no write seam
+  PASS  disabled: the launcher's left-click is refused and its right-click still opens the panel
+  PASS  disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line
+  PASS  disabled: re-enabling restores the registration set, from the settings as they are NOW
+  PASS  disabled: releasing one hold does not stand up an addon the other still holds down
+  PASS  disabled: a profile switch to an enabled profile stands the addon back up
+  PASS  disabled: a disabled login builds no container frame
+  PASS  disabled: a profile switch while disabled builds nothing until enable
+  PASS  disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
+  PASS  slash: every command is a positional {name, desc, fn} triple
+  PASS  slash: the reserved verbs are all present
+  PASS  slash: /am new creates the described container and selects it
+  PASS  slash: /am new text creates a text-style container
+  PASS  slash: /am new gives the new container the Fill its style suits (B5)
+  PASS  slash: /am new with a word it does not know creates nothing and says why
+  PASS  slash: /am select takes an id or a name; /am containers marks the selection
+  PASS  slash: /am set writes the selected container through the seam
+  PASS  slash: lock and unlock drive the same setting the panel does
+  PASS  slash: /am preview is an unknown verb; /am test switches test mode and leaves the lock alone (B1)
+  PASS  slash: /am help and the landing page list test, and not preview (B1)
+  PASS  slash: /am disable and /am enable write the master switch through the seam and say so
+  PASS  slash: /am disable in combat is not refused; the master switch is a visibility write
+  PASS  slash: /am enable prints the seam's error instead of the success line
+  PASS  slash: enable and disable are listed by /am help and on the landing page
+  PASS  slash: the degraded stub's /am disable and /am enable store the switch through writeThrough
+  PASS  slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough
+  PASS  slash: /am delete removes a container by id
+  PASS  slash: a name two containers share is refused, not guessed
+  PASS  slash: /am delete in combat refuses in gray and keeps the container
+  PASS  slash: /am resetall in combat resets the profile and parks what it drops (options-ui-§12)
+  PASS  slash: the General Reset-all popup in combat resets the profile and parks what it drops (options-ui-§12)
+  PASS  slash: /am new in combat refuses in gray and creates nothing
+  PASS  slash: /am pick starts the frame picker for the selected container
+  PASS  slash: /am resetall and the General reset print the same line
+  PASS  slash: /am debug on and off flip the session flag; it never reaches the profile
+  PASS  slash: the dispatcher's isEnabled is NS.EnabledStored
+  PASS  slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
+  PASS  slash verbs: the landing page's rows are /am help's rows without the chat indent
+  PASS  slash verbs: /am and /auramaster both reach the one dispatcher
+  PASS  slash verbs: /am options is an alias of /am config, and both open the settings panel
+  PASS  slash verbs: a bare or whitespace-only /am opens the settings panel through config; /am help prints the list
+  PASS  slash verbs: in combat a bare /am prints the same refusal /am config does
+  PASS  slash verbs: /am version prints the version on its own line
+  PASS  slash verbs: get, set and reset with no path print a usage line naming /am
+  PASS  slash verbs: an unknown path, or one in the wrong case, is not found and nothing is written
+  PASS  slash verbs: a global row reads with no note; a container row names the container it read
+  PASS  slash verbs: with no containers, get and list read a container row as nil and note nothing
+  PASS  slash verbs: set clamps a number to the row's range and echoes what was stored
+  PASS  slash verbs: set refuses what the row's type cannot take, and stores and announces nothing
+  PASS  slash verbs: set writes a color in the stored {r, g, b, a} shape; get decodes a partial one channel by channel
+  PASS  slash verbs: a value the parser takes but the seam refuses prints the refusal and no echo of the unchanged value
+  PASS  slash verbs: /am set with a refused value prints INVALID and the row's reason once each, and does not echo the unchanged value
+  PASS  slash verbs: /am reset container.name prints the library's no-default line once
+  PASS  slash verbs: /am reset with no container prints the seam's reason, not the no-default line
+  PASS  slash verbs: set and reset reach a session row, which never lands in the profile
+  PASS  slash verbs: reset restores the selected container's row only, and its echo carries no note
+  PASS  slash verbs: set on a global row writes the profile through the seam
+  PASS  slash verbs: /am list prints every row once, grouped by page in page order, noting container rows
+  PASS  slash verbs: /am resetall resets the profile once, with no popup, and says so
+  PASS  slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
+  PASS  slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
+  PASS  slash verbs: /am lock and /am unlock go through the seam: unlocked shows the handle, and live auras keep drawing (B1)
+  PASS  slash verbs: /am enable, /am disable, /am lock, /am unlock echo the stored value in the set shape
+  PASS  slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)
+  PASS  slash verbs: /am pick with no containers, or in combat, never starts the picker
+  PASS  slash verbs: /am pick attaches the container selected when it began, even if the selection moves
+  PASS  slash verbs: /am set on a free-text row stores every word typed after the path
+  PASS  slash verbs: a right-click cancels /am pick, says so, and attaches nothing
+  PASS  slash verbs: /am perf prints every line the harness returns, tagged, and hands it the rest of the line
+  PASS  slash verbs: a bare /am debug toggles the window and leaves the flag; /am debug ON is read in any case
+  PASS  slash verbs: /am containers marks the selection and a disabled container, and says when there are none
+  PASS  slash verbs: /am select matches a name in any case, and a miss moves nothing
+  PASS  slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
+  PASS  slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
+  PASS  slash verbs: /am resetposition and /am forgettimed do their act and say so
+  PASS  slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true
+  PASS  slash verbs: the old path global.minimap.hide is not a setting, and nothing is written
+  PASS  slash verbs: a legacy store's minimap.hide reads through the renamed path with no migration
+  PASS  slash verbs: without the library each schema verb names what is missing, and writes nothing
+  PASS  slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
+  PASS  slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
+  PASS  slash verbs: without the library the host verbs keep working
+  PASS  slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
+  PASS  slash verbs: while disabled the live set still answers — settings stay readable and repairable
+  PASS  slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
+  PASS  slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
+  PASS  bulklog: a container page's Defaults is one [Set] line counting the rows it changed
+  PASS  bulklog: General's Defaults is one [Set] line counting the rows it changed
+  PASS  bulklog: Reset all, from /am resetall or the General popup, is one line in total — the profile handler's
+  PASS  bulklog: the degraded build's Reset all is one line in total, too
+  PASS  bulklog: Slash's CliResetAll, handed the same pair, is one [Set] reset all line
+  PASS  bulklog: a profile reset and a profile copy are one [Set] line each; a switch keeps its trace
+  PASS  bulklog: CopyFrom is one [Set] line counting the rows it changed, and no [Containers] summary
+  PASS  bulklog: a refused CopyFrom logs nothing
+  PASS  bulklog: ResetPositions is one [Set] line counting the rows it changed
+  PASS  bulklog: a bracket inside a bracket logs once, summed, when the outer one closes
+  PASS  bulklog: a -0 stored over 0 is not a change, so a settled ResetPositions counts none
+  PASS  bulklog: a bulk act that raises still logs its one line, marked, and the seam logs again
+  PASS  bulklog: a stray bulkEnd with no bracket open logs nothing, and the next bracket still counts itself
+  PASS  bulklog: a spell set written in a bracket counts once when it changed and not at all when it did not
+  PASS  bulklog: a section written in a bracket counts each row and spell set under it that changed, and its own line is muted
+  PASS  bulklog: a session row written in a bracket is counted through its own get
+  PASS  bulklog: each act starts its own count and its own error mark
+  PASS  bulklog: an error inside a nested bracket marks the outer act's one line
+  PASS  bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
+  PASS  bulklog: a library Defaults a row's onChange stops counts the write it stored
+  PASS  options: NS.Helpers IS the library instance
+  PASS  options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
+  PASS  options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one
+  PASS  options: every page renders without a reported error
+  PASS  options: the General page leads with Master controls, in canonical order
+  PASS  options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type
+  PASS  options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back
+  PASS  options: with no containers a container page draws one placeholder tab
+  PASS  options: the banner is the picker — choosing a container retargets every page
+  PASS  options: the Containers page's New button creates and selects a container
+  PASS  options: a page's Defaults button restores only the selected container
+  PASS  options: Reset all settings resets the active profile whole, and nothing else (options-ui-§12)
+  PASS  options: opening a page in combat refuses with the canonical gray line
+  PASS  options: the Delete popup refuses in combat
+  PASS  options: the Background block is composed in canonical order, and its tooltips name the background
+  PASS  options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
+  PASS  options: the degraded stub completes the load — every page's rows still register
+  PASS  options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)
+  PASS  options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
+  PASS  options descriptor: a rendered widget reads the selected container and writes it through the seam
+  PASS  options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
+  PASS  options descriptor: a page's Defaults resets the page's session rows too
+  PASS  options descriptor: Reset all writes only session rows through the seam and resets only the active profile
+  PASS  options descriptor: Reset all never writes a Profiles-page row, live or degraded
+  PASS  options descriptor: the degraded Reset all resets the profile whole and walks no profile-backed row
+  PASS  options descriptor: the banner lists every container by name and ignores a re-pick of the selection
+  PASS  options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)
+  PASS  options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)
+  PASS  options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
+  PASS  options descriptor: with no containers a page draws the one empty-registry line and no intro
+  PASS  options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
+  PASS  options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it
+  PASS  options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
+  PASS  options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
+  PASS  options descriptor: RenderWarnings draws one orange line per thing the engine will not do
+  PASS  options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
+  PASS  options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
+  PASS  options descriptor: every stub composer answers an empty row list
+  PASS  general: the Enable checkbox writes the master switch through the seam
+  PASS  general: the four show-or-hide master rows are visibility passes; Master scale re-applies
+  PASS  general: the visibility dropdown offers the four states in order and stores the one chosen
+  PASS  general: the Debug console checkbox shows the window and writes nothing to the profile
+  PASS  general: the Test mode checkbox shows the placeholders without unlocking, and reads the mode back (B1)
+  PASS  general: a Test mode start in combat is refused and the checkbox reads false again (B1)
+  PASS  general: combat starting ends test mode, and Reset all settings ends it too (B1)
+  PASS  general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
+  PASS  general: the Blizzard-frame rows re-apply no container
+  PASS  general: Reset position puts every container back on the screen
+  PASS  general: Reset all settings asks first and resets nothing until the answer
+  PASS  general: the Reset-all tooltip names the equivalence with Profiles -> Reset Profile
+  PASS  general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
+  PASS  general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
+  PASS  general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
+  PASS  general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
+  PASS  general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
+  PASS  general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
+  PASS  general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
+  PASS  general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
+  PASS  general → spell categories: the markers are padded so every name starts at the same column (issue #10)
+  PASS  general → spell categories: the closed dropdown shows the marked label too (issue #10)
+  PASS  general → spell categories: a section heading separates the picker from the spell list (2026-09-20)
+  PASS  general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
+  PASS  general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
+  PASS  general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+  PASS  general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
+  PASS  general → spell categories: the Weapon enchants entry explains the all-slots fallback
+  PASS  general → spell categories: unticking a weapon slot writes the profile, one row at a time
+  PASS  general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
+  PASS  general: Select accepts the enchant key too, and lands the tab on it
+  PASS  general → spell categories: the tab and Dispel Colors are drawn with no container at all
+  PASS  general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
+  PASS  general → dispel colors: a swatch writes its own type's color and re-applies every container
+  PASS  general → dispel colors: the page's Defaults restores them
+  PASS  general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)
+  PASS  general → spell categories: the create form makes a category, shows it, and it is usable at once
+  PASS  general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide
+  PASS  general → spell categories: a shipped category draws no controls, no heading and no sentence (owner 2026-09-21)
+  PASS  general → spell categories: the rename and the Delete sit directly under the picker (owner 2026-09-21)
+  PASS  general → spell categories: Delete asks first, and the confirmation's act is what refuses a shipped key
+  PASS  general → spell categories: a category the player made is drawn no Restore, and the act refuses one
+  PASS  general → spell categories: Weapon enchants is promised no spell list, Restore or add/remove
+  PASS  general → spell categories: a category the player made says so, without moving the name column
+  PASS  general → spell categories: the rename box and the create box cannot be mistaken for each other
+  PASS  general → spell categories: every act of the block answers in the panel, not only in chat
+  PASS  general → spell categories: a saved record the sync cannot read can be forgotten from the panel
+  PASS  general → spell categories: an id another category already claims is marked in the list and reported at the add
+  PASS  general → spell categories: the answer line dies with the profile it was said in
+  PASS  general → spell categories: the answer line ends when the page leaves the screen
+  PASS  general → spell categories: Weapon enchants has a lead-in, and its slots have a heading of their own
+  PASS  general → spell categories: a claimed-by tooltip says when the other category is one the player made
+  PASS  general → spell categories: the mark's color says which of the two things it has to say
+  PASS  general → spell categories: two other claimants are both named, in the mark and the tooltip
+  PASS  general → spell categories: one unreadable record reads in the singular
+  PASS  general → spell categories: a profile that refuses the sweep is said out loud, not only logged
+  PASS  general → spell categories: typing lists the candidates — the profile's edits, every container's overrides, the learned timed buffs
+  PASS  general → spell categories: the add box still offers a spellbook spell that is on NO list of this addon
+  PASS  general → spell categories: a host kind with a base keeps its own entry tooltip AND its base's suggestions
+  PASS  general → spell categories: a name only the candidates know resolves — another category's added spell, a spell on any container's overrides
+  PASS  general → spell categories: picking a suggestion adds it through the one writer, exactly once
+  PASS  general → spell categories: a name two ranks share lists both, labeled; Enter without a pick adds neither
+  PASS  general → spell categories: the add line's tooltip and its refusal say where a name can come from
+  PASS  general → spell categories: a starter's X stores false and drops it from the list; adding it again drops the edit (B2)
+  PASS  general → spell categories: choosing another category lists its starters, by name where the client knows them
+  PASS  general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
+  PASS  general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
+  PASS  containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
+  PASS  containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
+  PASS  containers: the subsection heading is drawn between Enabled and Unit, not anywhere else
+  PASS  containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
+  PASS  containers: the picker and New container sit in the band above the strip, drawn before it (feedback #2)
+  PASS  containers: the picker retargets the tab and every page
+  PASS  containers: New container creates a container and selects it
+  PASS  containers: New container takes the Fill its style suits (B5)
+  PASS  containers: a created container with its own Fill keeps it; Create with only a style takes the style's
+  PASS  containers: Delete keeps the band's picker and New through both refreshes, and the picker lists what remains (C-3)
+  PASS  containers: with no containers the page draws the band's picker and New, and one line instead of the rows
+  PASS  containers: the Name box renames the selected container, trimmed, and no other
+  PASS  containers: /am reset container.name says a name has no default and changes nothing
+  PASS  containers: a blank name is refused and the container keeps its name
+  PASS  containers: a rename re-lists every picker and re-applies no container
+  PASS  containers: the Unit dropdown offers the four units in order and writes the selected container
+  PASS  containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+  PASS  containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)
+  PASS  containers: the Style dropdown offers bars, icons and text and writes the selected container
+  PASS  containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)
+  PASS  containers: re-choosing the same Style keeps a Fill set by hand (B5)
+  PASS  containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)
+  PASS  containers: a duplicate and a copy-from keep the source's Fill (B5)
+  PASS  containers: in combat the library refuses Duplicate and New container; nothing is created
+  PASS  containers: Duplicate copies the selected container and selects the copy
+  PASS  containers: Delete asks first, naming the container, and deletes it only on Yes
+  PASS  containers: the copy block offers every other container and copies only the chosen section
+  PASS  containers: copying Everything takes what the source is, never its name or position
+  PASS  containers: with one container the page offers Duplicate and Delete but no copy block
+  PASS  containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
+  PASS  containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
+  PASS  filters: Cast by writes the selected container's filter and no other
+  PASS  filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
+  PASS  filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
+  PASS  filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
+  PASS  filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
+  PASS  filters: a max-duration preset writes the same path as the slider
+  PASS  filters: a stored max-duration matching no preset leaves the preset dropdown blank
+  PASS  filters: the max-duration description says there is no minimum
+  PASS  filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
+  PASS  filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
+  PASS  filters: the Dispel Types grid draws no 4th cell, blank or otherwise
+  PASS  filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)
+  PASS  filters: every grid's columns are Show and Hide, then the category (schema v3)
+  PASS  filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
+  PASS  filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
+  PASS  filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)
+  PASS  filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
+  PASS  filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
+  PASS  filters: the priority order (spec §6) is stated on the General tab, highest rank first
+  PASS  filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
+  PASS  filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
+  PASS  filters: the priority block is drawn under the General rows, not above them (batch 8)
+  PASS  filters: the priority ranks read at the same size as the Overrides notes (2026-09-20)
+  PASS  filters: the four tabs read General, Categories, Overrides, Sorting (batch 8)
+  PASS  filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
+  PASS  filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
+  PASS  filters: /am get and /am list print a category's state as Show or Hide
+  PASS  filters: every category row is skipRender and names its grid
+  PASS  filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
+  PASS  filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
+  PASS  filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
+  PASS  filters: the Overrides lists pack two entries to a row, row-major
+  PASS  filters: an Overrides name the game cannot find adds nothing and says why on the add line
+  PASS  filters: an Overrides list suggests the profile's edits and the other list; a keyboard pick writes that list once
+  PASS  filters: an Overrides name two ranks share is refused until one is picked, and the tooltip says where names come from
+  PASS  filters: every tab opens with what the engine will not honor here, in orange
+  PASS  filters: a plain whitelist entry with nothing to disagree has no note
+  PASS  filters: a spell on both lists gets a note on its blacklist entry saying the whitelist wins
+  PASS  filters: a spell on both lists gets a note on its whitelist entry naming the blacklist too
+  PASS  filters: a blacklisted spell in a Show category names that category as overridden
+  PASS  filters: a whitelisted spell every one of its categories would hide names them as overridden
+  PASS  filters: a blacklisted spell a Hide category would also hide gets no note
+  PASS  filters: an entry with a verdict keeps its place in the two-column grid
+  PASS  filters: an uncategorized blacklisted spell warns that no category hides it
+  PASS  filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
+  PASS  filters: Show all and Hide all head the Blizzard and Spell Categories sections, and no other (feedback #10)
+  PASS  filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
+  PASS  filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
+  PASS  layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
+  PASS  layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
+  PASS  layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen
+  PASS  layout: in screen mode only the subsections that apply are drawn (feedback #4)
+  PASS  layout: in container mode only the subsections that apply are drawn (feedback #4)
+  PASS  layout: in frame mode only the subsections that apply are drawn (feedback #4)
+  PASS  layout: changing Attach to redraws the tab on the next frame with the chosen subsections (feedback #4)
+  PASS  layout: Attach to writes the mode and redraws an open page on the next frame
+  PASS  layout: the Container dropdown offers None and every other container, never the selected one
+  PASS  layout: a target that would close a loop is refused; any other, or None, is stored
+  PASS  layout: Frame name stores the typed name for the selected container
+  PASS  layout: Pick a frame in combat refuses in gray and starts nothing
+  PASS  layout: a pick attaches the container selected when it began, and reopens the page
+  PASS  layout: a Growth write re-applies only the selected container
+  PASS  layout: Strata offers the five layers in order and stores the one chosen
+  PASS  layout: the Mouse tab's rows write the selected container's behavior
+  PASS  layout: Defaults restores the selected container's placement and arrangement, and not its look
+  PASS  layout: after the banner moves, the page draws the newly selected container's values
+  PASS  layout: an attached container's Fill and growth are dimmed and show its parent's
+  PASS  layout: a screen or frame container's growth rows are its own and live, with no follow line
+  PASS  layout: the follow line is drawn on the Growth tab only
+  PASS  layout: Another container names the derived points and the container it is attached to
+  PASS  layout: every Point and Relative point row places the first aura, since the container's full size is secret
+  PASS  layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
+  PASS  layout: the hint names the growth to pick instead, one line per facing axis
+  PASS  layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
+  PASS  layout: choosing a facing Point redraws the tab with the hint on the next frame
+  PASS  bars: every tab of an icons container carries the muted-red note; a bars container's carry none
+  PASS  bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
+  PASS  bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
+  PASS  bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
+  PASS  bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
+  PASS  bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)
+  PASS  bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
+  PASS  bars: Width writes the selected container, and the page re-reads after the banner moves
+  PASS  bars: a confirmed fill color is stored on the selected container, as a table of its own
+  PASS  bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+  PASS  bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
+  PASS  bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
+  PASS  pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)
+  PASS  bars: Defaults restores the selected container's bar look and leaves its icon look alone
+  PASS  icons: a bars container's tabs carry the muted-red note; an icons container's carry none
+  PASS  icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
+  PASS  icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
+  PASS  icons: the six tabs are drawn in order
+  PASS  icons: Width on the Icons page writes the icon width, never the bar width
+  PASS  icons: the Cooldown rows write the selected container's swipe
+  PASS  icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
+  PASS  icons: Defaults restores the selected container's icon look and leaves its bar look alone
+  PASS  text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
+  PASS  text page: a bars or icons container sees every row disabled under the note naming its style
+  PASS  text page: the Bars and Icons pages name the text style on a text container
+  PASS  text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
+  PASS  text page: the section is named Text Template (Task 20, owner: rename this section)
+  PASS  text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
+  PASS  text page: the Preview box refreshes after a template change (Task 20)
+  PASS  text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
+  PASS  text page: the Text Template block grays with the page on a bars container (2026-09-20)
+  PASS  text page: a valid template is stored; a refused one is not, and the panel prints why
+  PASS  text page: /am set refuses a bad template with the parser's reason, indented under the refusal
+  PASS  text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
+  PASS  text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
+  PASS  text page: each loop row is live only for the effects that use it
+  PASS  text page: without a duration token the pandemic-window rows dim, except the swatch, under a note
+  PASS  text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)
+  PASS  text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
+  PASS  text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type
+  PASS  text page: Defaults restores the selected container's text look and nothing else
+  PASS  text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
+  PASS  text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
+  PASS  text page: picking a built-in that also moves Justify writes and applies once (final review)
+  PASS  text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)
+  PASS  text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)
+  PASS  text page: the centered built-in's Preview joins its two rows with a visible separator (final review)
+  PASS  text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
+  PASS  text page: an already-doubled || in a custom template still doubles each pipe (final review)
+  PASS  text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
+  PASS  text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
+  PASS  tabs: each of the seven pages draws its tab keys and labels in order
+  PASS  tabs: a container switch that takes the active tab away heals the strip to its first tab
+  PASS  tabs: Bars, Icons and Text on a mismatched style draw the muted-red notice above every row, drawn disabled
+  PASS  tabs: the Filters page draws the engine's warnings above the tab's rows
+  PASS  tabs: with no containers every per-container page draws one placeholder tab and the empty-registry line
+  PASS  tabs: the Containers page's band holds the picker and New container, out of the tab body
+  PASS  tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
+  PASS  about: the landing page lists every slash command, in /am help's own words
+  PASS  about: the Notes line is read from this addon's TOC when the page is drawn
+  PASS  about: the logo is this addon's own art, shipped as a texture the client can load
+  PASS  profiles: the page registers this database's AceDBOptions table under its own app name
+  PASS  profiles: every render re-opens the dialog into the one container it built
+  PASS  profiles: without AceConfigDialog the page opts out instead of failing on first show
+  PASS  env: NS.Meta reads this addon's own manifest, by its folder name, on both arms
+  PASS  env: the version is the TOC's where it can be read, and the fallback constant where not
+  PASS  env: an empty TOC version falls back like an absent one, on both arms
+  PASS  env: the version is never nil — '?' when neither the TOC nor the constant answers
+  PASS  pool: the live seam is the library's own pool, not the fallback
+  PASS  pool: the fallback carries every member the preview calls
+  PASS  pool: a released placeholder is reused rather than made again, on both arms
+  PASS  pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
+  PASS  defaults: every starter container is a valid container whose every override the template knows
+  PASS  defaults: every category carries what its kind needs, and a label and description
+  PASS  defaults: IsSpellCategory names exactly the spells-kind categories of BOTH aura types
+  PASS  defaults: every shipped category answers its own aura type through AuraTypeOf, by def and by key
+  PASS  defaults: AuraTypeOf is total — nil for an unknown key and for anything that is not a definition
+  PASS  defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of positive integer ids
+  PASS  defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine
+  PASS  defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)
+  PASS  defaults: every leaf of the container template is edited by a settings row or is a spell set
+  PASS  defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
+  PASS  defaults: every dropdown's default is one of its choices
+  PASS  defaults: every slider's default lies inside its range
+  PASS  defaults: the dispel palette covers every dispel type, and the profile holds its own copy
+  PASS  defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)
+  PASS  defaults: one Healing category holds both retired healing lists, where Core healing was
+  PASS  defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
+  PASS  defaults: the global schema stamp defaults to 0, never the current version
+  PASS  defaults: StatesShowing hides every buff category but the ones named, and leaves the debuff ones at Show
+  PASS  defaults: no shipped category key sits in the reserved 'user' namespace
+  PASS  defaults: SanitizeUserName strips the escape character and control characters, trims and caps
+  PASS  defaults: NewUserKey is namespaced and terminates against a generator that always collides
+  PASS  defaults: the key generator is the client's own, not the shared unseeded math.random
+  PASS  defaults: a user category materializes among the spell lists, above Weapon enchants, Uncategorized still last
+  PASS  defaults: schema order tracks Cat.For order per aura type, user categories included
+  PASS  defaults: a user category's name is unrouted by design, and its description is not
+  PASS  defaults: a sync canonicalizes a stored user name in the store, not only at the draw
+  PASS  defaults: a corrupt user record is skipped and left on disk, never coerced
+  PASS  defaults: a record outside the reserved namespace cannot hijack a shipped category
+  PASS  defaults: a user category's name is shown as typed even when it is a shipped locale key
+  PASS  defaults: userCategoryOrder is reconciled the way containerOrder is
+  PASS  perf: every declared bucket is reached by a real bracket
+  PASS  perf: a dormant probe notes nothing
+  PASS  perf: suspend makes the addon inert without a reload, and resume restores it
+  PASS  perf: suspend holds a queued apply until resume
+  PASS  perf: the buckets are declared in report order, and only the per-container apply nests
+  PASS  perf: suspend and resume log to the console whatever the debug flag says
+  PASS  perf: resume re-registers exactly the lifecycle events suspend took away
+  PASS  perf: without the library, /am perf answers one honest line
+  PASS  debuglog: enabling logging writes the [Init] summary — name, version, schema, profile and container count
+  PASS  debuglog: the flag is NS.State.debug itself — the sink and IsEnabled read it live
+  PASS  debuglog: the chat acknowledgment goes through the addon's tagged printer; the console brackets both ends
+  PASS  debuglog: showing or hiding the console refreshes open panels, so the Master controls row follows it
+  PASS  debuglog: the Debug console row shows and hides the window and never touches the logging flag
+  PASS  debuglog: Reset all closes an open console, because the console row carries a default
+  PASS  debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
+  PASS  debuglog: without the library the console row is honest — never checked, and its tooltip says why
+  PASS  locale: every L[...] subscript in the source is defined in enUS.lua
+  PASS  locale: every key enUS.lua defines is used somewhere in the source
+  PASS  locale: no key is defined twice in enUS.lua
+  PASS  locale: every enUS value is its own key, so the English build shows the source string
+  PASS  locale: every string routed by value has its key — Constants labels, categories, filter warnings
+  PASS  locale: every value is ASCII, the em dash excepted (T-1)
+  PASS  locale: no library-missing line joins a routed fragment
+  PASS  README.md carries no angle-bracket argument placeholders
+  PASS  every Tier 2 documentation-map row agrees with docs/
+  PASS  every .md under docs/ appears in the documentation map
+  PASS  docs: every file:line citation names an existing file and a non-blank line inside it
+  PASS  docs: no file:line citation lands on a comment-only or blank line
+  PASS  docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
+  PASS  prose: no authored file carries a British spelling from localization-§5's published list
+  PASS  prose: the gate carries localization-§5's two lists whole, and nothing of its own
+  PASS  prose: the exclusions this repository declared suppressed 3 of 146 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+  PASS  prose: no path this repository narrows the gate by is loaded by a TOC
+  PASS  prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
+  PASS  prose self-test: the carve-out suppresses the named generated folder, and only it
+  PASS  prose self-test: a path the carve-out does not name is not covered by one that looks like it
+  PASS  prose self-test: a carve-out that is not a set of path strings is a failure, not a silence
+  PASS  prose self-test: a TOC's file lines are read as paths, and its directives and comments are not
+  PASS  prose self-test: a .pkgmeta's ignore block is read, and the keys around it are not
+  PASS  prose self-test: an ignore entry covers a path exactly, by folder, and by wildcard
+  PASS  prose self-test: the carve-out admits a generated dump and refuses a file the TOC loads
+  PASS  prose self-test: a waiver-file exclusion meets the same two refusals as the carve-out
+  PASS  prose self-test: each list is refused on the matching rule its own scan uses
+  PASS  prose self-test: the scan and the refusals read the added exclusions through one reader
+  PASS  prose self-test: a narrowing is refused by what it suppresses, not by how it is written
+  PASS  prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
+  PASS  prose self-test: a malformed waived is a failure, not a silence
+  PASS  parity: the Core stub publishes everything core/CoreSetup.lua publishes live
+  PASS  parity: the DebugLog stub carries every member the addon calls
+  PASS  parity: the Options stub carries every helper the host calls, off the load path as a no-op
+  PASS  parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls
+  PASS  parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires
+  PASS  parity: the Slash stub carries every dispatcher member the addon calls
+  PASS  parity: the Slash stub's refusal line is the library's own format, byte for byte
+  PASS  libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+  PASS  tests/_kit is the test kit that shipped with that release
+  PASS  the automated-test runner is recorded executable (100755)
+  PASS  lintconfig: .luacheckrc sets no top-level ignore
+  PASS  lintconfig: .luacheckrc switches no warning class off wholesale
+  PASS  lintconfig: every files[...] ignore is narrowed to a file or a name
+  PASS  lintconfig: no source file carries a bare inline luacheck ignore
+  PASS  lintconfig: no length operator shares its line with a keyword or brace lizard must see
+  PASS  lintconfig: every read_globals name is referenced as a global by some authored file
+  PASS  eol: every tracked file carries the terminator .gitattributes declares for it
+  PASS  eol: .gitattributes is line-endings-§5's canonical body for this repo kind
+  PASS  layoutcap: every authored file over the 1500-line cap is named in the census
+  PASS  layoutcap: no census row outlives the breach it records
+  PASS  layoutcap: every over-cap census row carries one of layout-§1's three terminal states
+  PASS  layoutcap: the census and the exempt set agree about which paths were exempted
+  PASS  layoutcap: an empty census is written as a result rather than left standing empty
+  PASS  layoutcap self-test: the parser reads the census nested under the register, and stops there
+  PASS  layoutcap self-test: a census outside its register, or at the wrong level, is not read
+  PASS  layoutcap self-test: an over-cap file missing from the census is reported, and an exempt one is not
+  PASS  layoutcap self-test: a census row that outlives its breach is reported
+  PASS  layoutcap self-test: an over-cap row that names no terminal state is reported
+  PASS  layoutcap self-test: the census and the exempt set are held to naming the same paths
+  PASS  layoutcap self-test: a census that states nothing is told apart from one that states none
+  PASS  layoutcap self-test: the exempt set takes folders as well as paths
+
+1350 passed, 0 failed, 0 skipped, 1350 total (16 shards)
