@@ -138,7 +138,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:424`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:425`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),

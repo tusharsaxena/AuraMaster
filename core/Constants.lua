@@ -240,7 +240,7 @@ C.TEXT_BUILTINS = {
     timeOfMax      = { template = "$spellname$[ $remainingduration$ / $maxduration$]" },
     nameType       = { template = "$spellname$[ ($dispeltype$)]" },
     nameTypeTime   = { template = "$spellname$[ ($dispeltype$)][ - $remainingduration$]" },
-    -- No " - " separator (fix round 1, feedback #1): Center STACKS this in two rows, and a leading
+    -- No " - " separator (feedback #1): Center STACKS this in two rows, and a leading
     -- dash on the second row (" - 11s") is not clean.
     centered       = { template = "$spellname$[$remainingduration$]", justifyH = "CENTER" },
 }

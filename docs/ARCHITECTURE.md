@@ -545,7 +545,7 @@ return value.
   (`modules/ContainerManager.lua:196`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:446`).
+  button's ancestry (`modules/Container.lua:447`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),

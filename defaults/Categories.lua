@@ -37,8 +37,8 @@ local _, NS = ...
 --                  grid, default Show. There is no General -> Spell Categories entry for it: it has no
 --                  list to edit.
 --
---                  ONE ROW PER AURA TYPE, ASYMMETRIC (fix round 3, 2026-09-16 — the owner restored the
---                  debuff row round 1 dropped; issue #11's part A2 re-derived the asymmetry from the
+--                  ONE ROW PER AURA TYPE, ASYMMETRIC (2026-09-16 — the owner restored the debuff
+--                  row an earlier pass dropped; issue #11's part A2 re-derived the asymmetry from the
 --                  UNIT rather than from the aura type). Both rows' unions are now genuine subsets —
 --                  `Cat.HELPFUL` has always had `spells`-kind categories and `Cat.HARMFUL` gained
 --                  `hardCC` and `softCC` below — so what decides whether a Show row may contribute a
@@ -59,7 +59,7 @@ local _, NS = ...
 --                  `focus` buff container whose unit may be hostile when the engine looks — Show
 --                  contributes NOTHING and the ordinary catch-all runs as if the row were not there,
 --                  while Hide still suppresses the catch-all outright, reproducing the retired "Only
---                  these categories" toggle exactly. Concretely proven (fix round 3, and again in A2):
+--                  these categories" toggle exactly. Concretely proven (2026-09-16, and again in A2):
 --                  a Show group whose one `excludeSpellIDs` the engine throws away carries no
 --                  candidate filter at all, draws EVERY aura of the type regardless of any other
 --                  category's Hide, and neuters them all — the owner's original complaint reborn.
@@ -527,7 +527,7 @@ Cat.HARMFUL = {
         label = "From any player", desc = "Debuffs applied by any player or their pet.",
     },
     {
-        -- Fix round 3 (2026-09-16): restored, asymmetric with the buff row — see the KINDS doc above.
+        -- Restored 2026-09-16, asymmetric with the buff row — see the KINDS doc above.
         -- Hide reproduces the retired "Only these categories" toggle exactly (drops the catch-all, so
         -- only what is explicitly Shown is drawn). Show is a plain default that must NOT contribute a
         -- group of its own, and since issue #11's A2 that is a fact about the UNIT, not about this

@@ -35,14 +35,14 @@ local _, NS = ...
 --     whitelist (rule 5 — an aura in no category). The catch-all is skipped instead whenever an
 --     `uncategorized` category ACTUALLY SUPERSEDES it for this compile (below, `supersedesCatchAll`)
 --     — not merely whenever one exists for the aura type: a Hide always supersedes it, but a Show
---     only does when `hasUnion` is true (fix round 3's asymmetry — where the union is empty, or the
+--     only does when `hasUnion` is true (the asymmetry — where the union is empty, or the
 --     engine might discard the ids that group is made of, the Show contributes no group of its own
 --     and leaves the catch-all exactly as if the category did not exist).
 --
--- Fix round 2 (batch 7): the per-container "Only these categories" toggle (`D8`/`R-8`..`R-11`) is
+-- Batch 7: the per-container "Only these categories" toggle (`D8`/`R-8`..`R-11`) is
 -- RETIRED. It once dropped the catch-all so a container drew only its whitelist plus its shown
 -- categories; once `uncategorized`'s own group correctly supersedes the catch-all in both of its
--- states (fix round 1), the toggle had nothing left to drop — `uncategorized = "hide"` IS what it
+-- states, the toggle had nothing left to drop — `uncategorized = "hide"` IS what it
 -- used to mean, on buffs. The owner chose one concept over two controls that needed explaining
 -- against each other. `core/Database.lua`'s schema step 4 migrates a stored `onlyShown = true` to
 -- `categories.uncategorized = "hide"` so an existing container keeps drawing only what it
@@ -53,7 +53,7 @@ local _, NS = ...
 -- matches no aura.
 --
 -- `uncategorized` (batch 7, docs/superpowers/specs/2026-09-15-feedback-batch7-design.md section 4,
--- ONE ROW PER AURA TYPE, ASYMMETRIC as of fix round 3, GATED ON THE UNIT as of issue #11 —
+-- ONE ROW PER AURA TYPE, ASYMMETRIC, GATED ON THE UNIT as of issue #11 —
 -- defaults/Categories.lua's KINDS doc has the full reasoning): "in none of the profile's SPELL-LIST
 -- (kind `spells`) categories" — token/flag/dispel categories do not count toward being categorized.
 -- `hasUnion` is what the asymmetry turns on, and it asks TWO questions, not one:
@@ -73,31 +73,32 @@ local _, NS = ...
 -- where `target`/`focus` are TRUE for both aura types, and is what `identityWarning` chooses its
 -- sentence with. Two predicates, deliberately: conflating them is what produced a single gate that
 -- called target/HARMFUL honored (emitting a group the engine discards the moment the target is
--- friendly) and target/HELPFUL unhonored (dropping the group fix round 1 exists for) in one breath.
+-- friendly) and target/HELPFUL unhonored (dropping the very group Uncategorized Show exists for) in
+-- one breath.
 --
 --   * `hasUnion` true: Show compiles to its own group like any other shown category, but as an
 --     EXCLUDE of that union (there is no id list of "every other spell" to include), carrying no
 --     hidden-category exclusion of its own — that is what rescues a cancelable-but-unlisted buff from
---     a Hidden `Cancelable` (the defect fix round 1 fixed). Hide has no negative way to express "not
+--     a Hidden `Cancelable`, which is what this group is for. Hide has no negative way to express "not
 --     uncategorized" (no id list to subtract), so it contributes nothing of its own.
 --   * `hasUnion` false: Show contributes NO group at all. With an empty union the group would carry
 --     no `excludeSpellIDs` in the first place; where the engine may discard ids it carries one that
 --     can be thrown away before evaluation. Both paths end in the same place — an unrestricted
 --     "every aura not otherwise Shown" group that draws right through every category's Hide, since
---     every aura is then trivially "not on any spell list" (proven concretely, fix round 3: shipping
---     it produced a single group with no candidate filter, matching everything). Hide still
+--     every aura is then trivially "not on any spell list" (proven concretely: shipping it produced
+--     a single group with no candidate filter, matching everything). Hide still
 --     contributes nothing of its own either, for the same "no id list to subtract" reason as the
 --     true side.
 --
--- WHICH CONTAINERS LAND ON WHICH SIDE, and why the unit half is not a formality. Through fix round 3
+-- WHICH CONTAINERS LAND ON WHICH SIDE, and why the unit half is not a formality. Before issue #11
 -- the gate was the union alone, and on debuffs that was indistinguishable from the rule above for
 -- exactly one reason: `Cat.HARMFUL` carried no `spells`-kind category at all, so the debuff union was
 -- empty on every container ever compiled and the two questions could not disagree there. Issue #11
 -- adds `hardCC` and `softCC` to `Cat.HARMFUL` and ends that. A PLAYER debuff container then has a
 -- non-empty union AND an engine that discards debuff ids on the player: the union test alone would
 -- say "emit the group", the engine would strip that group's one constraint, and the container would
--- draw every debuff — neutering every Hide on the tab. That is fix round 3's failure arriving through
--- a new door, which is why the gate is written against the general question (is a spell-id filter on
+-- draw every debuff — neutering every Hide on the tab. That is the empty-union failure above arriving
+-- through a new door, which is why the gate is written against the general question (is a spell-id filter on
 -- THIS container CERTAIN to be applied?) and never against the aura type.
 --
 -- A `target` or `focus` debuff container lands on the same side as the player one, and that is the
@@ -165,15 +166,14 @@ local _, NS = ...
 --     would draw the same aura twice. Suppressed.
 --   * Show with `hasUnion` false: `uncategorized` contributes no group (above), so there is nothing
 --     to supersede the catch-all with — it must stay, unsuppressed, exactly as if this category did
---     not exist. This is the fix round 3 correction: round 1 suppressed it unconditionally on Show,
---     which is only safe when `hasUnion` is true.
+--     not exist. Suppressing it unconditionally on Show would be safe only when `hasUnion` is true.
 --   * Hide, either `hasUnion`: the only possible catch-all contribution would be an INCLUDE
 --     restricted to the union — but the catch-all already EXCLUDES every one of those same ids (each
 --     spells-kind category is in `shown` or `hidden`, both swept into its exclusions), so that INCLUDE
 --     could never match anything (`hasUnion` true), or is simply moot (`hasUnion` false — the union
 --     is empty, or the engine would throw the ids away unread). Either way Hide suppresses the
 --     catch-all outright — on a player debuff container this reproduces the retired "Only these
---     categories" toggle exactly (fix round 2).
+--     categories" toggle exactly.
 --
 -- A group whose constraints contradict themselves (it would need both `X` and `!X`) is dropped rather
 -- than handed to the engine, because it could never match anything.
@@ -361,8 +361,8 @@ end
 --- may silently strip. `FC.IdsAlwaysHonored` is that second, stricter question. The two were ONE
 --- predicate when issue #11's gate was first written, and conflating them is precisely what made it
 --- self-contradictory: target/HARMFUL "honored" (emitting a group the engine discards the moment the
---- target is friendly) and target/HELPFUL "not honored" (dropping the very group fix round 1 exists
---- for) — the same conditionality, opposite treatment, in one function.
+--- target is friendly) and target/HELPFUL "not honored" (dropping the very group Uncategorized Show
+--- exists for) — the same conditionality, opposite treatment, in one function.
 --- @param unit string|nil  the container's unit (core/Constants.lua C.UNITS)
 --- @param auraType string  "HELPFUL" or "HARMFUL"
 --- @return boolean
@@ -396,7 +396,7 @@ end
 ---
 --- KNOWN LIMITATION, accepted deliberately by the owner (issue #11, 2026-09-20): on a FRIENDLY target
 --- or focus BUFF container, Uncategorized Show no longer rescues an unlisted buff from another
---- category's Hide the way fix round 1 made it do on the player. The rescue is genuinely lost, and
+--- category's Hide the way it does on the player. The rescue is genuinely lost, and
 --- losing a niche rescue beats defeating every Hide by default. The top-of-file comment carries the
 --- same note, along with the latent pre-#11 bug this closes on a hostile target.
 --- @param unit string|nil  the container's unit (core/Constants.lua C.UNITS)
@@ -614,8 +614,8 @@ end
 --- categories is drawn once, under the first) and the whitelist. `uncategorized` (U-3) rides this
 --- loop like any other shown category when `hasUnion` — `includeCategory` gives it the complement
 --- exclude instead of a positive include, and needs no special dedup of its own since it is always
---- last (U-1) — but contributes NO group at all when `hasUnion` is false (fix round 3, generalized to
---- the unit by issue #11): with no union, or with a unit whose spell-id filters the engine may
+--- last (U-1) — but contributes NO group at all when `hasUnion` is false (gated on the unit as well
+--- since issue #11): with no union, or with a unit whose spell-id filters the engine may
 --- discard, the group's one constraint is absent or thrown away, every aura trivially qualifies, and
 --- the unrestricted group left over would draw everything and defeat every other category's Hide (the
 --- top-of-file comment has the concrete proof for both paths). Skipping it here is
@@ -650,8 +650,8 @@ end
 --- top-of-file comment for why shipping both would either double-draw what `uncategorized`'s own
 --- group already covers, or ship a group that could never match. That is not every time an
 --- `uncategorized` category exists for the aura type, though: wherever `hasUnion` is false with it
---- Shown (an empty union, or a unit whose ids the engine is not CERTAIN to apply — fix round 3,
---- generalized to the unit by issue #11), it does NOT supersede the catch-all, so `cats.shown`
+--- Shown (an empty union, or a unit whose ids the engine is not CERTAIN to apply, the unit half since
+--- issue #11), it does NOT supersede the catch-all, so `cats.shown`
 --- genuinely can contain that kind here — `excludeGuarded`'s own no-op guard is what keeps this
 --- group correct in that case (it contributes no exclusion, exactly as a category with no id list
 --- of its own should).
@@ -679,10 +679,10 @@ end
 ---     rescue anything when nothing is hiding, so the per-shown-category groups below would be pure
 ---     cost — this is what keeps a default container at one group.
 ---   * Otherwise (R-4): `addShownGroups` plus `addCatchAllGroup` (R-5) — unless `uncategorized`
----     actually supersedes the catch-all for this compile (fix round 1, corrected fix round 3): Hide
+---     actually supersedes the catch-all for this compile: Hide
 ---     always does (whatever `hasUnion` is); Show does only when `hasUnion` is true, since a Show
 ---     that contributes no group of its own (`addShownGroups`) has nothing to supersede the catch-all
----     WITH. Fix round 2 retired the per-container "Only these categories" toggle (`D8`) that used to
+---     WITH. Batch 7 retired the per-container "Only these categories" toggle (`D8`) that used to
 ---     drop the catch-all on its own: once `uncategorized` does that correctly, the toggle had
 ---     nothing left to do.
 ---
@@ -701,7 +701,7 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     -- BOTH halves, and the first one is the one that is easy to drop. `uncategorized`'s Show group is
     -- made of nothing but an `excludeSpellIDs` of the union, so a union the engine MIGHT discard buys
     -- exactly as little as no union at all — it ships a group with no effective constraint, which
-    -- draws every aura and neuters every Hide on the tab (fix round 3's failure; issue #11's `hardCC`
+    -- draws every aura and neuters every Hide on the tab (the empty-union failure; issue #11's `hardCC`
     -- and `softCC` are what let a debuff container reach it, and a hostile-target BUFF container has
     -- reached it since long before #11). Hence `IdsAlwaysHonored`, the CERTAIN predicate, and not the
     -- CAN-ever `IdsHonored` the warning prints from: on a `target` the answer changes under the
@@ -837,7 +837,7 @@ function FC.ClaimingCategories(Categories, auraType, filter, categorySpells, id)
 end
 
 --- `auraType`'s `uncategorized` category def, or nil (a future aura type that never gets one). Both
---- HELPFUL and HARMFUL carry one as of fix round 3 (defaults/Categories.lua's KINDS doc). Unlike
+--- HELPFUL and HARMFUL carry one (defaults/Categories.lua's KINDS doc). Unlike
 --- `token`/`flag`/`dispel`, this one needs no guess: whether `id` is on any `spells`-kind list is
 --- exactly what `FC.ClaimingCategories` (empty `claiming`) already answers, so `ExplainSpell` can report
 --- it with the same confidence as a spells-kind category.
@@ -850,19 +850,19 @@ local function uncategorizedDef(Categories, auraType)
 end
 
 --- `ExplainSpell`'s rank-5 case: `id` is on no `spells`-kind list. Mirrors `addCategoryGroups`'
---- asymmetry (fix round 3) exactly, because the two must never disagree about what the compiled plan
+--- asymmetry exactly, because the two must never disagree about what the compiled plan
 --- actually draws:
 ---   * Hide, whatever `hasUnion` is: rank 4 — `addCategoryGroups` suppresses the catch-all outright
 ---     on Hide regardless, so nothing is left to draw an aura that reaches here.
 ---   * Show with `hasUnion` true: rank 3 — a real rescuing group, same as any other Show.
 ---   * Show with `hasUnion` false, or no `uncategorized` category at all (should not arise
----     post round 3, but a future shape might): the row contributes NO group of its own
+---     today, but a future shape might): the row contributes NO group of its own
 ---     (`addShownGroups`) and does not supersede the catch-all (`addCategoryGroups`), so it decides
 ---     nothing — this falls through to the ordinary rank 5, exactly as if the row did not exist. No
 ---     category is named in either rank-5 branch (a `token`/`flag`/`dispel` guess is never made —
 ---     see `ExplainSpell`'s comment).
 ---
---- THE APPROXIMATION (review, item 6): the Hide branch's "hidden, rank 4" is confident about
+--- THE APPROXIMATION: the Hide branch's "hidden, rank 4" is confident about
 --- `uncategorized` itself, but NOT about the aura as a whole — `id` might still genuinely belong to a
 --- Shown `token`/`flag`/`dispel` category the addon cannot check from a bare id (the same silence
 --- `ExplainSpell`'s own comment already names), in which case rank 3 there would actually draw it and
@@ -895,7 +895,7 @@ end
 --- an aura in no category is drawn — nothing removed it — unless the aura type carries its own
 --- `uncategorized` category, whose own state then decides it instead (`explainUncategorized`) — a
 --- real rescue on Show only under the same `hasUnion` the compiler gates on, both halves of it
---- (fix round 3's asymmetry, gated on the unit by issue #11): a container whose union is empty, or
+--- (the asymmetry, gated on the unit by issue #11): a container whose union is empty, or
 --- whose unit and aura type leave the engine free to discard spell ids, compiles no rescuing group,
 --- and an explanation that named one would describe a group the plan does not contain. Pure,
 --- like `Compile`: no frames, no database, `cfg`/`id`/`ctx` in, a table out — `FC.ProfileContext()`

@@ -195,7 +195,7 @@ end
 
 --- Under Placement: what Center does to a template of more than one piece (feedback #1): it stacks
 --- the fields in rows and leaves plain text out (modules/Style_Text.lua's layoutStack). One row reads
---- singular (fix round 1): a literal-plus-one-field template (`Buff: $spellname$`) is Stacked but has
+--- singular: a literal-plus-one-field template (`Buff: $spellname$`) is Stacked but has
 --- only one field row.
 local function centerNote(ctx, cfg)
     local s = cfg.text or {}
@@ -225,7 +225,7 @@ end
 
 --- Choose built-in `key` for container `id`: its template, then the justify it needs (Center for the
 --- centered one; Left for any other when the stored justify is Center), each through the write seam,
---- both under one `NS.Bulk.Run` bracket (final review) so a pick that touches both -- Centered picked
+--- both under one `NS.Bulk.Run` bracket so a pick that touches both -- Centered picked
 --- from a Left template, or the reverse -- applies once, as Show all / Hide all already do
 --- (`settings/Filters.lua`'s `setGrid`), rather than drawing an intermediate mismatched frame.
 local function pickBuiltin(cfg, id, key)
@@ -293,8 +293,8 @@ end
 --- WoW `|r` restores the wrapping color it is nested in, not just white.
 ---
 --- `PreviewLine` joins a Center-stacked template's rows with `"\n"`, which suited the old Preview
---- LABEL (it wraps), but a single-line WoW EditBox does not lay a `\n` out as a break (final review,
---- Task 20/8 interaction). Controller ruling: join stacked rows with a visible `" / "` instead, inside
+--- LABEL (it wraps), but a single-line WoW EditBox does not lay a `\n` out as a break.
+--- Controller ruling: join stacked rows with a visible `" / "` instead, inside
 --- the same font-color wrap, so "Centered: name over time" reads "Ignore Pain / 11s".
 --- `gray` (the page drawn disabled) takes the font color off the line and reads it in the notes'
 --- gray instead: the container's own bright font color on an inert tab was the loudest thing on it.
