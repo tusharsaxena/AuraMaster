@@ -10,8 +10,8 @@ marked as such rather than listed as a requirement.
 | Group | Who needs it | Short answer |
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
-| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). **Python 3** only if you run the spell-research generator. |
-| Release / assets | Nobody, locally | None. |
+| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
+| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
 
 ## Runtime (in-game) — what a player needs
 
@@ -45,8 +45,6 @@ marked as such rather than listed as a requirement.
 | `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:195` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/vendor_sync.lua:371` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:169` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:68`, `:80` and `:93` (`sed`), `:80` and `:165` (`grep`), `:100` (`date`), `:77` (`head`), `:80` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
 | POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:41` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
-| `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the Hard CC / Soft CC spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
-| a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
 | POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, which `lua tests/run.lua` uses by default (`jobs = "auto"`; `-j N` overrides); `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
@@ -98,7 +96,8 @@ git -C ../LibKa0s rev-parse --short v1.55.0   # verify: prints a commit
 
 - **LuaFileSystem.** Not used; the kit lists directories by shelling out. `luacheck` pulls it in for
   itself, which is LuaRocks' business rather than this addon's.
-- **Any Python package.** `tools/spell-research/research.py` is standard library only, on purpose:
+- **Any pip-installed Python package.** Pillow, the one Python package here, comes from apt (Release /
+  assets, above). `tools/spell-research/research.py` is standard library only, on purpose:
   Ubuntu 24.04 marks its Python EXTERNALLY-MANAGED (PEP 668), so a single `pip install` in that
   generator would have dragged a virtualenv or a pipx recipe into a tool that runs a handful of
   times per expansion. The complexity suite's `lizard` is installed through pipx (above) and is a
@@ -110,9 +109,25 @@ git -C ../LibKa0s rev-parse --short v1.55.0   # verify: prints a commit
 
 ## Release / assets
 
-**None.** This addon is packaged from the committed tree. `.pkgmeta` sets `package-as: AuraMaster`
-with no `externals:` block, and nothing is generated at build time. **None of this group is required
-to build, run or test the addon.**
+This addon is packaged from the committed tree. `.pkgmeta` sets `package-as: AuraMaster` with no
+`externals:` block, and nothing is generated at build time. This group is what it takes to
+*regenerate* a committed asset: the spell-research data and the 128 icon. **None of this group is
+required to build, run or test the addon.**
+
+| Tool | Version | Needed for | Evidence |
+|---|---|---|---|
+| `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the Hard CC / Soft CC spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
+| a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
+| Pillow (`python3-pil`) | any recent | regenerating the 128 icon TGA (below) | the recipe below does `from PIL import Image` |
+
+```sh
+# Python 3 ships with Ubuntu; Pillow comes from apt (PEP 668 rules out a bare pip install)
+sudo apt-get install -y python3 python3-pil
+
+# verify
+python3 --version                                  # Python 3.8 or newer
+python3 -c 'import PIL; print(PIL.__version__)'    # prints a version
+```
 
 - **The logo is committed in every form, and TWO of them are loaded.** `auramaster.logo.tga` is
   the settings panel's landing-page art (`C.LOGO_PATH`, `core/Constants.lua:25`) and
