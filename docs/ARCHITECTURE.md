@@ -216,7 +216,7 @@ The surfaces this added, all read by name rather than duplicated:
 | `FC.ClaimingCategories(Cat, auraType, filter, edits, id)` | Which categories hold a spell id — `ExplainSpell`'s own answer, published so the overlap guardrail cannot drift from it |
 | `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker, muted gold included, that both surfaces read, the restore ACT behind the button's absence, and the Filters page's per-row link |
 
-The addon holds two pieces of named non-setting state (architecture-§5). The first is learned
+The addon holds three pieces of named non-setting state (architecture-§5). The first is learned
 data that no control sets and no row addresses.
 
 - **Storage key:** `global.timedSpells` (`db.global.timedSpells`), `[spellId] = true` for every buff
@@ -242,6 +242,17 @@ capture ring. No control sets it and no row addresses it.
   finished capture, drops the oldest record once the ring holds more than ten (the library's
   `DEFAULT_RING`, since this addon sets no `ring`), and discards a ring stored under an older record
   schema. No addon code writes it, and no verb clears it.
+
+The third is the minimap button's position, which a vendored library writes into a table the addon
+hands it. No control sets it and no row addresses it.
+
+- **Storage key:** `global.minimap.minimapPos` in the table `core/LauncherSetup.lua` hands out,
+  `db.global.minimap`, the same account-wide table as the Minimap button row's `hide`, so a profile
+  switch, copy or reset never touches it (launcher-§3).
+- **Owner:** `core/LauncherSetup.lua`, which hands `db.global.minimap` to `LibKa0s-Launcher-1.0` as the
+  descriptor's `minimap` field, resolved at call time (core/LauncherSetup.lua:104).
+- **Writers:** LibDBIcon-1.0, when the player drags the button, reached through the LibKa0s-Launcher
+  seam, and nothing else. No addon code writes it, and no verb or reset clears it.
 
 SavedVariables shape, every default and the migration path: `docs/schema.md`.
 
