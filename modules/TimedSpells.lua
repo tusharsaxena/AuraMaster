@@ -13,7 +13,7 @@ local _, NS = ...
 -- HOW IT LISTENS. The gate events go through AceEvent on this file's own target. UNIT_AURA cannot:
 -- the vendored AceEvent still has no RegisterUnitEvent, and through AceEvent UNIT_AURA would arrive
 -- for every unit, raid members and nameplates included. So UNIT_AURA takes events-frames-taint-§1's
--- one permitted private frame: TS.unitFrame, registered with RegisterUnitEvent for "player" and "pet"
+-- unit-filter frame carve-out: TS.unitFrame, registered with RegisterUnitEvent for "player" and "pet"
 -- only, so the client filters every other unit out before Lua is entered. The carve-out's MUSTs, and
 -- where each is met: the frame is HELD ON THE MODULE (TS.unitFrame, built once, lazily, by the first
 -- gate opening); it is UNREGISTERED IN THE DISABLE PATH by hand (TS.Stop, which the stand-down runs,

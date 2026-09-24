@@ -225,7 +225,7 @@ test("disabled: every registration the addon owns is UNREGISTERED, not gated", f
 end)
 
 test("disabled: TimedSpells' private unit frame is in the census while enabled and gone when disabled", function()
-    -- The one permitted private frame (events-frames-taint-§1): UNIT_AURA for player and pet, on a
+    -- The unit-filter frame (events-frames-taint-§1's carve-out): UNIT_AURA for player and pet, on a
     -- frame AceEvent's UnregisterAllEvents never reaches, so the stand-down must drop it by hand.
     -- No starter uses the "only without a duration" mode, so the case turns it on first.
     local NS, mocks = baseline()
