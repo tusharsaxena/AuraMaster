@@ -62,7 +62,10 @@ local function captureSteps(NS, into)
     NS.Debug = function(tag, fmt, ...)
         if tag == "Migrate" then
             local line = fmt:format(...)
-            if line:match("^v%d+ %-> v%d+$") then into[#into + 1] = line end
+            if line:match("^v%d+ %-> v%d+$") then
+                local n = #into
+                into[n + 1] = line
+            end
         end
     end
 end
@@ -116,7 +119,10 @@ test("migrations: every step is idempotent on a fresh default profile", function
     NS.db.sv.profiles = { Fresh = freshProfile }
     local before = NS.Database.DeepCopy(freshProfile)
     local printed = {}
-    NS.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
+    NS.Print = function(...)
+        local n = #printed
+        printed[n + 1] = table.concat({ ... }, " ")
+    end
     for _ = 1, 2 do
         NS.db.global.schemaVersion = 0
         NS.RunMigrations()
@@ -130,7 +136,10 @@ end)
 test("migrations: a step that raises leaves the stamp where it was and the addon loads", function()
     local NS = fresh()
     local printed, steps = {}, {}
-    NS.Printf = function(fmt, ...) printed[#printed + 1] = fmt:format(...) end
+    NS.Printf = function(fmt, ...)
+        local n = #printed
+        printed[n + 1] = fmt:format(...)
+    end
     captureSteps(NS, steps)
     local real = NS.Database.MigrateV4
     NS.Database.MigrateV4 = function() error("boom") end
