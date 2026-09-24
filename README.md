@@ -25,8 +25,7 @@ Master* in Titan Panel, Bazooka or ElvUI's data texts if you use one.
 
 ## Screenshots
 
-No screenshots yet. They'll come before the first release, taken in the game itself: a bar
-container, an icon container, an unlocked container with its handle, and each settings page.
+No screenshots yet. They have to be taken in the game, and that work is tracked in [issue #3](https://github.com/tusharsaxena/AuraMaster/issues/3).
 
 ## Usage
 
