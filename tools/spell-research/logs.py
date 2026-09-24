@@ -10,6 +10,10 @@ Subcommands:
     propose  Read evidence.json, the DB2 tables and the shipped categories, and write the bundle:
              the per-spec aura dictionary and the review set (CORRECTIONS.md,
              PROPOSED_ADDITIONS.md, FLAGS.md, ... and proposals.json, the review queue).
+    decide   Record the owner's ruling on one proposal key of a bundle in decisions.json
+             (accept / reject / move into a chosen category); the only writer of that file.
+    apply    Apply the bundle's ruled proposals to defaults/Categories.lua (the only writer of
+             that file; unruled proposals are left alone) and write the bundle's DECISIONS.md.
 
 The per-log cache and its salt live outside the repo (default
 ~/.cache/auramaster-spell-research/). Python 3.8+ standard library only.
@@ -26,6 +30,7 @@ if str(HERE) not in sys.path:
 
 import research  # noqa: E402
 import sid_cache  # noqa: E402
+import sid_decide  # noqa: E402
 import sid_propose  # noqa: E402
 
 DEFAULT_LOGS = Path("/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive")
@@ -80,19 +85,11 @@ def _shown(path):
 
 def load_decisions(path):
     # type: (Path) -> dict
-    """{proposal key: ruling} from decisions.json; {} when the file does not exist yet.
-
-    Accepts the flat {key: ruling} form and a {"decisions": {key: ruling}} wrapper.
-    """
-    path = Path(path)
-    if not path.exists():
-        return {}
-    doc = json.loads(path.read_text(encoding="utf-8"))
-    if isinstance(doc, dict) and isinstance(doc.get("decisions"), dict):
-        return doc["decisions"]
-    if not isinstance(doc, dict):
-        raise SystemExit("logs.py: %s is not a JSON object of rulings" % path)
-    return doc
+    """{proposal key: ruling entry} from decisions.json (sid_decide's reader); {} when missing."""
+    try:
+        return sid_decide.load_decisions(path)
+    except ValueError as exc:
+        raise SystemExit("logs.py: %s" % exc)
 
 
 def _aura_ids(agg, aura_type):
@@ -166,6 +163,59 @@ def cmd_propose(args):
     return 0
 
 
+def _bundle_queue(bundle):
+    # type: (Path) -> dict
+    path = Path(bundle) / "proposals.json"
+    if not path.exists():
+        raise SystemExit("logs.py: no proposals at %s; run `logs.py propose` first" % path)
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    return {"date": doc.get("date") or "", "proposals": list(doc.get("proposals") or [])}
+
+
+def cmd_decide(args):
+    if not research.DATE_RE.match(args.date or ""):
+        raise SystemExit("logs.py decide: --date must be YYYY-MM-DD, got %r" % args.date)
+    queue = _bundle_queue(args.bundle)
+    if args.key not in {p["key"] for p in queue["proposals"]}:
+        raise SystemExit("logs.py decide: %s is not a proposal key in %s"
+                         % (args.key, Path(args.bundle) / "proposals.json"))
+    if args.ruling == "move" and not args.category:
+        raise SystemExit("logs.py decide: a move ruling needs --category")
+    if args.category:
+        import sid_db2
+        known = [cat["key"] for cat in sid_db2.shipped_categories(Path(args.categories))]
+        if args.category not in known:
+            raise SystemExit("logs.py decide: --category %s is not a `spells` category of %s "
+                             "(known: %s)" % (args.category, args.categories, ", ".join(known)))
+    try:
+        entry = sid_decide.record(args.decisions, args.key, args.ruling, category=args.category,
+                                  reason=args.reason, date=args.date)
+    except ValueError as exc:
+        raise SystemExit("logs.py decide: %s" % exc)
+    print("Recorded %s%s for %s in %s"
+          % (entry["ruling"], " -> %s" % entry["category"] if entry.get("category") else "",
+             args.key, args.decisions))
+    return 0
+
+
+def cmd_apply(args):
+    queue = _bundle_queue(args.bundle)
+    decisions = load_decisions(args.decisions)
+    ruled = [p for p in queue["proposals"] if p["key"] in decisions]
+    pending = len(queue["proposals"]) - len(ruled)
+    try:
+        changes = sid_decide.apply(Path(args.categories), decisions, ruled, _shown(args.bundle))
+    except ValueError as exc:
+        raise SystemExit("logs.py apply: %s" % exc)
+    md = sid_decide.write_decisions_md(Path(args.bundle), queue["date"], decisions,
+                                       queue["proposals"], changes)
+    for change in changes:
+        print(change)
+    print("Applied %d ruled proposals to %s: %d line changes; %d not yet ruled. Wrote %s"
+          % (len(ruled), args.categories, len(changes), pending, md))
+    return 0
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="logs.py", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="command", metavar="command")
@@ -202,6 +252,33 @@ def build_parser():
     prop.add_argument("--min-players", type=int, default=sid_propose.DEFAULT_MIN_PLAYERS,
                       help="evidence bar: distinct players (default: %(default)s)")
     prop.set_defaults(func=cmd_propose)
+
+    dec = sub.add_parser("decide", help="record the owner's ruling on one proposal")
+    dec.add_argument("--bundle", type=Path, required=True,
+                     help="bundle folder holding proposals.json")
+    dec.add_argument("--key", required=True, help="the proposal key (proposals.json `key`)")
+    dec.add_argument("--ruling", required=True, choices=sid_decide.RULINGS,
+                     help="accept, reject (suppressed for good), or move (into --category)")
+    dec.add_argument("--category", default=None,
+                     help="the category to put it in instead (required for move)")
+    dec.add_argument("--reason", default="", help="optional reason, kept with the ruling")
+    dec.add_argument("--date", required=True,
+                     help="the ruling's date, YYYY-MM-DD (required; never taken from the clock)")
+    dec.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
+                     help="the owner's rulings (default: tools/spell-research/decisions.json)")
+    dec.add_argument("--categories", type=Path, default=DEFAULT_CATEGORIES,
+                     help="the shipped categories, to check --category (default: "
+                          "defaults/Categories.lua)")
+    dec.set_defaults(func=cmd_decide)
+
+    app = sub.add_parser("apply", help="apply the bundle's ruled proposals to Categories.lua")
+    app.add_argument("--bundle", type=Path, required=True,
+                     help="bundle folder holding proposals.json; DECISIONS.md is written there")
+    app.add_argument("--categories", type=Path, default=DEFAULT_CATEGORIES,
+                     help="the file to rewrite (default: defaults/Categories.lua)")
+    app.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
+                     help="the owner's rulings (default: tools/spell-research/decisions.json)")
+    app.set_defaults(func=cmd_apply)
     return p
 
 
