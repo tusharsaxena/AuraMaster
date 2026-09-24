@@ -24,6 +24,12 @@ local print = NS.Print
 local printf = NS.Printf
 
 local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
+-- The refusal line's format, byte for byte the library's DISABLED_LINE_FORMAT (slash-commands-§7),
+-- for the library-absent stub. Published as Sl.__stubDisabledLineFormat in BOTH builds so
+-- tests/test_surface_parity.lua compares it against the live major: the copy that could drift is
+-- falsifiable rather than trusted.
+local STUB_DISABLED_LINE_FORMAT = "%s is disabled \226\128\148 enable it with |cFFFFFF00%s|r"
+Sl.__stubDisabledLineFormat = STUB_DISABLED_LINE_FORMAT
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
 local cli
 
@@ -198,9 +204,14 @@ end
 -- The master switch, through the same seam as General → Master controls' "Enable Aura Master" and
 -- `/am set enabled`: the [Set] line, CONFIG_CHANGED and the visibility pass. Not refused in combat —
 -- the pass flips each engine through its own SetEnabled, which is combat-legal.
+--
+-- The latch is synced HERE as well as in the row's onChange: idempotent on the live path, where the
+-- row's onChange already ran, and required without LibKa0s, where the path is a writeThrough one
+-- with no row and so no onChange (settings/Schema.lua, NS.WRITE_THROUGH).
 function runEnabled(on)
     local ok, err = NS.SetByPath("enabled", on)
     if not ok then return print(err) end
+    NS.SyncEnabled()
     echo("enabled", on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
 end
 
@@ -368,8 +379,9 @@ if not SlashLib then
 
     function SlashLib.New(_, d)
         local stub = { SetRowAnnotator = function() end }
+        -- The library-absent line, one sentence through the locale (WS-02).
         local function absent(verb)
-            return function() printf(L["/am %s is unavailable. %s."], verb, NS.LIBKA0S_MISSING) end
+            return function() printf(L["%s is unavailable: the LibKa0s library did not load."], "/am " .. verb) end
         end
         for _, verb in ipairs({ "List", "Get", "Set", "Reset" }) do
             stub["Cli" .. verb] = absent(verb:lower())
@@ -392,13 +404,13 @@ if not SlashLib then
                 if e[1] == name then return e end
             end
         end
-        -- The refusal line, spelled as the library spells it (slash-commands-§7) rather than as a
-        -- second wording invented for the library-less build. Plain text plus the one gold command.
+        -- The refusal line, in the library's exact bytes (slash-commands-§7): the file-level
+        -- STUB_DISABLED_LINE_FORMAT, which tests/test_surface_parity.lua pins to the live major's
+        -- DISABLED_LINE_FORMAT. Plain text plus the one gold command.
         local live = {}
         for _, name in ipairs(d.liveVerbs or {}) do live[name] = true end
         stub.DisabledLine = function()
-            return ("%s is disabled \226\128\148 enable it with |cFFFFFF00%s enable|r")
-                :format(tostring(d.brandName or d.slash), d.slash)
+            return STUB_DISABLED_LINE_FORMAT:format(tostring(d.brandName or d.slash), d.slash .. " enable")
         end
         stub.OnSlash = function(_, msg)
             local raw = (msg or ""):match("^%s*(.-)%s*$") or ""

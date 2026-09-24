@@ -366,7 +366,6 @@ test("options: the degraded stub completes the load — every page's rows still 
         assertEqual(type(NS2.Helpers[member]), "function", member)
     end
     assertEqual(NS2.Helpers.MASTER_GROUP, "Master controls")
-    assertEqual(#NS2.Schema, #NS.Schema, "the degraded schema has every row the live one has")
     local lines = {}
     rawset(m2.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
         lines[#lines + 1] = tostring(msg)
@@ -378,6 +377,55 @@ test("options: the degraded stub completes the load — every page's rows still 
     assertTrue(count >= 1 and count <= 2, "at most the one-time notice and the refusal")
     local last = lines[count] or ""
     assertTrue(last:find("settings panel is unavailable", 1, true) ~= nil, last)
+end)
+
+--- A full load whose Options instance records every row its five composers answer, so the rows the
+--- library-absent build lacks are DERIVED from what the live composers emitted, never typed.
+local COMPOSERS = { "ColorPair", "FontGroup", "BorderGroup", "BarGroup", "MasterControls" }
+local function loadRecordingComposers()
+    local Loader     = dofile("tests/_kit/loader.lua")
+    local buildMocks = dofile("tests/wow_mock.lua")
+    Loader.addonName = "AuraMaster"
+    local m, NS3, composed = buildMocks(), {}, {}
+    Loader.loadAll(Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml"), NS3, m)
+    local lib = m.LibStub("LibKa0s-Options-1.0")
+    local new = lib.New
+    lib.New = function(self, d)
+        local inst = new(self, d)
+        for _, name in ipairs(COMPOSERS) do
+            local compose = inst[name]
+            inst[name] = function(...)
+                local rows, tail = compose(...)
+                for _, row in ipairs(rows) do composed[row.path] = name end
+                return rows, tail
+            end
+        end
+        return inst
+    end
+    Loader.loadAll(Loader.tocFiles("AuraMaster.toc"), NS3, m)
+    lib.New = new
+    return NS3, composed
+end
+
+test("options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)", function()
+    local NS2 = loadDegraded()
+    local NS3, composed = loadRecordingComposers()
+    local nComposed = 0
+    for _ in pairs(composed) do nComposed = nComposed + 1 end
+    assertTrue(nComposed > 0, "the recording load saw the composers emit rows")
+    local full, degraded = #NS3.Schema, #NS2.Schema
+    -- The full-load count: the recording load registers what the shared suite's load registers.
+    assertEqual(full, #NS.Schema, "the full-load row count")
+    -- red under: a non-empty stub composer
+    assertEqual(degraded, full - nComposed, "the library-absent row count")
+    local have = {}
+    for _, row in ipairs(NS2.Schema) do have[row.path] = true end
+    for _, row in ipairs(NS3.Schema) do
+        -- The delta, by name: every row the library-absent build lacks is a composed one, and no
+        -- composed row survived into it.
+        assertEqual(not have[row.path], composed[row.path] ~= nil, "row " .. tostring(row.path))
+    end
+    assertEqual(NS2.ValidateSchema(), 0, "the smaller schema still validates")
 end)
 
 test("options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)", function()

@@ -186,97 +186,31 @@ local descriptor = {
 -- it never carries is a copy of the library: no widget maker's body, no flow engine, no header, no
 -- LAYOUT or composer constant, no AceGUI, no media lister.
 --
--- The composers reproduce the STORED SURFACE only — one row per canonical leaf at the path the live
--- composer derives, with its type. Labels, ranges and media sources are read by widgets, and this
--- build has none. tests/test_surface_parity.lua pins the member set against the live instance;
--- tests/test_optionssetup.lua pins the schema row count.
+-- The composers answer AN EMPTY ROW LIST (options-ui-§1, v2.64.0 of the standard): the page files
+-- finish loading and register their own hand-written rows, and every composed block is simply absent
+-- from this build's schema. A host copy of a composed block here is anti-pattern #73 -- the copy
+-- that drifts from the library it stands in for. The two master paths the host verbs still write,
+-- `enabled` and `locked`, reach the seam through settings/Schema.lua's NS.WRITE_THROUGH instead of
+-- through a row (route (a)); `/am set` on any composed path answers the library-absent line.
+-- tests/test_surface_parity.lua pins the member set against the live instance;
+-- tests/test_optionssetup.lua pins the full count, the library-absent count and the named delta.
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
     NS.Helpers = Helpers
 
-    local function composeBlock(leaves, spec)
-        spec = spec or {}
-        local keys, omit = spec.keys or {}, spec.omit or {}
-        local rows = {}
-        for _, leaf in ipairs(leaves) do
-            if not omit[leaf.leaf] then
-                local row = {
-                    path = leaf.path or ((spec.prefix or "") .. (keys[leaf.leaf] or leaf.leaf)),
-                    page = spec.page, group = spec.group, subgroup = spec.subgroup,
-                    type = leaf.type, sessionOnly = leaf.sessionOnly,
-                }
-                rows[#rows + 1] = row
-            end
-        end
-        for _, extra in ipairs(spec.extra or {}) do
-            local row = {}
-            for k, v in pairs(extra) do row[k] = v end
-            row.page, row.group, row.subgroup = spec.page, spec.group, spec.subgroup
-            rows[#rows + 1] = row
-        end
-        return rows
-    end
+    -- Every composer answers an empty row list: the composed block is the library's, and a build
+    -- without the library has none (options-ui-§1; a copy here is anti-pattern #73).
+    local function noRows() return {} end
+    Helpers.ColorPair   = noRows
+    Helpers.FontGroup   = noRows
+    Helpers.BorderGroup = noRows
+    Helpers.BarGroup    = noRows
 
-    Helpers.ColorPair = function(spec)
-        spec = spec or {}
-        local key = spec.key or "color"
-        local companion = spec.companionKey or ("useClassColor" .. key:sub(1, 1):upper() .. key:sub(2))
-        return composeBlock({ { leaf = key, type = "color" }, { leaf = companion, type = "bool" } }, spec)
-    end
-    Helpers.FontGroup = function(spec)
-        return composeBlock({
-            { leaf = "font", type = "string" }, { leaf = "fontSize", type = "number" },
-            { leaf = "fontColor", type = "color" }, { leaf = "useClassColorFont", type = "bool" },
-            { leaf = "fontFlags", type = "string" }, { leaf = "fontShadow", type = "bool" },
-        }, spec)
-    end
-    Helpers.BorderGroup = function(spec)
-        spec = spec or {}
-        local leaves = {
-            { leaf = "borderStyle", type = "string" }, { leaf = "borderSize", type = "number" },
-            { leaf = "borderColor", type = "color" }, { leaf = "useClassColorBorder", type = "bool" },
-        }
-        if spec.show then table.insert(leaves, 1, { leaf = "borderShow", type = "bool" }) end
-        return composeBlock(leaves, spec)
-    end
-    Helpers.BarGroup = function(spec)
-        return composeBlock({
-            { leaf = "barTexture", type = "string" }, { leaf = "barAlpha", type = "number" },
-            { leaf = "barColor", type = "color" }, { leaf = "useClassColorBar", type = "bool" },
-        }, spec)
-    end
-
-    -- The literal options-ui-§15 mandates; the host uses it as the afterGroup key, so both paths
-    -- must answer it for the two schemas to match.
+    -- The literal options-ui-§15 mandates; settings/General.lua reads it by name, so both builds
+    -- answer it.
     Helpers.MASTER_GROUP = "Master controls"
-    Helpers.MasterControls = function(spec)
-        spec = spec or {}
-        local omit = {}
-        for k in pairs(spec.omit or {}) do omit[k] = true end
-        if spec.frameless then omit.scale, omit.alpha, omit.locked = true, true, true end
-        -- The minimap leaf is emitted STORED rather than session-only, and the Test mode leaf
-        -- session-only, because the live composer emits them that way: a row this build left out is
-        -- a row `/am set` and the profile defaults would not know about, on the build whose panel
-        -- will not open.
-        local leaves = {
-            { leaf = "enabled", type = "bool" }, { leaf = "visibility", type = "string" },
-            { leaf = "scale", type = "number" }, { leaf = "alpha", type = "number" },
-            { leaf = "locked", type = "bool" },
-            { leaf = "debugConsole", type = "bool", sessionOnly = true,
-              path = spec.debugConsolePath or "state.debugConsole" },
-        }
-        if spec.minimapPath then
-            leaves[#leaves + 1] = { leaf = "minimap", type = "bool", path = spec.minimapPath }
-        end
-        if spec.testModePath then
-            leaves[#leaves + 1] = { leaf = "testMode", type = "bool", sessionOnly = true, path = spec.testModePath }
-        end
-        local rows = composeBlock(leaves,
-            { prefix = spec.prefix, page = spec.page, group = spec.group or Helpers.MASTER_GROUP,
-             subgroup = spec.subgroup, omit = omit, extra = spec.extra })
-        return rows, function() end
-    end
+    Helpers.MasterControls = function() return {}, function() end end
 
     -- Kept although it is reached at call time: `/am resetall` is a recovery path, and the player
     -- whose panel will not open is the one who needs it.

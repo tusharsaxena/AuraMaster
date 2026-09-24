@@ -57,6 +57,12 @@ local _, NS = ...
 
 NS.Schema = NS.Schema or {}
 
+-- THE WRITE-THROUGH PATHS (options-ui-§1, route (a)). Data only: the paths a HOST VERB writes
+-- (`/am enable`/`disable`, `/am lock`/`unlock`) whose rows the Master controls composer declares.
+-- Without LibKa0s that composer answers no rows, so these two paths have no row, and NS.SetByPath
+-- stores them raw rather than refusing them as unknown. A path with a row always takes the row.
+NS.WRITE_THROUGH = { enabled = true, locked = true }
+
 local SchemaLib = LibStub and LibStub("LibKa0s-Schema-1.0", true)
 
 -- ONE instance per addon, over the live NS.Schema array by reference (both the Options and Slash
@@ -65,6 +71,16 @@ local SchemaLib = LibStub and LibStub("LibKa0s-Schema-1.0", true)
 -- is the one that speaks.
 local S = SchemaLib and SchemaLib:New({
     rows  = NS.Schema,
+    -- The same list, handed to the library in its own array shape, so a future adoption of S.Set
+    -- inherits it (LibKa0s-Schema's `writeThrough`, read once here). Nothing calls S.Set today.
+    writeThrough = (function()
+        local out = {}
+        for path in pairs(NS.WRITE_THROUGH) do
+            table.insert(out, path)
+        end
+        table.sort(out)
+        return out
+    end)(),
     debug = function(...) if NS.Debug then return NS.Debug(...) end end,
     print = function(line) if NS.Print then NS.Print(line) end end,
 })
@@ -776,6 +792,21 @@ local function writeRow(row, path, value, containerId)
     return true, nil, id, value, old
 end
 
+--- A declared NS.WRITE_THROUGH path with no row (the library-absent build): stored raw, a copy, with
+--- no validate, normalize or onChange because there is no row to carry them; tallied inside a
+--- bracket, logged and announced like any other write. The caller reacts (settings/Slash.lua's
+--- runEnabled syncs the latch). Mirrors LibKa0s-Schema's writeThrough rows for this addon's seam.
+local function writeThrough(path, value, containerId)
+    local parts = splitPath(path)
+    local root, first = resolveRoot(parts, containerId)
+    if not root then return false, L["Setting not found: %s"]:format(path) end
+    local changed = inBulk() and changes(readFrom(root, parts, first), value)
+    writeInto(root, parts, first, copy(value))
+    if changed then tally(1) end
+    announceWrite(nil, nil, path, value, false, false)
+    return true
+end
+
 --- Write one setting. THE single write seam: the panel's widgets, `/am set`, `/am reset`, the
 --- Defaults buttons and a drag handle all land here. `containerId` targets a specific container
 --- instead of the active one.
@@ -795,7 +826,10 @@ function NS.SetByPath(path, value, containerId)
     if sec then return writeSection(path, value, containerId, sec) end
 
     local row = findRow(path)
-    if not row then return false, L["Setting not found: %s"]:format(path) end
+    if not row then
+        if NS.WRITE_THROUGH[path] then return writeThrough(path, value, containerId) end
+        return false, L["Setting not found: %s"]:format(path)
+    end
     local ok, err, id, stored, old = writeRow(row, path, value, containerId)
     if not ok then return false, err, id end
 
@@ -817,7 +851,11 @@ end
 --- normalize never refuses, so it is not run.
 local function checkRow(path, value, containerId)
     local row = findRow(path)
-    if not row then return false, L["Setting not found: %s"]:format(path) end
+    if not row then
+        -- A row-less write-through path is stored whenever its root resolves, as NS.SetByPath stores it.
+        if NS.WRITE_THROUGH[path] and resolveRoot(splitPath(path), containerId) then return true end
+        return false, L["Setting not found: %s"]:format(path)
+    end
     local root, id
     if not row.sessionOnly then
         local _

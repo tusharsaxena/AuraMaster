@@ -170,15 +170,17 @@ test("options descriptor: the degraded Reset all resets the profile whole and wa
     rawset(_G, "AuraMasterDB", nil)
     NS2.addon:OnInitialize()
     local walked = { 0 }
-    NS2.FindSchemaRow("alpha").onChange = function() walked[1] = walked[1] + 1 end
-    NS2.SetByPath("alpha", 0.5)
+    -- A hand-written profile row: the degraded build registers no composed one (options-ui-§1).
+    local PATH = "hideBlizzardBuffs"
+    NS2.FindSchemaRow(PATH).onChange = function() walked[1] = walked[1] + 1 end
+    NS2.SetByPath(PATH, true)
     walked[1] = 0
     local resets = counter(NS2.db, "ResetProfile")
     NS2.Helpers.RestoreAllDefaults()
-    -- red under: the stub's loop dropping the `not row.sessionOnly` veto (alpha is written, then discarded)
+    -- red under: the stub's loop dropping the `not row.sessionOnly` veto (the row is written, then discarded)
     assertEqual(walked[1], 0)
     assertEqual(resets[1], 1)
-    assertEqual(NS2.db.profile.alpha, 1)
+    assertEqual(NS2.db.profile[PATH], false)
 end)
 
 -- ── the banner, the picker, the page renderer ─────────────────────────────────────────────────
@@ -442,30 +444,22 @@ end)
 
 -- ── the degradation stub's composers ──────────────────────────────────────────────────────────
 
-test("options descriptor: the stub's composers emit the paths and types the live composers do", function()
+test("options descriptor: every stub composer answers an empty row list", function()
     local NS2 = loadDegraded()
-    local live = fresh().Helpers
     local SPECS = {
         { "ColorPair", { prefix = "p.", key = "barColor", page = "bars", group = "G" } },
-        { "ColorPair", { prefix = "p.", key = "tint", companionKey = "useTint", page = "bars", group = "G" } },
-        { "FontGroup", { prefix = "p.text.", page = "bars", group = "G", omit = { fontShadow = true } } },
-        { "BorderGroup", { prefix = "p.", page = "icons", group = "G", show = true } },
-        { "BorderGroup", { prefix = "p.", page = "icons", group = "G" } },
-        { "BarGroup", { prefix = "p.", page = "bars", group = "G", keys = { barTexture = "bgTexture" } } },
-        { "MasterControls", { prefix = "", page = "general", addonName = "Aura Master", frameless = true } },
+        { "FontGroup", { prefix = "p.text.", page = "bars", group = "G" } },
+        { "BorderGroup", { prefix = "p.", page = "icons", group = "G", show = true,
+                           extra = { { path = "p.extra", type = "bool" } } } },
+        { "BarGroup", { prefix = "p.", page = "bars", group = "G" } },
         { "MasterControls", { prefix = "", page = "general", addonName = "Aura Master",
-                              debugConsolePath = "state.console" } },
+                              minimapPath = "global.minimap.shown", testModePath = "state.testMode" } },
     }
-    local function shape(rows)
-        local out = {}
-        for i, r in ipairs(rows) do
-            out[i] = ("%s:%s%s"):format(tostring(r.path), tostring(r.type), r.sessionOnly and ":session" or "")
-        end
-        return table.concat(out, ",")
-    end
     for _, s in ipairs(SPECS) do
-        local want, got = shape((live[s[1]](s[2]))), shape((NS2.Helpers[s[1]](s[2])))
-        -- red under: a stub composer drifting from the live one (a leaf, an order, a key or an omission)
-        assertEqual(got, want, s[1])
+        local rows, tail = NS2.Helpers[s[1]](s[2])
+        -- red under: a host copy of a composed block in the stub (anti-pattern #73, options-ui-§1)
+        assertEqual(type(rows), "table", s[1])
+        assertNil(next(rows), s[1] .. " answered rows")
+        if s[1] == "MasterControls" then assertEqual(type(tail), "function", "MasterControls' tail") end
     end
 end)

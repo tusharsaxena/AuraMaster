@@ -43,7 +43,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:535-536`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:547-548`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:246`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
@@ -117,7 +117,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — `docs/schema.md`). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:790`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:821`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -333,8 +333,8 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:384` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:539` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:318` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:555` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:561` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), and a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end | none | `modules/ContainerManager.lua:584` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
@@ -343,7 +343,7 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:33`). Twenty-two verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-two verbs; `options` is an alias of `config`.
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
@@ -491,6 +491,15 @@ reparenting a Blizzard frame is refused under lockdown, so neither is attempted 
 stand-down holds that half pending and finishes it on `PLAYER_REGEN_ENABLED` — the one registration a
 disabled addon keeps — releasing it the moment it fires.
 
+**Without LibKa0s the switch still works.** The master switch's row comes from the Master controls
+composer, which answers no rows in a library-absent build (options-ui-§1). `enabled` and `locked` are
+therefore declared in `NS.WRITE_THROUGH` (`settings/Schema.lua`), and `NS.SetByPath` stores such a
+path raw when no row declares it, then logs and announces it; a path with a row always takes the row.
+With no row there is no onChange, so `runEnabled` (`settings/Slash.lua`) calls `NS.SyncEnabled()`
+after every successful write: idempotent on the live build, where the row's onChange already synced,
+and what moves the latch on the library-absent one. The same list is handed to the Schema instance as
+`writeThrough`, so a later adoption of the library's `Set` inherits it.
+
 **Standing up rebuilds from current state**, never from a snapshot taken on the way down: a setting
 changed while the addon was off is reflected when it comes back.
 
@@ -539,7 +548,7 @@ return value.
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:367`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:301`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
   page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header

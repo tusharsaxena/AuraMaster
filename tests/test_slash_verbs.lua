@@ -685,9 +685,29 @@ test("slash verbs: without the library each schema verb names what is missing, a
         local verb = cmd:match("^%a+")
         local p = slash(NS2, lines, cmd)
         -- red under: a stub Cli* verb answering nothing
-        assertTrue(said(p, "/am " .. verb .. " is unavailable. " .. NS2.LIBKA0S_MISSING .. "."), cmd .. ": " .. dump(p))
+        assertTrue(said(p, "/am " .. verb .. " is unavailable: the LibKa0s library did not load."), cmd .. ": " .. dump(p))
     end
     assertEqual(NS2.db.profile.alpha, 1)
+end)
+
+test("slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing", function()
+    local NS2, mocks = degraded()
+    local lines = capture(mocks)
+    local c = NS2.ActiveContainer()
+    local alpha = c.bars.barAlpha
+    -- The degraded printer names the missing library once, on the first line it ever prints
+    -- (core/CoreSetup.lua); spend it here so each line below stands alone.
+    slash(NS2, lines, "containers")
+    -- A composed row (the Bars page's BarGroup) that this build never registered, and the master
+    -- switch that the host verbs still reach through writeThrough: `/am set` is the library's verb,
+    -- so both answer the library-absent line (options-ui-§1), exactly once and alone.
+    for _, cmd in ipairs({ "set container.bars.barAlpha 0.5", "set enabled false" }) do
+        local p = slash(NS2, lines, cmd)
+        -- red under: the stub's CliSet reaching the seam
+        assertEqual(dump(p), "{/am set is unavailable: the LibKa0s library did not load.}", cmd)
+    end
+    assertEqual(c.bars.barAlpha, alpha, "the composed row is unchanged")
+    assertTrue(NS2.db.profile.enabled, "the switch is unchanged")
 end)
 
 test("slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so", function()

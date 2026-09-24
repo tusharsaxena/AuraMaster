@@ -100,13 +100,15 @@ test("bulklog: the degraded build's Reset all is one line in total, too", functi
     local NS2 = loadDegraded()
     rawset(_G, "AuraMasterDB", nil)
     NS2.addon:OnInitialize()
-    NS2.SetByPath("state.debugConsole", true)
+    -- A hand-written row: this build registers no composed one, the console's session row among
+    -- them (options-ui-§1).
+    NS2.SetByPath("hideBlizzardBuffs", true)
     local lines = capture(NS2)
     NS2.Helpers.RestoreAllDefaults()
-    -- red under: the stub's own loop logging the session row, or a bulk line beside the handler's
+    -- red under: the stub's own loop logging a row it walks, or a bulk line beside the handler's
     assertEqual(#lines, 1, dump(lines))
     assertEqual(lines[1], RESET_LINE)
-    assertFalse(NS2.DebugLog:IsShown())
+    assertFalse(NS2.db.profile.hideBlizzardBuffs)
 end)
 
 test("bulklog: Slash's CliResetAll, handed the same pair, is one [Set] reset all line", function()
@@ -348,17 +350,19 @@ test("bulklog: Bulk.Run stays silent only when its act sets info.profileReset, t
             rawset(_G, "AuraMasterDB", nil)
             NS2.addon:OnInitialize()
         end
-        NS2.SetByPath("alpha", 1)
+        -- A hand-written row, present in both builds: the degraded one has no composed rows.
+        local PATH = "hideBlizzardBuffs"
+        NS2.SetByPath(PATH, false)
         local lines = capture(NS2)
         NS2.Bulk.Run("reset", "whole", function(info)
-            NS2.SetByPath("alpha", 0.5)
+            NS2.SetByPath(PATH, true)
             info.profileReset = true
         end)
         -- red under: Run ignoring info.profileReset (the act logs beside the profile handler's line)
         assertEqual(#lines, 0, build .. ": " .. dump(lines))
-        assertEqual(NS2.db.profile.alpha, 0.5, build .. ": the write still happened, muted")
+        assertEqual(NS2.db.profile[PATH], true, build .. ": the write still happened, muted")
         NS2.Bulk.Run("reset", "returned", function()
-            NS2.SetByPath("alpha", 0.25)
+            NS2.SetByPath(PATH, false)
             return true
         end)
         -- red under: the host arm still reading fn's return as the signal

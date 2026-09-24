@@ -455,18 +455,21 @@ test("schema: without LibKa0s the host arm still answers", function()
     rawset(_G, "AuraMasterDB", nil)
     NS2.addon:OnInitialize()
     assertNil(NS2.SchemaRuntime, "no instance without the library")
-    assertTrue(NS2.SetByPath("alpha", 0.5))
-    assertEqual(NS2.db.profile.alpha, 0.5)
-    assertTrue(NS2.FindSchemaRow("alpha") ~= nil)
+    -- A hand-written row: the composed ones (Master controls' alpha among them) are absent from this
+    -- build (options-ui-§1).
+    local PATH = "hideBlizzardBuffs"
+    assertTrue(NS2.SetByPath(PATH, true))
+    assertEqual(NS2.db.profile[PATH], true)
+    assertTrue(NS2.FindSchemaRow(PATH) ~= nil)
     local lines = captureSet(NS2)
     NS2.Bulk.Run("copy", "degraded", function()
-        NS2.SetByPath("alpha", 0.25)
-        NS2.SetByPath("alpha", 0.25)                    -- no change: not counted
+        NS2.SetByPath(PATH, false)
+        NS2.SetByPath(PATH, false)                      -- no change: not counted
     end)
     assertEqual(table.concat(lines, " | "), "copy degraded: 1 rows")
     -- The act that reset the profile says so on `info`, the library's contract (JC-9).
     NS2.Bulk.Run("reset", "whole", function(info)
-        NS2.SetByPath("alpha", 0.5)
+        NS2.SetByPath(PATH, true)
         info.profileReset = true
     end)
     assertEqual(#lines, 1, "a profile reset act logs no bulk line")

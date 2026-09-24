@@ -46,7 +46,7 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
   banner; Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:334`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:350`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -750,11 +750,21 @@ pages, and the five `dispelColors.*` on General → Dispel Colors.
 With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-completing** stub
 (options-ui-§1): the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
 `MasterControls`) and `MASTER_GROUP` (every member a page file touches at file load), and a real
-`RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`), so
-every row still registers and `/am list|get|set` and the defaults keep working. Every other function
+`RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`). Every
+composer answers an **empty row list** (`MasterControls` answers `{}` and a no-op tail), so the page
+files finish loading and register their hand-written rows while every composed row (the Master
+controls block, the font, border, bar and color-pair blocks) is absent from that build's schema: a
+host copy of a composed block in the stub is anti-pattern #73. `/am set` on a composed path, like
+every schema verb in that build, prints the library-absent line (`/am set is unavailable: the LibKa0s
+library did not load.`). `/am enable`, `/am disable`, `/am lock` and `/am unlock` keep working: their
+two paths, `enabled` and `locked`, are declared in `NS.WRITE_THROUGH` (`settings/Schema.lua`), and
+`NS.SetByPath` stores a listed path that has no row raw, with no validate, normalize or onChange, then
+logs and announces it (route (a)); `runEnabled` syncs the latch itself. Every other function
 member of the live instance, this addon's decorations (`SelectContainer`, `ContainerHeader`,
 `RenderTabbedPage`, …) included, is carried as a no-op, so no call site finds a member missing
 (testing-§8); the library's layout and composer constants, `AceGUI` and `LSMValues` are not copied.
 The panel itself (`CreateOptionsPanel`, `OpenOptionsPanel`) answers one line naming the missing
-library. `tests/degraded_env.lua` builds that environment for the suite, and
-`tests/test_surface_parity.lua` compares its member set against the live instance.
+library. `tests/degraded_env.lua` builds that environment for the suite,
+`tests/test_surface_parity.lua` compares its member set against the live instance, and
+`tests/test_optionssetup.lua` pins the full row count, the library-absent count and the delta, derived
+from what the live composers emit.

@@ -231,18 +231,43 @@ test("slash: enable and disable are listed by /am help and on the landing page",
     end
 end)
 
-test("slash: the degraded stub still answers /am enable and /am disable", function()
+--- The library-absent environment, initialized so it has a database and containers.
+local function degraded()
     local NS2, mocks = dofile("tests/degraded_env.lua")()
-    local calls = recordSeam(NS2, function() return true end)
+    rawset(_G, "AuraMasterDB", nil)
+    NS2.addon:OnInitialize()
+    return NS2, mocks
+end
+
+test("slash: the degraded stub's /am disable and /am enable store the switch through writeThrough", function()
+    local NS2, mocks = degraded()
+    -- No composed row in this build: the path is reached through NS.WRITE_THROUGH alone.
+    assertNil(NS2.FindSchemaRow("enabled"), "the stub composer registered no enabled row")
     local lines = capture(mocks)
     NS2.Slash:OnSlash("disable")
+    -- red under: writeThrough absent (Setting not found)
+    assertFalse(NS2.db.profile.enabled, "disable stored false")
+    assertFalse(said(lines, "Setting not found"), lastLine(lines))
+    assertTrue(NS2.IsStoodDown(), "the latch followed the stored switch")
     NS2.Slash:OnSlash("enable")
-    assertEqual(#calls, 2, "both verbs reached the seam without the library")
-    assertEqual(calls[1].value, false)
-    assertEqual(calls[2].value, true)
+    assertTrue(NS2.db.profile.enabled, "enable stored true")
+    assertFalse(NS2.IsStoodDown(), "the latch followed it back up")
     assertTrue(said(lines, "Aura Master enabled"), lastLine(lines))
     local rows = table.concat(NS2.Slash.LandingRows(), "\n")
     assertTrue(rows:find("/am disable", 1, true) ~= nil, "the stub lists the verb")
+end)
+
+test("slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough", function()
+    local NS2, mocks = degraded()
+    assertNil(NS2.FindSchemaRow("locked"), "the stub composer registered no locked row")
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("unlock")
+    -- red under: writeThrough absent (Setting not found)
+    assertFalse(NS2.db.profile.locked, "unlock stored false")
+    NS2.Slash:OnSlash("lock")
+    assertTrue(NS2.db.profile.locked, "lock stored true")
+    assertFalse(said(lines, "Setting not found"), lastLine(lines))
+    assertTrue(said(lines, "Containers locked"), lastLine(lines))
 end)
 
 test("slash: /am delete removes a container by id", function()

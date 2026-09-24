@@ -949,7 +949,7 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (25)
+### test_slash.lua (26)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -966,7 +966,8 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am disable in combat is not refused; the master switch is a visibility write
 - slash: /am enable prints the seam's error instead of the success line
 - slash: enable and disable are listed by /am help and on the landing page
-- slash: the degraded stub still answers /am enable and /am disable
+- slash: the degraded stub's /am disable and /am enable store the switch through writeThrough
+- slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough
 - slash: /am delete removes a container by id
 - slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
@@ -977,7 +978,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 
-### test_slash_verbs.lua (49)
+### test_slash_verbs.lua (50)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1022,6 +1023,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the old path global.minimap.hide is not a setting, and nothing is written
 - slash verbs: a legacy store's minimap.hide reads through the renamed path with no migration
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
+- slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
@@ -1052,7 +1054,7 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
-### test_optionssetup.lua (18)
+### test_optionssetup.lua (19)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -1071,6 +1073,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Background block is composed in canonical order, and its tooltips name the background
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
+- options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)
 - options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
 ### test_options_descriptor.lua (19)
@@ -1093,7 +1096,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
-- options descriptor: the stub's composers emit the paths and types the live composers do
+- options descriptor: every stub composer answers an empty row list
 
 ### test_pages_general.lua (67)
 
@@ -1459,7 +1462,7 @@ badge and any count quoted in the docs must agree with it.
 - prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
 - prose self-test: a malformed waived is a failure, not a silence
 
-### test_surface_parity.lua (6)
+### test_surface_parity.lua (7)
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
@@ -1467,6 +1470,7 @@ badge and any count quoted in the docs must agree with it.
 - parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls
 - parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires
 - parity: the Slash stub carries every dispatcher member the addon calls
+- parity: the Slash stub's refusal line is the library's own format, byte for byte
 
 ### test_vendor_sync.lua (3)
 
@@ -1535,10 +1539,10 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 14 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 25 |
-| test_slash_verbs.lua | 49 |
+| test_slash.lua | 26 |
+| test_slash_verbs.lua | 50 |
 | test_bulklog.lua | 20 |
-| test_optionssetup.lua | 18 |
+| test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 67 |
 | test_pages_containers.lua | 31 |
@@ -1557,9 +1561,9 @@ badge and any count quoted in the docs must agree with it.
 | test_locale.lua | 6 |
 | test_docs.lua | 5 |
 | test_prose.lua | 18 |
-| test_surface_parity.lua | 6 |
+| test_surface_parity.lua | 7 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1332** |
+| **Total** | **1336** |
