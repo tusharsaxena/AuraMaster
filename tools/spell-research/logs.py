@@ -121,20 +121,21 @@ def cmd_propose(args):
     family = sid_db2.aura_to_family(candidates)
     decisions = load_decisions(args.decisions)
     signals = sid_db2.aura_signals(tables["SpellEffect"], _aura_ids(agg, "BUFF"))
-    pool = sid_db2.player_pool(tables)
+    pool, pool_names = sid_db2.castable(tables)
     cc_ids = sid_db2.cc_spell_ids(tables["SpellEffect"], tables["SpellCategories"],
                                   _aura_ids(agg, "DEBUFF"))
     th = sid_propose.Thresholds(min_applications=args.min_apps, min_players=args.min_players)
 
     proposals = (sid_propose.corrections(agg, spec_map, names, shipped, family, decisions, th)
                  + sid_propose.moves(agg, spec_map, names, shipped, signals, pool, candidates,
-                                     decisions, th)
+                                     decisions, th, pool_names=pool_names)
                  + sid_propose.additions(agg, spec_map, names, shipped, signals, pool, candidates,
-                                         decisions, th))
+                                         decisions, th, pool_names=pool_names))
     flags = sid_propose.flags(agg, spec_map, names, shipped, family, cc_ids, th)
     rows = sid_artifacts.dictionary_rows(
         agg, spec_map, names, shipped,
-        sid_propose.suggestions(agg, spec_map, signals, pool, candidates))
+        sid_propose.suggestions(agg, spec_map, signals, pool, candidates, pool_names=pool_names,
+                                names=names))
 
     bundle.mkdir(parents=True, exist_ok=True)
     in_bundle = bundle / "evidence.json"

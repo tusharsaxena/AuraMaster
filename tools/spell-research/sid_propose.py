@@ -559,11 +559,12 @@ def _castable(pool, cast_candidates):
 class _Ruled:
     """Shared state of moves() and additions(): evidence per (class, id), the bar, the rules."""
 
-    def __init__(self, agg, spec_map, names, signals, pool, cast_candidates, th):
+    def __init__(self, agg, spec_map, names, signals, pool, cast_candidates, th, pool_names=None):
         self.spec_map = spec_map
         self.names = names
         self.signals = signals or {}
         self.castable = _castable(pool, cast_candidates)
+        self.pool_names = pool_names or {}
         self.th = th
         self.rows = _class_rows(agg, "BUFF")
         self.class_players = getattr(agg, "class_players", None) or {}
@@ -583,8 +584,15 @@ class _Ruled:
 
     def suggest(self, klass, sid):
         rows = self.rows[(klass, sid)]
-        return suggest(_stats_of(rows), self.signals.get(sid, set()), sid in self.castable,
+        return suggest(_stats_of(rows), self.signals.get(sid, set()), self.in_pool(klass, sid),
                        _tank_only(rows, self.spec_map))
+
+    def in_pool(self, klass, sid):
+        """A class spell: in the castable ids, or named like a pool spell of the same class."""
+        if sid in self.castable:
+            return True
+        name = self.name(klass, sid)
+        return bool(name) and name.lower() in self.pool_names.get(klass, ())
 
     def evidence(self, klass, sid):
         return {spec_name(self.spec_map, spec): (st.applications, len(st.players))
@@ -618,14 +626,15 @@ def _ordered(props, decisions):
 
 
 def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
-          thresholds=None):
+          thresholds=None, pool_names=None):
     """Move proposals: a listed BUFF entry whose evidence suggests another category.
 
     Only above-bar entries, only a suggestion of at least medium confidence, only into a category
     the file has and that does not already list the id; the move itself is medium at most (the
     spec). Debuff categories are never moved: log evidence only cross-checks them.
     """
-    ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds())
+    ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds(),
+                   pool_names)
     listed_in = _category_ids(shipped)
     out = []  # type: List[Proposal]
     for cat in shipped:
@@ -651,14 +660,15 @@ def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, de
 
 
 def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
-              thresholds=None):
+              thresholds=None, pool_names=None):
     """Addition proposals: above-bar player BUFFs in no `spells` category, with a category by rule.
 
     An aura named like a spell the class already lists (in a BUFF category) is left to
     corrections(), which proposes it as a replace or an add. No proposal when the rules give no
     category, or one the file lacks.
     """
-    ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds())
+    ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds(),
+                   pool_names)
     listed = set().union(*_category_ids(shipped).values()) if shipped else set()
     keys = _spells_keys(shipped)
     listed_names = set()  # type: Set[Tuple[str, str]]
@@ -686,8 +696,9 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
     return _ordered(out, decisions)
 
 
-def suggestions(agg, spec_map, signals, pool, cast_candidates=None):
+def suggestions(agg, spec_map, signals, pool, cast_candidates=None, pool_names=None, names=None):
     """{(class, spell_id): suggest()'s (category or None, rule, confidence, reason)} for every
     player BUFF, whatever its count: the dictionary's suggested-category column."""
-    ruled = _Ruled(agg, spec_map, {}, signals, pool, cast_candidates, Thresholds())
+    ruled = _Ruled(agg, spec_map, names or {}, signals, pool, cast_candidates, Thresholds(),
+                   pool_names)
     return {key: ruled.suggest(*key) for key in sorted(ruled.rows)}

@@ -554,10 +554,11 @@ class AdditionsTest(unittest.TestCase):
     NAMES = {**NAMES, **{900200: "Sprint", 900300: "Well Fed", 900400: "Spell Reflection"}}
     SIGNALS = {900200: {"speed_up"}, 900300: set(), 900400: set(), 114052: {"haste_up"}}
 
-    def additions(self, rows, decisions=None, pool=POOL, candidates=None, shipped=None):
+    def additions(self, rows, decisions=None, pool=POOL, candidates=None, shipped=None,
+                  pool_names=None):
         return sid_propose.additions(agg_of(rows), SPEC_MAP, self.NAMES, shipped or RULE_SHIPPED,
                                      self.SIGNALS, pool, cast_candidates=candidates,
-                                     decisions=decisions or {})
+                                     decisions=decisions or {}, pool_names=pool_names)
 
     SPRINT = ("WARRIOR", ARMS, "BUFF", 900200, rows_st(60, 4, self_=60, recast=60.0, name="Sprint"))
 
@@ -608,6 +609,20 @@ class AdditionsTest(unittest.TestCase):
                  rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
         props = self.additions(rows, pool={2565}, candidates={2565: [900300]})
         self.assertNotEqual([p.rule for p in props], ["R8"])
+
+    def test_an_aura_named_like_a_pool_spell_of_its_class_is_player_castable(self):
+        # SID-10, the real run: Whirling Dragon Punch's aura 196742 has no trigger edge and no
+        # family, but MONK's pool holds a Whirling Dragon Punch; it is no consumable.
+        rows = [("WARRIOR", ARMS, "BUFF", 900300,
+                 rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
+        props = self.additions(rows, pool=set(), pool_names={"WARRIOR": {"well fed"}})
+        self.assertNotEqual([p.rule for p in props], ["R8"])
+
+    def test_a_pool_name_of_another_class_does_not_make_it_castable(self):
+        rows = [("WARRIOR", ARMS, "BUFF", 900300,
+                 rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
+        props = self.additions(rows, pool=set(), pool_names={"ROGUE": {"well fed"}})
+        self.assertEqual([(p.category, p.rule) for p in props], [("consumables", "R8")])
 
     def test_tank_only_uses_the_spec_roles(self):
         rows = [("WARRIOR", PROT, "BUFF", 900400,

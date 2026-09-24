@@ -12,7 +12,7 @@ Everything here is a pure read. Python 3.8+ standard library only.
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import research
 
@@ -145,10 +145,39 @@ def names(spell_name_csv: Path) -> Dict[int, str]:
     return research.read_names(spell_name_csv)
 
 
+def castable(cache: Dict[str, Path]) -> Tuple[Set[int], Dict[str, Set[str]]]:
+    """(ids, names by class): what rule R8 counts as a class spell rather than an item effect.
+
+    ids: research.build_pool's pool (the spells a player can learn), closed over
+    SpellEffect.EffectTriggerSpell with research.close_over_triggers (the aura a class spell
+    triggers, e.g. Dancing Rune Weapon 49028 -> 81256), plus every spell with a non-zero
+    SpellClassOptions.SpellClassSet (a class spell family: procs and talent auras such as Bone
+    Shield 195181; family 0 is where items, potions and enchants live).
+    names: {class token: lower-cased names of that class's pooled spells}, for an aura that reaches
+    none of those edges but carries the name of a spell its own class can cast (Whirling Dragon
+    Punch's aura 196742).
+
+    The bare build_pool holds learnable ids only; on the owner's logs (SID-10) it left 1,532
+    above-bar class procs outside the pool, and R8 filed every one of them as a consumable.
+    """
+    pool, classes = research.build_pool(cache)
+    classes = defaultdict(set, {spell: set(tokens) for spell, tokens in classes.items()})
+    _mechanics, triggers = research.read_spell_effect(cache["SpellEffect"])
+    research.close_over_triggers(pool, classes, triggers)
+    by_class: Dict[str, Set[str]] = defaultdict(set)
+    spell_names = research.read_names(cache["SpellName"]) if "SpellName" in cache else {}
+    for spell in pool:
+        name = spell_names.get(spell)
+        if name:
+            for token in classes.get(spell, ()):
+                by_class[token].add(name.lower())
+    ids = set(pool) | set(research.read_spell_families(cache["SpellClassOptions"]))
+    return ids, dict(by_class)
+
+
 def player_pool(cache: Dict[str, Path]) -> Set[int]:
-    """Every player-castable spell id (research.build_pool's pool), for rule R8."""
-    pool, _classes = research.build_pool(cache)
-    return pool
+    """castable()'s ids: every class spell id, for rule R8."""
+    return castable(cache)[0]
 
 
 # --- the DB2 cache ---------------------------------------------------------------------------------

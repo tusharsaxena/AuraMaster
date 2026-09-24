@@ -235,11 +235,55 @@ class PlayerPoolTest(unittest.TestCase):
                       ["1,9,7"])
             write_csv(d / "TraitNode.csv", "ID,TraitTreeID", ["9,11"])
             write_csv(d / "TraitTreeLoadout.csv", "ID,TraitTreeID,ChrSpecializationID", ["1,11,264"])
+            write_csv(d / "SpellEffect.csv", "ID,DifficultyID,Effect,EffectTriggerSpell,SpellID", [])
+            write_csv(d / "SpellClassOptions.csv", "ID,SpellID,SpellClassSet", [])
             cache = {p.stem: p for p in d.glob("*.csv")}
             cache["ChrSpecialization"] = CHR_SPEC
             with redirect_stderr(io.StringIO()):
                 pool = sid_db2.player_pool(cache)
         self.assertEqual(pool, {108271, 2825, 61295, 114050, 114051})
+
+    def castable(self, effects=(), families=(), names=()):
+        """sid_db2.castable over a one-class pool: Dancing Rune Weapon 49028 (DEATHKNIGHT)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            write_csv(d / "SkillLine.csv", "ID,DisplayName_lang,CategoryID,ParentSkillLineID",
+                      ["960,Death Knight,7,0"])
+            write_csv(d / "SkillLineAbility.csv", "ID,Spell,ClassMask,SkillLine", ["1,49028,0,960"])
+            write_csv(d / "SpecializationSpells.csv", "ID,SpellID,SpecID", [])
+            write_csv(d / "TraitDefinition.csv", "ID,SpellID,VisibleSpellID", [])
+            write_csv(d / "TraitNodeEntry.csv", "ID,TraitDefinitionID", [])
+            write_csv(d / "TraitNodeXTraitNodeEntry.csv", "ID,TraitNodeID,TraitNodeEntryID", [])
+            write_csv(d / "TraitNode.csv", "ID,TraitTreeID", [])
+            write_csv(d / "TraitTreeLoadout.csv", "ID,TraitTreeID,ChrSpecializationID", [])
+            write_csv(d / "SpellEffect.csv", "ID,DifficultyID,Effect,EffectTriggerSpell,SpellID",
+                      list(effects))
+            write_csv(d / "SpellClassOptions.csv", "ID,SpellID,SpellClassSet", list(families))
+            write_csv(d / "SpellName.csv", "ID,Name_lang", list(names))
+            cache = {p.stem: p for p in d.glob("*.csv")}
+            cache["ChrSpecialization"] = CHR_SPEC
+            with redirect_stderr(io.StringIO()):
+                return sid_db2.castable(cache)
+
+    def test_castable_closes_over_trigger_edges(self):
+        # SID-10, the real run: the bare build_pool left 1,532 class procs (Bone Shield, Dancing
+        # Rune Weapon's aura, Touch of Karma, ...) outside the pool, and R8 filed them as consumables.
+        ids, _names = self.castable(effects=["1,0,6,81256,49028"])
+        self.assertIn(81256, ids)
+
+    def test_castable_takes_every_spell_of_a_class_family(self):
+        # SpellClassOptions.SpellClassSet is the spell family; 0 (or no row) is no family, which is
+        # where items, potions and enchants live.
+        ids, _names = self.castable(families=["1,195181,15", "2,431971,0"])
+        self.assertIn(195181, ids)
+        self.assertNotIn(431971, ids)
+        self.assertNotIn(999999, ids)
+
+    def test_castable_names_are_per_class_and_lower_cased(self):
+        _ids, names = self.castable(effects=["1,0,6,81256,49028"],
+                                    names=["49028,Dancing Rune Weapon", "81256,Dancing Rune Weapon",
+                                           "431971,Tempered Potion"])
+        self.assertEqual(names, {"DEATHKNIGHT": {"dancing rune weapon"}})
 
 
 class CcSpellIdsTest(unittest.TestCase):
