@@ -50,7 +50,7 @@ Example: a bar option.
    `label`/`desc`.
 2. That is the whole wiring: `DefaultStates()` backfills the key as `"show"` into every stored
    container (schema v3 — Show is a positive claim, not merely "not excluded";
-   `docs/ARCHITECTURE.md` → Filter priority), `settings/Filters.lua` generates its row and draws it
+   `docs/data-flow.md` → Filter priority), `settings/Filters.lua` generates its row and draws it
    in its kind's grid on Filters → Categories, and `modules/FilterCompiler.lua` applies it by kind: a
    Hide excludes (`excludeCategory`), and a Show's own positive constraint
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
@@ -90,7 +90,7 @@ path it walks, for when something about it has to be changed or debugged.
    `NS.CategoryRow`. Never add a second labeling rule — every site that shows a category's name asks
    `Cat.LabelOf`, and the panel's `(yours)` marker (`NS.GeneralSpells.MarkedName`) wraps that answer.
 5. **Never route a player-supplied name through `NS.L`.** That is the locale guard's one exemption and
-   it is written out in `docs/ARCHITECTURE.md` → *Locale routing, and its one exemption*.
+   it is written out in *Locale routing, and its one exemption*, below.
 6. A test for any of this goes in `tests/test_defaults.lua` (definitions and names),
    `tests/test_database_categories.lua` (the store, the sweep, profile switches),
    `tests/test_filtercompiler_categories.lua` (what the compiler makes of one) or
@@ -204,8 +204,33 @@ from, and mixing them silently is how a diff stops meaning anything.
    `enUS` key; `NS.Choices` looks them up with `L[…]`, and every site that draws a category name asks
    `Cat.LabelOf`. The one exemption is a **user category's** name: it is the player's own text, it has
    no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/UserCategories.lua`). The exemption,
-   what it covers and what it deliberately does not, is `docs/ARCHITECTURE.md` → *Locale routing, and
-   its one exemption*.
+   what it covers and what it deliberately does not, is *Locale routing, and its one exemption*,
+   below.
+
+## Locale routing, and its one exemption
+
+Every user-visible string routes through `NS.L`, the key being the English text itself
+(localization-§2), and `tests/test_locale.lua` fails the build twice over: on a routed string with no
+`locales/enUS.lua` line, and on an `enUS` line nothing routes. A label routed BY VALUE — a
+`core/Constants.lua` `*_LABELS` entry, a category's `label` and `desc` — still needs its own line,
+because `NS.Choices` and the drawing sites look them up with `L[…]`.
+
+**A user category's name is the one exemption** (issue #10), and it is written here so the guard test
+can be read from it. The name is the PLAYER'S OWN TEXT: it is data, no `enUS` line can exist for it,
+and none should. The exemption is exactly one FIELD of exactly one flagged definition kind —
+`def.label` on a definition carrying `userCategory = true`. Its `desc` is still checked, and a user
+category's description is a fixed shipped string precisely so that it can be; if that description ever
+has to name the category, the name is a `%s` ARGUMENT to a routed format string and never concatenated
+into one, because a `%` inside a player-supplied name is an ordinary character.
+
+The exemption is enforced at the draw by `Cat.LabelOf`, which is why every site that shows a category
+name asks it rather than indexing `NS.L`. This is not tidiness: `NS.L` answers its own miss path, so
+`L[def.label]` looks correct for a user category right up until a player names one "Healing" — at
+which point the lookup finds a real shipped line and the panel shows the shipped string instead of the
+name that was typed. Invisible on enUS, plainly wrong on any translated client. The guard proves the
+exemption narrow from both sides: `tests/test_locale.lua` asserts that NO shipped definition claims it
+on the shipped load, and `tests/test_defaults.lua` asserts that a user definition's name is unrouted
+while its description is not.
 
 ## Add a container field that changes shape (a migration)
 

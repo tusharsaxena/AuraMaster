@@ -90,7 +90,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor (a plain frame, `Style.DrawEdge` strips); left-click picks, right-click or Escape cancels. `FP.PickFor` is the one pick flow `/am pick` and Layout's Pick a frame... share: active-container resolve, combat refusal and the two attach writes |
 | `modules/BlizzardFrames.lua` | Reparents `BuffFrame`/`DebuffFrame` to a hidden parent and back, out of combat only |
 | `modules/Container.lua` | One live container: its anchor, handle and unlocked outline (a plain frame, `Style.DrawEdge` strips), building, updating or retiring its engine, restyling, the per-apply class snapshot, the show ladder; bucket `applyContainer` |
-| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate; `Database.PrepareProfile` is its load pass, and `docs/ARCHITECTURE.md` → Settings Schema names both), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply (each container's apply guarded, so an error is reported once and the pass goes on), a flow or attachment write re-applying the containers that follow it, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
+| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate; `Database.PrepareProfile` is its load pass, and `docs/schema.md` → *Settings schema, registries and named non-setting state* names both), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply (each container's apply guarded, so an error is reported once and the pass goes on), a flow or attachment write re-applying the containers that follow it, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
 
 ## `settings/` (TOC order)
 
@@ -210,3 +210,43 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `media/logos/auramaster.logo.tga` | The landing-page logo, drawn at 300×300 (options-ui-§5) |
 | `media/logos/auramaster.logo.128.tga` | The ICON logo, 128×128 and uncompressed 32-bit (layout-§4): `## IconTexture`, the minimap button and the broker row. Regenerated from the `.png`, never hand-edited |
 | `media/logos/auramaster.logo.png`, `….jpg` | The 2000×2000 source art and its render; shipped but never loaded — the client reads neither format |
+
+## Libraries
+
+All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc:15-32`.
+
+| Library | Used for |
+|---|---|
+| LibStub, CallbackHandler-1.0 | Library registry; AceEvent's and AceDB's callbacks |
+| AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
+| AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
+| AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:536-537`) |
+| AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:246`) |
+| AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
+| AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
+| LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
+| LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
+| LibKa0s v1.55.0 | Twelve modules wired, one setup file each — table below |
+
+| LibKa0s module | Setup file | Publishes |
+|---|---|---|
+| `LibKa0s-Media-1.0` | `core/MediaSetup.lua` | `NS.Icon`, `NS.MediaFont`, the LSM registration |
+| `LibKa0s-Env-1.0` | `core/EnvSetup.lua` | `NS.Meta`, `NS.Version` |
+| `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.MakeCloseButton` |
+| `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
+| `LibKa0s-Lifecycle-1.0` | `core/LifecycleSetup.lua` | `NS.lifecycle` — the one latch; `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled` |
+| `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, and the `perf` hold on that latch) |
+| `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |
+| `LibKa0s-Launcher-1.0` | `core/LauncherSetup.lua` | `NS.Launcher` — the one LibDataBroker object, registered with LibDBIcon under the folder name |
+| `LibKa0s-Slash-1.0` | `settings/Slash.lua` | the `/am` dispatcher over `NS.COMMANDS` |
+| `LibKa0s-Compat-1.0` | `core/Compat.lua`, `core/Secrets.lua` | `NS.Compat.GetSpellInfo` (behind this addon's number-only guard) and `NS.Secrets.IsSecret` / `CanAccess` / `IsSafeKey`. Without the library the reader answers `nil` and the guards run this addon's own bodies, a deliberate duplication (a guard stub answering "nothing is secret" on a 12.x client would raise in combat) |
+| `LibKa0s-Bus-1.0` | `core/Bus.lua` | `NS.MSG`, through `Bus.Catalog` only (the strict catalog); `NS.BusLib`, the resolved major or its stub. The stand-down record is not taken: `NS.NewBusTarget` stays this addon's own untracked factory (issue #20) |
+| `LibKa0s-Options-1.0` | `settings/OptionsSetup.lua` | `NS.Helpers` (the panel shell, flow engine, composers, and the `ChoiceGrid` and `IdList` widgets the Filters and General pages draw) |
+| `LibKa0s-Schema-1.0` | `settings/Schema.lua` | `NS.SchemaRuntime`, the one instance over `NS.Schema`: the path primitives, `NS.FindSchemaRow`, `NS.Bulk` and `NS.ValidateSchema` run on it. The write seam stays the host's `NS.SetByPath` (issue #21). Without the library the host bodies answer |
+
+`LibKa0s-Item-1.0` and `LibKa0s-Widgets-1.0` arrive with the whole-folder copy (library-stack-§7)
+and are not bound by name here; the addon handles no items. `LibKa0s-Schema-1.0` runs under the
+rows but not the write seam (`docs/schema.md`, "Write seam: why AuraMaster keeps SetByPath").
+Every setup file degrades to a stub when
+the library is absent, exercised by `tests/degraded_env.lua`.

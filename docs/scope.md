@@ -25,7 +25,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   fixed count (36 shipped as this is written, 17 buff and 19 debuff: spell lists, Blizzard aura flags
   and filter tokens, dispel types, player-or-creature source, and the weapon-enchant capability) — a
   per-container Overrides whitelist and blacklist of spells (the
-  whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists
+  whitelist always wins, `docs/data-flow.md` → Filter priority), the spell categories' lists
   (editable, and shared by every container in the profile), sort method and direction, and a
   per-group cap.
 - **Categories the player makes** (issue #10). A name, a buff-or-debuff choice and a spell list of
@@ -72,7 +72,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   serialization layer. When one is written (issue #9) it has to answer two questions user categories
   raise: a shared container naming a category the importing player does not have, and a record whose
   key that account already uses, which the import must re-key rather than merge
-  (`docs/ARCHITECTURE.md` → Known Limitations).
+  (`docs/known-limitations.md`).
 - **Hiding Blizzard frames during combat.** Reparenting a Blizzard frame under lockdown is refused, so
   the switch applies on the next `PLAYER_REGEN_ENABLED`.
 
@@ -137,7 +137,7 @@ These are not declined; the game forbids them, and a request for one is answered
 - **Categories have two states** (schema v3, owner's 2026-09-15 revision), labeled Show and Hide and
   stored `"show"` / `"hide"`; Show is the default and is a *positive claim*, not merely "not
   excluded" — an aura in even one Show category is drawn even if another of its categories says Hide,
-  and only an aura whose every category says Hide is removed by them (`docs/ARCHITECTURE.md` →
+  and only an aura whose every category says Hide is removed by them (`docs/data-flow.md` →
   Filter priority). **The real limitation this costs:** Categories alone can no longer build "only
   Defensive cooldowns" the way the old exclusive Whitelist did — hiding every other category is not the same
   thing, because an aura in no category at all still shows (nothing removed it). Getting that back

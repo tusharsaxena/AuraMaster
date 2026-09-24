@@ -203,7 +203,156 @@ holds the most recent in-game perf captures in the library's record schema, outs
 so a profile copy, reset or switch never touches it (performance-§5). This addon writes nothing to
 it directly. Recorded data a vendored library writes, not a setting: its owner (`core/PerfSetup.lua`)
 and its one writer (the library's `P.Save`, behind `/am perf finish`) are named in
-`docs/ARCHITECTURE.md` → Settings Schema (architecture-§5).
+*Settings schema, registries and named non-setting state*, below (architecture-§5).
+
+## Settings schema, registries and named non-setting state
+
+`NS.Schema` holds **242** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
+out of General's own tab), Filters 43, Layout 26, Bars 72, Icons 42 and Text 36. The
+AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
+player's own; **the schema is a live table, not a frozen one**, and each user category adds one
+`container.filter.categories.<key>` row at runtime (`NS.RegisterSchemaRows(rows, beforePath)` inserts
+it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
+`NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
+the same table — the rest of this file). It drives the panel,
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:821`),
+is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
+container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
+announces, in that order.
+The name row's hook stores container names unique, case-insensitively. A bulk copy or reset (a page's
+Defaults, Reset all, `ContainerManager.CopyFrom`, `ContainerManager.ResetPositions`) runs inside
+`NS.Bulk`'s bracket: the seam mutes its per-row `[Set]` line, tallies the rows each write changed as
+it stores them, and the act logs one `[Set] <act> <scope>: N rows` line. An act that an error stops
+still logs that line once, ending ` (stopped by an error)`. A whole-profile reset is logged by
+`NS.OnProfileReset` alone, as `[Set] reset profile '<name>' to defaults` with no row count
+(debug-logging-§10 allows omitting it). A reset re-seeds the starter containers, so counting rows not
+at default would overcount. AceDB also gives no hook before the wipe, so the Profiles page's reset
+cannot cheaply snapshot the rows it changes (this file, `docs/profiles.md`).
+
+Almost every row belongs to one container, so container rows use a **relative path**:
+`container.bars.width` resolves against the container the settings banner has selected
+(`NS.State.activeContainerId`), falling back to the first one. Addon-wide rows keep absolute paths
+(`enabled`, `hideBlizzardBuffs`). **One row resolves outside the profile entirely:**
+`global.minimap.shown` names LibDBIcon's own key in the GLOBAL store, `global.minimap.hide`, so the
+seam answers and writes it directly, inverting on the way (the path and the row say shown, the
+stored key says hidden) and telling `NS.Launcher` so the button moves at once. A row's `default` is never typed in a page file —
+`NS.RegisterSchemaRows` stamps it from `defaults/Profile.lua`, and `NS.ValidateSchema` proves every
+path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the
+profile-wide `categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
+`.position`, `.bars`, `.icons`) are written through the same seam and normalized there. A drag, a
+copy between containers, a position reset and a delete's fallback to the screen all write that way.
+
+The addon holds one structural registry, the containers (architecture-§5). No schema row addresses
+it, and none can, since a row is a leaf.
+
+- **Storage keys:** the profile's `containers` (members keyed by numeric id, each stamped with its
+  `c.id`), `containerOrder` (display order), `nextContainerId` (the id counter) and `seeded` (the
+  sentinel recording that first-run seeding has run).
+- **Registry writer:** `modules/ContainerManager.lua`. `ContainerManager.Create`, `.Delete` and
+  `.Duplicate` (through `Create`) make every runtime membership change, and
+  `Database.NewContainerData` mints the id and stamps `c.id` for it. `NewContainerData` has no
+  other caller, so it is part of the writer.
+- **Load pass:** `Database.PrepareProfile` (`core/Database.lua`), run from `NS.RunMigrations` at
+  initialization and from `NS.OnProfileChanged` on AceDB's profile changed, copied and reset
+  callbacks, and from nowhere else. It runs `seedStarters`, `normalizeKeys`, `backfillContainers`,
+  the `nextContainerId` bump and `rebuildOrder`.
+
+A member field a row addresses goes through `NS.SetByPath` with a container id even when
+ContainerManager is the caller: rename, copy-from, position reset and a delete's fallback to the
+screen. The per-container `container.filter.whitelist` and `.blacklist` sets, and the profile-wide
+`categorySpells` set, are values the seam takes whole at its carve-out paths, not registries. Only
+its named writer and load pass write the registry, so it is compliant and carries no Documented
+deviations row.
+
+The addon holds a second structural registry since issue #10, the player's own spell categories. No
+schema row addresses the registry itself; the row each member GETS is an ordinary category row.
+
+- **Storage keys:** the profile's `userCategories` (one record per category, keyed by a `user…` key
+  that is minted once and never moves) and `userCategoryOrder` (declaration order, their only
+  ordering source). The member's spell list is not part of the registry — it is
+  `categorySpells[key]`, the same carve-out every other category's edits live in.
+- **Registry writer:** `defaults/UserCategories.lua`. `Cat.CreateUserCategory`, `Cat.RenameUserCategory`,
+  `Cat.DeleteUserCategory` and `Cat.ForgetUnusableUserRecords` make every membership change, and
+  `Cat.NewUserKey` mints the key for `Create` and has no other caller. Nothing else writes a record,
+  and **nothing anywhere writes `rec.auraType` but `Create`**, which is what makes a category's aura
+  type immutable: it is the absence of an act rather than a refusal.
+- **Load pass:** `Cat.SyncUserCategories(profile)`, run from `NS.RunMigrations` after the whole schema
+  ladder and before `Database.PrepareProfile`, from `core/AuraMaster.lua`'s `prepareProfile` (so a
+  profile switch, copy and reset all pass through it), and from each act above. It tears the previous
+  set down and builds the new one as ONE act over four mirrors — the two definition lists, the
+  container template's `filter.categories`, and the schema rows — because a stale definition left
+  behind makes `Cat.IsSpellCategory(deadKey)` true and quietly takes ids out of the complement
+  `Uncategorized` is defined against. Not at panel render: a row that existed only while the panel was
+  open would be invisible to `/am get|set|list`, to a page's Defaults and to the resets.
+
+**Materialized into the shipped lists, deliberately.** A stored record becomes an ordinary
+`spells`-kind definition inside `Cat.HELPFUL` or `Cat.HARMFUL`, inserted in front of that aura type's
+Weapon enchants or Uncategorized row. Every reader was then already correct for it: `Cat.Find` and
+therefore `Cat.AuraTypeOf`'s key form, `modules/FilterCompiler.lua`'s `categorizedUnion`,
+`settings/Filters.lua`'s grids, the CLI. The alternative — a parallel path per reader — would have
+been five places to keep in agreement rather than one rebuild per profile change. **The keys live in a
+reserved `user` namespace** (`Cat.IsUserKey`) that no shipped key may take, asserted by
+`tests/test_defaults.lua`; a stored record outside it is refused rather than materialized, because a
+record keyed `healing` is a claim on a shipped category's identity and the next sync's teardown would
+take the SHIPPED category's container-template entry down with it.
+
+The surfaces this added, all read by name rather than duplicated:
+
+| Surface | Answers |
+|---|---|
+| `Cat.AuraTypeOf(defOrKey)` | Which aura type a category holds, from `def.auraType` or through `Cat.Find` |
+| `Cat.LabelOf(def)` | A category's name AS SHOWN — a shipped label routed through `NS.L`, a user label never. THE labeling rule; every drawing site asks it, and the panel's `(yours)` marker wraps it rather than copying it |
+| `Cat.IsUserCategory(defOrKey)` / `Cat.IsUserKey(key)` | Whether the player made it; whether a key sits in the reserved namespace (structural, not a guess at how the key was made) |
+| `Cat.CreateUserCategory` / `RenameUserCategory` / `DeleteUserCategory` | The three acts, each refusing anything without a stored record and anything outside the namespace |
+| `Cat.UnusableUserRecords` / `Cat.ForgetUnusableUserRecords` | The records the sync refuses, and the way to be rid of them |
+| `Cat.SanitizeUserName` / `Cat.CharCount` / `Cat.USER_NAME_MAX` | The stored form of a player-supplied name, capped in CHARACTERS — the same count `EditBox:SetMaxLetters` applies, so the box and the store cannot disagree |
+| `Cat.SyncUserCategories` / `Cat.UserCategoryOrder` / `Cat.HasUserRecord` / `Cat.UserKeysInUse` / `Cat.NewUserKey` / `Cat.UserCategoryNameTaken` | The load pass, the order reconcile, the record test `settings/Schema.lua` asks before a `categorySpells` write, and the key machinery |
+| `Database.EachProfile(db, fn)` | Every stored profile, the inactive ones included — the schema ladder's own walk, published so the delete sweep reaches the same set rather than growing a second walk that drifts |
+| `NS.CategoryRow(def)` | One category's Show/Hide row, exported by `settings/Filters.lua` so the runtime rows are built by the same function as the shipped ones |
+| `NS.RegisterSchemaRows(rows, beforePath)` / `NS.UnregisterSchemaRows(pred)` | Insert rows in schema order, and remove them again |
+| `FC.ClaimingCategories(Cat, auraType, filter, edits, id)` | Which categories hold a spell id — `ExplainSpell`'s own answer, published so the overlap guardrail cannot drift from it |
+| `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker, muted gold included, that both surfaces read, the restore ACT behind the button's absence, and the Filters page's per-row link |
+
+The addon holds three pieces of named non-setting state (architecture-§5). The first is learned
+data that no control sets and no row addresses.
+
+- **Storage key:** `global.timedSpells` (`db.global.timedSpells`), `[spellId] = true` for every buff
+  seen carrying a duration. It is account-wide, so a profile switch, copy or reset never touches it.
+- **Owner:** `modules/TimedSpells.lua`.
+- **Writers:** `TS.Scan` adds the id of each newly seen timed buff. The readable-state scan reaches
+  it: `scanTick`, 0.5 s after a player or pet `UNIT_AURA` or after the readable gate reopens.
+  `TS.Forget` replaces the set with `{}`, and `/am forgettimed` reaches it (`runForgetTimed` in
+  `settings/Slash.lua`). That is the owner's forget operation. Nothing else writes it. `store()`
+  lazily creates the empty table on first read and is not a writer, and neither is the load pass
+  (`NS.RunMigrations` backfills it, as does the no-AceDB fallback in `NS.InitDB`). The two compile
+  sites in `modules/Container.lua` and `settings/OptionsSetup.lua` hand it to `FilterCompiler.Compile`,
+  which only reads it.
+
+The second is recorded data that a vendored library writes into a key the addon hands it: the perf
+capture ring. No control sets it and no row addresses it.
+
+- **Storage key:** `AuraMasterPerfDB`, a SavedVariables global of its own (`AuraMaster.toc:7`),
+  outside the AceDB tree, so a profile switch, copy or reset never touches it (performance-§5).
+- **Owner:** `core/PerfSetup.lua`, which hands the key to `LibKa0s-Perf-1.0` as the descriptor's
+  `sv`.
+- **Writers:** the library's `P.Save`, and nothing else. `/am perf finish` reaches it. It appends the
+  finished capture, drops the oldest record once the ring holds more than ten (the library's
+  `DEFAULT_RING`, since this addon sets no `ring`), and discards a ring stored under an older record
+  schema. No addon code writes it, and no verb clears it.
+
+The third is the minimap button's position, which a vendored library writes into a table the addon
+hands it. No control sets it and no row addresses it.
+
+- **Storage key:** `global.minimap.minimapPos` in the table `core/LauncherSetup.lua` hands out,
+  `db.global.minimap`, the same account-wide table as the Minimap button row's `hide`, so a profile
+  switch, copy or reset never touches it (launcher-§3).
+- **Owner:** `core/LauncherSetup.lua`, which hands `db.global.minimap` to `LibKa0s-Launcher-1.0` as the
+  descriptor's `minimap` field, resolved at call time (core/LauncherSetup.lua:104).
+- **Writers:** LibDBIcon-1.0, when the player drags the button, reached through the LibKa0s-Launcher
+  seam, and nothing else. No addon code writes it, and no verb or reset clears it.
+
+SavedVariables shape, every default and the migration path: the rest of this file.
 
 ## How the schema paths map onto this shape
 
@@ -457,7 +606,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `Database.CurrentSchemaVersion()` answers `4`. The owner retired the per-container "Only these
   categories" toggle (`filter.onlyShown`) entirely: `categories.uncategorized = "hide"` (buffs) or
   `categories.uncategorizedDebuffs = "hide"` (debuffs, batch 7 `U-1`..`U-5`, restored fix round 3;
-  `docs/ARCHITECTURE.md` → Filter priority) means what the toggle used to mean, on either aura type —
+  `docs/data-flow.md` → Filter priority) means what the toggle used to mean, on either aura type —
   Hide always reproduces it exactly, whether or not the category's union is empty (fix round 3's
   `hasUnion` gate only changes what SHOW does, not what Hide does). For a container with
   `filter.onlyShown == true`:

@@ -1118,7 +1118,7 @@ end
 -- INFORM, DO NOT BLOCK -- the ledger decided this before any of it was written, and the reason is
 -- that overlap is CORRECT: a defensive that is also an immunity belongs on both lists, and the
 -- compiler already resolves the overlap by drawing the aura once, under the first category set to
--- Show (docs/ARCHITECTURE.md, Filter priority). Refusing the add would make a correct configuration
+-- Show (docs/data-flow.md, Filter priority). Refusing the add would make a correct configuration
 -- unreachable. So the player is told WHICH other categories hold the id, twice over: once in a chat
 -- line at the moment of the add, and permanently on the entry's own row -- a count in its label,
 -- the names in its tooltip.

@@ -98,7 +98,7 @@ as described in `docs/perf-analysis/README.md`.
 Arm B suspends the addon without a reload (performance-§6), and **it is not a mechanism of the perf
 module's own**: the probe takes the `perf` hold on the addon's one latch, and the addon goes down the
 same way it goes down when a player unticks *Enable Aura Master* (slash-commands-§7,
-`docs/ARCHITECTURE.md` → *The disabled state*). A second teardown path beside this one is
+`docs/data-flow.md` → *The disabled state*). A second teardown path beside this one is
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 

@@ -508,7 +508,7 @@ above the controls on two tabs at once. The wording is unchanged, and drives `FC
 per-entry notes above: (1) on the Overrides whitelist — always shown; (2) on the Overrides blacklist
 — hidden, unless the whitelist already claimed it; (3) in at least one category set to Show — shown,
 even if another of its categories says Hide; (4) in categories that all say Hide — hidden; (5) in no
-category at all — shown, nothing removed it. Full detail and how it compiles: `docs/ARCHITECTURE.md`
+category at all — shown, nothing removed it. Full detail and how it compiles: `docs/data-flow.md`
 → Filter priority.
 
 A container that shows only weapon enchants is a buff container (schema v5): on its Categories tab
@@ -708,7 +708,7 @@ the note and the dimming follow it at once.
 **Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
 stored values did not change) holds three opt-in stand-ins for "color the text by dispel
 type", all off by default, since no engine binding colors a font string by the aura's type
-(`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
+(`docs/known-limitations.md`). `dispelTypeColor` writes the `$dispeltype$` word in its
 palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
 around the word, the bracket text keeping the font color (dimmed without a `$dispeltype$` token).
 `dispelBackdrop` fills the text area behind the chain with a white texture the engine tints and shows
@@ -752,6 +752,36 @@ With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `f
 **Palette-definition swatches carry no companion** — they identify a state or a dispel type, not a
 player, which is the one exemption options-ui-§17 makes: `expiringColor` and `pandemicColor` on both
 pages, and the five `dispelColors.*` on General → Dispel Colors.
+
+## Launcher
+
+**One object, registered twice** (launcher-§1). `core/LauncherSetup.lua` owns it: it builds a single
+LibDataBroker-1.1 object of `type = "launcher"` through `LibKa0s-Launcher-1.0` and hands that very
+object to LibDBIcon-1.0, so the minimap button and any broker display (Titan Panel, ElvUI data
+texts, Bazooka) draw from one icon, one label and one `OnClick`. `NS.Launcher:Register()` is called
+from `OnInitialize` after `InitDB`, and is idempotent.
+
+| | |
+|---|---|
+| Owner | `core/LauncherSetup.lua` → `NS.Launcher` |
+| Registered as | `AuraMaster` — the **folder name**, on both registrations, because LibDBIcon keys the button's saved position by it |
+| Icon | `C.LOGO_ICON_PATH`, the same file `## IconTexture` names (launcher-§4) |
+| Label | `Ka0s Aura Master` — the **brand name in plain text** (launcher-§1). What a broker display prints in its row, beside the other ten Ka0s addons, so it is spelled the way they are. Deliberately not the TOC `## Title` (a Title may carry color escapes) and not the folder name |
+| Left click | **Rung (b)**: toggles test mode, by calling `NS.Slash.ToggleTestMode` — the same host verb a bare `/am test` runs, which switches it through `Preview.SetTestMode`. The launcher holds no copy of the mode. **While the addon is disabled** the left click is refused by `LibKa0s-Launcher-1.0`'s own gate (minor 2), fed by the descriptor's `isEnabled` and `disabledLine` (the dispatcher's refusal line); right-click is never gated |
+| Right click | Always `NS.OpenOptionsPanel()`. Neither button is reassignable and there is no setting for either |
+| Visibility | The **Minimap button** row. Its CLI path is `global.minimap.shown`, which answers true while the button shows; its storage is LibDBIcon's own `global.minimap.hide`, in the global store, never a second `shown` key (launcher-§3, anti-pattern #81, General's Master controls in this file) |
+| Survives every reset | A per-installation display preference, like the button's position, so **no** reset the panel runs may move it — neither *Reset all settings* nor the General page's **Defaults** button. The one veto is `vetoedFromPanelReset` in the options descriptor's `applyDefault`, the library's single reset seam. `/am reset global.minimap.shown` is deliberately **not** vetoed: that is the player naming this one row |
+
+**Rung (b) because the addon has a test mode.** This addon has no primary window; its preview is
+the session-only test mode, switched by the Master controls *Test mode* checkbox (unlocking no
+longer previews: live auras keep drawing while containers are unlocked). The left button therefore
+spends itself on that switch, which it can because the panel is already on the right button.
+
+**Both broker libraries are optional.** `LibKa0s-Launcher-1.0` resolves them with
+`LibStub(…, true)` at Register time, so a client with LibDataBroker but no LibDBIcon gets the
+broker plugin and no button, one with neither gets a line naming what is missing, and one without
+LibKa0s at all gets `core/LauncherSetup.lua`'s stub. In every case the stored `hide` is still written, so the
+checkbox reflects what the player chose and a later reload draws the button where they left it.
 
 ## The degraded panel
 
