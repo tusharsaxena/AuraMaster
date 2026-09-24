@@ -289,7 +289,7 @@ class EndToEnd(unittest.TestCase):
         self.assertIn("| Logs scanned | 2 |", sources)
         self.assertIn("| Skipped lines | 1 |", sources)
         self.assertIn("| DB2 build | %s |" % BUILD, sources)
-        self.assertIn("| Evidence bar | 1 applications from 1 players |", sources)
+        self.assertIn("| Evidence bar | 1 application from 1 player |", sources)
         self.assertIn("| Unattributed applications | 1 |", sources)
 
     def test_no_player_identity_and_every_file_is_crlf(self):
@@ -485,3 +485,25 @@ class ProposeCliTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PluralTest(unittest.TestCase):
+    """SID-11 cosmetics: "9 categories", "1 application / 1 player"."""
+
+    def test_counts_read_as_english(self):
+        n = sid_artifacts._n
+        self.assertEqual(n(9, "category"), "9 categories")
+        self.assertEqual(n(1, "category"), "1 category")
+        self.assertEqual(n(2, "class"), "2 classes")
+        self.assertEqual(n(1, "class"), "1 class")
+        self.assertEqual(n(3, "class line"), "3 class lines")
+        self.assertEqual(n(0, "application"), "0 applications")
+        self.assertEqual(n(1, "application"), "1 application")
+        self.assertEqual(n(1, "player"), "1 player")
+        self.assertEqual(n(2, "id"), "2 ids")
+
+    def test_the_scan_summary_reads_singular(self):
+        import logs
+        line = logs.format_summary({"files": 1, "bytes": 0, "read": 1, "cached": 0, "first_date": "",
+                                    "last_date": "", "lines": 1, "skipped": 0, "unattributed": 0})
+        self.assertTrue(line.startswith("Scanned 1 log (0.0 MB)"), line)

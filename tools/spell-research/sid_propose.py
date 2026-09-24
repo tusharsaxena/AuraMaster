@@ -90,6 +90,19 @@ class Flag:
     detail: str
 
 
+_IRREGULAR = {"category": "categories", "class": "classes"}
+
+
+def plural(count, word):
+    # type: (int, str) -> str
+    """'1 application', '9 categories', '2 classes', '3 class lines': the count and its noun."""
+    if count == 1:
+        return "%d %s" % (count, word)
+    head, _sep, last = word.rpartition(" ")
+    last = _IRREGULAR.get(last, last + "s")
+    return "%d %s" % (count, (head + " " + last) if head else last)
+
+
 def proposal_key(p):
     # type: (Proposal) -> str
     """The decisions.json key: type|category|class|name lower-cased|sorted proposed ids."""
@@ -305,8 +318,9 @@ class _Review:
         for sid in sorted(ev):
             if not self.meets(totals[sid]):
                 self.flag("below_bar", category, klass, sid,
-                          "%d applications / %d players, under the bar of %d / %d"
-                          % (totals[sid].apps, totals[sid].players,
+                          "%s / %s, under the bar of %d / %d"
+                          % (plural(totals[sid].apps, "application"),
+                             plural(totals[sid].players, "player"),
                              self.th.min_applications, self.th.min_players))
         new_ids = sorted(sid for sid in ev if sid not in listed and self.meets(totals[sid]))
         never = [sid for sid in listed if sid not in ev]
@@ -330,14 +344,15 @@ class _Review:
         applications = sum(totals[sid].apps for sid in new_ids)
         if replaceable:
             ptype, plisted, confidence = "replace", replaceable, "high"
-            reason = ("%s never applied by any %s, while %s applied %s %d times"
-                      % (_ids(replaceable), _who(klass), _ids(new_ids), name, applications))
+            reason = ("%s never applied by any %s, while %s applied %s %s"
+                      % (_ids(replaceable), _who(klass), _ids(new_ids), name,
+                         plural(applications, "time")))
         else:
             ptype, plisted = "add", list(listed)
             confidence = "medium" if kept else "high"
-            reason = ("%s applied %s %d times under %s, which is not listed"
-                      % ("Players" if klass == ALL_CLASSES else klass, name, applications,
-                         _ids(new_ids)))
+            reason = ("%s applied %s %s under %s, which is not listed"
+                      % ("Players" if klass == ALL_CLASSES else klass, name,
+                         plural(applications, "time"), _ids(new_ids)))
         evidence = {sid: _spec_evidence(ev.get(sid, {})) for sid in list(plisted) + new_ids}
         self.proposals.append(Proposal(
             type=ptype, category=category, from_category="", klass=klass, name=name,
@@ -398,8 +413,8 @@ class _Review:
                 continue
             self.flags.append(Flag(
                 "cc_unlisted", "", cls, sid, self.names.get(sid) or _top_name(slot["names"]),
-                "%d applications / %d players; DB2 gives it a crowd-control mechanic, and it is in "
-                "neither hardCC nor softCC" % (total.apps, total.players)))
+                "%s / %s; DB2 gives it a crowd-control mechanic, and it is in neither hardCC nor "
+                "softCC" % (plural(total.apps, "application"), plural(total.players, "player"))))
 
 
 def _who(klass):
@@ -521,8 +536,8 @@ _RULES = (
      lambda f: "%s self-applied and DB2 says it %s" % (_pct(f.self_), _says(f, DEFENSIVE_SIGNALS))),
     ("R2", lambda f: f.group >= GROUP_SHARE and f.signals & RAID_SIGNALS,
      "raidCDs", "high",
-     lambda f: "%s of applications land on 5+ players at once (%d bursts) and DB2 says it %s"
-     % (_pct(f.group), f.bursts, _says(f, RAID_SIGNALS))),
+     lambda f: "%s of applications land on 5+ players at once (%s) and DB2 says it %s"
+     % (_pct(f.group), plural(f.bursts, "burst"), _says(f, RAID_SIGNALS))),
     ("R3", lambda f: (f.self_ >= SELF_SHARE and f.signals & OFFENSIVE_SIGNALS
                       and f.recast is not None and f.recast >= LONG_RECAST),
      "offensiveCDs", "high",

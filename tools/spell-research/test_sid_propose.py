@@ -980,3 +980,22 @@ class Sid11LustAndImmunityTest(unittest.TestCase):
         got = self.ruled(agg, 642, "Divine Shield", {"immunity"}).suggest("PALADIN", 642)
         self.assertEqual(got[:3], ("defensives", "R1", "high"))
         self.assertIn("immunity", got[3])
+
+
+class Sid11PluralTest(unittest.TestCase):
+    def test_a_below_bar_flag_with_one_application_reads_singular(self):
+        agg = agg_of([("WARRIOR", ARMS, "BUFF", 871, stats("Shield Wall", 1, 1))])
+        _props, flags = run(agg)
+        below = [f for f in flags if f.kind == "below_bar" and f.spell_id == 871]
+        self.assertEqual(len(below), 1)
+        self.assertIn("1 application / 1 player, under the bar of 20 / 3", below[0].detail)
+
+    def test_one_burst_reads_singular(self):
+        got = sid_propose.suggest(shape(apps=10, group=1), {"damage_taken_down"}, True, False)
+        self.assertEqual(got[1], "R2")
+        self.assertIn("(1 burst)", got[3])
+
+    def test_plural_helper(self):
+        self.assertEqual(sid_propose.plural(1, "time"), "1 time")
+        self.assertEqual(sid_propose.plural(21, "time"), "21 times")
+        self.assertEqual(sid_propose.plural(9, "category"), "9 categories")

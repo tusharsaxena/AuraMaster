@@ -53,9 +53,9 @@ def spec_to_class_from_db2(db2_cache, build=None):
 
 
 def format_summary(s):
-    return ("Scanned %d logs (%.1f MB): read %d, cached %d; dates %s..%s; "
+    return ("Scanned %s (%.1f MB): read %d, cached %d; dates %s..%s; "
             "lines %d, skipped %d, unattributed %d"
-            % (s["files"], s["bytes"] / 1e6, s["read"], s["cached"],
+            % (sid_propose.plural(s["files"], "log"), s["bytes"] / 1e6, s["read"], s["cached"],
                s["first_date"] or "-", s["last_date"] or "-",
                s["lines"], s["skipped"], s["unattributed"]))
 
@@ -213,8 +213,9 @@ def cmd_apply(args):
                                        queue["proposals"], changes)
     for change in changes:
         print(change)
-    print("Applied %d ruled proposals to %s: %d line changes; %d not yet ruled. Wrote %s"
-          % (len(ruled), args.categories, len(changes), pending, md))
+    print("Applied %s to %s: %s; %d not yet ruled. Wrote %s"
+          % (sid_propose.plural(len(ruled), "ruled proposal"), args.categories,
+             sid_propose.plural(len(changes), "line change"), pending, md))
     return 0
 
 

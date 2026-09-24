@@ -78,7 +78,12 @@ def _pct(part, whole):
 
 def _n(count, word):
     # type: (int, str) -> str
-    return "%d %s%s" % (count, word, "" if count == 1 else "s")
+    return sid_propose.plural(count, word)
+
+
+def _count(value, word):
+    """_n() for a count that may be missing ('- applications')."""
+    return "- %ss" % word if value is None else _n(int(value), word)
 
 
 def _cell(value):
@@ -463,8 +468,9 @@ def _sources_md(date, sources, counts):
            "| Skipped lines | %s |" % val("skipped"),
            "| Unattributed applications | %s |" % val("unattributed"),
            "| DB2 build | %s |" % (sources.get("db2_build") or "-"),
-           "| Evidence bar | %s applications from %s players |" % (
-               th.get("min_applications", "-"), th.get("min_players", "-")),
+           "| Evidence bar | %s from %s |" % (
+               _count(th.get("min_applications"), "application"),
+               _count(th.get("min_players"), "player")),
            "| Stale window | %s days |" % th.get("stale_days", "-"),
            "| Categories | %s |" % _cell(sources.get("categories", "-")),
            "| CastToAura | %s |" % _cell(sources.get("cast_to_aura", "-")),
