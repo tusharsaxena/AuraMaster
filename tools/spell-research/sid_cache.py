@@ -30,9 +30,10 @@ from sid_scan import AuraStats, FileAggregate
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "auramaster-spell-research"
 
 # Bump when the cached aggregate's meaning changes, so old entries are re-read.
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 # 2: `other` (applications onto a unit that is no player) split out of `single` (SID-10).
 # 3: an external's self-copy is one `single` application; recast is per caster onto any target (SID-11).
+# 4: a SPELL_AURA_REFRESH by the caster is a recast too (SID-11).
 # 2: adds classPlayers and specPlayers (exact distinct-player unions; see evidence_to_json).
 EVIDENCE_VERSION = 4
 # 3: rows carry `other`; `single` and `group` count player targets only.
@@ -314,7 +315,8 @@ def evidence_from_json(d):
     len() gives the row's distinct-player count; a union of two rows' sets is
     NOT a distinct count (every row shares '#0'..), so the exact unions come
     from classPlayers / specPlayers into class_players / spec_players.
-    `recast_samples` holds the recorded median alone, so its median is exact.
+    `recast_samples` holds the recorded median alone, so its median is exact (the propose stage
+    weights each spec's median by its applications across specs).
     """
     agg = EvidenceAggregate(lines=d["lines"], skipped=d["skipped"], unattributed=d["unattributed"],
                         first_date=d["firstDate"], last_date=d["lastDate"])

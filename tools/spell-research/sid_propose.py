@@ -637,15 +637,39 @@ def _class_rows(agg, aura_type):
 
 
 def _stats_of(rows):
-    """suggest()'s stats summed over specs. The recast median pools every spec's samples; from
-    evidence.json each spec carries only its own median, so there it is a median of medians."""
-    samples = [x for _spec, st in rows for x in st.recast_samples]
+    """suggest()'s stats summed over specs.
+
+    The recast is a median over every spec's samples, each spec weighted by its applications
+    (SID-11): from evidence.json a spec carries only its own median, and the merged samples are
+    capped at 200 per spec, so an unweighted median of medians let three rarely-casting druid
+    off-specs (37-69 s) outvote Restoration's Rejuvenation (7.8 s over 16,619 applications).
+    """
+    weighted = [(x, st.applications / len(st.recast_samples))
+                for _spec, st in rows if st.recast_samples for x in st.recast_samples]
     return {"applications": sum(st.applications for _s, st in rows),
             "self": sum(st.self_ for _s, st in rows),
             "single": sum(st.single for _s, st in rows),
             "group": sum(st.group for _s, st in rows),
             "other": sum(st.other for _s, st in rows),
-            "recast": round(statistics.median(samples), 2) if samples else None}
+            "recast": _weighted_median(weighted)}
+
+
+def _weighted_median(pairs):
+    # type: (List[Tuple[float, float]]) -> Optional[float]
+    """The lower weighted median of (value, weight) pairs, averaged with the next value on an exact
+    half (so equal weights give statistics.median); None when there is nothing to weigh."""
+    pairs = sorted((v, w) for v, w in pairs if w > 0)
+    if not pairs:
+        return None
+    half = sum(w for _v, w in pairs) / 2.0
+    run = 0.0
+    for i, (v, w) in enumerate(pairs):
+        run += w
+        if abs(run - half) <= 1e-9 * max(half, 1.0) and i + 1 < len(pairs):
+            return round((v + pairs[i + 1][0]) / 2.0, 2)
+        if run > half:
+            return round(v, 2)
+    return round(pairs[-1][0], 2)
 
 
 def _tank_only(rows, spec_map):

@@ -999,3 +999,15 @@ class Sid11PluralTest(unittest.TestCase):
         self.assertEqual(sid_propose.plural(1, "time"), "1 time")
         self.assertEqual(sid_propose.plural(21, "time"), "21 times")
         self.assertEqual(sid_propose.plural(9, "category"), "9 categories")
+
+
+class Sid11WeightedMedianTest(unittest.TestCase):
+    def test_equal_weights_are_the_plain_median(self):
+        wm = sid_propose._weighted_median
+        self.assertEqual(wm([(1.0, 1), (2.0, 1)]), 1.5)
+        self.assertEqual(wm([(3.0, 1), (1.0, 1), (2.0, 1)]), 2.0)
+        self.assertIsNone(wm([]))
+
+    def test_a_heavy_spec_wins(self):
+        self.assertEqual(sid_propose._weighted_median([(7.77, 16619), (43.41, 124), (68.92, 343)]),
+                         7.77)

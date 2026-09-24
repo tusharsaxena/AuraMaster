@@ -438,11 +438,15 @@ class ScanFileRecast(unittest.TestCase):
         self.assertEqual(st.recast_samples, [90.0])
 
     def test_single_self_application_has_no_sample(self):
-        self.assertEqual(scan_fixture().per_spec[ELE][(BUFF, 1219480)].recast_samples, [])
+        # B's one application (23:10:52) is followed by B's refresh (23:12:30): one recast of 98 s.
+        self.assertEqual(scan_fixture().per_spec[ELE][(BUFF, 1219480)].recast_samples, [98.0])
+        lines = [aura_line("23:00:01.0000", A, A, 7777)]
+        self.assertEqual(synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)].recast_samples, [])
 
     def test_two_casters_applications_are_not_one_casters_recast(self):
-        # Earth Shield 974: A onto B, then C onto A. Recast is per caster.
-        self.assertEqual(scan_fixture().per_spec[RESTO][(BUFF, 974)].recast_samples, [])
+        # Earth Shield 974: A onto B (23:10:53), C onto A (23:11:30), A refreshes B (23:11:41).
+        # Recast is per caster: A's 48 s only, never the 37 s to C's application.
+        self.assertEqual(scan_fixture().per_spec[RESTO][(BUFF, 974)].recast_samples, [48.0])
 
     def test_a_hot_recast_onto_different_targets_is_measured(self):
         # SID-11: a HoT applied every 8 s, each time to another player, never to the caster.
@@ -466,6 +470,27 @@ class ScanFileRecast(unittest.TestCase):
         lines += [aura_line("23:00:11.%d000" % i, A, "Player-1-000000%d0" % i, 7777) for i in range(6)]
         st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
         self.assertEqual(st.recast_samples, [10.0])
+
+    def test_a_refresh_by_the_same_caster_is_a_recast(self):
+        # SID-11, the real run: Lifebloom and Rejuvenation kept rolling on one target log
+        # SPELL_AURA_REFRESH, not APPLIED; without refreshes Lifebloom's recast read 32 s.
+        lines = [aura_line("23:00:00.0000", A, "Player-1-00000010", 7777)]
+        lines += [aura_line("23:00:%02d.0000" % (8 * i), A, "Player-1-00000010", 7777)
+                  .replace("SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH") for i in range(1, 4)]
+        st = synthetic(self, lines).per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual(st.recast_samples, [8.0, 8.0, 8.0])
+        self.assertEqual((st.applications, st.single), (1, 1))
+
+    def test_a_refresh_before_any_application_or_by_a_non_player_is_ignored(self):
+        lines = [aura_line("23:00:00.0000", A, "Player-1-00000010", 7777)
+                 .replace("SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH"),
+                 aura_line("23:00:05.0000", A, "Player-1-00000010", 7777),
+                 aura_line("23:00:09.0000", "Pet-0-1-1-1-1-00000001", "Player-1-00000010", 7777,
+                           flags="0x1111").replace("SPELL_AURA_APPLIED", "SPELL_AURA_REFRESH")]
+        agg = synthetic(self, lines)
+        st = agg.per_spec[RESTO][(BUFF, 7777)]
+        self.assertEqual((st.applications, st.recast_samples), (1, []))
+        self.assertNotIn((BUFF, 7777), agg.non_player)
 
     def test_recasts_onto_pets_count_too(self):
         lines = [aura_line("23:00:00.0000", A, "Pet-0-1-1-1-1-00000001", 7777, dest_flags="0x1111"),

@@ -301,6 +301,26 @@ class Evidence(unittest.TestCase):
         med = {r["spellId"]: r["recastMedian"] for r in ev["auras"]}
         self.assertEqual(med, {1: 90.0, 2: None})
 
+    def test_the_class_wide_recast_weights_each_spec_by_its_applications(self):
+        # SID-11, the real run: Restoration druids' Rejuvenation recast is 7.77 s over 16,619
+        # applications; three off-specs' medians (43, 69, 37 s over 124-731 applications) outvoted
+        # it as a plain median of medians (every spec's samples are capped at 200), so R6 failed
+        # and it was proposed Healing -> Support.
+        import sid_propose
+        agg = sid_scan.FileAggregate()
+        agg.per_spec[RESTO] = {(BUFF, 774): stats(applications=16619, recast_samples=[7.77] * 200)}
+        agg.per_spec[ELE] = {(BUFF, 774): stats(applications=124, recast_samples=[43.41] * 109)}
+        agg.per_spec[("SHAMAN", 263)] = {(BUFF, 774): stats(applications=343,
+                                                            recast_samples=[68.92] * 200)}
+        agg.per_spec[("SHAMAN", None)] = {(BUFF, 774): stats(applications=731,
+                                                             recast_samples=[36.8] * 200)}
+        self.assertEqual(sid_propose._stats_of(
+            [(spec, auras[(BUFF, 774)]) for (_c, spec), auras in agg.per_spec.items()])["recast"], 7.77)
+        back = sid_cache.evidence_from_json(json.loads(json.dumps(sid_cache.evidence_to_json(agg, {}))))
+        rows = [(spec, auras[(BUFF, 774)]) for (_c, spec), auras in back.per_spec.items()]
+        self.assertEqual(sid_propose._stats_of(rows)["recast"], 7.77)
+        self.assertEqual(sid_cache.recast_median(back.per_spec[ELE][(BUFF, 774)].recast_samples), 43.41)
+
     def test_evidence_carries_exact_cross_spec_and_per_spec_player_counts(self):
         # Per-row counts cannot be merged; these two tables carry the unions the propose stage needs.
         agg = sid_scan.FileAggregate()

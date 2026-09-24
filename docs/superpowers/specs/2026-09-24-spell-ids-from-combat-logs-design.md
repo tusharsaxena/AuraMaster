@@ -64,7 +64,9 @@ Streams each log as bytes, line by line. Never loads a file into memory.
     within 0.1 s: Power Infusion, Blessing of Sacrifice, Guardian Spirit) is ONE `single`
     application, not `self` + `single` (owner ruling, 2026-09-24);
   - `recast` median seconds between successive casts of the aura by the same caster, onto any
-    target (applications under 0.5 s apart are one cast), a rough cooldown, from at most the first
+    target, a `SPELL_AURA_REFRESH` (a rolling HoT re-cast before it expires) included
+    (applications under 0.5 s apart are one cast; across specs each spec's median is weighted by
+    its interval count), a rough cooldown, from at most the first
     200 intervals per aura to bound memory. Measured on self-applications alone, a HoT cast onto
     other players had no recast and failed R6 (owner ruling, 2026-09-24);
   - `firstSeen` / `lastSeen` log dates (from the file name stamp, not the line).

@@ -371,7 +371,7 @@ changes nothing. Run the addon's green gate after it, as for any `Categories.lua
 |---|---|---|
 | Evidence bar for a proposal | ≥ 20 applications from ≥ 3 distinct players | `propose --min-apps`, `--min-players` |
 | Group burst (target shape `group`) | the same caster and aura onto ≥ 5 distinct players within 1.0 s | `sid_scan.BURST_TARGETS`, `BURST_WINDOW` |
-| Recast samples | at most 200 intervals per aura: seconds between one caster's successive casts, onto any target; applications under 0.5 s apart are one cast | `sid_scan.RECAST_SAMPLE_CAP`, `RECAST_SAME_CAST` |
+| Recast samples | at most 200 intervals per aura: seconds between one caster's successive casts (applications and `SPELL_AURA_REFRESH`es), onto any target; applications under 0.5 s apart are one cast | `sid_scan.RECAST_SAMPLE_CAP`, `RECAST_SAME_CAST` |
 | External self-copy | the same caster's aura on itself and on exactly one other player within 0.1 s is one `single` application | `sid_scan.SELF_COPY_WINDOW` |
 | Stale | not applied in the newest 60 days of the scanned range while a same-name sibling is | `sid_propose.DEFAULT_STALE_DAYS` |
 
