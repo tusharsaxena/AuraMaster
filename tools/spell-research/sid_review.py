@@ -62,17 +62,15 @@ def _class_of(spec):
 def _players(klass, aura_type, sid, by_spec, class_players):
     # type: (str, str, int, dict, dict) -> int
     """Distinct players who applied the id: exact from evidence.json's class-wide counts (for ALL,
-    summed over the classes, whose caster sets are disjoint); without them, the most in one spec
-    (per class, summed for ALL) -- a lower bound, never a double count."""
+    summed over the classes folded into the proposal -- the classes its specs name, whose caster
+    sets are disjoint -- never every class that applied the id); without them, the most in one
+    spec (per class, summed for ALL) -- a lower bound, never a double count."""
     if klass == sid_propose.ALL_CLASSES:
-        exact = [n for (_c, t, i), n in class_players.items() if t == aura_type and i == sid]
-        if exact:
-            return sum(exact)
         most = {}  # type: Dict[str, int]
         for spec, v in by_spec.items():
             cls = _class_of(spec)
             most[cls] = max(most.get(cls, 0), int(v[1]))
-        return sum(most.values())
+        return sum(int(class_players.get((cls, aura_type, sid), n)) for cls, n in most.items())
     exact_one = class_players.get((klass, aura_type, sid))
     if exact_one is not None:
         return int(exact_one)

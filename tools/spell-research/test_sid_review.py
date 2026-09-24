@@ -139,6 +139,15 @@ class ReviewRowsTest(unittest.TestCase):
         self.assertEqual((row["class"], row["players"], row["applications"]), ("ALL", 7, 70))
         self.assertEqual(row["specs"], "WARRIOR Arms 40/4; SHAMAN Restoration 30/3")
 
+    def test_all_players_sum_only_the_folded_classes(self):
+        # MAGE also applied 900300 but its own suggestion was not folded (not R8, or ruled out):
+        # its players must not be added, or `players` disagrees with the row's specs and context.
+        extra = dict(CLASS_PLAYERS)
+        extra[("MAGE", "BUFF", 900300)] = 50
+        rows = sid_review.review_rows(proposals(), SHIPPED, NAMES, extra)
+        row = [r for r in rows if r["spell_id"] == 900300][0]
+        self.assertEqual(row["players"], 7)
+
     def test_without_exact_counts_players_is_a_lower_bound(self):
         rows = sid_review.review_rows(proposals(), SHIPPED, NAMES, {})
         move = [r for r in rows if r["type"] == "move"][0]
