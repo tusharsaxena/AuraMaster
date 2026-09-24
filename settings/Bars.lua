@@ -6,7 +6,7 @@ local _, NS = ...
 --     [ General ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Icon ][ Pandemic ]
 --
 -- A container drawn as icons sees every row here disabled, under a note naming where its style is
--- changed (B-2; settings/OptionsSetup.lua's drawDisabledNotice, which draws it small and gray).
+-- changed (B-2; settings/OptionsSetup.lua's mutedNotice, which the library draws small, in muted red).
 --
 -- The font, border, bar and background blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
 -- with anything extra appended after the block — and every color row has its class-color companion
@@ -145,9 +145,9 @@ textRows("stacks", G_STACK)
 -- ── Icon ──────────────────────────────────────────────────────────────────────────────────────
 -- Second-last in the strip, ahead of Pandemic (owner, 2026-09-20): the icon is an ornament beside
 -- the bar rather than part of the bar itself, so it follows the bar's own look and its three text
--- elements. A tab's place is where its group is FIRST DECLARED — settings/OptionsSetup.lua's
--- collectTabs walks NS.SchemaForPage(pageKey) in declaration order and opens a tab the first time
--- it meets a group — so this block sits here, between the text rows and Pandemic, rather than
+-- elements. A tab's place is where its group is FIRST DECLARED — the library's
+-- O.RenderTabbedSchema walks NS.SchemaForPage(pageKey) in declaration order and opens a tab the
+-- first time it meets a group — so this block sits here, between the text rows and Pandemic, rather than
 -- carrying an index of its own.
 
 NS.RegisterSchemaRows({

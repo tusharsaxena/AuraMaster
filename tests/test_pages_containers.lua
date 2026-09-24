@@ -134,34 +134,28 @@ test("containers: NS.OpenOptionsPage('containers') opens its own category, not t
     assertEqual(opened[2], NS.L["Containers"], "N-3: Containers opens its own category, not the main panel")
 end)
 
---- The chrome block's two controls, as the last render drew them: the picker and New container.
-local function headerWidgets(NS)
+--- The band's two controls, as the last render drew them: the picker and New container (the
+--- library's page banner and its `action` Button, found through its chrome ledger).
+local function headerWidgets(NS, P)
     local ctx = NS.Helpers.__pageCtx.containers
-    local picker, new
-    for _, w in ipairs(ctx.__chromeWidgets or {}) do
-        if w.type == "Dropdown" and w.labelText == NS.L["Container"] then picker = w end
-        if w.type == "Button" and w.text == NS.L["New container"] then new = w end
-    end
-    return picker, new
+    return P.banner(ctx), P.bannerAction(ctx)
 end
 
 test("containers: the picker and New container sit in the band above the strip, drawn before it (feedback #2)", function()
     local NS, _, P = containers()
     local H = NS.Helpers
-    local order, real, headerFrame = {}, {}, nil
-    for _, name in ipairs({ "PageHeader", "TabStrip" }) do
+    local order, real = {}, {}
+    for _, name in ipairs({ "PageBanner", "TabStrip" }) do
         real[name] = H[name]
         H[name] = function(...)
             local n = #order
             order[n + 1] = name
-            local ret = real[name](...)
-            if name == "PageHeader" then headerFrame = ret end
-            return ret
+            return real[name](...)
         end
     end
     -- A widget's frame is a fresh table per Create (tests/_kit's own spy convention: rawset a
     -- method to record, rawset nil to restore), so shadowing SetParent right after Create catches
-    -- placeInHeader's call on it, made moments later inside the same build.
+    -- PageBanner's call on it, made moments later inside the same draw.
     local AceGUI = NS.AceGUI
     local realCreate = AceGUI.Create
     local parents = {}
@@ -173,20 +167,21 @@ test("containers: the picker and New container sit in the band above the strip, 
         return w
     end
     P.rerender("Containers")
-    H.PageHeader, H.TabStrip = real.PageHeader, real.TabStrip
+    H.PageBanner, H.TabStrip = real.PageBanner, real.TabStrip
     AceGUI.Create = realCreate
-    -- red under: the page drawing no chrome block, or drawing it after the strip (its band unreserved)
-    assertEqual(table.concat(order, ","), "PageHeader,TabStrip", "the band, then the tabs")
-    local picker, new = headerWidgets(NS)
+    -- red under: the page drawing no band, or drawing it after the strip (its band unreserved)
+    assertEqual(table.concat(order, ","), "PageBanner,TabStrip", "the band, then the tabs")
+    local picker, new = headerWidgets(NS, P)
     -- red under: the picker and New still drawn in the tab body (the retired options-ui-§14 deviation)
     assertTrue(picker ~= nil and new ~= nil, "both drawn in the band")
     assertFalse(inScroll(NS, picker) or inScroll(NS, new), "neither in the tab body")
-    -- red under: the pair drawn but never actually anchored into the band (placeInHeader not run,
-    -- or run against some other frame) -- "neither in the tab body" alone is trivially true of a
+    -- red under: the pair drawn but never actually anchored into the band (New container drawn
+    -- anywhere but as the banner's action) -- "neither in the tab body" alone is trivially true of a
     -- widget parented nowhere at all
-    assertTrue(headerFrame ~= nil and parents[picker] == headerFrame and parents[new] == headerFrame,
-        "both parented into the header frame PageHeader returned")
-    assertTrue(H.__pageCtx.containers.__bannerWidget == picker, "the picker is the page's banner widget")
+    local chrome = H.__pageCtx.containers.chrome
+    assertTrue(parents[picker] == chrome and parents[new] == chrome, "both parented into the page's chrome band")
+    assertEqual(picker.labelText, NS.L["Container"], "the band's picker")
+    assertEqual(new.text, NS.L["New container"], "and its create act")
     assertEqual(table.concat(picker.order, ","), "1,4,2,3", "by name (B2-2)")
     assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])
 end)
@@ -235,8 +230,8 @@ test("containers: Delete keeps the band's picker and New through both refreshes,
     local ws = P.rerender("Containers")
     NS.Helpers.__pageCtx.containers.panel:Show()   -- on screen: both refreshes below re-render it at once
     local renders = 0
-    local render = NS.Helpers.RenderTabbedPage
-    NS.Helpers.RenderTabbedPage = function(ctx, key, ...)
+    local render = NS.Helpers.RenderPage
+    NS.Helpers.RenderPage = function(ctx, key, ...)
         if key == "containers" then renders = renders + 1 end
         return render(ctx, key, ...)
     end
@@ -249,7 +244,7 @@ test("containers: Delete keeps the band's picker and New through both refreshes,
     assertEqual(renders, 2, "the popup's own refresh, then the registry change's")
     -- red under: the block drawn only on a first render, or its widgets released by the render that
     -- drew them (the reported loss: no picker and no New after a delete)
-    local picker, new = headerWidgets(NS)
+    local picker, new = headerWidgets(NS, P)
     assertTrue(picker ~= nil and not picker.__released, "the band's picker is live after both renders")
     assertTrue(new ~= nil and not new.__released, "and so is New container")
     assertEqual(table.concat(picker.order, ","), "1,4,3", "the picker lists the remaining containers, by name")
@@ -265,9 +260,9 @@ test("containers: with no containers the page draws the band's picker and New, a
     local NS, _, P = containers()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     local ws = P.rerender("Containers")
-    -- red under: collectTabs dropping the page's one tab when no container exists
+    -- red under: RenderPage dropping the page's one tab when no container exists
     assertEqual(P.tabKeys("containers")[1], NS.L["General"])
-    local picker, new = headerWidgets(NS)
+    local picker, new = headerWidgets(NS, P)
     assertTrue(new ~= nil, "New is still offered")
     assertTrue(picker ~= nil and picker.order[1] == nil, "the picker is drawn, empty")
     assertNil(P.row(ws, "container.name"), "no row edits a container that does not exist")
@@ -439,7 +434,7 @@ test("containers: a duplicate and a copy-from keep the source's Fill (B5)", func
     assertEqual(NS.Database.FindContainer(1).layout.axis, "vertical")
 end)
 
-test("containers: in combat the library refuses Duplicate; New reaches CM.Create's own gray refusal; nothing is created", function()
+test("containers: in combat the library refuses Duplicate and New container; nothing is created", function()
     local NS, m, P, ws = containers()
     local lines = P.chat()
     m.__lockdown = true
@@ -449,13 +444,13 @@ test("containers: in combat the library refuses Duplicate; New reaches CM.Create
     -- red under: the library's write seam not refusing the button pair in combat
     assertEqual(#lines, 1, "the lock's one notice")
     assertTrue(lines[1]:find(m.LibStub("LibKa0s-Options-1.0").STRINGS.COMBAT_LOCKED_NOTICE, 1, true) ~= nil, lines[1])
-    -- New container is the host's own chrome button: in the client the lock's cover sits over it; a
-    -- click that still arrives meets CM.Create's gate, the one /am new meets (test_slash.lua pins
-    -- that path), since the create's apply cannot run until combat ends.
+    -- New container is the library's banner action (O.PageBanner's `action`, AM-17), refused in
+    -- combat by the same lock as the picker's selection, before doNew runs: the lock's notice is
+    -- once per combat, so nothing more is printed. /am new still meets CM.Create's own gray
+    -- refusal (test_slash.lua pins that path).
     P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
-    -- red under: sayError printing a refusal plain, or a page act bypassing the combat refusal
-    assertEqual(#lines, 2, "one refusal from the create gate")
-    assertTrue(lines[2]:find("|cff808080cannot create a container during combat", 1, true) ~= nil, lines[2])
+    -- red under: the band's create act bypassing the library's combat refusal
+    assertEqual(#lines, 1, "no second line: the lock already said it once this combat")
     assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS)
 end)
 

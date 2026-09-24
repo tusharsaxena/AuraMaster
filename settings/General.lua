@@ -196,7 +196,7 @@ local function build(mainCategory)
     ctx.panel.defaultsOnClick = function() H.RestoreDefaults("general", ctx) end
     H.__pageCtx.general = ctx
     -- Through SetRenderer, which owns WHEN the page draws and refuses under combat (options-ui-§11).
-    H.SetRenderer(ctx, function(c) H.RenderTabbedPage(c, "general", PAGE_SPEC) end)
+    H.SetRenderer(ctx, function(c) H.RenderPage(c, "general", PAGE_SPEC) end)
     return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, L["General"])
 end
 

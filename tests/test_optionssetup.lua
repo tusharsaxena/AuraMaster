@@ -7,6 +7,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local NS, mocks = T.NS, T.mocks
 local fresh = dofile("tests/fresh_env.lua")
+local pages = dofile("tests/page_helpers.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
 -- Pages, by key and tree label. Filters, Layout, Bars, Icons and Text are sub-pages of Containers
@@ -93,11 +94,12 @@ test("options: the General page leads with Master controls, in canonical order",
 end)
 
 test("options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     local ctx = NS2.Helpers.__pageCtx.filters
     local function tabs()
         local keys = {}
-        for _, t in ipairs(ctx.__tabs or {}) do keys[t.key] = true end
+        for _, t in ipairs(P.drawnTabs(ctx)) do keys[t.key] = true end
         return keys
     end
     NS2.State.SetActiveContainer(1)
@@ -109,7 +111,7 @@ test("options: the Filters page offers the Overrides tab only for a buff or debu
     -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
     NS2.Helpers.RefreshAllPanels()
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
-    -- red under: collectTabs ignoring a bespoke tab's auraTypes
+    -- red under: the page's tabs handed to the library without their auraTypes filter
     assertNil(tabs().overrides)
 end)
 
@@ -117,12 +119,13 @@ end)
 -- collection and tab validation moved into local helpers.
 
 test("options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     local ctx = NS2.Helpers.__pageCtx.filters
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
     -- Batch 8: the Filters page's `overrides` tab carries `before = Sorting`, so it is INSERTED
-    -- ahead of that group rather than appended after every group (placeTab). A bespoke tab with no
+    -- ahead of that group rather than appended after every group (the library places it). A bespoke tab with no
     -- `before` still lands last; this page no longer has one to prove it with, so the expectation
     -- below is the insertion, derived from the schema rather than written out.
     local want, seen = {}, {}
@@ -136,7 +139,7 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
         end
     end
     local got = {}
-    for i, t in ipairs(ctx.__tabs) do got[i] = t.key end
+    for i, t in ipairs(P.drawnTabs(ctx)) do got[i] = t.key end
     assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups, the bespoke tab where it asked")
     ctx.activeTab = "no such tab"
     NS2.Helpers.RefreshAllPanels()   -- a hidden panel is marked dirty, and re-renders on its next show
@@ -145,21 +148,24 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
 end)
 
 test("options: with no containers a container page draws one placeholder tab", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     for _, c in ipairs(NS2.Database.GetContainers()) do NS2.ContainerManager.Delete(c.id) end
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.filters
-    assertEqual(#ctx.__tabs, 1, "one tab")
-    assertEqual(ctx.__tabs[1].key, "__empty")
+    local tabs = P.drawnTabs(ctx)
+    assertEqual(#tabs, 1, "one tab")
+    assertEqual(tabs[1].key, "__empty")
     assertEqual(ctx.activeTab, "__empty")
 end)
 
 test("options: the banner is the picker — choosing a container retargets every page", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    local ctx = NS2.Helpers.__pageCtx.bars
-    assertTrue(ctx.__bannerWidget ~= nil, "the page drew its banner")
-    ctx.__bannerWidget:__fire("OnValueChanged", 3)
+    local banner = P.banner(NS2.Helpers.__pageCtx.bars)
+    assertTrue(banner ~= nil, "the page drew its banner")
+    banner:__fire("OnValueChanged", 3)
     assertEqual(NS2.State.activeContainerId, 3)
     assertEqual(NS2.GetSetting("container.unit"), "target")
 end)
@@ -315,6 +321,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
             return f
         end
     end })
+    local P = pages(NS2, m)
     local H = NS2.Helpers
     local ctx = H.__pageCtx.bars
     ctx.chrome:__setGeom(200, 0)
@@ -322,7 +329,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
 
     local function snapshot()
         local ys = {}
-        for i in ipairs(ctx.__tabs) do
+        for i in ipairs(P.drawnTabs(ctx)) do
             local b = ctx.__tabKids[i]
             assertEqual(b.__stripRel, ctx.chrome, "tab " .. i .. " anchors to the chrome")
             ys[i] = b.__stripY
@@ -334,7 +341,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
     clear()
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local keys = {}
-    for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
+    for i, t in ipairs(P.drawnTabs(ctx)) do keys[i] = t.key end
     assertTrue(#keys >= 2, "the page draws several tabs")
     assertEqual(ctx.activeTab, keys[1])
     assertEqual(H.__tabArtHeight(), m.__atlasSizes["Options_Tab_Left"][2], "the probe measured the inactive art")
@@ -440,6 +447,6 @@ test("options: a page drawn for another style heads its tabs with the notice in 
     for _, t in ipairs(P.texts(ws)) do
         if t:find("Not in use:", 1, true) then hit = t end
     end
-    -- red under: drawDisabledNotice keeping the old gray |cff808080
+    -- red under: mutedNotice keeping the old gray |cff808080
     assertTrue(hit ~= nil and hit:sub(1, #want) == want, tostring(hit))
 end)

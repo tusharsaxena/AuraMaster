@@ -2,11 +2,12 @@ local _, NS = ...
 
 -- settings/OptionsSetup.lua — wires the addon into LibKa0s-Options-1.0 (options-ui-§1).
 --
--- The canvas shell, the schema-row → AceGUI makers, the two-column flow engine, the tab strip and
--- the chrome band are the library's. This file is the part that is ours: where a value lives,
--- which rows belong to which page, what a color looks like on disk — and the one piece of page
--- furniture four pages share, the CONTAINER BANNER, with the renderer every per-container page
--- goes through.
+-- The canvas shell, the schema-row → AceGUI makers, the two-column flow engine, the chrome band and
+-- the tabbed page itself -- the strip, the stale-tab heal, the tab switch, the disabled notice and
+-- the page banner with its create button -- are the library's (O.RenderTabbedSchema, O.PageBanner).
+-- This file is the part that is ours: where a value lives, which rows belong to which page, what a
+-- color looks like on disk -- and the CONTAINER BANNER every per-container page shares, with
+-- Helpers.RenderPage, which maps this addon's page spec onto the library's tabbed page.
 --
 -- Loads after settings/Slash.lua and BEFORE every settings/<page>.lua, because those files call
 -- the composers (NS.Helpers.FontGroup, …) at FILE LOAD.
@@ -245,8 +246,7 @@ if not lib then
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "UnnamedCandidates", "SelectTab",
         -- this addon's decorations on the live instance (defined below the `return`)
-        "SelectContainer", "ContainerBanner", "ContainerHeader", "RenderWarnings",
-        "RenderTabbedPage", "RenderContainerPage",
+        "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
     }) do
         Helpers[name] = function() end
     end
@@ -361,12 +361,19 @@ local BANNER_TOOLTIP = "Which container the settings on this page apply to. Ever
 
 --- The banner every per-container page draws (options-ui-§14): the picker itself, the page's only
 --- picker, re-read at render time so two pages can never disagree.
-function Helpers.ContainerBanner(ctx)
+---
+--- `opts` (optional) = { tooltip, action }. The Containers page passes its own tooltip and its create
+--- act as `action`, which O.PageBanner draws in the band's right half, level with the picker: the
+--- picker+create band options-ui-§14 describes, drawn by the library rather than by this file.
+--- The library keeps the Dropdown and the Button and gives both back to AceGUI once the next band
+--- is drawn (LibKa0s OptionsTabs minor 4), so this file holds neither.
+function Helpers.ContainerBanner(ctx, opts)
+    opts = opts or {}
     local list, order = containerList()
     local _, activeId = NS.ActiveContainer()
-    local dd = Helpers.PageBanner(ctx, {
+    return Helpers.PageBanner(ctx, {
         label    = L["Container"],
-        tooltip  = L[BANNER_TOOLTIP],
+        tooltip  = opts.tooltip or L[BANNER_TOOLTIP],
         list     = list,
         order    = order,
         value    = activeId,
@@ -374,95 +381,8 @@ function Helpers.ContainerBanner(ctx)
             if id == nil or id == activeId then return end
             Helpers.SelectContainer(id)
         end,
+        action   = opts.action,
     })
-    ctx.__bannerWidget = dd
-    return dd
-end
-
--- The Containers page's CHROME BLOCK (options-ui-§14, feedback #2): the picker and New container on
--- one row above the tab strip. Not Helpers.PageBanner, which draws exactly one Dropdown: a page with
--- a picker AND a create control puts both in the library's PageHeader frame, and the host places
--- what it draws inside it. Its widgets are recorded on ctx.__chromeWidgets, which settings/Containers.lua
--- releases after the NEXT render: a render is usually running inside one of their own callbacks.
-local HEADER_CONTROL_H = 24   -- AceGUI's Button frame height
--- AceGUI's labeled Dropdown anchors its CONTROL 14px below the frame's top
--- (AceGUIWidget-DropDown.lua's SetLabel: `dropdown:SetPoint("TOPLEFT", frame, "TOPLEFT", -15, -14)`),
--- not centered or foot-aligned in the 44-tall band Helpers.BANNER_H reserves for the frame -- that
--- SetHeight(40) call runs before this file's own f:SetHeight(BANNER_H) stretches the frame further,
--- and the control never re-anchors off the new height. New container levels with THIS y, not the
--- band's foot.
-local HEADER_DROPDOWN_CONTROL_Y = 14
-local HEADER_PAIR_GAP  = 4    -- half the gutter between the block's two halves
-
---- Anchor one AceGUI widget's frame inside the block, on its LEFT or RIGHT half.
-local function placeInHeader(widget, frame, y, height, half)
-    local f = widget and widget.frame
-    if not f then return end
-    f:SetParent(frame)
-    f:ClearAllPoints()
-    if half == "LEFT" then
-        f:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
-        f:SetPoint("TOPRIGHT", frame, "TOP", -HEADER_PAIR_GAP, -y)
-    else
-        f:SetPoint("TOPLEFT", frame, "TOP", HEADER_PAIR_GAP, -y)
-        f:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -y)
-    end
-    f:SetHeight(height)
-    f:Show()
-end
-
---- The block's two controls, built into the frame PageHeader hands over.
-local function buildContainerHeader(ctx, frame, spec)
-    local kids = ctx.__chromeWidgets
-    local list, order = containerList()
-    local _, activeId = NS.ActiveContainer()
-    local dd = NS.AceGUI:Create("Dropdown")
-    kids[#kids + 1] = dd
-    dd:SetLabel(L["Container"])
-    dd:SetList(list, order)
-    dd:SetValue(activeId)
-    dd:SetCallback("OnValueChanged", function(_, _, id)
-        if id == nil or id == activeId then return end
-        Helpers.SelectContainer(id)
-    end)
-    Helpers.AttachTooltip(dd, L["Container"], L["Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."])
-    placeInHeader(dd, frame, 0, Helpers.BANNER_H, "LEFT")
-    ctx.__bannerWidget = dd
-
-    local btn = NS.AceGUI:Create("Button")
-    kids[#kids + 1] = btn
-    btn:SetText(L["New container"])
-    btn:SetCallback("OnClick", function() if spec.onNew then spec.onNew() end end)
-    Helpers.AttachTooltip(btn, L["New container"], L["Create a container showing the player's buffs as bars. Change what it shows below."])
-    -- Level with the dropdown's control, not its label or the band's foot (see HEADER_DROPDOWN_CONTROL_Y).
-    placeInHeader(btn, frame, HEADER_DROPDOWN_CONTROL_Y, HEADER_CONTROL_H, "RIGHT")
-end
-
---- The Containers page's chrome: the picker and New container, one row above the strip. Called as
---- RenderTabbedPage's `chrome`, so it is drawn before the strip reserves its band. `spec.onNew` is
---- the page's own create act.
----
---- Swaps in a fresh ctx.__chromeWidgets before building and releases the PREVIOUS render's kids only
---- after PageHeader returns -- never before: this may be reached from inside the picker's or New's
---- own callback, and a widget released on the way in could be handed straight back out, re-
---- initialized, under its own callback. This covers every caller, not only settings/Containers.lua's
---- own renderPage wrapper: RenderTabbedPage's tab-strip `onSelect` re-renders through
---- Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome) directly, calling this again without going
---- through that wrapper, and without this the swap here that path would leak one picker and one
---- button per click once the page ever grows a second tab.
-function Helpers.ContainerHeader(ctx, spec)
-    local stale = ctx.__chromeWidgets
-    ctx.__chromeWidgets = {}
-    ctx.__bannerWidget = nil
-    local headerFrame = Helpers.PageHeader(ctx, {
-        height = Helpers.BANNER_H,
-        build  = function(_, hframe) buildContainerHeader(ctx, hframe, spec or {}) end,
-    })
-    local AceGUI = NS.AceGUI
-    if AceGUI and AceGUI.Release and stale then
-        for _, w in ipairs(stale) do AceGUI:Release(w) end
-    end
-    return headerFrame
 end
 
 --- One orange line per thing the aura engine will silently not do for this container, above the
@@ -474,56 +394,12 @@ function Helpers.RenderWarnings(ctx, cfg)
     end
 end
 
---- Add a bespoke tab to the strip: ahead of the tab `before` names when this render draws it, else
---- last.
-local function placeTab(tabs, entry, before)
-    for i, t in ipairs(tabs) do
-        if before ~= nil and t.key == before then
-            table.insert(tabs, i, entry)
-            return
-        end
-    end
-    tabs[#tabs + 1] = entry
-end
+-- ---------------------------------------------------------------------------
+-- The tabbed page: this addon's page spec, mapped onto the library's
+-- ---------------------------------------------------------------------------
 
---- A tabbed page's tabs: its schema groups in first-seen order, then the bespoke tabs the
---- container's aura type admits. A bespoke tab keyed by a schema group takes that group's place in
---- the strip rather than adding a second tab; one with `before` is drawn ahead of that tab. A
---- per-container page with no container has no tabs; an addon-wide page (`spec.addonWide`) has its
---- tabs whatever the registry holds.
---- @return table tabs, table byGroup, table bespoke
-local function collectTabs(cfg, pageKey, spec)
-    local tabs, byGroup, bespoke = {}, {}, {}
-    if not (cfg or spec.addonWide) then return tabs, byGroup, bespoke end
-    for _, row in ipairs(NS.SchemaForPage(pageKey)) do
-        if not byGroup[row.group] then
-            byGroup[row.group] = {}
-            tabs[#tabs + 1] = { key = row.group, label = row.group }
-        end
-        local rows = byGroup[row.group]
-        rows[#rows + 1] = row
-    end
-    for _, t in ipairs(spec.tabs or {}) do
-        if not t.auraTypes or (cfg and t.auraTypes[cfg.auraType]) then
-            if not byGroup[t.key] then
-                placeTab(tabs, { key = t.key, label = t.label }, t.before)
-            end
-            bespoke[t.key] = t
-        end
-    end
-    return tabs, byGroup, bespoke
-end
-
---- Keep the active tab when this render draws it; otherwise fall back to the first.
-local function settleActiveTab(ctx, tabs)
-    for _, t in ipairs(tabs) do
-        if t.key == ctx.activeTab then return end
-    end
-    ctx.activeTab = tabs[1].key
-end
-
---- The notice over a page drawn disabled: a quiet muted-red note (C.NOTICE_COLOR) in the small
---- font, then the ordinary row gap before the first control.
+--- The notice over a page drawn disabled, in the addon's muted red (C.NOTICE_COLOR). The library
+--- draws it, in the small font with the ordinary row gap under it, and adds no color of its own.
 ---
 --- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
 --- shouted a full-width warning for what is an informational aside — nothing is wrong, the page is
@@ -535,94 +411,86 @@ end
 --- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
 --- quieter than the title's is still no warning. Later the same day the owner asked for muted red
 --- instead (Task 20), on bars, icons and text pages alike; the combat refusals keep their gray.
-local function drawDisabledNotice(ctx, text)
-    Helpers.TextRow(ctx, "|c" .. C.NOTICE_COLOR .. text .. "|r", { fontObject = "GameFontHighlightSmall" })
-    local scroll = Helpers.EnsureScroll(ctx)
-    if scroll then Helpers.AddSpacer(scroll, Helpers.ROW_VSPACER) end
-end
-
---- A bespoke tab's renderer under the page's disable, as RenderRows' `opts.disabled` holds it: the
---- library's makers read `ctx.__renderDisabled`, which is restored on the way out, a raise included,
---- so one failed render never leaves every later one disabled.
-local function renderBespoke(ctx, cfg, tab, rows, disabled)
-    local outer = ctx.__renderDisabled
-    ctx.__renderDisabled = (disabled or outer) and true or nil
-    local ok, err = pcall(tab.render, ctx, cfg, rows)
-    ctx.__renderDisabled = outer
-    if not ok then error(err, 0) end
-end
-
---- The active tab's content, under the page's intro; a per-container page with no container draws
---- the empty registry's one line instead. A bespoke tab is handed its group's schema rows when it
---- stands in for one. A page whose `disabledFor(cfg)` answers true draws its `disabledNotice` and
---- every control disabled (B-2: the Bars page on an icons container, and the reverse).
-local function renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
-    if not (cfg or spec.addonWide) then
-        Helpers.TextRow(ctx, L["No containers yet. Create one on Containers, or type /am new."])
-        return
-    end
-    local disabled = (cfg and spec.disabledFor and spec.disabledFor(cfg)) and true or false
-    if cfg and spec.intro then spec.intro(ctx, cfg) end
-    local notice = spec.disabledNotice
+local function mutedNotice(notice, cfg)
     if type(notice) == "function" then notice = notice(cfg) end
-    if disabled and notice then drawDisabledNotice(ctx, notice) end
-    local b = bespoke[ctx.activeTab]
-    if b then
-        renderBespoke(ctx, cfg, b, byGroup[ctx.activeTab], disabled)
-    elseif byGroup[ctx.activeTab] then
-        Helpers.RenderRows(ctx, byGroup[ctx.activeTab], spec.afterGroup, spec.pairWith,
-            { noHeadings = true, disabled = disabled })
-    end
+    if type(notice) ~= "string" then return nil end
+    return "|c" .. C.NOTICE_COLOR .. notice .. "|r"
 end
 
---- Render one tabbed page: the optional chrome (`chrome(ctx)`, drawn before the strip so the strip
---- reserves its band), the tab strip over the page's schema groups plus any bespoke tabs, and the
---- active tab's content. The General page renders through this with no chrome; every per-container
---- page through RenderContainerPage, which is this plus the container banner.
+-- The page key an empty registry's render hands the library: no row carries it, so the strip it
+-- draws is the one placeholder tab below and nothing else (options-ui-§13: every page draws a strip).
+local EMPTY_PAGE = "__empty"
+local EMPTY_TABS = { {
+    key    = "__empty",
+    label  = L["Container"],
+    render = function(ctx) Helpers.TextRow(ctx, L["No containers yet. Create one on Containers, or type /am new."]) end,
+} }
+
+--- The page's own tabs as the library takes them: those the container's aura type admits, each
+--- handed the container as well as its rows. One keyed by a schema group takes that group's place
+--- and is handed its rows; one with `before` is drawn ahead of the tab it names (LibKa0s Options
+--- 24.31.4.7.4, `opts.tabs`).
+local function hostTabs(spec, cfg)
+    local out = {}
+    for _, t in ipairs(spec.tabs or {}) do
+        if not t.auraTypes or (cfg and t.auraTypes[cfg.auraType]) then
+            local render, n = t.render, #out
+            out[n + 1] = {
+                key = t.key, label = t.label, tooltip = t.tooltip, before = t.before,
+                render = function(ctx, rows) return render(ctx, cfg, rows) end,
+            }
+        end
+    end
+    return out
+end
+
+--- The library's `opts` for one render of a page with a container (or an addon-wide page).
+local function pageOpts(spec, cfg)
+    local disabledFor, notice, intro = spec.disabledFor, spec.disabledNotice, spec.intro
+    local opts = { tabs = hostTabs(spec, cfg), cfg = cfg }
+    if disabledFor then opts.disabledFor = function(c) return c ~= nil and disabledFor(c) end end
+    if notice then opts.disabledNotice = function(c) return mutedNotice(notice, c) end end
+    if intro and cfg then opts.chrome = function(c) intro(c, cfg) end end
+    return opts
+end
+
+--- Render one tabbed page through the library's O.RenderTabbedSchema: the optional `banner(ctx)`
+--- first (the strip reserves its band under it), then the strip over the page's schema groups and
+--- its own tabs, then the active tab's content. The library owns the partition, the stale-tab heal,
+--- the tab-switch re-render, the disabled notice and the release of the banner's widgets; this
+--- wrapper owns only what the page spec means for this addon. General and Containers call it
+--- directly; every per-container page through RenderContainerPage, which passes the container
+--- banner. A per-container page with no container draws the empty registry's one tab and line.
 ---
 --- `spec` fields, all optional:
 ---   addonWide            the page's tabs do not depend on a container existing (General)
----   tabs                 { { key, label, render(ctx, cfg, rows), auraTypes, before } } bespoke
----                        tabs, after the schema's own; one keyed by a schema group replaces that
----                        group's rows, and one with `before` is drawn ahead of the tab it names
+---   tabs                 { { key, label, render(ctx, cfg, rows), auraTypes, before } }: the page's
+---                        own tabs, drawn when the container's aura type is in `auraTypes` (or it
+---                        has none); one keyed by a schema group replaces that group's rows, one
+---                        with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
----   disabledFor(cfg)     true draws every control of every tab disabled (bespoke tabs through
----                        `ctx.__renderDisabled`), under `disabledNotice` (a string, or a function of
----                        cfg answering one), drawn as a small note
+---   disabledFor(cfg)     true draws every control of every tab disabled (a page tab's widgets
+---                        through `ctx.__renderDisabled`), under `disabledNotice` (a string, or a
+---                        function of cfg answering one), drawn as a small muted-red note
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
 ---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
-function Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)
+function Helpers.RenderPage(ctx, pageKey, spec, banner)
     spec = spec or {}
     Helpers.ClearScroll(ctx)
     local scroll = Helpers.EnsureScroll(ctx)
-    ctx.__bannerWidget = nil
-    if chrome then chrome(ctx) end
-
+    if banner then banner(ctx) end
     local cfg = NS.ActiveContainer()
-    local tabs, byGroup, bespoke = collectTabs(cfg, pageKey, spec)
-    -- Every page draws a strip (options-ui-§13), including the empty registry's one-tab page.
-    if tabs[1] == nil then tabs[1] = { key = "__empty", label = L["Container"] } end
-    ctx.__tabs = tabs   -- test seam: which tabs this render drew
-    settleActiveTab(ctx, tabs)
-
-    Helpers.TabStrip(ctx, {
-        tabs  = tabs,
-        value = ctx.activeTab,
-        onSelect = function(key)
-            if key == ctx.activeTab then return end
-            ctx.activeTab = key
-            Helpers.RenderTabbedPage(ctx, pageKey, spec, chrome)
-        end,
-    })
-
-    renderActiveTab(ctx, cfg, spec, byGroup, bespoke)
-
+    if cfg or spec.addonWide then
+        Helpers.RenderTabbedSchema(ctx, pageKey, spec.afterGroup, spec.pairWith, pageOpts(spec, cfg))
+    else
+        Helpers.RenderTabbedSchema(ctx, EMPTY_PAGE, nil, nil, { tabs = EMPTY_TABS })
+    end
     if scroll and scroll.DoLayout then scroll:DoLayout() end
 end
 
---- Render one per-container page: the container banner (options-ui-§14), then RenderTabbedPage.
+--- Render one per-container page: the container banner (options-ui-§14), then the tabbed page.
 function Helpers.RenderContainerPage(ctx, pageKey, spec)
-    Helpers.RenderTabbedPage(ctx, pageKey, spec, Helpers.ContainerBanner)
+    Helpers.RenderPage(ctx, pageKey, spec, Helpers.ContainerBanner)
 end
 
 -- Test seam: the ctx each tabbed page built, by page key. The library keeps its registry private,

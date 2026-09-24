@@ -87,7 +87,7 @@ test("text page: a bars or icons container sees every row disabled under the not
         assertTrue(rows[1] ~= nil, key .. " drew its rows")
         for _, w in ipairs(rows) do
             -- red under: the Text spec without disabledFor, or the bespoke General tab dropping the
-            -- page's disable (renderBespoke's ctx.__renderDisabled)
+            -- page's disable (the library's ctx.__renderDisabled around a page tab's render)
             assertTrue(w.disabled, key .. ": " .. w.labelText)
         end
     end)

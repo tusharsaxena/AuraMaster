@@ -46,7 +46,7 @@ local BUFFS_DEBUFFS = { HELPFUL = true, HARMFUL = true }
 
 -- The first tab was "What to show" until the owner renamed it (2026-09-20): every other container
 -- sub-page opens on a tab called General, and this one asks the same kind of question. The name is
--- per PAGE — settings/OptionsSetup.lua's collectTabs builds a page's strip out of the groups of
+-- per PAGE — the library's O.RenderTabbedSchema builds a page's strip out of the groups of
 -- NS.SchemaForPage(pageKey) alone — so it does not meet the General groups on the Text and Bars
 -- pages.
 local G_SHOW, G_CATS, G_SORT = L["General"], L["Categories"], L["Sorting"]

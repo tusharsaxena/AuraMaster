@@ -38,13 +38,18 @@ only the tree entry is marked.
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Four pages edit one container.** Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`, which is the container
-  banner plus `Helpers.RenderTabbedPage` (`settings/OptionsSetup.lua`): the page's schema groups
-  become tabs, the page's bespoke tabs follow (one may name the tab it is drawn ahead of, as
-  General's Spell Categories does), and every row resolves against the selected container. These
+  banner plus `Helpers.RenderPage` (`settings/OptionsSetup.lua`). `RenderPage` maps the page's spec
+  onto the library's `O.RenderTabbedSchema` (LibKa0s v1.56.0, `opts`: `tabs`, `cfg`, `disabledFor`,
+  `disabledNotice`, `chrome`), which draws the tabbed page: the page's schema groups become tabs, the
+  page's own tabs that the container's aura type admits follow (one keyed by a group takes that
+  group's place and is handed its rows; one may name the tab it is drawn ahead of, as Filters'
+  Overrides does), a stale active tab heals to the first, a page disabled for its container draws
+  the muted-red notice above rows drawn disabled, and every row resolves against the selected
+  container. The host keeps no tab renderer of its own (anti-pattern #47, `AuraMaster-R-04`). These
   four are also sub-pages of Containers in the tree (`N-2`, `D6`) — their Blizzard subcategory
   registers under a marked label, but their page key, heading and everything above is unaffected.
-  General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
-  banner; Containers' one tab edits the selected container's identity.
+  General and Containers are both addon-wide and render through `Helpers.RenderPage`; General draws
+  no banner, and Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:350`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
@@ -69,11 +74,13 @@ band holds **the picker itself** (options-ui-§14):
   the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
   page's only picker.
 - **Containers** carries the page's identity controls in the band, as options-ui-§14 asks: its Container
-  picker and **New container** on one row, drawn by `Helpers.ContainerHeader` through the library's
-  `PageHeader` chrome block (feedback #2, 2026-09-19; `PageBanner` draws exactly one dropdown). The acts
-  on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
-  one tab, which options-ui-§14 then names **General**. The block is drawn on every render, so a Delete's two
-  refreshes cannot lose it, and the widgets of the render before are released after each render.
+  picker and **New container** on one row: `Helpers.ContainerBanner` with the page's own tooltip and
+  New container as the library's `PageBanner` `action` (feedback #2, 2026-09-19; the picker+create
+  band, LibKa0s v1.56.0). The acts on the selected container (Name, Enabled, Duplicate, Delete, Copy
+  settings from) stay on the page's one tab, which options-ui-§14 then names **General**. The band is
+  drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
+  widgets of the render before once the new band exists, and refuses New container in combat as it
+  refuses the picker's selection.
 - **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
   **Copy settings from**'s source and Layout's *Another container* all read
   `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
@@ -580,7 +587,8 @@ container), Click-through `container.behavior.clickThrough` (no tooltips and no 
 When the selected container is drawn as icons, a small muted-red note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
 and every control below it is drawn disabled (the spec's `disabledFor`,
-`settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
+`settings/OptionsSetup.lua`'s `mutedNotice`, drawn by the library's `O.RenderTabbedSchema` above
+the rows). It was a large orange banner until batch 8, which
 shouted for what is an aside; orange is left to the engine warnings, which can head the same page.
 The tabs and the container picker stay live.
 
@@ -760,8 +768,8 @@ library did not load.`). `/am enable`, `/am disable`, `/am lock` and `/am unlock
 two paths, `enabled` and `locked`, are declared in `NS.WRITE_THROUGH` (`settings/Schema.lua`), and
 `NS.SetByPath` stores a listed path that has no row raw, with no validate, normalize or onChange, then
 logs and announces it (route (a)); `runEnabled` syncs the latch itself. Every other function
-member of the live instance, this addon's decorations (`SelectContainer`, `ContainerHeader`,
-`RenderTabbedPage`, …) included, is carried as a no-op, so no call site finds a member missing
+member of the live instance, this addon's decorations (`SelectContainer`, `ContainerBanner`,
+`RenderPage`, …) included, is carried as a no-op, so no call site finds a member missing
 (testing-§8); the library's layout and composer constants, `AceGUI` and `LSMValues` are not copied.
 The panel itself (`CreateOptionsPanel`, `OpenOptionsPanel`) answers one line naming the missing
 library. `tests/degraded_env.lua` builds that environment for the suite,

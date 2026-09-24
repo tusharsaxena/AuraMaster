@@ -145,7 +145,7 @@ C.TOOLTIP_ANCHOR_LABELS = {
 }
 
 -- The "Not in use" notice over a container page drawn for another style (settings/OptionsSetup.lua's
--- drawDisabledNotice): a muted red, about (0.80, 0.40, 0.40), readable on the dark panel and quieter
+-- mutedNotice): a muted red, about (0.80, 0.40, 0.40), readable on the dark panel and quieter
 -- than an error red. The owner asked for gold first (2026-09-19, B3), then for this red on the same
 -- day, on bars, icons and text pages alike (Task 20). The AARRGGBB body of a "|c" escape.
 C.NOTICE_COLOR = "ffcc6666"

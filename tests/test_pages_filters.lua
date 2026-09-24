@@ -549,7 +549,7 @@ test("filters: the four tabs read General, Categories, Overrides, Sorting (batch
     assertEqual(table.concat(P.tabKeys("filters"), ","),
         table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"] }, ","))
     -- red under: tabs keyed globally rather than per page, which would fuse this General with the
-    -- Text and Bars pages' own General tabs (settings/OptionsSetup.lua's collectTabs builds a strip
+    -- Text and Bars pages' own General tabs (the library's O.RenderTabbedSchema builds a strip
     -- out of NS.SchemaForPage(pageKey) alone, so the name is the PAGE's)
     P.show("Text")
     assertEqual(P.tabKeys("text")[1], L["General"], "the Text page keeps its own General tab")

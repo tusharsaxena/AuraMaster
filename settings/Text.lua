@@ -29,7 +29,7 @@ local _, NS = ...
 -- -- printed under "Invalid value for container.text.template" by the panel and by `/am set` alike.
 --
 -- A container drawn as bars or icons sees every row here disabled, under a note naming where its
--- style is changed (settings/OptionsSetup.lua's drawDisabledNotice). The read-only TEXT between the
+-- style is changed (settings/OptionsSetup.lua's mutedNotice). The read-only TEXT between the
 -- rows dims with them: the Placement notes are gray at all times, and the Text Template block's
 -- Preview line and cheat sheet are grayed for that render (`dim`/`token`), so nothing on an inert
 -- tab reads brighter than the controls it describes. The font and icon-border blocks
@@ -126,8 +126,9 @@ NS.RegisterSchemaRows({
 })
 
 --- Whether this render is the page drawn disabled — the container is not drawn as text. The library
---- holds `ctx.__renderDisabled` for the whole of a bespoke tab's render (settings/OptionsSetup.lua's
---- renderBespoke), which is how every ROW here dims itself; free-standing text has to be told.
+--- holds `ctx.__renderDisabled` for the whole of a page tab's render (O.RenderTabbedSchema's
+--- `disabledFor`, through settings/OptionsSetup.lua's RenderPage), which is how every ROW here dims
+--- itself; free-standing text has to be told.
 local function pageDim(ctx)
     return ctx.__renderDisabled and true or false
 end

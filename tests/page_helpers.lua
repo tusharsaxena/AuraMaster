@@ -173,19 +173,24 @@ return function(NS, m)
         return out
     end
 
-    --- The page banner's Dropdown on `ctx`, or nil: the live AceGUI Dropdown whose frame is the
-    --- first thing the library's chrome ledger (`ctx.__chromeKids`) lists, which is where
-    --- O.PageBanner records it.
-    function P.banner(ctx)
-        local first = ctx and (ctx.__chromeKids or {})[1]
-        if first == nil then return nil end
+    --- The live AceGUI widget of `wtype` whose frame the library's chrome ledger
+    --- (`ctx.__chromeKids`, what the current render drew into the band) lists, or nil.
+    local function inBand(ctx, wtype)
+        local band = {}
+        for _, f in ipairs(ctx and ctx.__chromeKids or {}) do band[f] = true end
         local last = #ace.__created
         for i = last, 1, -1 do
             local w = ace.__created[i]
-            if w.type == "Dropdown" and w.frame == first and not w.__released then return w end
+            if w.type == wtype and w.frame and band[w.frame] and not w.__released then return w end
         end
         return nil
     end
+
+    --- The page banner's Dropdown on `ctx` (O.PageBanner's picker), or nil.
+    function P.banner(ctx) return inBand(ctx, "Dropdown") end
+
+    --- The banner's action Button on `ctx` (O.PageBanner's `action`), or nil.
+    function P.bannerAction(ctx) return inBand(ctx, "Button") end
 
     --- Visit every tab of a container page in strip order, calling `fn(key, widgets)` with what
     --- that tab drew. The active tab is the show's own draw: a click on it draws nothing.

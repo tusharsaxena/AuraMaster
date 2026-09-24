@@ -90,6 +90,9 @@ suite covers what only the client can show.
     above Name, and the three rows are visibly one block apart from the two), then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
     **Delete** it → the picker and New container are still there, and the picker lists what is left.
+    **New container** creates a container and selects it. Hover it → its tooltip. The pair is the
+    library's page banner with its create button (LibKa0s v1.56.0, AM-17): flip the picker between
+    containers 20 times and `/dump collectgarbage("count")` stays flat.
     Rename a container and change its Unit, then press the page's **Defaults** → Enabled, Unit, Aura
     type and Style go back to their defaults and the name stays.
     **Style switch with auras up.** Locked, with live auras in a container, switch its **Style** from

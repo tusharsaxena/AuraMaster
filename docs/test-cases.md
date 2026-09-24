@@ -1090,7 +1090,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
-- options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it
+- options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
@@ -1193,7 +1193,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: re-choosing the same Style keeps a Fill set by hand (B5)
 - containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)
 - containers: a duplicate and a copy-from keep the source's Fill (B5)
-- containers: in combat the library refuses Duplicate; New reaches CM.Create's own gray refusal; nothing is created
+- containers: in combat the library refuses Duplicate and New container; nothing is created
 - containers: Duplicate copies the selected container and selects the copy
 - containers: Delete asks first, naming the container, and deletes it only on Yes
 - containers: the copy block offers every other container and copies only the chosen section
@@ -1455,7 +1455,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 138 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 3 of 139 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
