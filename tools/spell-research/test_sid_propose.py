@@ -542,6 +542,45 @@ class MovesTest(unittest.TestCase):
         self.assertEqual(ruled.suggest("WARRIOR", 5246)[0], "raidCDs")
         self.assertEqual(self.moves(rows), [])
 
+    def moves_in(self, shipped, rows, signals):
+        return sid_propose.moves(agg_of(rows), SPEC_MAP, self.NAMES, shipped, signals, POOL)
+
+    def test_an_entry_that_meets_its_own_category_rule_never_moves(self):
+        # SID-10, the real run: every listed HoT (Rejuvenation, Riptide, Renewing Mist, ...) was
+        # proposed Healing -> Support, because R5 (70% single) precedes R6 in the table. A move
+        # needs the entry to CONTRADICT its category's rule (the spec); this one meets R6.
+        shipped = [{"key": "healing", "label": "H", "aura": "BUFF", "classes": {"WARRIOR": [900100]}},
+                   {"key": "support", "label": "S", "aura": "BUFF", "classes": {}}]
+        rows = [("WARRIOR", ARMS, "BUFF", 900100,
+                 rows_st(100, 5, self_=5, single=95, recast=10.0, name="Rallying Cry"))]
+        signals = {900100: {"periodic_heal"}}
+        ruled = sid_propose._Ruled(agg_of(rows), SPEC_MAP, self.NAMES, signals, POOL, None,
+                                   sid_propose.Thresholds())
+        self.assertEqual(ruled.suggest("WARRIOR", 900100)[:2], ("support", "R5"))
+        self.assertEqual(self.moves_in(shipped, rows, signals), [])
+
+    def test_an_offensive_cooldown_that_also_reduces_damage_taken_stays(self):
+        # Avatar 107574 on the real run: self 100%, a damage increase AND a damage-taken
+        # reduction, recast ~ 90 s. R1 wins the table, but R3 (its own category) holds.
+        shipped = [{"key": "offensiveCDs", "label": "O", "aura": "BUFF",
+                    "classes": {"WARRIOR": [900100]}},
+                   {"key": "defensives", "label": "D", "aura": "BUFF", "classes": {}}]
+        rows = [("WARRIOR", ARMS, "BUFF", 900100,
+                 rows_st(100, 5, self_=100, recast=90.0, name="Rallying Cry"))]
+        signals = {900100: {"damage_taken_down", "damage_up"}}
+        self.assertEqual(self.moves_in(shipped, rows, signals), [])
+
+    def test_a_utility_entry_that_a_rule_claims_moves(self):
+        # Utility's rule is R9, "none of the above": an entry R1 claims contradicts it.
+        shipped = [{"key": "utility", "label": "U", "aura": "BUFF", "classes": {"WARRIOR": [900100]}},
+                   {"key": "defensives", "label": "D", "aura": "BUFF", "classes": {}}]
+        rows = [("WARRIOR", ARMS, "BUFF", 900100,
+                 rows_st(100, 5, self_=100, recast=90.0, name="Rallying Cry"))]
+        signals = {900100: {"damage_taken_down"}}
+        props = self.moves_in(shipped, rows, signals)
+        self.assertEqual([(p.from_category, p.category, p.rule) for p in props],
+                         [("utility", "defensives", "R1")])
+
     def test_already_in_the_suggested_category_is_no_move(self):
         shipped = [dict(self.SHIPPED[0]),
                    {"key": "raidCDs", "label": "R", "aura": "BUFF", "classes": {"PRIEST": [900100]}}]

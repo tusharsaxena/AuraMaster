@@ -493,6 +493,37 @@ _RULES = (
 )
 
 
+def _facts(stats, signals, in_pool, tank_only):
+    # type: (dict, Set[str], bool, bool) -> Optional[_Facts]
+    """suggest()'s inputs as shares; None when there are no applications."""
+    apps = stats.get("applications", 0)
+    if apps <= 0:
+        return None
+    self_, single = stats.get("self", 0), stats.get("single", 0)
+    return _Facts(apps=apps, self_=self_ / apps, single=single / apps,
+                  group=max(apps - self_ - single, 0) / apps, bursts=stats.get("group", 0),
+                  recast=stats.get("recast"), signals=set(signals or ()), in_pool=in_pool,
+                  tank_only=tank_only)
+
+
+def meets_category(category, stats, signals, in_pool, tank_only):
+    # type: (str, dict, Set[str], bool, bool) -> bool
+    """Whether one aura's evidence meets its OWN category's rule, whatever rule would win first.
+
+    The spec moves an entry only when its behaviour contradicts its category's rule; the first
+    match of the table is not that test (Rejuvenation meets R6 Healing, though R5 Support is met
+    first; Avatar meets R3 though R1 is). Utility's rule is R9, "none of the above". A category no
+    rule names (or an aura with no applications) is never contradicted.
+    """
+    f = _facts(stats, signals, in_pool, tank_only)
+    if f is None:
+        return True
+    if category == "utility":
+        return not any(predicate(f) for _r, predicate, _c, _conf, _why in _RULES)
+    own = [predicate for _r, predicate, cat, _conf, _why in _RULES if cat == category]
+    return not own or any(predicate(f) for predicate in own)
+
+
 def suggest(stats, signals, in_pool, tank_only):
     # type: (dict, Set[str], bool, bool) -> Tuple[Optional[str], str, str, str]
     """(category key or None, rule id, confidence, reason sentence) for one aura, by rules R1-R9.
@@ -502,14 +533,10 @@ def suggest(stats, signals, in_pool, tank_only):
     in_pool: the aura (or the cast it comes from) is player-castable. tank_only: every spec that
     applied it is a tank spec.
     """
-    apps = stats.get("applications", 0)
-    if apps <= 0:
+    f = _facts(stats, signals, in_pool, tank_only)
+    if f is None:
         return None, "R9", "low", "No applications, so no suggestion."
     self_, single = stats.get("self", 0), stats.get("single", 0)
-    f = _Facts(apps=apps, self_=self_ / apps, single=single / apps,
-               group=max(apps - self_ - single, 0) / apps, bursts=stats.get("group", 0),
-               recast=stats.get("recast"), signals=set(signals or ()), in_pool=in_pool,
-               tank_only=tank_only)
     for rule, predicate, category, confidence, reason in _RULES:
         if predicate(f):
             return category, rule, confidence, "%s → %s." % (reason(f), CATEGORY_LABELS[category])
@@ -579,9 +606,6 @@ class _Ruled:
             players = len(seen)
         return _Total(sum(st.applications for _s, st in rows), players, "")
 
-    def meets(self, total):
-        return total.apps >= self.th.min_applications and total.players >= self.th.min_players
-
     def suggest(self, klass, sid):
         rows = self.rows[(klass, sid)]
         return suggest(_stats_of(rows), self.signals.get(sid, set()), self.in_pool(klass, sid),
@@ -593,6 +617,15 @@ class _Ruled:
             return True
         name = self.name(klass, sid)
         return bool(name) and name.lower() in self.pool_names.get(klass, ())
+
+    def meets(self, total):
+        return total.apps >= self.th.min_applications and total.players >= self.th.min_players
+
+    def fits(self, category, klass, sid):
+        """The listed aura meets its own category's rule (meets_category)."""
+        rows = self.rows[(klass, sid)]
+        return meets_category(category, _stats_of(rows), self.signals.get(sid, set()),
+                              self.in_pool(klass, sid), _tank_only(rows, self.spec_map))
 
     def evidence(self, klass, sid):
         return {spec_name(self.spec_map, spec): (st.applications, len(st.players))
@@ -627,8 +660,10 @@ def _ordered(props, decisions):
 
 def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
           thresholds=None, pool_names=None):
-    """Move proposals: a listed BUFF entry whose evidence suggests another category.
+    """Move proposals: a listed BUFF entry whose evidence contradicts its category's rule.
 
+    The entry must fail its own category's rule (meets_category); the target is then what the
+    table suggests.
     Only above-bar entries, only a suggestion of at least medium confidence, only into a category
     the file has and that does not already list the id; the move itself is medium at most (the
     spec). Debuff categories are never moved: log evidence only cross-checks them.
@@ -645,7 +680,7 @@ def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, de
                 if (klass, sid) not in ruled.rows:
                     continue
                 total = ruled.total(klass, sid)
-                if not ruled.meets(total):
+                if not ruled.meets(total) or ruled.fits(cat["key"], klass, sid):
                     continue
                 target, rule, confidence, reason = ruled.suggest(klass, sid)
                 if (target is None or target == cat["key"] or target not in listed_in
