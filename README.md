@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1349%2F1349_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1350%2F1350_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -152,7 +152,7 @@ Please file reports there rather than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.1.0 | 2026-09-11 | - First release: buff, debuff and weapon enchant containers for player, target, focus and pet, drawn as bars or icons, with category filters, spell lists, attach-anywhere placement and a preview mode |
+| 0.1.0 | 2026-09-11 | - First release: buff and debuff containers for player, target, focus and pet, with weapon enchants as a buff category, drawn as bars, icons or text, with category filters, spell lists, attach-anywhere placement and a Test mode |
 
 ## Credits
 

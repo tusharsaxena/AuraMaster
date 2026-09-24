@@ -1457,19 +1457,20 @@ badge and any count quoted in the docs must agree with it.
 - locale: every value is ASCII, the em dash excepted (T-1)
 - locale: no library-missing line joins a routed fragment
 
-### test_docs.lua (5)
+### test_docs.lua (6)
 
 - README.md carries no angle-bracket argument placeholders
 - every Tier 2 documentation-map row agrees with docs/
 - every .md under docs/ appears in the documentation map
 - docs: every file:line citation names an existing file and a non-blank line inside it
+- docs: no file:line citation lands on a comment-only or blank line
 - docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
 
 ### test_prose.lua (18)
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 145 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 3 of 146 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1588,11 +1589,11 @@ badge and any count quoted in the docs must agree with it.
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
 | test_locale.lua | 7 |
-| test_docs.lua | 5 |
+| test_docs.lua | 6 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1349** |
+| **Total** | **1350** |

@@ -42,9 +42,9 @@ marked as such rather than listed as a requirement.
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
 | `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:167` probes `command -v lizard` |
-| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:195` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/vendor_sync.lua:371` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:169` (`git rev-parse`) |
+| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:195` (`git -C … show`), `tests/test_lintconfig.lua:157` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/vendor_sync.lua:371` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:169` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:68`, `:80` and `:93` (`sed`), `:80` and `:165` (`grep`), `:100` (`date`), `:77` (`head`), `:80` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
-| POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:41` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
+| POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:43` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42` and `:74` (`io.popen("grep -rn … --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
 | POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, which `lua tests/run.lua` uses by default (`jobs = "auto"`; `-j N` overrides); `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
@@ -130,9 +130,9 @@ python3 -c 'import PIL; print(PIL.__version__)'    # prints a version
 ```
 
 - **The logo is committed in every form, and TWO of them are loaded.** `auramaster.logo.tga` is
-  the settings panel's landing-page art (`C.LOGO_PATH`, `core/Constants.lua:25`) and
+  the settings panel's landing-page art (`C.LOGO_PATH`, `core/Constants.lua:26`) and
   `auramaster.logo.128.tga` is the icon the AddOns list, the minimap button and a broker display
-  all draw (`C.LOGO_ICON_PATH`, `core/Constants.lua:31`, `AuraMaster.toc:6`). The `.png` and
+  all draw (`C.LOGO_ICON_PATH`, `core/Constants.lua:32`, `AuraMaster.toc:6`). The `.png` and
   `.jpg` beside them are the 2000×2000 source art and the project-page image, and `.pkgmeta`
   keeps both out of the package.
 - **Pillow regenerates the 128 icon, and is NOT required to build, run or test the addon.** The

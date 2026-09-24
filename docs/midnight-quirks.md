@@ -65,7 +65,7 @@ after its `initializeFrame` has run. Its child regions cannot be reparented afte
 applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 
 **What this addon does.**
-- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:39`), before the restrictions apply, so every
+- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:42`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
   `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:196`),
@@ -85,7 +85,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:223-227`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:225-227`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -197,7 +197,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:490`), and then adds again
-(`modules/Style_Bars.lua:313`, `modules/Style_Icons.lua:153`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:322-329`, `modules/Style_Icons.lua:165-170`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -466,7 +466,7 @@ values was secret.
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
-  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:41-44`).
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:43-44`).
 - **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
@@ -484,7 +484,7 @@ values was secret.
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
   it draws. The next visibility pass after combat catches both up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:223-227`).
+  anchor it (`modules/Container.lua:225-227`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:196`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
@@ -561,7 +561,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:823-825`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:828`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

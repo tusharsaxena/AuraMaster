@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:574
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:576
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
@@ -122,7 +122,7 @@ directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:774`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:778`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority *Filter
 priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
