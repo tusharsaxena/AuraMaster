@@ -1108,7 +1108,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
 
-### test_pages_general.lua (67)
+### test_pages_general.lua (35)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1136,6 +1136,18 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+- general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
+- general → spell categories: the Weapon enchants entry explains the all-slots fallback
+- general → spell categories: unticking a weapon slot writes the profile, one row at a time
+- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
+- general: Select accepts the enchant key too, and lands the tab on it
+- general → spell categories: the tab and Dispel Colors are drawn with no container at all
+- general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
+- general → dispel colors: a swatch writes its own type's color and re-applies every container
+- general → dispel colors: the page's Defaults restores them
+
+### test_pages_general_categories.lua (32)
+
 - general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)
 - general → spell categories: the create form makes a category, shows it, and it is usable at once
 - general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide
@@ -1168,15 +1180,6 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
 - general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
-- general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
-- general → spell categories: the Weapon enchants entry explains the all-slots fallback
-- general → spell categories: unticking a weapon slot writes the profile, one row at a time
-- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
-- general: Select accepts the enchant key too, and lands the tab on it
-- general → spell categories: the tab and Dispel Colors are drawn with no container at all
-- general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
-- general → dispel colors: a swatch writes its own type's color and re-applies every container
-- general → dispel colors: the page's Defaults restores them
 
 ### test_pages_containers.lua (31)
 
@@ -1466,7 +1469,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 143 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 3 of 145 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1568,7 +1571,8 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 67 |
+| test_pages_general.lua | 35 |
+| test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
 | test_pages_layout.lua | 27 |

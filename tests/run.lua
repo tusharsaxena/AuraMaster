@@ -102,6 +102,7 @@ Kit.run{
         "test_optionssetup",
         "test_options_descriptor",
         "test_pages_general",
+        "test_pages_general_categories",
         "test_pages_containers",
         "test_pages_filters",
         "test_pages_layout",

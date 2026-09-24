@@ -94,7 +94,7 @@ path it walks, for when something about it has to be changed or debugged.
 6. A test for any of this goes in `tests/test_defaults.lua` (definitions and names),
    `tests/test_database_categories.lua` (the store, the sweep, profile switches),
    `tests/test_filtercompiler_categories.lua` (what the compiler makes of one) or
-   `tests/test_pages_general.lua` (the block's widgets).
+   `tests/test_pages_general_categories.lua` (the block's widgets).
 
 ## Re-derive the Hard CC / Soft CC spell lists
 

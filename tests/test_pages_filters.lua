@@ -70,7 +70,7 @@ end
 --- at all; and since LibKa0s v1.51.0 an entry that has something to say draws a "?" mark BETWEEN
 --- its X and its name, so the Icon immediately before a label may be the mark rather than the X.
 --- The mark is the Icon that records `__helpTint` (libs/LibKa0s/OptionsWidgets.lua:2860-2861),
---- which is exactly how tests/test_pages_general.lua tells the two Icons apart.
+--- which is exactly how tests/general_page_helpers.lua tells the two Icons apart.
 local function entry(ws, id)
     for _, w in ipairs(ws) do
         local kids = w.children or {}
@@ -96,7 +96,7 @@ end
 --- `nth` picks between the two lists: the Whitelist draws first, so an id sitting on both is the
 --- first match on the whitelist and the second on the blacklist.
 ---
---- WALKED IN ORDER for the reason tests/test_pages_general.lua gives: the library draws
+--- WALKED IN ORDER for the reason tests/general_page_helpers.lua gives: the library draws
 --- [X] [?] [label] per entry, two entries to a row, so the mark in force when a label is reached
 --- is the one belonging to it.
 local function entryHelp(ws, id, nth)
