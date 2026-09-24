@@ -412,3 +412,29 @@ test("slash: /am debug on and off flip the session flag; it never reaches the pr
     -- red under: DebugLogSetup's setEnabled writing NS.db.profile.debug (reached via /am debug off)
     assertNil(NS2.db.profile.debug)
 end)
+
+test("slash: the dispatcher's isEnabled is NS.EnabledStored", function()
+    -- A descriptor spy: the same load fresh_env.lua does, with LibKa0s-Slash's New wrapped between
+    -- the library and the TOC, so the descriptor settings/Slash.lua builds is the one inspected.
+    local Loader     = dofile("tests/_kit/loader.lua")
+    local buildMocks = dofile("tests/wow_mock.lua")
+    Loader.addonName = "AuraMaster"
+    local mocks, NS2 = buildMocks(), {}
+    rawset(_G, "AuraMasterDB", nil)
+    Loader.loadAll(Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml"), NS2, mocks)
+    local lib = (mocks.LibStub or _G.LibStub)("LibKa0s-Slash-1.0")
+    local realNew, seen = lib.New, nil
+    lib.New = function(self, d)
+        if d and d.slash == "/am" then seen = d end
+        return realNew(self, d)
+    end
+    local ok, err = pcall(Loader.loadAll, Loader.tocFiles("AuraMaster.toc"), NS2, mocks)
+    lib.New = realNew
+    if not ok then error(err, 0) end
+    assertTrue(seen ~= nil, "settings/Slash.lua built its dispatcher through LibKa0s-Slash:New")
+    assertTrue(type(NS2.EnabledStored) == "function", "core/LifecycleSetup.lua publishes NS.EnabledStored")
+    -- red under: a second, private isEnabled in settings/Slash.lua
+    assertTrue(seen.isEnabled == NS2.EnabledStored, "one enabled predicate, not two")
+    -- Before InitDB the stored read answers nil, and nil is enabled.
+    assertTrue(NS2.EnabledStored())
+end)

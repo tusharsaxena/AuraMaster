@@ -108,14 +108,6 @@ NS.COMMANDS = {
 -- it lives in core/LifecycleSetup.lua; this file only decides what the command surface says about
 -- it. A green gate here says nothing about whether anything is still registered.
 
---- Is the addon enabled, from the stored path? Asked at DISPATCH TIME by the library, never cached,
---- so the command after an `/am enable` works. EXPLICITLY false only: before core/Database.lua builds
---- NS.db the read answers nil, and reading nil as "off" would refuse every feature verb on a load
---- that has not finished.
-local function isEnabled()
-    return NS.GetSetting("enabled") ~= false
-end
-
 --- The verbs that keep answering. The library's own default is the standard's twelve reserved verbs
 --- and it is named rather than copied, so a change upstream arrives with the re-vendor instead of
 --- being missed here.
@@ -472,7 +464,9 @@ cli = SlashLib:New({
     aliases      = { options = "config" },
 
     -- The disabled gate (see the section above).
-    isEnabled    = isEnabled,
+    -- The one enabled predicate, core/LifecycleSetup.lua's (loaded earlier by the TOC); the library
+    -- asks it at DISPATCH TIME, never cached, so the command after an `/am enable` works.
+    isEnabled    = NS.EnabledStored,
     -- THE BRAND NAME IN PLAIN TEXT, the same string core/LauncherSetup.lua hands the broker object
     -- as its `label` (launcher-§1). One brand spelling per addon, and that field is already
     -- forbidden escape sequences, which is what makes it safe to drop into a colored line.

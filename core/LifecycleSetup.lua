@@ -26,10 +26,12 @@ local addonName, NS = ...
 
 --- Is the addon enabled, from the stored path? EXPLICITLY false only: before core/Database.lua
 --- builds NS.db the read answers nil, and reading nil as "off" would hold the addon down on a load
---- that has not finished.
-local function enabledStored()
+--- that has not finished. Published: settings/Slash.lua hands this same function to the dispatcher
+--- as its `isEnabled`, asked at dispatch time, so the gate and the stand-down read one predicate.
+function NS.EnabledStored()
     return NS.GetSetting("enabled") ~= false
 end
+local enabledStored = NS.EnabledStored
 
 -- ---------------------------------------------------------------------------
 -- The secure half, which combat can refuse

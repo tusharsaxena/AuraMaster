@@ -442,7 +442,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (26)
+### test_compat.lua (27)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -465,7 +465,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: a rule formatter is built with its breakpoints, and nil without the API or when refused
 - compat: a duration binding writes nothing for a timeless or expired aura, and refreshes only when asked
 - compat: the blink curve alternates the running-out color's alpha every quarter second, then the normal color
-- compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global
+- compat: the mouse focus is the topmost frame GetMouseFoci returns
+- compat: GetMouseFocus answers from GetMouseFoci and has no pre-11.0 rung
 - compat: spell info comes from C_Spell, and the pre-11.0 global only when C_Spell is absent
 - compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
 - compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
@@ -949,7 +950,7 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (26)
+### test_slash.lua (27)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -977,6 +978,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am pick starts the frame picker for the selected container
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
+- slash: the dispatcher's isEnabled is NS.EnabledStored
 
 ### test_slash_verbs.lua (50)
 
@@ -1532,7 +1534,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 94 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 53 |
-| test_compat.lua | 26 |
+| test_compat.lua | 27 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -1550,7 +1552,7 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 14 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 26 |
+| test_slash.lua | 27 |
 | test_slash_verbs.lua | 50 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
@@ -1578,4 +1580,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1344** |
+| **Total** | **1346** |

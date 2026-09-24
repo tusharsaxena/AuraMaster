@@ -304,14 +304,14 @@ end
 -- ---------------------------------------------------------------------------
 
 --- The frame under the cursor. GetMouseFocus was removed in 11.0 in favor of GetMouseFoci, which
---- returns every frame under the cursor; the first is the topmost.
+--- returns every frame under the cursor; the first is the topmost. There is no pre-11.0 rung: the
+--- TOC is 120100 only, and every client it loads on has GetMouseFoci.
 --- @return table|nil
 function Compat.GetMouseFocus()
     if _G.GetMouseFoci then
         local foci = _G.GetMouseFoci()
         return foci and foci[1] or nil
     end
-    if _G.GetMouseFocus then return _G.GetMouseFocus() end
     return nil
 end
 

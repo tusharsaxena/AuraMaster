@@ -464,8 +464,8 @@ end)
 
 -- ── everything else ──────────────────────────────────────────────────────────────────────────
 
-test("compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global", function()
-    local top, under, legacy = {}, {}, {}
+test("compat: the mouse focus is the topmost frame GetMouseFoci returns", function()
+    local top, under = {}, {}
     with({ { "GetMouseFoci", function() return { top, under } end } }, function(NS)
         -- red under: GetMouseFocus answering the last frame GetMouseFoci returns
         assertTrue(NS.Compat.GetMouseFocus() == top)
@@ -473,11 +473,16 @@ test("compat: the mouse focus is the topmost frame GetMouseFoci returns, else th
     with({ { "GetMouseFoci", function() return {} end } }, function(NS)
         assertNil(NS.Compat.GetMouseFocus(), "nothing under the cursor")
     end)
-    with({ { "GetMouseFoci", nil }, { "GetMouseFocus", function() return legacy end } }, function(NS)
-        assertTrue(NS.Compat.GetMouseFocus() == legacy, "a pre-11.0 client")
-    end)
     with({ { "GetMouseFoci", nil }, { "GetMouseFocus", nil } }, function(NS)
         assertNil(NS.Compat.GetMouseFocus())
+    end)
+end)
+
+test("compat: GetMouseFocus answers from GetMouseFoci and has no pre-11.0 rung", function()
+    local legacy = {}
+    with({ { "GetMouseFoci", nil }, { "GetMouseFocus", function() return legacy end } }, function(NS)
+        -- red under: the _G.GetMouseFocus fallback
+        assertNil(NS.Compat.GetMouseFocus(), "the 120100 TOC has no client without GetMouseFoci")
     end)
 end)
 
