@@ -315,19 +315,14 @@ function runTest(rest)
 end
 
 function runPick()
-    local c, id = NS.ActiveContainer()
-    if not c then return print(L["No containers yet — /am new creates one"]) end
-    if InCombatLockdown() then
-        return printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
-    end
-    printf(L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."], c.name)
-    NS.FramePicker.Start(function(name)
-        NS.SetByPath("container.attach.frame", name, id)
-        NS.SetByPath("container.attach.mode", "frame", id)
-        printf(L["'%s' is now attached to %s"], c.name, name)
+    local started, c = NS.FramePicker.PickFor(function(picked, name)
+        printf(L["'%s' is now attached to %s"], picked.name, name)
     end, function()
         print(L["Frame pick canceled"])
     end)
+    if started then
+        printf(L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."], c.name)
+    end
 end
 
 function runResetPosition()

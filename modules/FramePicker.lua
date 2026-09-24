@@ -127,6 +127,31 @@ function FP.Start(pick, cancel)
     overlay:SetScript("OnUpdate", onUpdate)
 end
 
+--- The one pick flow, for `/am pick` and Layout's "Pick a frame..." alike: resolve the active
+--- container, refuse under combat lockdown with one gray line, and start the picker with a completion
+--- that attaches that container (the one selected when the pick began, even if the selection moves)
+--- to the picked frame. The callers keep only their own messages and the panel re-open:
+--- `onDone(c, name)` after the two writes, `onCanceled()` on a cancel.
+--- @return boolean started, table|nil c the container being attached
+function FP.PickFor(onDone, onCanceled)
+    local L = NS.L
+    local c, id = NS.ActiveContainer()
+    if not c then
+        NS.Print(L["No containers yet — /am new creates one"])
+        return false
+    end
+    if InCombatLockdown() then
+        NS.Printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
+        return false
+    end
+    FP.Start(function(name)
+        NS.SetByPath("container.attach.frame", name, id)
+        NS.SetByPath("container.attach.mode", "frame", id)
+        if onDone then onDone(c, name) end
+    end, onCanceled)
+    return true, c
+end
+
 --- Stop a pick in progress with no callback -- what the stand-down calls (slash-commands-§7). The
 --- overlay's OnUpdate goes with it, because a stood-down addon runs none; a canceled pick prints
 --- nothing, since the player did not cancel it.

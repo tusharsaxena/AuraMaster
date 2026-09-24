@@ -912,7 +912,7 @@ badge and any count quoted in the docs must agree with it.
 - blizzard: in combat nothing moves and Apply says it has to wait; with no profile, nothing is waiting
 - blizzard: a profile switch applies the new profile's choice
 
-### test_framepicker.lua (14)
+### test_framepicker.lua (15)
 
 - picker: the screen and the world are never a target, and the walk ends there
 - picker: the walk climbs past one of this addon's own frames to a named frame above it
@@ -928,6 +928,7 @@ badge and any count quoted in the docs must agree with it.
 - picker: Escape keeps its key from the game for that press only, and cancels
 - picker: any other key passes through and the pick continues
 - picker: a new pick waits for the buttons to be released again before it can pick
+- framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes
 
 ### test_disabled.lua (18)
 
@@ -1550,7 +1551,7 @@ badge and any count quoted in the docs must agree with it.
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
-| test_framepicker.lua | 14 |
+| test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 27 |
 | test_slash_verbs.lua | 50 |
@@ -1580,4 +1581,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1346** |
+| **Total** | **1347** |
