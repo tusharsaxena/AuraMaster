@@ -19,6 +19,7 @@ L["The LibKa0s library is missing from this installation of Aura Master (expecte
 L["%s; running on reduced built-in fallbacks."] = "%s; running on reduced built-in fallbacks."
 L["%s, so the debug console window is unavailable."] = "%s, so the debug console window is unavailable."
 L["%s, so the minimap button is unavailable."] = "%s, so the minimap button is unavailable."
+L["Toggle test mode"] = "Toggle test mode"
 L["%s: migration to schema v%s failed; your settings were left as they were. %s"] = "%s: migration to schema v%s failed; your settings were left as they were. %s"
 L["The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."] = "The retired 'Only these categories' setting could not be carried over for: %s. These containers now draw their ordinary catch-all again, the same as any container that never used it."
 L["Debug logging on."] = "Debug logging on."

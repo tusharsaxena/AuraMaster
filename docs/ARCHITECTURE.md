@@ -184,7 +184,9 @@ answers while the addon is disabled (slash-commands-§2). What disabling *does* 
 One LibDataBroker `launcher` object, built by `core/LauncherSetup.lua` through `LibKa0s-Launcher-1.0`
 and registered with LibDBIcon under the folder name (launcher-§1). Left click toggles test mode
 (rung (b)), right click opens the panel, and the Minimap button row stores LibDBIcon's own
-`global.minimap.hide`. Both broker libraries are optional. The full table and the reasons:
+`global.minimap.hide`. The hover tooltip is the library's (enabled, locked and test-mode status
+and the click hints, drawn while disabled too); the descriptor only answers its questions. Both
+broker libraries are optional. The full table and the reasons:
 `docs/settings-panel.md` → *Launcher*.
 
 ## Event Subscriptions

@@ -563,7 +563,12 @@ nothing).
 86. **The AddOns list.** Esc → AddOns (or the character-select AddOns list) → *Ka0s Aura Master*
     shows **the addon's own logo**, not a blank square and not a Blizzard icon.
 87. **The button is there.** A round button wearing that same logo sits on the minimap ring. Drag it
-    around the ring → it follows; `/reload` → it is still where you left it.
+    around the ring → it follows; `/reload` → it is still where you left it. **Hover it** → the
+    tooltip reads `Ka0s Aura Master  v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`,
+    `Test mode: On|Off` (green or red, matching General → Master controls), `Left-click: Toggle test
+    mode`, `Right-click: Open settings`, and nothing twice. `/am unlock` or `/am test` → the next
+    hover says so. `/am disable` → hover again: the tooltip still shows, `Enabled: No`, and
+    `Left-click: disabled — /am enable`; `/am enable` puts it back.
 88. **Left-click = test mode.** Left-click the button → every container shows its placeholder
     auras without unlocking, and General → Master controls → **Test mode** ticks. Left-click again →
     they go and the checkbox unticks.

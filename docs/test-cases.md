@@ -34,7 +34,7 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_launcher.lua (21)
+### test_launcher.lua (26)
 
 - launcher: one broker object, of type launcher, registered with LibDBIcon under the FOLDER name
 - launcher: Register is idempotent, so a second call builds no second button
@@ -44,6 +44,11 @@ badge and any count quoted in the docs must agree with it.
 - launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses
 - launcher: the disabled gate is the library's — the descriptor carries isEnabled and disabledLine
 - launcher: the RIGHT click opens the settings panel, whatever the left button does
+- launcher tooltip: the descriptor passes version, isLocked, isTestMode and leftClickLabel, and no hook
+- launcher tooltip: enabled, locked, test mode off — the whole block, in the library's order
+- launcher tooltip: every state is read on the show — unlock and test mode change the next hover
+- launcher tooltip: shown while disabled, with the disabled hint naming /am enable
+- launcher tooltip: the left-click label is the addon's locale string, read on every show
 - minimap row: composed, stored not session, default SHOWN, in its canonical position
 - minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
 - minimap row: one record of one state — LibDBIcon writes the very table the row writes
@@ -1539,7 +1544,7 @@ badge and any count quoted in the docs must agree with it.
 |-------|------:|
 | test_loadorder.lua | 8 |
 | test_setups.lua | 14 |
-| test_launcher.lua | 21 |
+| test_launcher.lua | 26 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 18 |
 | test_migrations.lua | 6 |
@@ -1596,4 +1601,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1350** |
+| **Total** | **1355** |

@@ -204,6 +204,113 @@ test("launcher: the RIGHT click opens the settings panel, whatever the left butt
     assertEqual(NS2.GetSetting("locked"), before, "and changes nothing else")
 end)
 
+-- ── The status tooltip (launcher-§1, LibKa0s-Launcher-1.0 minor 3) ─────────────────────────────
+--
+-- The library draws the block; this addon only answers its questions. What is pinned here is which
+-- questions it answers (the lock and the test mode it really has), through which accessor, and the
+-- label its rung (b) left click gets. The shape itself is the library's and tested there.
+
+--- The descriptor's tooltip, drawn into a recording GameTooltip, color escapes stripped.
+local function hover(rec)
+    local lines = {}
+    local tt = {}
+    function tt.AddLine(_, text)
+        local n = #lines
+        lines[n + 1] = tostring(text)
+    end
+    rec.objects.AuraMaster.OnTooltipShow(tt)
+    for i, line in ipairs(lines) do
+        lines[i] = line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    end
+    return lines
+end
+
+--- A TOC reader answering Version = `v`, installed at call time as tests/test_envsetup.lua does.
+local function tocVersion(mocks, v)
+    mocks.C_AddOns = { GetAddOnMetadata = function(_, field)
+        if field == "Version" then return v end
+        return nil
+    end }
+end
+
+test("launcher tooltip: the descriptor passes version, isLocked, isTestMode and leftClickLabel, and no hook",
+function()
+    local f = assert(io.open("core/LauncherSetup.lua", "r"))
+    local src = f:read("*a")
+    f:close()
+    -- red under: a descriptor missing any of the four minor-3 fields this addon owes
+    assertTrue(src:find("\n%s*version%s*=%s*function") ~= nil, "descriptor.version, asked on every show")
+    assertTrue(src:find("\n%s*isLocked%s*=%s*function") ~= nil, "descriptor.isLocked: the Lock frame row")
+    assertTrue(src:find("\n%s*isTestMode%s*=%s*function") ~= nil, "descriptor.isTestMode: the Test mode row")
+    assertTrue(src:find("\n%s*leftClickLabel%s*=%s*function") ~= nil, "descriptor.leftClickLabel: rung (b)")
+    -- red under: a host hook drawing its own title or click hints (anti-pattern #89). This addon has
+    -- no lines of its own to add, so it passes no hook at all.
+    assertNil(src:find("\n%s*onTooltipShow%s*="), "no onTooltipShow")
+    assertNil(src:find("\n%s*slash%s*="), "the hint's command is read out of disabledLine")
+end)
+
+test("launcher tooltip: enabled, locked, test mode off — the whole block, in the library's order",
+function()
+    local NS2, rec, mocks = withBroker()
+    tocVersion(mocks, "9.8.7")
+    NS2.SetByPath("locked", true)
+    local lines = hover(rec)
+    -- red under: `version` reading core/Namespace.lua's constant instead of the TOC (9.8.7 here)
+    assertEqual(table.concat(lines, "\n"), table.concat({
+        "Ka0s Aura Master  v9.8.7",
+        "Enabled: Yes",
+        "Locked: Yes",
+        "Test mode: Off",
+        "Left-click: Toggle test mode",
+        "Right-click: Open settings",
+    }, "\n"))
+end)
+
+test("launcher tooltip: every state is read on the show — unlock and test mode change the next hover",
+function()
+    local NS2, rec = withBroker()
+    NS2.SetByPath("locked", false)
+    NS2.Slash.ToggleTestMode()
+    assertTrue(NS2.State.testMode, "test mode on through the one switch")
+    local lines = hover(rec)
+    -- red under: an accessor reading a copy, or a value captured at New
+    assertEqual(lines[3], "Locked: No")
+    assertEqual(lines[4], "Test mode: On")
+    -- The same click the button makes turns it back off, and the next hover says so.
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    assertEqual(hover(rec)[4], "Test mode: Off")
+end)
+
+test("launcher tooltip: shown while disabled, with the disabled hint naming /am enable", function()
+    local NS2, rec = withBroker()
+    NS2.SetByPath("locked", true)
+    NS2.SetByPath("enabled", false)
+    local lines = hover(rec)
+    -- red under: no isEnabled passed (the line would read Yes), or no tooltip while disabled, which
+    -- is when the player most needs to ask.
+    assertEqual(lines[2], "Enabled: No")
+    assertEqual(lines[3], "Locked: Yes", "the status lines still draw")
+    assertEqual(lines[4], "Test mode: Off")
+    assertEqual(lines[5], "Left-click: disabled \226\128\148 /am enable",
+        "the command is read out of the dispatcher's own DisabledLine")
+    assertEqual(lines[6], "Right-click: Open settings", "right-click is never gated")
+    assertEqual(#lines, 6)
+    NS2.SetByPath("enabled", true)
+    assertEqual(hover(rec)[5], "Left-click: Toggle test mode")
+end)
+
+test("launcher tooltip: the left-click label is the addon's locale string, read on every show", function()
+    local NS2, rec = withBroker()
+    local L = NS2.L
+    local was = rawget(L, "Toggle test mode")
+    assertEqual(was, "Toggle test mode", "locales/enUS.lua lists the key")
+    rawset(L, "Toggle test mode", "Testmodus umschalten")
+    local lines = hover(rec)
+    rawset(L, "Toggle test mode", was)
+    -- red under: a literal English label typed into the descriptor, past the locale
+    assertEqual(lines[#lines - 1], "Left-click: Testmodus umschalten")
+end)
+
 -- ── The Minimap button row ────────────────────────────────────────────────────────────────────
 
 test("minimap row: composed, stored not session, default SHOWN, in its canonical position", function()

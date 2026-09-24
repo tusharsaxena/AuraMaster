@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1350%2F1350_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1355%2F1355_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -17,7 +17,8 @@ Aura Master is built on top of the new Aura Container APIs introduced in 12.1. T
 Everything is set up from the addon's page under Settings → AddOns, from the button on your
 minimap, or from chat with `/am`. Left-clicking the minimap button turns test mode on, filling
 every container with sample auras, and clicking it again turns it off; right-clicking it opens the
-settings.
+settings. Hovering it shows whether the addon is enabled, whether the containers are locked and
+whether test mode is on, even while the addon is turned off.
 If you would rather not have the button, the Minimap button checkbox under General → Master
 controls turns it off, and it stays off — resetting your settings does not put it back, any more
 than it drags the button to a different spot on the ring. The same addon appears as *Ka0s Aura

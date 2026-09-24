@@ -125,6 +125,23 @@ NS.Launcher = Launcher:New({
         if NS.Slash and NS.Slash.ToggleTestMode then NS.Slash.ToggleTestMode() end
     end,
 
+    -- THE STATUS TOOLTIP IS THE LIBRARY'S (launcher-§1, LibKa0s-Launcher-1.0 minor 3). It draws the
+    -- title, Enabled, Locked, Test mode and the two click hints on every hover, disabled or not; the
+    -- fields below only answer its questions, and each is asked on the show, never cached. There is
+    -- no onTooltipShow: this addon has no lines of its own, and a hook that drew a title or a click
+    -- hint would draw a second copy of the library's (anti-pattern #89).
+    --
+    -- The version is the TOC's `## Version`, through core/EnvSetup.lua's reader.
+    version = function() return NS.Version and NS.Version() end,
+    -- The two states this addon really has, read through the same accessor the Master controls
+    -- rows read (settings/General.lua): Lock frame's `locked` and Test mode's `state.testMode`.
+    isLocked   = function() return NS.GetSetting and NS.GetSetting("locked") and true or false end,
+    isTestMode = function() return NS.GetSetting and NS.GetSetting("state.testMode") and true or false end,
+    -- Rung (b)'s left click, in the locale's words (standards ADDONS.md: "(b) test mode"). A
+    -- function, so a locale table filled after this file loads is still the one read. The disabled
+    -- hint needs no `slash`: the library reads `/am enable` out of `disabledLine` above.
+    leftClickLabel = function() return NS.L["Toggle test mode"] end,
+
     -- CALL-TIME forwarders: core/CoreSetup.lua's printer is reclaimed from AceConsole's embed in
     -- core/AuraMaster.lua, which loads after this file.
     print = function(line) NS.Print(line) end,
