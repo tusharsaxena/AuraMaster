@@ -521,12 +521,25 @@ class MovesTest(unittest.TestCase):
         self.assertEqual(self.moves(rows), [])
 
     def test_a_low_confidence_suggestion_never_moves(self):
+        # 50% self, 50% single, no signal: R9 'utility' at low confidence. 'utility' is in the
+        # file and does not list 871, so only the medium-confidence gate can stop the move.
         rows = [("WARRIOR", PROT, "BUFF", 871, rows_st(50, 5, self_=25, single=25))]
         self.SIGNALS = {**self.SIGNALS, **{871: set()}}
+        self.SHIPPED = self.SHIPPED + [{"key": "utility", "label": "U", "aura": "BUFF", "classes": {}}]
+        ruled = sid_propose._Ruled(agg_of(rows), SPEC_MAP, self.NAMES, self.SIGNALS, POOL, None,
+                                   sid_propose.Thresholds())
+        self.assertEqual(ruled.suggest("WARRIOR", 871)[::2], ("utility", "low"))
         self.assertEqual(self.moves(rows), [])
 
     def test_debuff_categories_never_move(self):
-        rows = [("WARRIOR", ARMS, "DEBUFF", 5246, rows_st(100, 5, self_=0, single=100))]
+        # A BUFF observation of an id listed only in hardCC, shaped like a raid cooldown: were
+        # the debuff category not skipped, it would move hardCC -> raidCDs.
+        rows = [("WARRIOR", ARMS, "BUFF", 5246,
+                 rows_st(100, 5, self_=60, group=4, recast=180.0, name="Intimidating Shout"))]
+        self.SIGNALS = {**self.SIGNALS, **{5246: {"damage_taken_down"}}}
+        ruled = sid_propose._Ruled(agg_of(rows), SPEC_MAP, self.NAMES, self.SIGNALS, POOL, None,
+                                   sid_propose.Thresholds())
+        self.assertEqual(ruled.suggest("WARRIOR", 5246)[0], "raidCDs")
         self.assertEqual(self.moves(rows), [])
 
     def test_already_in_the_suggested_category_is_no_move(self):
