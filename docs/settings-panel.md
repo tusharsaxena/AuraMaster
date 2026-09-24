@@ -112,7 +112,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralDispel.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:

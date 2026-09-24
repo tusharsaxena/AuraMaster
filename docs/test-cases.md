@@ -6,11 +6,12 @@ badge and any count quoted in the docs must agree with it.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_loadorder.lua (7)
+### test_loadorder.lua (8)
 
 - loadorder: the TOC lists the locale first and the Profiles page last
 - loadorder: every TOC path exists, and none is a library
 - loadorder: the load-bearing pairs are in order, and the TOC says why
+- loadorder: GeneralDispel loads after GeneralSpells and before General
 - loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Conventional note
 - loadorder: the runner loaded exactly the TOC's files and the XML's library files
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
@@ -1526,7 +1527,7 @@ badge and any count quoted in the docs must agree with it.
 
 | Suite | Cases |
 |-------|------:|
-| test_loadorder.lua | 7 |
+| test_loadorder.lua | 8 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 21 |
 | test_database.lua | 91 |
@@ -1582,4 +1583,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1348** |
+| **Total** | **1349** |

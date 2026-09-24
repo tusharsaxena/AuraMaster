@@ -1,7 +1,8 @@
 local _, NS = ...
 
--- settings/GeneralSpells.lua — General → Spell Categories and General → Dispel Colors: the two sets
--- every container shares (schema v2 made both the profile's).
+-- settings/GeneralSpells.lua — General → Spell Categories: the spell lists every container shares
+-- (schema v2 made them the profile's). Its sibling set, General → Dispel Colors, is
+-- settings/GeneralDispel.lua (issue #16).
 --
 --     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
 --     Spell Categories  [Category ▾]  [Restore this category's starter list]
@@ -24,8 +25,7 @@ local _, NS = ...
 --                    -- OR, when the category is Weapon enchants --
 --                       ---- Weapon slots ----------------------------------------------------
 --                       [x] Main hand   [x] Off hand   [x] Ranged
---     Dispel Colors     the lead-in and its four bullets, then one swatch per dispel type,
---                       Magic … Bleed
+--     Dispel Colors     settings/GeneralDispel.lua
 --
 -- SPELL CATEGORIES is bespoke: the category dropdown, the restore, then the library's IdList over that
 -- category's edits, drawn with an X at the left of every entry (`removeStyle = "icon"`, LibKa0s
@@ -66,19 +66,11 @@ local _, NS = ...
 -- and on Filters -> Categories. Restore is not drawn for one at all: see the note above
 -- `restoreStarters` for why an empty starter list makes that button a silent delete.
 --
--- DISPEL COLORS are five plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
--- no `effect`, so a write re-applies every container. Bars and text read them: a bar's fill or
--- background colored by dispel type, and a text line's dispel type word, backdrop and edge (feedback
--- #7, modules/Style_Text.lua); an icon's dispel border keeps Blizzard's own colored art (modules/Style_Icons.lua,
--- owner 2026-09-13). There is no None swatch (feedback #7): an aura with no dispel type keeps the
--- surface's own color, so a None color would be read by nothing; schema v5 clears the stored leaf.
--- They are palette definitions, one color per dispel type, and carry no class-color companion: the
--- one exemption options-ui-§17 makes.
---
 -- This file registers no SCHEMA ROWS of its own -- only the delete confirmation's
--- StaticPopupDialogs entry. settings/General.lua registers ENCHANT_ROWS then DISPEL_ROWS after
--- the Containers rows, so Spell Categories takes the fourth strip position and Dispel Colors the
--- fifth, and draws both tabs through TABS. It loads before General.lua for that reason, and before
+-- StaticPopupDialogs entry. settings/General.lua registers ENCHANT_ROWS after the Display rows and
+-- settings/GeneralDispel.lua's rows after those, so Spell Categories takes the third strip position
+-- and Dispel Colors the fourth, and draws this tab through TABS. It loads before GeneralDispel.lua,
+-- which reads BULLET and BULLET_GAP from here, and before General.lua for the rows; and before
 -- settings/Filters.lua, whose Overrides lists read `candidates`, `ID_STRINGS` and `ID_TOOLTIP` from
 -- here.
 
@@ -96,10 +88,11 @@ local CA = NS.CastAura
 
 local PAGE = "general"
 local SPELLS = L["Spell Categories"]
+-- Only for the Spell Categories tab's `before`: the tab itself is settings/GeneralDispel.lua's.
 local DISPEL = L["Dispel Colors"]
 
 -- One bullet's marker, prefixed at draw so the locale keys stay plain prose (settings/Text.lua's
--- cheat sheet does the same).
+-- cheat sheet does the same). Published on NS.GeneralSpells for settings/GeneralDispel.lua.
 local BULLET = "- "
 
 -- A hairline between two bullets: enough that they are not read as one wrapped paragraph, small
@@ -1454,53 +1447,10 @@ local function renderSpells(ctx)
     })
 end
 
--- ---------------------------------------------------------------------------
--- Dispel Colors
--- ---------------------------------------------------------------------------
-
-local DISPEL_ROWS = {}
-for _, name in ipairs(C.DISPEL_TYPES) do
-    local row = {
-        path = "dispelColors." .. name, page = PAGE, group = DISPEL, type = "color", label = L[name],
-        desc = L["This dispel type's color for a bar's fill or background, and for a text line's dispel type word, backdrop or edge when those are on. An icon's dispel border keeps Blizzard's own colors."],
-    }
-    DISPEL_ROWS[#DISPEL_ROWS + 1] = row
-end
-
--- The three facts the tab has to state before the swatches mean anything: where the colors are
--- read, what has no dispel type at all and how that looks, and that an icon's dispel border is
--- Blizzard's art rather than one of these. They were one paragraph of five lines until the owner
--- asked for a list (2026-09-20, from the live panel) -- the same complaint, and the same answer,
--- as settings/Filters.lua's priority block: a lead-in, then one H.TextRow per fact with a hairline
--- between them, drawn from helpers that already exist. The WORDING is the paragraph's, split.
-local DISPEL_LEAD = L["One color per dispel type, shared by every container:"]
-local DISPEL_FACTS = {
-    L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text -> Font)."],
-    -- Split in two (the paragraph's one long sentence): at panel width a ~170-character bullet wraps,
-    -- and its second line lands flush under the "- " with no hanging indent, so a three-bullet block
-    -- reads as 1/2/1 lines and loses the shape the bullets were asked for. Two short facts instead.
-    L["Buffs and many debuffs have no dispel type at all, class debuffs such as Judgment or Consecration included."],
-    L["Those keep a bar's own color, and show no type word, backdrop or edge."],
-    L["An icon's dispel border keeps Blizzard's own colors."],
-}
-
---- The Dispel Colors tab: the lead-in and its four bullets, then the group's five rows.
-local function renderDispel(ctx, _, rows)
-    local scroll = H.EnsureScroll(ctx)
-    H.TextRow(ctx, DISPEL_LEAD, { fontObject = "GameFontNormalSmall" })
-    if scroll then H.AddSpacer(scroll, BULLET_GAP) end
-    for _, fact in ipairs(DISPEL_FACTS) do
-        H.TextRow(ctx, BULLET .. fact)
-        if scroll then H.AddSpacer(scroll, BULLET_GAP) end
-    end
-    H.RenderRows(ctx, rows or {}, nil, nil, { noHeadings = true })
-end
-
 local TABS = {
-    -- Ahead of Dispel Colors: every schema group's tab is collected before any bespoke one.
+    -- Ahead of Dispel Colors (settings/GeneralDispel.lua's tab): every schema group's tab is
+    -- collected before any bespoke one.
     { key = SPELLS, label = SPELLS, render = renderSpells, before = DISPEL },
-    -- Keyed by its group, so it takes the group's place and is handed the group's rows.
-    { key = DISPEL, label = DISPEL, render = renderDispel },
 }
 
 -- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` are shared with the Filters page's Overrides lists,
@@ -1508,8 +1458,10 @@ local TABS = {
 -- `MarkedName` is the ONE definition of the 'yours' marker, read by settings/Filters.lua's Categories
 -- grid; `RestoreStarters` is the restore ACT, published so that it is testable and so that any
 -- future caller meets the refusal the button's absence only implies.
+-- `BULLET` and `BULLET_GAP` are published once here and read by settings/GeneralDispel.lua's
+-- lead-in and bullets rather than copied there.
 NS.GeneralSpells = {
-    DISPEL_ROWS = DISPEL_ROWS, ENCHANT_ROWS = ENCHANT_ROWS, TABS = TABS,
+    ENCHANT_ROWS = ENCHANT_ROWS, TABS = TABS, BULLET = BULLET, BULLET_GAP = BULLET_GAP,
     candidates = candidates, ID_STRINGS = ID_STRINGS, ID_TOOLTIP = ID_TOOLTIP,
     MarkedName = markedName, RestoreStarters = restoreStarters,
 }

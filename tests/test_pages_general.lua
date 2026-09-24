@@ -1,4 +1,4 @@
--- tests/test_pages_general.lua — settings/General.lua and settings/GeneralSpells.lua, driven
+-- tests/test_pages_general.lua — settings/General.lua, GeneralSpells.lua and GeneralDispel.lua, driven
 -- through their widgets: what each Master control and Display row writes, what each one's effect is,
 -- the two buttons the composer adds, the page's Defaults, the Spell Categories ID list and its
 -- restore, and the Dispel Colors rows. The top-level Containers page — its picker and New container

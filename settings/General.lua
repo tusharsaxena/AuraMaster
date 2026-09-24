@@ -11,7 +11,7 @@ local _, NS = ...
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
 --     Display          -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
 --     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
---     Dispel Colors    settings/GeneralSpells.lua: one color per dispel type, profile-wide
+--     Dispel Colors    settings/GeneralDispel.lua: one color per dispel type, profile-wide
 --
 -- A container's OWN identity — create, name, enable, unit, aura type, style, duplicate, delete,
 -- copy — is the top-level Containers page's (`settings/Containers.lua`, N-1, batch 7). It used to
@@ -42,6 +42,7 @@ local L = NS.L
 local H = NS.Helpers
 local print = NS.Print
 local GS = NS.GeneralSpells
+local GD = NS.GeneralDispel
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
 -- Session state, like the console row: the path names no stored leaf.
@@ -149,7 +150,7 @@ NS.RegisterSchemaRows({
 -- After the Display rows, the enchant-slot rows, so Spell Categories (their group) takes the third
 -- place; the Dispel Colors rows after those, so theirs is last.
 NS.RegisterSchemaRows(GS.ENCHANT_ROWS)
-NS.RegisterSchemaRows(GS.DISPEL_ROWS)
+NS.RegisterSchemaRows(GD.ROWS)
 
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →
 -- Reset Profile.
@@ -171,14 +172,14 @@ StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {
     end,
 }
 
--- The page's tabs: its schema groups, with Spell Categories and Dispel Colors
--- (settings/GeneralSpells.lua) as its bespoke ones. `addonWide`: every tab is drawn whether or not a
+-- The page's tabs: its schema groups, with Spell Categories (settings/GeneralSpells.lua) and
+-- Dispel Colors (settings/GeneralDispel.lua) as its bespoke ones. `addonWide`: every tab is drawn whether or not a
 -- container exists.
 local PAGE_SPEC = {
     addonWide  = true,
     -- The group name IS the hook key, read off the instance rather than spelled again.
     afterGroup = { [H.MASTER_GROUP] = masterTail },
-    tabs       = { GS.TABS[1], GS.TABS[2] },
+    tabs       = { GS.TABS[1], GD.TAB },
 }
 
 local function build(mainCategory)

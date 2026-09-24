@@ -71,6 +71,18 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         "the MediaSetup position carries its note")
 end)
 
+test("loadorder: GeneralDispel loads after GeneralSpells and before General", function()
+    -- red under: settings/GeneralDispel.lua missing from the TOC, or moved out from between the two
+    -- (it reads NS.GeneralSpells' BULLET and BULLET_GAP at file load, and General.lua reads its
+    -- ROWS and TAB at file load).
+    local index = indexOf()
+    local spells, dispel, general =
+        index["settings/GeneralSpells.lua"], index["settings/GeneralDispel.lua"], index["settings/General.lua"]
+    assertTrue(dispel ~= nil, "settings/GeneralDispel.lua must be in the TOC")
+    assertTrue(spells < dispel, "settings/GeneralSpells.lua must load before settings/GeneralDispel.lua")
+    assertTrue(dispel < general, "settings/GeneralDispel.lua must load before settings/General.lua")
+end)
+
 -- The note that governs each addon file line (toc-file-§5). Groups are runs of non-blank lines;
 -- `##` metadata and `#@` directives are ignored, `libs\` lines skipped. A group's first line, when it
 -- is a comment, is its header and not a note. A note is a maximal run of comment lines; a file line's
