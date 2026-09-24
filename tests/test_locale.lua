@@ -173,3 +173,22 @@ test("locale: every value is ASCII, the em dash excepted (T-1)", function()
     end
     assertEqual(#bad, 0, "non-ASCII byte outside the em dash: " .. table.concat(bad, "; "))
 end)
+
+test("locale: no library-missing line joins a routed fragment", function()
+    -- red under: the concatenation at the four sites (CoreSetup, DebugLogSetup, LauncherSetup,
+    -- PerfSetup). localization-§1: a sentence is one key with a placeholder, never NS.LIBKA0S_MISSING
+    -- glued to an unrouted ", " / "; " and a separately routed fragment a translator cannot reorder.
+    local bad = {}
+    local p = io.popen("ls -1 core/*.lua 2>/dev/null")
+    for path in p:lines() do
+        local n = 0
+        for line in (readFile(path) .. "\n"):gmatch("(.-)\n") do
+            n = n + 1
+            if line:find("LIBKA0S_MISSING%s*%.%.") then
+                bad[#bad + 1] = ("%s:%d"):format(path, n)
+            end
+        end
+    end
+    p:close()
+    assertEqual(#bad, 0, "library-missing line concatenated at: " .. table.concat(bad, ", "))
+end)

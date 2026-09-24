@@ -81,7 +81,7 @@ if not lib then
         if not announced then
             announced = true
             DEFAULT_CHAT_FRAME:AddMessage(NS.SafeToString(NS.PREFIX) .. " " ..
-                NS.LIBKA0S_MISSING .. "; " .. NS.L["running on reduced built-in fallbacks."])
+                NS.L["%s; running on reduced built-in fallbacks."]:format(NS.LIBKA0S_MISSING))
         end
         DEFAULT_CHAT_FRAME:AddMessage(table.concat(parts, " "))
     end

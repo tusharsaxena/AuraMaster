@@ -16,7 +16,7 @@ if not lib then
     -- Degrade, never error. The stub answers EVERY member the addon calls — `/am debug`, the Master
     -- controls tab's console row and core/PerfSetup.lua's log sink all reach for one — and the flag
     -- itself still works, because NS.State.debug is ours. What is lost is the window, said once.
-    local missing = NS.LIBKA0S_MISSING .. ", " .. NS.L["so the debug console window is unavailable."]
+    local missing = NS.L["%s, so the debug console window is unavailable."]:format(NS.LIBKA0S_MISSING)
     local announced = false
     local function sayOnce()
         if announced then return end

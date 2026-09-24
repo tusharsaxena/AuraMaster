@@ -48,7 +48,7 @@ if not Launcher then
     -- why, and the seam's `hide` write must still land so the player's choice survives a reload on a
     -- library-less build. So the stub answers every member of the live instance, honestly: nothing
     -- is registered, there is no object, and the stored `hide` is still the truth about the button.
-    local missing = NS.LIBKA0S_MISSING .. ", " .. NS.L["so the minimap button is unavailable."]
+    local missing = NS.L["%s, so the minimap button is unavailable."]:format(NS.LIBKA0S_MISSING)
     local announced = false
     local function sayOnce()
         if announced then return end

@@ -1434,7 +1434,7 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (6)
+### test_locale.lua (7)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
@@ -1442,6 +1442,7 @@ badge and any count quoted in the docs must agree with it.
 - locale: every enUS value is its own key, so the English build shows the source string
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
 - locale: every value is ASCII, the em dash excepted (T-1)
+- locale: no library-missing line joins a routed fragment
 
 ### test_docs.lua (5)
 
@@ -1569,7 +1570,7 @@ badge and any count quoted in the docs must agree with it.
 | test_defaults.lua | 30 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
-| test_locale.lua | 6 |
+| test_locale.lua | 7 |
 | test_docs.lua | 5 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
@@ -1577,4 +1578,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1343** |
+| **Total** | **1344** |
