@@ -11,7 +11,7 @@ marked as such rather than listed as a requirement.
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
 | Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
-| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
+| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
 
 ## Runtime (in-game) — what a player needs
 
@@ -97,7 +97,8 @@ git -C ../LibKa0s rev-parse --short v1.58.0   # verify: prints a commit
 - **LuaFileSystem.** Not used; the kit lists directories by shelling out. `luacheck` pulls it in for
   itself, which is LuaRocks' business rather than this addon's.
 - **Any pip-installed Python package.** Pillow, the one Python package here, comes from apt (Release /
-  assets, above). `tools/spell-research/research.py` is standard library only, on purpose:
+  assets, above). `tools/spell-research/research.py` is standard library only, on purpose
+  (and so is `logs.py` with its `sid_*.py` modules, for the same reason):
   Ubuntu 24.04 marks its Python EXTERNALLY-MANAGED (PEP 668), so a single `pip install` in that
   generator would have dragged a virtualenv or a pipx recipe into a tool that runs a handful of
   times per expansion. The complexity suite's `lizard` is installed through pipx (above) and is a
@@ -118,6 +119,8 @@ required to build, run or test the addon.**
 |---|---|---|---|
 | `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the Hard CC / Soft CC spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
 | a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
+| `python3` (same install) | **3.8** or newer | the combat-log evidence tool, `tools/spell-research/logs.py` and its `sid_*.py` modules, which mine the owner's combat logs for the aura ids each spec applies and drive the `/aura-spells-review` command. Not part of the green gate | `tools/spell-research/logs.py:1` is `#!/usr/bin/env python3`; it and the `sid_*.py` modules import only the standard library (`argparse`, `csv`, `dataclasses`, `hashlib`, `json`, `statistics`, `pathlib`, …) plus `research.py` as a module. Its tests are `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'` |
+| a folder of combat logs (optional) | — | `logs.py scan`'s input: the `WoWCombatLog-*.txt` files the client writes with advanced combat logging on. Default `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`, any other folder with `--logs`. Only the owner's review needs it; nothing else reads it. Its per-log cache and salt live outside the repo, in `~/.cache/auramaster-spell-research/` | `tools/spell-research/logs.py` (`DEFAULT_LOGS`), `tools/spell-research/sid_cache.py` (`DEFAULT_CACHE_DIR`) |
 | Pillow (`python3-pil`) | any recent | regenerating the 128 icon TGA (below) | the recipe below does `from PIL import Image` |
 
 ```sh

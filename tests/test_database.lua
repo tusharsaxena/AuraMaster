@@ -553,9 +553,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 5
-    -- steps a v1 profile now climbs (v2, v3, v4, v5, v6).
-    assertEqual(perProfile, 10, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 6
+    -- steps a v1 profile now climbs (v2, v3, v4, v5, v6, v7).
+    assertEqual(perProfile, 12, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -848,11 +848,11 @@ test("v3: the whitelist lift never sweeps a category the aura type does not have
     assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
 end)
 
-test("v6: the current schema version is 6", function()
+test("v7: the current schema version is 7", function()
     local NS = fresh()
-    -- red under: the v6 step missing from SCHEMA_STEPS
-    assertEqual(NS.Database.CurrentSchemaVersion(), 6)
-    assertEqual(NS.db.global.schemaVersion, 6)
+    -- red under: the v7 step missing from SCHEMA_STEPS
+    assertEqual(NS.Database.CurrentSchemaVersion(), 7)
+    assertEqual(NS.db.global.schemaVersion, 7)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()

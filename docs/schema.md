@@ -502,7 +502,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:837`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:899`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -656,6 +656,15 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   (toc-file-§2) and because a later step can then say "a profile at v6 or later carries these keys"
   without re-deriving it. Idempotent in the strongest sense: it creates only what is absent and
   replaces only a non-table leaf.
+- **Schema v7** (`Database.MigrateV7`, `core/Database.lua`, owner 2026-09-25) runs over **every**
+  stored profile and logs one `[Migrate] v7 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `7`. It retires the `consumables` buff category and
+  seeds the three that arrived with it so that no stored container draws differently: each
+  container's `groupBuffs` takes its `support` state (the raid buffs were Support's), and `stances`
+  and `racials` take its `uncategorized` state (those auras were on no list), a stored state or an
+  absent source being left alone. `consumables` is deleted from every container and from
+  `categorySpells`; a player's Support edit on a group buff, and a Utility edit on Shadowmeld, move
+  to the new category unless it already holds its own. Idempotent: the seeds are `== nil` tests.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

@@ -798,6 +798,68 @@ function Database.MigrateV6(p)
     return n
 end
 
+--- v7 (owner 2026-09-25): the Consumables category retired, and three new buff categories --
+--- `groupBuffs` (split out of Support), `stances` and `racials` (auras that had no list before, bar
+--- Shadowmeld out of Utility).
+---
+--- THE RULE IS THAT NO STORED CONTAINER DRAWS DIFFERENTLY BECAUSE OF THE UPGRADE. A new key left
+--- absent would backfill as Show (`Cat.DefaultStates`), so a container that Hid Support, or that
+--- Hid Uncategorized to draw only what it names (the "Player cooldowns" starter), would start
+--- drawing raid buffs or stances it never drew. So each new key takes the state of where its auras
+--- used to fall: `groupBuffs` Support's, `stances` and `racials` Uncategorized's. A key already
+--- there is a choice and is kept; a source that is absent leaves the new key to the backfill.
+--- `consumables` is simply dropped: its five flask ids fall to Uncategorized, like any unlisted buff.
+---
+--- The player's own list edits follow the ids that moved: a Support edit on a group buff, and a
+--- Utility edit on Shadowmeld, move to the new category unless it already has its own. The
+--- Consumables edits are dropped with the category. IDEMPOTENT: a second run changes nothing. A
+--- test seam as well as the step's body, like MigrateV2..V6.
+--- @return number  the containers it walked
+local V7_SEEDS = { groupBuffs = "support", stances = "uncategorized", racials = "uncategorized" }
+local V7_MOVED = {
+    support = { to = "groupBuffs", ids = { 1459, 21562, 6673, 1126, 462854, 381748, 381732, 381741,
+        381746, 381749, 381750, 381751, 381752, 381756, 381757 } },
+    utility = { to = "racials", ids = { 58984 } },
+}
+
+local function moveEdits(edits)
+    for from, move in pairs(V7_MOVED) do
+        local src = edits[from]
+        if type(src) == "table" then
+            for _, id in ipairs(move.ids) do
+                if src[id] ~= nil then
+                    local dst = edits[move.to]
+                    if type(dst) ~= "table" then dst = {}; edits[move.to] = dst end
+                    if dst[id] == nil then dst[id] = src[id] end
+                    src[id] = nil
+                end
+            end
+            if next(src) == nil then edits[from] = nil end
+        end
+    end
+end
+
+function Database.MigrateV7(p)
+    if type(p) ~= "table" then return 0 end
+    if type(p.categorySpells) == "table" then
+        p.categorySpells.consumables = nil
+        moveEdits(p.categorySpells)
+    end
+    if type(p.containers) ~= "table" then return 0 end
+    local walked = 0
+    for _, c in pairs(p.containers) do
+        local cats = type(c) == "table" and type(c.filter) == "table" and c.filter.categories
+        if type(cats) == "table" then
+            cats.consumables = nil
+            for key, from in pairs(V7_SEEDS) do
+                if cats[key] == nil and cats[from] ~= nil then cats[key] = cats[from] end
+            end
+            walked = walked + 1
+        end
+    end
+    return walked
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 ---
@@ -806,7 +868,7 @@ end
 --- category's `filter.categories.<key>` sits in the containers of profiles nobody is logged into --
 --- and a second walk written to look like this one would drift on exactly the case that matters:
 --- the fallback branch below, which is the whole of the headless harness and of a client whose
---- AceDB failed to load. The local name is kept so the ladder's five steps read as they did.
+--- AceDB failed to load. The local name is kept so the ladder's steps read as they did.
 --- @param db table  NS.db, or anything carrying `sv.profiles` or `profile`
 --- @param fn function  fn(profile, name)
 function Database.EachProfile(db, fn)
@@ -886,6 +948,14 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV6(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v6 profile '%s': the user-category store stamped -- %s category(ies) already stored", name, n)
+            end
+        end)
+    end },
+    { to = 7, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV7(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v7 profile '%s': Consumables retired; Group buffs, Stances and Racials seeded over %s container(s)", name, n)
             end
         end)
     end },

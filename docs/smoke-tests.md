@@ -166,8 +166,9 @@ suite covers what only the client can show.
 ## F. Filters
 
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category (including
-    *Uncategorized*) left at Show → your flask disappears from it, nothing else changes. Now also set
+35. **Categories.** On a buff container set *Group buffs* to **Hide**, every other category (including
+    *Uncategorized*) left at Show → your Mark of the Wild / Arcane Intellect / Battle Shout disappears
+    from it, nothing else changes. Now also set
     *Defensive cooldowns* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
     still shows (rank 3: a Show elsewhere rescues it). Set every category to **Hide**, *Uncategorized*
     included, with the Overrides whitelist empty → the container goes empty and shows "These filters
@@ -486,8 +487,8 @@ one. None of this is reproducible headlessly; these checks are.
     Categories → Spell Categories, click **See spells** on a category that is NOT the first row
     (say *Support* or *Utility*) → General → Spell Categories opens with the tab selected AND that
     same category already chosen in the **Category** dropdown, not defensives or whatever was last
-    selected there. Do it again from a DIFFERENT category (say *Consumables*) on a different
-    container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
+    selected there. Do it again from a DIFFERENT category (say *Racials*) on a different
+    container → it lands on Racials, not Support. Click **See spells** on the **Weapon enchants**
     row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
     slot toggles, not a spell list.
 80. **The priority block reads as one rank per line, once, at the foot of General (`F-4`,

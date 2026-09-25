@@ -1,0 +1,8 @@
+Name_lang,FemaleName_lang,Description_lang,ID,ClassID,OrderIndex,PetTalentType,Role,Flags,SpellIconFileID,PrimaryStatPriority,AnimReplacements,MasterySpellID_0,MasterySpellID_1
+Arms,,"A battle-hardened master of weapons, using mobility and overpowering attacks.",71,1,0,-1,2,0,132355,1,0,76838,0
+Fury,,"A furious berserker, wielding a weapon in each hand.",72,1,1,-1,2,0,132347,1,0,76856,0
+Protection,,"A stalwart protector, using a shield.",73,1,2,-1,0,0,132341,1,0,76857,0
+Elemental,,"A spellcaster who harnesses the destructive forces of nature.",262,7,0,-1,2,0,136048,4,0,168534,0
+Enhancement,,"A totemic warrior who strikes foes with weapons.",263,7,1,-1,2,0,237581,2,0,77223,0
+Restoration,,"A healer who calls upon ancestral spirits.",264,7,2,-1,1,0,136052,4,0,77226,0
+Initial,,"",1444,7,4,-1,2,0,0,0,0,0,0

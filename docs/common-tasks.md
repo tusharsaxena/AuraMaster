@@ -62,8 +62,8 @@ Example: a bar option.
    plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list is honored only on a HOSTILE target or focus; the engine
    discards its ids on you or a friendly unit (the identity gate, `docs/midnight-quirks.md`). That
-   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:379`,
-   `:452`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
+   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:530`,
+   `:606`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
    where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
 
@@ -239,7 +239,7 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:837`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:899`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure

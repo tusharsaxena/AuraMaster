@@ -336,10 +336,15 @@ test("defaults: one Healing category holds both retired healing lists, where Cor
     assertTrue(def ~= nil and def.kind == "spells", "a healing spell category")
     assertEqual(def.label, "Healing")
     assertEqual(def.desc, "Heal-over-time effects, shields and beacons.")
+    -- What the owner's review of the 2026-09-24 combat-log bundle added since (SID, 2026-09-25).
+    local FROM_LOGS = { 1227806, 1246768, 77489, 1253593, 383648, 382024, 1260617, 443113, 406220,
+        1260681, 367364, 373862, 355941, 1291636, 376788, 409895, 409678, 363534, 373267, 1245369,
+        1244893, 156322 }
     for _, id in ipairs(HEALING) do assertTrue(def.spells[id] ~= nil, "starter " .. id) end
+    for _, id in ipairs(FROM_LOGS) do assertTrue(def.spells[id] ~= nil, "from the logs " .. id) end
     local n = 0
     for _ in pairs(def.spells) do n = n + 1 end
-    assertEqual(n, #HEALING, "the union, nothing more")
+    assertEqual(n, #HEALING + #FROM_LOGS, "the union and the reviewed additions, nothing more")
     assertEqual(Cat.Find("HELPFUL", "coreHealing"), nil)
     assertEqual(Cat.Find("HELPFUL", "lesserHealing"), nil)
     -- red under: appending healing at the end (the editor's category order would move)
@@ -493,7 +498,7 @@ test("defaults: a user category materializes among the spell lists, above Weapon
     for i, def in ipairs(C2.HELPFUL) do at[def.key] = i end
     -- red under: appending a user definition after Weapon enchants or after Uncategorized (U-1)
     assertTrue(at[keys[1]] < at.weaponEnchants, "a user category sits above Weapon enchants")
-    assertTrue(at.consumables < at[keys[1]], "and below the shipped spell lists it is a sibling of")
+    assertTrue(at.racials < at[keys[1]], "and below the shipped spell lists it is a sibling of")
     assertEqual(C2.HELPFUL[#C2.HELPFUL].key, "uncategorized", "U-1 survives materialization")
     assertEqual(C2.HARMFUL[#C2.HARMFUL].key, "uncategorizedDebuffs")
     local def = C2.Find("HELPFUL", keys[1])

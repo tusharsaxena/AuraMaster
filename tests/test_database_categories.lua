@@ -56,13 +56,95 @@ test("v6: a profile that predates user categories climbs the ladder and stays va
         }
     end
     local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 5 } } })
-    assertEqual(NS.db.global.schemaVersion, 6)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local p = NS.db.sv.profiles[name]
         -- red under: the step touching the active profile only, as every step before it must not
         assertEqual(type(p.userCategories), "table", name)
         assertEqual(type(p.userCategoryOrder), "table", name)
         assertEqual(next(p.userCategories), nil, name .. " invented a category")
+    end
+    assertEqual(NS.ValidateSchema(), 0, "and every schema row still resolves")
+end)
+
+test("v7: MigrateV7 retires Consumables and seeds the new categories from where their auras fell", function()
+    local NS = fresh()
+    local p = {
+        categorySpells = {
+            consumables = { [431971] = false, [900001] = true },
+            support = { [1459] = false, [10060] = false },   -- a group buff, and a Support starter that stays
+            utility = { [58984] = false },                   -- Shadowmeld, now a racial
+            groupBuffs = { [21562] = true },
+        },
+        containers = {
+            [1] = { filter = { categories = { support = "hide", uncategorized = "hide", consumables = "show" } } },
+            [2] = { filter = { categories = { support = "show", uncategorized = "show" } } },
+            [3] = { filter = { categories = { support = "hide", groupBuffs = "show" } } },
+            [4] = { name = "no filter" },
+        },
+    }
+    assertEqual(NS.Database.MigrateV7(p), 3)
+    local c1, c2, c3 = p.containers[1].filter.categories, p.containers[2].filter.categories,
+        p.containers[3].filter.categories
+    -- red under: leaving the retired key behind
+    assertNil(c1.consumables)
+    -- red under: leaving the new keys to the backfill's Show, which would draw raid buffs and
+    -- stances on a container that hid Support or Uncategorized
+    assertEqual(c1.groupBuffs, "hide", "Group buffs takes Support's state")
+    assertEqual(c1.stances, "hide", "Stances takes Uncategorized's")
+    assertEqual(c1.racials, "hide", "and so does Racials")
+    assertEqual(c2.groupBuffs, "show")
+    assertEqual(c2.racials, "show")
+    -- red under: overwriting a state already stored
+    assertEqual(c3.groupBuffs, "show", "a stored state is a choice")
+    assertNil(c3.stances, "an absent source leaves the key to the backfill")
+    local spellEdits = p.categorySpells
+    assertNil(spellEdits.consumables, "Consumables edits go with the category")
+    -- red under: the player's edits staying on the list their ids left
+    assertEqual(spellEdits.groupBuffs[1459], false, "a Support edit on a group buff follows it")
+    assertEqual(spellEdits.groupBuffs[21562], true, "beside what Group buffs already held")
+    assertNil(spellEdits.support[1459])
+    assertEqual(spellEdits.support[10060], false, "a Support edit on an id that stayed is kept")
+    assertEqual(spellEdits.racials[58984], false, "Shadowmeld's Utility edit follows it to Racials")
+    assertNil(spellEdits.utility, "a list left with no edits is not stored")
+end)
+
+test("v7: a second MigrateV7 run changes nothing, and a new key's stored edit wins over a moved one", function()
+    local NS = fresh()
+    local p = {
+        categorySpells = { support = { [6673] = false }, groupBuffs = { [6673] = true } },
+        containers = { [1] = { filter = { categories = { support = "hide", uncategorized = "show" } } } },
+    }
+    NS.Database.MigrateV7(p)
+    -- red under: a moved edit overwriting one the new category already had
+    assertEqual(p.categorySpells.groupBuffs[6673], true)
+    assertNil(p.categorySpells.support)
+    local cats = p.containers[1].filter.categories
+    local snapshot = {}
+    for k, v in pairs(cats) do snapshot[k] = v end
+    p.containers[1].filter.categories.support = "show"   -- a later change of Support's state
+    NS.Database.MigrateV7(p)
+    -- red under: re-seeding from the source on every run
+    assertEqual(cats.groupBuffs, snapshot.groupBuffs, "the seed happens once")
+    assertEqual(cats.stances, "show")
+end)
+
+test("v7: a v6 profile climbs to v7 with every schema row still resolving", function()
+    local function raw()
+        return {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 }, userCategories = {}, userCategoryOrder = {},
+            containers = { [1] = { name = "Mine", unit = "player", auraType = "HELPFUL", style = "bars",
+                filter = { categories = { support = "hide", uncategorized = "hide", consumables = "hide" } } } },
+        }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 6 } } })
+    assertEqual(NS.db.global.schemaVersion, 7)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local cats = NS.db.sv.profiles[name].containers[1].filter.categories
+        -- red under: the step touching the active profile only
+        assertNil(cats.consumables, name)
+        assertEqual(cats.groupBuffs, "hide", name)
+        assertEqual(cats.racials, "hide", name)
     end
     assertEqual(NS.ValidateSchema(), 0, "and every schema row still resolves")
 end)

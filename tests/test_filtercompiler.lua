@@ -228,11 +228,11 @@ end)
 test("filter: showing a spell category with every id removed, and nothing hidden, still contributes nothing (R-3)", function()
     -- R-3: with nothing Hidden, `includeCategory` never even runs — the container stays at its one,
     -- unfiltered group whatever a Show category's own spell edits say.
-    local def = NS.Categories.Find("HELPFUL", "consumables")
+    local def = NS.Categories.Find("HELPFUL", "racials")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = { categories = { consumables = "show" } } },
-        { categorySpells = { consumables = removed }, categories = only("HELPFUL", { "consumables" }) })
+    local plan = compile({ filter = { categories = { racials = "show" } } },
+        { categorySpells = { racials = removed }, categories = only("HELPFUL", { "racials" }) })
     assertEqual(#plan.groups, 1)
     assertNil(plan.groups[1].candidateFilters)
     assertEqual(#plan.warnings, 0)
@@ -240,18 +240,18 @@ end)
 
 test("filter: a shown spell category with every id removed can never match, and is dropped as a conflict (R-6)", function()
     -- Unlike the R-3 case above, a Hide elsewhere forces the per-shown-category path to actually run
-    -- `includeCategory` for "consumables". red under: `includeCategory`'s spells branch writing an
+    -- `includeCategory` for "racials". red under: `includeCategory`'s spells branch writing an
     -- EMPTY `includeSpellIDs` instead of `con.conflict = true` — an empty includeSpellIDs is what the
     -- engine would honor, drawing nothing where dropping the group draws through the catch-all instead.
-    local def = NS.Categories.Find("HELPFUL", "consumables")
+    local def = NS.Categories.Find("HELPFUL", "racials")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = { categories = { consumables = "show", defensives = "hide" } } },
-        { categorySpells = { consumables = removed },
-          categories = only("HELPFUL", { "consumables", "defensives" }) })
+    local plan = compile({ filter = { categories = { racials = "show", defensives = "hide" } } },
+        { categorySpells = { racials = removed },
+          categories = only("HELPFUL", { "racials", "defensives" }) })
     local labels = {}
     for _, g in ipairs(plan.groups) do labels[g.label] = true end
-    assertNil(labels["Consumables"], "the empty shown category's own group is dropped, not emitted empty")
+    assertNil(labels["Racials"], "the empty shown category's own group is dropped, not emitted empty")
     assertTrue(labels["All"], "the catch-all still stands, excluding defensives")
 end)
 
@@ -849,8 +849,8 @@ end)
 test("filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container", function()
     -- red under: lookOf only being applied to one group; this is the bug the maxAuras description
     -- exists to warn about — 5 shown groups each capped at 5 is up to 25 frames, not 5.
-    local plan = compile({ filter = { maxAuras = 5, categories = { defensives = "show", consumables = "hide" } } },
-        { categories = only("HELPFUL", { "defensives", "consumables" }) })
+    local plan = compile({ filter = { maxAuras = 5, categories = { defensives = "show", racials = "hide" } } },
+        { categories = only("HELPFUL", { "defensives", "racials" }) })
     assertTrue(#plan.groups > 1, "more than one group exists to check")
     for i, g in ipairs(plan.groups) do
         assertEqual(g.maxFrameCount, 5, "group " .. i)
@@ -862,8 +862,8 @@ end)
 test("filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)", function()
     -- red under: a shown group inheriting a hidden category's exclusion (rank 4 winning), which
     -- would mean nothing but the catch-all can ever draw an aura
-    local plan = compile({ filter = { categories = { defensives = "show", consumables = "hide" } } },
-        { categories = only("HELPFUL", { "defensives", "consumables" }) })
+    local plan = compile({ filter = { categories = { defensives = "show", racials = "hide" } } },
+        { categories = only("HELPFUL", { "defensives", "racials" }) })
     local shownGroup
     for _, g in ipairs(plan.groups) do
         if g.label == "Defensive cooldowns" then shownGroup = g end
@@ -876,8 +876,8 @@ test("filter: an aura in a Show category is drawn even if it is also in a Hide c
 end)
 
 test("filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)", function()
-    local plan = compile({ filter = { categories = { defensives = "show", consumables = "hide" } } },
-        { categories = only("HELPFUL", { "defensives", "consumables" }) })
+    local plan = compile({ filter = { categories = { defensives = "show", racials = "hide" } } },
+        { categories = only("HELPFUL", { "defensives", "racials" }) })
     assertEqual(#plan.groups, 2, "one shown group (defensives) plus the catch-all")
     local shownGroup, catchAll
     for _, g in ipairs(plan.groups) do
@@ -892,18 +892,19 @@ end)
 
 -- ── the cost is real: the REAL shipped category list, not `only` (documented in the plan ledger) ──
 
-test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 17 for HARMFUL today", function()
+test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 17 for HARMFUL today", function()
     -- Not a bug — R-4's shape is inherent to "in ANY shown category" being a union over heterogeneous
     -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1 of batch 6). This test
     -- exists so the count is visible in the suite: if it moves, a category was added or removed and
     -- someone should look, not silently absorb a costlier (or cheaper but wrong) container.
     --
-    -- HELPFUL: 16 filterable categories (15 pre-batch-7 plus `uncategorized`, U-1) minus 1 hidden
-    -- (defensives) = 15 shown groups (`uncategorized` included, own its group like any other shown
+    -- HELPFUL: 18 filterable categories (15 pre-batch-7 plus `uncategorized`, U-1, then schema v7
+    -- retiring `consumables` for `groupBuffs`, `stances` and `racials`) minus 1 hidden
+    -- (defensives) = 17 shown groups (`uncategorized` included, own its group like any other shown
     -- category), and NO catch-all: batch 7's fix round 1 suppresses it outright once an
     -- `uncategorized` category exists for the aura type (its constraints were always either a strict
     -- subset of `uncategorized`'s own group's, or a group that could never match — see
-    -- modules/FilterCompiler.lua's top-of-file comment). 15 groups total.
+    -- modules/FilterCompiler.lua's top-of-file comment). 17 groups total.
     --
     -- HARMFUL: 19 filterable categories (16 pre-batch-7, plus `uncategorizedDebuffs` restored in fix
     -- round 3 with an asymmetric meaning — defaults/Categories.lua's KINDS doc — plus issue #11's
@@ -932,7 +933,7 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- to be revisited along with it. See the dedicated test below that isolates
     -- `uncategorizedDebuffs` from this pair, which the real shipped list otherwise masks.
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
-    assertEqual(#helpfulPlan.groups, 15, "HELPFUL: 15 shown groups, no catch-all (Uncategorized supersedes it)")
+    assertEqual(#helpfulPlan.groups, 17, "HELPFUL: 17 shown groups, no catch-all (Uncategorized supersedes it)")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
     assertEqual(#harmfulPlan.groups, 17, "HARMFUL: 17 shown groups, no catch-all (it self-contradicts and is dropped)")
 end)
@@ -1126,11 +1127,11 @@ test("filter: 'only timeless' with nothing learned yet filters no ids and warns 
 end)
 
 test("filter: a hidden spell category with every id removed excludes nothing", function()
-    local def = NS.Categories.Find("HELPFUL", "consumables")
+    local def = NS.Categories.Find("HELPFUL", "racials")
     local removed = {}
     for id in pairs(def.spells) do removed[id] = false end
-    local plan = compile({ filter = { categories = { consumables = "hide" } } },
-        { categorySpells = { consumables = removed }, categories = only("HELPFUL", { "consumables" }) })
+    local plan = compile({ filter = { categories = { racials = "hide" } } },
+        { categorySpells = { racials = removed }, categories = only("HELPFUL", { "racials" }) })
     assertEqual(#plan.groups, 1)
     -- red under: excludeCategory adding an empty exclude map for a hidden category
     assertNil(plan.groups[1].candidateFilters)
@@ -1190,14 +1191,14 @@ end)
 -- red under: a single Hide category removing an aura another category shows (the superseded order)
 test("explain: a Show category rescues an aura another category hides — rank 3, shown, both named", function()
     local x = FC.ExplainSpell(cfg({ filter = { categories = { defensives = "hide" } } }), 900001,
-        { categorySpells = { defensives = { [900001] = true }, consumables = { [900001] = true } },
-          categories = only("HELPFUL", { "defensives", "consumables" }) })
+        { categorySpells = { defensives = { [900001] = true }, racials = { [900001] = true } },
+          categories = only("HELPFUL", { "defensives", "racials" }) })
     assertEqual(x.verdict, "shown")
     assertEqual(x.rank, 3)
     local states = {}
     for _, c in ipairs(x.categories) do states[c.key] = c.state end
     assertEqual(states.defensives, "hide")
-    assertEqual(states.consumables, "show")
+    assertEqual(states.racials, "show")
 end)
 
 test("explain: an aura whose every category says Hide is hidden — rank 4", function()

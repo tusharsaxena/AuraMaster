@@ -1,0 +1,1873 @@
+# Proposed additions — 2026-09-24
+
+Buffs that players applied, above the evidence bar (20 applications from 3 players) that are in no `spells` category, grouped by the recommended category. Each names the rule that chose it (R1-R9, the spec's table), a reason in plain words and a confidence.
+
+614 additions in 8 categories.
+
+2045 candidates above the bar in no category: 817 dropped as low confidence (R9 Utility; they stay in the dictionary's suggested_category and rule columns); 852 item-effect candidates folded into 238 class-neutral (ALL) proposals; 0 already ruled; 614 proposed.
+
+## Defensive cooldowns (`defensives`)
+
+- **Frost Shield** (207203) · DEATHKNIGHT — Blood 97915 apps / 69 players; Unholy 13846 apps / 72 players; Frost 5714 apps / 27 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|frost shield|207203`
+- **Ursoc's Fury** (372505) · DRUID — Guardian 25104 apps / 47 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|ursoc's fury|372505`
+- **Yu'lon's Grace** (414143) · MONK — Mistweaver 10688 apps / 33 players; Brewmaster 6866 apps / 44 players; Windwalker 6063 apps / 44 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|yu'lon's grace|414143`
+- **Bulwark of Order** (209388) · PALADIN — Protection 22812 apps / 74 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|bulwark of order|209388`
+- **Rune Carved Plates** (440290) · DEATHKNIGHT — Blood 15311 apps / 30 players; Frost 1411 apps / 24 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|rune carved plates|440290`
+- **Rune Carved Plates** (440289) · DEATHKNIGHT — Blood 13897 apps / 30 players; Frost 1226 apps / 24 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|rune carved plates|440289`
+- **Sacrosanct Crusade** (461867) · PALADIN — Retribution 4929 apps / 113 players; Protection 3327 apps / 26 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|sacrosanct crusade|461867`
+- **Wind Barrier** (457387) · SHAMAN — Restoration 6573 apps / 40 players; Enhancement 202 apps / 12 players; Elemental 16 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|SHAMAN|wind barrier|457387`
+- **Deflecting Dance** (427901) · DEMONHUNTER — Havoc 5668 apps / 45 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|deflecting dance|427901`
+- **Blood-Soaked Ground** (434034) · DEATHKNIGHT — Blood 5448 apps / 34 players; Unholy 64 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|blood-soaked ground|434034`
+- **Mental Fortitude** (377066) · PRIEST — Shadow 5040 apps / 46 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|mental fortitude|377066`
+- **First In, Last Out** (1266619) · DEMONHUNTER — Devourer 2153 apps / 107 players; Havoc 1100 apps / 47 players; Vengeance 802 apps / 30 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|first in, last out|1266619`
+- **Revel in Pain** (1265857) · DEMONHUNTER — Vengeance 4016 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|revel in pain|1265857`
+- **Keep Your Feet on the Ground** (438591) · WARRIOR — Protection 2448 apps / 32 players; Fury 1491 apps / 22 players; Arms 6 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|keep your feet on the ground|438591`
+- **Umbilicus Eternus** (391527) · DEATHKNIGHT — Blood 3128 apps / 54 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|umbilicus eternus|391527`
+- **Protective Light** (193065) · PRIEST — Holy 1805 apps / 50 players; Discipline 891 apps / 28 players; Shadow 50 apps / 16 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|protective light|193065`
+- **Prismatic Barrier** (235450) · MAGE — Arcane 2733 apps / 98 players; Fire 1 app / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage and reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|prismatic barrier|235450`
+- **Matted Fur** (385787) · DRUID — Guardian 1329 apps / 44 players; Balance 604 apps / 54 players; Restoration 265 apps / 48 players; Feral 220 apps / 28 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|matted fur|385787`
+- **Merely a Setback** (449336) · MAGE — Arcane 2367 apps / 67 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|merely a setback|449336`
+- **Ice Barrier** (11426) · MAGE — Frost 2290 apps / 96 players; Fire 1 app / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|ice barrier|11426`
+- **Don't Look Back** (451447) · HUNTER — Marksmanship 1646 apps / 16 players; Survival 621 apps / 6 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|HUNTER|don't look back|451447`
+- **Moonkin Form** (24858) · DRUID — Balance 1186 apps / 55 players; Restoration 840 apps / 10 players; Guardian 10 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|moonkin form|24858`
+- **Exhilarating Execution** (428488) · ROGUE — Subtlety 1760 apps / 26 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|ROGUE|exhilarating execution|428488`
+- **Fade to Nothing** (386237) · ROGUE — Subtlety 1688 apps / 27 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|ROGUE|fade to nothing|386237`
+- **Bear Form** (5487) · DRUID — Restoration 695 apps / 42 players; Balance 467 apps / 47 players; Guardian 376 apps / 51 players; Feral 120 apps / 22 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|bear form|5487`
+- **Mantra of Purity** (451253) · MONK — Brewmaster 1629 apps / 13 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|mantra of purity|451253`
+- **Sentinel** (389539) · PALADIN — Protection 1516 apps / 44 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|sentinel|389539`
+- **Spirit Wolf** (260881) · SHAMAN — Elemental 845 apps / 41 players; Enhancement 278 apps / 19 players; Restoration 225 apps / 11 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|SHAMAN|spirit wolf|260881`
+- **Natural Resilience** (1278800) · DRUID — Guardian 1330 apps / 40 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|natural resilience|1278800`
+- **Rune of Void-Tainted Shell** (1287955) · PALADIN — Retribution 825 apps / 41 players; Protection 345 apps / 14 players; Holy 139 apps / 6 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|rune of void-tainted shell|1287955`
+- **Demon Muzzle** (1266616) · DEMONHUNTER — Devourer 730 apps / 74 players; Havoc 342 apps / 33 players; Vengeance 226 apps / 17 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|demon muzzle|1266616`
+- **Palisade's Protection** (1237611) · PALADIN — Protection 1236 apps / 2 players; Holy 52 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|palisade's protection|1237611`
+- **Soul Barrier** (263648) · DEMONHUNTER — Vengeance 1170 apps / 28 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|soul barrier|263648`
+- **Predictive Training** (451230) · MONK — Brewmaster 1127 apps / 30 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|predictive training|451230`
+- **Celestial Infusion** (1241059) · MONK — Brewmaster 1097 apps / 42 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|celestial infusion|1241059`
+- **Blood Draw** (454871) · DEATHKNIGHT — Blood 928 apps / 56 players; Unholy 117 apps / 37 players; Frost 21 apps / 6 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|blood draw|454871`
+- **Stretch Time** (410355) · EVOKER — Devastation 651 apps / 21 players; Augmentation 384 apps / 28 players; Preservation 18 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|EVOKER|stretch time|410355`
+- **Fade** (586) · PRIEST — Shadow 451 apps / 37 players; Holy 413 apps / 43 players; Discipline 179 apps / 16 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|fade|586`
+- **Fel Flame Fortification** (393009) · DEMONHUNTER — Vengeance 1017 apps / 12 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|fel flame fortification|393009`
+- **Windveil** (355634) · SHAMAN — Elemental 594 apps / 65 players; Enhancement 256 apps / 21 players; Restoration 84 apps / 12 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|SHAMAN|windveil|355634`
+- **Rune of Void-Tainted Shell** (1287955) · DEATHKNIGHT — Blood 525 apps / 10 players; Unholy 201 apps / 7 players; Frost 94 apps / 5 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|rune of void-tainted shell|1287955`
+- **Ice Cold** (414658) · MAGE — Frost 387 apps / 72 players; Arcane 331 apps / 85 players; Fire 19 apps / 6 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|ice cold|414658`
+- **Focused Will** (45242) · PRIEST — Holy 482 apps / 48 players; Discipline 203 apps / 24 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|focused will|45242`
+- **Rune of Void-Tainted Shell** (1287955) · DEMONHUNTER — Devourer 394 apps / 14 players; Havoc 112 apps / 4 players; Vengeance 84 apps / 5 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|rune of void-tainted shell|1287955`
+- **Fiery Brand** (207771) · DEMONHUNTER — Vengeance 563 apps / 29 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|fiery brand|207771`
+- **Demolish** (436358) · WARRIOR — Arms 455 apps / 20 players; Protection 94 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|demolish|436358`
+- **Solar Core Igniter** (1254638) · DEATHKNIGHT — Blood 514 apps / 4 players; Unholy 12 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|solar core igniter|1254638`
+- **Rune of Void-Tainted Shell** (1287955) · MAGE — Arcane 332 apps / 14 players; Frost 159 apps / 6 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|rune of void-tainted shell|1287955`
+- **Blessed Word** (1301739) · PALADIN — Protection 491 apps / 8 players — R1 — high
+  - Reason: 95% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|blessed word|1301739`
+- **Awakening Spirit** (1263631) · MONK — Brewmaster 456 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|awakening spirit|1263631`
+- **Rune of Void-Tainted Shell** (1287955) · WARLOCK — Demonology 353 apps / 17 players; Destruction 81 apps / 3 players; Affliction 15 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARLOCK|rune of void-tainted shell|1287955`
+- **Adjudication** (1277046) · PALADIN — Protection 410 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|adjudication|1277046`
+- **Focused Will** (426401) · PRIEST — Shadow 383 apps / 44 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|focused will|426401`
+- **Jade Sanctuary** (448508) · MONK — Mistweaver 356 apps / 25 players; Windwalker 11 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|jade sanctuary|448508`
+- **Second Wind** (458245) · WARRIOR — Arms 261 apps / 31 players; Protection 58 apps / 8 players; Fury 28 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|second wind|458245`
+- **Blazing Barrier** (235313) · MAGE — Frost 171 apps / 9 players; Fire 158 apps / 8 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|blazing barrier|235313`
+- **Invoke Niuzao, the Black Ox** (132578) · MONK — Brewmaster 329 apps / 42 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|invoke niuzao, the black ox|132578`
+- **Rune of Void-Tainted Shell** (1287955) · MONK — Windwalker 156 apps / 8 players; Brewmaster 134 apps / 3 players; Mistweaver 38 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|rune of void-tainted shell|1287955`
+- **Rune of Void-Tainted Shell** (1287955) · DRUID — Guardian 230 apps / 10 players; Feral 62 apps / 3 players; Balance 30 apps / 1 player; Restoration 5 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|rune of void-tainted shell|1287955`
+- **Tranquility** (740) · DRUID — Restoration 297 apps / 52 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|tranquility|740`
+- **Rune of Void-Tainted Shell** (1287955) · HUNTER — Beast Mastery 240 apps / 12 players; Survival 35 apps / 2 players; Marksmanship 17 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|HUNTER|rune of void-tainted shell|1287955`
+- **Rune of Void-Tainted Shell** (1287955) · WARRIOR — Arms 229 apps / 12 players; Fury 49 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|rune of void-tainted shell|1287955`
+- **Perseverance of the Ebon Blade** (374748) · DEATHKNIGHT — Blood 266 apps / 5 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|perseverance of the ebon blade|374748`
+- **Rotting Globule** (1254641) · DEATHKNIGHT — Blood 265 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|rotting globule|1254641`
+- **Rune of Void-Tainted Shell** (1287955) · SHAMAN — Elemental 120 apps / 7 players; Restoration 95 apps / 4 players; Enhancement 40 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|SHAMAN|rune of void-tainted shell|1287955`
+- **Gelatinous Protection** (1254520) · DEATHKNIGHT — Blood 228 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|gelatinous protection|1254520`
+- **Solar Core Igniter** (1254638) · PALADIN — Protection 216 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|solar core igniter|1254638`
+- **Rune of Void-Tainted Shell** (1287955) · PRIEST — Holy 143 apps / 4 players; Shadow 49 apps / 3 players; Discipline 11 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|rune of void-tainted shell|1287955`
+- **Worldsoul Aegis** (1242032) · WARRIOR — Protection 189 apps / 3 players; Arms 5 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|worldsoul aegis|1242032`
+- **Gelatinous Protection** (1254520) · PALADIN — Protection 179 apps / 3 players; Holy 5 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|gelatinous protection|1254520`
+- **Elixir of Determination** (455179) · MONK — Brewmaster 176 apps / 19 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|elixir of determination|455179`
+- **Angelic Bulwark** (114214) · PRIEST — Holy 121 apps / 33 players; Discipline 27 apps / 8 players; Shadow 23 apps / 7 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|angelic bulwark|114214`
+- **Ethereal Barrier** (1223612) · DEATHKNIGHT — Blood 170 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|ethereal barrier|1223612`
+- **Gelatinous Protection** (1254520) · WARRIOR — Protection 157 apps / 7 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|gelatinous protection|1254520`
+- **Rune of Void-Tainted Shell** (1287955) · EVOKER — Preservation 65 apps / 3 players; Devastation 55 apps / 3 players; Augmentation 19 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|EVOKER|rune of void-tainted shell|1287955`
+- **Ethereal Barrier** (1223612) · MONK — Brewmaster 137 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|ethereal barrier|1223612`
+- **Temporality** (431872) · EVOKER — Preservation 75 apps / 6 players; Augmentation 39 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|EVOKER|temporality|431872`
+- **Defensive Stance** (386208) · WARRIOR — Arms 67 apps / 12 players; Protection 36 apps / 12 players; Fury 5 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage and reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|defensive stance|386208`
+- **Ethereal Barrier** (1223612) · PALADIN — Protection 107 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|ethereal barrier|1223612`
+- **Consumption** (1263861) · DEATHKNIGHT — Blood 97 apps / 7 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|consumption|1263861`
+- **Ethereal Barrier** (1223612) · DRUID — Guardian 93 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|ethereal barrier|1223612`
+- **Soulburn: Drain Life** (394810) · WARLOCK — Destruction 58 apps / 3 players; Demonology 29 apps / 11 players; Affliction 3 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARLOCK|soulburn: drain life|394810`
+- **Palisade's Protection** (1237611) · WARRIOR — Protection 82 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|palisade's protection|1237611`
+- **Rune of Void-Tainted Shell** (1287955) · ROGUE — Assassination 40 apps / 2 players; Subtlety 21 apps / 1 player; Outlaw 18 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|ROGUE|rune of void-tainted shell|1287955`
+- **Abyss Walker** (389614) · WARLOCK — Demonology 50 apps / 13 players; Affliction 16 apps / 4 players; Destruction 6 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|WARLOCK|abyss walker|389614`
+- **Ultimate Penitence** (421453) · PRIEST — Discipline 65 apps / 23 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PRIEST|ultimate penitence|421453`
+- **Cheating Death** (45182) · ROGUE — Assassination 29 apps / 19 players; Subtlety 27 apps / 16 players; Outlaw 9 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|ROGUE|cheating death|45182`
+- **Coalesced Jelly** (1254514) · DEATHKNIGHT — Blood 60 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|coalesced jelly|1254514`
+- **Solar Core Igniter** (1254638) · WARRIOR — Protection 47 apps / 4 players; Arms 9 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|solar core igniter|1254638`
+- **Coalesced Jelly** (1254514) · PALADIN — Protection 45 apps / 3 players; Holy 9 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|coalesced jelly|1254514`
+- **Battle-Scarred Veteran** (386397) · WARRIOR — Protection 49 apps / 20 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|battle-scarred veteran|386397`
+- **Stoneform** (65116) · SHAMAN — Restoration 24 apps / 7 players; Enhancement 13 apps / 2 players; Elemental 9 apps / 5 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|SHAMAN|stoneform|65116`
+- **Gelatinous Protection** (1254520) · DRUID — Guardian 40 apps / 2 players; Feral 4 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|gelatinous protection|1254520`
+- **Stoneform** (65116) · HUNTER — Beast Mastery 24 apps / 7 players; Survival 18 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|HUNTER|stoneform|65116`
+- **Stoneform** (65116) · MAGE — Frost 21 apps / 3 players; Arcane 11 apps / 6 players; Fire 2 apps / 1 player — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|MAGE|stoneform|65116`
+- **Stoneform** (65116) · PALADIN — Retribution 17 apps / 4 players; Holy 7 apps / 3 players; Protection 7 apps / 2 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it reduces damage taken → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|stoneform|65116`
+- **Rotting Globule** (1254641) · PALADIN — Protection 27 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|PALADIN|rotting globule|1254641`
+- **Gloom-Spattered Dreadscale** (1263141) · DRUID — Guardian 26 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DRUID|gloom-spattered dreadscale|1263141`
+- **Solar Core Igniter** (1254638) · MONK — Brewmaster 26 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|solar core igniter|1254638`
+- **Tangle of Vibrant Vines** (1255367) · DEMONHUNTER — Devourer 25 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEMONHUNTER|tangle of vibrant vines|1255367`
+- **Gloom-Spattered Dreadscale** (1263141) · MONK — Brewmaster 24 apps / 3 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|gloom-spattered dreadscale|1263141`
+- **Niuzao's Protection** (442749) · MONK — Windwalker 12 apps / 2 players; Mistweaver 11 apps / 4 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|MONK|niuzao's protection|442749`
+- **Newly Turned** (433981) · DEATHKNIGHT — Blood 21 apps / 10 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|DEATHKNIGHT|newly turned|433981`
+- **Coalesced Jelly** (1254514) · WARRIOR — Protection 21 apps / 7 players — R1 — high
+  - Reason: 100% self-applied and DB2 says it absorbs damage → Defensive cooldowns.
+  - Key: `addition|defensives|WARRIOR|coalesced jelly|1254514`
+
+## Active mitigation (`activeMitigation`)
+
+- **Sanguine Ground** (391459) · DEATHKNIGHT — Blood 35105 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 6.79s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|sanguine ground|391459`
+- **Coagulating Blood** (463730) · DEATHKNIGHT — Blood 30689 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 14.42s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|coagulating blood|463730`
+- **Strength in Adversity** (393038) · PALADIN — Protection 29412 apps / 67 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 5s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|strength in adversity|393038`
+- **Hemostasis** (273947) · DEATHKNIGHT — Blood 28903 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 10.33s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|hemostasis|273947`
+- **Elusive Brawler** (195630) · MONK — Brewmaster 18357 apps / 44 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 1.61s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|elusive brawler|195630`
+- **Lifeblood** (1264304) · DEATHKNIGHT — Blood 16501 apps / 21 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 11.5s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|lifeblood|1264304`
+- **Bulwark of Righteous Fury** (386652) · PALADIN — Protection 16215 apps / 69 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 8.75s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|bulwark of righteous fury|386652`
+- **Boiling Point** (1265968) · DEATHKNIGHT — Blood 13300 apps / 71 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 19.12s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|boiling point|1265968`
+- **Boiling Point** (1265982) · DEATHKNIGHT — Blood 12380 apps / 71 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 20.33s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|boiling point|1265982`
+- **Grand Crusader** (85416) · PALADIN — Protection 11339 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 11.89s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|grand crusader|85416`
+- **Voracious** (274009) · DEATHKNIGHT — Blood 11216 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 21.76s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|voracious|274009`
+- **Shining Light** (182104) · PALADIN — Protection 11186 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 14.42s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|shining light|182104`
+- **Valor** (1269179) · PALADIN — Protection 7670 apps / 69 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 13.64s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|valor|1269179`
+- **Light-Blessed Shield** (1272298) · PALADIN — Protection 7300 apps / 38 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 6.15s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|light-blessed shield|1272298`
+- **Redoubt** (280375) · PALADIN — Protection 6610 apps / 32 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 4.04s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|redoubt|280375`
+- **Blackout Combo** (228563) · MONK — Brewmaster 6511 apps / 44 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 7.16s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|blackout combo|228563`
+- **Galactic Guardian** (213708) · DRUID — Guardian 6122 apps / 48 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 7.56s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|galactic guardian|213708`
+- **Consecration** (188370) · PALADIN — Protection 5748 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 12.22s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|consecration|188370`
+- **Gore** (93622) · DRUID — Guardian 5320 apps / 51 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 8.25s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|gore|93622`
+- **Counterstrike** (383800) · MONK — Brewmaster 4936 apps / 36 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 7s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|counterstrike|383800`
+- **Shield Slam!** (224324) · WARRIOR — Protection 3944 apps / 16 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 4.86s → Active mitigation.
+  - Key: `addition|activeMitigation|WARRIOR|shield slam!|224324`
+- **Elevated Stagger** (1260619) · MONK — Brewmaster 3715 apps / 44 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 11.47s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|elevated stagger|1260619`
+- **Soul Fragments** (203981) · DEMONHUNTER — Vengeance 3673 apps / 30 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 7.33s → Active mitigation.
+  - Key: `addition|activeMitigation|DEMONHUNTER|soul fragments|203981`
+- **Pretense of Instability** (393515) · MONK — Brewmaster 3191 apps / 44 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 14.28s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|pretense of instability|393515`
+- **Shining Light** (327510) · PALADIN — Protection 2690 apps / 74 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 29.61s → Active mitigation.
+  - Key: `addition|activeMitigation|PALADIN|shining light|327510`
+- **Empty Barrel** (1265307) · MONK — Brewmaster 1848 apps / 40 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 26.77s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|empty barrel|1265307`
+- **Visceral Strength** (461130) · DEATHKNIGHT — Blood 1742 apps / 43 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 29.32s → Active mitigation.
+  - Key: `addition|activeMitigation|DEATHKNIGHT|visceral strength|461130`
+- **Gift of an Ancient Guardian** (1251877) · DRUID — Guardian 1451 apps / 43 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 18.44s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|gift of an ancient guardian|1251877`
+- **Celestial Might** (1272376) · DRUID — Guardian 1018 apps / 23 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 13.08s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|celestial might|1272376`
+- **Hot Potato** (1301477) · MONK — Brewmaster 625 apps / 4 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 6.68s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|hot potato|1301477`
+- **Niuzao's Resolve** (1241109) · MONK — Brewmaster 582 apps / 15 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 23.33s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|niuzao's resolve|1241109`
+- **Gorestained Claws** (1301286) · DRUID — Guardian 558 apps / 12 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 21.89s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|gorestained claws|1301286`
+- **Ravage** (441602) · DRUID — Guardian 510 apps / 7 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 14.9s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|ravage|441602`
+- **Rushing Jade Wind** (116847) · MONK — Brewmaster 463 apps / 3 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 6.88s → Active mitigation.
+  - Key: `addition|activeMitigation|MONK|rushing jade wind|116847`
+- **Gory Fur** (1307881) · DRUID — Guardian 225 apps / 5 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 21.6s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|gory fur|1307881`
+- **Vengeful Shield** (1300681) · WARRIOR — Protection 180 apps / 3 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 18.65s → Active mitigation.
+  - Key: `addition|activeMitigation|WARRIOR|vengeful shield|1300681`
+- **After the Wildfire** (400734) · DRUID — Guardian 32 apps / 17 players — R7 — medium
+  - Reason: only tank specs apply it, 100% self-applied, recast about 6.08s → Active mitigation.
+  - Key: `addition|activeMitigation|DRUID|after the wildfire|400734`
+
+## Raid cooldowns (`raidCDs`)
+
+- **Strength of the Black Ox** (443113) · MONK — Mistweaver 8601 apps / 31 players — R2 — high
+  - Reason: 86% of applications land on 5+ players at once (1481 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|MONK|strength of the black ox|443113`
+- **Temporal Anomaly** (373862) · EVOKER — Preservation 5209 apps / 16 players — R2 — high
+  - Reason: 49% of applications land on 5+ players at once (448 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|temporal anomaly|373862`
+- **Dream Breath** (355941) · EVOKER — Preservation 3819 apps / 22 players — R2 — high
+  - Reason: 46% of applications land on 5+ players at once (353 bursts) and DB2 says it heals over time → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|dream breath|355941`
+- **Temporal Barrier** (1291636) · EVOKER — Preservation 1501 apps / 6 players — R2 — high
+  - Reason: 75% of applications land on 5+ players at once (223 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|temporal barrier|1291636`
+- **Chi Cocoon** (406220) · MONK — Mistweaver 1319 apps / 30 players — R2 — high
+  - Reason: 88% of applications land on 5+ players at once (232 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|MONK|chi cocoon|406220`
+- **Dream Breath** (376788) · EVOKER — Preservation 1228 apps / 22 players — R2 — high
+  - Reason: 53% of applications land on 5+ players at once (129 bursts) and DB2 says it heals over time → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|dream breath|376788`
+- **Veneration** (414407) · PALADIN — Holy 976 apps / 3 players — R2 — high
+  - Reason: 55% of applications land on 5+ players at once (108 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|PALADIN|veneration|414407`
+- **Verdant Embrace** (409895) · EVOKER — Preservation 753 apps / 10 players — R2 — high
+  - Reason: 39% of applications land on 5+ players at once (58 bursts) and DB2 says it heals over time → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|verdant embrace|409895`
+- **Chi Cocoon** (1260681) · MONK — Mistweaver 707 apps / 7 players — R2 — high
+  - Reason: 44% of applications land on 5+ players at once (62 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|MONK|chi cocoon|1260681`
+- **Chrono Ward** (409678) · EVOKER — Augmentation 680 apps / 12 players — R2 — high
+  - Reason: 37% of applications land on 5+ players at once (14 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|chrono ward|409678`
+- **Rewind** (363534) · EVOKER — Preservation 516 apps / 17 players — R2 — high
+  - Reason: 49% of applications land on 5+ players at once (43 bursts) and DB2 says it heals over time → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|rewind|363534`
+- **Litany of Lightblind Wrath** (1263727) · PRIEST — Holy 402 apps / 2 players; Discipline 28 apps / 1 player — R2 — high
+  - Reason: 74% of applications land on 5+ players at once (64 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|PRIEST|litany of lightblind wrath|1263727`
+- **Litany of Lightblind Wrath** (1263727) · EVOKER — Preservation 193 apps / 3 players; Augmentation 81 apps / 1 player — R2 — high
+  - Reason: 65% of applications land on 5+ players at once (35 bursts) and DB2 says it absorbs damage → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|litany of lightblind wrath|1263727`
+- **Defy Fate** (404381) · EVOKER — Augmentation 208 apps / 22 players — R2 — high
+  - Reason: 82% of applications land on 5+ players at once (34 bursts) and DB2 says it heals over time → Raid cooldowns.
+  - Key: `addition|raidCDs|EVOKER|defy fate|404381`
+- **Harrier's Cry** (466904) · HUNTER — Marksmanship 127 apps / 12 players — R2 — high
+  - Reason: 94% of applications land on 5+ players at once (24 bursts) and DB2 says it raises haste for the whole group → Raid cooldowns.
+  - Key: `addition|raidCDs|HUNTER|harrier's cry|466904`
+- **Void-touched Drums** (1243972) · WARLOCK — Destruction 61 apps / 2 players; Demonology 15 apps / 2 players — R2 — high
+  - Reason: 99% of applications land on 5+ players at once (15 bursts) and DB2 says it raises haste for the whole group → Raid cooldowns.
+  - Key: `addition|raidCDs|WARLOCK|void-touched drums|1243972`
+- **Void-touched Drums** (1243972) · DRUID — Restoration 29 apps / 3 players; Guardian 5 apps / 1 player — R2 — high
+  - Reason: 88% of applications land on 5+ players at once (6 bursts) and DB2 says it raises haste for the whole group → Raid cooldowns.
+  - Key: `addition|raidCDs|DRUID|void-touched drums|1243972`
+- **Void-touched Drums** (1243972) · ROGUE — Subtlety 15 apps / 2 players; Assassination 10 apps / 1 player — R2 — high
+  - Reason: 100% of applications land on 5+ players at once (5 bursts) and DB2 says it raises haste for the whole group → Raid cooldowns.
+  - Key: `addition|raidCDs|ROGUE|void-touched drums|1243972`
+
+## Offensive cooldowns (`offensiveCDs`)
+
+- **Violent Euphoria** (1270731) · WARRIOR — Arms 1732 apps / 53 players; Fury 232 apps / 13 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 61.42s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|WARRIOR|violent euphoria|1270731`
+- **Tyrant's Oblation** (1276767) · WARLOCK — Demonology 1900 apps / 110 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 78.87s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|WARLOCK|tyrant's oblation|1276767`
+- **Lycara's Teachings** (378990) · DRUID — Restoration 998 apps / 50 players; Feral 348 apps / 28 players; Balance 266 apps / 46 players; Guardian 153 apps / 32 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a primary stat, recast about 70.94s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DRUID|lycara's teachings|378990`
+- **Abundance** (207640) · DRUID — Restoration 1633 apps / 61 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises critical strike, recast about 92.28s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DRUID|abundance|207640`
+- **Blood Debt** (1310372) · DEATHKNIGHT — Blood 1605 apps / 27 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a primary stat, recast about 73.06s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DEATHKNIGHT|blood debt|1310372`
+- **Swift and Painful** (469169) · DEATHKNIGHT — Blood 1333 apps / 30 players; Frost 237 apps / 23 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a primary stat, recast about 105.22s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DEATHKNIGHT|swift and painful|469169`
+- **Relentless Rider's Strength** (1300369) · DEATHKNIGHT — Blood 1500 apps / 26 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a primary stat, recast about 72.8s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DEATHKNIGHT|relentless rider's strength|1300369`
+- **Idol of Y'Shaarj** (373316) · PRIEST — Shadow 1291 apps / 46 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 60.07s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|PRIEST|idol of y'shaarj|373316`
+- **Essence of the Blood Queen** (433925) · DEATHKNIGHT — Blood 549 apps / 42 players; Unholy 107 apps / 8 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 77.7s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DEATHKNIGHT|essence of the blood queen|433925`
+- **Heart of the Jade Serpent** (1238904) · MONK — Mistweaver 401 apps / 28 players; Windwalker 94 apps / 4 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 131.39s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|MONK|heart of the jade serpent|1238904`
+- **Heart of the Jade Serpent** (443616) · MONK — Mistweaver 394 apps / 30 players; Windwalker 62 apps / 4 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 155.53s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|MONK|heart of the jade serpent|443616`
+- **Akil'zon's Cry of Victory** (1252818) · PALADIN — Retribution 354 apps / 21 players; Protection 45 apps / 3 players; Holy 7 apps / 1 player — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a secondary stat, recast about 67.28s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|PALADIN|akil'zon's cry of victory|1252818`
+- **Chosen of Frostbrood** (1265630) · DEATHKNIGHT — Frost 345 apps / 26 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 91.67s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DEATHKNIGHT|chosen of frostbrood|1265630`
+- **Akil'zon's Cry of Victory** (1252818) · MONK — Windwalker 181 apps / 12 players; Brewmaster 20 apps / 2 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a secondary stat, recast about 60.24s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|MONK|akil'zon's cry of victory|1252818`
+- **Rising Fury** (1271783) · EVOKER — Devastation 185 apps / 22 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 136.33s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|EVOKER|rising fury|1271783`
+- **Ancient Madness** (1304485) · PRIEST — Shadow 161 apps / 17 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 139.9s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|PRIEST|ancient madness|1304485`
+- **Temporal Burst** (431698) · EVOKER — Preservation 81 apps / 10 players; Augmentation 62 apps / 3 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 109.96s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|EVOKER|temporal burst|431698`
+- **Hyperthermia** (383874) · MAGE — Fire 131 apps / 8 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises critical strike, recast about 65.31s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|MAGE|hyperthermia|383874`
+- **Battle Stance** (386164) · WARRIOR — Arms 108 apps / 29 players; Protection 18 apps / 3 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises critical strike, recast about 103.74s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|WARRIOR|battle stance|386164`
+- **Time Convergence** (431991) · EVOKER — Preservation 124 apps / 7 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a primary stat, recast about 60.71s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|EVOKER|time convergence|431991`
+- **Lingering Darkness** (457273) · ROGUE — Subtlety 62 apps / 5 players; Assassination 38 apps / 6 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises damage done, recast about 107.88s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|ROGUE|lingering darkness|457273`
+- **Akil'zon's Cry of Victory** (1252818) · DEMONHUNTER — Vengeance 50 apps / 2 players; Devourer 35 apps / 3 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises a secondary stat, recast about 66.99s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DEMONHUNTER|akil'zon's cry of victory|1252818`
+- **Touch of Elune - Night** (154797) · DRUID — Balance 39 apps / 3 players; Restoration 29 apps / 3 players; Guardian 11 apps / 5 players; Feral 1 app / 1 player — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 842.76s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DRUID|touch of elune - night|154797`
+- **Touch of Elune - Day** (154796) · DRUID — Restoration 43 apps / 10 players; Balance 17 apps / 7 players; Guardian 9 apps / 6 players; Feral 6 apps / 4 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises critical strike, recast about 566.16s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DRUID|touch of elune - day|154796`
+- **Berserking** (26297) · DRUID — Balance 42 apps / 7 players; Guardian 18 apps / 3 players; Feral 7 apps / 1 player; Restoration 7 apps / 2 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 243.78s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|DRUID|berserking|26297`
+- **Lesser Time Warp** (1260277) · MAGE — Fire 71 apps / 6 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 72.66s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|MAGE|lesser time warp|1260277`
+- **Risen Fury** (1271799) · EVOKER — Devastation 68 apps / 11 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 137.38s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|EVOKER|risen fury|1271799`
+- **Berserking** (26297) · MAGE — Arcane 27 apps / 5 players; Frost 24 apps / 5 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 231.38s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|MAGE|berserking|26297`
+- **Berserking** (26297) · SHAMAN — Elemental 39 apps / 7 players; Enhancement 10 apps / 2 players; Restoration 1 app / 1 player — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises haste, recast about 207.3s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|SHAMAN|berserking|26297`
+- **Jackpot** (1214937) · ROGUE — Outlaw 47 apps / 13 players — R3 — high
+  - Reason: 100% self-applied, DB2 says it raises critical strike, recast about 230.25s → Offensive cooldowns.
+  - Key: `addition|offensiveCDs|ROGUE|jackpot|1214937`
+
+## Healing (`healing`)
+
+- **Earthliving Weapon** (382024) · SHAMAN — Restoration 41738 apps / 53 players; Elemental 64 apps / 1 player — R6 — medium
+  - Reason: DB2 says it heals over time, 85% applied to others, recast about 3.73s → Healing.
+  - Key: `addition|healing|SHAMAN|earthliving weapon|382024`
+- **Echo of Light** (77489) · PRIEST — Holy 28353 apps / 51 players — R6 — medium
+  - Reason: DB2 says it heals over time, 92% applied to others, recast about 1.38s → Healing.
+  - Key: `addition|healing|PRIEST|echo of light|77489`
+- **Holy Bulwark** (432607) · PALADIN — Protection 5148 apps / 46 players; Holy 1717 apps / 9 players — R6 — medium
+  - Reason: DB2 says it absorbs damage, 58% applied to others, recast about 2s → Healing.
+  - Key: `addition|healing|PALADIN|holy bulwark|432607`
+- **Refreshing Drink** (1265145) · MONK — Brewmaster 2961 apps / 40 players — R6 — medium
+  - Reason: DB2 says it heals over time, 63% applied to others, recast about 10.95s → Healing.
+  - Key: `addition|healing|MONK|refreshing drink|1265145`
+- **Protective Toadstools** (1285161) · MAGE — Frost 206 apps / 5 players; Arcane 178 apps / 4 players — R6 — medium
+  - Reason: DB2 says it absorbs damage, 61% applied to others, recast about 29.08s → Healing.
+  - Key: `addition|healing|MAGE|protective toadstools|1285161`
+
+## Support (`support`)
+
+- **Elemental Resistance** (462568) · SHAMAN — Restoration 52061 apps / 53 players; Elemental 82 apps / 2 players — R5 — medium
+  - Reason: 82% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|elemental resistance|462568`
+- **Beacon of the Savior** (1245369) · PALADIN — Holy 33709 apps / 68 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|beacon of the savior|1245369`
+- **Beacon of the Savior** (1244893) · PALADIN — Holy 28438 apps / 68 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|beacon of the savior|1244893`
+- **Condensation** (1300642) · SHAMAN — Restoration 19760 apps / 9 players — R5 — medium
+  - Reason: 85% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|condensation|1300642`
+- **Sun Sear** (431415) · PALADIN — Holy 16657 apps / 59 players; Retribution 9 apps / 1 player — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|sun sear|431415`
+- **Symbiotic Blooms** (439530) · DRUID — Restoration 11974 apps / 52 players; Feral 20 apps / 1 player — R5 — medium
+  - Reason: 83% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|symbiotic blooms|439530`
+- **Rune of Lingering** (1287665) · SHAMAN — Restoration 8125 apps / 25 players; Elemental 25 apps / 13 players; Enhancement 7 apps / 5 players — R5 — medium
+  - Reason: 85% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|rune of lingering|1287665`
+- **Eternal Flame** (156322) · PALADIN — Holy 7517 apps / 59 players; Retribution 458 apps / 30 players — R5 — medium
+  - Reason: 71% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|eternal flame|156322`
+- **Saved by the Light** (157128) · PALADIN — Holy 6837 apps / 7 players — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|saved by the light|157128`
+- **Divine Aegis** (47753) · PRIEST — Discipline 6423 apps / 29 players — R5 — medium
+  - Reason: 82% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|divine aegis|47753`
+- **Rune of Lingering** (1287665) · PALADIN — Holy 3890 apps / 25 players; Protection 2144 apps / 33 players; Retribution 276 apps / 43 players — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|rune of lingering|1287665`
+- **Arcanoweave Insight** (1229746) · PALADIN — Holy 2024 apps / 30 players; Protection 1563 apps / 26 players; Retribution 1400 apps / 41 players — R5 — medium
+  - Reason: 98% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|arcanoweave insight|1229746`
+- **Void Shield** (1253593) · PRIEST — Discipline 4643 apps / 29 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|void shield|1253593`
+- **Rune of Lingering** (1287665) · DRUID — Restoration 3117 apps / 18 players; Guardian 773 apps / 27 players; Feral 151 apps / 11 players; Balance 51 apps / 17 players — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|rune of lingering|1287665`
+- **Inspiration** (390677) · PRIEST — Holy 2701 apps / 34 players; Discipline 1303 apps / 13 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|inspiration|390677`
+- **Lesser Weapon** (1239091) · PALADIN — Protection 3024 apps / 46 players; Holy 574 apps / 9 players — R5 — medium
+  - Reason: 96% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|lesser weapon|1239091`
+- **Rune of Lingering** (1287665) · PRIEST — Holy 3038 apps / 26 players; Discipline 521 apps / 9 players; Shadow 28 apps / 13 players — R5 — medium
+  - Reason: 74% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|rune of lingering|1287665`
+- **Arcanoweave Insight** (1229746) · MAGE — Arcane 1725 apps / 42 players; Frost 1557 apps / 39 players; Fire 98 apps / 3 players — R5 — medium
+  - Reason: 95% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MAGE|arcanoweave insight|1229746`
+- **Rune of Lingering** (1287665) · MONK — Mistweaver 2925 apps / 20 players; Brewmaster 341 apps / 7 players; Windwalker 13 apps / 6 players — R5 — medium
+  - Reason: 83% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MONK|rune of lingering|1287665`
+- **Arcanoweave Insight** (1229746) · DEMONHUNTER — Devourer 2120 apps / 56 players; Havoc 602 apps / 20 players; Vengeance 266 apps / 8 players — R5 — medium
+  - Reason: 98% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEMONHUNTER|arcanoweave insight|1229746`
+- **Arcanoweave Insight** (1229746) · DRUID — Balance 1475 apps / 21 players; Guardian 889 apps / 21 players; Feral 312 apps / 8 players; Restoration 273 apps / 7 players — R5 — medium
+  - Reason: 97% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|arcanoweave insight|1229746`
+- **Arcanoweave Insight** (1229746) · DEATHKNIGHT — Blood 1443 apps / 23 players; Unholy 1077 apps / 28 players; Frost 213 apps / 6 players — R5 — medium
+  - Reason: 99% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|arcanoweave insight|1229746`
+- **Arcanoweave Insight** (1229746) · WARLOCK — Demonology 1979 apps / 56 players; Affliction 433 apps / 11 players; Destruction 299 apps / 9 players — R5 — medium
+  - Reason: 95% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARLOCK|arcanoweave insight|1229746`
+- **Glistening Radiance** (1241866) · PALADIN — Holy 2267 apps / 6 players — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|glistening radiance|1241866`
+- **Shifting Sands** (413984) · EVOKER — Augmentation 2211 apps / 29 players — R5 — medium
+  - Reason: 98% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|shifting sands|413984`
+- **Rune of Lingering** (1287665) · DEMONHUNTER — Vengeance 1024 apps / 14 players; Devourer 764 apps / 19 players; Havoc 289 apps / 11 players — R5 — medium
+  - Reason: 83% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEMONHUNTER|rune of lingering|1287665`
+- **Arcanoweave Insight** (1229746) · SHAMAN — Elemental 878 apps / 23 players; Restoration 626 apps / 17 players; Enhancement 320 apps / 11 players — R5 — medium
+  - Reason: 96% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|arcanoweave insight|1229746`
+- **Sacred Weapon** (432502) · PALADIN — Protection 1419 apps / 47 players; Holy 339 apps / 9 players — R5 — medium
+  - Reason: 97% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|sacred weapon|432502`
+- **Arcanoweave Insight** (1229746) · HUNTER — Beast Mastery 1350 apps / 34 players; Survival 195 apps / 3 players; Marksmanship 67 apps / 2 players — R5 — medium
+  - Reason: 96% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|HUNTER|arcanoweave insight|1229746`
+- **Lesser Bulwark** (1239002) · PALADIN — Protection 1151 apps / 42 players; Holy 420 apps / 9 players — R5 — medium
+  - Reason: 96% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|lesser bulwark|1239002`
+- **Duskwraith's Infusion** (1263447) · DRUID — Restoration 1516 apps / 6 players — R5 — medium
+  - Reason: 76% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|duskwraith's infusion|1263447`
+- **Overflowing Light** (461499) · PALADIN — Holy 1280 apps / 8 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|overflowing light|461499`
+- **Arcanoweave Insight** (1229746) · PRIEST — Shadow 491 apps / 15 players; Holy 473 apps / 12 players; Discipline 199 apps / 4 players — R5 — medium
+  - Reason: 96% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|arcanoweave insight|1229746`
+- **Inferno's Blessing** (410263) · EVOKER — Augmentation 1134 apps / 29 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|inferno's blessing|410263`
+- **Misdirection** (34477) · HUNTER — Beast Mastery 835 apps / 26 players; Survival 178 apps / 17 players; Marksmanship 116 apps / 12 players — R5 — medium
+  - Reason: 89% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|HUNTER|misdirection|34477`
+- **Arcanoweave Insight** (1229746) · EVOKER — Augmentation 372 apps / 9 players; Devastation 345 apps / 8 players; Preservation 318 apps / 8 players — R5 — medium
+  - Reason: 98% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|arcanoweave insight|1229746`
+- **Blaze of Light** (355851) · PRIEST — Discipline 1029 apps / 6 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|blaze of light|355851`
+- **Holy Bulwark** (432496) · PALADIN — Protection 685 apps / 46 players; Holy 271 apps / 9 players — R5 — medium
+  - Reason: 91% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|holy bulwark|432496`
+- **Arcanoweave Insight** (1229746) · WARRIOR — Fury 339 apps / 10 players; Protection 300 apps / 9 players; Arms 282 apps / 15 players — R5 — medium
+  - Reason: 98% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARRIOR|arcanoweave insight|1229746`
+- **Arcanoweave Insight** (1229746) · ROGUE — Subtlety 347 apps / 12 players; Assassination 282 apps / 9 players; Outlaw 266 apps / 7 players — R5 — medium
+  - Reason: 99% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|ROGUE|arcanoweave insight|1229746`
+- **Arcanoweave Insight** (1229746) · MONK — Windwalker 403 apps / 11 players; Mistweaver 394 apps / 8 players; Brewmaster 96 apps / 3 players — R5 — medium
+  - Reason: 98% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MONK|arcanoweave insight|1229746`
+- **Fanatically Inspired** (1266300) · PALADIN — Protection 393 apps / 5 players; Holy 300 apps / 1 player; Retribution 191 apps / 7 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|fanatically inspired|1266300`
+- **Rune of Lingering** (1287665) · EVOKER — Preservation 672 apps / 8 players; Devastation 51 apps / 9 players; Augmentation 50 apps / 4 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|rune of lingering|1287665`
+- **Rune of Lingering** (1287665) · WARRIOR — Arms 622 apps / 20 players; Fury 46 apps / 1 player; Protection 22 apps / 2 players — R5 — medium
+  - Reason: 91% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARRIOR|rune of lingering|1287665`
+- **Fanatically Inspired** (1266300) · SHAMAN — Restoration 586 apps / 2 players; Elemental 78 apps / 2 players; Enhancement 22 apps / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|fanatically inspired|1266300`
+- **Lifebind** (373267) · EVOKER — Preservation 616 apps / 22 players — R5 — medium
+  - Reason: 74% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|lifebind|373267`
+- **Ironbark** (102342) · DRUID — Restoration 571 apps / 54 players — R5 — medium
+  - Reason: 94% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|ironbark|102342`
+- **Ethereal Guard** (1223453) · DRUID — Restoration 552 apps / 4 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|ethereal guard|1223453`
+- **Visage** (372014) · PRIEST — Holy 271 apps / 6 players; Discipline 216 apps / 5 players; Shadow 56 apps / 2 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|visage|372014`
+- **Rune of Lingering** (1287665) · HUNTER — Beast Mastery 444 apps / 49 players; Survival 66 apps / 9 players; Marksmanship 28 apps / 5 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|HUNTER|rune of lingering|1287665`
+- **Rune of Lingering** (1287665) · DEATHKNIGHT — Blood 243 apps / 26 players; Unholy 236 apps / 19 players; Frost 5 apps / 5 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|rune of lingering|1287665`
+- **Blessing of Sacrifice** (6940) · PALADIN — Protection 201 apps / 29 players; Holy 193 apps / 45 players; Retribution 83 apps / 32 players — R5 — medium
+  - Reason: 99% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|blessing of sacrifice|6940`
+- **Duskwraith's Infusion** (1263447) · SHAMAN — Restoration 453 apps / 3 players — R5 — medium
+  - Reason: 76% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|duskwraith's infusion|1263447`
+- **Life Cocoon** (116849) · MONK — Mistweaver 357 apps / 31 players — R5 — medium
+  - Reason: 89% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MONK|life cocoon|116849`
+- **Soulcoil Barrier** (1307578) · PRIEST — Holy 326 apps / 6 players; Discipline 31 apps / 1 player — R5 — medium
+  - Reason: 81% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|soulcoil barrier|1307578`
+- **Rune of Lingering** (1287665) · WARLOCK — Demonology 162 apps / 35 players; Destruction 132 apps / 5 players; Affliction 12 apps / 6 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARLOCK|rune of lingering|1287665`
+- **Duskwraith's Infusion** (1263447) · PALADIN — Holy 301 apps / 4 players — R5 — medium
+  - Reason: 70% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|duskwraith's infusion|1263447`
+- **Duskwraith's Infusion** (1263447) · PRIEST — Discipline 194 apps / 2 players; Holy 106 apps / 2 players — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|duskwraith's infusion|1263447`
+- **Lesser Anti-Magic Shell** (454863) · DEATHKNIGHT — Frost 188 apps / 12 players; Unholy 60 apps / 6 players; Blood 8 apps / 2 players — R5 — medium
+  - Reason: 84% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|lesser anti-magic shell|454863`
+- **Preternatural Antivenom** (1305846) · PRIEST — Holy 172 apps / 2 players; Discipline 70 apps / 1 player — R5 — medium
+  - Reason: 81% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|preternatural antivenom|1305846`
+- **Worldsoul Cradle** (1242003) · DRUID — Restoration 225 apps / 3 players — R5 — medium
+  - Reason: 72% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|worldsoul cradle|1242003`
+- **Time To Shine!** (383799) · SHAMAN — Restoration 207 apps / 7 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|time to shine!|383799`
+- **Fanatically Inspired** (1266300) · DEATHKNIGHT — Frost 77 apps / 1 player; Blood 68 apps / 2 players; Unholy 57 apps / 2 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|fanatically inspired|1266300`
+- **Time Dilation** (357170) · EVOKER — Preservation 190 apps / 20 players — R5 — medium
+  - Reason: 92% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time dilation|357170`
+- **Echoing Protection** (387804) · PALADIN — Holy 179 apps / 33 players — R5 — medium
+  - Reason: 95% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|echoing protection|387804`
+- **Void Shield (Unfolding Vision)** (1300009) · PRIEST — Discipline 179 apps / 5 players — R5 — medium
+  - Reason: 89% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|void shield (unfolding vision)|1300009`
+- **Fanatically Inspired** (1266300) · DRUID — Balance 56 apps / 1 player; Restoration 51 apps / 1 player; Feral 37 apps / 1 player; Guardian 34 apps / 2 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|fanatically inspired|1266300`
+- **Rune of Echoes** (1289063) · PALADIN — Protection 167 apps / 5 players; Retribution 6 apps / 2 players — R5 — medium
+  - Reason: 86% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|rune of echoes|1289063`
+- **Soulcoil Barrier** (1307578) · PALADIN — Holy 161 apps / 3 players — R5 — medium
+  - Reason: 82% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|soulcoil barrier|1307578`
+- **Soulcoil Barrier** (1307578) · SHAMAN — Restoration 152 apps / 4 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|soulcoil barrier|1307578`
+- **Worldsoul Cradle** (1242003) · PRIEST — Holy 77 apps / 2 players; Discipline 72 apps / 1 player — R5 — medium
+  - Reason: 72% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|worldsoul cradle|1242003`
+- **Pain Suppression** (33206) · PRIEST — Discipline 148 apps / 26 players — R5 — medium
+  - Reason: 87% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|pain suppression|33206`
+- **Fanatically Inspired** (1266300) · DEMONHUNTER — Devourer 75 apps / 2 players; Havoc 49 apps / 2 players; Vengeance 21 apps / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEMONHUNTER|fanatically inspired|1266300`
+- **Fanatically Inspired** (1266300) · WARLOCK — Demonology 73 apps / 3 players; Destruction 70 apps / 2 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARLOCK|fanatically inspired|1266300`
+- **Vampiric Aura** (434107) · DEATHKNIGHT — Blood 142 apps / 6 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|vampiric aura|434107`
+- **Black Attunement** (403295) · EVOKER — Augmentation 130 apps / 4 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|black attunement|403295`
+- **Fanatically Inspired** (1266300) · MAGE — Arcane 104 apps / 3 players; Frost 25 apps / 1 player — R5 — medium
+  - Reason: 99% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MAGE|fanatically inspired|1266300`
+- **Tricks of the Trade** (57934) · ROGUE — Assassination 115 apps / 18 players; Subtlety 8 apps / 2 players; Outlaw 2 apps / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|ROGUE|tricks of the trade|57934`
+- **Soulcoil Barrier** (1307578) · DRUID — Restoration 123 apps / 3 players — R5 — medium
+  - Reason: 82% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|soulcoil barrier|1307578`
+- **Fanatically Inspired** (1266300) · MONK — Brewmaster 85 apps / 4 players; Mistweaver 29 apps / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MONK|fanatically inspired|1266300`
+- **Soulcoil Barrier** (1307578) · MONK — Mistweaver 108 apps / 4 players — R5 — medium
+  - Reason: 78% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|MONK|soulcoil barrier|1307578`
+- **Visage** (372014) · HUNTER — Beast Mastery 67 apps / 3 players; Survival 30 apps / 1 player; Marksmanship 8 apps / 1 player — R5 — medium
+  - Reason: 99% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|HUNTER|visage|372014`
+- **Fanatically Inspired** (1266300) · WARRIOR — Fury 66 apps / 2 players; Arms 39 apps / 1 player — R5 — medium
+  - Reason: 99% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARRIOR|fanatically inspired|1266300`
+- **Rune of Echoes** (1289063) · SHAMAN — Restoration 98 apps / 1 player; Enhancement 2 apps / 2 players — R5 — medium
+  - Reason: 81% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|rune of echoes|1289063`
+- **Tangle of Vibrant Vines** (1255367) · DRUID — Restoration 95 apps / 4 players — R5 — medium
+  - Reason: 80% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|tangle of vibrant vines|1255367`
+- **Symbiotic Relationship** (474750) · DRUID — Restoration 78 apps / 31 players; Guardian 3 apps / 3 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|symbiotic relationship|474750`
+- **Time To Shine!** (383799) · DRUID — Restoration 81 apps / 4 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DRUID|time to shine!|383799`
+- **Shroud of Concealment** (115834) · ROGUE — Assassination 39 apps / 3 players; Outlaw 23 apps / 4 players; Subtlety 19 apps / 2 players — R5 — medium
+  - Reason: 75% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|ROGUE|shroud of concealment|115834`
+- **Tricks of the Trade** (1224098) · ROGUE — Subtlety 51 apps / 13 players; Outlaw 28 apps / 9 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|ROGUE|tricks of the trade|1224098`
+- **Fanatically Inspired** (1266300) · HUNTER — Beast Mastery 48 apps / 2 players; Survival 29 apps / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|HUNTER|fanatically inspired|1266300`
+- **Consecrated Chalice** (1259988) · PRIEST — Holy 64 apps / 4 players; Discipline 3 apps / 1 player — R5 — medium
+  - Reason: 76% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|consecrated chalice|1259988`
+- **Rune of Echoes** (1289063) · WARLOCK — Demonology 62 apps / 10 players — R5 — medium
+  - Reason: 82% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|WARLOCK|rune of echoes|1289063`
+- **Blistering Scales** (360827) · EVOKER — Augmentation 57 apps / 11 players — R5 — medium
+  - Reason: 79% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|blistering scales|360827`
+- **Time To Shine!** (383799) · PALADIN — Holy 54 apps / 3 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PALADIN|time to shine!|383799`
+- **Leap of Faith** (73325) · PRIEST — Holy 25 apps / 17 players; Shadow 15 apps / 10 players; Discipline 12 apps / 9 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|leap of faith|73325`
+- **Time Spiral** (375253) · EVOKER — Augmentation 24 apps / 6 players; Devastation 21 apps / 6 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time spiral|375253`
+- **Time Spiral** (375230) · EVOKER — Augmentation 30 apps / 5 players; Devastation 10 apps / 4 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time spiral|375230`
+- **Time Spiral** (375226) · EVOKER — Devastation 19 apps / 6 players; Augmentation 16 apps / 6 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time spiral|375226`
+- **Time Spiral** (375229) · EVOKER — Augmentation 22 apps / 3 players; Devastation 12 apps / 3 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time spiral|375229`
+- **Radiant Blessing** (1254624) · SHAMAN — Restoration 31 apps / 4 players — R5 — medium
+  - Reason: 71% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|radiant blessing|1254624`
+- **Symbiotic Relationship** (474754) · DEATHKNIGHT — Blood 28 apps / 7 players; Frost 1 app / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|symbiotic relationship|474754`
+- **Coached** (386578) · SHAMAN — Restoration 29 apps / 5 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|SHAMAN|coached|386578`
+- **Time Spiral** (375257) · EVOKER — Augmentation 20 apps / 5 players; Devastation 3 apps / 1 player — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time spiral|375257`
+- **Newly Turned** (434493) · DEATHKNIGHT — Blood 21 apps / 10 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|DEATHKNIGHT|newly turned|434493`
+- **Spatial Paradox** (406789) · EVOKER — Augmentation 18 apps / 5 players; Devastation 2 apps / 2 players; Preservation 1 app / 1 player — R5 — medium
+  - Reason: 95% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|spatial paradox|406789`
+- **Time Spiral** (375256) · EVOKER — Devastation 15 apps / 4 players; Augmentation 6 apps / 3 players — R5 — medium
+  - Reason: 100% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|EVOKER|time spiral|375256`
+- **Power Word: Shield (Unfolding Vision)** (1300008) · PRIEST — Discipline 21 apps / 5 players — R5 — medium
+  - Reason: 86% of applications go to one other player (Blizzard's EXTERNAL_DEFENSIVE tag is not readable offline, so an external defensive is not excluded) → Support.
+  - Key: `addition|support|PRIEST|power word: shield (unfolding vision)|1300008`
+
+## Movement (`movement`)
+
+- **Enrage** (184362) · WARRIOR — Fury 13640 apps / 39 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|enrage|184362`
+- **Chi-Ji's Swiftness** (443569) · MONK — Mistweaver 5019 apps / 31 players; Windwalker 843 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|chi-ji's swiftness|443569`
+- **War Machine** (262232) · WARRIOR — Arms 2536 apps / 73 players; Protection 1256 apps / 35 players; Fury 1211 apps / 39 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|war machine|262232`
+- **Death's Advance** (48265) · DEATHKNIGHT — Blood 3652 apps / 74 players; Frost 336 apps / 23 players; Unholy 125 apps / 9 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|death's advance|48265`
+- **Forestwalk** (400126) · DRUID — Restoration 2877 apps / 52 players; Guardian 345 apps / 12 players; Feral 284 apps / 11 players; Balance 6 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|forestwalk|400126`
+- **Quick Draw** (1279347) · HUNTER — Marksmanship 3321 apps / 23 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|HUNTER|quick draw|1279347`
+- **Dawnlight** (431381) · PALADIN — Holy 2588 apps / 59 players; Retribution 79 apps / 24 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|dawnlight|431381`
+- **Felfire Haste** (389847) · DEMONHUNTER — Devourer 1562 apps / 84 players; Havoc 243 apps / 14 players; Vengeance 73 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEMONHUNTER|felfire haste|389847`
+- **Voidlust** (1277482) · PALADIN — Protection 980 apps / 5 players; Retribution 463 apps / 14 players; Holy 400 apps / 13 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|voidlust|1277482`
+- **Lycara's Teachings** (378991) · DRUID — Restoration 695 apps / 42 players; Balance 467 apps / 47 players; Guardian 377 apps / 51 players; Feral 120 apps / 22 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|lycara's teachings|378991`
+- **Electroshock** (454025) · SHAMAN — Elemental 744 apps / 15 players; Enhancement 552 apps / 11 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|SHAMAN|electroshock|454025`
+- **Voidlust** (1277482) · DRUID — Restoration 587 apps / 9 players; Balance 368 apps / 10 players; Feral 204 apps / 6 players; Guardian 98 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|voidlust|1277482`
+- **Death Charge** (444347) · DEATHKNIGHT — Unholy 1153 apps / 72 players; Frost 38 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|death charge|444347`
+- **Bounding Stride** (202164) · WARRIOR — Arms 618 apps / 72 players; Protection 291 apps / 29 players; Fury 211 apps / 34 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|bounding stride|202164`
+- **Vampiric Speed** (434029) · DEATHKNIGHT — Blood 841 apps / 19 players; Unholy 256 apps / 7 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|vampiric speed|434029`
+- **Voidlust** (1277482) · MAGE — Frost 678 apps / 20 players; Arcane 321 apps / 15 players; Fire 24 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MAGE|voidlust|1277482`
+- **Jade Walk** (450552) · MONK — Windwalker 555 apps / 38 players; Brewmaster 429 apps / 35 players; Mistweaver 33 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|jade walk|450552`
+- **Relentless Pursuit** (446044) · WARRIOR — Arms 799 apps / 36 players; Fury 212 apps / 11 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|relentless pursuit|446044`
+- **Travel Form** (165961) · DRUID — Restoration 508 apps / 42 players; Balance 241 apps / 37 players; Guardian 137 apps / 30 players; Feral 66 apps / 14 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|travel form|165961`
+- **Voidlust** (1277482) · SHAMAN — Elemental 415 apps / 15 players; Restoration 368 apps / 13 players; Enhancement 98 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|SHAMAN|voidlust|1277482`
+- **Voidlust** (1277482) · DEMONHUNTER — Devourer 494 apps / 17 players; Havoc 288 apps / 11 players; Vengeance 93 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEMONHUNTER|voidlust|1277482`
+- **Voidlust** (1277482) · WARLOCK — Demonology 573 apps / 19 players; Destruction 157 apps / 5 players; Affliction 139 apps / 5 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARLOCK|voidlust|1277482`
+- **Judgment** (20271) · PALADIN — Retribution 821 apps / 16 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|judgment|20271`
+- **Wraith Walk** (212552) · DEATHKNIGHT — Blood 676 apps / 10 players; Unholy 53 apps / 20 players; Frost 21 apps / 5 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|wraith walk|212552`
+- **Chi Torpedo** (119085) · MONK — Mistweaver 606 apps / 2 players; Brewmaster 48 apps / 3 players; Windwalker 23 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|chi torpedo|119085`
+- **Deep Breath** (433874) · EVOKER — Devastation 655 apps / 21 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|deep breath|433874`
+- **Farstrider's Step** (1242775) · MAGE — Arcane 384 apps / 25 players; Frost 248 apps / 15 players; Fire 19 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MAGE|farstrider's step|1242775`
+- **Voidlust** (1277482) · DEATHKNIGHT — Unholy 355 apps / 12 players; Blood 92 apps / 5 players; Frost 88 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|voidlust|1277482`
+- **Shadowstep** (36554) · ROGUE — Assassination 252 apps / 26 players; Subtlety 219 apps / 26 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|ROGUE|shadowstep|36554`
+- **Farstrider's Step** (1242775) · HUNTER — Beast Mastery 343 apps / 32 players; Survival 61 apps / 6 players; Marksmanship 52 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|HUNTER|farstrider's step|1242775`
+- **Farstrider's Step** (1242775) · DEMONHUNTER — Devourer 279 apps / 26 players; Havoc 155 apps / 14 players; Vengeance 9 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEMONHUNTER|farstrider's step|1242775`
+- **Farstrider's Step** (1242775) · DRUID — Balance 337 apps / 15 players; Feral 79 apps / 6 players; Guardian 25 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|farstrider's step|1242775`
+- **Voidlust** (1277482) · PRIEST — Holy 230 apps / 7 players; Discipline 104 apps / 4 players; Shadow 98 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PRIEST|voidlust|1277482`
+- **Voidlust** (1277482) · HUNTER — Beast Mastery 236 apps / 5 players; Marksmanship 105 apps / 3 players; Survival 63 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|HUNTER|voidlust|1277482`
+- **Voidlust** (1277482) · EVOKER — Augmentation 182 apps / 6 players; Devastation 109 apps / 3 players; Preservation 107 apps / 5 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|voidlust|1277482`
+- **Hammer of Wrath** (24275) · PALADIN — Retribution 398 apps / 20 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|hammer of wrath|24275`
+- **Spirit Walk** (58875) · SHAMAN — Restoration 283 apps / 10 players; Enhancement 65 apps / 16 players; Elemental 34 apps / 7 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|SHAMAN|spirit walk|58875`
+- **Farstrider's Step** (1242775) · WARLOCK — Demonology 283 apps / 26 players; Affliction 54 apps / 4 players; Destruction 41 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARLOCK|farstrider's step|1242775`
+- **Swift as a Coursing River** (1263345) · MONK — Brewmaster 366 apps / 26 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|swift as a coursing river|1263345`
+- **Breath of Eons** (442204) · EVOKER — Augmentation 350 apps / 26 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|breath of eons|442204`
+- **Reinvigoration** (1266743) · MONK — Mistweaver 339 apps / 5 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|reinvigoration|1266743`
+- **Voidlust** (1277482) · WARRIOR — Fury 240 apps / 7 players; Protection 49 apps / 2 players; Arms 41 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|voidlust|1277482`
+- **Tiger Dash** (252216) · DRUID — Restoration 276 apps / 16 players; Feral 29 apps / 5 players; Balance 17 apps / 3 players; Guardian 5 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|tiger dash|252216`
+- **Initiator's Edge** (1272850) · MONK — Brewmaster 313 apps / 27 players; Windwalker 13 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|initiator's edge|1272850`
+- **Voidlust** (1277482) · MONK — Brewmaster 175 apps / 9 players; Mistweaver 70 apps / 2 players; Windwalker 63 apps / 5 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|voidlust|1277482`
+- **Will of the Dawn** (431752) · PALADIN — Holy 199 apps / 45 players; Retribution 102 apps / 24 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|will of the dawn|431752`
+- **Farstrider's Step** (1242775) · SHAMAN — Elemental 193 apps / 18 players; Enhancement 64 apps / 6 players; Restoration 10 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|SHAMAN|farstrider's step|1242775`
+- **Farstrider's Step** (1242775) · PALADIN — Retribution 223 apps / 18 players; Protection 23 apps / 3 players; Holy 17 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|farstrider's step|1242775`
+- **Lightning Conduit** (468226) · SHAMAN — Elemental 235 apps / 22 players; Enhancement 18 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|SHAMAN|lightning conduit|468226`
+- **Farstrider's Step** (1242775) · DEATHKNIGHT — Unholy 215 apps / 13 players; Blood 32 apps / 4 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|farstrider's step|1242775`
+- **Farstrider's Step** (1242775) · WARRIOR — Arms 206 apps / 14 players; Fury 24 apps / 3 players; Protection 16 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|farstrider's step|1242775`
+- **Nitro Boosts** (54861) · DEATHKNIGHT — Blood 244 apps / 3 players; Unholy 1 app / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DEATHKNIGHT|nitro boosts|54861`
+- **Acrobatic Strikes** (455144) · ROGUE — Outlaw 232 apps / 6 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|ROGUE|acrobatic strikes|455144`
+- **Piercing Howl** (1244157) · WARRIOR — Protection 121 apps / 7 players; Fury 87 apps / 6 players; Arms 10 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARRIOR|piercing howl|1244157`
+- **Echoing Freedom** (394454) · PALADIN — Holy 192 apps / 28 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PALADIN|echoing freedom|394454`
+- **Voidlust** (1277482) · ROGUE — Subtlety 150 apps / 6 players; Assassination 40 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|ROGUE|voidlust|1277482`
+- **Farstrider's Step** (1242775) · PRIEST — Shadow 180 apps / 15 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|PRIEST|farstrider's step|1242775`
+- **Farstrider's Step** (1242775) · MONK — Windwalker 154 apps / 13 players; Mistweaver 17 apps / 2 players; Brewmaster 8 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|MONK|farstrider's step|1242775`
+- **Farstrider's Step** (1242775) · ROGUE — Assassination 96 apps / 8 players; Subtlety 54 apps / 6 players; Outlaw 19 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|ROGUE|farstrider's step|1242775`
+- **Flow State** (390148) · EVOKER — Preservation 130 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|flow state|390148`
+- **Farstrider's Step** (1242775) · EVOKER — Devastation 62 apps / 5 players; Augmentation 60 apps / 6 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|farstrider's step|1242775`
+- **Soulburn: Demonic Circle** (387633) · WARLOCK — Demonology 81 apps / 26 players; Affliction 12 apps / 4 players; Destruction 8 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARLOCK|soulburn: demonic circle|387633`
+- **Nitro Boosts** (54861) · WARLOCK — Destruction 53 apps / 2 players; Demonology 9 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|WARLOCK|nitro boosts|54861`
+- **Motes of Acceleration** (432061) · EVOKER — Augmentation 27 apps / 1 player; Preservation 14 apps / 2 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|motes of acceleration|432061`
+- **Twin Guardian** (370889) · EVOKER — Augmentation 33 apps / 9 players; Devastation 4 apps / 3 players — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|EVOKER|twin guardian|370889`
+- **Mount Form** (210053) · DRUID — Restoration 20 apps / 4 players; Balance 5 apps / 1 player; Guardian 4 apps / 3 players; Feral 2 apps / 1 player — R4 — high
+  - Reason: DB2 says it raises movement speed → Movement.
+  - Key: `addition|movement|DRUID|mount form|210053`
+
+## Consumables (`consumables`)
+
+- **Might of the Void** (1241715) · ALL — SHAMAN Restoration 3754 apps / 28 players; PALADIN Retribution 1970 apps / 66 players; MAGE Arcane 1735 apps / 41 players; PALADIN Protection 1594 apps / 20 players; MAGE Frost 1560 apps / 43 players; HUNTER Beast Mastery 1382 apps / 45 players; WARLOCK Destruction 1371 apps / 6 players; MONK Mistweaver 1170 apps / 21 players; WARLOCK Demonology 1166 apps / 39 players; PALADIN Holy 1045 apps / 30 players; DRUID Restoration 778 apps / 18 players; MONK Brewmaster 739 apps / 22 players; PRIEST Holy 720 apps / 18 players; DRUID Balance 709 apps / 21 players; DEMONHUNTER Havoc 648 apps / 22 players; DRUID Guardian 648 apps / 17 players; MONK Windwalker 522 apps / 18 players; SHAMAN Elemental 490 apps / 11 players; EVOKER Devastation 443 apps / 13 players; ROGUE Subtlety 406 apps / 15 players; EVOKER Augmentation 370 apps / 11 players; DEMONHUNTER Vengeance 369 apps / 12 players; DRUID Feral 352 apps / 11 players; PRIEST Discipline 338 apps / 9 players; WARLOCK Affliction 271 apps / 10 players; SHAMAN Enhancement 261 apps / 10 players; EVOKER Preservation 231 apps / 7 players; PRIEST Shadow 228 apps / 7 players; WARRIOR Protection 212 apps / 6 players; ROGUE Outlaw 209 apps / 6 players; MAGE Fire 179 apps / 5 players; WARRIOR Arms 174 apps / 7 players; DEMONHUNTER Devourer 172 apps / 5 players; HUNTER Marksmanship 148 apps / 6 players; HUNTER Survival 143 apps / 4 players; ROGUE Assassination 128 apps / 4 players; WARRIOR Fury 119 apps / 5 players — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 26754 applications / 634 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|might of the void|1241715`
+- **Rune of Critical Power** (1287772) · ALL — DEATHKNIGHT Blood 5683 apps / 25 players; SHAMAN Restoration 3007 apps / 17 players; MAGE Arcane 2909 apps / 47 players; DRUID Balance 1997 apps / 10 players; WARLOCK Demonology 1591 apps / 30 players; SHAMAN Elemental 1170 apps / 21 players; PRIEST Holy 907 apps / 15 players; DEATHKNIGHT Unholy 653 apps / 9 players; WARRIOR Arms 629 apps / 13 players; PRIEST Shadow 592 apps / 11 players; DEMONHUNTER Havoc 582 apps / 11 players; HUNTER Beast Mastery 533 apps / 10 players; PALADIN Protection 518 apps / 11 players; EVOKER Devastation 487 apps / 9 players; DEATHKNIGHT Frost 431 apps / 8 players; MONK Windwalker 367 apps / 8 players; WARLOCK Affliction 283 apps / 4 players; MAGE Frost 278 apps / 8 players; DRUID Guardian 249 apps / 5 players; ROGUE Outlaw 248 apps / 6 players; PALADIN Retribution 245 apps / 6 players; HUNTER Survival 206 apps / 2 players; SHAMAN Enhancement 155 apps / 3 players; ROGUE Assassination 139 apps / 3 players; HUNTER Marksmanship 133 apps / 3 players; WARLOCK Destruction 104 apps / 2 players; EVOKER Preservation 84 apps / 2 players; PRIEST Discipline 83 apps / 2 players; WARRIOR Protection 79 apps / 2 players; EVOKER Augmentation 73 apps / 1 player; MONK Brewmaster 71 apps / 1 player; PALADIN Holy 63 apps / 1 player; DRUID Feral 56 apps / 1 player; MONK Mistweaver 51 apps / 3 players; WARRIOR Fury 50 apps / 1 player; ROGUE Subtlety 45 apps / 1 player; DEMONHUNTER Devourer 43 apps / 1 player; DEMONHUNTER Vengeance 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 24795 applications / 311 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rune of critical power|1287772`
+- **Rune of Burning Haste** (1287774) · ALL — MONK Mistweaver 2898 apps / 12 players; PALADIN Protection 2401 apps / 11 players; WARLOCK Destruction 1539 apps / 3 players; WARRIOR Arms 1113 apps / 23 players; DRUID Restoration 811 apps / 11 players; DRUID Guardian 549 apps / 8 players; ROGUE Assassination 460 apps / 10 players; MAGE Arcane 451 apps / 10 players; PALADIN Holy 439 apps / 8 players; DEMONHUNTER Vengeance 427 apps / 9 players; PRIEST Holy 405 apps / 8 players; DEMONHUNTER Devourer 387 apps / 6 players; WARRIOR Protection 367 apps / 5 players; WARLOCK Demonology 323 apps / 8 players; PRIEST Discipline 274 apps / 5 players; DRUID Feral 257 apps / 5 players; DEMONHUNTER Havoc 254 apps / 5 players; DEATHKNIGHT Blood 250 apps / 3 players; DRUID Balance 217 apps / 3 players; PRIEST Shadow 207 apps / 5 players; SHAMAN Restoration 190 apps / 3 players; MONK Windwalker 184 apps / 3 players; MAGE Frost 166 apps / 3 players; PALADIN Retribution 153 apps / 3 players; SHAMAN Enhancement 143 apps / 3 players; MAGE Fire 141 apps / 2 players; WARLOCK Affliction 138 apps / 2 players; WARRIOR Fury 136 apps / 2 players; SHAMAN Elemental 126 apps / 3 players; EVOKER Preservation 125 apps / 2 players; ROGUE Outlaw 125 apps / 2 players; EVOKER Devastation 114 apps / 2 players; EVOKER Augmentation 107 apps / 2 players; HUNTER Beast Mastery 106 apps / 3 players; MONK Brewmaster 71 apps / 1 player; DEATHKNIGHT Frost 48 apps / 1 player; DEATHKNIGHT Unholy 45 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 16147 applications / 195 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rune of burning haste|1287774`
+- **Rune of Masterful Cunning** (1287771) · ALL — HUNTER Beast Mastery 3575 apps / 37 players; PALADIN Retribution 1993 apps / 40 players; PALADIN Holy 1137 apps / 14 players; DEMONHUNTER Devourer 858 apps / 15 players; DEATHKNIGHT Unholy 652 apps / 11 players; DRUID Balance 594 apps / 9 players; SHAMAN Elemental 513 apps / 11 players; MAGE Frost 481 apps / 8 players; HUNTER Marksmanship 284 apps / 2 players; PRIEST Shadow 258 apps / 4 players; PALADIN Protection 243 apps / 5 players; HUNTER Survival 221 apps / 5 players; ROGUE Subtlety 215 apps / 4 players; ROGUE Assassination 211 apps / 4 players; WARRIOR Arms 200 apps / 4 players; DEATHKNIGHT Blood 191 apps / 4 players; DRUID Feral 172 apps / 4 players; DRUID Restoration 164 apps / 3 players; EVOKER Preservation 157 apps / 4 players; PRIEST Discipline 137 apps / 2 players; DEMONHUNTER Vengeance 135 apps / 2 players; DEATHKNIGHT Frost 124 apps / 3 players; MAGE Arcane 124 apps / 3 players; MONK Windwalker 116 apps / 2 players; DRUID Guardian 93 apps / 2 players; WARLOCK Demonology 92 apps / 2 players; SHAMAN Enhancement 85 apps / 2 players; PRIEST Holy 58 apps / 1 player; MONK Mistweaver 46 apps / 1 player; SHAMAN Restoration 40 apps / 1 player; ROGUE Outlaw 34 apps / 1 player; WARLOCK Affliction 24 apps / 1 player; DEMONHUNTER Havoc 16 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 13243 applications / 212 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rune of masterful cunning|1287771`
+- **Masterful Hunt** (1252488) · ALL — SHAMAN Restoration 2150 apps / 8 players; DEATHKNIGHT Blood 2109 apps / 12 players; DEMONHUNTER Devourer 929 apps / 67 players; PALADIN Protection 639 apps / 10 players; PALADIN Holy 569 apps / 22 players; WARLOCK Demonology 491 apps / 31 players; MAGE Frost 488 apps / 36 players; MONK Mistweaver 423 apps / 5 players; DEATHKNIGHT Unholy 411 apps / 24 players; WARRIOR Arms 409 apps / 20 players; PALADIN Retribution 402 apps / 26 players; DRUID Restoration 375 apps / 16 players; WARRIOR Fury 241 apps / 15 players; PRIEST Holy 239 apps / 10 players; PRIEST Shadow 211 apps / 15 players; DRUID Guardian 198 apps / 14 players; DEMONHUNTER Vengeance 197 apps / 14 players; ROGUE Subtlety 193 apps / 16 players; ROGUE Assassination 155 apps / 8 players; PRIEST Discipline 152 apps / 9 players; MAGE Arcane 133 apps / 7 players; DRUID Balance 127 apps / 8 players; SHAMAN Elemental 122 apps / 6 players; DEMONHUNTER Havoc 108 apps / 10 players; HUNTER Beast Mastery 98 apps / 8 players; MONK Windwalker 88 apps / 8 players; MAGE Fire 86 apps / 4 players; SHAMAN Enhancement 83 apps / 7 players; EVOKER Preservation 80 apps / 4 players; HUNTER Survival 77 apps / 7 players; DRUID Feral 69 apps / 5 players; EVOKER Augmentation 65 apps / 7 players; MONK Brewmaster 65 apps / 3 players; DEATHKNIGHT Frost 52 apps / 5 players; WARRIOR Protection 52 apps / 3 players; EVOKER Devastation 48 apps / 3 players; WARLOCK Affliction 13 apps / 2 players; WARLOCK Destruction 13 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 12360 applications / 472 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|masterful hunt|1252488`
+- **The Wind Awoken** (1263318) · ALL — WARLOCK Destruction 1130 apps / 3 players; DEMONHUNTER Devourer 886 apps / 24 players; MAGE Frost 774 apps / 13 players; WARLOCK Demonology 689 apps / 19 players; DRUID Guardian 680 apps / 14 players; DRUID Balance 479 apps / 9 players; PALADIN Protection 453 apps / 12 players; EVOKER Augmentation 442 apps / 11 players; DRUID Restoration 424 apps / 10 players; PALADIN Holy 382 apps / 9 players; PALADIN Retribution 361 apps / 10 players; DEATHKNIGHT Blood 336 apps / 5 players; MONK Mistweaver 304 apps / 7 players; SHAMAN Restoration 281 apps / 7 players; SHAMAN Elemental 275 apps / 9 players; DRUID Feral 264 apps / 7 players; WARLOCK Affliction 259 apps / 7 players; WARRIOR Protection 256 apps / 7 players; PRIEST Shadow 253 apps / 6 players; PRIEST Discipline 248 apps / 4 players; DEATHKNIGHT Unholy 233 apps / 6 players; PRIEST Holy 219 apps / 6 players; MONK Brewmaster 186 apps / 4 players; HUNTER Beast Mastery 167 apps / 5 players; DEMONHUNTER Vengeance 166 apps / 4 players; MAGE Arcane 165 apps / 5 players; WARRIOR Arms 158 apps / 4 players; WARRIOR Fury 144 apps / 3 players; HUNTER Survival 143 apps / 3 players; MONK Windwalker 136 apps / 4 players; ROGUE Assassination 125 apps / 4 players; DEMONHUNTER Havoc 115 apps / 3 players; EVOKER Preservation 110 apps / 3 players; DEATHKNIGHT Frost 85 apps / 2 players; EVOKER Devastation 81 apps / 2 players; MAGE Fire 74 apps / 2 players; HUNTER Marksmanship 72 apps / 3 players; ROGUE Subtlety 28 apps / 1 player; ROGUE Outlaw 22 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 11605 applications / 257 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|the wind awoken|1263318`
+- **Alnsight** (1266686) · ALL — WARLOCK Destruction 1136 apps / 2 players; MAGE Frost 951 apps / 31 players; DEMONHUNTER Devourer 688 apps / 23 players; DEATHKNIGHT Unholy 457 apps / 16 players; WARLOCK Demonology 400 apps / 13 players; PALADIN Retribution 350 apps / 15 players; PALADIN Protection 328 apps / 11 players; PRIEST Shadow 319 apps / 10 players; DRUID Guardian 256 apps / 9 players; DEATHKNIGHT Blood 235 apps / 8 players; HUNTER Beast Mastery 231 apps / 9 players; MONK Windwalker 222 apps / 9 players; SHAMAN Elemental 209 apps / 8 players; PALADIN Holy 203 apps / 8 players; MONK Brewmaster 193 apps / 6 players; MAGE Arcane 183 apps / 6 players; MONK Mistweaver 182 apps / 5 players; PRIEST Holy 179 apps / 3 players; SHAMAN Restoration 172 apps / 5 players; DRUID Balance 166 apps / 5 players; DRUID Feral 163 apps / 5 players; EVOKER Augmentation 161 apps / 5 players; ROGUE Subtlety 152 apps / 7 players; WARRIOR Protection 140 apps / 4 players; PRIEST Discipline 138 apps / 5 players; DEMONHUNTER Havoc 131 apps / 5 players; DEMONHUNTER Vengeance 130 apps / 4 players; HUNTER Survival 102 apps / 3 players; WARRIOR Arms 98 apps / 4 players; EVOKER Devastation 93 apps / 3 players; DEATHKNIGHT Frost 78 apps / 4 players; SHAMAN Enhancement 71 apps / 4 players; DRUID Restoration 65 apps / 3 players; ROGUE Assassination 61 apps / 2 players; WARLOCK Affliction 56 apps / 2 players; WARRIOR Fury 51 apps / 2 players; EVOKER Preservation 50 apps / 2 players; HUNTER Marksmanship 15 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 8815 applications / 267 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|alnsight|1266686`
+- **Halazzi's Rite** (1297663) · ALL — HUNTER Beast Mastery 1582 apps / 20 players; PALADIN Holy 1070 apps / 4 players; MAGE Arcane 735 apps / 20 players; PALADIN Retribution 631 apps / 17 players; WARRIOR Arms 512 apps / 15 players; DRUID Balance 505 apps / 6 players; ROGUE Assassination 334 apps / 10 players; DEMONHUNTER Devourer 297 apps / 8 players; SHAMAN Elemental 277 apps / 8 players; MONK Windwalker 262 apps / 7 players; DEMONHUNTER Havoc 214 apps / 7 players; WARLOCK Demonology 199 apps / 6 players; PRIEST Shadow 145 apps / 4 players; SHAMAN Enhancement 125 apps / 4 players; PRIEST Holy 89 apps / 2 players; HUNTER Marksmanship 69 apps / 2 players; ROGUE Outlaw 60 apps / 2 players; DEMONHUNTER Vengeance 59 apps / 2 players; EVOKER Devastation 48 apps / 1 player; ROGUE Subtlety 43 apps / 1 player; WARLOCK Destruction 41 apps / 1 player; DRUID Feral 40 apps / 1 player; EVOKER Preservation 40 apps / 1 player; PALADIN Protection 35 apps / 1 player; MAGE Frost 32 apps / 1 player; WARLOCK Affliction 29 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 7473 applications / 151 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|halazzi's rite|1297663`
+- **Alnscorned Essence** (1266687) · ALL — WARLOCK Destruction 860 apps / 2 players; MAGE Frost 713 apps / 31 players; DEMONHUNTER Devourer 538 apps / 23 players; DEATHKNIGHT Unholy 322 apps / 16 players; WARLOCK Demonology 296 apps / 13 players; PALADIN Retribution 268 apps / 15 players; PRIEST Shadow 245 apps / 10 players; PALADIN Protection 236 apps / 11 players; HUNTER Beast Mastery 183 apps / 9 players; DRUID Guardian 174 apps / 9 players; MONK Windwalker 172 apps / 9 players; DEATHKNIGHT Blood 169 apps / 8 players; SHAMAN Elemental 160 apps / 8 players; PALADIN Holy 157 apps / 8 players; MONK Brewmaster 146 apps / 6 players; MAGE Arcane 144 apps / 6 players; PRIEST Holy 138 apps / 3 players; MONK Mistweaver 133 apps / 5 players; SHAMAN Restoration 129 apps / 5 players; EVOKER Augmentation 128 apps / 5 players; DRUID Balance 123 apps / 5 players; ROGUE Subtlety 120 apps / 7 players; DRUID Feral 119 apps / 5 players; WARRIOR Protection 108 apps / 4 players; PRIEST Discipline 107 apps / 5 players; DEMONHUNTER Vengeance 101 apps / 4 players; DEMONHUNTER Havoc 100 apps / 5 players; WARRIOR Arms 78 apps / 4 players; HUNTER Survival 76 apps / 3 players; EVOKER Devastation 74 apps / 3 players; SHAMAN Enhancement 59 apps / 4 players; DRUID Restoration 58 apps / 3 players; DEATHKNIGHT Frost 55 apps / 4 players; ROGUE Assassination 48 apps / 2 players; WARLOCK Affliction 48 apps / 2 players; WARRIOR Fury 39 apps / 2 players; EVOKER Preservation 37 apps / 2 players; HUNTER Marksmanship 14 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 6675 applications / 267 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|alnscorned essence|1266687`
+- **Fanatical Inspiration** (1266299) · ALL — SHAMAN Restoration 1588 apps / 6 players; PALADIN Holy 976 apps / 6 players; PALADIN Protection 549 apps / 6 players; PALADIN Retribution 445 apps / 16 players; DEMONHUNTER Devourer 310 apps / 10 players; SHAMAN Elemental 185 apps / 6 players; DEATHKNIGHT Blood 174 apps / 7 players; DRUID Balance 158 apps / 4 players; DEATHKNIGHT Unholy 152 apps / 5 players; DRUID Restoration 140 apps / 5 players; MAGE Arcane 131 apps / 4 players; HUNTER Beast Mastery 129 apps / 5 players; WARRIOR Protection 122 apps / 4 players; MAGE Frost 102 apps / 4 players; MONK Mistweaver 99 apps / 4 players; WARLOCK Demonology 99 apps / 5 players; WARRIOR Arms 99 apps / 4 players; ROGUE Subtlety 96 apps / 3 players; MONK Brewmaster 95 apps / 5 players; WARRIOR Fury 85 apps / 4 players; WARLOCK Destruction 80 apps / 3 players; DEMONHUNTER Havoc 78 apps / 3 players; DEATHKNIGHT Frost 75 apps / 2 players; PRIEST Discipline 60 apps / 2 players; DRUID Guardian 58 apps / 3 players; DEMONHUNTER Vengeance 56 apps / 2 players; PRIEST Holy 53 apps / 2 players; HUNTER Survival 46 apps / 2 players; PRIEST Shadow 43 apps / 2 players; ROGUE Outlaw 40 apps / 1 player; DRUID Feral 33 apps / 1 player; MONK Windwalker 33 apps / 1 player; EVOKER Preservation 32 apps / 1 player; EVOKER Augmentation 30 apps / 1 player; HUNTER Marksmanship 23 apps / 1 player; ROGUE Assassination 21 apps / 1 player; SHAMAN Enhancement 17 apps / 1 player; EVOKER Devastation 13 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 6525 applications / 140 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|fanatical inspiration|1266299`
+- **Frenzied Focus** (1241762) · ALL — DEMONHUNTER Devourer 1410 apps / 45 players; PALADIN Protection 845 apps / 19 players; WARRIOR Arms 796 apps / 20 players; DRUID Guardian 537 apps / 17 players; ROGUE Assassination 306 apps / 10 players; PRIEST Discipline 304 apps / 8 players; WARRIOR Fury 291 apps / 10 players; WARRIOR Protection 266 apps / 9 players; SHAMAN Elemental 238 apps / 8 players; WARLOCK Demonology 213 apps / 6 players; DRUID Restoration 169 apps / 4 players; PRIEST Holy 166 apps / 4 players; PALADIN Retribution 137 apps / 4 players; DRUID Balance 132 apps / 3 players; DEMONHUNTER Vengeance 92 apps / 4 players; PRIEST Shadow 91 apps / 3 players; WARLOCK Affliction 71 apps / 3 players; MAGE Arcane 54 apps / 2 players; ROGUE Subtlety 53 apps / 2 players; WARLOCK Destruction 53 apps / 2 players; ROGUE Outlaw 50 apps / 1 player; DRUID Feral 44 apps / 1 player; EVOKER Augmentation 44 apps / 1 player; SHAMAN Enhancement 38 apps / 2 players; MAGE Fire 18 apps / 1 player; PALADIN Holy 14 apps / 1 player; SHAMAN Restoration 14 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 6446 applications / 190 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|frenzied focus|1241762`
+- **Genius Insight** (1241759) · ALL — DEMONHUNTER Devourer 2064 apps / 61 players; PRIEST Shadow 590 apps / 16 players; HUNTER Survival 449 apps / 11 players; DRUID Balance 442 apps / 5 players; WARRIOR Fury 393 apps / 12 players; PALADIN Retribution 386 apps / 11 players; SHAMAN Elemental 383 apps / 13 players; HUNTER Beast Mastery 347 apps / 11 players; DEMONHUNTER Havoc 195 apps / 5 players; MAGE Frost 153 apps / 3 players; ROGUE Subtlety 145 apps / 6 players; DEMONHUNTER Vengeance 102 apps / 3 players; MONK Windwalker 84 apps / 3 players; WARLOCK Demonology 74 apps / 2 players; SHAMAN Restoration 72 apps / 2 players; EVOKER Preservation 65 apps / 2 players; SHAMAN Enhancement 63 apps / 2 players; WARRIOR Arms 56 apps / 2 players; HUNTER Marksmanship 38 apps / 1 player; EVOKER Devastation 36 apps / 1 player; PRIEST Holy 34 apps / 1 player; ROGUE Assassination 34 apps / 1 player; DRUID Restoration 33 apps / 1 player; MAGE Arcane 7 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 6245 applications / 173 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|genius insight|1241759`
+- **Hasty Hunt** (1252486) · ALL — DEATHKNIGHT Blood 1198 apps / 11 players; DEMONHUNTER Devourer 679 apps / 61 players; SHAMAN Restoration 456 apps / 6 players; WARLOCK Demonology 356 apps / 29 players; MAGE Frost 325 apps / 33 players; PALADIN Protection 300 apps / 8 players; DEATHKNIGHT Unholy 224 apps / 21 players; PALADIN Retribution 223 apps / 23 players; MONK Mistweaver 185 apps / 4 players; PALADIN Holy 173 apps / 19 players; WARRIOR Arms 158 apps / 16 players; DRUID Guardian 134 apps / 11 players; PRIEST Shadow 132 apps / 12 players; HUNTER Survival 112 apps / 7 players; DEMONHUNTER Vengeance 108 apps / 10 players; HUNTER Beast Mastery 105 apps / 8 players; DEMONHUNTER Havoc 95 apps / 10 players; DRUID Restoration 93 apps / 12 players; MAGE Arcane 89 apps / 6 players; ROGUE Subtlety 88 apps / 12 players; WARRIOR Fury 85 apps / 11 players; EVOKER Augmentation 74 apps / 6 players; DRUID Balance 72 apps / 6 players; PRIEST Discipline 72 apps / 5 players; PRIEST Holy 67 apps / 10 players; ROGUE Assassination 67 apps / 8 players; SHAMAN Elemental 64 apps / 5 players; EVOKER Preservation 61 apps / 4 players; SHAMAN Enhancement 57 apps / 8 players; DEATHKNIGHT Frost 51 apps / 4 players; MAGE Fire 48 apps / 3 players; DRUID Feral 45 apps / 4 players; MONK Brewmaster 44 apps / 3 players; WARRIOR Protection 42 apps / 3 players; EVOKER Devastation 32 apps / 3 players; MONK Windwalker 28 apps / 8 players; WARLOCK Destruction 2 apps / 1 player; WARLOCK Affliction 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 6145 applications / 409 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hasty hunt|1252486`
+- **Solarflare Prism** (1255504) · ALL — DEATHKNIGHT Blood 1027 apps / 9 players; PALADIN Retribution 841 apps / 25 players; HUNTER Beast Mastery 796 apps / 28 players; PALADIN Protection 391 apps / 12 players; DEATHKNIGHT Unholy 346 apps / 10 players; MONK Windwalker 335 apps / 8 players; MONK Brewmaster 296 apps / 9 players; WARRIOR Arms 295 apps / 9 players; DRUID Guardian 281 apps / 5 players; HUNTER Marksmanship 255 apps / 3 players; DEMONHUNTER Havoc 226 apps / 6 players; WARRIOR Fury 176 apps / 5 players; ROGUE Outlaw 108 apps / 3 players; DEATHKNIGHT Frost 82 apps / 3 players; DEMONHUNTER Vengeance 71 apps / 4 players; ROGUE Subtlety 66 apps / 2 players; ROGUE Assassination 65 apps / 2 players; WARRIOR Protection 48 apps / 2 players; MONK Mistweaver 43 apps / 1 player; SHAMAN Enhancement 42 apps / 2 players; DRUID Feral 40 apps / 1 player; HUNTER Survival 32 apps / 1 player; PALADIN Holy 28 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MONK, PALADIN, ROGUE, SHAMAN, WARRIOR) with 5890 applications / 150 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|solarflare prism|1255504`
+- **Versatile Hunt** (1252489) · ALL — DEATHKNIGHT Blood 823 apps / 8 players; DEMONHUNTER Devourer 667 apps / 50 players; MAGE Frost 485 apps / 30 players; SHAMAN Restoration 363 apps / 5 players; PALADIN Holy 254 apps / 15 players; PALADIN Protection 226 apps / 7 players; WARLOCK Demonology 223 apps / 21 players; WARRIOR Arms 187 apps / 11 players; PALADIN Retribution 171 apps / 15 players; WARRIOR Fury 169 apps / 11 players; DEATHKNIGHT Unholy 165 apps / 14 players; ROGUE Subtlety 134 apps / 10 players; DEMONHUNTER Vengeance 129 apps / 9 players; DRUID Balance 116 apps / 7 players; PRIEST Discipline 113 apps / 8 players; PRIEST Shadow 111 apps / 9 players; SHAMAN Enhancement 93 apps / 6 players; DRUID Guardian 91 apps / 7 players; DEMONHUNTER Havoc 88 apps / 6 players; EVOKER Augmentation 88 apps / 7 players; DRUID Feral 73 apps / 4 players; MONK Windwalker 73 apps / 5 players; MONK Mistweaver 54 apps / 4 players; HUNTER Survival 53 apps / 7 players; HUNTER Beast Mastery 47 apps / 7 players; ROGUE Assassination 39 apps / 6 players; WARLOCK Affliction 37 apps / 2 players; DEATHKNIGHT Frost 35 apps / 3 players; PRIEST Holy 34 apps / 6 players; DRUID Restoration 33 apps / 10 players; EVOKER Devastation 32 apps / 1 player; MAGE Arcane 19 apps / 3 players; EVOKER Preservation 10 apps / 2 players; MAGE Fire 10 apps / 3 players; WARRIOR Protection 10 apps / 2 players; MONK Brewmaster 7 apps / 2 players; SHAMAN Elemental 7 apps / 3 players; WARLOCK Destruction 3 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 5272 applications / 323 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|versatile hunt|1252489`
+- **Focused Hunt** (1252487) · ALL — DEATHKNIGHT Blood 976 apps / 11 players; SHAMAN Restoration 463 apps / 4 players; DEMONHUNTER Devourer 436 apps / 50 players; PALADIN Protection 320 apps / 7 players; MAGE Frost 228 apps / 26 players; WARLOCK Demonology 170 apps / 20 players; WARRIOR Arms 168 apps / 13 players; PALADIN Holy 167 apps / 14 players; DEATHKNIGHT Unholy 153 apps / 17 players; MONK Mistweaver 150 apps / 4 players; PALADIN Retribution 134 apps / 18 players; PRIEST Shadow 127 apps / 14 players; DEMONHUNTER Vengeance 117 apps / 13 players; WARRIOR Fury 105 apps / 10 players; DRUID Restoration 97 apps / 12 players; ROGUE Subtlety 94 apps / 10 players; DRUID Guardian 74 apps / 6 players; DEMONHUNTER Havoc 73 apps / 8 players; HUNTER Beast Mastery 59 apps / 7 players; PRIEST Holy 56 apps / 7 players; ROGUE Assassination 53 apps / 6 players; MONK Windwalker 50 apps / 5 players; DRUID Balance 49 apps / 6 players; EVOKER Augmentation 42 apps / 6 players; HUNTER Survival 39 apps / 6 players; PRIEST Discipline 36 apps / 7 players; DEATHKNIGHT Frost 35 apps / 3 players; SHAMAN Elemental 33 apps / 6 players; DRUID Feral 32 apps / 4 players; MAGE Arcane 32 apps / 2 players; SHAMAN Enhancement 29 apps / 4 players; MAGE Fire 27 apps / 3 players; WARRIOR Protection 24 apps / 2 players; EVOKER Preservation 21 apps / 2 players; MONK Brewmaster 15 apps / 3 players; EVOKER Devastation 13 apps / 1 player; WARLOCK Destruction 3 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 4700 applications / 336 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|focused hunt|1252487`
+- **Burning Embers** (387028) · ALL — SHAMAN Restoration 2697 apps / 3 players; PALADIN Holy 1194 apps / 2 players; EVOKER Preservation 256 apps / 2 players; MONK Mistweaver 134 apps / 1 player; ROGUE Outlaw 8 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (EVOKER, MONK, PALADIN, ROGUE, SHAMAN) with 4289 applications / 9 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|burning embers|387028`
+- **Akil'zon's Rite** (1297664) · ALL — HUNTER Beast Mastery 1203 apps / 20 players; PALADIN Holy 804 apps / 4 players; PALADIN Retribution 457 apps / 17 players; DRUID Balance 247 apps / 6 players; DEMONHUNTER Devourer 198 apps / 8 players; SHAMAN Elemental 180 apps / 8 players; MAGE Arcane 119 apps / 16 players; PRIEST Shadow 119 apps / 4 players; SHAMAN Enhancement 93 apps / 4 players; MONK Windwalker 74 apps / 7 players; WARRIOR Arms 59 apps / 15 players; DEMONHUNTER Havoc 52 apps / 7 players; ROGUE Assassination 42 apps / 10 players; DRUID Feral 38 apps / 1 player; EVOKER Devastation 35 apps / 1 player; HUNTER Marksmanship 32 apps / 2 players; ROGUE Subtlety 29 apps / 1 player; DEMONHUNTER Vengeance 24 apps / 1 player; WARLOCK Demonology 24 apps / 6 players; MAGE Frost 21 apps / 1 player; PRIEST Holy 14 apps / 2 players; EVOKER Preservation 9 apps / 1 player; WARLOCK Destruction 6 apps / 1 player; ROGUE Outlaw 5 apps / 2 players; PALADIN Protection 4 apps / 1 player; WARLOCK Affliction 4 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 3892 applications / 146 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|akil'zon's rite|1297664`
+- **Tidal Insight** (1295057) · ALL — MONK Mistweaver 1434 apps / 3 players; MAGE Arcane 323 apps / 3 players; DEMONHUNTER Devourer 300 apps / 5 players; DRUID Balance 260 apps / 4 players; PRIEST Shadow 222 apps / 4 players; SHAMAN Restoration 173 apps / 3 players; PALADIN Holy 172 apps / 3 players; DRUID Restoration 139 apps / 2 players; SHAMAN Elemental 132 apps / 2 players; WARLOCK Demonology 131 apps / 2 players; WARLOCK Affliction 64 apps / 1 player; MAGE Frost 63 apps / 1 player; EVOKER Augmentation 59 apps / 1 player; EVOKER Preservation 59 apps / 1 player; PRIEST Holy 59 apps / 1 player; PRIEST Discipline 58 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK) with 3648 applications / 37 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|tidal insight|1295057`
+- **Seized Power** (1259230) · ALL — DEATHKNIGHT Blood 2735 apps / 1 player; HUNTER Beast Mastery 177 apps / 6 players; PALADIN Retribution 127 apps / 4 players; WARRIOR Fury 114 apps / 4 players; DEMONHUNTER Devourer 66 apps / 2 players; SHAMAN Elemental 63 apps / 2 players; DRUID Balance 54 apps / 2 players; DEATHKNIGHT Unholy 47 apps / 2 players; PALADIN Protection 44 apps / 2 players; WARRIOR Arms 41 apps / 2 players; MAGE Arcane 36 apps / 1 player; WARRIOR Protection 32 apps / 1 player; HUNTER Marksmanship 30 apps / 1 player; DEMONHUNTER Vengeance 26 apps / 1 player; WARLOCK Affliction 19 apps / 1 player; PALADIN Holy 12 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 3623 applications / 33 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|seized power|1259230`
+- **Protective Toadstools** (1285161) · ALL — PRIEST Discipline 357 apps / 4 players; DEATHKNIGHT Unholy 337 apps / 7 players; HUNTER Beast Mastery 308 apps / 7 players; DRUID Guardian 282 apps / 5 players; DRUID Restoration 280 apps / 4 players; SHAMAN Elemental 224 apps / 6 players; DEMONHUNTER Devourer 213 apps / 4 players; WARLOCK Affliction 163 apps / 2 players; PALADIN Holy 158 apps / 3 players; SHAMAN Restoration 117 apps / 2 players; EVOKER Augmentation 109 apps / 2 players; PALADIN Retribution 109 apps / 4 players; DEMONHUNTER Havoc 106 apps / 2 players; EVOKER Preservation 93 apps / 2 players; PRIEST Holy 88 apps / 2 players; HUNTER Survival 84 apps / 2 players; PRIEST Shadow 76 apps / 2 players; MONK Brewmaster 60 apps / 1 player; DRUID Feral 59 apps / 1 player; WARRIOR Protection 57 apps / 1 player; MONK Mistweaver 53 apps / 1 player; WARRIOR Fury 43 apps / 1 player; WARRIOR Arms 36 apps / 1 player; ROGUE Subtlety 35 apps / 1 player; WARLOCK Demonology 27 apps / 1 player; PALADIN Protection 20 apps / 1 player; DRUID Balance 16 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 3510 applications / 70 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|protective toadstools|1285161`
+- **Akil'zon's Clarity** (1247577) · ALL — DEATHKNIGHT Blood 2148 apps / 7 players; WARRIOR Arms 114 apps / 6 players; DEATHKNIGHT Unholy 107 apps / 3 players; PALADIN Holy 98 apps / 5 players; PALADIN Retribution 94 apps / 4 players; SHAMAN Elemental 75 apps / 3 players; DRUID Balance 65 apps / 3 players; WARLOCK Demonology 64 apps / 3 players; SHAMAN Enhancement 54 apps / 2 players; DRUID Restoration 53 apps / 3 players; WARRIOR Fury 53 apps / 2 players; EVOKER Preservation 51 apps / 2 players; WARRIOR Protection 49 apps / 2 players; SHAMAN Restoration 42 apps / 2 players; EVOKER Augmentation 40 apps / 2 players; HUNTER Beast Mastery 39 apps / 2 players; DEATHKNIGHT Frost 38 apps / 1 player; MONK Mistweaver 35 apps / 1 player; MONK Brewmaster 34 apps / 1 player; HUNTER Marksmanship 32 apps / 1 player; PRIEST Discipline 32 apps / 1 player; PRIEST Holy 32 apps / 3 players; HUNTER Survival 26 apps / 1 player; DRUID Feral 22 apps / 1 player; ROGUE Assassination 22 apps / 2 players; MAGE Arcane 20 apps / 2 players; PRIEST Shadow 17 apps / 1 player; MONK Windwalker 16 apps / 1 player; DEMONHUNTER Havoc 13 apps / 1 player; DEMONHUNTER Devourer 9 apps / 1 player; MAGE Frost 6 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 3500 applications / 69 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|akil'zon's clarity|1247577`
+- **Versatile Ritual** (1295898) · ALL — HUNTER Beast Mastery 667 apps / 16 players; MAGE Arcane 540 apps / 31 players; DRUID Balance 419 apps / 11 players; DEMONHUNTER Devourer 197 apps / 11 players; DEMONHUNTER Havoc 156 apps / 9 players; ROGUE Assassination 152 apps / 10 players; PALADIN Retribution 150 apps / 11 players; EVOKER Devastation 118 apps / 7 players; DEATHKNIGHT Blood 117 apps / 7 players; WARLOCK Demonology 115 apps / 8 players; WARRIOR Arms 94 apps / 7 players; PRIEST Holy 91 apps / 4 players; SHAMAN Enhancement 69 apps / 4 players; HUNTER Survival 68 apps / 2 players; ROGUE Outlaw 54 apps / 4 players; MONK Windwalker 51 apps / 3 players; DEMONHUNTER Vengeance 50 apps / 3 players; SHAMAN Elemental 49 apps / 4 players; PRIEST Shadow 46 apps / 3 players; ROGUE Subtlety 43 apps / 2 players; DEATHKNIGHT Frost 30 apps / 2 players; WARLOCK Destruction 23 apps / 1 player; EVOKER Augmentation 22 apps / 1 player; MONK Brewmaster 22 apps / 1 player; WARRIOR Protection 15 apps / 1 player; HUNTER Marksmanship 10 apps / 1 player; WARLOCK Affliction 10 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 3378 applications / 165 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|versatile ritual|1295898`
+- **Refueling Orb** (1254577) · ALL — SHAMAN Restoration 1421 apps / 3 players; DRUID Restoration 561 apps / 4 players; PALADIN Holy 338 apps / 2 players; SHAMAN Elemental 288 apps / 4 players; EVOKER Preservation 191 apps / 1 player; PRIEST Shadow 178 apps / 1 player; MONK Mistweaver 166 apps / 1 player; PRIEST Discipline 126 apps / 1 player; DEMONHUNTER Devourer 108 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEMONHUNTER, DRUID, EVOKER, MONK, PALADIN, PRIEST, SHAMAN) with 3377 applications / 17 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|refueling orb|1254577`
+- **Focus of Ula'tek** (1295582) · ALL — ROGUE Assassination 861 apps / 6 players; HUNTER Beast Mastery 512 apps / 4 players; WARRIOR Arms 473 apps / 3 players; PALADIN Retribution 457 apps / 3 players; ROGUE Subtlety 344 apps / 2 players; DRUID Guardian 303 apps / 2 players; WARRIOR Protection 158 apps / 1 player; ROGUE Outlaw 112 apps / 1 player; SHAMAN Elemental 78 apps / 1 player; DEMONHUNTER Havoc 38 apps / 1 player; DRUID Feral 4 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEMONHUNTER, DRUID, HUNTER, PALADIN, ROGUE, SHAMAN, WARRIOR) with 3340 applications / 25 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|focus of ula'tek|1295582`
+- **Restlessness** (281744) · ALL — MAGE Arcane 867 apps / 9 players; SHAMAN Elemental 281 apps / 2 players; MONK Mistweaver 280 apps / 2 players; WARLOCK Demonology 274 apps / 4 players; PRIEST Holy 159 apps / 3 players; EVOKER Augmentation 121 apps / 1 player; DRUID Balance 103 apps / 1 player; DEMONHUNTER Devourer 101 apps / 2 players; SHAMAN Restoration 94 apps / 2 players; HUNTER Beast Mastery 89 apps / 4 players; PALADIN Holy 87 apps / 2 players; WARRIOR Arms 82 apps / 3 players; WARLOCK Destruction 76 apps / 1 player; PRIEST Shadow 72 apps / 1 player; HUNTER Survival 71 apps / 2 players; DEMONHUNTER Vengeance 69 apps / 2 players; EVOKER Preservation 66 apps / 1 player; PALADIN Retribution 62 apps / 1 player; DRUID Guardian 57 apps / 2 players; DRUID Restoration 55 apps / 1 player; MONK Brewmaster 38 apps / 2 players; DEATHKNIGHT Frost 22 apps / 2 players; DEATHKNIGHT Blood 18 apps / 1 player; DEMONHUNTER Havoc 11 apps / 1 player; ROGUE Assassination 11 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 3166 applications / 52 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|restlessness|281744`
+- **Hasty Ritual** (1295900) · ALL — HUNTER Beast Mastery 572 apps / 16 players; MAGE Arcane 483 apps / 31 players; DRUID Balance 373 apps / 11 players; DEMONHUNTER Devourer 162 apps / 11 players; PALADIN Retribution 146 apps / 11 players; DEMONHUNTER Havoc 112 apps / 9 players; ROGUE Assassination 108 apps / 10 players; WARLOCK Demonology 93 apps / 8 players; DEATHKNIGHT Blood 88 apps / 8 players; EVOKER Devastation 88 apps / 7 players; WARRIOR Arms 79 apps / 7 players; PRIEST Holy 59 apps / 4 players; HUNTER Survival 55 apps / 2 players; SHAMAN Enhancement 44 apps / 4 players; PRIEST Shadow 41 apps / 3 players; ROGUE Outlaw 40 apps / 4 players; ROGUE Subtlety 40 apps / 2 players; SHAMAN Elemental 39 apps / 4 players; DEMONHUNTER Vengeance 38 apps / 3 players; MONK Windwalker 32 apps / 3 players; DEATHKNIGHT Frost 24 apps / 2 players; WARLOCK Destruction 22 apps / 1 player; EVOKER Augmentation 18 apps / 1 player; HUNTER Marksmanship 17 apps / 1 player; WARLOCK Affliction 17 apps / 1 player; MONK Brewmaster 15 apps / 1 player; WARRIOR Protection 11 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 2816 applications / 166 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hasty ritual|1295900`
+- **Masterful Ritual** (1295901) · ALL — HUNTER Beast Mastery 565 apps / 16 players; MAGE Arcane 444 apps / 31 players; DRUID Balance 354 apps / 11 players; DEMONHUNTER Devourer 173 apps / 11 players; PALADIN Retribution 161 apps / 11 players; DEMONHUNTER Havoc 107 apps / 9 players; DEATHKNIGHT Blood 104 apps / 7 players; WARLOCK Demonology 102 apps / 8 players; ROGUE Assassination 98 apps / 10 players; EVOKER Devastation 86 apps / 7 players; WARRIOR Arms 77 apps / 7 players; PRIEST Holy 70 apps / 4 players; HUNTER Survival 67 apps / 2 players; DEMONHUNTER Vengeance 45 apps / 3 players; SHAMAN Enhancement 43 apps / 4 players; MONK Windwalker 38 apps / 3 players; ROGUE Subtlety 38 apps / 2 players; SHAMAN Elemental 38 apps / 4 players; ROGUE Outlaw 37 apps / 4 players; PRIEST Shadow 36 apps / 3 players; DEATHKNIGHT Frost 27 apps / 2 players; HUNTER Marksmanship 18 apps / 1 player; EVOKER Augmentation 16 apps / 1 player; WARLOCK Affliction 14 apps / 1 player; WARRIOR Protection 14 apps / 1 player; MONK Brewmaster 12 apps / 1 player; WARLOCK Destruction 12 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 2796 applications / 165 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|masterful ritual|1295901`
+- **Precision of the Dragonhawk** (1241761) · ALL — WARLOCK Demonology 730 apps / 18 players; WARRIOR Arms 359 apps / 13 players; MAGE Frost 341 apps / 10 players; PRIEST Shadow 183 apps / 5 players; HUNTER Beast Mastery 181 apps / 5 players; SHAMAN Elemental 181 apps / 5 players; WARLOCK Affliction 164 apps / 4 players; DEMONHUNTER Havoc 117 apps / 3 players; ROGUE Outlaw 105 apps / 3 players; SHAMAN Restoration 83 apps / 2 players; MAGE Arcane 43 apps / 1 player; ROGUE Assassination 43 apps / 2 players; PALADIN Retribution 37 apps / 1 player; WARLOCK Destruction 36 apps / 1 player; ROGUE Subtlety 31 apps / 1 player; DEMONHUNTER Devourer 30 apps / 1 player; DRUID Balance 26 apps / 1 player; WARRIOR Protection 25 apps / 1 player; HUNTER Marksmanship 23 apps / 1 player; SHAMAN Enhancement 17 apps / 1 player; DEMONHUNTER Vengeance 7 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEMONHUNTER, DRUID, HUNTER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 2762 applications / 80 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|precision of the dragonhawk|1241761`
+- **Critical Ritual** (1295899) · ALL — HUNTER Beast Mastery 545 apps / 16 players; MAGE Arcane 453 apps / 31 players; DRUID Balance 380 apps / 11 players; DEMONHUNTER Devourer 158 apps / 11 players; PALADIN Retribution 156 apps / 11 players; DEMONHUNTER Havoc 114 apps / 9 players; ROGUE Assassination 104 apps / 10 players; WARLOCK Demonology 98 apps / 8 players; DEATHKNIGHT Blood 97 apps / 7 players; EVOKER Devastation 97 apps / 7 players; HUNTER Survival 77 apps / 2 players; WARRIOR Arms 62 apps / 7 players; PRIEST Holy 48 apps / 4 players; SHAMAN Enhancement 47 apps / 4 players; ROGUE Outlaw 45 apps / 4 players; SHAMAN Elemental 43 apps / 4 players; MONK Windwalker 41 apps / 3 players; PRIEST Shadow 34 apps / 3 players; DEMONHUNTER Vengeance 31 apps / 3 players; ROGUE Subtlety 31 apps / 2 players; DEATHKNIGHT Frost 23 apps / 2 players; EVOKER Augmentation 15 apps / 1 player; HUNTER Marksmanship 15 apps / 1 player; WARRIOR Protection 15 apps / 1 player; WARLOCK Affliction 14 apps / 1 player; WARLOCK Destruction 12 apps / 1 player; MONK Brewmaster 5 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 2760 applications / 165 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|critical ritual|1295899`
+- **Faith in Ula'tek** (1296714) · ALL — DRUID Balance 846 apps / 3 players; MAGE Arcane 193 apps / 6 players; PALADIN Retribution 157 apps / 5 players; HUNTER Beast Mastery 133 apps / 5 players; WARRIOR Arms 117 apps / 4 players; DEATHKNIGHT Blood 103 apps / 3 players; HUNTER Survival 98 apps / 2 players; DEMONHUNTER Devourer 80 apps / 2 players; PALADIN Protection 65 apps / 2 players; EVOKER Devastation 63 apps / 2 players; WARLOCK Demonology 46 apps / 2 players; EVOKER Augmentation 44 apps / 1 player; SHAMAN Elemental 44 apps / 2 players; PRIEST Shadow 43 apps / 1 player; DEATHKNIGHT Unholy 42 apps / 1 player; DEMONHUNTER Havoc 40 apps / 1 player; DRUID Restoration 38 apps / 1 player; MONK Windwalker 38 apps / 1 player; WARLOCK Affliction 37 apps / 1 player; PALADIN Holy 35 apps / 1 player; SHAMAN Restoration 33 apps / 1 player; DRUID Feral 32 apps / 1 player; PRIEST Holy 26 apps / 1 player; ROGUE Outlaw 9 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 2362 applications / 50 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|faith in ula'tek|1296714`
+- **Rune of the Versatile Warrior** (1287770) · ALL — DRUID Guardian 340 apps / 8 players; DEATHKNIGHT Blood 334 apps / 7 players; MONK Brewmaster 262 apps / 4 players; MAGE Arcane 196 apps / 4 players; DEMONHUNTER Devourer 118 apps / 1 player; SHAMAN Restoration 113 apps / 2 players; WARRIOR Protection 111 apps / 2 players; PALADIN Protection 97 apps / 2 players; WARRIOR Arms 88 apps / 2 players; PRIEST Holy 82 apps / 1 player; PALADIN Holy 81 apps / 1 player; ROGUE Outlaw 69 apps / 1 player; HUNTER Beast Mastery 62 apps / 1 player; PRIEST Shadow 60 apps / 1 player; MONK Mistweaver 53 apps / 1 player; PALADIN Retribution 52 apps / 1 player; DEATHKNIGHT Frost 51 apps / 1 player; DRUID Feral 49 apps / 1 player; DEMONHUNTER Vengeance 40 apps / 1 player; MAGE Frost 21 apps / 1 player; MONK Windwalker 7 apps / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARRIOR) with 2286 applications / 44 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rune of the versatile warrior|1287770`
+- **Nalorakk's Rage** (1258223) · ALL — DEATHKNIGHT Blood 1523 apps / 7 players; WARRIOR Arms 206 apps / 6 players; PALADIN Retribution 178 apps / 5 players; DEATHKNIGHT Unholy 146 apps / 3 players; PALADIN Protection 64 apps / 3 players — R8 — high
+  - Reason: Applied by 3 classes (DEATHKNIGHT, PALADIN, WARRIOR) with 2117 applications / 24 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nalorakk's rage|1258223`
+- **Venomcursed Ascendance** (1317581) · ALL — SHAMAN Restoration 484 apps / 3 players; MAGE Arcane 222 apps / 4 players; DEMONHUNTER Devourer 117 apps / 2 players; PALADIN Holy 116 apps / 3 players; SHAMAN Elemental 108 apps / 4 players; PRIEST Holy 105 apps / 3 players; ROGUE Outlaw 103 apps / 3 players; DEATHKNIGHT Blood 88 apps / 3 players; HUNTER Beast Mastery 78 apps / 4 players; PALADIN Retribution 72 apps / 3 players; DEATHKNIGHT Unholy 71 apps / 2 players; DEATHKNIGHT Frost 69 apps / 2 players; DRUID Balance 69 apps / 2 players; EVOKER Devastation 62 apps / 2 players; PRIEST Shadow 58 apps / 2 players; DEMONHUNTER Vengeance 38 apps / 1 player; DRUID Restoration 38 apps / 1 player; EVOKER Preservation 36 apps / 1 player; DRUID Guardian 31 apps / 1 player; WARRIOR Arms 31 apps / 1 player; WARRIOR Protection 29 apps / 1 player; ROGUE Assassination 26 apps / 1 player; WARLOCK Demonology 26 apps / 1 player; PALADIN Protection 21 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 2098 applications / 51 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|venomcursed ascendance|1317581`
+- **Jan'alai's Rite** (1297655) · ALL — MAGE Arcane 468 apps / 20 players; WARRIOR Arms 256 apps / 14 players; DRUID Balance 215 apps / 6 players; HUNTER Beast Mastery 200 apps / 19 players; MONK Windwalker 160 apps / 7 players; ROGUE Assassination 113 apps / 10 players; PALADIN Holy 68 apps / 4 players; PALADIN Retribution 60 apps / 17 players; DEMONHUNTER Devourer 45 apps / 4 players; SHAMAN Elemental 44 apps / 7 players; WARLOCK Demonology 40 apps / 6 players; PALADIN Protection 34 apps / 1 player; DEMONHUNTER Havoc 32 apps / 6 players; PRIEST Shadow 31 apps / 4 players; ROGUE Outlaw 28 apps / 2 players; ROGUE Subtlety 21 apps / 1 player; EVOKER Devastation 15 apps / 1 player; SHAMAN Enhancement 13 apps / 4 players; DEMONHUNTER Vengeance 11 apps / 2 players; WARLOCK Affliction 10 apps / 1 player; HUNTER Marksmanship 7 apps / 2 players; EVOKER Preservation 6 apps / 1 player; WARLOCK Destruction 6 apps / 1 player; MAGE Frost 5 apps / 1 player; PRIEST Holy 5 apps / 2 players; DRUID Feral 4 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1897 applications / 143 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|jan'alai's rite|1297655`
+- **Light's Blessing** (1263768) · ALL — MAGE Arcane 266 apps / 8 players; DEMONHUNTER Havoc 260 apps / 3 players; HUNTER Beast Mastery 239 apps / 7 players; DRUID Restoration 146 apps / 7 players; PALADIN Holy 104 apps / 6 players; PRIEST Holy 82 apps / 5 players; MONK Mistweaver 77 apps / 2 players; PRIEST Shadow 64 apps / 3 players; DRUID Guardian 62 apps / 2 players; EVOKER Devastation 56 apps / 2 players; WARLOCK Demonology 47 apps / 3 players; SHAMAN Elemental 46 apps / 1 player; MAGE Fire 42 apps / 1 player; WARLOCK Destruction 42 apps / 1 player; WARLOCK Affliction 41 apps / 1 player; DRUID Feral 39 apps / 1 player; MAGE Frost 39 apps / 1 player; DEMONHUNTER Devourer 36 apps / 1 player; SHAMAN Enhancement 34 apps / 1 player; DRUID Balance 33 apps / 1 player; ROGUE Outlaw 24 apps / 1 player; EVOKER Preservation 17 apps / 1 player; MONK Windwalker 8 apps / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 1804 applications / 60 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|light's blessing|1263768`
+- **Void Suffusion** (1258534) · ALL — SHAMAN Restoration 1517 apps / 1 player; SHAMAN Elemental 60 apps / 1 player; PRIEST Discipline 32 apps / 1 player; DRUID Restoration 31 apps / 1 player; PALADIN Holy 28 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DRUID, PALADIN, PRIEST, SHAMAN) with 1668 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|void suffusion|1258534`
+- **Freightrunner's Flask** (1250533) · ALL — MAGE Arcane 373 apps / 27 players; DEMONHUNTER Devourer 167 apps / 12 players; HUNTER Beast Mastery 133 apps / 10 players; DRUID Balance 107 apps / 3 players; MONK Windwalker 106 apps / 6 players; PALADIN Holy 99 apps / 7 players; WARLOCK Destruction 86 apps / 2 players; WARLOCK Demonology 82 apps / 8 players; PRIEST Shadow 58 apps / 5 players; SHAMAN Elemental 58 apps / 6 players; SHAMAN Restoration 42 apps / 5 players; PRIEST Holy 31 apps / 5 players; HUNTER Survival 29 apps / 2 players; ROGUE Subtlety 27 apps / 2 players; PRIEST Discipline 23 apps / 2 players; ROGUE Assassination 22 apps / 2 players; PALADIN Retribution 18 apps / 1 player; WARLOCK Affliction 17 apps / 1 player; DRUID Guardian 15 apps / 1 player; MAGE Fire 13 apps / 1 player; SHAMAN Enhancement 11 apps / 1 player; DEMONHUNTER Vengeance 9 apps / 1 player; ROGUE Outlaw 9 apps / 1 player; DRUID Restoration 7 apps / 2 players; EVOKER Preservation 3 apps / 1 player; MONK Mistweaver 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 1546 applications / 115 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|freightrunner's flask|1250533`
+- **Light's Potential** (1236616) · ALL — MAGE Arcane 188 apps / 44 players; PALADIN Retribution 143 apps / 49 players; HUNTER Beast Mastery 142 apps / 40 players; WARLOCK Demonology 140 apps / 38 players; SHAMAN Elemental 119 apps / 33 players; WARRIOR Arms 79 apps / 25 players; MAGE Frost 69 apps / 22 players; PRIEST Shadow 62 apps / 19 players; ROGUE Assassination 38 apps / 11 players; DEATHKNIGHT Unholy 37 apps / 13 players; PALADIN Protection 37 apps / 13 players; ROGUE Subtlety 37 apps / 12 players; DRUID Balance 36 apps / 14 players; DRUID Guardian 34 apps / 9 players; HUNTER Survival 34 apps / 7 players; DEATHKNIGHT Frost 32 apps / 12 players; DRUID Feral 29 apps / 9 players; DEMONHUNTER Havoc 26 apps / 11 players; DEMONHUNTER Devourer 23 apps / 6 players; MONK Brewmaster 22 apps / 9 players; HUNTER Marksmanship 19 apps / 6 players; DEATHKNIGHT Blood 18 apps / 9 players; ROGUE Outlaw 16 apps / 5 players; EVOKER Devastation 14 apps / 4 players; WARLOCK Affliction 13 apps / 5 players; MONK Windwalker 12 apps / 5 players; EVOKER Augmentation 11 apps / 3 players; PRIEST Holy 11 apps / 4 players; SHAMAN Restoration 11 apps / 4 players; WARLOCK Destruction 11 apps / 3 players; WARRIOR Protection 11 apps / 4 players; DEMONHUNTER Vengeance 9 apps / 4 players; WARRIOR Fury 9 apps / 5 players; MAGE Fire 8 apps / 2 players; SHAMAN Enhancement 8 apps / 5 players; PALADIN Holy 6 apps / 2 players; PRIEST Discipline 6 apps / 2 players; MONK Mistweaver 5 apps / 3 players — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1525 applications / 468 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|light's potential|1236616`
+- **Blessing of the Capybara** (1252524) · ALL — PALADIN Retribution 480 apps / 27 players; MONK Brewmaster 242 apps / 15 players; MONK Windwalker 231 apps / 15 players; DEATHKNIGHT Frost 104 apps / 5 players; PALADIN Protection 86 apps / 4 players; DEATHKNIGHT Blood 65 apps / 4 players; DEMONHUNTER Vengeance 64 apps / 3 players; SHAMAN Elemental 52 apps / 3 players; DEMONHUNTER Devourer 37 apps / 3 players; MAGE Frost 35 apps / 2 players; SHAMAN Enhancement 24 apps / 1 player; WARLOCK Affliction 24 apps / 2 players; HUNTER Beast Mastery 22 apps / 2 players; EVOKER Devastation 14 apps / 1 player; DRUID Balance 11 apps / 1 player; DRUID Guardian 11 apps / 1 player; PALADIN Holy 6 apps / 1 player; DEATHKNIGHT Unholy 3 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK) with 1511 applications / 91 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|blessing of the capybara|1252524`
+- **Cosmic Siphon** (1264404) · ALL — DRUID Balance 640 apps / 3 players; MAGE Arcane 339 apps / 9 players; WARLOCK Demonology 161 apps / 7 players; WARLOCK Destruction 84 apps / 2 players; EVOKER Devastation 61 apps / 2 players; SHAMAN Elemental 47 apps / 1 player; PRIEST Discipline 38 apps / 1 player; MAGE Frost 36 apps / 1 player; WARLOCK Affliction 36 apps / 1 player; PRIEST Holy 19 apps / 1 player; SHAMAN Restoration 6 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DRUID, EVOKER, MAGE, PRIEST, SHAMAN, WARLOCK) with 1467 applications / 29 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|cosmic siphon|1264404`
+- **Emberwing Heatwave** (1250508) · ALL — WARLOCK Demonology 367 apps / 38 players; DEMONHUNTER Devourer 170 apps / 20 players; SHAMAN Elemental 142 apps / 20 players; MAGE Frost 133 apps / 16 players; MAGE Arcane 84 apps / 11 players; DRUID Balance 81 apps / 8 players; PRIEST Shadow 62 apps / 6 players; WARLOCK Affliction 60 apps / 8 players; DRUID Feral 48 apps / 5 players; HUNTER Beast Mastery 43 apps / 6 players; PRIEST Discipline 29 apps / 4 players; DEMONHUNTER Vengeance 27 apps / 4 players; EVOKER Devastation 26 apps / 3 players; SHAMAN Restoration 26 apps / 4 players; PALADIN Holy 25 apps / 4 players; MONK Mistweaver 24 apps / 4 players; DRUID Guardian 22 apps / 3 players; SHAMAN Enhancement 21 apps / 3 players; EVOKER Augmentation 19 apps / 2 players; HUNTER Marksmanship 12 apps / 1 player; MAGE Fire 11 apps / 2 players; PRIEST Holy 8 apps / 1 player; WARLOCK Destruction 8 apps / 1 player; MONK Windwalker 7 apps / 1 player; ROGUE Assassination 3 apps / 1 player; DRUID Restoration 2 apps / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 1460 applications / 177 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|emberwing heatwave|1250508`
+- **Venomcursed Haste** (1307927) · ALL — DRUID Balance 830 apps / 3 players; ROGUE Outlaw 106 apps / 4 players; PALADIN Protection 77 apps / 2 players; DRUID Restoration 71 apps / 2 players; DEATHKNIGHT Frost 64 apps / 2 players; DRUID Guardian 61 apps / 2 players; MONK Windwalker 58 apps / 2 players; DEMONHUNTER Devourer 42 apps / 2 players; ROGUE Subtlety 40 apps / 1 player; DEMONHUNTER Havoc 34 apps / 1 player; ROGUE Assassination 24 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, MONK, PALADIN, ROGUE) with 1407 applications / 22 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|venomcursed haste|1307927`
+- **Algeth'ar Puzzle** (383781) · ALL — PALADIN Retribution 331 apps / 48 players; HUNTER Beast Mastery 241 apps / 32 players; DEMONHUNTER Havoc 163 apps / 23 players; DEATHKNIGHT Unholy 88 apps / 14 players; MONK Windwalker 76 apps / 12 players; HUNTER Marksmanship 73 apps / 10 players; DRUID Feral 58 apps / 9 players; HUNTER Survival 50 apps / 7 players; SHAMAN Enhancement 45 apps / 6 players; WARRIOR Arms 37 apps / 6 players; ROGUE Subtlety 35 apps / 5 players; PALADIN Protection 23 apps / 5 players; DRUID Guardian 21 apps / 4 players; WARRIOR Fury 20 apps / 3 players; ROGUE Assassination 15 apps / 2 players; DEATHKNIGHT Frost 10 apps / 1 player; DEATHKNIGHT Blood 6 apps / 4 players; DEMONHUNTER Devourer 5 apps / 1 player; MONK Brewmaster 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MONK, PALADIN, ROGUE, SHAMAN, WARRIOR) with 1299 applications / 193 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|algeth'ar puzzle|383781`
+- **Empowering Venom** (1293316) · ALL — SHAMAN Elemental 161 apps / 15 players; WARLOCK Demonology 153 apps / 16 players; MAGE Arcane 120 apps / 10 players; WARRIOR Arms 116 apps / 13 players; PALADIN Retribution 92 apps / 8 players; DRUID Balance 78 apps / 9 players; HUNTER Beast Mastery 51 apps / 6 players; MONK Windwalker 48 apps / 5 players; PRIEST Shadow 39 apps / 4 players; DRUID Guardian 38 apps / 5 players; DEMONHUNTER Devourer 36 apps / 4 players; EVOKER Devastation 32 apps / 3 players; DEATHKNIGHT Blood 26 apps / 4 players; PALADIN Holy 23 apps / 3 players; WARRIOR Protection 23 apps / 2 players; PALADIN Protection 21 apps / 3 players; ROGUE Assassination 21 apps / 2 players; PRIEST Holy 18 apps / 2 players; SHAMAN Enhancement 16 apps / 2 players; HUNTER Survival 15 apps / 1 player; DEMONHUNTER Havoc 13 apps / 1 player; MONK Brewmaster 11 apps / 1 player; WARLOCK Destruction 11 apps / 1 player; WARRIOR Fury 11 apps / 1 player; WARLOCK Affliction 10 apps / 1 player; DRUID Feral 9 apps / 1 player; DEATHKNIGHT Frost 5 apps / 1 player; SHAMAN Restoration 2 apps / 1 player; MONK Mistweaver 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1200 applications / 125 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|empowering venom|1293316`
+- **Riftwalker's Temptation** (1259317) · ALL — WARLOCK Demonology 204 apps / 6 players; MAGE Frost 147 apps / 6 players; DEMONHUNTER Devourer 134 apps / 4 players; EVOKER Preservation 117 apps / 3 players; PALADIN Holy 116 apps / 3 players; SHAMAN Restoration 81 apps / 2 players; SHAMAN Elemental 73 apps / 2 players; DRUID Restoration 56 apps / 1 player; DRUID Balance 53 apps / 2 players; PRIEST Holy 44 apps / 1 player; MAGE Arcane 43 apps / 1 player; MONK Mistweaver 41 apps / 1 player; PRIEST Shadow 25 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK) with 1134 applications / 33 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|riftwalker's temptation|1259317`
+- **Heart of Ancient Hunger** (1262753) · ALL — WARRIOR Arms 203 apps / 9 players; WARRIOR Fury 168 apps / 6 players; DEATHKNIGHT Blood 164 apps / 6 players; PALADIN Protection 160 apps / 6 players; PALADIN Retribution 158 apps / 6 players; DEATHKNIGHT Unholy 152 apps / 6 players; WARRIOR Protection 127 apps / 6 players — R8 — high
+  - Reason: Applied by 3 classes (DEATHKNIGHT, PALADIN, WARRIOR) with 1132 applications / 43 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|heart of ancient hunger|1262753`
+- **Venomcursed Critical Strike** (1307910) · ALL — PALADIN Protection 883 apps / 2 players; DEATHKNIGHT Blood 74 apps / 2 players; HUNTER Beast Mastery 68 apps / 3 players; WARRIOR Arms 31 apps / 1 player; DEATHKNIGHT Unholy 29 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, HUNTER, PALADIN, WARRIOR) with 1085 applications / 9 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|venomcursed critical strike|1307910`
+- **Sacred Duty** (1266403) · ALL — DRUID Balance 310 apps / 1 player; MAGE Frost 144 apps / 10 players; WARLOCK Demonology 97 apps / 7 players; HUNTER Beast Mastery 91 apps / 7 players; SHAMAN Elemental 71 apps / 3 players; WARLOCK Affliction 49 apps / 3 players; MAGE Arcane 41 apps / 2 players; EVOKER Devastation 40 apps / 3 players; WARLOCK Destruction 38 apps / 2 players; DEMONHUNTER Devourer 37 apps / 3 players; ROGUE Outlaw 27 apps / 1 player; DRUID Feral 19 apps / 1 player; PRIEST Shadow 18 apps / 1 player; HUNTER Survival 16 apps / 2 players; HUNTER Marksmanship 15 apps / 2 players; PALADIN Holy 15 apps / 2 players; SHAMAN Enhancement 12 apps / 1 player; ROGUE Subtlety 11 apps / 1 player; DRUID Guardian 10 apps / 1 player; PALADIN Retribution 9 apps / 1 player; MONK Windwalker 8 apps / 1 player; SHAMAN Restoration 6 apps / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 1084 applications / 55 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sacred duty|1266403`
+- **Withered Saptor's Paw** (1255226) · ALL — PALADIN Retribution 231 apps / 8 players; WARRIOR Arms 210 apps / 4 players; WARRIOR Fury 98 apps / 4 players; WARRIOR Protection 95 apps / 3 players; HUNTER Beast Mastery 60 apps / 5 players; MONK Windwalker 59 apps / 3 players; HUNTER Survival 52 apps / 2 players; SHAMAN Enhancement 52 apps / 3 players; ROGUE Subtlety 48 apps / 2 players; ROGUE Outlaw 40 apps / 1 player; DEMONHUNTER Havoc 32 apps / 2 players; DRUID Guardian 25 apps / 1 player; DEATHKNIGHT Unholy 23 apps / 1 player; DRUID Feral 22 apps / 1 player; DEMONHUNTER Devourer 15 apps / 1 player; PALADIN Protection 10 apps / 1 player; HUNTER Marksmanship 9 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MONK, PALADIN, ROGUE, SHAMAN, WARRIOR) with 1081 applications / 43 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|withered saptor's paw|1255226`
+- **Cosmic Bell** (1272482) · ALL — MONK Mistweaver 1033 apps / 1 player; PRIEST Discipline 23 apps / 1 player; EVOKER Preservation 10 apps / 1 player; SHAMAN Elemental 6 apps / 1 player; PRIEST Holy 5 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (EVOKER, MONK, PRIEST, SHAMAN) with 1077 applications / 5 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|cosmic bell|1272482`
+- **Adroit Intuition** (1241530) · ALL — PRIEST Discipline 493 apps / 12 players; PRIEST Shadow 254 apps / 8 players; PRIEST Holy 202 apps / 5 players; MAGE Frost 52 apps / 1 player; MAGE Arcane 43 apps / 1 player; WARLOCK Affliction 7 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (MAGE, PRIEST, WARLOCK) with 1051 applications / 28 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|adroit intuition|1241530`
+- **Thorn Bloom** (1238467) · ALL — SHAMAN Restoration 535 apps / 6 players; DRUID Guardian 126 apps / 6 players; SHAMAN Elemental 75 apps / 3 players; HUNTER Beast Mastery 63 apps / 4 players; DRUID Balance 59 apps / 3 players; DRUID Feral 55 apps / 3 players; WARRIOR Fury 33 apps / 2 players; ROGUE Subtlety 24 apps / 2 players; WARRIOR Arms 15 apps / 2 players; DRUID Restoration 12 apps / 2 players; WARRIOR Protection 10 apps / 1 player; MONK Brewmaster 8 apps / 1 player; WARLOCK Demonology 8 apps / 1 player; MAGE Arcane 3 apps / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DRUID, HUNTER, MAGE, MONK, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1026 applications / 35 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|thorn bloom|1238467`
+- **50-Lb Midnight Salmon** (1308013) · ALL — MAGE Arcane 154 apps / 14 players; WARLOCK Demonology 114 apps / 10 players; SHAMAN Elemental 98 apps / 9 players; HUNTER Beast Mastery 80 apps / 6 players; PALADIN Retribution 65 apps / 5 players; PRIEST Holy 54 apps / 4 players; PALADIN Holy 51 apps / 4 players; EVOKER Devastation 49 apps / 4 players; DRUID Restoration 39 apps / 3 players; DRUID Balance 37 apps / 3 players; WARRIOR Arms 35 apps / 3 players; PRIEST Shadow 34 apps / 3 players; DEATHKNIGHT Unholy 25 apps / 2 players; DRUID Guardian 24 apps / 2 players; ROGUE Outlaw 24 apps / 2 players; MONK Windwalker 21 apps / 1 player; ROGUE Assassination 20 apps / 2 players; EVOKER Augmentation 13 apps / 1 player; SHAMAN Restoration 13 apps / 1 player; DEATHKNIGHT Blood 12 apps / 1 player; DEATHKNIGHT Frost 12 apps / 1 player; HUNTER Marksmanship 11 apps / 1 player; WARLOCK Affliction 11 apps / 1 player; SHAMAN Enhancement 10 apps / 1 player; DEMONHUNTER Devourer 8 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1014 applications / 85 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|50-lb midnight salmon|1308013`
+- **Slick and Slimy Gralstone** (1308012) · ALL — MAGE Arcane 150 apps / 14 players; WARLOCK Demonology 117 apps / 10 players; SHAMAN Elemental 100 apps / 9 players; HUNTER Beast Mastery 76 apps / 6 players; PALADIN Retribution 63 apps / 5 players; PRIEST Holy 52 apps / 4 players; PALADIN Holy 50 apps / 4 players; EVOKER Devastation 47 apps / 4 players; DRUID Restoration 39 apps / 3 players; DRUID Balance 38 apps / 3 players; PRIEST Shadow 36 apps / 3 players; WARRIOR Arms 36 apps / 3 players; DEATHKNIGHT Unholy 27 apps / 2 players; ROGUE Outlaw 25 apps / 2 players; DRUID Guardian 24 apps / 2 players; MONK Windwalker 22 apps / 1 player; ROGUE Assassination 19 apps / 2 players; SHAMAN Restoration 13 apps / 1 player; DEATHKNIGHT Frost 12 apps / 1 player; EVOKER Augmentation 12 apps / 1 player; DEATHKNIGHT Blood 11 apps / 1 player; HUNTER Marksmanship 11 apps / 1 player; WARLOCK Affliction 11 apps / 1 player; SHAMAN Enhancement 10 apps / 1 player; DEMONHUNTER Devourer 9 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1010 applications / 85 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|slick and slimy gralstone|1308012`
+- **Tattered Tortollan Scroll** (1306870) · ALL — MAGE Arcane 153 apps / 14 players; WARLOCK Demonology 112 apps / 10 players; SHAMAN Elemental 101 apps / 9 players; HUNTER Beast Mastery 80 apps / 6 players; PALADIN Retribution 60 apps / 5 players; PRIEST Holy 53 apps / 4 players; PALADIN Holy 52 apps / 4 players; EVOKER Devastation 50 apps / 4 players; DRUID Restoration 38 apps / 3 players; WARRIOR Arms 36 apps / 3 players; DRUID Balance 35 apps / 3 players; PRIEST Shadow 32 apps / 3 players; DEATHKNIGHT Unholy 26 apps / 2 players; DRUID Guardian 25 apps / 2 players; ROGUE Outlaw 23 apps / 2 players; MONK Windwalker 22 apps / 1 player; ROGUE Assassination 20 apps / 2 players; DEATHKNIGHT Frost 13 apps / 1 player; DEATHKNIGHT Blood 12 apps / 1 player; EVOKER Augmentation 12 apps / 1 player; SHAMAN Restoration 12 apps / 1 player; SHAMAN Enhancement 11 apps / 1 player; WARLOCK Affliction 11 apps / 1 player; HUNTER Marksmanship 10 apps / 1 player; DEMONHUNTER Devourer 8 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1007 applications / 85 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|tattered tortollan scroll|1306870`
+- **Seriously Sharp Seashell** (1292299) · ALL — MAGE Arcane 149 apps / 14 players; WARLOCK Demonology 116 apps / 10 players; SHAMAN Elemental 99 apps / 9 players; HUNTER Beast Mastery 79 apps / 6 players; PALADIN Retribution 64 apps / 5 players; PALADIN Holy 52 apps / 4 players; PRIEST Holy 49 apps / 4 players; EVOKER Devastation 48 apps / 4 players; DRUID Restoration 40 apps / 3 players; WARRIOR Arms 35 apps / 3 players; DRUID Balance 34 apps / 3 players; PRIEST Shadow 34 apps / 3 players; DEATHKNIGHT Unholy 26 apps / 2 players; ROGUE Outlaw 25 apps / 2 players; DRUID Guardian 23 apps / 2 players; MONK Windwalker 21 apps / 1 player; ROGUE Assassination 20 apps / 2 players; DEATHKNIGHT Blood 13 apps / 1 player; EVOKER Augmentation 13 apps / 1 player; SHAMAN Restoration 13 apps / 1 player; DEATHKNIGHT Frost 11 apps / 1 player; WARLOCK Affliction 11 apps / 1 player; HUNTER Marksmanship 10 apps / 1 player; SHAMAN Enhancement 10 apps / 1 player; DEMONHUNTER Devourer 9 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 1004 applications / 85 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|seriously sharp seashell|1292299`
+- **Rotting Voidfin** (1308014) · ALL — MAGE Arcane 145 apps / 14 players; WARLOCK Demonology 114 apps / 10 players; SHAMAN Elemental 100 apps / 9 players; HUNTER Beast Mastery 76 apps / 6 players; PALADIN Retribution 60 apps / 5 players; PALADIN Holy 52 apps / 4 players; PRIEST Holy 51 apps / 4 players; EVOKER Devastation 47 apps / 4 players; DRUID Restoration 39 apps / 3 players; WARRIOR Arms 38 apps / 3 players; DRUID Balance 34 apps / 3 players; PRIEST Shadow 33 apps / 3 players; DEATHKNIGHT Unholy 26 apps / 2 players; ROGUE Outlaw 25 apps / 2 players; DRUID Guardian 24 apps / 2 players; MONK Windwalker 22 apps / 1 player; ROGUE Assassination 17 apps / 2 players; EVOKER Augmentation 13 apps / 1 player; DEATHKNIGHT Blood 12 apps / 1 player; DEATHKNIGHT Frost 12 apps / 1 player; SHAMAN Restoration 12 apps / 1 player; SHAMAN Enhancement 11 apps / 1 player; WARLOCK Affliction 11 apps / 1 player; DEMONHUNTER Devourer 9 apps / 1 player; HUNTER Marksmanship 9 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 992 applications / 85 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rotting voidfin|1308014`
+- **Brittle Torga Totem** (1292300) · ALL — MAGE Arcane 141 apps / 14 players; WARLOCK Demonology 107 apps / 10 players; SHAMAN Elemental 100 apps / 9 players; HUNTER Beast Mastery 77 apps / 6 players; PALADIN Retribution 62 apps / 5 players; PALADIN Holy 52 apps / 4 players; PRIEST Holy 52 apps / 4 players; EVOKER Devastation 48 apps / 4 players; DRUID Restoration 38 apps / 3 players; DRUID Balance 37 apps / 3 players; PRIEST Shadow 33 apps / 3 players; WARRIOR Arms 32 apps / 3 players; DEATHKNIGHT Unholy 25 apps / 2 players; DRUID Guardian 25 apps / 2 players; ROGUE Outlaw 24 apps / 2 players; MONK Windwalker 23 apps / 1 player; ROGUE Assassination 19 apps / 2 players; EVOKER Augmentation 13 apps / 1 player; SHAMAN Restoration 13 apps / 1 player; DEATHKNIGHT Frost 11 apps / 1 player; HUNTER Marksmanship 11 apps / 1 player; SHAMAN Enhancement 11 apps / 1 player; DEATHKNIGHT Blood 10 apps / 1 player; WARLOCK Affliction 9 apps / 1 player; DEMONHUNTER Devourer 7 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 980 applications / 85 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|brittle torga totem|1292300`
+- **Rune of Lingering** (1287665) · ALL — ROGUE Subtlety 259 apps / 5 players; ROGUE Outlaw 245 apps / 10 players; ROGUE Assassination 229 apps / 17 players; MAGE Arcane 131 apps / 45 players; MAGE Frost 55 apps / 11 players; MAGE Fire 5 apps / 2 players — R8 — high
+  - Reason: Applied by 2 classes (MAGE, ROGUE) with 924 applications / 90 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rune of lingering|1287665`
+- **Fiber of Living Agony** (1276677) · ALL — WARRIOR Arms 289 apps / 8 players; DEATHKNIGHT Blood 126 apps / 4 players; PALADIN Retribution 101 apps / 4 players; DEMONHUNTER Havoc 70 apps / 3 players; MONK Windwalker 61 apps / 2 players; HUNTER Survival 39 apps / 1 player; DRUID Feral 36 apps / 1 player; ROGUE Assassination 36 apps / 1 player; ROGUE Subtlety 32 apps / 1 player; DEATHKNIGHT Unholy 29 apps / 1 player; SHAMAN Elemental 29 apps / 1 player; WARRIOR Fury 28 apps / 1 player; DEATHKNIGHT Frost 23 apps / 1 player; DRUID Restoration 4 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MONK, PALADIN, ROGUE, SHAMAN, WARRIOR) with 903 applications / 30 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|fiber of living agony|1276677`
+- **A Restless Soul** (1265566) · ALL — DEMONHUNTER Devourer 104 apps / 8 players; MAGE Frost 76 apps / 11 players; WARLOCK Demonology 58 apps / 9 players; PALADIN Retribution 49 apps / 6 players; MAGE Arcane 46 apps / 5 players; MONK Mistweaver 44 apps / 2 players; DEATHKNIGHT Unholy 40 apps / 5 players; DEATHKNIGHT Blood 37 apps / 6 players; HUNTER Beast Mastery 37 apps / 6 players; WARLOCK Affliction 34 apps / 4 players; WARRIOR Arms 31 apps / 4 players; PALADIN Holy 30 apps / 4 players; DEATHKNIGHT Frost 25 apps / 3 players; DRUID Balance 25 apps / 4 players; PALADIN Protection 24 apps / 3 players; DRUID Restoration 20 apps / 3 players; SHAMAN Elemental 20 apps / 3 players; ROGUE Assassination 17 apps / 3 players; DEMONHUNTER Havoc 14 apps / 1 player; HUNTER Marksmanship 14 apps / 2 players; MAGE Fire 14 apps / 2 players; PRIEST Holy 14 apps / 2 players; SHAMAN Enhancement 14 apps / 2 players; WARRIOR Protection 14 apps / 2 players; DRUID Guardian 13 apps / 1 player; ROGUE Subtlety 11 apps / 2 players; DEMONHUNTER Vengeance 10 apps / 2 players; EVOKER Augmentation 9 apps / 1 player; MONK Windwalker 8 apps / 1 player; WARLOCK Destruction 5 apps / 1 player; WARRIOR Fury 5 apps / 1 player; DRUID Feral 3 apps / 1 player; PRIEST Discipline 3 apps / 1 player; EVOKER Devastation 2 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 870 applications / 110 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|a restless soul|1265566`
+- **Radiant Plume** (1260615) · ALL — DEATHKNIGHT Unholy 140 apps / 4 players; HUNTER Survival 121 apps / 3 players; HUNTER Beast Mastery 69 apps / 2 players; SHAMAN Enhancement 68 apps / 2 players; WARRIOR Fury 67 apps / 2 players; DRUID Guardian 62 apps / 2 players; DEATHKNIGHT Blood 57 apps / 3 players; PALADIN Protection 50 apps / 1 player; MONK Brewmaster 47 apps / 1 player; PALADIN Retribution 42 apps / 1 player; DRUID Feral 38 apps / 1 player; MONK Windwalker 37 apps / 1 player; DEATHKNIGHT Frost 29 apps / 2 players; WARRIOR Arms 26 apps / 1 player; ROGUE Outlaw 17 apps / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEATHKNIGHT, DRUID, HUNTER, MONK, PALADIN, ROGUE, SHAMAN, WARRIOR) with 870 applications / 27 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|radiant plume|1260615`
+- **Nullsight** (1260459) · ALL — MAGE Frost 315 apps / 25 players; DEMONHUNTER Devourer 149 apps / 14 players; DRUID Balance 106 apps / 10 players; PRIEST Shadow 99 apps / 9 players; WARLOCK Demonology 45 apps / 4 players; MAGE Arcane 30 apps / 3 players; SHAMAN Elemental 27 apps / 5 players; EVOKER Devastation 22 apps / 3 players; PRIEST Discipline 19 apps / 3 players; MONK Mistweaver 12 apps / 1 player; PRIEST Holy 12 apps / 1 player; WARLOCK Destruction 9 apps / 1 player; WARLOCK Affliction 6 apps / 1 player; DRUID Restoration 4 apps / 1 player; EVOKER Augmentation 4 apps / 1 player; MAGE Fire 1 app / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, MONK, PRIEST, SHAMAN, WARLOCK) with 860 applications / 81 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nullsight|1260459`
+- **Venomcursed Mastery** (1307922) · ALL — SHAMAN Elemental 284 apps / 8 players; MAGE Arcane 177 apps / 6 players; HUNTER Beast Mastery 106 apps / 4 players; PRIEST Holy 76 apps / 2 players; EVOKER Devastation 69 apps / 2 players; WARLOCK Demonology 55 apps / 2 players; DRUID Feral 35 apps / 1 player; SHAMAN Restoration 31 apps / 1 player; PRIEST Shadow 26 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DRUID, EVOKER, HUNTER, MAGE, PRIEST, SHAMAN, WARLOCK) with 859 applications / 27 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|venomcursed mastery|1307922`
+- **Potion of Recklessness** (1236994) · ALL — DEMONHUNTER Devourer 145 apps / 37 players; HUNTER Beast Mastery 126 apps / 14 players; DEATHKNIGHT Unholy 119 apps / 24 players; DRUID Balance 65 apps / 6 players; MAGE Frost 58 apps / 9 players; DEMONHUNTER Havoc 43 apps / 12 players; MONK Windwalker 37 apps / 11 players; WARRIOR Arms 35 apps / 11 players; PALADIN Retribution 34 apps / 11 players; DEATHKNIGHT Blood 21 apps / 6 players; MAGE Arcane 16 apps / 4 players; WARLOCK Demonology 16 apps / 5 players; SHAMAN Enhancement 15 apps / 4 players; EVOKER Devastation 12 apps / 4 players; PRIEST Shadow 12 apps / 4 players; DEATHKNIGHT Frost 11 apps / 3 players; DEMONHUNTER Vengeance 10 apps / 2 players; DRUID Feral 9 apps / 3 players; SHAMAN Elemental 9 apps / 4 players; PALADIN Protection 8 apps / 2 players; WARRIOR Fury 8 apps / 2 players; ROGUE Subtlety 6 apps / 2 players; WARLOCK Affliction 5 apps / 1 player; ROGUE Outlaw 4 apps / 1 player; HUNTER Marksmanship 3 apps / 1 player; PRIEST Holy 3 apps / 2 players; EVOKER Augmentation 2 apps / 1 player; MONK Brewmaster 2 apps / 1 player; PRIEST Discipline 2 apps / 1 player; ROGUE Assassination 2 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 838 applications / 188 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|potion of recklessness|1236994`
+- **Flight Style: Skyriding** (404464) · ALL — HUNTER Beast Mastery 74 apps / 28 players; WARLOCK Demonology 73 apps / 20 players; PALADIN Retribution 62 apps / 24 players; DEMONHUNTER Devourer 50 apps / 19 players; DRUID Restoration 50 apps / 16 players; MAGE Frost 38 apps / 12 players; DRUID Balance 30 apps / 10 players; WARRIOR Arms 29 apps / 8 players; MAGE Arcane 28 apps / 11 players; SHAMAN Elemental 28 apps / 12 players; PALADIN Holy 26 apps / 11 players; DRUID Guardian 22 apps / 7 players; DEATHKNIGHT Unholy 21 apps / 9 players; DEMONHUNTER Havoc 21 apps / 11 players; ROGUE Outlaw 20 apps / 5 players; PRIEST Shadow 19 apps / 8 players; WARRIOR Fury 19 apps / 7 players; PRIEST Discipline 16 apps / 3 players; DRUID Feral 15 apps / 6 players; PRIEST Holy 15 apps / 8 players; WARLOCK Affliction 15 apps / 5 players; HUNTER Marksmanship 13 apps / 4 players; DEATHKNIGHT Frost 11 apps / 6 players; EVOKER Augmentation 11 apps / 3 players; SHAMAN Restoration 11 apps / 6 players; DEATHKNIGHT Blood 10 apps / 5 players; HUNTER Survival 10 apps / 4 players; MONK Windwalker 9 apps / 4 players; WARRIOR Protection 9 apps / 2 players; DEMONHUNTER Vengeance 8 apps / 2 players; MONK Mistweaver 7 apps / 3 players; PALADIN Protection 7 apps / 5 players; ROGUE Assassination 7 apps / 4 players; WARLOCK Destruction 6 apps / 3 players; SHAMAN Enhancement 5 apps / 4 players; EVOKER Devastation 4 apps / 2 players; MONK Brewmaster 3 apps / 3 players; ROGUE Subtlety 3 apps / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 805 applications / 299 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|flight style: skyriding|404464`
+- **Void Glass** (1244617) · ALL — MONK Mistweaver 255 apps / 7 players; MONK Brewmaster 142 apps / 5 players; PRIEST Discipline 83 apps / 2 players; ROGUE Outlaw 62 apps / 2 players; WARRIOR Protection 52 apps / 2 players; MONK Windwalker 45 apps / 2 players; PALADIN Protection 36 apps / 1 player; DEMONHUNTER Vengeance 35 apps / 1 player; PALADIN Retribution 31 apps / 1 player; ROGUE Subtlety 29 apps / 1 player; PRIEST Holy 22 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEMONHUNTER, MONK, PALADIN, PRIEST, ROGUE, WARRIOR) with 792 applications / 25 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|void glass|1244617`
+- **Rush of Fangs** (1296884) · ALL — WARRIOR Arms 496 apps / 13 players; ROGUE Assassination 92 apps / 4 players; WARRIOR Fury 41 apps / 1 player; DEMONHUNTER Havoc 38 apps / 1 player; MAGE Arcane 34 apps / 1 player; PRIEST Shadow 33 apps / 1 player; DEMONHUNTER Vengeance 24 apps / 1 player; HUNTER Survival 17 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEMONHUNTER, HUNTER, MAGE, PRIEST, ROGUE, WARRIOR) with 775 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rush of fangs|1296884`
+- **Blood Beast** (460605) · DEATHKNIGHT — Blood 570 apps / 42 players; Unholy 143 apps / 6 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DEATHKNIGHT|blood beast|460605`
+- **Sporelord's Mycelium** (1284698) · ALL — PRIEST Discipline 153 apps / 3 players; PRIEST Holy 68 apps / 2 players; DEMONHUNTER Vengeance 67 apps / 2 players; SHAMAN Elemental 65 apps / 2 players; DRUID Restoration 57 apps / 1 player; DRUID Guardian 56 apps / 2 players; MONK Brewmaster 41 apps / 1 player; WARRIOR Protection 37 apps / 1 player; SHAMAN Restoration 34 apps / 1 player; PALADIN Holy 33 apps / 1 player; MAGE Arcane 27 apps / 1 player; PALADIN Protection 23 apps / 1 player; HUNTER Beast Mastery 21 apps / 1 player; DEMONHUNTER Devourer 18 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARRIOR) with 700 applications / 20 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sporelord's mycelium|1284698`
+- **Astral Antenna** (1239640) · ALL — PALADIN Retribution 97 apps / 2 players; DEATHKNIGHT Unholy 94 apps / 3 players; HUNTER Survival 70 apps / 2 players; WARLOCK Demonology 59 apps / 2 players; SHAMAN Enhancement 48 apps / 1 player; DRUID Guardian 45 apps / 1 player; DEATHKNIGHT Blood 42 apps / 1 player; MAGE Frost 40 apps / 1 player; MONK Windwalker 35 apps / 1 player; EVOKER Preservation 33 apps / 1 player; PALADIN Protection 33 apps / 1 player; WARRIOR Fury 33 apps / 1 player; DEATHKNIGHT Frost 32 apps / 1 player; HUNTER Beast Mastery 30 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 691 applications / 19 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|astral antenna|1239640`
+- **Embrace of Pa'ku** (292463) · ALL — PALADIN Retribution 171 apps / 8 players; HUNTER Beast Mastery 87 apps / 4 players; DEATHKNIGHT Unholy 69 apps / 4 players; DRUID Feral 62 apps / 2 players; WARRIOR Arms 48 apps / 2 players; DRUID Balance 43 apps / 2 players; DRUID Guardian 34 apps / 1 player; WARRIOR Fury 33 apps / 1 player; DEATHKNIGHT Frost 31 apps / 1 player; SHAMAN Restoration 25 apps / 1 player; PRIEST Holy 23 apps / 1 player; DRUID Restoration 21 apps / 1 player; HUNTER Survival 17 apps / 1 player; PALADIN Holy 14 apps / 1 player; DEATHKNIGHT Blood 8 apps / 1 player; MAGE Frost 1 app / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEATHKNIGHT, DRUID, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARRIOR) with 687 applications / 32 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|embrace of pa'ku|292463`
+- **Nalorakk's Rite** (1297665) · ALL — HUNTER Beast Mastery 163 apps / 19 players; MAGE Arcane 102 apps / 19 players; PALADIN Holy 75 apps / 4 players; DRUID Balance 52 apps / 6 players; PALADIN Retribution 45 apps / 15 players; WARRIOR Arms 36 apps / 13 players; ROGUE Assassination 31 apps / 8 players; SHAMAN Elemental 25 apps / 8 players; MONK Windwalker 21 apps / 7 players; DEMONHUNTER Havoc 20 apps / 6 players; WARLOCK Demonology 20 apps / 6 players; EVOKER Preservation 10 apps / 1 player; PRIEST Shadow 10 apps / 4 players; WARLOCK Destruction 10 apps / 1 player; DEMONHUNTER Devourer 9 apps / 5 players; HUNTER Marksmanship 8 apps / 2 players; SHAMAN Enhancement 8 apps / 4 players; PRIEST Holy 7 apps / 2 players; WARLOCK Affliction 6 apps / 1 player; ROGUE Outlaw 4 apps / 2 players; EVOKER Devastation 3 apps / 1 player; ROGUE Subtlety 3 apps / 1 player; DEMONHUNTER Vengeance 2 apps / 2 players; DRUID Feral 2 apps / 1 player; MAGE Frost 2 apps / 1 player; PALADIN Protection 2 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 676 applications / 140 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nalorakk's rite|1297665`
+- **Echoing Roar** (1254331) · ALL — HUNTER Beast Mastery 144 apps / 6 players; WARRIOR Arms 83 apps / 5 players; PALADIN Retribution 76 apps / 5 players; DEATHKNIGHT Unholy 60 apps / 4 players; DEATHKNIGHT Frost 53 apps / 3 players; DEMONHUNTER Havoc 40 apps / 3 players; PALADIN Protection 34 apps / 2 players; DRUID Feral 27 apps / 1 player; DRUID Guardian 27 apps / 2 players; DEATHKNIGHT Blood 19 apps / 1 player; ROGUE Outlaw 18 apps / 1 player; SHAMAN Enhancement 15 apps / 1 player; ROGUE Assassination 14 apps / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, PALADIN, ROGUE, SHAMAN, WARRIOR) with 610 applications / 35 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|echoing roar|1254331`
+- **Xathuux's Last Roar** (1254180) · ALL — HUNTER Beast Mastery 133 apps / 6 players; WARRIOR Arms 85 apps / 5 players; PALADIN Retribution 78 apps / 5 players; DEATHKNIGHT Unholy 59 apps / 4 players; DEATHKNIGHT Frost 56 apps / 3 players; DEMONHUNTER Havoc 37 apps / 3 players; PALADIN Protection 35 apps / 2 players; DRUID Guardian 30 apps / 2 players; DEATHKNIGHT Blood 22 apps / 1 player; DRUID Feral 21 apps / 1 player; ROGUE Outlaw 17 apps / 1 player; SHAMAN Enhancement 16 apps / 1 player; ROGUE Assassination 14 apps / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, PALADIN, ROGUE, SHAMAN, WARRIOR) with 603 applications / 35 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|xathuux's last roar|1254180`
+- **Astral Antenna** (1239641) · ALL — DEATHKNIGHT Unholy 79 apps / 3 players; PALADIN Retribution 77 apps / 2 players; HUNTER Survival 59 apps / 2 players; WARLOCK Demonology 55 apps / 2 players; DEATHKNIGHT Blood 42 apps / 1 player; DRUID Guardian 42 apps / 1 player; SHAMAN Enhancement 42 apps / 1 player; MONK Windwalker 35 apps / 1 player; MAGE Frost 33 apps / 1 player; EVOKER Preservation 32 apps / 1 player; PALADIN Protection 29 apps / 1 player; HUNTER Beast Mastery 28 apps / 1 player; DEATHKNIGHT Frost 24 apps / 1 player; WARRIOR Fury 24 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 601 applications / 19 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|astral antenna|1239641`
+- **Spiderling** (452226) · ALL — DRUID Restoration 343 apps / 1 player; PALADIN Retribution 51 apps / 1 player; DEMONHUNTER Devourer 48 apps / 1 player; PRIEST Holy 42 apps / 1 player; WARRIOR Fury 39 apps / 1 player; WARLOCK Demonology 37 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEMONHUNTER, DRUID, PALADIN, PRIEST, WARLOCK, WARRIOR) with 560 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|spiderling|452226`
+- **Gift of Light** (1259228) · ALL — DRUID Restoration 335 apps / 9 players; PRIEST Holy 62 apps / 5 players; PALADIN Holy 61 apps / 4 players; MONK Mistweaver 53 apps / 1 player; SHAMAN Restoration 12 apps / 1 player; EVOKER Augmentation 10 apps / 1 player; PRIEST Discipline 8 apps / 1 player; ROGUE Subtlety 7 apps / 1 player; HUNTER Beast Mastery 1 app / 1 player; MAGE Arcane 1 app / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN) with 550 applications / 25 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|gift of light|1259228`
+- **Ascension** (458525) · ALL — SHAMAN Restoration 86 apps / 1 player; DEMONHUNTER Devourer 81 apps / 2 players; PALADIN Retribution 76 apps / 2 players; WARLOCK Demonology 68 apps / 2 players; WARRIOR Fury 49 apps / 1 player; WARLOCK Destruction 45 apps / 1 player; SHAMAN Elemental 38 apps / 1 player; DEATHKNIGHT Frost 27 apps / 1 player; MAGE Frost 26 apps / 1 player; DEATHKNIGHT Unholy 24 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, MAGE, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 520 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ascension|458525`
+- **Ascension** (458502) · ALL — DEMONHUNTER Devourer 90 apps / 2 players; SHAMAN Restoration 84 apps / 1 player; PALADIN Retribution 76 apps / 2 players; WARLOCK Demonology 59 apps / 2 players; WARRIOR Fury 38 apps / 1 player; WARLOCK Destruction 36 apps / 1 player; DEATHKNIGHT Unholy 35 apps / 1 player; SHAMAN Elemental 33 apps / 1 player; MAGE Frost 28 apps / 1 player; DEATHKNIGHT Frost 26 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, MAGE, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 505 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ascension|458502`
+- **Rune of Echoes** (1289063) · ALL — PRIEST Holy 360 apps / 1 player; PRIEST Discipline 48 apps / 1 player; ROGUE Assassination 19 apps / 2 players; DEATHKNIGHT Unholy 18 apps / 1 player; MAGE Frost 15 apps / 2 players; HUNTER Beast Mastery 8 apps / 2 players; PRIEST Shadow 5 apps / 1 player; MAGE Arcane 2 apps / 1 player; DEMONHUNTER Vengeance 1 app / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DEMONHUNTER, HUNTER, MAGE, PRIEST, ROGUE) with 476 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rune of echoes|1289063`
+- **Gladiator's Insignia** (345230) · ALL — PALADIN Holy 200 apps / 3 players; MAGE Frost 33 apps / 1 player; PRIEST Shadow 29 apps / 1 player; DRUID Restoration 28 apps / 1 player; PALADIN Protection 26 apps / 1 player; PRIEST Holy 26 apps / 1 player; HUNTER Marksmanship 24 apps / 1 player; DEMONHUNTER Devourer 23 apps / 1 player; HUNTER Beast Mastery 18 apps / 1 player; DEATHKNIGHT Frost 17 apps / 1 player; PALADIN Retribution 14 apps / 2 players; SHAMAN Elemental 12 apps / 1 player; WARLOCK Affliction 9 apps / 1 player; WARLOCK Destruction 6 apps / 1 player; DRUID Balance 5 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK) with 470 applications / 18 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|gladiator's insignia|345230`
+- **Sleepy Ruby Warmth** (383813) · ALL — SHAMAN Restoration 192 apps / 2 players; DEMONHUNTER Devourer 45 apps / 5 players; DEATHKNIGHT Unholy 24 apps / 1 player; PALADIN Retribution 24 apps / 3 players; WARRIOR Arms 24 apps / 2 players; DEMONHUNTER Vengeance 22 apps / 2 players; WARLOCK Demonology 19 apps / 4 players; MAGE Arcane 17 apps / 2 players; DEATHKNIGHT Blood 15 apps / 3 players; SHAMAN Enhancement 11 apps / 1 player; DRUID Balance 7 apps / 1 player; PALADIN Protection 6 apps / 1 player; PRIEST Discipline 6 apps / 1 player; PRIEST Shadow 6 apps / 1 player; DRUID Feral 4 apps / 1 player; EVOKER Preservation 4 apps / 1 player; PALADIN Holy 4 apps / 1 player; PRIEST Holy 4 apps / 1 player; SHAMAN Elemental 4 apps / 1 player; DRUID Guardian 3 apps / 1 player; DRUID Restoration 3 apps / 1 player; HUNTER Beast Mastery 2 apps / 1 player; MAGE Frost 2 apps / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 449 applications / 38 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sleepy ruby warmth|383813`
+- **Charge!** (1259633) · ALL — DEATHKNIGHT Unholy 134 apps / 11 players; ROGUE Subtlety 77 apps / 9 players; PALADIN Retribution 63 apps / 5 players; DEATHKNIGHT Blood 33 apps / 3 players; HUNTER Beast Mastery 24 apps / 2 players; WARRIOR Fury 23 apps / 3 players; DRUID Feral 22 apps / 2 players; PALADIN Protection 15 apps / 2 players; DEATHKNIGHT Frost 13 apps / 1 player; DRUID Guardian 11 apps / 1 player; DEMONHUNTER Havoc 10 apps / 1 player; ROGUE Assassination 8 apps / 1 player; ROGUE Outlaw 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, PALADIN, ROGUE, WARRIOR) with 434 applications / 42 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|charge!|1259633`
+- **Light Company Guidon** (1262496) · ALL — DEATHKNIGHT Unholy 134 apps / 11 players; ROGUE Subtlety 77 apps / 9 players; PALADIN Retribution 63 apps / 5 players; DEATHKNIGHT Blood 33 apps / 3 players; HUNTER Beast Mastery 24 apps / 2 players; WARRIOR Fury 23 apps / 3 players; DRUID Feral 22 apps / 2 players; PALADIN Protection 15 apps / 2 players; DEATHKNIGHT Frost 13 apps / 1 player; DRUID Guardian 11 apps / 1 player; DEMONHUNTER Havoc 10 apps / 1 player; ROGUE Assassination 8 apps / 1 player; ROGUE Outlaw 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, PALADIN, ROGUE, WARRIOR) with 434 applications / 42 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|light company guidon|1262496`
+- **Soul Fang Alacrity** (1305360) · ALL — MAGE Arcane 89 apps / 2 players; EVOKER Devastation 87 apps / 2 players; SHAMAN Elemental 51 apps / 1 player; EVOKER Preservation 45 apps / 1 player; PRIEST Holy 45 apps / 1 player; WARLOCK Affliction 43 apps / 1 player; SHAMAN Restoration 37 apps / 1 player; PRIEST Shadow 35 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (EVOKER, MAGE, PRIEST, SHAMAN, WARLOCK) with 432 applications / 10 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|soul fang alacrity|1305360`
+- **Ascendance** (458524) · ALL — PALADIN Retribution 78 apps / 2 players; DEMONHUNTER Devourer 66 apps / 2 players; WARLOCK Demonology 61 apps / 2 players; WARLOCK Destruction 51 apps / 1 player; MONK Brewmaster 43 apps / 1 player; WARRIOR Fury 36 apps / 1 player; DEATHKNIGHT Frost 30 apps / 1 player; DEATHKNIGHT Unholy 30 apps / 1 player; MAGE Frost 21 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, MAGE, MONK, PALADIN, WARLOCK, WARRIOR) with 416 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ascendance|458524`
+- **Void Execution Mandate** (1250557) · ALL — HUNTER Beast Mastery 301 apps / 8 players; HUNTER Survival 36 apps / 1 player; MONK Windwalker 22 apps / 2 players; DEMONHUNTER Havoc 12 apps / 1 player; SHAMAN Enhancement 10 apps / 1 player; HUNTER Marksmanship 9 apps / 1 player; ROGUE Assassination 8 apps / 1 player; ROGUE Subtlety 5 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, HUNTER, MONK, ROGUE, SHAMAN) with 403 applications / 15 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|void execution mandate|1250557`
+- **Ascendance** (458503) · ALL — DEMONHUNTER Devourer 79 apps / 2 players; PALADIN Retribution 64 apps / 2 players; WARLOCK Demonology 64 apps / 2 players; WARRIOR Fury 46 apps / 1 player; WARLOCK Destruction 40 apps / 1 player; MAGE Frost 36 apps / 1 player; DEATHKNIGHT Frost 33 apps / 1 player; DEATHKNIGHT Unholy 29 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DEMONHUNTER, MAGE, PALADIN, WARLOCK, WARRIOR) with 391 applications / 11 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ascendance|458503`
+- **Impending Execution** (1263357) · ALL — HUNTER Beast Mastery 289 apps / 8 players; HUNTER Survival 35 apps / 1 player; MONK Windwalker 22 apps / 2 players; DEMONHUNTER Havoc 12 apps / 1 player; SHAMAN Enhancement 10 apps / 1 player; HUNTER Marksmanship 9 apps / 1 player; ROGUE Assassination 8 apps / 1 player; ROGUE Subtlety 5 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, HUNTER, MONK, ROGUE, SHAMAN) with 390 applications / 15 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|impending execution|1263357`
+- **Dawnthread Lining** (457666) · ALL — DEATHKNIGHT Unholy 90 apps / 4 players; HUNTER Survival 62 apps / 2 players; PALADIN Retribution 44 apps / 2 players; MAGE Frost 32 apps / 1 player; PALADIN Protection 30 apps / 1 player; SHAMAN Restoration 25 apps / 1 player; DEATHKNIGHT Frost 24 apps / 1 player; WARRIOR Fury 19 apps / 1 player; HUNTER Marksmanship 18 apps / 1 player; WARLOCK Demonology 15 apps / 1 player; DRUID Guardian 13 apps / 1 player; SHAMAN Elemental 10 apps / 1 player; PRIEST Shadow 7 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DRUID, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 389 applications / 17 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|dawnthread lining|457666`
+- **Winds of Mysterious Fortune** (1214848) · ALL — DEATHKNIGHT Blood 42 apps / 12 players; PALADIN Protection 42 apps / 9 players; DRUID Balance 40 apps / 6 players; HUNTER Beast Mastery 37 apps / 13 players; MAGE Arcane 30 apps / 21 players; PALADIN Holy 27 apps / 9 players; SHAMAN Restoration 25 apps / 4 players; MONK Mistweaver 23 apps / 4 players; PALADIN Retribution 18 apps / 15 players; WARLOCK Demonology 14 apps / 13 players; WARRIOR Arms 12 apps / 10 players; DRUID Restoration 8 apps / 5 players; MONK Windwalker 8 apps / 4 players; DEATHKNIGHT Frost 6 apps / 6 players; ROGUE Assassination 5 apps / 4 players; SHAMAN Elemental 5 apps / 4 players; DEATHKNIGHT Unholy 4 apps / 4 players; DEMONHUNTER Devourer 4 apps / 4 players; DEMONHUNTER Vengeance 4 apps / 4 players; EVOKER Preservation 4 apps / 3 players; MAGE Frost 4 apps / 3 players; PRIEST Holy 4 apps / 4 players; PRIEST Shadow 4 apps / 3 players; HUNTER Survival 3 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; EVOKER Devastation 2 apps / 1 player; HUNTER Marksmanship 2 apps / 2 players; PRIEST Discipline 2 apps / 1 player; ROGUE Outlaw 2 apps / 2 players; DRUID Feral 1 app / 1 player; DRUID Guardian 1 app / 1 player; WARLOCK Affliction 1 app / 1 player; WARLOCK Destruction 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 388 applications / 175 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|winds of mysterious fortune|1214848`
+- **Radiant Acumen** (1230366) · ALL — DEATHKNIGHT Unholy 44 apps / 1 player; SHAMAN Enhancement 43 apps / 1 player; EVOKER Devastation 42 apps / 1 player; SHAMAN Elemental 41 apps / 1 player; ROGUE Assassination 39 apps / 1 player; MAGE Arcane 37 apps / 1 player; PALADIN Protection 35 apps / 1 player; PRIEST Discipline 35 apps / 1 player; PALADIN Retribution 34 apps / 1 player; PRIEST Shadow 32 apps / 1 player; WARLOCK Demonology 1 app / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEATHKNIGHT, EVOKER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 383 applications / 11 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|radiant acumen|1230366`
+- **Nalorakk's Call to War** (1257183) · ALL — MONK Brewmaster 105 apps / 7 players; DEATHKNIGHT Blood 50 apps / 3 players; MONK Windwalker 42 apps / 3 players; PALADIN Retribution 37 apps / 3 players; DEATHKNIGHT Frost 35 apps / 2 players; MAGE Frost 24 apps / 1 player; WARLOCK Affliction 24 apps / 2 players; DRUID Guardian 16 apps / 1 player; DRUID Balance 15 apps / 1 player; HUNTER Beast Mastery 15 apps / 1 player; EVOKER Devastation 13 apps / 1 player; SHAMAN Elemental 4 apps / 1 player; DEMONHUNTER Devourer 2 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK) with 382 applications / 27 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nalorakk's call to war|1257183`
+- **Authority of Radiant Power** (448730) · ALL — DEMONHUNTER Devourer 109 apps / 4 players; PALADIN Protection 77 apps / 3 players; DEMONHUNTER Vengeance 30 apps / 1 player; SHAMAN Enhancement 28 apps / 1 player; WARLOCK Demonology 26 apps / 1 player; MONK Brewmaster 25 apps / 1 player; WARRIOR Fury 24 apps / 1 player; MAGE Frost 23 apps / 1 player; MAGE Arcane 13 apps / 1 player; EVOKER Preservation 11 apps / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEMONHUNTER, EVOKER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 366 applications / 15 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|authority of radiant power|448730`
+- **Sign of Battle** (186403) · ALL — DEATHKNIGHT Blood 47 apps / 5 players; DRUID Restoration 42 apps / 12 players; SHAMAN Restoration 36 apps / 8 players; WARLOCK Demonology 26 apps / 11 players; MAGE Arcane 18 apps / 11 players; DEATHKNIGHT Unholy 15 apps / 10 players; PALADIN Retribution 14 apps / 12 players; SHAMAN Elemental 13 apps / 8 players; HUNTER Beast Mastery 12 apps / 6 players; MAGE Frost 11 apps / 7 players; WARRIOR Arms 11 apps / 6 players; WARLOCK Destruction 10 apps / 3 players; DRUID Balance 9 apps / 7 players; MONK Brewmaster 9 apps / 4 players; PALADIN Holy 9 apps / 5 players; DEMONHUNTER Vengeance 8 apps / 3 players; PALADIN Protection 8 apps / 4 players; HUNTER Survival 7 apps / 4 players; PRIEST Holy 7 apps / 6 players; DEMONHUNTER Devourer 6 apps / 4 players; SHAMAN Enhancement 6 apps / 2 players; DRUID Feral 5 apps / 3 players; MONK Windwalker 4 apps / 4 players; WARLOCK Affliction 4 apps / 3 players; DEMONHUNTER Havoc 3 apps / 2 players; EVOKER Augmentation 3 apps / 1 player; EVOKER Devastation 3 apps / 3 players; HUNTER Marksmanship 3 apps / 1 player; ROGUE Outlaw 3 apps / 1 player; WARRIOR Fury 3 apps / 3 players; DEATHKNIGHT Frost 2 apps / 2 players; DRUID Guardian 2 apps / 2 players; MAGE Fire 2 apps / 2 players; WARRIOR Protection 2 apps / 2 players; EVOKER Preservation 1 app / 1 player; MONK Mistweaver 1 app / 1 player; PRIEST Discipline 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 366 applications / 165 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of battle|186403`
+- **Amirdrassil's Swiftness** (1258887) · ALL — HUNTER Beast Mastery 154 apps / 13 players; SHAMAN Elemental 104 apps / 9 players; SHAMAN Restoration 46 apps / 3 players; HUNTER Marksmanship 44 apps / 5 players; HUNTER Survival 17 apps / 2 players — R8 — high
+  - Reason: Applied by 2 classes (HUNTER, SHAMAN) with 365 applications / 31 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|amirdrassil's swiftness|1258887`
+- **Shaladrassil's Strength** (1258890) · ALL — HUNTER Beast Mastery 158 apps / 13 players; SHAMAN Elemental 97 apps / 9 players; HUNTER Marksmanship 47 apps / 5 players; SHAMAN Restoration 35 apps / 3 players; HUNTER Survival 28 apps / 2 players — R8 — high
+  - Reason: Applied by 2 classes (HUNTER, SHAMAN) with 365 applications / 31 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|shaladrassil's strength|1258890`
+- **Deepening Temptation** (1268058) · ALL — MAGE Frost 65 apps / 6 players; WARLOCK Demonology 53 apps / 6 players; DEMONHUNTER Devourer 47 apps / 4 players; PALADIN Holy 33 apps / 3 players; EVOKER Preservation 31 apps / 3 players; DRUID Restoration 23 apps / 1 player; SHAMAN Elemental 21 apps / 2 players; SHAMAN Restoration 18 apps / 2 players; DRUID Balance 17 apps / 2 players; MAGE Arcane 16 apps / 1 player; PRIEST Shadow 13 apps / 1 player; PRIEST Holy 11 apps / 1 player; MONK Mistweaver 7 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK) with 355 applications / 33 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|deepening temptation|1268058`
+- **Teldrassil's Tenacity** (1258885) · ALL — HUNTER Beast Mastery 133 apps / 13 players; SHAMAN Elemental 97 apps / 9 players; HUNTER Marksmanship 61 apps / 5 players; SHAMAN Restoration 32 apps / 3 players; HUNTER Survival 26 apps / 2 players — R8 — high
+  - Reason: Applied by 2 classes (HUNTER, SHAMAN) with 349 applications / 31 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|teldrassil's tenacity|1258885`
+- **Nordrassil's Sagacity** (1258886) · ALL — HUNTER Beast Mastery 149 apps / 13 players; SHAMAN Elemental 78 apps / 9 players; HUNTER Marksmanship 51 apps / 5 players; SHAMAN Restoration 41 apps / 3 players; HUNTER Survival 27 apps / 2 players — R8 — high
+  - Reason: Applied by 2 classes (HUNTER, SHAMAN) with 346 applications / 31 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nordrassil's sagacity|1258886`
+- **Flask of the Shattered Sun** (1235111) · ALL — DEATHKNIGHT Blood 112 apps / 8 players; SHAMAN Restoration 80 apps / 8 players; WARLOCK Demonology 21 apps / 16 players; WARLOCK Destruction 18 apps / 1 player; WARRIOR Arms 16 apps / 9 players; MAGE Frost 14 apps / 6 players; DEMONHUNTER Havoc 9 apps / 7 players; DEATHKNIGHT Frost 8 apps / 7 players; DEATHKNIGHT Unholy 8 apps / 7 players; HUNTER Beast Mastery 6 apps / 4 players; SHAMAN Elemental 6 apps / 3 players; PRIEST Discipline 5 apps / 2 players; DEMONHUNTER Devourer 4 apps / 2 players; HUNTER Marksmanship 4 apps / 3 players; MAGE Arcane 4 apps / 3 players; MONK Windwalker 4 apps / 1 player; PALADIN Protection 4 apps / 4 players; MONK Brewmaster 3 apps / 3 players; PRIEST Holy 3 apps / 3 players; ROGUE Outlaw 3 apps / 2 players; PALADIN Retribution 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; EVOKER Devastation 1 app / 1 player; PALADIN Holy 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARLOCK Affliction 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 341 applications / 107 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|flask of the shattered sun|1235111`
+- **Cauterizing Bolts** (1236118) · ALL — DRUID Restoration 198 apps / 1 player; SHAMAN Restoration 66 apps / 1 player; MONK Mistweaver 36 apps / 1 player; SHAMAN Elemental 30 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DRUID, MONK, SHAMAN) with 330 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|cauterizing bolts|1236118`
+- **Telluric Leyblossom** (1272942) · ALL — SHAMAN Restoration 174 apps / 2 players; PRIEST Shadow 56 apps / 1 player; WARLOCK Demonology 40 apps / 1 player; MAGE Fire 25 apps / 1 player; MAGE Frost 21 apps / 1 player; HUNTER Beast Mastery 7 apps / 1 player; DRUID Feral 6 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DRUID, HUNTER, MAGE, PRIEST, SHAMAN, WARLOCK) with 329 applications / 8 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|telluric leyblossom|1272942`
+- **Jan'alai's Warmth** (1247579) · ALL — PRIEST Shadow 74 apps / 3 players; MAGE Arcane 61 apps / 2 players; HUNTER Survival 44 apps / 1 player; DEATHKNIGHT Frost 37 apps / 1 player; PALADIN Retribution 29 apps / 1 player; WARRIOR Fury 28 apps / 1 player; HUNTER Beast Mastery 25 apps / 1 player; SHAMAN Elemental 25 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARRIOR) with 323 applications / 11 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|jan'alai's warmth|1247579`
+- **Explosive Adrenaline** (1218713) · ALL — HUNTER Survival 93 apps / 4 players; DEATHKNIGHT Unholy 70 apps / 3 players; DEATHKNIGHT Frost 25 apps / 1 player; SHAMAN Enhancement 25 apps / 1 player; MONK Brewmaster 24 apps / 1 player; PALADIN Protection 21 apps / 1 player; PALADIN Retribution 21 apps / 1 player; HUNTER Beast Mastery 20 apps / 1 player; HUNTER Marksmanship 18 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, HUNTER, MONK, PALADIN, SHAMAN) with 317 applications / 14 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|explosive adrenaline|1218713`
+- **Maybe Stop Blowing Up** (1218715) · ALL — HUNTER Survival 93 apps / 4 players; DEATHKNIGHT Unholy 70 apps / 3 players; DEATHKNIGHT Frost 25 apps / 1 player; SHAMAN Enhancement 25 apps / 1 player; MONK Brewmaster 24 apps / 1 player; PALADIN Protection 21 apps / 1 player; PALADIN Retribution 21 apps / 1 player; HUNTER Beast Mastery 20 apps / 1 player; HUNTER Marksmanship 18 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, HUNTER, MONK, PALADIN, SHAMAN) with 317 applications / 14 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|maybe stop blowing up|1218715`
+- **Umbral Plume** (1265808) · ALL — PALADIN Retribution 76 apps / 2 players; WARRIOR Arms 74 apps / 3 players; HUNTER Beast Mastery 48 apps / 2 players; MONK Brewmaster 41 apps / 1 player; DEMONHUNTER Havoc 28 apps / 1 player; HUNTER Marksmanship 25 apps / 1 player; PALADIN Protection 19 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, HUNTER, MONK, PALADIN, WARRIOR) with 311 applications / 11 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|umbral plume|1265808`
+- **Nascent Empowerment** (449275) · ALL — DRUID Restoration 151 apps / 1 player; MONK Brewmaster 56 apps / 2 players; SHAMAN Restoration 47 apps / 1 player; SHAMAN Elemental 21 apps / 1 player; PRIEST Holy 18 apps / 1 player; MAGE Frost 17 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DRUID, MAGE, MONK, PRIEST, SHAMAN) with 310 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nascent empowerment|449275`
+- **Diamantine Voidcore** (1239221) · ALL — DEMONHUNTER Devourer 97 apps / 3 players; MAGE Frost 58 apps / 2 players; WARLOCK Destruction 41 apps / 1 player; SHAMAN Elemental 38 apps / 1 player; EVOKER Preservation 34 apps / 1 player; DRUID Restoration 32 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, SHAMAN, WARLOCK) with 300 applications / 9 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|diamantine voidcore|1239221`
+- **Battle Fervor** (1295735) · ALL — WARRIOR Arms 96 apps / 6 players; DEATHKNIGHT Unholy 44 apps / 3 players; ROGUE Subtlety 35 apps / 1 player; PALADIN Retribution 31 apps / 1 player; HUNTER Beast Mastery 26 apps / 4 players; ROGUE Outlaw 22 apps / 2 players; DEATHKNIGHT Blood 15 apps / 1 player; DEATHKNIGHT Frost 13 apps / 1 player; HUNTER Marksmanship 8 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, HUNTER, PALADIN, ROGUE, WARRIOR) with 290 applications / 20 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|battle fervor|1295735`
+- **Find Lumber** (1256697) · ALL — PALADIN Retribution 27 apps / 24 players; DRUID Restoration 25 apps / 11 players; WARLOCK Demonology 25 apps / 14 players; MAGE Arcane 21 apps / 14 players; MAGE Frost 17 apps / 8 players; DEMONHUNTER Devourer 16 apps / 13 players; HUNTER Beast Mastery 14 apps / 8 players; DEATHKNIGHT Unholy 13 apps / 7 players; DRUID Balance 11 apps / 9 players; PALADIN Holy 10 apps / 8 players; SHAMAN Elemental 9 apps / 6 players; PRIEST Holy 8 apps / 8 players; SHAMAN Restoration 8 apps / 4 players; WARLOCK Destruction 8 apps / 4 players; PALADIN Protection 6 apps / 4 players; PRIEST Discipline 6 apps / 3 players; WARRIOR Arms 6 apps / 5 players; DEMONHUNTER Vengeance 5 apps / 3 players; DRUID Feral 5 apps / 3 players; DEATHKNIGHT Frost 4 apps / 4 players; MONK Windwalker 4 apps / 4 players; ROGUE Outlaw 4 apps / 2 players; WARRIOR Fury 4 apps / 4 players; DEATHKNIGHT Blood 3 apps / 3 players; DRUID Guardian 3 apps / 1 player; EVOKER Preservation 3 apps / 3 players; WARLOCK Affliction 3 apps / 2 players; EVOKER Augmentation 2 apps / 2 players; EVOKER Devastation 2 apps / 2 players; HUNTER Survival 2 apps / 2 players; MAGE Fire 2 apps / 2 players; MONK Brewmaster 2 apps / 2 players; PRIEST Shadow 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; SHAMAN Enhancement 2 apps / 2 players; DEMONHUNTER Havoc 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MONK Mistweaver 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 288 applications / 196 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|find lumber|1256697`
+- **Devoured Strength** (1305376) · ALL — DEATHKNIGHT Unholy 57 apps / 4 players; ROGUE Assassination 47 apps / 4 players; DEATHKNIGHT Frost 43 apps / 3 players; PALADIN Retribution 41 apps / 3 players; DEMONHUNTER Vengeance 20 apps / 2 players; HUNTER Marksmanship 13 apps / 1 player; MONK Brewmaster 13 apps / 1 player; MONK Windwalker 13 apps / 1 player; WARRIOR Fury 13 apps / 1 player; DEATHKNIGHT Blood 12 apps / 1 player; ROGUE Outlaw 11 apps / 1 player; HUNTER Beast Mastery 4 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, HUNTER, MONK, PALADIN, ROGUE, WARRIOR) with 287 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|devoured strength|1305376`
+- **Voracious Heart of Ula'tek** (1297761) · ALL — DEATHKNIGHT Unholy 57 apps / 4 players; ROGUE Assassination 47 apps / 4 players; DEATHKNIGHT Frost 43 apps / 3 players; PALADIN Retribution 41 apps / 3 players; DEMONHUNTER Vengeance 20 apps / 2 players; HUNTER Marksmanship 13 apps / 1 player; MONK Brewmaster 13 apps / 1 player; MONK Windwalker 13 apps / 1 player; WARRIOR Fury 13 apps / 1 player; DEATHKNIGHT Blood 12 apps / 1 player; ROGUE Outlaw 11 apps / 1 player; HUNTER Beast Mastery 4 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, HUNTER, MONK, PALADIN, ROGUE, WARRIOR) with 287 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|voracious heart of ula'tek|1297761`
+- **Flask of the Magisters** (1235108) · ALL — HUNTER Beast Mastery 71 apps / 22 players; PALADIN Retribution 40 apps / 32 players; DRUID Balance 21 apps / 8 players; DEMONHUNTER Devourer 19 apps / 13 players; MAGE Frost 18 apps / 8 players; PALADIN Holy 16 apps / 8 players; HUNTER Survival 13 apps / 5 players; SHAMAN Elemental 13 apps / 9 players; WARRIOR Fury 10 apps / 7 players; DEATHKNIGHT Unholy 7 apps / 4 players; MAGE Arcane 7 apps / 6 players; WARLOCK Demonology 7 apps / 4 players; PRIEST Shadow 6 apps / 5 players; DEATHKNIGHT Blood 4 apps / 1 player; WARLOCK Destruction 4 apps / 2 players; DRUID Restoration 3 apps / 2 players; HUNTER Marksmanship 3 apps / 1 player; DEATHKNIGHT Frost 2 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; DEMONHUNTER Vengeance 2 apps / 2 players; MONK Windwalker 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; DRUID Feral 1 app / 1 player; DRUID Guardian 1 app / 1 player; EVOKER Preservation 1 app / 1 player; MAGE Fire 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; SHAMAN Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 279 applications / 149 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|flask of the magisters|1235108`
+- **Mark of Frost** (1260316) · ALL — PALADIN Protection 138 apps / 3 players; DEATHKNIGHT Blood 54 apps / 2 players; MONK Brewmaster 43 apps / 1 player; DEMONHUNTER Vengeance 29 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, DEMONHUNTER, MONK, PALADIN) with 264 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|mark of frost|1260316`
+- **Find Herbs** (2383) · ALL — DRUID Balance 54 apps / 10 players; DRUID Restoration 30 apps / 15 players; PALADIN Retribution 21 apps / 14 players; DRUID Guardian 16 apps / 8 players; WARLOCK Demonology 12 apps / 10 players; DEATHKNIGHT Unholy 11 apps / 5 players; DEMONHUNTER Devourer 8 apps / 5 players; HUNTER Beast Mastery 8 apps / 6 players; SHAMAN Elemental 8 apps / 5 players; SHAMAN Enhancement 7 apps / 3 players; EVOKER Preservation 6 apps / 3 players; MONK Windwalker 6 apps / 3 players; PALADIN Protection 6 apps / 4 players; DEMONHUNTER Havoc 5 apps / 4 players; DEMONHUNTER Vengeance 5 apps / 2 players; EVOKER Devastation 5 apps / 2 players; MAGE Arcane 5 apps / 4 players; MAGE Frost 5 apps / 5 players; SHAMAN Restoration 5 apps / 5 players; WARLOCK Destruction 5 apps / 3 players; HUNTER Survival 4 apps / 2 players; PRIEST Holy 4 apps / 4 players; PRIEST Shadow 4 apps / 4 players; WARLOCK Affliction 4 apps / 3 players; PALADIN Holy 3 apps / 3 players; DEATHKNIGHT Blood 2 apps / 2 players; DEATHKNIGHT Frost 2 apps / 2 players; ROGUE Outlaw 2 apps / 2 players; WARRIOR Arms 2 apps / 2 players; DRUID Feral 1 app / 1 player; EVOKER Augmentation 1 app / 1 player; MONK Mistweaver 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; WARRIOR Fury 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 262 applications / 146 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|find herbs|2383`
+- **Sign of the Warrior** (225787) · ALL — DEATHKNIGHT Blood 29 apps / 8 players; DRUID Balance 23 apps / 4 players; HUNTER Beast Mastery 23 apps / 12 players; PALADIN Protection 23 apps / 5 players; MONK Mistweaver 21 apps / 4 players; MAGE Arcane 17 apps / 12 players; PALADIN Holy 16 apps / 5 players; SHAMAN Restoration 15 apps / 2 players; DEMONHUNTER Devourer 11 apps / 5 players; PALADIN Retribution 10 apps / 8 players; WARLOCK Demonology 7 apps / 6 players; PRIEST Shadow 6 apps / 5 players; WARLOCK Destruction 6 apps / 2 players; DEATHKNIGHT Unholy 4 apps / 3 players; DEMONHUNTER Havoc 4 apps / 2 players; DEMONHUNTER Vengeance 4 apps / 2 players; DRUID Restoration 4 apps / 3 players; WARRIOR Arms 4 apps / 3 players; DEATHKNIGHT Frost 3 apps / 3 players; DRUID Guardian 3 apps / 1 player; EVOKER Preservation 3 apps / 2 players; MONK Windwalker 3 apps / 2 players; PRIEST Discipline 3 apps / 3 players; ROGUE Assassination 3 apps / 2 players; ROGUE Outlaw 3 apps / 3 players; MAGE Frost 2 apps / 2 players; DRUID Feral 1 app / 1 player; EVOKER Augmentation 1 app / 1 player; HUNTER Survival 1 app / 1 player; PRIEST Holy 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; WARLOCK Affliction 1 app / 1 player; WARRIOR Fury 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 258 applications / 113 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the warrior|225787`
+- **Food & Drink** (1232065) · ALL — SHAMAN Restoration 49 apps / 3 players; DRUID Restoration 43 apps / 8 players; PRIEST Holy 20 apps / 5 players; DEATHKNIGHT Blood 16 apps / 3 players; HUNTER Beast Mastery 10 apps / 6 players; MAGE Arcane 10 apps / 5 players; PALADIN Retribution 10 apps / 8 players; PALADIN Holy 8 apps / 4 players; DEMONHUNTER Devourer 6 apps / 5 players; DEMONHUNTER Havoc 5 apps / 5 players; MAGE Frost 5 apps / 5 players; MONK Mistweaver 5 apps / 1 player; WARLOCK Destruction 5 apps / 1 player; DEATHKNIGHT Frost 4 apps / 1 player; HUNTER Marksmanship 4 apps / 3 players; HUNTER Survival 4 apps / 2 players; WARLOCK Demonology 4 apps / 4 players; WARRIOR Arms 4 apps / 2 players; DEATHKNIGHT Unholy 3 apps / 2 players; DRUID Balance 3 apps / 3 players; DRUID Guardian 3 apps / 3 players; EVOKER Augmentation 3 apps / 3 players; EVOKER Devastation 3 apps / 2 players; PALADIN Protection 3 apps / 3 players; SHAMAN Elemental 3 apps / 3 players; DEMONHUNTER Vengeance 2 apps / 1 player; DRUID Feral 2 apps / 1 player; PRIEST Discipline 2 apps / 1 player; WARRIOR Fury 2 apps / 2 players; EVOKER Preservation 1 app / 1 player; MONK Brewmaster 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 245 applications / 99 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|food & drink|1232065`
+- **Find Minerals** (2580) · ALL — PALADIN Retribution 32 apps / 25 players; DEATHKNIGHT Unholy 19 apps / 12 players; WARRIOR Arms 18 apps / 10 players; DRUID Restoration 17 apps / 9 players; DEATHKNIGHT Blood 12 apps / 8 players; DEMONHUNTER Devourer 12 apps / 7 players; PALADIN Protection 11 apps / 8 players; WARLOCK Demonology 11 apps / 8 players; DRUID Guardian 9 apps / 4 players; HUNTER Beast Mastery 9 apps / 5 players; PALADIN Holy 8 apps / 8 players; SHAMAN Enhancement 8 apps / 4 players; DEMONHUNTER Vengeance 6 apps / 3 players; HUNTER Survival 6 apps / 4 players; WARRIOR Fury 6 apps / 6 players; DEMONHUNTER Havoc 5 apps / 4 players; MAGE Frost 5 apps / 3 players; WARLOCK Affliction 5 apps / 3 players; DRUID Balance 4 apps / 3 players; EVOKER Preservation 4 apps / 3 players; SHAMAN Elemental 4 apps / 2 players; WARLOCK Destruction 4 apps / 2 players; WARRIOR Protection 4 apps / 4 players; DEATHKNIGHT Frost 3 apps / 3 players; MAGE Arcane 3 apps / 3 players; PRIEST Holy 3 apps / 3 players; HUNTER Marksmanship 2 apps / 2 players; MONK Windwalker 2 apps / 2 players; PRIEST Shadow 2 apps / 2 players; SHAMAN Restoration 2 apps / 2 players; EVOKER Augmentation 1 app / 1 player; MAGE Fire 1 app / 1 player; MONK Brewmaster 1 app / 1 player; ROGUE Assassination 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; ROGUE Subtlety 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 242 applications / 166 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|find minerals|2580`
+- **Drink** (1269918) · ALL — DRUID Restoration 60 apps / 11 players; SHAMAN Restoration 46 apps / 3 players; PRIEST Holy 26 apps / 7 players; PALADIN Holy 13 apps / 5 players; PALADIN Retribution 10 apps / 8 players; HUNTER Beast Mastery 8 apps / 6 players; DEATHKNIGHT Blood 6 apps / 3 players; DEMONHUNTER Devourer 6 apps / 5 players; PRIEST Discipline 6 apps / 1 player; MAGE Frost 5 apps / 5 players; WARLOCK Destruction 5 apps / 1 player; DEATHKNIGHT Frost 4 apps / 1 player; HUNTER Survival 4 apps / 2 players; DEMONHUNTER Havoc 3 apps / 3 players; DRUID Balance 3 apps / 3 players; EVOKER Augmentation 3 apps / 3 players; WARLOCK Demonology 3 apps / 3 players; DEMONHUNTER Vengeance 2 apps / 1 player; DRUID Feral 2 apps / 1 player; DRUID Guardian 2 apps / 2 players; EVOKER Devastation 2 apps / 1 player; HUNTER Marksmanship 2 apps / 2 players; MAGE Arcane 2 apps / 2 players; WARRIOR Fury 2 apps / 2 players; DEATHKNIGHT Unholy 1 app / 1 player; EVOKER Preservation 1 app / 1 player; MONK Brewmaster 1 app / 1 player; PALADIN Protection 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARRIOR Arms 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 233 applications / 89 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|drink|1269918`
+- **Drink** (1291791) · ALL — SHAMAN Restoration 95 apps / 8 players; DRUID Restoration 92 apps / 3 players; MONK Mistweaver 16 apps / 2 players; PALADIN Holy 13 apps / 4 players; PRIEST Discipline 9 apps / 3 players; PALADIN Protection 3 apps / 1 player; EVOKER Preservation 1 app / 1 player; PRIEST Holy 1 app / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DRUID, EVOKER, MONK, PALADIN, PRIEST, SHAMAN) with 230 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|drink|1291791`
+- **Encapsulated Destiny** (415603) · ALL — PALADIN Protection 52 apps / 2 players; HUNTER Beast Mastery 50 apps / 5 players; PALADIN Holy 33 apps / 7 players; PALADIN Retribution 16 apps / 9 players; MAGE Frost 9 apps / 4 players; DRUID Restoration 8 apps / 4 players; MAGE Arcane 7 apps / 5 players; MONK Windwalker 6 apps / 2 players; DEMONHUNTER Devourer 4 apps / 4 players; DRUID Balance 4 apps / 4 players; DRUID Guardian 4 apps / 2 players; ROGUE Outlaw 4 apps / 2 players; EVOKER Devastation 3 apps / 2 players; SHAMAN Elemental 3 apps / 3 players; DEATHKNIGHT Unholy 2 apps / 2 players; EVOKER Preservation 2 apps / 2 players; HUNTER Survival 2 apps / 1 player; MONK Brewmaster 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; PRIEST Shadow 2 apps / 2 players; WARLOCK Demonology 2 apps / 2 players; WARLOCK Destruction 2 apps / 2 players; WARRIOR Arms 2 apps / 1 player; WARRIOR Fury 2 apps / 2 players; DEMONHUNTER Havoc 1 app / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; MAGE Fire 1 app / 1 player; PRIEST Discipline 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; SHAMAN Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 229 applications / 77 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|encapsulated destiny|415603`
+- **Storm's Fury** (449100) · ALL — DRUID Restoration 183 apps / 2 players; EVOKER Augmentation 24 apps / 1 player; MAGE Frost 18 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DRUID, EVOKER, MAGE) with 225 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|storm's fury|449100`
+- **Sign of the Explorer** (471521) · ALL — DEATHKNIGHT Blood 39 apps / 4 players; SHAMAN Restoration 20 apps / 2 players; HUNTER Beast Mastery 16 apps / 4 players; DEMONHUNTER Devourer 13 apps / 10 players; PALADIN Holy 13 apps / 6 players; PALADIN Retribution 12 apps / 8 players; DRUID Balance 10 apps / 3 players; DRUID Restoration 10 apps / 2 players; MAGE Frost 9 apps / 6 players; WARRIOR Arms 9 apps / 4 players; MONK Brewmaster 7 apps / 6 players; WARLOCK Demonology 7 apps / 6 players; DEATHKNIGHT Unholy 6 apps / 6 players; PRIEST Holy 6 apps / 5 players; WARLOCK Destruction 6 apps / 2 players; DRUID Feral 4 apps / 2 players; MAGE Arcane 4 apps / 4 players; DEATHKNIGHT Frost 3 apps / 2 players; MONK Mistweaver 3 apps / 1 player; PALADIN Protection 3 apps / 2 players; PRIEST Shadow 3 apps / 3 players; ROGUE Assassination 3 apps / 3 players; DEMONHUNTER Vengeance 2 apps / 2 players; DRUID Guardian 2 apps / 2 players; EVOKER Preservation 2 apps / 2 players; SHAMAN Elemental 2 apps / 2 players; SHAMAN Enhancement 2 apps / 2 players; EVOKER Devastation 1 app / 1 player; HUNTER Survival 1 app / 1 player; MAGE Fire 1 app / 1 player; MONK Windwalker 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 224 applications / 107 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the explorer|471521`
+- **Pangolin** (1266184) · ALL — HUNTER Beast Mastery 78 apps / 4 players; DEATHKNIGHT Blood 16 apps / 2 players; WARRIOR Fury 14 apps / 2 players; DEATHKNIGHT Unholy 13 apps / 3 players; WARRIOR Arms 13 apps / 3 players; MONK Windwalker 12 apps / 2 players; PALADIN Retribution 12 apps / 3 players; DRUID Guardian 8 apps / 1 player; DEMONHUNTER Havoc 7 apps / 1 player; DEATHKNIGHT Frost 6 apps / 1 player; ROGUE Assassination 6 apps / 1 player; WARRIOR Protection 6 apps / 1 player; DEMONHUNTER Devourer 5 apps / 1 player; MAGE Arcane 5 apps / 1 player; PALADIN Protection 5 apps / 1 player; WARLOCK Destruction 5 apps / 1 player; SHAMAN Enhancement 3 apps / 1 player; DRUID Balance 2 apps / 1 player; DRUID Feral 2 apps / 1 player; HUNTER Marksmanship 2 apps / 1 player; HUNTER Survival 2 apps / 1 player; DRUID Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 223 applications / 34 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|pangolin|1266184`
+- **Forged Tenacity** (449115) · ALL — MAGE Frost 65 apps / 1 player; MAGE Arcane 64 apps / 3 players; PALADIN Retribution 27 apps / 1 player; SHAMAN Elemental 27 apps / 1 player; MONK Brewmaster 18 apps / 1 player; WARRIOR Fury 18 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (MAGE, MONK, PALADIN, SHAMAN, WARRIOR) with 219 applications / 8 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|forged tenacity|449115`
+- **Tattered Amani War Banner** (1293326) · ALL — WARRIOR Arms 58 apps / 6 players; DEATHKNIGHT Unholy 32 apps / 3 players; DRUID Guardian 24 apps / 1 player; HUNTER Beast Mastery 23 apps / 4 players; ROGUE Subtlety 16 apps / 1 player; PALADIN Retribution 14 apps / 1 player; ROGUE Outlaw 14 apps / 2 players; DEATHKNIGHT Frost 13 apps / 1 player; DEATHKNIGHT Blood 12 apps / 1 player; HUNTER Marksmanship 9 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DRUID, HUNTER, PALADIN, ROGUE, WARRIOR) with 215 applications / 21 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|tattered amani war banner|1293326`
+- **Bear** (1266182) · ALL — HUNTER Beast Mastery 71 apps / 3 players; PALADIN Retribution 15 apps / 3 players; DEATHKNIGHT Unholy 14 apps / 3 players; DEATHKNIGHT Blood 13 apps / 2 players; WARRIOR Arms 11 apps / 3 players; MONK Windwalker 10 apps / 2 players; WARRIOR Fury 8 apps / 2 players; DEMONHUNTER Havoc 7 apps / 1 player; DEATHKNIGHT Frost 6 apps / 1 player; DEMONHUNTER Devourer 6 apps / 1 player; DRUID Guardian 6 apps / 1 player; MAGE Arcane 6 apps / 1 player; WARLOCK Destruction 6 apps / 1 player; WARRIOR Protection 6 apps / 1 player; DRUID Feral 5 apps / 1 player; PALADIN Protection 5 apps / 1 player; HUNTER Survival 4 apps / 1 player; ROGUE Assassination 4 apps / 1 player; SHAMAN Enhancement 2 apps / 1 player; DRUID Balance 1 app / 1 player; DRUID Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 207 applications / 32 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|bear|1266182`
+- **Favored by Kulzi** (1259061) · ALL — SHAMAN Restoration 104 apps / 2 players; DRUID Restoration 33 apps / 1 player; DRUID Balance 29 apps / 1 player; WARRIOR Protection 28 apps / 1 player; MONK Brewmaster 13 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DRUID, MONK, SHAMAN, WARRIOR) with 207 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|favored by kulzi|1259061`
+- **Soulcoiler Ritual Vessel** (1291894) · ALL — PRIEST Holy 64 apps / 6 players; PALADIN Holy 32 apps / 3 players; SHAMAN Restoration 31 apps / 4 players; DRUID Restoration 29 apps / 3 players; MONK Mistweaver 22 apps / 4 players; EVOKER Preservation 21 apps / 2 players; PRIEST Discipline 7 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DRUID, EVOKER, MONK, PALADIN, PRIEST, SHAMAN) with 206 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|soulcoiler ritual vessel|1291894`
+- **Find Fish** (43308) · ALL — WARLOCK Demonology 17 apps / 7 players; PALADIN Retribution 16 apps / 14 players; HUNTER Beast Mastery 14 apps / 9 players; MAGE Arcane 14 apps / 7 players; PALADIN Holy 12 apps / 8 players; DRUID Restoration 11 apps / 5 players; DEATHKNIGHT Unholy 9 apps / 5 players; DEMONHUNTER Devourer 8 apps / 5 players; SHAMAN Elemental 8 apps / 6 players; DRUID Balance 7 apps / 6 players; WARLOCK Destruction 7 apps / 3 players; EVOKER Preservation 6 apps / 3 players; SHAMAN Restoration 6 apps / 4 players; DEMONHUNTER Vengeance 5 apps / 2 players; DRUID Guardian 5 apps / 3 players; WARRIOR Fury 5 apps / 5 players; DEATHKNIGHT Blood 4 apps / 4 players; DRUID Feral 4 apps / 2 players; EVOKER Devastation 4 apps / 3 players; HUNTER Survival 4 apps / 3 players; ROGUE Outlaw 4 apps / 2 players; EVOKER Augmentation 3 apps / 1 player; MAGE Frost 3 apps / 3 players; PALADIN Protection 3 apps / 2 players; PRIEST Holy 3 apps / 3 players; PRIEST Shadow 3 apps / 3 players; ROGUE Assassination 3 apps / 3 players; SHAMAN Enhancement 3 apps / 3 players; WARLOCK Affliction 3 apps / 2 players; WARRIOR Arms 3 apps / 2 players; DEATHKNIGHT Frost 2 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; MONK Windwalker 2 apps / 2 players; MONK Brewmaster 1 app / 1 player; PRIEST Discipline 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 205 applications / 133 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|find fish|43308`
+- **Lynx** (1266197) · ALL — HUNTER Beast Mastery 62 apps / 4 players; WARRIOR Fury 16 apps / 2 players; WARRIOR Arms 13 apps / 3 players; DEATHKNIGHT Unholy 12 apps / 3 players; MONK Windwalker 11 apps / 2 players; DRUID Guardian 10 apps / 1 player; PALADIN Retribution 9 apps / 3 players; DEATHKNIGHT Blood 8 apps / 2 players; DEATHKNIGHT Frost 7 apps / 1 player; DEMONHUNTER Devourer 7 apps / 1 player; WARLOCK Destruction 6 apps / 1 player; WARRIOR Protection 6 apps / 1 player; DEMONHUNTER Havoc 5 apps / 1 player; DRUID Feral 5 apps / 1 player; MAGE Arcane 5 apps / 1 player; PALADIN Protection 5 apps / 1 player; ROGUE Assassination 4 apps / 1 player; SHAMAN Enhancement 4 apps / 1 player; HUNTER Survival 3 apps / 1 player; DRUID Balance 2 apps / 1 player; HUNTER Marksmanship 2 apps / 1 player; DRUID Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 203 applications / 34 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|lynx|1266197`
+- **Artisanal Flourish** (449108) · ALL — HUNTER Survival 75 apps / 3 players; PALADIN Retribution 51 apps / 2 players; DRUID Guardian 29 apps / 1 player; DEMONHUNTER Devourer 22 apps / 1 player; PRIEST Shadow 19 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, DRUID, HUNTER, PALADIN, PRIEST) with 196 applications / 8 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|artisanal flourish|449108`
+- **Diverting Power...** (1250609) · ALL — SHAMAN Restoration 15 apps / 6 players; DEMONHUNTER Devourer 12 apps / 12 players; DEATHKNIGHT Blood 11 apps / 2 players; PALADIN Retribution 11 apps / 10 players; WARLOCK Demonology 11 apps / 10 players; HUNTER Beast Mastery 9 apps / 8 players; DRUID Guardian 8 apps / 5 players; DRUID Restoration 8 apps / 5 players; PALADIN Protection 8 apps / 7 players; WARLOCK Destruction 7 apps / 3 players; WARRIOR Arms 7 apps / 6 players; HUNTER Survival 6 apps / 5 players; MAGE Frost 6 apps / 5 players; DEATHKNIGHT Unholy 5 apps / 4 players; MAGE Arcane 5 apps / 4 players; WARRIOR Protection 5 apps / 5 players; DRUID Balance 4 apps / 2 players; MONK Mistweaver 4 apps / 3 players; SHAMAN Elemental 4 apps / 4 players; WARRIOR Fury 4 apps / 4 players; DEMONHUNTER Vengeance 3 apps / 3 players; EVOKER Augmentation 3 apps / 3 players; MONK Brewmaster 3 apps / 3 players; MONK Windwalker 3 apps / 2 players; PRIEST Shadow 3 apps / 3 players; ROGUE Outlaw 3 apps / 1 player; ROGUE Subtlety 3 apps / 3 players; DEMONHUNTER Havoc 2 apps / 2 players; DRUID Feral 2 apps / 1 player; EVOKER Preservation 2 apps / 2 players; HUNTER Marksmanship 2 apps / 2 players; PALADIN Holy 2 apps / 2 players; PRIEST Discipline 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; SHAMAN Enhancement 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; EVOKER Devastation 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 191 applications / 146 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|diverting power...|1250609`
+- **Nature's Tenacity** (1241764) · ALL — DRUID Restoration 47 apps / 1 player; WARRIOR Protection 41 apps / 2 players; PALADIN Protection 39 apps / 1 player; PRIEST Discipline 33 apps / 1 player; DEMONHUNTER Havoc 31 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, DRUID, PALADIN, PRIEST, WARRIOR) with 191 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|nature's tenacity|1241764`
+- **Drain Shield** (1237842) · ALL — DEATHKNIGHT Blood 18 apps / 7 players; DEMONHUNTER Devourer 17 apps / 14 players; PALADIN Retribution 12 apps / 12 players; HUNTER Beast Mastery 11 apps / 11 players; SHAMAN Restoration 11 apps / 3 players; MAGE Frost 10 apps / 9 players; PALADIN Protection 9 apps / 6 players; WARLOCK Demonology 9 apps / 8 players; DRUID Restoration 8 apps / 5 players; DRUID Balance 7 apps / 6 players; MONK Mistweaver 7 apps / 7 players; EVOKER Augmentation 6 apps / 6 players; DEATHKNIGHT Unholy 5 apps / 5 players; DEMONHUNTER Havoc 5 apps / 5 players; MAGE Arcane 5 apps / 5 players; PRIEST Shadow 5 apps / 5 players; WARLOCK Destruction 5 apps / 3 players; DRUID Guardian 4 apps / 4 players; PALADIN Holy 4 apps / 4 players; SHAMAN Elemental 4 apps / 4 players; WARRIOR Fury 4 apps / 4 players; DEMONHUNTER Vengeance 3 apps / 3 players; HUNTER Survival 3 apps / 3 players; MONK Windwalker 3 apps / 3 players; WARRIOR Protection 3 apps / 3 players; DRUID Feral 2 apps / 2 players; PRIEST Discipline 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; WARRIOR Arms 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; MONK Brewmaster 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; WARLOCK Affliction 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 190 applications / 157 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|drain shield|1237842`
+- **Farstrider's Guile** (1245025) · ALL — MAGE Arcane 79 apps / 4 players; DEATHKNIGHT Unholy 26 apps / 1 player; MONK Mistweaver 24 apps / 1 player; WARRIOR Fury 21 apps / 1 player; WARLOCK Destruction 20 apps / 1 player; MAGE Frost 13 apps / 1 player; SHAMAN Enhancement 5 apps / 1 player; WARRIOR Arms 2 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, MAGE, MONK, SHAMAN, WARLOCK, WARRIOR) with 190 applications / 11 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|farstrider's guile|1245025`
+- **Flask of the Blood Knights** (1235110) · ALL — PALADIN Protection 33 apps / 1 player; MONK Mistweaver 25 apps / 7 players; MAGE Arcane 19 apps / 12 players; DRUID Guardian 18 apps / 8 players; DEATHKNIGHT Blood 11 apps / 6 players; WARRIOR Arms 11 apps / 8 players; MONK Windwalker 9 apps / 7 players; WARLOCK Demonology 7 apps / 4 players; DEMONHUNTER Devourer 6 apps / 5 players; DRUID Restoration 6 apps / 4 players; EVOKER Preservation 5 apps / 4 players; ROGUE Assassination 4 apps / 3 players; WARLOCK Destruction 4 apps / 1 player; PALADIN Holy 3 apps / 3 players; PRIEST Discipline 3 apps / 2 players; DEATHKNIGHT Unholy 2 apps / 2 players; DRUID Feral 2 apps / 1 player; ROGUE Outlaw 2 apps / 2 players; SHAMAN Elemental 2 apps / 2 players; WARLOCK Affliction 2 apps / 1 player; WARRIOR Fury 2 apps / 2 players; WARRIOR Protection 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; EVOKER Devastation 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MAGE Fire 1 app / 1 player; MONK Brewmaster 1 app / 1 player; PALADIN Retribution 1 app / 1 player; PRIEST Holy 1 app / 1 player; PRIEST Shadow 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 189 applications / 98 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|flask of the blood knights|1235110`
+- **Under Red Wings** (389820) · ALL — SHAMAN Restoration 62 apps / 3 players; WARRIOR Arms 25 apps / 2 players; DEMONHUNTER Devourer 19 apps / 4 players; WARLOCK Demonology 15 apps / 4 players; DEATHKNIGHT Blood 10 apps / 3 players; PALADIN Retribution 8 apps / 2 players; PRIEST Discipline 6 apps / 1 player; DRUID Balance 4 apps / 1 player; DRUID Guardian 4 apps / 1 player; HUNTER Beast Mastery 4 apps / 1 player; MAGE Arcane 4 apps / 2 players; SHAMAN Enhancement 4 apps / 1 player; DEATHKNIGHT Unholy 3 apps / 1 player; DEMONHUNTER Vengeance 3 apps / 2 players; DRUID Feral 3 apps / 1 player; EVOKER Preservation 3 apps / 1 player; PALADIN Holy 3 apps / 1 player; PALADIN Protection 2 apps / 1 player; PRIEST Holy 2 apps / 1 player; SHAMAN Elemental 2 apps / 1 player; DRUID Restoration 1 app / 1 player; PRIEST Shadow 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 189 applications / 36 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|under red wings|389820`
+- **Sign of the Destroyer** (335150) · ALL — DEATHKNIGHT Blood 26 apps / 5 players; SHAMAN Restoration 18 apps / 3 players; DRUID Balance 17 apps / 3 players; HUNTER Beast Mastery 16 apps / 5 players; PALADIN Protection 14 apps / 3 players; PALADIN Holy 12 apps / 5 players; MAGE Arcane 11 apps / 9 players; PALADIN Retribution 9 apps / 8 players; MONK Mistweaver 8 apps / 4 players; MAGE Frost 7 apps / 3 players; DRUID Restoration 5 apps / 4 players; EVOKER Preservation 5 apps / 2 players; WARLOCK Demonology 5 apps / 5 players; WARRIOR Arms 5 apps / 5 players; DEMONHUNTER Devourer 4 apps / 2 players; MONK Windwalker 4 apps / 2 players; WARRIOR Protection 3 apps / 1 player; DEMONHUNTER Vengeance 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Havoc 1 app / 1 player; DRUID Feral 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; PRIEST Shadow 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 184 applications / 84 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the destroyer|335150`
+- **Deadly Precision** (71564) · ALL — WARLOCK Destruction 46 apps / 1 player; MAGE Frost 34 apps / 6 players; MONK Mistweaver 31 apps / 1 player; WARLOCK Affliction 12 apps / 2 players; DEMONHUNTER Devourer 10 apps / 2 players; SHAMAN Restoration 10 apps / 2 players; EVOKER Augmentation 9 apps / 1 player; SHAMAN Elemental 8 apps / 2 players; PRIEST Shadow 7 apps / 1 player; DRUID Balance 6 apps / 1 player; EVOKER Devastation 5 apps / 1 player; WARLOCK Demonology 4 apps / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, MONK, PRIEST, SHAMAN, WARLOCK) with 182 applications / 21 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|deadly precision|71564`
+- **Despair** (1265323) · ALL — DEATHKNIGHT Blood 45 apps / 2 players; DRUID Guardian 22 apps / 2 players; WARRIOR Protection 22 apps / 2 players; DEATHKNIGHT Frost 20 apps / 2 players; DEMONHUNTER Vengeance 17 apps / 2 players; DEATHKNIGHT Unholy 16 apps / 1 player; PALADIN Protection 14 apps / 1 player; PALADIN Retribution 11 apps / 3 players; MONK Brewmaster 7 apps / 1 player; WARRIOR Arms 6 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, MONK, PALADIN, WARRIOR) with 180 applications / 16 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|despair|1265323`
+- **Solar Core Igniter** (1257988) · ALL — DEATHKNIGHT Blood 90 apps / 4 players; PALADIN Protection 39 apps / 2 players; WARRIOR Protection 19 apps / 3 players; DEATHKNIGHT Unholy 10 apps / 1 player; MONK Brewmaster 6 apps / 3 players; WARRIOR Arms 6 apps / 1 player; DRUID Guardian 4 apps / 1 player; DEMONHUNTER Vengeance 3 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, MONK, PALADIN, WARRIOR) with 177 applications / 16 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|solar core igniter|1257988`
+- **Sanguine Rancor** (1303479) · ALL — DEMONHUNTER Havoc 67 apps / 1 player; ROGUE Subtlety 55 apps / 1 player; HUNTER Beast Mastery 51 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DEMONHUNTER, HUNTER, ROGUE) with 173 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sanguine rancor|1303479`
+- **Desecrated Aura** (1265327) · ALL — DEATHKNIGHT Blood 42 apps / 2 players; DEATHKNIGHT Frost 20 apps / 2 players; DRUID Guardian 20 apps / 2 players; DEMONHUNTER Vengeance 19 apps / 2 players; WARRIOR Protection 19 apps / 2 players; DEATHKNIGHT Unholy 15 apps / 1 player; PALADIN Retribution 12 apps / 3 players; PALADIN Protection 11 apps / 1 player; MONK Brewmaster 7 apps / 1 player; WARRIOR Arms 3 apps / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, MONK, PALADIN, WARRIOR) with 168 applications / 16 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|desecrated aura|1265327`
+- **Seed of the Devouring Wild** (1259352) · ALL — DEATHKNIGHT Unholy 55 apps / 3 players; WARRIOR Arms 37 apps / 3 players; DEATHKNIGHT Blood 30 apps / 4 players; PALADIN Retribution 24 apps / 3 players; PALADIN Protection 12 apps / 2 players; DEATHKNIGHT Frost 10 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DEATHKNIGHT, PALADIN, WARRIOR) with 168 applications / 16 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|seed of the devouring wild|1259352`
+- **Charged Bolts** (1236110) · ALL — DEMONHUNTER Devourer 54 apps / 2 players; MAGE Arcane 35 apps / 1 player; DEATHKNIGHT Frost 27 apps / 1 player; EVOKER Augmentation 27 apps / 1 player; PRIEST Holy 22 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, DEMONHUNTER, EVOKER, MAGE, PRIEST) with 165 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|charged bolts|1236110`
+- **Entertained** (1224312) · ALL — MONK Mistweaver 29 apps / 3 players; MAGE Arcane 25 apps / 4 players; DEATHKNIGHT Blood 20 apps / 3 players; DEMONHUNTER Devourer 15 apps / 2 players; WARRIOR Arms 15 apps / 3 players; DRUID Restoration 10 apps / 1 player; PALADIN Holy 10 apps / 2 players; PRIEST Holy 10 apps / 1 player; WARLOCK Destruction 10 apps / 1 player; EVOKER Preservation 5 apps / 1 player; HUNTER Marksmanship 5 apps / 1 player; PALADIN Protection 5 apps / 1 player; ROGUE Assassination 5 apps / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, WARLOCK, WARRIOR) with 164 applications / 24 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|entertained|1224312`
+- **Golden Luster** (271107) · ALL — HUNTER Beast Mastery 79 apps / 5 players; ROGUE Outlaw 23 apps / 2 players; ROGUE Assassination 15 apps / 2 players; DRUID Guardian 14 apps / 2 players; DEMONHUNTER Vengeance 8 apps / 1 player; HUNTER Marksmanship 8 apps / 1 player; MONK Windwalker 5 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, DRUID, HUNTER, MONK, ROGUE) with 152 applications / 14 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|golden luster|271107`
+- **Critical Overload** (1236935) · ALL — DEATHKNIGHT Unholy 31 apps / 1 player; MAGE Arcane 31 apps / 1 player; PALADIN Protection 27 apps / 1 player; EVOKER Devastation 22 apps / 1 player; HUNTER Marksmanship 22 apps / 1 player; DEATHKNIGHT Frost 15 apps / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, EVOKER, HUNTER, MAGE, PALADIN) with 148 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|critical overload|1236935`
+- **Ophidian Maw** (1291580) · ALL — PALADIN Protection 55 apps / 5 players; MONK Mistweaver 26 apps / 1 player; DEATHKNIGHT Blood 14 apps / 3 players; MAGE Arcane 7 apps / 6 players; PALADIN Retribution 4 apps / 3 players; DEATHKNIGHT Frost 2 apps / 2 players; DEMONHUNTER Devourer 2 apps / 1 player; DEMONHUNTER Vengeance 2 apps / 1 player; EVOKER Devastation 2 apps / 1 player; HUNTER Beast Mastery 2 apps / 2 players; PALADIN Holy 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; WARLOCK Demonology 2 apps / 1 player; WARRIOR Arms 2 apps / 2 players; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Havoc 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Restoration 1 app / 1 player; EVOKER Preservation 1 app / 1 player; HUNTER Survival 1 app / 1 player; MAGE Fire 1 app / 1 player; MONK Windwalker 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, WARLOCK, WARRIOR) with 132 applications / 40 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ophidian maw|1291580`
+- **Well Fed** (1232585) · ALL — DEATHKNIGHT Blood 17 apps / 3 players; SHAMAN Restoration 11 apps / 1 player; PALADIN Retribution 9 apps / 6 players; DEMONHUNTER Havoc 8 apps / 5 players; PALADIN Protection 8 apps / 4 players; MONK Mistweaver 7 apps / 3 players; WARRIOR Protection 7 apps / 3 players; DEATHKNIGHT Unholy 6 apps / 5 players; HUNTER Beast Mastery 6 apps / 4 players; PRIEST Holy 5 apps / 5 players; WARLOCK Demonology 5 apps / 3 players; WARLOCK Destruction 5 apps / 2 players; DRUID Restoration 4 apps / 4 players; MAGE Frost 4 apps / 4 players; DEMONHUNTER Devourer 3 apps / 3 players; DEATHKNIGHT Frost 2 apps / 2 players; DEMONHUNTER Vengeance 2 apps / 2 players; DRUID Balance 2 apps / 2 players; DRUID Feral 2 apps / 1 player; DRUID Guardian 2 apps / 1 player; MAGE Arcane 2 apps / 1 player; MONK Windwalker 2 apps / 2 players; PALADIN Holy 2 apps / 2 players; WARRIOR Arms 2 apps / 2 players; WARRIOR Fury 2 apps / 2 players; EVOKER Augmentation 1 app / 1 player; EVOKER Preservation 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; HUNTER Survival 1 app / 1 player; MONK Brewmaster 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 131 applications / 78 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|well fed|1232585`
+- **Sign of the Skirmisher** (186401) · ALL — SHAMAN Restoration 16 apps / 2 players; DEATHKNIGHT Blood 14 apps / 3 players; PALADIN Protection 12 apps / 6 players; DEMONHUNTER Devourer 9 apps / 5 players; DEATHKNIGHT Unholy 7 apps / 4 players; PALADIN Retribution 7 apps / 4 players; SHAMAN Elemental 6 apps / 4 players; HUNTER Survival 5 apps / 1 player; PRIEST Discipline 5 apps / 2 players; MAGE Arcane 4 apps / 3 players; WARRIOR Fury 4 apps / 4 players; DEATHKNIGHT Frost 3 apps / 3 players; EVOKER Augmentation 3 apps / 2 players; HUNTER Beast Mastery 3 apps / 3 players; MAGE Frost 3 apps / 2 players; WARLOCK Demonology 3 apps / 3 players; WARRIOR Arms 3 apps / 2 players; WARRIOR Protection 3 apps / 1 player; DRUID Guardian 2 apps / 2 players; PALADIN Holy 2 apps / 2 players; ROGUE Assassination 2 apps / 1 player; DEMONHUNTER Havoc 1 app / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Restoration 1 app / 1 player; EVOKER Preservation 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MONK Brewmaster 1 app / 1 player; MONK Windwalker 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; WARLOCK Destruction 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 127 applications / 68 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the skirmisher|186401`
+- **Egg Sac** (452146) · ALL — DRUID Restoration 67 apps / 1 player; PALADIN Retribution 14 apps / 1 player; PRIEST Holy 12 apps / 1 player; DEMONHUNTER Devourer 9 apps / 1 player; WARLOCK Demonology 8 apps / 1 player; WARRIOR Fury 8 apps / 1 player; DEATHKNIGHT Blood 7 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, PALADIN, PRIEST, WARLOCK, WARRIOR) with 125 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|egg sac|452146`
+- **Echo of Ironfur** (1269633) · DRUID — Guardian 125 apps / 16 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DRUID|echo of ironfur|1269633`
+- **Shadow Shard Sliver** (1308559) · ALL — PALADIN Retribution 45 apps / 4 players; MAGE Arcane 18 apps / 1 player; WARRIOR Fury 14 apps / 1 player; DEATHKNIGHT Blood 13 apps / 1 player; DRUID Balance 12 apps / 1 player; DEMONHUNTER Havoc 7 apps / 1 player; HUNTER Beast Mastery 7 apps / 1 player; PRIEST Shadow 5 apps / 1 player; SHAMAN Elemental 3 apps / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARRIOR) with 124 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|shadow shard sliver|1308559`
+- **Bound by Fire and Blaze** (383926) · ALL — PALADIN Retribution 69 apps / 5 players; WARRIOR Arms 19 apps / 2 players; PALADIN Protection 14 apps / 1 player; DEATHKNIGHT Blood 12 apps / 3 players; DEATHKNIGHT Frost 4 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DEATHKNIGHT, PALADIN, WARRIOR) with 118 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|bound by fire and blaze|383926`
+- **Sign of the Dragonflights** (1305981) · ALL — MAGE Frost 15 apps / 4 players; DRUID Guardian 13 apps / 5 players; WARLOCK Destruction 13 apps / 1 player; HUNTER Beast Mastery 11 apps / 3 players; WARRIOR Arms 8 apps / 3 players; SHAMAN Restoration 7 apps / 4 players; MONK Windwalker 6 apps / 2 players; PRIEST Discipline 6 apps / 2 players; DRUID Restoration 5 apps / 2 players; PALADIN Protection 4 apps / 3 players; SHAMAN Elemental 4 apps / 2 players; WARLOCK Demonology 4 apps / 3 players; WARRIOR Fury 4 apps / 1 player; HUNTER Marksmanship 3 apps / 2 players; DEATHKNIGHT Blood 2 apps / 2 players; DEATHKNIGHT Frost 2 apps / 2 players; DRUID Balance 2 apps / 1 player; HUNTER Survival 2 apps / 1 player; MONK Mistweaver 2 apps / 2 players; DEMONHUNTER Vengeance 1 app / 1 player; PALADIN Holy 1 app / 1 player; PALADIN Retribution 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 118 applications / 50 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the dragonflights|1305981`
+- **Prismatic Bauble** (223143) · ALL — DEMONHUNTER Havoc 23 apps / 2 players; PALADIN Protection 18 apps / 2 players; PRIEST Shadow 17 apps / 2 players; MONK Windwalker 13 apps / 2 players; PRIEST Holy 12 apps / 1 player; WARLOCK Demonology 11 apps / 2 players; MAGE Arcane 8 apps / 1 player; DRUID Balance 5 apps / 1 player; DRUID Feral 3 apps / 1 player; MAGE Frost 3 apps / 1 player; DEMONHUNTER Devourer 1 app / 1 player; WARRIOR Arms 1 app / 1 player — R8 — high
+  - Reason: Applied by 8 classes (DEMONHUNTER, DRUID, MAGE, MONK, PALADIN, PRIEST, WARLOCK, WARRIOR) with 115 applications / 17 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|prismatic bauble|223143`
+- **Killer Instincts** (1307361) · ALL — PALADIN Retribution 50 apps / 1 player; WARRIOR Arms 49 apps / 1 player; DEATHKNIGHT Frost 14 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DEATHKNIGHT, PALADIN, WARRIOR) with 113 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|killer instincts|1307361`
+- **Ever-collapsing Void Fissure** (1253114) · ALL — DEMONHUNTER Devourer 37 apps / 3 players; PRIEST Holy 13 apps / 1 player; WARLOCK Destruction 11 apps / 1 player; DRUID Balance 10 apps / 1 player; MAGE Arcane 9 apps / 2 players; WARLOCK Demonology 9 apps / 1 player; DEMONHUNTER Vengeance 6 apps / 1 player; EVOKER Devastation 6 apps / 1 player; MAGE Fire 6 apps / 1 player; SHAMAN Elemental 5 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEMONHUNTER, DRUID, EVOKER, MAGE, PRIEST, SHAMAN, WARLOCK) with 112 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ever-collapsing void fissure|1253114`
+- **Siphoning Wind** (1260572) · ALL — DEATHKNIGHT Blood 12 apps / 3 players; DEATHKNIGHT Unholy 8 apps / 8 players; MAGE Frost 8 apps / 8 players; SHAMAN Elemental 7 apps / 6 players; DEMONHUNTER Devourer 6 apps / 5 players; DRUID Restoration 5 apps / 1 player; PALADIN Protection 5 apps / 4 players; PALADIN Retribution 5 apps / 4 players; SHAMAN Restoration 5 apps / 3 players; DEMONHUNTER Havoc 4 apps / 3 players; HUNTER Beast Mastery 4 apps / 4 players; PALADIN Holy 4 apps / 4 players; WARLOCK Demonology 4 apps / 4 players; MONK Brewmaster 3 apps / 3 players; WARLOCK Destruction 3 apps / 1 player; WARRIOR Arms 3 apps / 3 players; WARRIOR Protection 3 apps / 3 players; DEMONHUNTER Vengeance 2 apps / 2 players; DRUID Guardian 2 apps / 2 players; EVOKER Preservation 2 apps / 2 players; MAGE Arcane 2 apps / 2 players; MONK Mistweaver 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; SHAMAN Enhancement 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Feral 1 app / 1 player; EVOKER Devastation 1 app / 1 player; MONK Windwalker 1 app / 1 player; PRIEST Discipline 1 app / 1 player; PRIEST Holy 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 111 applications / 87 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|siphoning wind|1260572`
+- **Echo of Frenzied Regeneration** (1269645) · DRUID — Guardian 109 apps / 14 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DRUID|echo of frenzied regeneration|1269645`
+- **Boon of Azerothian Blessings** (1252202) · ALL — MONK Brewmaster 50 apps / 2 players; MAGE Arcane 24 apps / 1 player; WARLOCK Demonology 18 apps / 2 players; PRIEST Shadow 15 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (MAGE, MONK, PRIEST, WARLOCK) with 107 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|boon of azerothian blessings|1252202`
+- **Blessing of Zeal** (1272350) · ALL — DEATHKNIGHT Blood 18 apps / 2 players; PALADIN Holy 16 apps / 3 players; SHAMAN Restoration 14 apps / 4 players; HUNTER Beast Mastery 8 apps / 3 players; PALADIN Protection 6 apps / 3 players; WARLOCK Demonology 6 apps / 3 players; PALADIN Retribution 5 apps / 3 players; DEMONHUNTER Havoc 4 apps / 2 players; WARRIOR Protection 4 apps / 2 players; DEATHKNIGHT Unholy 3 apps / 3 players; DRUID Guardian 3 apps / 1 player; DEATHKNIGHT Frost 2 apps / 2 players; DEMONHUNTER Devourer 2 apps / 2 players; DEMONHUNTER Vengeance 2 apps / 2 players; HUNTER Marksmanship 2 apps / 2 players; SHAMAN Elemental 2 apps / 2 players; DRUID Balance 1 app / 1 player; EVOKER Preservation 1 app / 1 player; MAGE Frost 1 app / 1 player; PRIEST Holy 1 app / 1 player; PRIEST Shadow 1 app / 1 player; ROGUE Assassination 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 104 applications / 44 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|blessing of zeal|1272350`
+- **Ophidian Bone Whistle** (1296890) · ALL — PALADIN Protection 93 apps / 1 player; ROGUE Outlaw 5 apps / 1 player; DEATHKNIGHT Unholy 3 apps / 1 player; HUNTER Beast Mastery 2 apps / 1 player; ROGUE Assassination 1 app / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, HUNTER, PALADIN, ROGUE) with 104 applications / 5 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ophidian bone whistle|1296890`
+- **Sign of the Critter** (186406) · ALL — DEATHKNIGHT Blood 17 apps / 2 players; SHAMAN Restoration 16 apps / 1 player; MAGE Frost 9 apps / 4 players; EVOKER Preservation 6 apps / 3 players; PALADIN Retribution 6 apps / 5 players; DRUID Restoration 5 apps / 3 players; MONK Mistweaver 5 apps / 2 players; DEMONHUNTER Devourer 4 apps / 2 players; DEMONHUNTER Havoc 4 apps / 3 players; WARLOCK Demonology 4 apps / 3 players; DRUID Feral 3 apps / 1 player; HUNTER Beast Mastery 3 apps / 3 players; MAGE Arcane 3 apps / 2 players; PALADIN Holy 3 apps / 2 players; SHAMAN Elemental 3 apps / 3 players; DEATHKNIGHT Unholy 2 apps / 2 players; WARLOCK Destruction 2 apps / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Guardian 1 app / 1 player; HUNTER Survival 1 app / 1 player; MONK Brewmaster 1 app / 1 player; MONK Windwalker 1 app / 1 player; PRIEST Holy 1 app / 1 player; PRIEST Shadow 1 app / 1 player; ROGUE Subtlety 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 104 applications / 51 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the critter|186406`
+- **Ward of the Uncoiled** (1305773) · ALL — PALADIN Holy 23 apps / 5 players; SHAMAN Restoration 14 apps / 2 players; MAGE Arcane 13 apps / 6 players; HUNTER Beast Mastery 10 apps / 3 players; PALADIN Retribution 6 apps / 5 players; PRIEST Shadow 4 apps / 3 players; DEATHKNIGHT Blood 3 apps / 3 players; DEATHKNIGHT Frost 3 apps / 3 players; PALADIN Protection 3 apps / 3 players; WARLOCK Demonology 3 apps / 3 players; DEATHKNIGHT Unholy 2 apps / 2 players; DEMONHUNTER Devourer 2 apps / 2 players; MONK Windwalker 2 apps / 2 players; PRIEST Discipline 2 apps / 1 player; PRIEST Holy 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Guardian 1 app / 1 player; DRUID Restoration 1 app / 1 player; EVOKER Preservation 1 app / 1 player; MONK Mistweaver 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; SHAMAN Elemental 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 101 applications / 53 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ward of the uncoiled|1305773`
+- **Gift of Ironfur** (1269659) · DRUID — Guardian 101 apps / 15 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DRUID|gift of ironfur|1269659`
+- **Gift of Maul** (1269660) · DRUID — Guardian 101 apps / 15 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DRUID|gift of maul|1269660`
+- **Gift of Frenzied Regeneration** (1269661) · DRUID — Guardian 100 apps / 15 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DRUID|gift of frenzied regeneration|1269661`
+- **Keen Prowess** (449091) · ALL — PALADIN Protection 33 apps / 2 players; HUNTER Survival 28 apps / 1 player; DRUID Guardian 22 apps / 1 player; WARLOCK Demonology 15 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DRUID, HUNTER, PALADIN, WARLOCK) with 98 applications / 5 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|keen prowess|449091`
+- **Well Fed** (1294727) · ALL — HUNTER Survival 10 apps / 3 players; DEATHKNIGHT Blood 9 apps / 4 players; HUNTER Beast Mastery 8 apps / 5 players; PALADIN Retribution 8 apps / 5 players; WARRIOR Arms 8 apps / 4 players; WARLOCK Demonology 6 apps / 4 players; DRUID Guardian 5 apps / 2 players; MAGE Frost 5 apps / 3 players; MAGE Arcane 4 apps / 3 players; SHAMAN Elemental 4 apps / 3 players; DEATHKNIGHT Frost 3 apps / 1 player; DEATHKNIGHT Unholy 3 apps / 3 players; DEMONHUNTER Havoc 3 apps / 3 players; HUNTER Marksmanship 3 apps / 1 player; PALADIN Protection 3 apps / 3 players; DEMONHUNTER Devourer 2 apps / 2 players; PRIEST Discipline 2 apps / 1 player; PRIEST Shadow 2 apps / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Feral 1 app / 1 player; EVOKER Devastation 1 app / 1 player; EVOKER Preservation 1 app / 1 player; PALADIN Holy 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; SHAMAN Restoration 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 97 applications / 60 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|well fed|1294727`
+- **Hearty Well Fed** (1233724) · ALL — WARLOCK Demonology 9 apps / 4 players; PALADIN Retribution 8 apps / 6 players; DRUID Restoration 7 apps / 2 players; HUNTER Beast Mastery 6 apps / 5 players; SHAMAN Elemental 6 apps / 4 players; DEMONHUNTER Devourer 5 apps / 3 players; MAGE Arcane 5 apps / 3 players; DEATHKNIGHT Unholy 4 apps / 4 players; EVOKER Augmentation 4 apps / 1 player; HUNTER Marksmanship 4 apps / 2 players; PALADIN Holy 4 apps / 4 players; DEATHKNIGHT Frost 3 apps / 3 players; DRUID Balance 3 apps / 2 players; DRUID Feral 3 apps / 2 players; MAGE Frost 3 apps / 3 players; DEATHKNIGHT Blood 2 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; EVOKER Devastation 2 apps / 2 players; HUNTER Survival 2 apps / 2 players; MONK Brewmaster 2 apps / 1 player; MONK Mistweaver 2 apps / 2 players; PALADIN Protection 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; DRUID Guardian 1 app / 1 player; MONK Windwalker 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; WARRIOR Arms 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 95 applications / 68 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hearty well fed|1233724`
+- **Mite-y Feast** (1243843) · ALL — WARLOCK Demonology 33 apps / 2 players; MAGE Frost 25 apps / 2 players; EVOKER Devastation 18 apps / 1 player; PRIEST Shadow 17 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (EVOKER, MAGE, PRIEST, WARLOCK) with 93 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|mite-y feast|1243843`
+- **The King's Unyielding Wind** (1295275) · ALL — MAGE Arcane 24 apps / 4 players; SHAMAN Elemental 18 apps / 1 player; WARLOCK Affliction 12 apps / 1 player; DRUID Balance 11 apps / 1 player; WARLOCK Demonology 11 apps / 3 players; DEMONHUNTER Devourer 7 apps / 1 player; PRIEST Holy 6 apps / 1 player; MONK Mistweaver 3 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEMONHUNTER, DRUID, MAGE, MONK, PRIEST, SHAMAN, WARLOCK) with 92 applications / 13 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|the king's unyielding wind|1295275`
+- **Rictus of the Laughing Skull** (274739) · ALL — WARRIOR Protection 22 apps / 4 players; DEATHKNIGHT Unholy 13 apps / 3 players; SHAMAN Elemental 13 apps / 4 players; DEATHKNIGHT Blood 10 apps / 3 players; MONK Windwalker 6 apps / 2 players; HUNTER Survival 5 apps / 1 player; MONK Mistweaver 5 apps / 1 player; ROGUE Assassination 5 apps / 1 player; WARLOCK Affliction 5 apps / 1 player; WARRIOR Arms 4 apps / 1 player; MONK Brewmaster 2 apps / 1 player; HUNTER Beast Mastery 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, HUNTER, MONK, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 91 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rictus of the laughing skull|274739`
+- **Woven Fate** (1244029) · ALL — DEMONHUNTER Devourer 58 apps / 5 players; MONK Brewmaster 12 apps / 1 player; SHAMAN Elemental 11 apps / 1 player; PRIEST Holy 10 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEMONHUNTER, MONK, PRIEST, SHAMAN) with 91 applications / 8 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|woven fate|1244029`
+- **Sentinel's Blessing** (1272713) · ALL — SHAMAN Restoration 30 apps / 2 players; DEATHKNIGHT Blood 18 apps / 3 players; HUNTER Beast Mastery 5 apps / 3 players; SHAMAN Elemental 5 apps / 5 players; MONK Windwalker 4 apps / 2 players; WARLOCK Demonology 4 apps / 2 players; DRUID Restoration 3 apps / 2 players; PALADIN Retribution 3 apps / 3 players; DEMONHUNTER Havoc 2 apps / 1 player; MONK Brewmaster 2 apps / 2 players; PALADIN Holy 2 apps / 2 players; PRIEST Discipline 2 apps / 2 players; ROGUE Subtlety 2 apps / 2 players; DEATHKNIGHT Unholy 1 app / 1 player; PALADIN Protection 1 app / 1 player; ROGUE Assassination 1 app / 1 player; WARLOCK Affliction 1 app / 1 player; WARLOCK Destruction 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 89 applications / 37 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sentinel's blessing|1272713`
+- **Sign of the Emissary** (225788) · ALL — SHAMAN Restoration 12 apps / 3 players; MAGE Frost 11 apps / 5 players; DEATHKNIGHT Blood 10 apps / 1 player; WARRIOR Protection 8 apps / 3 players; PALADIN Protection 7 apps / 1 player; WARLOCK Demonology 7 apps / 3 players; DRUID Restoration 6 apps / 2 players; DEMONHUNTER Devourer 5 apps / 5 players; HUNTER Beast Mastery 4 apps / 3 players; PALADIN Retribution 4 apps / 3 players; EVOKER Preservation 3 apps / 1 player; PRIEST Shadow 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Guardian 1 app / 1 player; PALADIN Holy 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; WARLOCK Destruction 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 89 applications / 42 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the emissary|225788`
+- **Halazzi's Swiftness** (1247578) · ALL — MAGE Arcane 30 apps / 1 player; SHAMAN Enhancement 28 apps / 1 player; DRUID Balance 16 apps / 1 player; DEMONHUNTER Havoc 14 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEMONHUNTER, DRUID, MAGE, SHAMAN) with 88 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|halazzi's swiftness|1247578`
+- **Interrogate** (1216737) · ALL — HUNTER Beast Mastery 10 apps / 4 players; MONK Mistweaver 10 apps / 2 players; PALADIN Holy 8 apps / 5 players; DEMONHUNTER Devourer 7 apps / 4 players; MAGE Arcane 6 apps / 4 players; SHAMAN Restoration 6 apps / 3 players; PALADIN Retribution 5 apps / 3 players; DRUID Restoration 4 apps / 2 players; DEATHKNIGHT Blood 3 apps / 3 players; DRUID Balance 3 apps / 1 player; EVOKER Preservation 3 apps / 1 player; HUNTER Marksmanship 3 apps / 1 player; PALADIN Protection 3 apps / 2 players; ROGUE Assassination 3 apps / 1 player; SHAMAN Elemental 3 apps / 1 player; WARRIOR Arms 3 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; DRUID Guardian 1 app / 1 player; PRIEST Shadow 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARLOCK Demonology 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 88 applications / 47 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|interrogate|1216737`
+- **The King's Unyielding Wind** (1294745) · ALL — MAGE Arcane 24 apps / 4 players; SHAMAN Elemental 18 apps / 1 player; WARLOCK Affliction 12 apps / 1 player; DRUID Balance 10 apps / 1 player; WARLOCK Demonology 10 apps / 2 players; DEMONHUNTER Devourer 7 apps / 1 player; PRIEST Holy 6 apps / 1 player; MONK Mistweaver 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEMONHUNTER, DRUID, MAGE, MONK, PRIEST, SHAMAN, WARLOCK) with 88 applications / 12 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|the king's unyielding wind|1294745`
+- **Arcanoweave Audacity** (1241289) · ALL — MAGE Frost 45 apps / 2 players; PRIEST Holy 40 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (MAGE, PRIEST) with 85 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|arcanoweave audacity|1241289`
+- **Sign of the Mists** (335151) · ALL — PALADIN Retribution 10 apps / 6 players; DEATHKNIGHT Blood 8 apps / 2 players; SHAMAN Elemental 7 apps / 3 players; SHAMAN Restoration 6 apps / 1 player; MAGE Frost 5 apps / 5 players; HUNTER Survival 4 apps / 2 players; PALADIN Protection 4 apps / 1 player; HUNTER Beast Mastery 3 apps / 1 player; MONK Mistweaver 3 apps / 2 players; PALADIN Holy 3 apps / 3 players; WARLOCK Affliction 3 apps / 2 players; DEMONHUNTER Devourer 2 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; DRUID Guardian 2 apps / 2 players; DRUID Restoration 2 apps / 1 player; MONK Brewmaster 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; PRIEST Shadow 2 apps / 1 player; SHAMAN Enhancement 2 apps / 2 players; WARLOCK Demonology 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DRUID Balance 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MAGE Arcane 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; WARLOCK Destruction 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 83 applications / 51 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the mists|335151`
+- **Toggle Find Lumber** (1263084) · ALL — HUNTER Beast Mastery 11 apps / 7 players; DRUID Restoration 9 apps / 4 players; PALADIN Retribution 7 apps / 5 players; MAGE Arcane 6 apps / 5 players; MAGE Frost 5 apps / 4 players; SHAMAN Elemental 5 apps / 3 players; WARLOCK Demonology 5 apps / 2 players; DRUID Feral 3 apps / 2 players; EVOKER Augmentation 3 apps / 1 player; SHAMAN Restoration 3 apps / 1 player; WARLOCK Affliction 3 apps / 2 players; DEATHKNIGHT Blood 2 apps / 2 players; DEMONHUNTER Devourer 2 apps / 1 player; PRIEST Holy 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Havoc 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Guardian 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; HUNTER Survival 1 app / 1 player; MONK Brewmaster 1 app / 1 player; MONK Windwalker 1 app / 1 player; PALADIN Holy 1 app / 1 player; PALADIN Protection 1 app / 1 player; PRIEST Discipline 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 82 applications / 56 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|toggle find lumber|1263084`
+- **Tangle of Vibrant Vines** (1255367) · ALL — SHAMAN Restoration 26 apps / 1 player; PRIEST Holy 19 apps / 1 player; DEATHKNIGHT Blood 10 apps / 1 player; DEATHKNIGHT Unholy 10 apps / 3 players; PRIEST Discipline 7 apps / 1 player; PRIEST Shadow 4 apps / 2 players; SHAMAN Enhancement 3 apps / 1 player; WARLOCK Affliction 1 app / 1 player; WARLOCK Demonology 1 app / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, PRIEST, SHAMAN, WARLOCK) with 81 applications / 11 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|tangle of vibrant vines|1255367`
+- **Sealed Chaos Urn** (1253115) · ALL — DEATHKNIGHT Unholy 23 apps / 2 players; HUNTER Beast Mastery 22 apps / 1 player; WARRIOR Fury 11 apps / 1 player; WARLOCK Destruction 9 apps / 1 player; WARLOCK Demonology 4 apps / 1 player; DRUID Restoration 3 apps / 1 player; MAGE Frost 2 apps / 1 player; PALADIN Retribution 2 apps / 1 player; WARLOCK Affliction 2 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DRUID, HUNTER, MAGE, PALADIN, WARLOCK, WARRIOR) with 78 applications / 10 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sealed chaos urn|1253115`
+- **Ethereal Reaping** (1217101) · ALL — HUNTER Survival 18 apps / 6 players; MAGE Frost 14 apps / 3 players; DEATHKNIGHT Unholy 9 apps / 4 players; PALADIN Retribution 9 apps / 3 players; DEMONHUNTER Devourer 5 apps / 4 players; EVOKER Devastation 4 apps / 1 player; WARRIOR Fury 4 apps / 2 players; ROGUE Outlaw 2 apps / 1 player; SHAMAN Elemental 2 apps / 2 players; SHAMAN Enhancement 2 apps / 1 player; WARLOCK Demonology 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MAGE Arcane 1 app / 1 player; MONK Windwalker 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, EVOKER, HUNTER, MAGE, MONK, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 76 applications / 34 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ethereal reaping|1217101`
+- **Rescue** (370667) · ALL — WARLOCK Demonology 11 apps / 7 players; DEATHKNIGHT Blood 7 apps / 2 players; DRUID Restoration 7 apps / 4 players; PALADIN Protection 6 apps / 4 players; DRUID Balance 5 apps / 3 players; HUNTER Beast Mastery 5 apps / 5 players; MAGE Arcane 4 apps / 3 players; MAGE Frost 3 apps / 2 players; PALADIN Retribution 3 apps / 3 players; SHAMAN Enhancement 3 apps / 1 player; SHAMAN Restoration 3 apps / 2 players; DEMONHUNTER Devourer 2 apps / 2 players; DEMONHUNTER Havoc 2 apps / 2 players; DRUID Guardian 2 apps / 1 player; HUNTER Survival 2 apps / 1 player; PRIEST Discipline 2 apps / 1 player; ROGUE Assassination 2 apps / 1 player; WARLOCK Destruction 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DRUID Feral 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; WARLOCK Affliction 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 76 applications / 51 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|rescue|370667`
+- **Crimson Blessing** (1272710) · ALL — PALADIN Protection 17 apps / 2 players; MONK Mistweaver 13 apps / 2 players; DEMONHUNTER Devourer 6 apps / 3 players; SHAMAN Enhancement 5 apps / 1 player; DEATHKNIGHT Unholy 4 apps / 2 players; WARLOCK Destruction 4 apps / 1 player; DEMONHUNTER Vengeance 3 apps / 1 player; DRUID Guardian 3 apps / 1 player; HUNTER Survival 3 apps / 2 players; WARLOCK Demonology 3 apps / 3 players; MAGE Arcane 2 apps / 2 players; PALADIN Retribution 2 apps / 2 players; WARRIOR Arms 2 apps / 1 player; WARRIOR Fury 2 apps / 2 players; DRUID Balance 1 app / 1 player; DRUID Restoration 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; MONK Brewmaster 1 app / 1 player; WARLOCK Affliction 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK, WARRIOR) with 74 applications / 30 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|crimson blessing|1272710`
+- **Zeal of the Burning Blade** (274740) · ALL — WARRIOR Protection 20 apps / 4 players; HUNTER Beast Mastery 9 apps / 2 players; SHAMAN Elemental 9 apps / 3 players; DEATHKNIGHT Blood 6 apps / 3 players; HUNTER Survival 5 apps / 1 player; WARLOCK Demonology 5 apps / 1 player; SHAMAN Enhancement 4 apps / 2 players; WARLOCK Affliction 4 apps / 1 player; ROGUE Assassination 3 apps / 1 player; WARRIOR Arms 3 apps / 1 player; MONK Brewmaster 2 apps / 1 player; MONK Mistweaver 2 apps / 1 player; WARRIOR Fury 2 apps / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, HUNTER, MONK, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 74 applications / 22 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|zeal of the burning blade|274740`
+- **Find High-Value Beasts** (1250491) · ALL — HUNTER Beast Mastery 14 apps / 10 players; SHAMAN Restoration 9 apps / 7 players; DEMONHUNTER Devourer 8 apps / 5 players; ROGUE Assassination 4 apps / 3 players; WARLOCK Demonology 4 apps / 2 players; WARRIOR Protection 4 apps / 2 players; DRUID Feral 3 apps / 2 players; EVOKER Augmentation 3 apps / 1 player; HUNTER Survival 3 apps / 3 players; MONK Brewmaster 3 apps / 2 players; DEATHKNIGHT Blood 2 apps / 2 players; DEMONHUNTER Vengeance 2 apps / 2 players; DRUID Restoration 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DRUID Balance 1 app / 1 player; EVOKER Devastation 1 app / 1 player; EVOKER Preservation 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MONK Mistweaver 1 app / 1 player; MONK Windwalker 1 app / 1 player; PALADIN Holy 1 app / 1 player; PALADIN Protection 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 73 applications / 53 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|find high-value beasts|1250491`
+- **Blessing of Potency** (1272321) · ALL — PALADIN Protection 20 apps / 3 players; PALADIN Holy 7 apps / 4 players; DEMONHUNTER Devourer 6 apps / 3 players; DEATHKNIGHT Blood 5 apps / 2 players; MAGE Arcane 5 apps / 4 players; WARRIOR Fury 5 apps / 2 players; DRUID Guardian 4 apps / 1 player; MONK Mistweaver 4 apps / 1 player; SHAMAN Restoration 3 apps / 1 player; DEATHKNIGHT Unholy 2 apps / 1 player; SHAMAN Elemental 2 apps / 1 player; DRUID Restoration 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; MAGE Frost 1 app / 1 player; MONK Brewmaster 1 app / 1 player; PALADIN Retribution 1 app / 1 player; PRIEST Holy 1 app / 1 player; PRIEST Shadow 1 app / 1 player; WARRIOR Arms 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARRIOR) with 71 applications / 30 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|blessing of potency|1272321`
+- **Veiled Blessing** (1272711) · ALL — HUNTER Beast Mastery 26 apps / 3 players; SHAMAN Restoration 22 apps / 2 players; MAGE Arcane 5 apps / 3 players; DRUID Restoration 3 apps / 1 player; SHAMAN Elemental 3 apps / 2 players; WARLOCK Destruction 3 apps / 1 player; PRIEST Shadow 2 apps / 1 player; WARLOCK Demonology 2 apps / 2 players; DRUID Balance 1 app / 1 player; MAGE Frost 1 app / 1 player; PALADIN Holy 1 app / 1 player; PRIEST Holy 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DRUID, HUNTER, MAGE, PALADIN, PRIEST, SHAMAN, WARLOCK) with 70 applications / 19 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|veiled blessing|1272711`
+- **Cursed Stone Idol** (1241806) · ALL — DEATHKNIGHT Unholy 44 apps / 4 players; DRUID Guardian 9 apps / 1 player; MONK Brewmaster 8 apps / 1 player; WARRIOR Fury 7 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, DRUID, MONK, WARRIOR) with 68 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|cursed stone idol|1241806`
+- **Mutating Elixir** (1310012) · ALL — DEATHKNIGHT Blood 13 apps / 3 players; PALADIN Holy 9 apps / 2 players; SHAMAN Restoration 8 apps / 2 players; WARRIOR Arms 8 apps / 2 players; HUNTER Beast Mastery 6 apps / 2 players; MAGE Arcane 5 apps / 2 players; PRIEST Shadow 5 apps / 1 player; WARLOCK Affliction 5 apps / 1 player; MONK Windwalker 2 apps / 1 player; PALADIN Retribution 2 apps / 1 player; ROGUE Outlaw 2 apps / 1 player; SHAMAN Elemental 2 apps / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 67 applications / 19 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|mutating elixir|1310012`
+- **Ethereal Augmentation** (1234969) · ALL — SHAMAN Elemental 9 apps / 4 players; HUNTER Beast Mastery 7 apps / 4 players; PALADIN Retribution 6 apps / 4 players; MAGE Frost 5 apps / 3 players; DRUID Feral 4 apps / 2 players; SHAMAN Restoration 4 apps / 2 players; WARLOCK Destruction 4 apps / 1 player; DEATHKNIGHT Frost 3 apps / 2 players; DRUID Balance 3 apps / 2 players; DRUID Restoration 3 apps / 1 player; PRIEST Shadow 3 apps / 1 player; HUNTER Marksmanship 2 apps / 2 players; MAGE Arcane 2 apps / 1 player; MONK Windwalker 2 apps / 2 players; PALADIN Holy 2 apps / 2 players; DEMONHUNTER Vengeance 1 app / 1 player; EVOKER Preservation 1 app / 1 player; PRIEST Holy 1 app / 1 player; ROGUE Assassination 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 13 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 64 applications / 38 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ethereal augmentation|1234969`
+- **Radiant Blessing** (1254624) · ALL — MONK Mistweaver 57 apps / 2 players; MAGE Frost 1 app / 1 player — R8 — high
+  - Reason: Applied by 2 classes (MAGE, MONK) with 58 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|radiant blessing|1254624`
+- **Araz's Ritual Forge** (1232802) · ALL — HUNTER Survival 22 apps / 3 players; PALADIN Retribution 16 apps / 2 players; PRIEST Shadow 10 apps / 1 player; DEATHKNIGHT Frost 9 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, HUNTER, PALADIN, PRIEST) with 57 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|araz's ritual forge|1232802`
+- **Embrace of Pa'ku** (292361) · ALL — PALADIN Retribution 25 apps / 8 players; HUNTER Beast Mastery 5 apps / 3 players; HUNTER Survival 4 apps / 1 player; DRUID Balance 3 apps / 1 player; DRUID Guardian 3 apps / 1 player; DRUID Restoration 3 apps / 1 player; PRIEST Holy 3 apps / 1 player; WARRIOR Arms 3 apps / 2 players; DEATHKNIGHT Blood 2 apps / 1 player; DEATHKNIGHT Unholy 2 apps / 2 players; MAGE Frost 2 apps / 1 player; DEATHKNIGHT Frost 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (DEATHKNIGHT, DRUID, HUNTER, MAGE, PALADIN, PRIEST, WARRIOR) with 56 applications / 23 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|embrace of pa'ku|292361`
+- **Mana Divining Stone** (227723) · ALL — DRUID Guardian 8 apps / 3 players; DEATHKNIGHT Blood 5 apps / 3 players; PALADIN Retribution 5 apps / 5 players; DEMONHUNTER Havoc 3 apps / 2 players; DEMONHUNTER Vengeance 3 apps / 1 player; MAGE Frost 3 apps / 2 players; WARLOCK Demonology 3 apps / 1 player; WARLOCK Destruction 3 apps / 1 player; PALADIN Holy 2 apps / 2 players; PALADIN Protection 2 apps / 2 players; PRIEST Discipline 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; ROGUE Assassination 2 apps / 2 players; WARLOCK Affliction 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Devourer 1 app / 1 player; DRUID Balance 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; MONK Brewmaster 1 app / 1 player; MONK Mistweaver 1 app / 1 player; MONK Windwalker 1 app / 1 player; SHAMAN Restoration 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 56 applications / 41 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|mana divining stone|227723`
+- **Volatile Power** (1270343) · ALL — DEATHKNIGHT Blood 25 apps / 1 player; PALADIN Protection 18 apps / 1 player; MAGE Frost 10 apps / 1 player; HUNTER Beast Mastery 2 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEATHKNIGHT, HUNTER, MAGE, PALADIN) with 55 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|volatile power|1270343`
+- **Ferocity of the Frostwolf** (274741) · ALL — DEATHKNIGHT Unholy 14 apps / 3 players; SHAMAN Elemental 10 apps / 2 players; DEATHKNIGHT Blood 9 apps / 3 players; SHAMAN Enhancement 9 apps / 2 players; MONK Windwalker 5 apps / 2 players; HUNTER Beast Mastery 4 apps / 2 players; WARLOCK Demonology 2 apps / 1 player; HUNTER Survival 1 app / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, HUNTER, MONK, SHAMAN, WARLOCK) with 54 applications / 16 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ferocity of the frostwolf|274741`
+- **Hearty Well Fed** (1285644) · ALL — DEATHKNIGHT Blood 9 apps / 2 players; SHAMAN Restoration 9 apps / 3 players; MAGE Frost 7 apps / 2 players; HUNTER Beast Mastery 4 apps / 1 player; HUNTER Survival 3 apps / 1 player; PALADIN Retribution 3 apps / 3 players; MAGE Arcane 2 apps / 2 players; PRIEST Holy 2 apps / 2 players; SHAMAN Elemental 2 apps / 1 player; WARLOCK Destruction 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Devourer 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Guardian 1 app / 1 player; MAGE Fire 1 app / 1 player; PALADIN Protection 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Assassination 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; WARLOCK Demonology 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK) with 53 applications / 27 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hearty well fed|1285644`
+- **Empyrean Swiftness** (1264337) · ALL — WARLOCK Demonology 24 apps / 1 player; DEMONHUNTER Devourer 17 apps / 1 player; SHAMAN Restoration 6 apps / 1 player; EVOKER Augmentation 4 apps / 1 player; MAGE Frost 1 app / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEMONHUNTER, EVOKER, MAGE, SHAMAN, WARLOCK) with 52 applications / 5 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|empyrean swiftness|1264337`
+- **Hearty Vilebranch Stew** (1269056) · ALL — HUNTER Beast Mastery 7 apps / 5 players; DRUID Restoration 4 apps / 3 players; MAGE Frost 4 apps / 4 players; WARRIOR Protection 4 apps / 3 players; SHAMAN Restoration 3 apps / 2 players; WARLOCK Demonology 3 apps / 3 players; WARLOCK Destruction 3 apps / 1 player; DEATHKNIGHT Blood 2 apps / 2 players; DEATHKNIGHT Frost 2 apps / 2 players; DEATHKNIGHT Unholy 2 apps / 2 players; DEMONHUNTER Devourer 2 apps / 2 players; PALADIN Protection 2 apps / 2 players; DEMONHUNTER Havoc 1 app / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Guardian 1 app / 1 player; EVOKER Augmentation 1 app / 1 player; HUNTER Survival 1 app / 1 player; MONK Mistweaver 1 app / 1 player; PALADIN Holy 1 app / 1 player; PALADIN Retribution 1 app / 1 player; PRIEST Shadow 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARLOCK Affliction 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 52 applications / 45 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hearty vilebranch stew|1269056`
+- **Hex Lord's Doom** (1307470) · ALL — PRIEST Shadow 14 apps / 1 player; MAGE Arcane 13 apps / 1 player; MONK Mistweaver 13 apps / 1 player; PRIEST Holy 11 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (MAGE, MONK, PRIEST) with 51 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hex lord's doom|1307470`
+- **Blinky's Collar** (1282029) · ALL — DRUID Guardian 8 apps / 3 players; PALADIN Retribution 6 apps / 6 players; MAGE Frost 5 apps / 2 players; PRIEST Holy 4 apps / 3 players; WARLOCK Demonology 4 apps / 2 players; HUNTER Beast Mastery 3 apps / 2 players; DEATHKNIGHT Unholy 2 apps / 2 players; DEMONHUNTER Devourer 2 apps / 2 players; MONK Windwalker 2 apps / 2 players; SHAMAN Restoration 2 apps / 2 players; WARRIOR Arms 2 apps / 2 players; DRUID Balance 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; HUNTER Survival 1 app / 1 player; MAGE Arcane 1 app / 1 player; PALADIN Holy 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Assassination 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; ROGUE Subtlety 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 49 applications / 36 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|blinky's collar|1282029`
+- **Tempered Potion** (431932) · ALL — DEATHKNIGHT Unholy 9 apps / 4 players; DEMONHUNTER Devourer 8 apps / 3 players; MAGE Arcane 5 apps / 2 players; DRUID Feral 3 apps / 1 player; MAGE Frost 3 apps / 1 player; PRIEST Shadow 3 apps / 1 player; SHAMAN Enhancement 3 apps / 1 player; DRUID Balance 2 apps / 1 player; EVOKER Preservation 2 apps / 1 player; HUNTER Beast Mastery 2 apps / 1 player; HUNTER Survival 2 apps / 1 player; PALADIN Protection 2 apps / 1 player; WARLOCK Demonology 2 apps / 1 player; MONK Brewmaster 1 app / 1 player; WARLOCK Destruction 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK) with 48 applications / 21 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|tempered potion|431932`
+- **Drink** (1303338) · ALL — DEATHKNIGHT Blood 10 apps / 1 player; MAGE Arcane 8 apps / 3 players; MONK Mistweaver 5 apps / 1 player; SHAMAN Restoration 3 apps / 1 player; WARRIOR Arms 3 apps / 1 player; DEATHKNIGHT Unholy 2 apps / 1 player; DEMONHUNTER Havoc 2 apps / 2 players; HUNTER Beast Mastery 2 apps / 1 player; HUNTER Marksmanship 2 apps / 1 player; PALADIN Protection 2 apps / 2 players; PRIEST Discipline 2 apps / 1 player; SHAMAN Elemental 2 apps / 2 players; DRUID Guardian 1 app / 1 player; EVOKER Devastation 1 app / 1 player; PALADIN Holy 1 app / 1 player; WARLOCK Demonology 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 47 applications / 21 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|drink|1303338`
+- **Ula'tek's Gift** (1291581) · ALL — MAGE Arcane 8 apps / 7 players; HUNTER Beast Mastery 7 apps / 4 players; DEATHKNIGHT Blood 5 apps / 3 players; PALADIN Retribution 4 apps / 4 players; PALADIN Protection 3 apps / 2 players; DRUID Balance 2 apps / 2 players; DRUID Feral 2 apps / 1 player; EVOKER Preservation 2 apps / 1 player; SHAMAN Elemental 2 apps / 2 players; WARRIOR Arms 2 apps / 2 players; DEATHKNIGHT Frost 1 app / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Devourer 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MAGE Frost 1 app / 1 player; MONK Windwalker 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Assassination 1 app / 1 player; SHAMAN Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARRIOR) with 46 applications / 37 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ula'tek's gift|1291581`
+- **Akil'zon's Cry of Victory** (1252818) · DEATHKNIGHT — Frost 31 apps / 2 players; Blood 15 apps / 1 player — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|DEATHKNIGHT|akil'zon's cry of victory|1252818`
+- **Gladiator's Badge** (345228) · ALL — MAGE Fire 21 apps / 1 player; DEMONHUNTER Devourer 19 apps / 1 player; WARRIOR Fury 4 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (DEMONHUNTER, MAGE, WARRIOR) with 44 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|gladiator's badge|345228`
+- **Void-Touched** (1264426) · ALL — PALADIN Retribution 6 apps / 4 players; DEMONHUNTER Devourer 5 apps / 3 players; HUNTER Beast Mastery 5 apps / 3 players; ROGUE Assassination 4 apps / 3 players; WARRIOR Arms 4 apps / 3 players; DRUID Feral 2 apps / 1 player; MONK Windwalker 2 apps / 2 players; PRIEST Holy 2 apps / 1 player; PRIEST Shadow 2 apps / 1 player; ROGUE Outlaw 2 apps / 2 players; DRUID Guardian 1 app / 1 player; DRUID Restoration 1 app / 1 player; EVOKER Preservation 1 app / 1 player; MAGE Frost 1 app / 1 player; PRIEST Discipline 1 app / 1 player; ROGUE Subtlety 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; WARLOCK Affliction 1 app / 1 player; WARLOCK Demonology 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 12 classes (DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 44 applications / 33 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|void-touched|1264426`
+- **Bolstering Light** (443531) · ALL — SHAMAN Restoration 26 apps / 1 player; HUNTER Survival 9 apps / 1 player; EVOKER Augmentation 6 apps / 1 player; MAGE Arcane 2 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (EVOKER, HUNTER, MAGE, SHAMAN) with 43 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|bolstering light|443531`
+- **Wraps of Cosmic Madness** (1259153) · ALL — MAGE Arcane 17 apps / 3 players; WARLOCK Demonology 10 apps / 1 player; PRIEST Shadow 7 apps / 1 player; PRIEST Discipline 5 apps / 1 player; DEMONHUNTER Devourer 4 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEMONHUNTER, MAGE, PRIEST, WARLOCK) with 43 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|wraps of cosmic madness|1259153`
+- **Archbishop Benedictus' Restitution** (211336) · PRIEST — Holy 43 apps / 29 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|PRIEST|archbishop benedictus' restitution|211336`
+- **Trovehunter's Bounty** (1293799) · ALL — DEATHKNIGHT Blood 10 apps / 2 players; MONK Mistweaver 7 apps / 1 player; HUNTER Beast Mastery 5 apps / 2 players; WARRIOR Arms 5 apps / 3 players; MAGE Arcane 4 apps / 3 players; DRUID Restoration 3 apps / 2 players; PALADIN Protection 3 apps / 3 players; DEATHKNIGHT Unholy 2 apps / 1 player; DEMONHUNTER Devourer 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; SHAMAN Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, ROGUE, SHAMAN, WARRIOR) with 42 applications / 19 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|trovehunter's bounty|1293799`
+- **Flight Style: Steady** (404468) · ALL — DRUID Restoration 7 apps / 2 players; HUNTER Beast Mastery 5 apps / 5 players; MAGE Frost 4 apps / 2 players; MAGE Arcane 3 apps / 2 players; SHAMAN Restoration 3 apps / 3 players; HUNTER Marksmanship 2 apps / 2 players; MONK Brewmaster 2 apps / 2 players; PRIEST Shadow 2 apps / 2 players; SHAMAN Elemental 2 apps / 2 players; WARRIOR Arms 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; EVOKER Devastation 1 app / 1 player; EVOKER Preservation 1 app / 1 player; PALADIN Retribution 1 app / 1 player; PRIEST Discipline 1 app / 1 player; SHAMAN Enhancement 1 app / 1 player; WARLOCK Destruction 1 app / 1 player — R8 — high
+  - Reason: Applied by 11 classes (DEATHKNIGHT, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK, WARRIOR) with 39 applications / 30 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|flight style: steady|404468`
+- **Sign of the Scourge** (335149) · ALL — DEATHKNIGHT Blood 5 apps / 2 players; SHAMAN Restoration 5 apps / 1 player; DEMONHUNTER Havoc 4 apps / 3 players; SHAMAN Elemental 4 apps / 4 players; MAGE Arcane 3 apps / 2 players; MONK Mistweaver 3 apps / 1 player; PALADIN Retribution 3 apps / 2 players; HUNTER Beast Mastery 2 apps / 2 players; WARLOCK Demonology 2 apps / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; DRUID Balance 1 app / 1 player; DRUID Guardian 1 app / 1 player; MONK Brewmaster 1 app / 1 player; MONK Windwalker 1 app / 1 player; PALADIN Holy 1 app / 1 player; PRIEST Holy 1 app / 1 player; WARLOCK Destruction 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, MAGE, MONK, PALADIN, PRIEST, SHAMAN, WARLOCK) with 39 applications / 26 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|sign of the scourge|335149`
+- **Dragon Games Equipment** (386692) · ALL — PALADIN Retribution 24 apps / 3 players; WARRIOR Arms 8 apps / 2 players; PALADIN Protection 6 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (PALADIN, WARRIOR) with 38 applications / 6 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|dragon games equipment|386692`
+- **Seed of Radiant Hope** (1263644) · ALL — DRUID Restoration 24 apps / 2 players; PRIEST Holy 13 apps / 2 players — R8 — high
+  - Reason: Applied by 2 classes (DRUID, PRIEST) with 37 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|seed of radiant hope|1263644`
+- **Coaching** (389581) · ALL — SHAMAN Restoration 26 apps / 5 players; DRUID Restoration 5 apps / 3 players; PALADIN Holy 2 apps / 2 players; EVOKER Augmentation 1 app / 1 player; MONK Mistweaver 1 app / 1 player; PRIEST Discipline 1 app / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DRUID, EVOKER, MONK, PALADIN, PRIEST, SHAMAN) with 36 applications / 13 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|coaching|389581`
+- **Hex Lord's Doom** (1295885) · ALL — PRIEST Shadow 10 apps / 1 player; MAGE Arcane 9 apps / 1 player; MONK Mistweaver 8 apps / 1 player; PRIEST Holy 8 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (MAGE, MONK, PRIEST) with 35 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hex lord's doom|1295885`
+- **Precious's Ribbon** (72968) · ALL — PALADIN Retribution 6 apps / 3 players; DEMONHUNTER Havoc 3 apps / 1 player; HUNTER Beast Mastery 3 apps / 3 players; HUNTER Survival 3 apps / 2 players; MAGE Arcane 3 apps / 3 players; PALADIN Holy 3 apps / 2 players; WARRIOR Arms 3 apps / 2 players; DEMONHUNTER Devourer 2 apps / 1 player; DEATHKNIGHT Blood 1 app / 1 player; DEATHKNIGHT Frost 1 app / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; MONK Brewmaster 1 app / 1 player; ROGUE Assassination 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; WARLOCK Demonology 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, HUNTER, MAGE, MONK, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 33 applications / 24 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|precious's ribbon|72968`
+- **Spelunker's Candle** (455444) · ALL — HUNTER Survival 16 apps / 1 player; DEMONHUNTER Vengeance 10 apps / 1 player; DRUID Restoration 4 apps / 1 player; MAGE Arcane 2 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEMONHUNTER, DRUID, HUNTER, MAGE) with 32 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|spelunker's candle|455444`
+- **Draconic Augmentation** (393438) · ALL — PALADIN Retribution 11 apps / 3 players; EVOKER Devastation 5 apps / 1 player; DEMONHUNTER Havoc 3 apps / 1 player; PRIEST Shadow 3 apps / 1 player; WARLOCK Demonology 2 apps / 1 player; WARRIOR Arms 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Devourer 1 app / 1 player; DRUID Balance 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; MONK Mistweaver 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MONK, PALADIN, PRIEST, WARLOCK, WARRIOR) with 31 applications / 13 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|draconic augmentation|393438`
+- **Blood** (1245969) · ALL — MAGE Arcane 10 apps / 3 players; DEATHKNIGHT Unholy 5 apps / 1 player; MONK Mistweaver 3 apps / 1 player; WARLOCK Destruction 3 apps / 1 player; WARRIOR Fury 3 apps / 1 player; SHAMAN Enhancement 2 apps / 1 player; MAGE Frost 1 app / 1 player; WARRIOR Arms 1 app / 1 player — R8 — high
+  - Reason: Applied by 6 classes (DEATHKNIGHT, MAGE, MONK, SHAMAN, WARLOCK, WARRIOR) with 28 applications / 10 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|blood|1245969`
+- **Noxious Venom Gland** (267402) · ALL — WARRIOR Arms 17 apps / 3 players; PALADIN Retribution 7 apps / 1 player; PALADIN Protection 4 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (PALADIN, WARRIOR) with 28 applications / 5 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|noxious venom gland|267402`
+- **Curse of the Wound** (1294941) · ALL — MAGE Arcane 16 apps / 2 players; PRIEST Shadow 7 apps / 1 player; EVOKER Preservation 3 apps / 1 player — R8 — high
+  - Reason: Applied by 3 classes (EVOKER, MAGE, PRIEST) with 26 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|curse of the wound|1294941`
+- **Ethereal Reconstitution** (1217103) · ALL — DRUID Restoration 18 apps / 2 players; SHAMAN Restoration 5 apps / 2 players; EVOKER Preservation 1 app / 1 player; MONK Mistweaver 1 app / 1 player; PRIEST Holy 1 app / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DRUID, EVOKER, MONK, PRIEST, SHAMAN) with 26 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ethereal reconstitution|1217103`
+- **Whispers of L'ura** (250768) · ALL — MONK Mistweaver 8 apps / 1 player; DRUID Restoration 6 apps / 1 player; PALADIN Holy 6 apps / 1 player; SHAMAN Restoration 6 apps / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DRUID, MONK, PALADIN, SHAMAN) with 26 applications / 4 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|whispers of l'ura|250768`
+- **Touch of Elune - Day** (154796) · ALL — DEMONHUNTER Devourer 8 apps / 7 players; HUNTER Beast Mastery 6 apps / 3 players; DEMONHUNTER Vengeance 5 apps / 3 players; DEMONHUNTER Havoc 2 apps / 2 players; MAGE Frost 2 apps / 2 players; HUNTER Survival 1 app / 1 player; WARRIOR Fury 1 app / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DEMONHUNTER, HUNTER, MAGE, WARRIOR) with 25 applications / 19 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|touch of elune - day|154796`
+- **Summoning Disorientation** (32752) · WARLOCK — Demonology 17 apps / 12 players; Destruction 5 apps / 3 players; Affliction 3 apps / 3 players — R8 — high
+  - Reason: not in the player-castable spell pool, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|WARLOCK|summoning disorientation|32752`
+- **Ground Skimming** (404184) · ALL — SHAMAN Restoration 5 apps / 1 player; DEATHKNIGHT Blood 3 apps / 2 players; MAGE Arcane 3 apps / 3 players; MONK Windwalker 3 apps / 1 player; DEMONHUNTER Havoc 2 apps / 1 player; PALADIN Retribution 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; DEMONHUNTER Devourer 1 app / 1 player; DRUID Balance 1 app / 1 player; EVOKER Preservation 1 app / 1 player; HUNTER Beast Mastery 1 app / 1 player; WARLOCK Demonology 1 app / 1 player — R8 — high
+  - Reason: Applied by 10 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, EVOKER, HUNTER, MAGE, MONK, PALADIN, SHAMAN, WARLOCK) with 24 applications / 15 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|ground skimming|404184`
+- **Well Fed** (1232086) · ALL — SHAMAN Restoration 4 apps / 1 player; WARRIOR Arms 4 apps / 1 player; DRUID Feral 3 apps / 1 player; PALADIN Holy 3 apps / 2 players; DEATHKNIGHT Blood 2 apps / 1 player; PALADIN Protection 2 apps / 1 player; DEMONHUNTER Vengeance 1 app / 1 player; HUNTER Survival 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; SHAMAN Elemental 1 app / 1 player; WARLOCK Demonology 1 app / 1 player; WARLOCK Destruction 1 app / 1 player — R8 — high
+  - Reason: Applied by 9 classes (DEATHKNIGHT, DEMONHUNTER, DRUID, HUNTER, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 24 applications / 13 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|well fed|1232086`
+- **Drink** (1277461) · ALL — PRIEST Discipline 12 apps / 5 players; PRIEST Holy 5 apps / 1 player; DRUID Restoration 3 apps / 1 player; PALADIN Holy 2 apps / 2 players; SHAMAN Restoration 1 app / 1 player — R8 — high
+  - Reason: Applied by 4 classes (DRUID, PALADIN, PRIEST, SHAMAN) with 23 applications / 10 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|drink|1277461`
+- **Inner Radiance** (450720) · ALL — PALADIN Protection 17 apps / 2 players; DEATHKNIGHT Blood 6 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (DEATHKNIGHT, PALADIN) with 23 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|inner radiance|450720`
+- **Inner Resilience** (450706) · ALL — PALADIN Protection 17 apps / 2 players; DEATHKNIGHT Blood 6 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (DEATHKNIGHT, PALADIN) with 23 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|inner resilience|450706`
+- **"The 50 Verses of Radiance"** (450699) · ALL — PALADIN Protection 16 apps / 2 players; DEATHKNIGHT Blood 6 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (DEATHKNIGHT, PALADIN) with 22 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|"the 50 verses of radiance"|450699`
+- **Volatile Energy** (451303) · ALL — DRUID Restoration 8 apps / 1 player; MAGE Arcane 7 apps / 1 player; MAGE Frost 7 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (DRUID, MAGE) with 22 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|volatile energy|451303`
+- **Draught of Rampant Abandon** (1236998) · ALL — PALADIN Retribution 5 apps / 2 players; ROGUE Subtlety 5 apps / 1 player; HUNTER Beast Mastery 2 apps / 1 player; MONK Mistweaver 2 apps / 1 player; SHAMAN Enhancement 2 apps / 1 player; HUNTER Marksmanship 1 app / 1 player; ROGUE Outlaw 1 app / 1 player; WARLOCK Demonology 1 app / 1 player; WARRIOR Arms 1 app / 1 player; WARRIOR Protection 1 app / 1 player — R8 — high
+  - Reason: Applied by 7 classes (HUNTER, MONK, PALADIN, ROGUE, SHAMAN, WARLOCK, WARRIOR) with 21 applications / 10 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|draught of rampant abandon|1236998`
+- **"The 50 Verses of Resilience"** (450696) · ALL — PALADIN Protection 15 apps / 2 players; DEATHKNIGHT Blood 5 apps / 1 player — R8 — high
+  - Reason: Applied by 2 classes (DEATHKNIGHT, PALADIN) with 20 applications / 3 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|"the 50 verses of resilience"|450696`
+- **Hearty Well Fed** (1233712) · ALL — DEATHKNIGHT Blood 5 apps / 1 player; MAGE Arcane 3 apps / 1 player; PALADIN Holy 3 apps / 2 players; WARLOCK Affliction 3 apps / 1 player; PALADIN Retribution 2 apps / 1 player; DEATHKNIGHT Unholy 1 app / 1 player; HUNTER Marksmanship 1 app / 1 player; MAGE Fire 1 app / 1 player; MAGE Frost 1 app / 1 player — R8 — high
+  - Reason: Applied by 5 classes (DEATHKNIGHT, HUNTER, MAGE, PALADIN, WARLOCK) with 20 applications / 7 players; not in any of their player-castable spell pools, so an item or consumable effect → Consumables.
+  - Key: `addition|consumables|ALL|hearty well fed|1233712`

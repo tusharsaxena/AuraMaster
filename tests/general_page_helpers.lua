@@ -136,7 +136,10 @@ local function drawnEntries(ws)
                 local t = lbl.text or ""
                 local id = t:match("%((%d+)%)|r") or t:match("^Unknown spell (%d+)")
                 if id then
+                    -- The X is the Icon before the label, stepping over the entry's "?" mark
+                    -- (`__helpTint`), which sits between them once any entry of the list has one.
                     local prev = kids[i - 1]
+                    if type(prev) == "table" and prev.__helpTint then prev = kids[i - 2] end
                     col = col + 1
                     local at = #out + 1
                     out[at] = {

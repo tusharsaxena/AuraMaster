@@ -204,12 +204,17 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `.luacheckrc` | Lint config: Lua 5.1, excludes `libs/`, `tests/_kit/` and the frozen `docs/` bundles; the harness global in a `tests/` stanza |
 | `.pkgmeta` | Packager config: no externals; ignores dev files, `docs`, `tests`, `tools` (the committed generators, never loaded in game), `_dev`, and the `.png`/`.jpg` logo sources |
 | `.gitattributes` | The client-bound line-ending policy (line-endings-§5): CRLF working tree, `*.sh` LF, binaries marked |
-| `.gitignore` | OS and editor clutter, agent scratch directories |
+| `.gitignore` | OS and editor clutter, agent scratch directories; `.claude/` is ignored except `.claude/commands/` (the project's slash commands) |
 | `LICENSE` | MIT |
 | `README.md`, `CLAUDE.md`, `DEPENDENCIES.md` | The three root docs (documentation-§1/§2/§7) |
 | `docs/` | The engineering docs; every file is registered in `docs/ARCHITECTURE.md` → Documentation map, which also names the frozen bundle directories |
 | `tools/spell-research/research.py` | The CC spell-list generator (issue #11 Part C): reads Blizzard's DB2 exports for one pinned build, buckets spells by the crowd-control mechanic the client stamps, and prints a diff or a paste-ready Lua fragment. Never writes `defaults/Categories.lua` — the author accepts each change. Python 3.8+, standard library only, needs the network on a run that is not a `--replay` |
-| `tools/spell-research/README.md` | How to run it: `--diff`, `--emit --date`, `--bundle`, `--replay`, and the limitations that make the diff a judgment call |
+| `tools/spell-research/logs.py` | The combat-log evidence CLI (`scan`, `propose`, `decide`, `apply`): mines the owner's combat logs for the aura ids players of each spec apply, writes the `docs/spell-research/<date>-logs/` bundle (the per-spec dictionary and the review set), records rulings in `decisions.json`, and is the only writer of `defaults/Categories.lua`, for ruled proposals only. Python 3.8+, standard library only |
+| `tools/spell-research/sid_scan.py`, `sid_cache.py`, `sid_db2.py`, `sid_propose.py`, `sid_artifacts.py`, `sid_decide.py` | `logs.py`'s stages: log parsing and the player filter; the per-log cache (outside the repo) and merge; DB2 signals and the shipped categories; proposals and the category rules; the bundle files; decisions and the `Categories.lua` line rewriter |
+| `tools/spell-research/test_sid_*.py`, `fixtures/` | The `unittest` suite for `logs.py` (one module per stage plus `test_sid_e2e.py`, the scan-to-apply acceptance run) and its fixtures: a hand-written combat log with fictional names, tiny DB2 CSVs, and small `Categories.lua` / `CastToAura.lua` copies |
+| `tools/spell-research/decisions.json` | The owner's durable rulings on combat-log proposals, one entry per proposal key; written only by `logs.py decide` (created on the first review) |
+| `tools/spell-research/README.md` | How to run both tools: `research.py`'s `--diff`, `--emit --date`, `--bundle`, `--replay` and the limitations that make the diff a judgment call; `logs.py`'s commands, thresholds, artifacts and privacy |
+| `.claude/commands/aura-spells-review.md` | The `/aura-spells-review` slash command: scan, propose, walk each proposal with the owner, record rulings, apply, gate and commit |
 | `tools/spell-research/.gitignore` | Keeps the ~75 MB export cache (`.cache/`) and `__pycache__/` out of the repo; only a bundle's gzipped `raw/` copies are committed |
 | `media/logos/auramaster.logo.tga` | The landing-page logo, drawn at 300×300 (options-ui-§5) |
 | `media/logos/auramaster.logo.128.tga` | The ICON logo, 128×128 and uncompressed 32-bit (layout-§4): `## IconTexture`, the minimap button and the broker row. Regenerated from the `.png`, never hand-edited |

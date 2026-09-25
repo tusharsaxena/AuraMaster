@@ -318,7 +318,7 @@ test("general → spell categories: the list draws two columns, filled row-major
 end)
 
 
-test("general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first", function()
+test("general → spell categories: a dropdown of the thirteen spell categories plus Weapon enchants, opening on the first", function()
     local NS, _, _, ws = spells()
     local dd
     for _, w in ipairs(ws) do
@@ -327,11 +327,11 @@ test("general → spell categories: a dropdown of the eleven spell categories pl
     assertTrue(dd ~= nil, "the category dropdown is drawn")
     assertTrue(inScroll(NS, dd), "in the tab body")
     -- red under: the dropdown offering a flag or token category (only spell categories and the
-    -- enchant row belong here). 12 = nine buff spell lists + weaponEnchants + issue #11's hardCC and
+    -- enchant row belong here). 14 = eleven buff spell lists + weaponEnchants + issue #11's hardCC and
     -- softCC, which are `spells`-kind on Cat.HARMFUL: this tab is keyed on the KIND, never on the
     -- aura type, or a shipped debuff list would have no editor and its `See spells` link would go
     -- nowhere.
-    assertEqual(#dd.order, 12)
+    assertEqual(#dd.order, 14)
     for _, k in ipairs(dd.order) do
         assertTrue(NS.Categories.IsSpellCategory(k) or k == "weaponEnchants", "a spell category or the enchant row: " .. k)
     end
@@ -342,9 +342,9 @@ test("general → spell categories: a dropdown of the eleven spell categories pl
     assertEqual(dd.list.hardCC, marked(NS, "hardCC"), "and the debuff lists")
     assertEqual(dd.list.softCC, marked(NS, "softCC"))
     assertEqual(dd.order[1], "defensives")
-    assertEqual(dd.order[10], "weaponEnchants", "the buff rows first, in defaults/Categories.lua's order")
-    assertEqual(dd.order[11], "hardCC", "then Cat.HARMFUL's, in its own order")
-    assertEqual(dd.order[12], "softCC")
+    assertEqual(dd.order[12], "weaponEnchants", "the buff rows first, in defaults/Categories.lua's order")
+    assertEqual(dd.order[13], "hardCC", "then Cat.HARMFUL's, in its own order")
+    assertEqual(dd.order[14], "softCC")
     assertEqual(dd.value, "defensives")
 end)
 
