@@ -105,7 +105,10 @@ test("close: a right click on the X opens the settings like the strip and the ?,
     local inst = NS.ContainerManager.instances[2]
     local h = recordedHandle(mocks, NS, inst)
     local opened = {}
-    NS.OpenOptionsPage = function(key) opened[#opened + 1] = key end
+    NS.OpenOptionsPage = function(key)
+        local n = #opened
+        opened[n + 1] = key
+    end
     h.close:__fire("OnClick", "RightButton")
     assertEqual(table.concat(opened, ","), "containers")
     assertTrue(NS.Database.FindContainer(2).enabled, "a right click closes nothing")
@@ -135,7 +138,10 @@ test("close: the X's tooltip names the container (following a rename) and says h
     local inst = NS.ContainerManager.instances[2]
     local h = recordedHandle(mocks, NS, inst)
     local lines, owners = {}, {}
-    local function add(_, s) lines[#lines + 1] = s end
+    local function add(_, s)
+        local n = #lines
+        lines[n + 1] = s
+    end
     rawset(mocks.GameTooltip, "SetText", add)
     rawset(mocks.GameTooltip, "AddLine", add)
     rawset(mocks.GameTooltip, "SetOwner", function(_, owner, anchor)
