@@ -169,7 +169,9 @@ test("edges: a side-attached child is placed at its edge's points with its gap a
     assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5)
     setEdge(NS, c2, "after-center")
     p = placed(NS)
-    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOM"); assertEqual(p[4], 0); assertEqual(p[5], -3)
+    -- T9: the parent is one column, so its BOTTOM is held steady as its start side plus half its width
+    local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
+    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], w / 2); assertEqual(p[5], -3)
 end)
 
 test("edges: flipping the root's growth mirrors an Automatic child; an explicit pair stays and takes the seam of the side it now is", function()

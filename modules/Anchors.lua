@@ -491,23 +491,103 @@ local function seamRoom(container, cfg, side, target)
     return 0
 end
 
+-- ---------------------------------------------------------------------------
+-- A steady join on an empty parent (batch 11 T9)
+-- ---------------------------------------------------------------------------
+-- A follower hangs from its parent's ENGINE whenever the parent is locked, in combat or not
+-- predicted empty (HangMode), and an empty engine holds a 1x1 provisional rect at its START corner.
+-- A relative point on the parent's center or end side then lands on that corner: the owner's chain of
+-- bars growing up, joined by centered points, shifted sideways by half a bar whenever the middle
+-- container had no aura. So on each axis where the parent is exactly ONE element across, the relative
+-- point is moved to the parent's start side on that axis and the difference is added as an offset,
+-- worked out from the parent's own config (its one-element size and scale), never from the engine's
+-- geometry, which is secret. There the slot and the preview block are one element across as well, so
+-- the result is the same in every hang mode, and steady when the engine empties.
+-- The axis a classified join runs along (after: vertical; ahead, behind: horizontal) is left alone,
+-- so an empty parent still closes the chain up along it as before. An axis on which the parent is
+-- more than one element across is left alone too: its center moves with its aura count.
+
+-- POINT_V[point], POINT_H[point]: a point's vertical and horizontal parts ("" for the middle), and
+-- JOIN_POINT[v][h] the point back, built once so a Place builds no string.
+local POINT_V, POINT_H, JOIN_POINT = {}, {}, {}
+for _, point in ipairs(C.POINTS) do
+    local v = point:match("^TOP") or point:match("^BOTTOM") or ""
+    local h = point:match("LEFT$") or point:match("RIGHT$") or ""
+    POINT_V[point], POINT_H[point] = v, h
+    JOIN_POINT[v] = JOIN_POINT[v] or {}
+    JOIN_POINT[v][h] = point
+end
+
+-- The axis each classified side's join runs along.
+local JOIN_AXIS = { after = "v", ahead = "h", behind = "h" }
+
+--- Whether container `pcfg` is exactly one element across horizontally and vertically: it fills
+--- columns (or rows) with no per-line limit, or rows (or columns) of one. Its axis is its chain's,
+--- its per-line count its own. Allocates nothing.
+--- @return boolean acrossH, boolean acrossV
+local function oneAcross(pcfg)
+    local root = Anchors.FlowRoot(pcfg)
+    local L = (root or pcfg).layout or D.layout
+    local vertical = (L.axis == "vertical")
+    local perLine = tonumber(pcfg.layout and pcfg.layout.perLine) or 0
+    local single, unlimited = (perLine == 1), (perLine <= 0)
+    return (vertical and unlimited) or (not vertical and single),
+        (not vertical and unlimited) or (vertical and single)
+end
+
+--- Move part `part` of a relative point to `start` (the parent's start side on that axis), and the
+--- offset that keeps it where it was on a parent `size` across: half of it from the center, all of
+--- it from the end, toward the growth (`forward` +1 or -1). A part already on the start side stays.
+--- @return string part, number offset
+local function toStart(part, start, size, forward)
+    if part == start then return part, 0 end
+    local frac = (part == "") and 0.5 or 1
+    return start, frac * size * forward
+end
+
+--- The relative point `rel` container `cfg` joins its parent `pcfg` by, moved onto the parent's
+--- start side on each axis the parent is one element across and the join does not run along
+--- (`joinAxis`, nil for a free pair), with the offset that keeps it in place, in the child's scale.
+--- @return string relativePoint, number dx, number dy
+local function steadyRelative(rel, joinAxis, pcfg, cfg, growH, growV)
+    local acrossH, acrossV = oneAcross(pcfg)
+    acrossH, acrossV = acrossH and joinAxis ~= "h", acrossV and joinAxis ~= "v"
+    if not (acrossH or acrossV) then return rel, 0, 0 end
+    local v, h = POINT_V[rel], POINT_H[rel]
+    local w, ht = NS.Style.ElementSize(pcfg)
+    local k = ownScale(pcfg) / ownScale(cfg)
+    local dx, dy = 0, 0
+    if acrossH then
+        h, dx = toStart(h, (growH == "left") and "RIGHT" or "LEFT", w * k, (growH == "left") and -1 or 1)
+    end
+    if acrossV then
+        v, dy = toStart(v, (growV == "up") and "BOTTOM" or "TOP", ht * k, (growV == "up") and 1 or -1)
+    end
+    return JOIN_POINT[v][h], dx, dy
+end
+
 --- The points and offsets container `cfg` attaches with. Attached to a container: the points in
---- effect (AttachPoints, G2, G3). A pair that is one of the nine sides (AttachEdge) takes one of its
---- own gaps across the seam with the stored X/Y on top as a nudge (SS-1, SS-2, AP-2), moved on along
---- the chain by the furniture in the way (seamRoom, batch 10 F2, F4); a free pair is placed at X/Y
---- alone (G5). Attached to a named frame: the stored points and offsets as they are.
+--- effect (AttachPoints, G2, G3), the relative one held steady on an empty parent (steadyRelative,
+--- T9). A pair that is one of the nine sides (AttachEdge) takes one of its own gaps across the seam
+--- with the stored X/Y on top as a nudge (SS-1, SS-2, AP-2), moved on along the chain by the
+--- furniture in the way (seamRoom, batch 10 F2, F4); a free pair is placed at X/Y alone (G5). The
+--- classification reads the points in effect, never the steadied one. Attached to a named frame: the
+--- stored points and offsets as they are.
 --- @return string point, string relativePoint, number x, number y
 local function attachSpec(container, cfg, at, mode, target)
     local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
     if mode == "container" then
-        local point, relativePoint = Anchors.AttachPoints(cfg)
+        local point, rel, _, _, growH, growV = Anchors.AttachPoints(cfg)
         local edge = Anchors.AttachEdge(cfg)
-        if not edge then return point, relativePoint, x, y end
+        local side = edge and EDGE_PARTS[edge][1]
+        local pcfg = target and target:Cfg()
+        local sx, sy = 0, 0
+        if pcfg then rel, sx, sy = steadyRelative(rel, JOIN_AXIS[side], pcfg, cfg, growH, growV) end
+        if not edge then return point, rel, x + sx, y + sy end
         local L = Anchors.EffectiveLayout(cfg) or {}
-        local side = EDGE_PARTS[edge][1]
         local gx, gy = Anchors.SeamOffset(L, side)
         gy = alongGrowth(L, gy, seamRoom(container, cfg, side, target))
-        return point, relativePoint, gx + x, gy + y
+        return point, rel, gx + x + sx, gy + y + sy
     end
     return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint, x, y
 end

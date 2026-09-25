@@ -619,7 +619,9 @@ test("layout: a write to either anchor point re-places the container on its pare
     -- red under: no row, so no CONFIG_CHANGED re-apply
     assertTrue(last ~= nil, "placed again")
     assertEqual(last[1], "CENTER")
-    assertEqual(last[3], "RIGHT")
+    -- T9: a one-column parent's RIGHT is held steady as its start side plus its width
+    assertEqual(last[3], "LEFT")
+    assertEqual(last[4], NS.Style.ElementSize(NS.Database.FindContainer(1)))
 end)
 
 -- ── the Point rows and the facing-growth hint (smoke feedback 2, item 1, D-3) ────────────────────

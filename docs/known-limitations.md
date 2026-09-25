@@ -247,6 +247,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   1500-line buffer can push older trace lines out. While the addon is disabled or stood down it
   builds no container, so after a login made while off the `[Plan]` lines are predictions only,
   and once built they are from the last apply; the header says which (batch 10 F8).
+- **A centered or end join on a parent several elements across moves with the parent's aura
+  count.** A join on the parent's center or end side is held steady while the parent is empty only on
+  an axis where the parent is exactly one element across (batch 11 T9). Where the parent is several
+  across (a row of icons under a centered follower), its center really does move as auras come and
+  go, and while its engine is empty that center is the engine's 1x1 start corner, so the follower
+  sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
 - **While unlocked (and not in test mode), an empty chain is laid out from a prediction, and still
   collapses where that cannot be made.** The engine cannot say whether it is empty (its frame count
   is a pool that never shrinks, its size is secret), so the addon predicts it from `C_UnitAuras` and

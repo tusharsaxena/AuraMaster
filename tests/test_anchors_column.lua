@@ -303,8 +303,9 @@ test("column: the owner's Text chain reads strip, block, strip, block, strip, bl
     for id = 2, 3 do
         local x, y, p = placed(NS, id)
         -- red under: the batch 9 seam (the strip beside the column, the blocks one gap apart)
-        assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOM", "Side Bottom: centered under the parent")
-        assertEqual(x, 0)
+        -- T9: centered under a one-column parent, held on its start side plus half its width
+        assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT", "Side Bottom: centered under the parent")
+        assertEqual(x, w / 2)
         tops[id] = tops[id - 1] - h + y
     end
     for id = 1, 3 do

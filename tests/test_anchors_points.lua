@@ -189,7 +189,10 @@ test("points: a classified explicit pair is placed exactly as batch 10 places it
     assertEqual(p[4], 5, "ahead: the child's line spacing across"); assertEqual(p[5], 0)
     c2.attach.childPoint, c2.attach.relPoint = "TOP", "BOTTOM"
     p = placed(NS)
-    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOM"); assertEqual(p[4], 0); assertEqual(p[5], -3, "after: SS-1")
+    -- T9: a one-column parent's BOTTOM is held steady as its start side plus half its width
+    local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
+    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], w / 2)
+    assertEqual(p[5], -3, "after: SS-1")
 end)
 
 test("points: behind is no longer refused: a child several auras wide sits on its behind pair", function()

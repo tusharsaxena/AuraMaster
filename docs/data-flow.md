@@ -390,7 +390,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:518`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:598`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
@@ -418,6 +418,19 @@ Along the chain the gap across the seam is the child's own gap between consecuti
 direction the chain stacks, its Spacing or, when it fills rows, its Line spacing (`Anchors.SeamOffset`,
 SS-1); on a side it is the child's gap across (AP-2); the stored `attach.x` / `.y` add on top as a
 nudge (SS-2). The seam is the same locked, unlocked and in test mode.
+
+A join on the parent's center or end holds still while the parent's engine is empty (batch 11 T9).
+An empty engine is a 1x1 rect at its start corner, so a relative point on the parent's center or far
+side landed on that corner, and a centered chain shifted sideways by half an element whenever a middle
+link had no aura. On each axis where the parent is exactly one element across (it fills columns with
+no per-line limit, so one element wide; or rows, so one element tall; or lines of one) and the join
+does not run along that axis, `attachSpec` moves the relative point to the parent's start side on
+that axis and adds the offset back: half the parent's one-element size from the center, all of it
+from the end, toward the growth, converted from the parent's scale to the child's. Both come from the
+parent's own config (`Style.ElementSize`, its Scale), never the engine's geometry. The slot and the
+preview block are one element across there too, so every hang mode lands in the same place. The
+classification, the seam, the spread and the push read the points in effect, not the moved one. On
+the axis the join runs along, an empty parent still closes the chain up, as before.
 
 One element's size is `Style.ElementSize`. On a Text container with Size to fit on
 (`container.text.autoSize`), it comes from the content instead of the stored width and height:

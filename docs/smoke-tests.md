@@ -1665,7 +1665,7 @@ before the upgrade, growing down.
 
 ## AD. Batch 11 follow-ups (owner to run)
 
-Two changes the owner asked for after section AC (2026-09-26). None has been run here.
+Three changes the owner asked for after section AC (2026-09-26). None has been run here.
 
 246. **An attached container's strip name is gray, and its tooltip says why.** `/am unlock` → a
      container on the screen shows its strip name in the usual gold; #14 (attached to #13) and a
@@ -1682,3 +1682,12 @@ Two changes the owner asked for after section AC (2026-09-26). None has been run
      container set to Bottom left / Top left before now reads Top left on the left and Bottom left on
      the right). Pick a corner in each → the container moves at once. The Screen section still reads
      Point / Relative point.
+248. **A centered chain holds still when its middle link is empty (T9).** Three Bars containers in
+     one column growing up, Target CC (root) ← Target Buffs (Mine) ← Target Debuffs (Mine), each
+     joined This container Bottom to Parent container Top (and once more with Bottom right to Top
+     right). Target a unit on which you have debuffs but no buffs of yours, so Target Buffs (Mine) is
+     empty. Locked, out of combat → Target Debuffs sits straight above the column, its bars lined up
+     with Target CC's, no sideways shift; `/am unlock` → still lined up; relock and pull a target
+     dummy → still lined up through the fight; unlocked in combat (unlock before the pull) → still
+     lined up. Give Target Buffs (Mine) an aura and let it fall off → Target Debuffs moves only up
+     and down the column, never sideways. No Lua error.
