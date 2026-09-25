@@ -1354,6 +1354,16 @@ for the migration lines, and once on a fresh profile.
 | SEP-1..SEP-4 test-mode outline, join pin, strip side, enchant preview | E4 | 221-224 |
 | One geometry locked, unlocked and in test mode | E1, E2 | 225 |
 
+**Owner run, 2026-09-25 (late).** Every AA check passed except those below, which go to feedback
+batch 10 on the same branch.
+
+| Item | Checks | Result |
+|---|---|---|
+| Unlocked handle placement | 221, 225 | **fail**: the attach geometry is correct, but a follower's strip beside the column reads as misleading. The owner wants each strip directly above its own block, with the chain spread out to make room (mockup) |
+| Name label placement | 203, 215 | **fail**: unlocked, a follower's label sits above its beside-strip at the far left; locked, a follower's label sits away from its block; with growth down, the child's label sits above its strip while the root's sits below it |
+| Inherited-growth note | - | **change**: say it is because the container is attached, add spacing below, and draw it dim gold |
+| Screen offset reset | 211, 212 | **fail on the owner's install**: screen containers still carry attach.y=-4. The owner's profile was stamped v9 by an intermediate build before the reset joined the v9 step |
+
 210. **`/am diagnostics`, test mode off and on (DX-1).** Out of combat, auras readable, with a
      target and a focus and at least one container showing a live aura: `/am diagnostics` → the
      report runs from the begin marker to the end marker with no Lua error and no `attempt to
