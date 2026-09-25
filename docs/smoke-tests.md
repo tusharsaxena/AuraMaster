@@ -1353,7 +1353,7 @@ for the migration lines, and once on a fresh profile.
 | TX-1 a live line under Size to fit is never clipped | E8 | 214 (and 202) |
 | LJ-1 label Justify | E7 | 215 (and 203) |
 | HG-1 the empty-only placeholder | E1 | 191-196 (and 14) |
-| AP-1..AP-4 the Side row, its limits and its default | E2, E5 | 216-220 |
+| AP-1..AP-4 the Side row, its limits and its default (the Side row retired by batch 11 G1: checks 236-242) | E2, E5 | 216-220 |
 | GC-1 the growth-conflict popup | E3 | 41 |
 | SEP-1..SEP-4 test-mode outline, join tooltip (the pin removed by batch 11 G6), strip side, enchant preview | E4 | 221-224 |
 | One geometry locked, unlocked and in test mode | E1, E2 | 225 |
@@ -1546,7 +1546,7 @@ Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **B
      reads schema v10, and no screen container lists `attach.y=-4` on its `non-default:` or `inert:`
      line (check 211). `/am select` a screen container, `/am get container.attach.y` → `0`. `/am
      select` each attached container, `/am get container.attach.edge` → `after-start`, or the side
-     picked since; its Side dropdown matches. Every chain sits where it did before the login, locked
+     picked since; its Side dropdown matches (the batch 10 build: batch 11 retires both, check 242). Every chain sits where it did before the login, locked
      and in test mode. `/reload` → no `[Migrate]` line at all.
 235. **Diagnostics while disabled (F8).** `/am disable`, then `/am diagnostics` → after the state
      flags the header adds "addon disabled: containers are hidden and not updated; the plan lines are
@@ -1555,3 +1555,101 @@ Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **B
      container's `[Plan]` line reads `not built (addon disabled)`, with the `Shown` section holding
      only `predicted:` lines. `/am enable`, `/am diagnostics` → no such line, and the plan verdicts
      read as they did before the disable.
+
+## AC. Feedback batch 11 sign-off (owner to run)
+
+The in-game checks for feedback batch 11 (`docs/superpowers/specs/2026-09-26-feedback-batch11-design.md`,
+owner decisions G1-G7). None of them has been run: each is for the owner, and none is marked passed
+here. Batch 11 retires batch 9's Side row and the stored `attach.edge`, so the Side and
+`container.attach.edge` steps of checks 211, 212, 216-220 and 234 no longer apply on this build (they
+record what the batch 9 and batch 10 builds did); checks 222 and 226-228 were rewritten for G6. Run on a
+build carrying schema v11, first on the owner's own SavedVariables (stamped v10 by the batch 10 build)
+for check 242, then on the owner's setup: the Text chain *Text (Offensive Cooldowns)* (#13) → *Text
+(Defensive Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **Bottom**
+before the upgrade, growing down.
+
+| Requirement | Check |
+|---|---|
+| G1 the two dropdowns, their Automatic entries, any pair allowed, the joins line | 236 |
+| G2, G3 Automatic defaults: Text under Text (centered) | 237 |
+| G3 Icons under Icons, growing right and growing left | 238 |
+| G3 Bars under a centered Text, and growth up | 239 |
+| G5 an odd pair placed as asked, with no spread and no push | 240 |
+| G5 a picked pair that is one of batch 9's sides behaves as batch 10 | 241 |
+| G4 schema v11 on the owner's v10 profile: a picked side stays put | 242 |
+| G6 no join dot, unlocked or in test mode | 243 (and 222, 226, 227) |
+| G7 `/am set` with both paths | 244 |
+| G7 `/am diagnostics` prints both points and the join | 245 |
+
+236. **The two dropdowns (G1, G2).** Select #14, Layout → **Anchor**, Attach to *Another container*,
+     Container #13 → below the Container row sit **Parent container anchor point** and **This container
+     anchor point**, and there is no **Side** row. Open each → the first entry reads "Automatic
+     (*point*)", naming the point Automatic gives, then the nine points: Top left, Top, Top right,
+     Left, Center, Right, Bottom left, Bottom, Bottom right. Pick one in each → #14 moves at once, with
+     no `/reload`, and the line beside Container reads "Its *this point* joins the *parent point* of
+     'Text (Offensive Cooldowns)'" for the pair picked. Pick a pair that looks odd (Bottom right to
+     Top left) → it is stored and drawn as asked, with no refusal, no grayed entry and no note. With
+     a pick in one row, open it again → its Automatic entry still names Automatic's own point, not
+     the pick. Pick Automatic in both → #14 goes back to its default place.
+237. **Text under Text (G3).** Three new Text containers, Justify Center, growing down, all on the
+     screen: attach the second to the first, then the third to the second, leaving both dropdowns on
+     Automatic → each follower sits one Spacing below its parent, centered under it; the dropdowns
+     read "Automatic (Bottom)" (parent) and "Automatic (Top)" (this). Set the second's Justify to
+     Left → it lines up on its parent's left (Bottom left / Top left); Right → its right (Bottom
+     right / Top right). Change the first's Width and toggle Size to fit → the centered ones stay
+     centered. Put Justify back to Center.
+238. **Icons under Icons (G3).** An Icons parent growing right, with an Icons child attached, both
+     rows Automatic → the child sits below the parent, its first icon under the parent's first icon
+     on the left: "Automatic (Bottom left)" (parent) and "Automatic (Top left)" (this). Set the
+     parent's **Grow horizontally** to Left → the child
+     mirrors to the parent's right end: "Automatic (Bottom right)" and "Automatic (Top right)",
+     with no `/reload`. Set it back to Right → it returns to the left.
+239. **Bars under a centered Text, and growth up (G3).** A Bars child attached to a Text parent
+     justified Center, both rows Automatic → the bars are centered under the text ("Automatic
+     (Bottom)" / "Automatic (Top)"); set the parent's Justify to Left → the bars move to start on the
+     parent's left (Bottom left / Top left); put Center back. Set the parent's **Grow vertically** to
+     Up → the bars sit centered above the text, and the rows read "Automatic (Top)" (parent) and
+     "Automatic (Bottom)" (this); the chain's strips and labels mirror as in check 231. Set it back to
+     Down.
+240. **An odd pair (G5).** On #14 pick **This container anchor point** Center and **Parent container
+     anchor point** Top right → #14's first element is centered on #13's top right corner, exactly as
+     asked, plus its X/Y offsets and no Spacing gap. `/am unlock` → the chain does not spread for #14:
+     nothing moves to make room, #14 is not pushed clear of #13's strip or label, and #14's strip and label sit on #14's own before
+     side, where they may overlap #13 (that overlap is the owner's to arrange). `/am lock` → #14 does
+     not move. #15, still on Automatic below #14, follows #14. No Lua error in any of it. Put both rows
+     back to Automatic.
+241. **A picked pair that is a side (G5).** On #14 pick This container Top and Parent container
+     Bottom (batch 9's Bottom) → it behaves as batch 10's Bottom: one Spacing below #13, centered;
+     unlocked, the chain spreads for #14's strip and label, and closes up on lock (checks 226-228).
+     Pick This container Top left and Parent container Top right (batch 9's Right, top) on an Icons
+     follower with its parent's label on → it is pushed clear of the parent's label as in check 232.
+242. **Schema v11 on the owner's v10 profile: a picked side stays put (G4).** Back up
+     `WTF/…/SavedVariables/AuraMaster.lua`, note where every chain sits on the batch 10 build, then
+     log in with it on the batch 11 build and `/am debug` → the console holds one
+     `[Migrate] v11 profile '<name>'` line per profile, and no v9 or v10 line. #14 and #15 (Side
+     Bottom before) sit exactly where they did; their Parent container anchor point reads **Bottom**
+     and This container anchor point **Top**, both picks, not Automatic. A container that was on the
+     old default (Bottom left, Top left growing up) now reads Automatic in both rows; it sits where it
+     did, except that a Text follower under a Text parent may re-center under the justify rule of
+     check 237 (accepted by G4). `/am get container.attach.edge` on any container → "Setting not
+     found". `/reload` → no `[Migrate]` line at all.
+243. **No join dot (G6).** With the chains of 237, 238 and 240: `/am unlock` → no dot, diamond or
+     other mark sits on any join; `/am test` → none either, and each block keeps its own test-mode
+     outline; `/am lock` with test mode on → none. Hover #14's strip while unlocked → the tooltip
+     still adds "Joined to the *point* of 'Text (Offensive Cooldowns)'. Change the anchor points on
+     Layout > Anchor." `/am test off`.
+244. **`/am set` with both paths (G7).** `/am select` #14, then `/am set container.attach.relPoint
+     bottomright` → accepted in lower case, #14 moves, and the Parent container dropdown reads Bottom
+     right; `/am set container.attach.childPoint Top` → accepted; `/am get container.attach.childPoint`
+     reads `TOP`. `/am set container.attach.childPoint auto` and `/am set container.attach.relPoint AUTO` →
+     both back to Automatic, and `/am get` on either reads `auto`. `/am set container.attach.childPoint
+     middle` → refused with an `Invalid value` line, and nothing moves. `/am set container.attach.edge
+     after-end` → "Setting not found: container.attach.edge". `/am reset container.attach.relPoint`
+     after a pick → back to Automatic.
+245. **`/am diagnostics` shows both points (G7).** `/am diagnostics` → the header reads schema v11;
+     #14's `[Cont]` line reads `attach=container#13 point=TOP(auto) relPoint=BOTTOM(auto)
+     join=after-center` while both rows are Automatic on the centered chain (the points it is on).
+     Pick This container Top left → the line reads `point=TOPLEFT(picked) relPoint=BOTTOM(auto)` with
+     `join=free`; pick the odd pair of 240 again → `point=CENTER(picked) relPoint=TOPRIGHT(picked)
+     join=free`. Put both rows back to Automatic.
+     A container on the screen or a named frame prints no `point=` or `join=`. No Lua error.

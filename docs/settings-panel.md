@@ -553,7 +553,7 @@ point (it sits right of the frame) with Grow horizontally Left, a RIGHT* point w
 "Point is *point* and Grow vertically is *growth*, so the auras grow back over the frame this
 container is attached to. Set Grow vertically to *opposite* on the Growth tab instead." (the
 horizontal line likewise; a corner point can draw both). The screen has no frame to grow over, and a
-follower's points never face back over its parent, so neither mode draws it.
+follower's two points are the user's to pick, odd pairs included (batch 11 G1), so neither mode draws it.
 
 **The points of a new attachment (batch 11 G2, G3).** An attachment writes nothing: while no point
 is picked, both are Automatic, and Automatic follows the parent's growth and the two styles
