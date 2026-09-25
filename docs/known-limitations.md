@@ -256,7 +256,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   combat, while auras are secret, a secret or raising read, a flag the aura data does not carry, such
   as role or priority auras) the parent counts as not empty, so an empty chain collapses onto itself
   there (the #9 look, each link about 5px under the last): lay such chains out in test mode. The
-  prediction is re-read 0.2 s after an aura change, so for that moment a follower can sit on the
+  prediction is re-read 0.2 s after an aura change (at once on a target or focus switch, so a
+  switch never makes a follower jump to the emptied engine and back), so for that moment a follower can sit on the
   placeholder over a new first aura, or past an aura that just ended. It relies on `C_UnitAuras`
   reading a filter string as the engine does (smoke check 191). Combat moves every follower onto its
   engine at the pull (PLAYER_REGEN_DISABLED, before lockdown) and back after it. While the strips

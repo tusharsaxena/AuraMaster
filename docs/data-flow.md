@@ -355,7 +355,8 @@ the aura data does not carry.
 shown, unlocked and not previewing, and marks it `watchEmpty`. `EW.Sync`, run after every visibility
 pass and every apply pass, registers `UNIT_AURA` on the module's two frames only for the units of
 watched containers, and only while unlocked, out of test mode, out of combat and while auras are
-readable. An event marks one pass due 0.2 s later; that pass re-predicts every watched container and
+readable. An event marks one pass due 0.2 s later (a target or focus switch runs it at once,
+folding in one already due, since the engine redraws for the new unit in that same frame); that pass re-predicts every watched container and
 re-runs the visibility pass of each whose answer changed, which re-places its followers through
 `Anchors.PlaceAttached`. A timer at the soonest enchant's expiry does the same, since a lapsing
 enchant fires no `UNIT_AURA`. `PLAYER_REGEN_DISABLED` reaches `EW.SetCombat` before the combat

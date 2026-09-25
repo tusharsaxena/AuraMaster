@@ -28,7 +28,8 @@ Every timer keeps its handle, and a stand-down cancels it rather than leaving it
 through `RegisterUnitEvent`, only while unlocked, out of test mode, out of combat and while auras are
 readable, and only for the units of a shown container. Locked, which is how the addon is played, it
 registers nothing, so its cost is **zero**. Registered, each event costs one `OnEvent` call that marks
-a pass due, with no allocation; the first arms the 0.2 s pass and the rest fall on its latch. Offline
+a pass due, with no allocation; the first arms the 0.2 s pass and the rest fall on its latch. A
+target or focus switch runs the pass at once instead, one per switch. Offline
 (`emptyWatchAura`): 0 B/iter. The pass itself (`emptyPass`) reads each watched container's auras
 through `C_UnitAuras`, which allocates the client's `AuraData` tables for a group with candidate
 filters, and re-runs the visibility pass of a container whose answer changed.

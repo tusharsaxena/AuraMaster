@@ -418,3 +418,45 @@ test("empty: the player frame filters UNIT_AURA alone; pet and inventory changes
     mocks.__fireEvent("UNIT_PET", "player")
     assertFalse(NS.EmptyWatch.__pending(), "locked: UNIT_PET dropped")
 end)
+
+test("empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between", function()
+    local NS, mocks = fresh()
+    noEnchants(mocks)
+    mocks.__unitExists.target = true
+    local held = { { spellId = 1, duration = 30, isFromPlayerOrPlayerPet = true } }
+    withAuras(mocks, "target", held)
+    NS.SetByPath("container.unit", "target", 1)
+    attach(NS, 2, 1)
+    NS.SetByPath("locked", false)
+    local CM = NS.ContainerManager
+    local one, two = CM.instances[1], CM.instances[2]
+    mocks.__fireTimers(); mocks.__fireTimers()
+    populate(mocks, one)
+    local f = NS.EmptyWatch.unitFrames[2]
+    f.__scripts.OnEvent(f, "UNIT_AURA", "target")
+    mocks.__fireTimers()
+    assertEqual(one.hangMode, "engine", "the old target holds an aura")
+    local rec = recordAnchor(two)
+    withAuras(mocks, "target", {})
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    -- red under: PLAYER_TARGET_CHANGED only marking the 0.2 s pass due, while the engine has already
+    -- emptied to its 1x1 rect, so the follower jumps to that corner and back (owner, 2026-09-26)
+    assertEqual(one.hangMode, "slot", "re-predicted inside the event, before any timer")
+    assertTrue(lastTarget(rec) == one.anchor, "the follower goes straight to the slot")
+end)
+
+test("empty: a target switch folds a pass already due into its own, leaving no timer behind", function()
+    local NS, mocks = fresh()
+    noEnchants(mocks)
+    mocks.__unitExists.target = true
+    withAuras(mocks, "target", {})
+    NS.SetByPath("container.unit", "target", 1)
+    attach(NS, 2, 1)
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local f = NS.EmptyWatch.unitFrames[2]
+    f.__scripts.OnEvent(f, "UNIT_AURA", "target")
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    -- red under: the switch running its pass beside the pending timer instead of canceling it
+    assertEqual(mocks.__fireTimers(), 0, "the due pass was folded into the switch")
+end)

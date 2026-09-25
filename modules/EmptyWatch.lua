@@ -277,6 +277,15 @@ local function onUnitEvent()
     schedulePass()
 end
 
+--- PLAYER_TARGET_CHANGED and PLAYER_FOCUS_CHANGED: re-predict NOW rather than PASS_DELAY later. The
+--- engine redraws for the new unit in this same frame, so a follower hung from a parent that just
+--- emptied would sit at the engine's 1x1 provisional rect for the whole delay, and jump there and
+--- back (the owner, 2026-09-26). One switch is one pass; a pass already due is folded into it.
+local function onUnitSwitch()
+    if passTimer then passTimer:Cancel() end
+    runPass()
+end
+
 --- UNIT_PET and UNIT_INVENTORY_CHANGED through AceEvent, which does not filter by unit: only the
 --- player's own pet or gear marks the pass due.
 local function onPlayerUnit(_, unit)
@@ -329,8 +338,8 @@ end
 local function openOther()
     onOther = NS.SafeRegisterUnitEvent(unitFrame(2), "UNIT_AURA", NS.RejectedEvents, "target", "focus")
     if onOther then
-        NS.SafeRegisterEvent(events, "PLAYER_TARGET_CHANGED", onUnitEvent, NS.RejectedEvents)
-        NS.SafeRegisterEvent(events, "PLAYER_FOCUS_CHANGED", onUnitEvent, NS.RejectedEvents)
+        NS.SafeRegisterEvent(events, "PLAYER_TARGET_CHANGED", onUnitSwitch, NS.RejectedEvents)
+        NS.SafeRegisterEvent(events, "PLAYER_FOCUS_CHANGED", onUnitSwitch, NS.RejectedEvents)
     end
 end
 
