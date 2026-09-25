@@ -637,3 +637,11 @@ test("layout: choosing a facing Point redraws the tab with the hint on the next 
     -- red under: Point without its structural onChange (the tab keeps its old hint state)
     assertTrue(P.hasText(redrawn, "grow back over"))
 end)
+
+test("layout: the Container row's help points at the Side row, not at points set for you (batch 9 AP-3)", function()
+    local NS = fresh()
+    local desc = NS.FindSchemaRow("container.attach.container").desc
+    -- red under: the pre-batch-9 help, which says the points are chosen for the player
+    assertTrue(desc:find("points are set for you", 1, true) == nil, desc)
+    assertTrue(desc:find(NS.L["Side"], 1, true) ~= nil, desc)
+end)

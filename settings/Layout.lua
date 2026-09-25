@@ -207,7 +207,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
         shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
-        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, the attachment points are set for you, and the gap to it is this container's own Spacing (its Line spacing when it fills rows). The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
+        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, Side picks which side of it this one sits on, and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = targetChanged,
         -- `fromId` is the container the write targets, resolved by the seam: the id a caller names,
