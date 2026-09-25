@@ -993,52 +993,6 @@ local function clampToHandle(container, cfg, overhang, reach)
     setClamp(container, left, right, top, bottom)
 end
 
--- The join pin's size, and its diamond's side before the 45 degree turn (its diagonal is the size).
-local PIN_SIZE, PIN_SIDE = 10, 7
-
---- The JOIN PIN (batch 9 SEP-2, E4): a small gold diamond at the point where a container attached to
---- another joins it, so a strip beside the block no longer reads as the attachment. A plain frame of
---- ours under the anchor, built once, the first time it is needed out of combat, taking no mouse and
---- never a backdrop; its diamond is WHITE8X8 turned 45 degrees in the handle's gold.
-local function buildPin(container)
-    local pin = CreateFrame("Frame", nil, container.anchor)
-    pin:EnableMouse(false)
-    pin:SetSize(PIN_SIZE, PIN_SIZE)
-    local tex = pin:CreateTexture(nil, "OVERLAY")
-    tex:SetTexture("Interface\\Buttons\\WHITE8X8")
-    local c = C.JOIN_PIN_COLOR
-    tex:SetVertexColor(c[1], c[2], c[3], c[4])
-    tex:SetSize(PIN_SIDE, PIN_SIDE)
-    tex:SetPoint("CENTER", pin, "CENTER", 0, 0)
-    tex:SetRotation(math.pi / 4)
-    container.joinPin = pin
-    return pin
-end
-
---- Show the join pin while `show` (unlocked) and the container is placed on another container, at
---- its own point in effect (AttachPoints) and the strip's level; hide it otherwise.
---- Placing it is layout work beside an aura engine's parent, so under lockdown a placed pin only
---- shows or hides and one never built waits for the next pass after combat.
-local function updatePin(container, cfg, show)
-    local pin = container.joinPin
-    local on = show and cfg and container.placedAs == "container"
-    if not on then
-        if pin then pin:Hide() end
-        return
-    end
-    if InCombatLockdown() then
-        if pin and pin.placed then pin:Show() end
-        return
-    end
-    pin = pin or buildPin(container)
-    local point = Anchors.AttachPoints(cfg)
-    pin:SetFrameLevel(handleLevel(container, cfg) + 1)
-    pin:ClearAllPoints()
-    pin:SetPoint("CENTER", container.anchor, point, 0, 0)
-    pin.placed = true
-    pin:Show()
-end
-
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
 --- name sets its width and the layout's growth sets its side. Placing the strip and clamping the
 --- anchor are layout work beside an aura engine's parent, so neither runs under lockdown: the handle
@@ -1053,7 +1007,6 @@ function Anchors.UpdateHandle(container, show)
     show = (show and cfg) and true or false
     handle:SetLabel(handleText(cfg))
     container.stripShown = show   -- the room its own seam makes (furnitureRoom)
-    updatePin(container, cfg, show)
     if not InCombatLockdown() then
         if show then
             clampToHandle(container, cfg, placeHandle(container, cfg))

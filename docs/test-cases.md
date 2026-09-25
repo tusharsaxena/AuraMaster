@@ -745,18 +745,17 @@ badge and any count quoted in the docs must agree with it.
 - label: its class color makes a tracked container re-apply on a unit swap, only while the label shows
 - label: ApplyFont paints an explicit class, falls back to the swatch for none, and keeps its three-argument path
 
-### test_anchors_strip.lua (8)
+### test_anchors_strip.lua (7)
 
 - strip: a behind follower's strip sits before it, lined up with the edge that faces its parent, so it runs away from it
 - strip: a behind follower's before strip clamps over its own column, not toward its parent
 - strip: an icons label mirrors only for a behind follower, whose strip lines up with the edge facing its parent
-- strip: unlocked, a gold diamond marks the join at the child's attach point; locked, screen and frame show none
-- strip: Park and Destroy hide the join pin
+- strip: no join dot is built for a container joined to another, unlocked or in test mode
 - strip: the tooltip of a container joined to another names the parent's point and the parent
 - strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
 
-### test_anchors_column.lua (20)
+### test_anchors_column.lua (19)
 
 - column: an after follower's strip sits before its own block, like a root's, mirrored by the growth
 - column: a follower's strip stays before it whatever other followers hold its sides
@@ -777,7 +776,6 @@ badge and any count quoted in the docs must agree with it.
 - column: an ahead follower stays level when its parent's strip fits its own block, and growing up it is pushed upward
 - column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
 - column: a follower of a side follower spreads by its own strip, as any after follower does
-- column: the join pin stays at the child's attach point while unlocked
 
 ### test_anchors_points.lua (16)
 
@@ -1763,7 +1761,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 172 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 173 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1854,8 +1852,8 @@ badge and any count quoted in the docs must agree with it.
 | test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
-| test_anchors_strip.lua | 8 |
-| test_anchors_column.lua | 20 |
+| test_anchors_strip.lua | 7 |
+| test_anchors_column.lua | 19 |
 | test_anchors_points.lua | 16 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -1900,4 +1898,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1610** |
+| **Total** | **1608** |

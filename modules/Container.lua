@@ -617,7 +617,6 @@ function ContainerClass:Park()
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
-    if self.joinPin then self.joinPin:Hide() end
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false   -- re-evaluated by the next visibility pass
     self.watchEmpty, self.predictedEmpty = false, nil
     self.parked = true
@@ -632,7 +631,6 @@ function ContainerClass:Destroy()
     if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
-    if self.joinPin then self.joinPin:Hide() end
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false
     self.watchEmpty, self.predictedEmpty = false, nil
     self.anchor:Hide()

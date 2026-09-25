@@ -1,7 +1,7 @@
 -- tests/test_anchors_strip.lua - the marks that make an attachment unambiguous (batch 9 SEP-1,
--- SEP-2, E4), and a side follower's strip (SEP-3 as batch 10 F4 leaves it). While unlocked a gold
--- diamond marks each join, and the strip's tooltip names it; in test mode each container's outline
--- encloses its whole placeholder block. Batch 9's StripSide, which put an after follower's strip
+-- SEP-2, E4), and a side follower's strip (SEP-3 as batch 10 F4 leaves it). The strip's tooltip names
+-- each join, and no dot marks it on screen (batch 11 G6 removed SEP-2's gold diamond); in test mode
+-- each container's outline encloses its whole placeholder block. Batch 9's StripSide, which put an after follower's strip
 -- beside or inside its first element, is gone: every strip sits before its own block
 -- (tests/test_anchors_column.lua).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
@@ -91,13 +91,21 @@ test("strip: an icons label mirrors only for a behind follower, whose strip line
     assertEqual(NS.Anchors.LabelJustify(cfgOf(NS, 3)), "LEFT", "an ahead follower's before strip")
 end)
 
--- ── the join pin and the tooltip (SEP-2) ──────────────────────────────────────────────────────
+-- ── no join dot (batch 11 G6), and the tooltip (SEP-2) ────────────────────────────────────────
 
-test("strip: unlocked, a gold diamond marks the join at the child's attach point; locked, screen and frame show none", function()
-    local NS, mocks = fresh()
+test("strip: no join dot is built for a container joined to another, unlocked or in test mode", function()
+    -- Every frame the client hands out records a turn of its textures (CreateTexture answers with
+    -- the frame itself in the mock), so a diamond built anywhere, under any field name, shows here.
+    local turned = 0
+    local NS, mocks = fresh({ before = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(...)
+            local f = create(...)
+            rawset(f, "SetRotation", function(self) turned = turned + 1; return self end)
+            return f
+        end
+    end })
     rootFlow(NS, "vertical", "right", "down")
-    NS.SetByPath("container.attach.x", 0, 2)
-    NS.SetByPath("container.attach.y", 0, 2)
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
     local at = NS.Database.FindContainer(2).attach
@@ -105,42 +113,14 @@ test("strip: unlocked, a gold diamond marks the join at the child's attach point
     NS.SetByPath("locked", false)
     mocks.__fireTimers()
     local two = NS.ContainerManager.instances[2]
-    local pin = two.joinPin
-    -- red under: no join pin
-    assertTrue(pin ~= nil and pin:IsShown(), "the pin shows")
-    local rec = {}
-    rawset(pin, "SetPoint", function(_, ...) table.insert(rec, { ... }) end)
     NS.Anchors.UpdateHandle(two, true)
-    local p = rec[#rec]
-    assertEqual(p[1], "CENTER"); assertTrue(p[2] == two.anchor, "on the child's anchor")
-    assertEqual(p[3], "TOPLEFT", "the child's point for ahead-start")
-    assertFalse(NS.ContainerManager.instances[1].joinPin ~= nil and NS.ContainerManager.instances[1].joinPin:IsShown(),
-        "a screen container shows none")
-    NS.SetByPath("locked", true)
-    mocks.__fireTimers()
-    assertFalse(pin:IsShown(), "locked: hidden")
-    NS.SetByPath("locked", false)
-    NS.SetByPath("container.attach.mode", "screen", 2)
-    mocks.__fireTimers()
-    assertFalse(pin:IsShown(), "screen: hidden")
-    NS.SetByPath("container.attach.mode", "frame", 2)
-    mocks.__fireTimers()
-    assertFalse(pin:IsShown(), "frame: hidden")
-end)
-
-test("strip: Park and Destroy hide the join pin", function()
-    local NS, mocks = fresh()
-    NS.SetByPath("container.attach.container", 1, 2)
-    NS.SetByPath("container.attach.mode", "container", 2)
-    NS.SetByPath("locked", false)
-    mocks.__fireTimers()
-    local two = NS.ContainerManager.instances[2]
-    assertTrue(two.joinPin:IsShown())
-    two:Park()
-    assertFalse(two.joinPin:IsShown(), "parked")
-    two.joinPin:Show()
-    two:Destroy()
-    assertFalse(two.joinPin:IsShown(), "destroyed")
+    NS.State.testMode = true
+    NS.Anchors.UpdateHandle(two, true)
+    NS.State.testMode = false
+    -- red under: the gold diamond join pin (batch 9 SEP-2) built on the child's anchor
+    assertEqual(turned, 0, "no texture turned into a diamond")
+    assertTrue(two.joinPin == nil, "no join pin")
+    assertTrue(two.handle:IsShown(), "the strip still shows")
 end)
 
 test("strip: the tooltip of a container joined to another names the parent's point and the parent", function()

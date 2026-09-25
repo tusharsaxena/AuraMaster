@@ -1355,7 +1355,7 @@ for the migration lines, and once on a fresh profile.
 | HG-1 the empty-only placeholder | E1 | 191-196 (and 14) |
 | AP-1..AP-4 the Side row, its limits and its default | E2, E5 | 216-220 |
 | GC-1 the growth-conflict popup | E3 | 41 |
-| SEP-1..SEP-4 test-mode outline, join pin, strip side, enchant preview | E4 | 221-224 |
+| SEP-1..SEP-4 test-mode outline, join tooltip (the pin removed by batch 11 G6), strip side, enchant preview | E4 | 221-224 |
 | One geometry locked, unlocked and in test mode | E1, E2 | 225 |
 
 **Owner run, 2026-09-25 (late).** Every AA check passed except those below, which go to feedback
@@ -1447,11 +1447,10 @@ batch 10 on the same branch.
      are enclosed by one outline of its own, the whole block, so a follower's block and its parent's
      read as two; `/am unlock` → still one outline per block. `/am test off` while locked → no
      outline at all; unlocked → only an empty container's one-element outline (check 193).
-222. **The join pin and its tooltip (SEP-2).** `/am unlock` with the chains of 216 and 212 → a small
-     gold diamond sits exactly on each join, at the child's attach point, one per attached
-     container; hover B's strip → the tooltip adds "Joined to the *point* of 'A'. Change the side on
-     Layout > Anchor." `/am lock` → every diamond goes. A container on the screen or on a named frame
-     never shows one.
+222. **The join's tooltip, and no join dot (SEP-2 as batch 11 G6 leaves it).** `/am unlock` with the
+     chains of 216 and 212 → no dot or diamond sits on any join, unlocked, locked or in test mode;
+     hover B's strip → the tooltip adds "Joined to the *point* of 'A'. Change the anchor points on
+     Layout > Anchor." A container on the screen or on a named frame adds no such line.
 223. **Every strip in its own column (batch 10 F1, F4; replaces SEP-3's free side).** Unlocked, test
      mode on and off:
      - a Bottom-attached follower's strip sits above its own first element, between the parent's
@@ -1492,7 +1491,7 @@ Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **B
 | F3 strip, label, block; the label justified inside its block, locked and unlocked | 229, 230 (and 203, 204, 215) |
 | F1, F3 growth up mirrors all of it | 231 |
 | F4 a side follower clears its parent's strip and label | 232 (and 223) |
-| F5 the join diamond, the test-mode block outline and the tooltip line stay | 226, 227 (and 221, 222) |
+| F5 the test-mode block outline and the tooltip line stay (the join diamond removed by batch 11 G6) | 226, 227 (and 221, 222) |
 | F6 the inherited-growth note | 233 (and 67) |
 | F7 schema v10 on the owner's v9 profile | 234 |
 | F8 diagnostics while disabled or stood down | 235 |
@@ -1501,15 +1500,15 @@ Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **B
      one column reading, top to bottom: #13's strip, #13's block, #14's strip, #14's block, #15's
      strip, #15's block, as in the owner's mockup. No strip sits beside the column or over another
      container's block, each strip is lined up with its own block, and each strip sits one Spacing
-     past the block before it. A small gold diamond sits on each of the two joins; hover #14's strip
-     → the tooltip carries "Joined to the *point* of 'Text (Offensive Cooldowns)'. Change the side on
-     Layout > Anchor."
+     past the block before it. No dot sits on either join; hover #14's strip
+     → the tooltip carries "Joined to the *point* of 'Text (Offensive Cooldowns)'. Change the anchor
+     points on Layout > Anchor."
 227. **The mockup in test mode (F1, F2, F5).** Still unlocked, `/am test` → the same order around
      the placeholder blocks: strip, block, strip, block, strip, block, each block enclosed by its own
      outline, no placeholder under another container's strip. `/am lock` with test mode still on →
-     the strips and diamonds go, each follower closes up to one Spacing past the block before it,
+     the strips go, each follower closes up to one Spacing past the block before it,
      and each block keeps its outline. `/am test off`.
-228. **Collapse on lock (F2).** From 226, `/am lock` → every strip and diamond goes and the chain
+228. **Collapse on lock (F2).** From 226, `/am lock` → every strip goes and the chain
      closes up: #14 sits one Spacing below #13's last line, #15 one Spacing below #14's, plus any
      X/Y nudge, where they sat locked on the batch 9 build. `/am unlock` → it spreads again at once,
      with no `/reload`. Toggle three times; no Lua error, taint or ADDON_ACTION_BLOCKED, and entering

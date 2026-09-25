@@ -170,9 +170,6 @@ C.NOTICE_COLOR = "ffcc6666"
 -- "|c" escape.
 C.TEST_TAG_COLOR = "ffff8000"
 
--- The join pin's color (batch 9 SEP-2): the drag handle's gold, the strip tooltip's attached line.
-C.JOIN_PIN_COLOR = { 1, 0.82, 0, 1 }
-
 -- The panel's muted gold for secondary text (batch 10 F6): the drag handle's gold dimmed toward its
 -- help mark, the same (0.85, 0.72, 0.38) settings/GeneralSpells.lua marks a player's own category
 -- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.

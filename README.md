@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1610%2F1610_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1608%2F1608_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -84,8 +84,8 @@ different way from this one, a dialog asks first: this one then grows like the c
 gets its own growth back if you detach it. While unlocked, every handle sits just outside its own
 container, so a chain reads handle, container, handle, container down one column; the chain spreads
 out to make room for the handles (and for names you show) and closes up again when you lock. A
-container beside another sits clear of that one's handle and name. A small gold diamond marks each
-spot where one container joins another. The same page covers growth direction,
+container beside another sits clear of that one's handle and name, and hovering a handle names the
+spot where it joins the other. The same page covers growth direction,
 spacing, scale and tooltips, and right-clicking one of your own buffs cancels it unless you switch
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
 chat too: `/am new target debuffs icons` makes a container, `/am select` changes which one you're

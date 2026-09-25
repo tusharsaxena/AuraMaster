@@ -409,16 +409,3 @@ test("column: a follower of a side follower spreads by its own strip, as any aft
     local _, y = placed(NS, 3)
     assertEqual(y, -(spacingOf(NS, 3) + ROW))
 end)
-
-test("column: the join pin stays at the child's attach point while unlocked", function()
-    local NS, mocks = fresh()
-    rootFlow(NS)
-    join(NS, 2, 1, "after-center")
-    settle(NS, mocks, false)
-    local two = inst(NS, 2)
-    assertTrue(two.joinPin ~= nil and two.joinPin:IsShown())
-    local rec = {}
-    rawset(two.joinPin, "SetPoint", function(_, ...) table.insert(rec, { ... }) end)
-    NS.Anchors.UpdateHandle(two, true)
-    assertEqual(rec[#rec][1], "CENTER"); assertEqual(rec[#rec][3], "TOP")
-end)

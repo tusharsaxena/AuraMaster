@@ -188,6 +188,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`Anchors.AttachEdge`); any other pair is placed at its X/Y alone, so its strip and label can overlap
   its parent's. Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
   leaves a picked one where it is.
+- **Nothing on screen marks where two containers join** (batch 11 G6). Batch 9's gold diamond at the
+  join is gone at the owner's request. The join is named by the strip's tooltip while unlocked
+  ("Joined to the *point* of '*parent*'") and by the Layout > Anchor joins line, and
+  `/am diagnostics` prints the two points and the side they make (`join=`).
 - **A chain spreads out while its strips show, and closes up when they hide** (batch 10 F1, F2).
   Every strip sits above its own block (below it growing up), in its own column, so a follower
   attached below its parent sits one strip row (20px) further along while unlocked, and one more
