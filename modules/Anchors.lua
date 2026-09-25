@@ -849,20 +849,31 @@ local function canDrag(container)
     return (cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown()) and true or false
 end
 
---- The handle's label: the container's name, a warm gray (C.ATTACHED_NAME_COLOR) while it is attached to
---- another container or a named frame, the sign that it follows that and cannot be dragged on its
---- own (canDrag; the owner, 2026-09-26); and while test mode is on an orange TEST tag after it
---- (feedback #8), so the placeholders on screen read as placeholders. It sits ABOVE BuildHandle
---- because the strip is born with its text — `label` is the widget's one required string.
-local function handleText(cfg)
-    if not cfg then return "" end
+--- The handle's label, in its three parts: the container's name, a warm gray
+--- (C.ATTACHED_NAME_COLOR) while it is attached to another container or a named frame, the sign that
+--- it follows that and cannot be dragged on its own (canDrag; the owner, 2026-09-26); and while test
+--- mode is on an orange TEST tag after it (feedback #8), so the placeholders on screen read as
+--- placeholders. Apart, so a strip too narrow for the whole shortens the name alone (stripLabel).
+--- @return string open, string name, string close, string tag  open and close wrap the name's color
+local function handleParts(cfg)
     local name = cfg.name or ""
+    local open, close, tag = "", "", ""
     local mode = cfg.attach and cfg.attach.mode
     if mode == "container" or mode == "frame" then
-        name = "|c" .. NS.Constants.ATTACHED_NAME_COLOR .. name .. "|r"
+        open, close = "|c" .. NS.Constants.ATTACHED_NAME_COLOR, "|r"
     end
-    if not (NS.State and NS.State.testMode) then return name end
-    return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
+    if NS.State and NS.State.testMode then
+        tag = ("  |c%s%s|r"):format(NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
+    end
+    return open, name, close, tag
+end
+
+--- The handle's whole label. It sits ABOVE BuildHandle because the strip is born with its text —
+--- `label` is the widget's one required string.
+local function handleText(cfg)
+    if not cfg then return "" end
+    local open, name, close, tag = handleParts(cfg)
+    return open .. name .. close .. tag
 end
 
 --- Build the handle a player drags a container by: LibKa0s-Widgets-1.0's strip, wearing this
@@ -915,7 +926,8 @@ end
 
 --- Put the strip on the side the auras do not grow into: above the anchor when they grow down,
 --- below when they grow up, its edge lined up with the edge they start from so it runs along the
---- first line. At least as wide as one element, and as its label with room for the help mark. The
+--- first line. As wide as one element, its name shortened to fit (stripLabel, batch 11 T11), or its
+--- natural width on an element too narrow for the marks and a readable label. The
 --- growth is the effective one: an attached container's auras grow the way its parent's do (L-6).
 --- A container attached to another puts it there too, in its own column (batch 10 F1): its seam
 --- makes the room (seamRoom).
@@ -1043,8 +1055,81 @@ function Anchors.PlaceLabel(container, cfg)
     host.placed = true
 end
 
---- The strip goes where Anchors.StripPoints says, moved out past a shown name label (D6). Records
---- how far it runs past the element (`stripOverhang`), which an ahead follower clears (sideRoom).
+-- ---------------------------------------------------------------------------
+-- The strip is never wider than its container (batch 11 T11)
+-- ---------------------------------------------------------------------------
+-- The widget's own width is its natural one (the label, the pads and the marks: Measure) floored at
+-- a minimum, so a long name, or a name and the TEST tag, ran the strip past the bars it sits on (the
+-- owner, 2026-09-26: about 15 px on three of five containers of one bar width). The strip is now the
+-- element's width, and a label that does not fit between the marks is shortened here, the name only,
+-- with STRIP_ELLIPSIS, so the TEST tag stays whole after it; the widget bounds its label between
+-- its reserves with word wrap off, so what we hand it draws on one line inside the strip. The one
+-- exception is an element too narrow for both reserves and MIN_STRIP_LABEL of name: a one-icon
+-- container keeps the natural width, as before, so its name still reads. Measuring goes through the
+-- widget's public SetLabel and Measure (a detached string, never the label, which can sit on secret
+-- geometry) and runs only when the name or the width changes, so a visibility pass allocates nothing.
+
+local MIN_STRIP_LABEL = 40   -- px of label the capped strip keeps readable
+local STRIP_ELLIPSIS  = "..."
+
+--- True when the strip is capped at element width `w`: it holds both reserves and a readable label.
+local function stripCapped(handle, w)
+    return w >= handle:Reserve() * 2 + MIN_STRIP_LABEL
+end
+
+--- The width `text` draws in the strip's label face (0 when it cannot be measured).
+local function labelWidth(handle, text)
+    handle:SetLabel(text)
+    return handle:Measure() - handle:Reserve() * 2
+end
+
+--- The largest byte count no greater than `n` that ends `s` on a whole UTF-8 character.
+local function charEnd(s, n)
+    while n > 0 do
+        local b = s:byte(n + 1)
+        if not b or b < 0x80 or b >= 0xC0 then return n end
+        n = n - 1
+    end
+    return 0
+end
+
+--- The label with the name cut to the longest start that fits `avail` with the ellipsis and the tag
+--- (a binary search over the name's bytes, snapped to whole characters). None fitting leaves the
+--- ellipsis alone before the tag; the widget's bound still keeps it inside the strip.
+local function shortened(handle, cfg, avail)
+    local open, name, close, tag = handleParts(cfg)
+    local function compose(n)
+        local head = name:sub(1, charEnd(name, n)):gsub("%s+$", "")
+        return open .. head .. STRIP_ELLIPSIS .. close .. tag
+    end
+    local lo, hi = 0, #name - 1
+    while lo < hi do
+        local mid = math.floor((lo + hi + 1) / 2)
+        if labelWidth(handle, compose(mid)) <= avail then lo = mid else hi = mid - 1 end
+    end
+    return compose(lo)
+end
+
+--- The text the strip draws: the whole label on a natural-width strip or when it fits, else the
+--- name shortened (shortened). Cached on the container by the whole label and the room it has, so
+--- an unchanged pass measures nothing. Config math and the widget's own measure only: safe in combat.
+local function stripLabel(container, handle, cfg)
+    local full = handleText(cfg)
+    if not (handle.Reserve and cfg) then return full end
+    local w = NS.Style.ElementSize(cfg)
+    if not stripCapped(handle, w) then return full end
+    local avail = w - handle:Reserve() * 2
+    if container.stripFull == full and container.stripAvail == avail then return container.stripText end
+    local text = full
+    if labelWidth(handle, full) > avail then text = shortened(handle, cfg, avail) end
+    container.stripFull, container.stripAvail, container.stripText = full, avail, text
+    return text
+end
+
+--- The strip goes where Anchors.StripPoints says, moved out past a shown name label (D6). Its width
+--- is the element's while that holds a readable label (stripCapped), else its natural width floored
+--- at the element. Records how far it runs past the element (`stripOverhang`, 0 when capped), which
+--- an ahead follower clears (sideRoom).
 --- @return number, number  how far the strip runs past the element along its line, and how far out
 ---                          past the anchor's V0 edge it reaches, its gap included
 local function placeHandle(container, cfg)
@@ -1056,9 +1141,14 @@ local function placeHandle(container, cfg)
     local push = labelPush(container, growV)
     handle:SetPoint(point, container.anchor, rel, x, y + push)
     local w = NS.Style.ElementSize(cfg)
-    -- The widget measures its own label on a detached string of its own and floors the width at the
-    -- element, which is the arithmetic this file used to carry (labelWidth + HANDLE_PAD + …).
-    local overhang = handle:ApplyWidth(w) - w
+    local overhang = 0
+    if handle.Reserve and stripCapped(handle, w) then
+        handle:SetWidth(w)
+    else
+        -- The widget measures its own label on a detached string of its own and floors the width
+        -- at the element.
+        overhang = handle:ApplyWidth(w) - w
+    end
     container.stripOverhang = overhang
     return overhang, DRAG.HEIGHT + math.abs(y + push)
 end
@@ -1106,7 +1196,8 @@ function Anchors.UpdateHandle(container, show)
     if not handle then return end
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
-    handle:SetLabel(handleText(cfg))
+    -- a hidden strip keeps the whole label and measures nothing (a locked pass allocates nothing)
+    handle:SetLabel(show and stripLabel(container, handle, cfg) or handleText(cfg))
     container.stripShown = show   -- the room its own seam makes (furnitureRoom)
     if not InCombatLockdown() then
         if show then

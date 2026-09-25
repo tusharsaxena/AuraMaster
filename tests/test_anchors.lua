@@ -340,7 +340,12 @@ test("handle: at least as wide as its container's element, and as its label with
     assertEqual(last(h, "SetWidth")[1], math.max(RESERVE2, w), "an empty label")
     measureAs(mocks, w + 100)
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "a label wider than the element")
+    -- B11-T11: a bar wide enough for the marks and a readable label caps the strip at its width (the
+    -- name is shortened, tests/test_anchors_width.lua); a narrower element keeps the natural width
+    assertEqual(last(h, "SetWidth")[1], w, "a label wider than the element: capped at it")
+    cfg.bars.width = 100
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "too narrow to cap: the label with its marks")
 end)
 
 test("handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone", function()
@@ -350,6 +355,7 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     local h = recordedHandle(mocks, NS, inst)
     local insets
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b) insets = table.concat({ l, r, t, b }, ",") end)
+    cfg.bars.width = 100   -- too narrow to cap (B11-T11), so the strip runs past it
     local w = NS.Style.ElementSize(cfg)
     measureAs(mocks, w + 100)
     local over = 100 + RESERVE2
@@ -1288,6 +1294,7 @@ test("handle: the width comes from a detached measuring string, never the label,
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
+    NS.Database.FindContainer(1).bars.width = 100   -- natural width, not capped (B11-T11)
     local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
     -- The label is the strip in the kit (a font string comes back as its frame).
     rawset(h, "GetStringWidth", function() error("attempt to perform arithmetic on a secret number value") end)

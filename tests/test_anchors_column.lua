@@ -324,8 +324,10 @@ end)
 
 -- ── F4: side followers ────────────────────────────────────────────────────────────────────────
 
---- Make container `id`'s strip run `over` pixels past its element on the next placement.
+--- Make container `id`'s strip run `over` pixels past its element on the next placement: marks too
+--- wide for its element keep its natural width (B11-T11), which then runs `over` past it.
 local function overhang(NS, id, over)
+    rawset(inst(NS, id).handle, "Reserve", function() return 1000 end)
     rawset(inst(NS, id).handle, "ApplyWidth", function(_, w) return (w or 0) + over end)
 end
 

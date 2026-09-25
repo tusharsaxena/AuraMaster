@@ -809,6 +809,15 @@ badge and any count quoted in the docs must agree with it.
 - steady: parent and child at different scales convert the offset to the child's scale
 - steady: start-aligned pairs are placed as before, along the chain and across it
 
+### test_anchors_width.lua (6)
+
+- width: a long name on a wide Bars container gives a strip exactly as wide as its bar, the name shortened with ...
+- width: in test mode the name is shortened, never the TEST tag, which stays after it
+- width: a name that fits is drawn whole, the strip still the bar's width
+- width: the full name stays the strip's tooltip title
+- width: a one-icon container too narrow for the marks and a readable label keeps its natural width
+- width: the label is worked out once per name and width, not on every pass
+
 ### test_texttemplate.lua (26)
 
 - template: an unknown token is refused, naming it and every known token (rule 1)
@@ -1776,7 +1785,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 174 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 175 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1871,6 +1880,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_column.lua | 19 |
 | test_anchors_points.lua | 16 |
 | test_anchors_steady.lua | 7 |
+| test_anchors_width.lua | 6 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -1914,4 +1924,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1620** |
+| **Total** | **1626** |

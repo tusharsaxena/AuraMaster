@@ -208,7 +208,12 @@ follower attached on the after side makes the room itself: its seam is moved on 
 its own strip's row while the strip shows and its label's row while the label shows (F2), and the
 visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`, after
 `UpdateHandle`). A follower on the parent's ahead side (Right, growing right) is moved on the same way past the parent's label
-while it shows, locked or not, and its strip while that runs past its element (F4). Nothing on screen
+while it shows, locked or not, and its strip while that runs past its element (F4). The strip is as
+wide as the element (batch 11 T11): `Anchors.UpdateHandle` hands the widget a label whose name is
+shortened with "..." to fit between the marks (the TEST tag kept whole), measured through the
+widget's `SetLabel` and `Measure` and cached per name and width, and `placeHandle` sets the element's
+width, so `stripOverhang` is 0. Only an element too narrow for both reserves and 40 px of label
+keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
 pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
 container is attached to another container or a named frame, which it follows and cannot be dragged

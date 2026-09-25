@@ -94,6 +94,7 @@ Kit.run{
         "test_anchors_column",
         "test_anchors_points",
         "test_anchors_steady",
+        "test_anchors_width",
         "test_texttemplate",
         "test_style",
         "test_castaura",

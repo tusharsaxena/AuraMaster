@@ -167,6 +167,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   anchor's clamp rect takes the handle in, so the handle can never be dragged off the screen
   (`Anchors.UpdateHandle`). A container dragged against the top edge that grows down therefore sits
   20px lower (the 18px strip and its 2px gap) until `/am lock`, and a handle wider than one element
+  (only on an element too narrow for its marks and a readable label, such as one icon, batch 11 T11)
   pushes a container off the side edge it runs toward the same way. Locking puts it back, and the
   stored position never changes. The strip's close mark (X, batch 8 CX-3) widens it by the X and a
   matching reserve on the other side, so the label stays centered, and a shown name label pushes the
@@ -211,7 +212,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and whatever the follower's own alignment, so a follower at the parent's bottom end moves too even
   where nothing would meet. A follower on the other side is never pushed, since the parent's strip runs away from it. A
   strip wider than its element still runs over whatever lies beside its column in the direction its
-  lines run.
+  lines run; only a narrow element's strip can be (batch 11 T11).
+- **A long container name is shortened on its strip.** The strip is as wide as its container's
+  element (batch 11 T11), so a name that does not fit between the marks ends in "..." there, the TEST
+  tag kept whole after it; the strip's tooltip title and the name label show it whole. An element
+  narrower than the marks, the pads and 40 px of label (one icon, for example) keeps the strip's
+  natural width instead, so its name still reads, and that strip runs past the element.
 - **The strip's X turns a container off at once, with no confirmation.** One left click writes
   `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enabled
   checkbox on the Containers page (`/am set container.enabled true`, with it selected, works too). There is

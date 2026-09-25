@@ -717,7 +717,8 @@ debuff container on the target, in a party or with a target dummy.
 
 117. **Attached to another frame: no Lua error (E).** Attach a container to another container, then
      one to a named frame (`PlayerFrame`), with `/am unlock` → no Lua error, in or out of combat
-     (enable `/console scriptErrors 1`), and each handle's strip is at least as wide as its name, with
+     (enable `/console scriptErrors 1`), and each handle's strip is as wide as its container (a long
+     name shortened with "...", batch 11 T11; one icon keeps the width of its name), with
      no clipped label on the handle's first show (the detached measurer's first measure may read 0).
      Drag the screen-attached one → it moves and saves; `/reload` → it is where you left it.
 118. **Center stacks the pieces (#1).** A Text container, Text → General → Justify Center, template
@@ -1665,7 +1666,7 @@ before the upgrade, growing down.
 
 ## AD. Batch 11 follow-ups (owner to run)
 
-Four changes the owner asked for after section AC (2026-09-26). None has been run here.
+Five changes the owner asked for after section AC (2026-09-26). None has been run here.
 
 246. **An attached container's strip name is gray, and its tooltip says why.** `/am unlock` → a
      container on the screen shows its strip name in the usual gold; #14 (attached to #13) and a
@@ -1699,3 +1700,12 @@ Four changes the owner asked for after section AC (2026-09-26). None has been ru
      change; Hide all under Who Cast It → both of its rows read Hide, Dispel Types unchanged; Show all
      on each → back to Show. Select Target debuffs (mine) → its rows were never touched. A buff
      container still shows only its two pairs. No Lua error.
+250. **The strip is never wider than its container (T11).** Five Bars containers of one bar width,
+     among them Target Debuffs (Mine), Target Movement (All), Target Defensive (All), Target Buffs
+     (Mine) and Target CC (All). `/am unlock` and `/am test` → every strip's left and right edges line
+     up with its bars, none running past them; a name too long to fit ends in "..." with the orange
+     TEST tag still whole after it, and the X and "?" marks are fully visible. Hover a shortened strip
+     → the tooltip's title is the whole name. `/am test` off → the name without the tag, shortened
+     only if it still does not fit. Rename one to a short name (Layout or Containers) → it is drawn
+     whole at once. A one-icon Icons container with a long name → its strip keeps the width of its
+     name and marks, running past the icon, as before. `/am lock` → no strips. No Lua error.
