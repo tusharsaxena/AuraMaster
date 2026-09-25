@@ -646,7 +646,7 @@ nothing).
     (smoke batch 2, item 6). Icon Left → the rows go live and the note goes at once; turn Show border
     on at thickness 2 in red → a red border frames the icon, the art inside it. Then Right, with the
     border: the text starts after the icon and its gap,
-    and a long line is cut at its box rather than drawn under the icon. Then, with `/am debug` and
+    and, with Size to fit off, a long line is cut at its box rather than drawn under the icon. Then, with `/am debug` and
     `/console scriptErrors 1`, and auras showing, change Text settings one after another (font, size,
     template, icon size, the border): every line keeps its text. Rows that go blank, or become empty
     bordered squares, must now come with a `[Style] … failed:` line in the debug console and one Lua
@@ -1258,8 +1258,10 @@ on the same branch.
      box. Icon size 0 with Bounce → neither the icon nor the text is cut at the right, and at Justify
      vertical Middle or Bottom the bounce is not cut at the top (Top still is, as before). A long-lived
      aura (hours or days) shows its whole time string.
-202. **Its limits (AS-2).** A live buff with a name longer than the samples (Incarnation: Chosen of
-     Elune) is cut at the box edge and never overlaps its neighbor. In combat gain and lose auras →
+202. **Its limits (AS-2, batch 9 TX-1).** A live buff with a name longer than the samples (Guardian of
+     Ancient Kings, Incarnation: Chosen of Elune) draws in full, not cut at either end, at Justify Left,
+     Center and Right, in and out of combat; with Size to fit off and a narrow Width it is cut at the
+     box as before. In combat gain and lose auras →
      no error and the size does not change; tick Size to fit in combat → it applies after combat.
      With a SharedMedia font, log in → at worst one apply at the stored size, then sized to fit; no
      lasting wrong size. Chain two Text containers, the first empty, unlocked, with Size to fit on and

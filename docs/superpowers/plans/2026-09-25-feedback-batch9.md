@@ -28,7 +28,7 @@ Resume at the first task, in order, that has no commit. A dirty tree is that tas
 | P0 tab rename, smoke record | E7 | — | done | 73e44b5 515474b 73c72e4 | |
 | Q1 diagnostics secret-safe + inert rows | DX-1 DX-2 | — | done | this commit (subject `B9-Q1: `; a commit cannot hold its own hash) | frameShown tri-state via CanAccess, shown=?/n+k?, per-group/per-listing/predictions pcall, probe pcall; [Cfg] `#N inert:` line from shownWhen + page disabledFor (NS.ContainerPageDisabledFor); attach.edge needs only CONTAINER_ONLY in Q6; quirks + debug.md + KL updated |
 | Q2 Size to fit Text-only; creates v9 | E6 MG-1 (autoSize half) | Q1 | done | this commit (subject `B9-Q2: `) | v8 stamps autoSize off only on style=="text"; new MigrateV9 + ladder row {to=9} removes text.autoSize from non-text containers (no stored style = bars), idempotent; ladder tests from v1, v7, v8; schema.md v9 entry, KL, debug.md, test-cases regen + badge 1482 |
-| Q3 live Size to fit never clips | TX-1 E8 | Q2 | todo | | |
+| Q3 live Size to fit never clips | TX-1 E8 | Q2 | done | this commit (subject `B9-Q3: `) | the bound was SetClipsChildren(true) on the clip and text-area frames (pieces are single-anchored, no width, no wrap); applyClip turns both off while Size to fit is on, on while off; tests with "Guardian of Ancient Kings" live L/C/R, stacked, preview, toggle; setting desc, KL, smoke 99/202, module-map, test-cases + badge 1486; optional budget widening not done |
 | Q4 label Justify | LJ-1 E7 | Q3 | todo | | |
 | Q5 drop the slot hang | HG-1 E1 | Q4 | todo | | |
 | Q6 attach edge model + Side dropdown + v9 edge/seam | AP-1..AP-4 E2 E5 MG-1 | Q5 | todo | | |

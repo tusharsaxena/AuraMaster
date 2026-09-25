@@ -18,6 +18,12 @@ local _, NS = ...
 -- the looping animations, so the icon and the text move and fade together; `area` is the text's box
 -- (the element less the icon and its gap), clipped again, so a long line is cut at its box and never
 -- runs under the icon. No Scale animation: glyphs scaled past the boxes they are anchored by overlap.
+-- UNDER SIZE TO FIT NEITHER CLIPS (batch 9 TX-1, E8). The fitted width is a budget measured on the
+-- placeholders; a live name is engine-written and secret, so it can be neither measured nor fitted,
+-- and a longer one ("Guardian of Ancient Kings") was cut at both ends of a centered box. Each piece is
+-- single-anchored at the justify point with no width and no wrap, so with the clipping off the line
+-- draws in full from that point; the budget still sizes the element for the layout, the outline and
+-- the strip. The fitted height already holds the bounce. A hand-set Width keeps cutting at the box.
 --
 -- ONE CHAIN PER SHAPE. A chain frame holds the font strings of one piece-kind sequence
 -- ("name|stacks|duration", TT's `shape`). A template edit that keeps the shape re-dresses the same
@@ -225,6 +231,14 @@ local function layoutIconAndArea(am, s, compiled, h)
     Style.ReportError("text icon", err)
     pcall(am.icon.Hide, am.icon)
     pcall(am.iconBorder.Hide, am.iconBorder)
+end
+
+--- Whether the frames cut what they hold: not while Size to fit is on (TX-1, the header's THREE NESTED
+--- FRAMES), where a live line longer than the fitted budget draws past the box from its justify point.
+local function applyClip(am, s)
+    local cut = not Style.OrTemplate(s.autoSize, D.autoSize)
+    am.clip:SetClipsChildren(cut)
+    am.area:SetClipsChildren(cut)
 end
 
 -- The anchor-point prefix for each vertical justify: TOPLEFT / LEFT / BOTTOMLEFT and the right-hand
@@ -554,6 +568,7 @@ function Text.Apply(frame, cfg, engine)
     local compiled = Text.Compiled(s)
     useChain(frame, am, compiled)
     layoutIconAndArea(am, s, compiled, h)
+    applyClip(am, s)
     dressPieces(am, s, compiled)
     layoutChain(am, s, compiled, h)
     dressDispelTints(am, s)
@@ -700,7 +715,7 @@ end
 -- a stacked Center's rows and the bounce; the width from the widest line the placeholders draw (the
 -- preview set of the aura type, the Text page's sample, and a worst case of the longest name, 99
 -- stacks and each of Style.TIME_SAMPLES), measured on our own hidden string (Style.WidestLine), which
--- is never secret. A live name longer than those is cut at the box's edge, as with a hand-set width.
+-- is never secret. A live name longer than those draws past the box's edge, unclipped (applyClip).
 
 -- The headroom a bounce needs, in bounce heights, per vertical justify: centered, the text gets half
 -- the added room above it; at the bottom all of it; at the top none helps (it is pinned to the edge).

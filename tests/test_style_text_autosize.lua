@@ -223,3 +223,83 @@ test("autosize: the dressed element, the flow layout and the preview offset all 
     local _, x = NS.Preview.Offset(c, 2)
     assertEqual(math.abs(x), LONGEST_BUFF + 2 + 4, "the second placeholder one autosized pitch along")
 end)
+
+-- ── a live name longer than the budget (batch 9 TX-1, E8) ──────────────────────────────────────
+
+-- The owner's live aura (smoke run, 2026-09-25): 25 characters, 152 at 12pt, wider than every line
+-- the fit measures, so Size to fit's budget cannot hold it.
+local GUARDIAN = "Guardian of Ancient Kings"
+local GUARDIAN_W = 25 * 6 + 2
+
+--- `c` dressed on `frame` (a fresh button when nil), live (engine bindings on) unless `preview`.
+local function dressOn(NS, m, c, frame, preview)
+    local made = {}
+    frame = frame or B.new(made)
+    B.during(m, made, function() NS.Style.Element(frame, c, not preview) end)
+    return frame, frame.__am
+end
+
+--- Whether neither the clip frame nor the text area cuts what they hold, each on its last call.
+local function unclipped(am)
+    return am.clip:__joined("SetClipsChildren") == "false" and am.area:__joined("SetClipsChildren") == "false"
+end
+
+test("autosize: on, a live name longer than the budget draws in full at its justify point (TX-1, E8)", function()
+    local NS, m, _, textCfg = env()
+    for _, side in ipairs({ "LEFT", "CENTER", "RIGHT" }) do
+        local c = textCfg({ template = "$spellname$", justifyH = side, justifyV = "MIDDLE", x = 0 })
+        local w = NS.Style.ElementSize(c)
+        local over = GUARDIAN_W > w
+        assertTrue(over, "the long name is wider than the fitted box: " .. side)
+        local frame, am = dressOn(NS, m, c)
+        local name = am.piece1
+        assertTrue(frame:__last("SetSpellName")[1] == name, "the engine writes the name: " .. side)
+        -- red under: the clip and text-area frames clipping (Guardian cut at both ends when centered)
+        assertTrue(unclipped(am), "nothing cuts the line: " .. side)
+        -- the string: one point, at the justify side, no width and no wrap to bound it
+        assertEqual(name:__count("SetWidth"), 0, side)
+        assertEqual(name:__count("SetPoint"), 1, side)
+        local pt = name:__last("SetPoint")
+        assertEqual(pt[1], side); assertTrue(pt[2] == am.area); assertEqual(pt[3], side)
+        assertEqual(name:__joined("SetWordWrap"), "false", side)
+        -- the budget still sizes the element, which the flow layout, outline and strip read
+        assertEqual(frame:__last("SetSize")[1], w, side)
+    end
+end)
+
+test("autosize: a stacked Center's long name row is not cut either", function()
+    local NS, m, _, textCfg = env()
+    local c = textCfg({ template = "$spellname$[$remainingduration$]", justifyH = "CENTER" })
+    local _, am = dressOn(NS, m, c)
+    -- red under: clipping kept for a stacked line (each centered row cut at both ends)
+    assertTrue(unclipped(am))
+    assertEqual(am.piece1:__count("SetWidth"), 0)
+    assertEqual(am.piece1:__last("SetPoint")[1], "TOP")
+end)
+
+test("autosize: a placeholder with the long name is not cut in test mode", function()
+    local NS, m, _, textCfg = env()
+    local c = textCfg({ template = "$spellname$", justifyH = "CENTER" })
+    local frame, am = dressOn(NS, m, c, nil, true)
+    NS.Style.Text.FillPreview(frame, { name = GUARDIAN, icon = 1, remaining = 5, duration = 10, stacks = 0 }, c)
+    assertEqual(am.piece1:__last("SetText")[1], GUARDIAN)
+    -- red under: a preview element clipped while the live one is not (test mode and live differ)
+    assertTrue(unclipped(am))
+end)
+
+test("autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it", function()
+    local NS, m, _, textCfg = env()
+    local c = textCfg({ template = "$spellname$", autoSize = false, width = 100 })
+    local frame, am = dressOn(NS, m, c)
+    -- red under: clipping dropped for every line (a hand-set Width no longer bounds its text)
+    assertEqual(am.clip:__joined("SetClipsChildren"), "true")
+    assertEqual(am.area:__joined("SetClipsChildren"), "true")
+    c.text.autoSize = true
+    dressOn(NS, m, c, frame)
+    -- red under: the clip set once at build and never again (a Size to fit toggle keeps the old cut)
+    assertTrue(unclipped(am), "on: nothing cut")
+    c.text.autoSize = false
+    dressOn(NS, m, c, frame)
+    assertEqual(am.clip:__joined("SetClipsChildren"), "true", "off again: cut at the box")
+    assertEqual(am.area:__joined("SetClipsChildren"), "true")
+end)

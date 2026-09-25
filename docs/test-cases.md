@@ -969,7 +969,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
 - text style: a debuff placeholder's dispel word and tints follow its own type, and the untyped one shows neither (TD-4)
 
-### test_style_text_autosize.lua (14)
+### test_style_text_autosize.lua (18)
 
 - autosize: off, the element keeps its stored size, and a stacked Center still grows (AS-3)
 - autosize: the template turns it on; a new container reads the template's true (AS-1, AS-3)
@@ -985,6 +985,10 @@ badge and any count quoted in the docs must agree with it.
 - autosize: a measure that fails keeps the stored size, is not remembered, and a later one autosizes
 - autosize: the size is remembered per style signature; a changed font size measures again
 - autosize: the dressed element, the flow layout and the preview offset all take the autosized size
+- autosize: on, a live name longer than the budget draws in full at its justify point (TX-1, E8)
+- autosize: a stacked Center's long name row is not cut either
+- autosize: a placeholder with the long name is not cut in test mode
+- autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
 ### test_preview.lua (26)
 
@@ -1716,7 +1720,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style_bars.lua | 63 |
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 55 |
-| test_style_text_autosize.lua | 14 |
+| test_style_text_autosize.lua | 18 |
 | test_preview.lua | 26 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -1752,4 +1756,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1482** |
+| **Total** | **1486** |

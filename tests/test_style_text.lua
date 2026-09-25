@@ -51,7 +51,9 @@ end
 -- ── the frames ─────────────────────────────────────────────────────────────────────────────────
 
 test("text style: the element takes its size; clip, animation and text-area frames nest inside it", function()
-    local frame, am = dressed(text({ width = 250, height = 18 }))
+    -- A hand-set size (Size to fit off): the frames clip. Under Size to fit they do not (batch 9 TX-1,
+    -- tests/test_style_text_autosize.lua).
+    local frame, am = dressed(text({ autoSize = false, width = 250, height = 18 }))
     assertEqual(frame:__joined("SetSize"), "250,18")
     -- red under: build without the clip frame (a bounce or a long line drawn over a neighbor)
     assertTrue(am.clip.parent == frame)

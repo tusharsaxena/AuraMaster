@@ -114,7 +114,7 @@ NS.RegisterSchemaRows({
     -- Size to fit (batch 8, AS-1): first in Size, a structural write so Width and Height dim (and
     -- the note under them shows) on the redraw. The size itself is modules/Style_Text.lua's.
     { path = P .. "autoSize", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "bool", startsLine = true,
-      label = L["Size to fit"], desc = L["Size each line's box to its content: the height from the font, the icon, a stacked Center's rows and the bounce, the width from the widest line the placeholders draw. A live aura name longer than those is cut off at the edge. Turn off to set the size by hand."], onChange = structural },
+      label = L["Size to fit"], desc = L["Size each line's box to its content: the height from the font, the icon, a stacked Center's rows and the bounce, the width from the widest line the placeholders draw. A live aura name longer than those is drawn in full past the edge, from where it is justified. Turn off to set the size by hand, and cut longer text at the edge."], onChange = structural },
     { path = P .. "width", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number",
       min = C.TEXT_WIDTH_MIN, max = C.TEXT_WIDTH_MAX, step = 1, disabledIf = sizedToFit, startsLine = true,
       label = L["Width (px)"], desc = L["The width of one line, icon included. Text past the edge is cut off. Grayed out while Size to fit is on: the width then follows the content, and this value is used only if it cannot be measured."] },
