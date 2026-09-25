@@ -1289,8 +1289,9 @@ on the same branch.
      (growing down), centered on it (a Bars container, batch 9 E7), and nothing else moves. Grow
      vertically Up → the label moves below the first element. The **Justify** dropdown reads Center
      with nothing picked; pick Left, then Right → the name moves to that edge (4px in); Center → back.
-     On *Player debuffs* (Icons) Justify reads Left, and Grow horizontally Left → it reads Right and the
-     name right-aligns; pick Center there and flip the growth → it stays centered. Change a Bars
+     On *Target debuffs (mine)* (Icons, growing right) Justify reads Left, and Grow horizontally Left
+     → it reads Right and the name right-aligns; pick Center there and flip the growth → it stays
+     centered. *Player debuffs* grows left on a fresh profile, so its Justify reads Right. Change a Bars
      container's style to Text → it stays centered. X/Y offsets and every font leaf
      (face, size, flags, shadow, color) apply live; with Show off the offsets and the font rows are
      grayed, but the color swatch is not.
@@ -1391,10 +1392,11 @@ for the migration lines, and once on a fresh profile.
      the whole live name.
 215. **Label Justify defaults (LJ-1, E7).** On a fresh profile with **Show name label** on for each
      starter: the Bars container's Layout → Label → **Justify** reads Center and the name is
-     centered; the Icons containers read Left, lined up with the first icon; the Text container
-     reads Center. Set an Icons container's **Grow horizontally** to Left → Justify reads Right and
-     the name lines up with the first icon on the right. `/am get container.label.justifyH` on each →
-     `AUTO`. Pick Left on the Bars container → `/am get` reads `LEFT`; `/am reset
+     centered; Target debuffs (mine), which grows right, reads Left, lined up with its first icon;
+     Player debuffs, which grows left, reads Right, lined up with its first icon on the right; the
+     Text container reads Center. Set Target debuffs (mine)'s **Grow horizontally** to Left →
+     Justify reads Right; set Player debuffs' to Right → it reads Left. Put both back. `/am get
+     container.label.justifyH` on each → `AUTO`. Pick Left on the Bars container → `/am get` reads `LEFT`; `/am reset
      container.label.justifyH` → back to `AUTO`, and the dropdown reads Center again. An Icons
      container attached below another with its label on → the name sits beside its first element,
      lined up with the edge that faces it (check 204).
