@@ -1418,7 +1418,7 @@ batch 10 on the same branch.
      child B attached to it (Per row or column 0, so it is one bar wide): B's Layout → Anchor → **Side** lists Bottom left, Bottom, Bottom right,
      Right, top / middle / bottom and Left, top / middle / bottom, and no Top entry. Pick each in turn
      → B moves there at once, one B Spacing below A on a Bottom side and one B Line spacing across on
-     a Right or Left side, and the line beside Container reads "Its *point* joins the *point* of 'A'"
+     a Right or Left side, and the line beside Parent container reads "Its *point* joins the *point* of 'A'"
      for the side picked. The X and Y offsets nudge it on top. Nothing overlaps A in any of them.
 217. **A growth flip mirrors it (E2).** With B on Bottom right, set A's **Grow vertically** to Up →
      the Side entries read Top left / Top / Top right, B sits above A on its right end, and no dialog
@@ -1556,6 +1556,11 @@ Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **B
      only `predicted:` lines. `/am enable`, `/am diagnostics` → no such line, and the plan verdicts
      read as they did before the disable.
 
+**Owner run, 2026-09-26.** Every AB check passed, except the parts the owner changed by request
+afterwards, which feedback batch 11 carries: the join dot (checks 226 and 227) is removed (G6), and
+the Side row (check 234's last step, and 232's Right, top and Left, top) gives way to the two
+anchor-point dropdowns (G1). Section AC checks those.
+
 ## AC. Feedback batch 11 sign-off (owner to run)
 
 The in-game checks for feedback batch 11 (`docs/superpowers/specs/2026-09-26-feedback-batch11-design.md`,
@@ -1582,7 +1587,7 @@ before the upgrade, growing down.
 | G7 `/am diagnostics` prints both points and the join | 245 |
 
 236. **The two dropdowns (G1, G2).** Select #14, Layout → **Anchor**, Attach to *Another container*,
-     Container #13 → below the Container row sit **Parent container anchor point** and **This container
+     **Parent container** #13 → below the Parent container row sit **Parent container anchor point** and **This container
      anchor point**, and there is no **Side** row. Open each → the first entry reads "Automatic
      (*point*)", naming the point Automatic gives, then the nine points: Top left, Top, Top right,
      Left, Center, Right, Bottom left, Bottom, Bottom right. Pick one in each → #14 moves at once, with

@@ -17,13 +17,9 @@ local function layout(opts)
     return NS, m, P, P.tab("layout", NS.L["Anchor"])
 end
 
---- The attach-target dropdown. The banner is labeled "Container" too, so it is excluded by identity.
+--- The attach-target dropdown, labeled "Parent container" (the banner keeps "Container").
 local function targetDropdown(NS, P, ws)
-    local banner = P.banner(NS.Helpers.__pageCtx.layout)
-    for _, w in ipairs(P.all(ws, "Dropdown", NS.L["Container"])) do
-        if w ~= banner then return w end
-    end
-    return nil
+    return P.find(ws, "Dropdown", NS.L["Parent container"])
 end
 
 --- layout(), with container 1 attached in `mode` first, so the Anchor tab draws that mode's
@@ -49,7 +45,7 @@ local SUBSECTIONS = {
 }
 
 --- How many widgets a render drew under each label, the banner's excepted (it is a second
---- "Container" dropdown). Counts, because Screen and Named frame both have a Point and a Relative point.
+--- "Parent container" dropdown). Counts, because Screen and Named frame both have a Point and a Relative point.
 local function drawnLabels(NS, P, ws)
     local banner = P.banner(NS.Helpers.__pageCtx.layout)
     local out = {}

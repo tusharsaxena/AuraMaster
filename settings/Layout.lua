@@ -335,7 +335,7 @@ NS.RegisterSchemaRows({
     },
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
-        shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
+        shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Parent container"],
         desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, the two anchor points below say where it joins it (below it, Automatic), and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = targetChanged,
