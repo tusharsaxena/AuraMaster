@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 256 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 257 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -515,7 +515,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (36 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (37 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).

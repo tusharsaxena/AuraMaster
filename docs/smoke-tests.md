@@ -40,8 +40,9 @@ suite covers what only the client can show.
 
 ## C. Unlock, drag, preview
 
-14. `/am unlock` → every container shows a handle with its name and a faint outline one element in
-    size; real auras keep drawing. `/am test` → every container fills with placeholder auras and its
+14. `/am unlock` → every container shows a handle with its name, and one with nothing to show a
+    faint outline one element in size (only while predicted empty, batch 9 HG-1, check 193); real
+    auras keep drawing. `/am test` → every container fills with placeholder auras and its
     real auras are hidden, the outline giving way to them. The handle is a dark strip with a thin gold edge and a gold label, sitting
     outside the container: above it when the auras grow down, below when they grow up, lined up with
     the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
@@ -1331,3 +1332,125 @@ on the same branch.
      anything, then `/am diagnostics` → the report appends after the trace lines, so one **Copy**
      carries both. `/am debug diagnostics` → the same report again. `/am debug diag` → no report:
      the console window just toggles, like any other unknown word after `debug`.
+
+## AA. Feedback batch 9 sign-off (owner to run)
+
+The in-game checks for feedback batch 9 (`docs/superpowers/specs/2026-09-25-feedback-batch9-design.md`,
+owner decisions E1-E9). None of them has been run: each is for the owner, and none is marked passed
+here. Requirements already covered by a check above point at it; the rest are new below. Run on a
+build carrying schema v9, once on a copy of the SavedVariables file the batch 8 run used (schema v8)
+for the migration lines, and once on a fresh profile.
+
+| Requirement | Decision | Check |
+|---|---|---|
+| DX-1, DX-2 `/am diagnostics` secret-safe, the `inert:` line | — | 210, 211 |
+| MG-1 schema v9 (autoSize, attach.edge, the screen offset) | E6, E9 | 212, 213 |
+| TX-1 a live line under Size to fit is never clipped | E8 | 214 (and 202) |
+| LJ-1 label Justify | E7 | 215 (and 203) |
+| HG-1 the empty-only placeholder | E1 | 191-196 (and 14) |
+| AP-1..AP-4 the Side row, its limits and its default | E2, E5 | 216-220 |
+| GC-1 the growth-conflict popup | E3 | 41 |
+| SEP-1..SEP-4 test-mode outline, join pin, strip side, enchant preview | E4 | 221-224 |
+| One geometry locked, unlocked and in test mode | E1, E2 | 225 |
+
+210. **`/am diagnostics`, test mode off and on (DX-1).** Out of combat, auras readable, with a
+     target and a focus and at least one container showing a live aura: `/am diagnostics` → the
+     report runs from the begin marker to the end marker with no Lua error and no `attempt to
+     compare ... secret boolean` line; every container has its `[Plan]` lines, and each reads
+     `shown=` with a number, `?`, or a `<n>+<k>?` count where some buttons could not be read (a
+     `[Shown]` line with `shown=?` for each of those). `/am test` → run it again → the same, with no
+     error, while the placeholders show. `/am test off` → a third run matches the first.
+211. **Only the rows in use (DX-2).** In the same report, a container on the screen lists no
+     `attach.container`, `attach.edge` or attach offsets on its `#id non-default:` line (any it still
+     stores sit on its `#id inert:` line), and no screen container lists `attach.y=-4`; a container
+     attached to another lists `attach.edge` (`after-start` is the default, so only a side you picked
+     shows) and puts a stored screen position, if any, on its `inert:` line. A bars or icons container
+     never lists `text.autoSize` on its `non-default:` line. A container with nothing inert prints no
+     `inert:` line at all.
+212. **The v9 migration.** Log in on the batch 8 (v8) SavedVariables copy (back up
+     `WTF/…/SavedVariables/AuraMaster.lua` first), then `/am debug` → the console holds one
+     `[Migrate] v9 profile '<name>'` line per profile. Every existing chain (Player Weapon
+     Enchants under Player Buffs (All); the Text Offensive -> Defensive -> Raid chain; the Target
+     Debuffs chain growing up) sits exactly where it did on the v8 build, locked and in test mode.
+     `/am select` each attached container, then `/am get container.attach.edge` → `after-start`, and
+     its Side dropdown reads Bottom left (Top left on the chain growing up; the mirrored name where
+     a chain grows left). A container that was on
+     the screen and is switched to Another container gains no 4px nudge (X/Y offsets read 0).
+213. **Size to fit is Text-only (E6).** On the migrated profile, `/dump` a bars and an icons
+     container's stored `text` table from `AuraMasterDB` → no `autoSize` key; a Text container keeps
+     its stored value. On a bars container the Text page is dimmed under its not-in-use note, and
+     changing that container's Style to Text → **Size to fit** starts ticked, the default. A Text
+     container made before batch 8 keeps its Width and Height and Size to fit unticked.
+214. **A live long name under Size to fit (TX-1, E8).** A Text container with Size to fit on and a
+     `$spellname$` template, live (test mode off): gain Guardian of Ancient Kings (or another buff
+     whose name is longer than every sample) → the whole name draws, past the box's edge if need
+     be, from the justify point: at Left it runs right, at Right it runs left, at Center both ways.
+     With Justify vertical Top and Bounce on → the bounce rises uncut. Two such auras up at once →
+     neither line is cut. Untick Size to fit → the line is cut at the box again; tick it →
+     whole again, with no `/reload`. `/am test` on and off while the buff is up → the samples, then
+     the whole live name.
+215. **Label Justify defaults (LJ-1, E7).** On a fresh profile with **Show name label** on for each
+     starter: the Bars container's Layout → Label → **Justify** reads Center and the name is
+     centered; the Icons containers read Left, lined up with the first icon; the Text container
+     reads Center. Set an Icons container's **Grow horizontally** to Left → Justify reads Right and
+     the name lines up with the first icon on the right. `/am get container.label.justifyH` on each →
+     `AUTO`. Pick Left on the Bars container → `/am get` reads `LEFT`; `/am reset
+     container.label.justifyH` → back to `AUTO`, and the dropdown reads Center again. An Icons
+     container attached below another with its label on → the name sits beside its first element,
+     lined up with the edge that faces it (check 204).
+216. **The Side list (AP-1, AP-3).** A bars parent A filling columns growing down and right, bars
+     child B attached to it (Per row or column 0, so it is one bar wide): B's Layout → Anchor → **Side** lists Bottom left, Bottom, Bottom right,
+     Right, top / middle / bottom and Left, top / middle / bottom, and no Top entry. Pick each in turn
+     → B moves there at once, one B Spacing below A on a Bottom side and one B Line spacing across on
+     a Right or Left side, and the line beside Container reads "Its *point* joins the *point* of 'A'"
+     for the side picked. The X and Y offsets nudge it on top. Nothing overlaps A in any of them.
+217. **A growth flip mirrors it (E2).** With B on Bottom right, set A's **Grow vertically** to Up →
+     the Side entries read Top left / Top / Top right, B sits above A on its right end, and no dialog
+     appears. Grow horizontally Left → the Right and Left entries swap sides, and B mirrors. `/am get
+     container.attach.edge` on B reads the same token throughout. Put A back.
+218. **Limits (AP-1, AP-3).** Set A's **Fill** to Rows → B, which follows A's fill, now spans more
+     than one aura across, and its Side lists no Left entry.
+     `/am set container.attach.edge behind-start` → refused with a chat line giving the reason (one
+     aura wide), and nothing moves. `/am set container.attach.edge top` → refused with a chat line.
+     Set A's Fill back to Columns.
+219. **The fallback note (AP-3).** B a bars column on **Left, top**, then B's **Per row or column**
+     set to 3 → B moves below A (Bottom left), the Side dropdown shows Left, top grayed with
+     " (unavailable)", and a gray line under the tab reads "'Left, top' needs this container to be one
+     aura wide (Fill: Columns, Per row or column: 0). It sits Bottom left until then." Set it back to
+     0 → B returns to A's left and the note goes. `/am get container.attach.edge` read `behind-start`
+     throughout.
+220. **The default side of a new attachment (AP-4, E5).** Three Text containers with the same
+     growth and Justify Center, all on the screen (the owner's #13, #14 and #15): attach the second
+     to the first, then the third to the second → each Side starts at Bottom, and the lines are centered under each other; change #13's Width and toggle Size to fit
+     → they stay centered. A Text container justified Right → Bottom right (growing right); Left →
+     Bottom left. A
+     bars or icons container → Bottom left. Pick a side while the mode is Another container but no
+     target is chosen, then choose the target → your pick is kept. Retarget an attached container →
+     its side is kept. An already-attached container migrated from v8 is not moved (check 212).
+221. **The test-mode block outline (SEP-1, E4).** `/am test` locked → every container's placeholders
+     are enclosed by one outline of its own, the whole block, so a follower's block and its parent's
+     read as two; `/am unlock` → still one outline per block. `/am test off` while locked → no
+     outline at all; unlocked → only an empty container's one-element outline (check 193).
+222. **The join pin and its tooltip (SEP-2).** `/am unlock` with the chains of 216 and 212 → a small
+     gold diamond sits exactly on each join, at the child's attach point, one per attached
+     container; hover B's strip → the tooltip adds "Joined to the *point* of 'A'. Change the side on
+     Layout > Anchor." `/am lock` → every diamond goes. A container on the screen or on a named frame
+     never shows one.
+223. **Strips find a free side (SEP-3).** Unlocked, test mode on and off:
+     - a Bottom-attached follower's strip sits beside its first element, over none of the parent's
+       elements;
+     - a Right-attached follower's strip sits above it and overlaps neither the parent nor the
+       parent's strip;
+     - a chain where B is on A's Left and C is below B: B's strip sits above B, and C's strip sits
+       beside C's first element on a side no follower holds (or inside it) and covers none of B's
+       elements;
+     - no two strips stack, each label sits where its strip sits, and on `/am lock` no strip is left.
+224. **Weapon enchant placeholders (SEP-4).** A container showing only Weapon enchants, `/am test`
+     → it previews weapon enchants (Windfury Weapon, Flametongue Weapon running out, Instant Poison
+     with no timer), not buffs; a Player Buffs container with Weapon enchants also on
+     still previews buffs. A Text container of enchants under Size to fit sizes to those names.
+225. **One geometry (E1, E2).** With B on each of Bottom, Right, middle and Left, top in turn and A
+     showing live auras: locked and unlocked → B sits in the same place (unlocked, A is not empty, so
+     B hangs from A's engine); in test mode → B sits on the same side of A's placeholder block; with A
+     empty and unlocked → B sits on that side of A's one-element outline. No Lua error, taint or
+     ADDON_ACTION_BLOCKED in any of them, and entering combat unlocked puts B back on A's engine.
