@@ -1660,3 +1660,5 @@ before the upgrade, growing down.
      `join=free`; pick the odd pair of 240 again → `point=CENTER(picked) relPoint=TOPRIGHT(picked)
      join=free`. Put both rows back to Automatic.
      A container on the screen or a named frame prints no `point=` or `join=`. No Lua error.
+
+**Owner run, 2026-09-26.** Every AC check passed.
