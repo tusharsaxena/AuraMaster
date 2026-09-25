@@ -138,8 +138,9 @@ end
 --- No two strips overlap, and each pair leaves at least the widget's strip gap between them:
 --- two gold edges touching read as one stacked strip.
 local function assertNoOverlap(spans, gap, what)
-    for a = 1, #spans do
-        for b = a + 1, #spans do
+    local n = #spans
+    for a = 1, n do
+        for b = a + 1, n do
             local sa, sb = spans[a], spans[b]
             assertTrue(sa[2] + gap <= sb[1] or sb[2] + gap <= sa[1],
                 ("%s: strips %d [%s,%s] and %d [%s,%s] overlap"):format(what, a, sa[1], sa[2], b, sb[1], sb[2]))
