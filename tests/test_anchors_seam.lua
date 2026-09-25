@@ -12,7 +12,7 @@ local fresh = dofile("tests/fresh_env.lua")
 --- Record every SetPoint made on a container's anchor.
 local function recordAnchor(inst)
     local rec = {}
-    rawset(inst.anchor, "SetPoint", function(_, ...) rec[#rec + 1] = { ... } end)
+    rawset(inst.anchor, "SetPoint", function(_, ...) table.insert(rec, { ... }) end)
     rawset(inst.anchor, "ClearAllPoints", function() end)
     return rec
 end
@@ -162,7 +162,7 @@ end)
 local function stripOf(NS)
     local inst = NS.ContainerManager.instances[2]
     local rec = { points = {} }
-    rawset(inst.handle, "SetPoint", function(_, ...) rec.points[#rec.points + 1] = { ... } end)
+    rawset(inst.handle, "SetPoint", function(_, ...) table.insert(rec.points, { ... }) end)
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b)
         rec.insets = { l, r, t, b }
     end)
@@ -210,7 +210,7 @@ test("seam: a screen container's strip keeps its place above or below its auras"
     local inst = NS.ContainerManager.instances[1]
     parentFlow(NS, "vertical", "right", "down")
     local points = {}
-    rawset(inst.handle, "SetPoint", function(_, ...) points[#points + 1] = { ... } end)
+    rawset(inst.handle, "SetPoint", function(_, ...) table.insert(points, { ... }) end)
     NS.Anchors.UpdateHandle(inst, true)
     local p = points[#points]
     -- red under: the side strip given to a container that follows nothing
