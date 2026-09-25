@@ -157,13 +157,21 @@ what the file says it is. This does, mechanically, over every id in `defaults/Ca
   id. Five shipped ids were in this state when the check was written; see issue #15.
 * **Its name disagrees with the comment beside it** — the id has been reused across an expansion,
   or was transcribed wrong. `format_diff` used to say a rename "cannot be detected against the
-  shipped file, which stores no names". It does store them, in those trailing comments.
+  shipped file, which stores no names". It does store them, in the comment beside each id.
 
-**The name check is positional and is only taken when it is safe.** A trailing comment is a
-comma-separated list meant to line up with the ids on its line, and usually does — but it is prose
-maintained by hand, and a line whose counts disagree is not evidence of anything. Such a line
-contributes its ids with no name, so the first two checks still run over it and only the name check
-is skipped. About 117 of 255 id slots currently carry an alignable name.
+**Where the names come from.** `defaults/Categories.lua` writes one table per class with **one id
+per line**, and the comment on that line gives the spell's name, then any context after a `;`
+(`436358,  -- Demolish; from the 2026-09-24 combat logs; ...`). The name is the text before the
+first `;`, so every shipped id carries one: all 440 do today. One reader in `research.py`
+(`parse_spells_body`) serves this check, `--diff` and the `logs.py` stages alike, and it takes ids
+from code only, never from a comment, since comments are full of digits (dates, `replaces 231895`,
+`98007 is the cast`).
+
+**The legacy one-line layout is still read, and its name check is positional and only taken when it
+is safe.** A class written as `CLASS = { 1, 2 }, -- Name1, Name2` has a comma-separated trailing
+comment meant to line up with its ids — but it is prose maintained by hand, and a line whose counts
+disagree is not evidence of anything. Such a line contributes its ids with no name, so the first two
+checks still run over it and only the name check is skipped.
 
 **What it cannot tell you**, so the gate is not read as more than it is: whether an id is in the
 RIGHT category, and whether it is the aura a player actually *sees* rather than some other aura the
@@ -358,7 +366,7 @@ python3 tools/spell-research/logs.py ingest --bundle docs/spell-research/2026-09
 python3 tools/spell-research/logs.py decide --bundle docs/spell-research/2026-09-24-logs \
   --key 'replace|offensiveCDs|SHAMAN|ascendance|114052' --ruling accept --date 2026-09-24
 
-# ... and apply rewrites the ruled class lines of defaults/Categories.lua and write the bundle's
+# ... and apply rewrites the ruled class tables of defaults/Categories.lua and writes the bundle's
 #    DECISIONS.md. Unruled proposals are left alone.
 python3 tools/spell-research/logs.py apply --bundle docs/spell-research/2026-09-24-logs
 ```
@@ -371,10 +379,18 @@ subcommand takes `--help`. `scan` and `propose` read the DB2 tables from `--db2-
 `--cast-to-aura`) to work on copies, which is what the tests do.
 
 **`logs.py apply` and `logs.py ingest` are the only paths that write `defaults/Categories.lua`**,
-and they write only what has a ruling in `decisions.json`. It rewrites just the affected class lines, keeps their
-order and trailing comments, inserts a class line in canonical class order when the category has
-none, and puts a provenance comment naming the bundle above each changed line. A second `apply`
-or `ingest` changes nothing. Run the addon's green gate after it, as for any `Categories.lua` change.
+and they write only what has a ruling in `decisions.json`. They edit just the class tables a ruling
+touches and keep every other line as it was. An id they remove loses its line, and a class table
+left empty is deleted (the table only: a comment line above it stays). An id they add gets its own
+line at the end of its class table (a replace puts it where the old id was), aligned to the comment
+column the neighboring lines use, with a same-line comment naming the spell and the bundle:
+`114052,  -- Ascendance; added from the 2026-09-24 combat logs (SID)`, plus `; replaces 114051` for a
+replace. A category without that class gets a new table in canonical class order. A legacy one-line
+class entry is rewritten as a table when a ruling edits it: its ids keep their positional names when
+the comment lines up (an aside in parentheses follows after a `;`), else take the name from the
+proposal or sheet row, else have none, and a comment that did not line up is kept as a comment line
+above the table. A second `apply` or `ingest` changes nothing. Run the addon's green gate after it,
+as for any `Categories.lua` change.
 
 ### Thresholds
 

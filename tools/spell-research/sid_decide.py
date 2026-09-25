@@ -7,16 +7,26 @@
   over the old one, so an interrupted write never leaves half a file. A key is never proposed
   again once it is here (sid_propose checks membership), whatever the ruling.
 - apply() rewrites defaults/Categories.lua for the ruled proposals of one bundle, and nothing
-  else: it edits only the `spells({ ... })` class lines a ruling touches, keeps every other byte
-  (order, alignment, trailing comments, commented-out lines, CRLF), and puts a provenance comment
-  above a line that gains ids:
-      -- 114052: combat-log evidence, docs/spell-research/<date>-logs (SID)
-  A class the category does not list yet gets a new line, placed in research.CLASS_EMIT_ORDER
-  order with the block's own indent and `=` column. Applying the same rulings twice changes
-  nothing the second time. A proposal handed to apply() without a ruling is refused.
+  else: it edits only the class tables of the `spells({ ... })` blocks a ruling touches and keeps
+  every other byte (order, alignment, comments, commented-out lines, CRLF). The file's layout is
+  one multi-line table per class with ONE ID PER LINE and the spell's name in a comment on that
+  line (research.py's shared reader documents it). An id the tool adds gets its own line, appended
+  inside the class table and aligned to the comment column its neighbors use:
+      114052,  -- Ascendance; added from the 2026-09-24 combat logs (SID)
+  and, for a replace, `; replaces <old ids>` on the end. Removing an id deletes its line; a class
+  table left empty is deleted (the table only: a comment line above it stays, since the tool
+  cannot tell what else it describes). A class the category does not list yet gets a new table,
+  placed in research.CLASS_EMIT_ORDER order with the block's own indent, above any comment lines
+  sitting directly over the class it precedes. A legacy one-line class entry (`CLASS = { 1, 2 },
+  -- Name1, Name2`) is converted to the table layout when, and only when, a ruling edits it: its
+  ids keep their positional names when the comment lines up (an aside in parentheses rides along
+  after a `;`), else take the name the proposal or sheet row gives them, else have none, and a
+  comment that did not line up is kept as a comment line above the new table. Applying the same
+  rulings twice changes nothing the second time. A proposal handed to apply() without a ruling is
+  refused.
 
 Ruling semantics (the plan, SID-8):
-    replace + accept  remove the listed ids from the class line, put the proposed ones in their place
+    replace + accept  remove the listed ids from the class, put the proposed ones in their place
     add + accept      append the proposed ids
     move + accept     remove from from_category, append to category
     addition + accept append to category (or the category chosen at decide time)
@@ -46,15 +56,20 @@ import sid_propose
 
 RULINGS = ("accept", "reject", "move")
 
-# One class line of a `spells({ ... })` block: indent, class, the `=` padding, the id list, and
-# whatever follows the closing brace (the comma and any trailing comment), kept verbatim.
+# A legacy one-line class entry (its code part): indent, class, the id list, whatever follows.
 _CLASS_LINE = re.compile(
-    r"^(?P<indent>[ \t]*)(?P<klass>[A-Z]+)(?P<pad>[ \t]*)=[ \t]*\{(?P<ids>[^}]*)\}(?P<tail>.*)$")
+    r"^(?P<indent>[ \t]*)(?P<klass>[A-Z]+)[ \t]*=[ \t]*\{(?P<ids>[^}]*)\}(?P<tail>.*)$")
+# The opening line of a class table (its code part): `CLASS = {`, nothing after the brace.
+_CLASS_OPEN = re.compile(r"^(?P<indent>[ \t]*)(?P<klass>[A-Z]+)[ \t]*=[ \t]*\{[ \t]*$")
+# The line that closes a class table (its code part): `},`.
+_TABLE_CLOSE = re.compile(r"^[ \t]*\}[ \t]*,?[ \t]*$")
 _CATEGORY_LINE = r'^[ \t]*key\s*=\s*"%s"\s*,\s*kind\s*=\s*"spells"'
 _ANY_KEY_LINE = re.compile(r'^[ \t]*key\s*=\s*"')
 _BLOCK_OPEN = re.compile(r"spells\s*=\s*spells\(\{\s*$")
 _BLOCK_CLOSE = re.compile(r"^[ \t]*\}\)")
-_PROVENANCE = re.compile(r"^[ \t]*-- [\d, ]+: combat-log evidence, .* \(SID\)[ \t]*$")
+# The widest id a line is laid out for when no neighbor shows a comment column: seven digits
+# and the comma, then the space before `--`.
+_DEFAULT_COMMENT_OFFSET = 9
 
 
 class UnruledProposal(ValueError):
@@ -143,32 +158,65 @@ def record(path, key, ruling, category=None, reason="", date=None):
 
 # --- Categories.lua -----------------------------------------------------------------------------
 
-def _format_ids(ids):
-    return "{ %s }" % ", ".join(str(i) for i in ids) if ids else "{ }"
-
-
-def _parse_ids(text):
-    return [int(t) for t in re.findall(r"\d+", text)]
-
-
 def _class_rank(klass):
     order = research.CLASS_EMIT_ORDER
     return order.index(klass) if klass in order else len(order)
 
 
-class _Lua:
-    """Categories.lua as a list of lines (without terminators), edited in place."""
+def _indent_of(line):
+    return line[:len(line) - len(line.lstrip())]
 
-    def __init__(self, text):
+
+def _code(line):
+    return research.split_comment(line)[0]
+
+
+def _joined(ids):
+    return ", ".join(str(i) for i in ids)
+
+
+def bundle_date(bundle, fallback=""):
+    # type: (object, str) -> str
+    """The YYYY-MM-DD a bundle is named for (`.../2026-09-24-logs` -> 2026-09-24), else `fallback`,
+    else the bundle's own name. It is the date a new id line's comment cites."""
+    name = Path(str(bundle)).name
+    found = re.search(r"\d{4}-\d{2}-\d{2}", name)
+    return found.group(0) if found else (fallback or name)
+
+
+class _Entry:
+    """One class of a `spells({ ... })` block: lines [start, end] of the file (equal for a legacy
+    one-line entry) and its id lines as [(line index, id)]; `legacy` is the one-line layout."""
+
+    def __init__(self, klass, start, end, ids, legacy):
+        self.klass, self.start, self.end, self.ids, self.legacy = klass, start, end, ids, legacy
+
+    def current(self):
+        return [sid for _at, sid in self.ids]
+
+
+class _Lua:
+    """Categories.lua as a list of lines (without terminators), edited in place.
+
+    `names` is {id: spell name} from the proposals or sheet rows being applied, used for the comment
+    of an id the tool adds and, as a fallback, of an id on a legacy line it converts. `date` is the
+    bundle date a new line's comment cites.
+    """
+
+    def __init__(self, text, names=None, date=""):
         self.newline = "\r\n" if "\r\n" in text else "\n"
         self.trailing = text.endswith(("\r\n", "\n"))
         self.lines = text.replace("\r\n", "\n").split("\n")
         if self.trailing:
             self.lines.pop()
+        self.names = dict(names or {})
+        self.date = date
 
     def text(self):
         out = self.newline.join(self.lines)
         return out + self.newline if self.trailing else out
+
+    # --- reading --------------------------------------------------------------------------------
 
     def block(self, category):
         # type: (str) -> Tuple[int, int]
@@ -187,123 +235,233 @@ class _Lua:
                 break
         raise ValueError("category %r has no `spells = spells({ ... })` block" % category)
 
-    def class_lines(self, category):
-        # type: (str) -> List[Tuple[int, re.Match]]
+    def entries(self, category):
+        # type: (str) -> List[_Entry]
+        """The block's class entries in file order. Ids come from code only, never a comment."""
         lo, hi = self.block(category)
-        return [(i, m) for i in range(lo, hi) for m in [_CLASS_LINE.match(self.lines[i])] if m]
+        out = []  # type: List[_Entry]
+        i = lo
+        while i < hi:
+            code = _code(self.lines[i])
+            legacy = _CLASS_LINE.match(code)
+            opened = None if legacy else _CLASS_OPEN.match(code)
+            if legacy:
+                ids = [(i, int(t)) for t in re.findall(r"\d+", legacy.group("ids"))]
+                out.append(_Entry(legacy.group("klass"), i, i, ids, True))
+            elif opened:
+                j, ids = i + 1, []
+                while j < hi and not _TABLE_CLOSE.match(_code(self.lines[j])):
+                    found = [int(t) for t in re.findall(r"\d+", _code(self.lines[j]))]
+                    if len(found) > 1:
+                        raise ValueError("%s %s: line %d holds more than one id; the writer "
+                                         "edits one id per line" % (category, opened.group("klass"),
+                                                                     j + 1))
+                    ids += [(j, sid) for sid in found]
+                    j += 1
+                if j >= hi:
+                    raise ValueError("%s %s: the class table opened on line %d never closes"
+                                     % (category, opened.group("klass"), i + 1))
+                out.append(_Entry(opened.group("klass"), i, j, ids, False))
+                i = j
+            i += 1
+        return out
 
     def find(self, category, klass):
-        return next(((i, m) for i, m in self.class_lines(category) if m.group("klass") == klass),
-                    (None, None))
+        # type: (str, str) -> Optional[_Entry]
+        return next((e for e in self.entries(category) if e.klass == klass), None)
 
-    def set_ids(self, at, match, ids):
-        self.lines[at] = "%s%s%s= %s%s" % (match.group("indent"), match.group("klass"),
-                                           match.group("pad"), _format_ids(ids),
-                                           match.group("tail"))
+    def ids(self, category, klass):
+        entry = self.find(category, klass)
+        return entry.current() if entry else []
+
+    # --- layout ---------------------------------------------------------------------------------
+
+    def _tables(self, category, entry):
+        """The class tables whose id lines set the layout: `entry` first, then the block's."""
+        return [e for e in ([entry] if entry else []) + self.entries(category) if not e.legacy]
+
+    def _id_indent(self, category, entry, class_indent):
+        """The indent id lines use: the entry's own, else another table's in the block, else the
+        class line's indent plus four spaces."""
+        for e in self._tables(category, entry):
+            if e.ids:
+                return _indent_of(self.lines[e.ids[0][0]])
+        return class_indent + "    "
+
+    def _comment_column(self, category, entry, id_indent):
+        """The column of `--` on the neighboring id lines: the entry's own, else the first
+        commented id line in the block, else a width that fits a seven-digit id."""
+        for e in self._tables(category, entry):
+            for at, _sid in e.ids:
+                if "--" in self.lines[at]:
+                    return self.lines[at].index("--")
+        return len(id_indent) + _DEFAULT_COMMENT_OFFSET
+
+    @staticmethod
+    def _id_line(indent, column, sid, comment):
+        head = "%s%d," % (indent, sid)
+        if not comment:
+            return head
+        return "%s%s-- %s" % (head, " " * max(1, column - len(head)), comment)
+
+    def _added_comment(self, sid, replaced):
+        parts = [self.names.get(sid) or ""]
+        parts.append("added from the %s combat logs (SID)" % self.date if self.date
+                     else "added from the combat logs (SID)")
+        if replaced:
+            parts.append("replaces %s" % _joined(replaced))
+        return "; ".join(p for p in parts if p)
+
+    # --- editing --------------------------------------------------------------------------------
+
+    def _convert(self, category, entry):
+        # type: (str, _Entry) -> _Entry
+        """Rewrite a legacy one-line entry as a class table in place; return the new entry."""
+        line = self.lines[entry.start]
+        comment = research.split_comment(line)[1]
+        indent = _indent_of(line)
+        ids = entry.current()
+        names = research.legacy_names(comment) if comment else []
+        aligned = len(names) == len(ids)
+        comments = []
+        for i, sid in enumerate(ids):
+            if aligned and names[i][0]:
+                name, aside = names[i]
+                comments.append("%s; %s" % (name, aside) if aside else name)
+            else:
+                comments.append(self.names.get(sid) or "")
+        id_indent = self._id_indent(category, None, indent)
+        column = self._comment_column(category, None, id_indent)
+        new = ["%s-- %s" % (indent, comment)] if comment and not aligned else []
+        head = len(new)
+        new.append("%s%s = {" % (indent, entry.klass))
+        new += [self._id_line(id_indent, column, sid, c) for sid, c in zip(ids, comments)]
+        new.append("%s}," % indent)
+        self.lines[entry.start:entry.start + 1] = new
+        start = entry.start + head
+        return _Entry(entry.klass, start, start + len(ids) + 1,
+                      [(start + 1 + k, sid) for k, sid in enumerate(ids)], False)
+
+    def _edit(self, category, klass, drop, add, replaced=()):
+        # type: (str, str, list, list, tuple) -> Tuple[List[int], List[int]]
+        """The one edit every ruling reduces to: the ids in `drop` out of the class, the ids in
+        `add` in (one line each, where the first dropped id was, else at the end of the table).
+        Return (removed, added). Nothing changes, and no legacy line is converted, when neither
+        list has anything to do."""
+        entry = self.find(category, klass)
+        current = entry.current() if entry else []
+        drop = set(drop) - set(add)  # an id both dropped and added stays where it is
+        gone = [sid for sid in current if sid in drop]
+        kept = [sid for sid in current if sid not in drop]
+        new = [sid for sid in dict.fromkeys(add) if sid not in kept]
+        if not gone and not new:
+            return [], []
+        if entry is None:
+            self._new_table(category, klass, new)
+            return [], new
+        if entry.legacy:
+            if not new and set(gone) == set(current):
+                del self.lines[entry.start]  # the whole line goes: nothing to convert
+                return gone, []
+            entry = self._convert(category, entry)
+        id_indent = self._id_indent(category, entry, _indent_of(self.lines[entry.start]))
+        column = self._comment_column(category, entry, id_indent)
+        fresh = [self._id_line(id_indent, column, sid, self._added_comment(sid, list(replaced)))
+                 for sid in new]
+        inner = []  # type: List[str]
+        placed = False
+        drop_at = {at for at, sid in entry.ids if sid in drop}
+        for at in range(entry.start + 1, entry.end):
+            if at in drop_at:
+                if not placed:
+                    inner += fresh
+                    placed = True
+                continue
+            inner.append(self.lines[at])
+        if not placed:
+            inner += fresh
+        if not any(re.search(r"\d", _code(line)) for line in inner):
+            del self.lines[entry.start:entry.end + 1]  # the class table is empty: it goes
+        else:
+            self.lines[entry.start + 1:entry.end] = inner
+        return gone, new
+
+    def _new_table(self, category, klass, ids):
+        """A new class table for `klass`, in research.CLASS_EMIT_ORDER order: above the first class
+        that sorts after it (and above the comment lines directly over that class), else after the
+        last class, else just inside the block."""
+        lo, hi = self.block(category)
+        present = self.entries(category)
+        if present:
+            indent = _indent_of(self.lines[present[0].start])
+            later = [e for e in present if _class_rank(e.klass) > _class_rank(klass)]
+            if later:
+                where = later[0].start
+                while where > lo and _code(self.lines[where - 1]).strip() == "" \
+                        and research.split_comment(self.lines[where - 1])[1] is not None:
+                    where -= 1
+            else:
+                where = present[-1].end + 1
+        else:
+            indent = _indent_of(self.lines[hi]) + "    "
+            where = hi
+        id_indent = self._id_indent(category, None, indent)
+        column = self._comment_column(category, None, id_indent)
+        self.lines[where:where] = (
+            ["%s%s = {" % (indent, klass)]
+            + [self._id_line(id_indent, column, sid, self._added_comment(sid, [])) for sid in ids]
+            + ["%s}," % indent])
 
     def remove(self, category, klass, ids):
         # type: (str, str, list) -> List[int]
-        """Remove ids from the class line; return the ids removed. A line left empty goes, with
-        the provenance comments directly above it."""
-        at, match = self.find(category, klass)
-        if at is None:
-            return []
-        current = _parse_ids(match.group("ids"))
-        gone = [i for i in current if i in set(ids)]
-        if not gone:
-            return []
-        kept = [i for i in current if i not in set(ids)]
-        if kept:
-            self.set_ids(at, match, kept)
-        else:
-            first = at
-            while first > 0 and _is_provenance(self.lines[first - 1]):
-                first -= 1
-            del self.lines[first:at + 1]
-        return gone
+        """Remove ids from the class: each id's line goes, and a class table left empty goes with
+        it. Return the ids removed."""
+        return self._edit(category, klass, ids, [])[0]
 
-    def replace(self, category, klass, listed, proposed, provenance):
-        # type: (str, str, list, list, str) -> Tuple[List[int], List[int]]
-        """One edit of one class line: the listed ids out, the proposed ones in the place of the
-        first listed id (appended when none is there). Return (removed, added)."""
-        at, match = self.find(category, klass)
-        if at is None:
-            return [], self.insert(category, klass, proposed, provenance)
-        current = _parse_ids(match.group("ids"))
-        gone = [i for i in current if i in set(listed)]
-        pos = current.index(gone[0]) if gone else len(current)
-        kept_before = [i for i in current[:pos] if i not in set(listed)]
-        kept_after = [i for i in current[pos:] if i not in set(listed)]
-        new = [i for i in dict.fromkeys(proposed) if i not in kept_before + kept_after]
-        if not gone and not new:
-            return [], []
-        self.set_ids(at, match, kept_before + new + kept_after)
-        if new:
-            self.lines.insert(at, "%s%s" % (match.group("indent"), provenance % _joined(new)))
-        return gone, new
+    def replace(self, category, klass, listed, proposed):
+        # type: (str, str, list, list) -> Tuple[List[int], List[int]]
+        """One edit of one class: the listed ids out, the proposed ones in, in the place of the
+        first listed id (appended when none is there), each new line's comment saying what it
+        replaces. An id both listed and proposed stays where it is. Return (removed, added)."""
+        drop = set(listed) - set(proposed)
+        gone = [i for i in self.ids(category, klass) if i in drop]
+        return self._edit(category, klass, listed, proposed, tuple(gone))
 
-    def insert(self, category, klass, ids, provenance):
-        # type: (str, str, list, str) -> List[int]
-        """Append ids to the class line, or add a new class line; a provenance comment goes
-        directly above. Return the ids actually added."""
-        at, match = self.find(category, klass)
-        if at is not None:
-            current = _parse_ids(match.group("ids"))
-            new = [i for i in dict.fromkeys(ids) if i not in current]
-            if not new:
-                return []
-            self.set_ids(at, match, current + new)
-            self.lines.insert(at, "%s%s" % (match.group("indent"), provenance % _joined(new)))
-            return new
-        new = list(dict.fromkeys(ids))
-        if not new:
-            return []
-        lines = self.class_lines(category)
-        lo, hi = self.block(category)
-        if lines:
-            indent = lines[0][1].group("indent")
-            width = len(lines[0][1].group("klass")) + len(lines[0][1].group("pad"))
-            later = [i for i, m in lines if _class_rank(m.group("klass")) > _class_rank(klass)]
-            where = later[0] if later else lines[-1][0] + 1
-            # a later line's own provenance comments stay attached to it
-            while later and where > lo and _is_provenance(self.lines[where - 1]):
-                where -= 1
-        else:
-            closing = self.lines[hi]
-            indent = closing[:len(closing) - len(closing.lstrip())] + "    "
-            width = 0
-            where = hi
-        pad = " " * max(1, width - len(klass)) if width else " "
-        self.lines[where:where] = [
-            "%s%s" % (indent, provenance % _joined(new)),
-            "%s%s%s= %s," % (indent, klass, pad, _format_ids(new)),
-        ]
-        return new
-
-
-def _is_provenance(line):
-    return bool(_PROVENANCE.match(line))
-
-
-def _joined(ids):
-    return ", ".join(str(i) for i in ids)
+    def insert(self, category, klass, ids):
+        # type: (str, str, list) -> List[int]
+        """Append ids to the class table, or add a new class table. Return the ids added."""
+        return self._edit(category, klass, [], ids)[1]
 
 
 def _ruled_target(p, entry):
     return entry.get("category") or p["category"]
 
 
-def apply(categories_lua, decisions, proposals, bundle_rel):
-    # type: (Path, dict, List[dict], str) -> List[str]
+def _names_of(pairs):
+    # type: (list) -> Dict[int, str]
+    """{id: name}, the first non-empty name given for each id."""
+    out = {}  # type: Dict[int, str]
+    for sid, name in pairs:
+        if name and int(sid) not in out:
+            out[int(sid)] = name
+    return out
+
+
+def apply(categories_lua, decisions, proposals, bundle_rel, date=None):
+    # type: (Path, dict, List[dict], str, Optional[str]) -> List[str]
     """Apply the ruled proposals (proposals.json entries) to Categories.lua; return a change log.
 
     Every proposal must have an entry in `decisions` (UnruledProposal otherwise, naming the key);
     `reject` entries change nothing. The file is written once, at the end, only when something
-    changed; a refusal (an unruled key, an unknown category) leaves it untouched.
+    changed; a refusal (an unruled key, an unknown category) leaves it untouched. A new id line's
+    comment carries the proposal's `name` and the bundle date (`date`, else the one in
+    `bundle_rel`'s name).
     """
     categories_lua = Path(categories_lua)
-    lua = _Lua(categories_lua.read_bytes().decode("utf-8"))
-    provenance = "-- %%s: combat-log evidence, %s (SID)" % bundle_rel
+    names = _names_of([(sid, p.get("name")) for p in proposals
+                       for sid in list(p.get("proposed") or []) + list(p.get("listed") or [])])
+    lua = _Lua(categories_lua.read_bytes().decode("utf-8"), names,
+               date or bundle_date(bundle_rel))
     changes = []  # type: List[str]
     for p in proposals:
         key = p["key"]
@@ -324,10 +482,12 @@ def apply(categories_lua, decisions, proposals, bundle_rel):
         listed = [int(i) for i in p.get("listed") or []]
         proposed = [int(i) for i in p["proposed"]]
         if ptype == "replace" and source == target:
-            removed, added = lua.replace(target, klass, listed, proposed, provenance)
+            removed, added = lua.replace(target, klass, listed, proposed)
         else:
-            removed = lua.remove(source, klass, listed) if source and listed else []
-            added = lua.insert(target, klass, proposed, provenance)
+            # a move into the category it is already in removes nothing (it would re-add the ids)
+            removed = (lua.remove(source, klass, listed)
+                       if source and listed and source != target else [])
+            added = lua.insert(target, klass, proposed)
         if removed:
             changes.append("%s %s: -%s (%s)" % (source, klass, _joined(removed), key))
         if added:
@@ -361,21 +521,23 @@ def sheet_entries(ruled, date, reason="review sheet"):
     return out
 
 
-def plan_rows(categories_lua, decisions, rows, bundle_rel):
-    # type: (Path, dict, List[dict], str) -> Tuple[str, List[str]]
+def plan_rows(categories_lua, decisions, rows, bundle_rel, date=None):
+    # type: (Path, dict, List[dict], str, Optional[str]) -> Tuple[str, List[str]]
     """(Categories.lua's new text, the change log) for the review-sheet rows ruled in `decisions`
     (row keys); nothing is written. Rows without a ruling, and rejected rows, change nothing.
 
-    Per row: `deletion` removes the id from its class line in current_category; `correction-add`
+    Per row: `deletion` removes the id (its line) from its class in current_category; `correction-add`
     and `addition` add it to the ruled category; `move` removes it from current_category and adds
     it to the ruled category. Within one proposal an approved deletion and approved adds into the
     same category are one in-place replace (the new ids take the deleted id's place). Every target
-    category is checked before anything is edited; ValueError names an unknown one.
+    category is checked before anything is edited; ValueError names an unknown one. A new id
+    line's comment carries the row's `spell_name` and the bundle date (`date`, else the one in
+    `bundle_rel`'s name).
     """
     categories_lua = Path(categories_lua)
     text = categories_lua.read_bytes().decode("utf-8")
-    lua = _Lua(text)
-    provenance = "-- %%s: combat-log evidence, %s (SID)" % bundle_rel
+    lua = _Lua(text, _names_of([(row["spell_id"], row.get("spell_name")) for row in rows]),
+               date or bundle_date(bundle_rel))
     groups = []  # type: List[Tuple[str, str, Dict[str, list], Dict[str, list], list]]
     by_key = {}  # type: Dict[str, int]
     for row in rows:
@@ -408,23 +570,24 @@ def plan_rows(categories_lua, decisions, rows, bundle_rel):
     for pkey, klass, dels, adds, moves in groups:
         for cat, ids in dels.items():
             if cat in adds:
-                removed, added = lua.replace(cat, klass, ids, adds.pop(cat), provenance)
+                removed, added = lua.replace(cat, klass, ids, adds.pop(cat))
                 log(cat, klass, "-", removed, pkey)
                 log(cat, klass, "+", added, pkey)
             else:
                 log(cat, klass, "-", lua.remove(cat, klass, ids), pkey)
         for cat, ids in adds.items():
-            log(cat, klass, "+", lua.insert(cat, klass, ids, provenance), pkey)
+            log(cat, klass, "+", lua.insert(cat, klass, ids), pkey)
         for source, target, sid in moves:
-            log(source, klass, "-", lua.remove(source, klass, [sid]), pkey)
-            log(target, klass, "+", lua.insert(target, klass, [sid], provenance), pkey)
+            if source != target:
+                log(source, klass, "-", lua.remove(source, klass, [sid]), pkey)
+            log(target, klass, "+", lua.insert(target, klass, [sid]), pkey)
     return (lua.text() if changes else text), changes
 
 
-def apply_rows(categories_lua, decisions, rows, bundle_rel):
-    # type: (Path, dict, List[dict], str) -> List[str]
+def apply_rows(categories_lua, decisions, rows, bundle_rel, date=None):
+    # type: (Path, dict, List[dict], str, Optional[str]) -> List[str]
     """plan_rows(), then write Categories.lua when anything changed; return the change log."""
-    text, changes = plan_rows(categories_lua, decisions, rows, bundle_rel)
+    text, changes = plan_rows(categories_lua, decisions, rows, bundle_rel, date)
     if changes:
         research.write_repo_text(Path(categories_lua), text)
     return changes

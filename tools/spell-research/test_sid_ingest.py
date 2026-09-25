@@ -65,11 +65,13 @@ class Bundle:
     """A bundle written by sid_artifacts.write_bundle, a copy of the fixture Categories.lua and an
     empty decisions.json path, in a temp dir."""
 
+    FIXTURE = "Categories.lua"
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.lua = self.root / "Categories.lua"
-        shutil.copyfile(FIXTURES / "Categories.lua", self.lua)
+        shutil.copyfile(FIXTURES / self.FIXTURE, self.lua)
         self.shipped = sid_db2.shipped_categories(self.lua)
         self.bundle = self.root / "bundle"
         sid_artifacts.write_bundle(self.bundle, BUNDLE_DATE, [], proposals(), [], self.shipped,
@@ -263,9 +265,9 @@ class IngestTests(Bundle, unittest.TestCase):
         self.ingest(self.filled({dele["row_id"]: "A", add["row_id"]: "A"}))
         self.assertEqual(self.classes("offensiveCDs")["SHAMAN"], [114052])
         text = self.lua.read_bytes().decode("utf-8")
-        # in place, keeping the trailing comment, with a provenance comment above it
-        self.assertIn("SHAMAN      = { 114052 },   -- Ascendance", text)
-        self.assertIn("-- 114052: combat-log evidence, bundle (SID)", text)
+        # the legacy line becomes a class table; the new id's line says what it replaces
+        self.assertIn("            SHAMAN = {\r\n                114052,  -- Ascendance; added from "
+                      "the 2026-09-24 combat logs (SID); replaces 114051\r\n            },\r\n", text)
         self.assertEqual(text.count("\n"), text.count("\r\n"))
 
     def test_move_and_addition_honour_an_edited_category(self):
@@ -341,6 +343,43 @@ class RecordManyTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 sid_decide.record_many(path, {"k": {"ruling": "maybe", "date": DATE}})
             self.assertFalse(path.exists())
+
+
+class MultilineIngestTests(Bundle, unittest.TestCase):
+    """`logs.py ingest` on the shipped layout (fixtures/Categories-multiline.lua, which lists the
+    same SHAMAN ids the proposals above touch): a line per id, the name in the same-line comment."""
+
+    FIXTURE = "Categories-multiline.lua"
+
+    def test_the_replace_rewrites_one_id_line_and_a_second_ingest_changes_nothing(self):
+        dele, add = self.row("deletion", 114051), self.row("correction-add", 114052)
+        move, extra = self.row("move", 108271), self.row("addition", 900500)
+        sheet = self.filled({dele["row_id"]: "A", add["row_id"]: "A", move["row_id"]: "A",
+                             extra["row_id"]: "A"})
+        before = self.lua.read_bytes().decode("utf-8")
+        code, out = self.ingest(sheet)
+        self.assertEqual(code, 0)
+        text = self.lua.read_bytes().decode("utf-8")
+        self.assertIn("            SHAMAN = {\r\n"
+                      "                -- 999999,  -- commented out: not an entry\r\n"
+                      "                114052,  -- %s; added from the 2026-09-24 combat logs (SID); "
+                      "replaces 114051\r\n" % add["spell_name"], text)
+        self.assertEqual(self.classes("offensiveCDs")["SHAMAN"], [114052, 108271])
+        # the move empties defensives' SHAMAN table (it goes) and the addition makes a new one
+        self.assertEqual(self.classes("defensives")["SHAMAN"], [900500])
+        self.assertIn("                900500, -- %s; added from the 2026-09-24 combat logs (SID)"
+                      % extra["spell_name"], text)
+        self.assertNotIn("108271, -- Astral Shift", text)
+        self.assertEqual(text.count("\n"), text.count("\r\n"))
+        # every line outside the edited tables is byte-for-byte what it was
+        self.assertIn("            -- Spirit Walk (58875) is Movement only (owner 2026-09-25)\r\n",
+                      text)
+        self.assertEqual(before.split("Cat.HARMFUL")[1], text.split("Cat.HARMFUL")[1])
+        first = self.state()
+        code, out = self.ingest(sheet)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.state(), first)
+        self.assertIn("0 line changes", out)
 
 
 if __name__ == "__main__":

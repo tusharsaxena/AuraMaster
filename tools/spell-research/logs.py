@@ -220,7 +220,8 @@ def cmd_apply(args):
     ruled = [p for p in queue["proposals"] if p["key"] in decisions]
     pending = len(queue["proposals"]) - len(ruled)
     try:
-        changes = sid_decide.apply(Path(args.categories), decisions, ruled, _shown(args.bundle))
+        changes = sid_decide.apply(Path(args.categories), decisions, ruled, _shown(args.bundle),
+                                   date=sid_decide.bundle_date(args.bundle, queue["date"]))
     except ValueError as exc:
         raise SystemExit("logs.py apply: %s" % exc)
     md = sid_decide.write_decisions_md(Path(args.bundle), queue["date"], decisions,
@@ -231,6 +232,14 @@ def cmd_apply(args):
           % (sid_propose.plural(len(ruled), "ruled proposal"), args.categories,
              sid_propose.plural(len(changes), "line change"), pending, md))
     return 0
+
+
+def _ingest_bundle_date(bundle, fallback):
+    # type: (Path, str) -> str
+    """The bundle date a new Categories.lua line cites: the one in the bundle folder's name, else
+    proposals.json's `date`, else `fallback` (the rulings' date)."""
+    queued = _bundle_queue(bundle)["date"] if (Path(bundle) / "proposals.json").exists() else ""
+    return sid_decide.bundle_date(bundle, queued or fallback)
 
 
 def cmd_ingest(args):
@@ -262,7 +271,8 @@ def cmd_ingest(args):
     merged = dict(decisions)
     merged.update(entries)
     try:
-        text, changes = sid_decide.plan_rows(Path(args.categories), merged, rows, _shown(bundle))
+        text, changes = sid_decide.plan_rows(Path(args.categories), merged, rows, _shown(bundle),
+                                             date=_ingest_bundle_date(bundle, args.date))
     except ValueError as exc:
         raise SystemExit("logs.py ingest: %s\nNothing was written." % exc)
     if any(decisions.get(k) != e for k, e in entries.items()):

@@ -1106,14 +1106,151 @@ def check_sentinels(result: dict) -> list[str]:
 # Step 7 — diff, emit, bundle
 # ---------------------------------------------------------------------------
 
-# `key = "hardCC"` ... up to the closing `}),` of its `spells({ ... })` table. Deliberately narrow:
-# the tool only ever READS this file, and a parser that guesses would be a parser that could be wrong
-# about what is currently shipped, which is the one thing the diff must not be wrong about.
-CATEGORY_BLOCK = re.compile(
-    r"""key\s*=\s*"(?P<key>%s)".*?spells\s*=\s*spells\(\{(?P<body>.*?)\}\)""" % "|".join(BUCKET_ORDER),
-    re.DOTALL,
-)
-CLASS_ENTRY = re.compile(r"(?P<class>[A-Z]+)\s*=\s*\{(?P<ids>[^}]*)\}", re.DOTALL)
+# ---------------------------------------------------------------------------
+# THE SHIPPED-FILE READER — the one parser of `defaults/Categories.lua`'s spell lists. read_shipped,
+# read_shipped_named (and so check_shipped) and sid_db2.shipped_categories all go through it, so they
+# cannot disagree about what the file ships. sid_decide (the writer) edits the same layout.
+# ---------------------------------------------------------------------------
+#
+# A `spells({ ... })` block holds one entry per class, in either of two layouts, and the reader takes
+# both (a block may even mix them):
+#
+#   THE SHIPPED LAYOUT (2026-09-25 on): a multi-line table per class, ONE ID PER LINE, and the
+#   comment on the id's line gives the spell's name, then any context after a `;`:
+#
+#       WARRIOR = {
+#           1719,    -- Recklessness
+#           436358,  -- Demolish; from the 2026-09-24 combat logs; owner review placed it here
+#       },
+#
+#   The name is the comment's text before its first `;`. Comment-only lines (above a class table,
+#   between classes, inside a table) are allowed anywhere and name nothing.
+#
+#   THE LEGACY LAYOUT: one line per class, with the names as a comma-separated trailing comment that
+#   lines up with the ids by position -- `WARRIOR = { 5246, 132168 }, -- Intimidating Shout, Shockwave`.
+#   The positional match is only taken when it is safe (see legacy_names and read_shipped_named).
+#
+# IDS ARE ONLY EVER READ FROM CODE, never from a comment. A comment carries digits all the time --
+# dates, "replaces 231895", "98007 is the cast" -- and every line is cut at its `--` before a digit is
+# looked for. A line that is only a comment (`-- SHAMAN = { 999999 }, ...`) is therefore never an
+# entry, which is also how a commented-out class line stays out.
+
+# A `spells({ ... })` block opens on its own line and closes on the first line that starts `})`.
+# Both are line-anchored, so prose in the file's header comments that mentions `spells({ ... })`
+# never opens a block, and a `})` inside a comment never closes one.
+SPELLS_OPEN = re.compile(r"^[ \t]*spells\s*=\s*spells\(\{", re.MULTILINE)
+SPELLS_CLOSE = re.compile(r"^[ \t]*\}\)", re.MULTILINE)
+# A category's opening line: `key = "...", kind = "spells", label = "..."`. Line-anchored, so a
+# commented-out one (`-- key = ...`) is never read.
+SPELLS_CATEGORY = re.compile(
+    r'^[ \t]*key\s*=\s*"(?P<key>\w+)"\s*,\s*kind\s*=\s*"spells"\s*,\s*label\s*=\s*"(?P<label>[^"]*)"',
+    re.MULTILINE)
+ANY_CATEGORY_KEY = re.compile(r'^[ \t]*key\s*=\s*"', re.MULTILINE)
+# `CLASS = {` at the start of a line's code; `rest` is what follows the brace.
+CLASS_OPEN = re.compile(r"^[ \t]*(?P<class>[A-Z]+)[ \t]*=[ \t]*\{(?P<rest>.*)$")
+
+# A parenthetical inside a legacy comment name: "Fear (the AURA; 5782 is the cast)" -> "Fear". The
+# notes the legacy layout carried are for a human, and stripping them is what makes a positional
+# match possible.
+COMMENT_ASIDE = re.compile(r"\s*\([^)]*\)")
+
+
+def split_comment(line: str) -> tuple[str, str | None]:
+    """`(code, comment)` of one Lua line: the text before its first `--`, and the text after it
+    (stripped), or None when the line has no comment. The spell tables hold no strings, so the first
+    `--` always starts the comment."""
+    at = line.find("--")
+    if at < 0:
+        return line, None
+    return line[:at], line[at + 2:].strip()
+
+
+def legacy_names(comment: str) -> list[tuple[str, str]]:
+    """`(name, aside)` per comma-separated part of a LEGACY trailing comment.
+
+    STRIP THE ASIDES BEFORE SPLITTING, not after. An aside may contain a comma -- "Fear (the AURA;
+    5782 is the cast, issue #15)" -- and splitting first turns one name into two, which takes the
+    line out of alignment and silently drops it from the name check. That is how the check first
+    passed a line reading "Ancestral Guidance" against 32182, which is Heroism. The aside text is
+    kept (joined with `; `) so the writer can carry it onto the id's own line when it converts a
+    legacy line to the shipped layout; the reader uses only the name.
+    """
+    asides: list[str] = []
+
+    def hold(match: re.Match) -> str:
+        asides.append(match.group(0).strip()[1:-1].strip())
+        return "\x00%d\x00" % (len(asides) - 1)
+
+    out: list[tuple[str, str]] = []
+    for part in COMMENT_ASIDE.sub(hold, comment).split(","):
+        notes = [asides[int(n)] for n in re.findall(r"\x00(\d+)\x00", part)]
+        out.append((re.sub(r"\x00\d+\x00", "", part).strip(), "; ".join(n for n in notes if n)))
+    return out
+
+
+def parse_spells_body(body: str) -> list[dict]:
+    """The entries of one `spells({ ... })` block, in file order: `{"class", "id", "comment"}`.
+
+    `comment` is the name the file gives that id, or None: in the shipped layout the text before the
+    first `;` of the comment on the id's own line; in the legacy layout the positional name from the
+    class line's trailing comment, taken only when the names and ids line up one for one. A table
+    line holding more than one id (not the shipped layout) names none of them.
+    """
+    records: list[dict] = []
+    klass: str | None = None
+    for line in body.splitlines():
+        code, comment = split_comment(line)
+        if klass is None:
+            opened = CLASS_OPEN.match(code)
+            if not opened:
+                continue  # a blank line or a comment-only line: it names no id
+            rest = opened.group("rest")
+            if "}" in rest:  # the legacy layout: the whole class on one line
+                ids = [int(t) for t in re.findall(r"\d+", rest[:rest.index("}")])]
+                names = legacy_names(comment) if comment else []
+                aligned = len(names) == len(ids)
+                for i, spell in enumerate(ids):
+                    records.append({"class": opened.group("class"), "id": spell,
+                                    "comment": (names[i][0] or None) if aligned else None})
+                continue
+            klass = opened.group("class")
+            code = rest  # the shipped layout puts no id on the opening line, but read one if it is
+        closing = "}" in code
+        ids = [int(t) for t in re.findall(r"\d+", code.split("}")[0])]
+        name = comment.split(";")[0].strip() if comment and len(ids) == 1 else ""
+        for spell in ids:
+            records.append({"class": klass, "id": spell, "comment": name or None})
+        if closing:
+            klass = None
+    return records
+
+
+def spells_block_at(text: str, pos: int = 0) -> tuple[int, int, str] | None:
+    """`(start, end, body)` of the first `spells({ ... })` block opening at or after `pos`, or None.
+    `body` is the text between `spells({` and the line that closes it."""
+    opened = SPELLS_OPEN.search(text, pos)
+    if not opened:
+        return None
+    closed = SPELLS_CLOSE.search(text, opened.end())
+    if not closed:
+        return None
+    return opened.start(), closed.end(), text[opened.end():closed.start()]
+
+
+def read_spells_categories(text: str) -> list[dict]:
+    """Every `kind = "spells"` category of a Categories.lua text that has a `spells({ ... })` block
+    of its own, in file order: `{"key", "label", "start", "records"}` (`start` is the offset of the
+    category's `key = ` line; `records` is parse_spells_body's list). A spells-kind category whose
+    next `spells({` belongs to a later category (no `key = ` line may sit between) is skipped."""
+    out: list[dict] = []
+    for cat in SPELLS_CATEGORY.finditer(text):
+        block = spells_block_at(text, cat.end())
+        following = ANY_CATEGORY_KEY.search(text, cat.end())
+        if not block or (following and following.start() < block[0]):
+            continue  # no spells table of its own: not something this tool can read
+        out.append({"key": cat.group("key"), "label": cat.group("label"), "start": cat.start(),
+                    "records": parse_spells_body(block[2])})
+    return out
 
 
 def read_shipped(path: Path) -> dict[str, dict[int, str]]:
@@ -1121,18 +1258,15 @@ def read_shipped(path: Path) -> dict[str, dict[int, str]]:
 
     A bucket the file does not have yet is an empty dict, which makes the first run's diff read as
     "everything is an addition" — which is exactly what it is (spec C3 step 5). A missing file is the
-    same thing, not an error: the tool is usable before Part A lands.
+    same thing, not an error: the tool is usable before Part A lands. Read with the shared reader
+    above (read_spells_categories), so a comment's digits are never taken for ids.
     """
     shipped: dict[str, dict[int, str]] = {bucket: {} for bucket in BUCKET_ORDER}
     if not path.exists():
         return shipped
-    text = path.read_text(encoding="utf-8")
-    for block in CATEGORY_BLOCK.finditer(text):
-        entries: dict[int, str] = {}
-        for entry in CLASS_ENTRY.finditer(block.group("body")):
-            for token in re.findall(r"\d+", re.sub(r"--[^\n]*", "", entry.group("ids"))):
-                entries[int(token)] = entry.group("class")
-        shipped[block.group("key")] = entries
+    for cat in read_spells_categories(path.read_text(encoding="utf-8")):
+        if cat["key"] in shipped:
+            shipped[cat["key"]] = {rec["id"]: rec["class"] for rec in cat["records"]}
     return shipped
 
 
@@ -1200,9 +1334,9 @@ def format_diff(result: dict, shipped: dict[str, dict[int, str]], categories_pat
 def format_lua(result: dict, build: str, date: str) -> str:
     """The paste-ready fragment, in `defaults/Categories.lua`'s own shape.
 
-    One id per line with the spell name as a trailing comment: the existing spell lists are short
-    enough to sit on one line, but a hard-CC list of eighty ids is not reviewable that way, and a
-    reviewer accepting a diff has to be able to read what each id IS. The `spells({ CLASS = { ... } })`
+    One id per line with the spell name as a trailing comment, the layout the file uses for every
+    list: a hard-CC list of eighty ids is not reviewable any other way, and a reviewer accepting a
+    diff has to be able to read what each id IS. The `spells({ CLASS = { ... } })`
     call, the class key order and the indentation are the file's.
 
     The provenance comment above each block is spec C6: a stale list should be visible in the file
@@ -1620,9 +1754,10 @@ def _trail(entry: dict, target: int | None) -> str:
 #      "Unknown spell N" in the editor and matches nothing.
 #   b. THE ID APPLIES NO AURA. It is the CAST of an ability whose aura carries a different id --
 #      issue #15's whole subject. Five shipped ids were in this state when the check was written.
-#   c. THE ID IS NOW A DIFFERENT SPELL. Every list carries trailing comments naming its ids, and
-#      an id whose current name disagrees with the name beside it has either been reused across an
-#      expansion or was transcribed wrong. `format_diff`'s docstring says a rename "cannot be
+#   c. THE ID IS NOW A DIFFERENT SPELL. Every id carries a comment naming it (on its own line in
+#      the shipped layout; positionally, in a legacy one-line class), and an id whose current name
+#      disagrees with the name beside it has either been reused across an expansion or was
+#      transcribed wrong. `format_diff`'s docstring says a rename "cannot be
 #      detected against the shipped file, which stores no names" -- it does store them, in those
 #      comments, and this is what reads them.
 #
@@ -1630,55 +1765,33 @@ def _trail(entry: dict, target: int | None) -> str:
 # in the RIGHT category, and whether it is the aura a player actually sees rather than some other
 # aura the same spell applies. Both need a human or a live client. See docs/scope.md.
 
-# One class line inside a `spells({ ... })` block, with whatever trailing comment follows it.
-SHIPPED_LINE = re.compile(
-    r"^\s*(?P<class>[A-Z]+)\s*=\s*\{(?P<ids>[^}]*)\}\s*,?(?:\s*--\s*(?P<comment>[^\n]*))?",
-    re.MULTILINE,
-)
-
-# Every `spells({ ... })` block, whatever category it belongs to -- not just the CC buckets
-# CATEGORY_BLOCK narrows to.
-ANY_SPELLS_BLOCK = re.compile(r"spells\s*=\s*spells\(\{(?P<body>.*?)\}\)", re.DOTALL)
-
-# A parenthetical inside a comment name: "Fear (the AURA; 5782 is the cast)" -> "Fear". The notes
-# this file carries are for a human, and stripping them is what makes a positional match possible.
-COMMENT_ASIDE = re.compile(r"\s*\([^)]*\)")
-
-
 def read_shipped_named(path: Path) -> list[dict]:
-    """Every id `defaults/Categories.lua` ships, with the name its trailing comment gives it.
+    """Every id `defaults/Categories.lua` ships, with the name the file gives it.
 
-    Returns one record per id: `{"id", "class", "comment"}`, where `comment` is the name from the
-    trailing list or None.
+    Returns one record per id slot, in file order: `{"id", "class", "comment"}`, where `comment` is
+    the name or None (parse_spells_body). Every `spells({ ... })` block is read, whatever category it
+    belongs to -- not just the CC buckets read_shipped narrows to.
 
-    THE POSITIONAL MATCH IS ONLY TAKEN WHEN IT IS SAFE. A trailing comment is a comma-separated
-    list meant to line up with the ids, and it usually does -- but it is prose maintained by hand
-    and a line whose counts disagree is not evidence of anything. Such a line contributes its ids
-    with no name rather than a guessed one, so the existence and aura checks still run over it and
-    only the name check is skipped. Guessing the alignment would invent mismatches on exactly the
-    lines a human had already found hard to keep straight.
+    In the shipped layout every id has a name: the comment on its own line. THE LEGACY POSITIONAL
+    MATCH IS ONLY TAKEN WHEN IT IS SAFE. A legacy trailing comment is a comma-separated list meant to
+    line up with the ids, and it usually does -- but it is prose maintained by hand and a line whose
+    counts disagree is not evidence of anything. Such a line contributes its ids with no name rather
+    than a guessed one, so the existence and aura checks still run over it and only the name check is
+    skipped. Guessing the alignment would invent mismatches on exactly the lines a human had already
+    found hard to keep straight.
     """
     out: list[dict] = []
     if not path.exists():
         return out
     text = path.read_text(encoding="utf-8")
-    for block in ANY_SPELLS_BLOCK.finditer(text):
-        for line in SHIPPED_LINE.finditer(block.group("body")):
-            ids = [int(t) for t in re.findall(r"\d+", line.group("ids"))]
-            names: list[str] = []
-            comment = line.group("comment")
-            if comment:
-                # STRIP THE ASIDES BEFORE SPLITTING, not after. An aside may contain a comma --
-                # "Fear (the AURA; 5782 is the cast, issue #15)" -- and splitting first turns one
-                # name into two, which takes the line out of alignment and silently drops it from
-                # the name check. That is how this check first passed a line reading "Ancestral
-                # Guidance" against 32182, which is Heroism.
-                names = [part.strip() for part in COMMENT_ASIDE.sub("", comment).split(",")]
-            aligned = len(names) == len(ids)
-            for i, spell in enumerate(ids):
-                out.append({"id": spell, "class": line.group("class"),
-                            "comment": names[i] if aligned else None})
-    return out
+    pos = 0
+    while True:
+        block = spells_block_at(text, pos)
+        if block is None:
+            return out
+        out.extend({"id": rec["id"], "class": rec["class"], "comment": rec["comment"]}
+                   for rec in parse_spells_body(block[2]))
+        pos = block[1]
 
 
 def check_shipped(cache: dict[str, Path], categories_path: Path) -> tuple[str, int]:
@@ -1740,9 +1853,9 @@ def check_shipped(cache: dict[str, Path], categories_path: Path) -> tuple[str, i
                       % (r["id"], r["class"], r["comment"], r["current"]))
 
     named = sum(1 for r in records if r["comment"])
-    lines.append("Name checks ran over %d of %d id slots; the rest sit on lines whose comment does "
-                 "not line up with its ids, where a positional match would invent mismatches."
-                 % (named, len(records)))
+    lines.append("Name checks ran over %d of %d id slots; the rest carry no name: an id line with "
+                 "no comment, or a legacy one-line class whose comment does not line up with its "
+                 "ids, where a positional match would invent mismatches." % (named, len(records)))
     lines.append("")
     return ("\n".join(lines), len(missing) + len(no_aura) + len(renamed))
 

@@ -68,6 +68,10 @@ local _, NS = ...
 -- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
 -- id per category, and those edits live in the profile (profile.categorySpells, shared by every
 -- container since schema v2), never here.
+-- ONE ID PER LINE, and the comment on that line gives the spell's name in the 12.1 client data
+-- followed by any context: which class, race or appearance the id belongs to when a spell has
+-- several, where it came from (the 2026-09-24 combat logs, via tools/spell-research), and the
+-- owner's rulings that placed it. A comment above a class or a category explains more than one id.
 -- An id that does not exist in the current client simply never matches, so a stale entry costs
 -- nothing but a row in the editor.
 --
@@ -101,36 +105,87 @@ Cat.HELPFUL = {
         key = "defensives", kind = "spells", label = "Defensive cooldowns",
         desc = "Personal defensive cooldowns.",
         spells = spells({
-            -- 385391: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            WARRIOR     = { 118038, 184364, 871, 23920, 12975, 385391 },
-            -- 403876: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 212641, 393108: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 389539: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 6940: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PALADIN     = { 642, 498, 31850, 86659, 184662, 205191, 403876, 212641, 393108, 389539, 6940 },
-            HUNTER      = { 186265, 264735 },
-            ROGUE       = { 5277, 31224, 1966 },
-            -- 33206: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST      = { 47585, 19236, 33206 },
-            DEATHKNIGHT = { 48792, 48707, 55233, 49039 },
-            SHAMAN      = { 108271 },
-            -- 235450: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 11426: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 414658: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 235313: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            MAGE        = { 45438, 342246, 235450, 11426, 414658, 235313 },
-            WARLOCK     = { 104773, 108416 },
-            -- 122470: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 132578: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 116849: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            MONK        = { 120954, 122278, 122783, 125174, 122470, 132578, 116849 },
-            -- 102342: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DRUID       = { 22812, 61336, 102342 },
-            -- 207771: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DEMONHUNTER = { 212800, 196555, 207771 },   -- Metamorphosis (162264, 187827) is Offensive cooldowns only (owner 2026-09-25)
-            -- 374349: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 357170: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            EVOKER      = { 363916, 374349, 357170 },
+            WARRIOR = {
+                118038, -- Die by the Sword
+                184364, -- Enraged Regeneration
+                871,    -- Shield Wall
+                23920,  -- Spell Reflection
+                12975,  -- Last Stand
+                385391, -- Spell Reflection; the aura id the 2026-09-24 combat logs show
+            },
+            PALADIN = {
+                642,    -- Divine Shield
+                498,    -- Divine Protection
+                31850,  -- Ardent Defender
+                86659,  -- Guardian of Ancient Kings
+                184662, -- Shield of Vengeance
+                205191, -- Eye for an Eye
+                403876, -- Divine Protection; the aura id the 2026-09-24 combat logs show
+                212641, -- Guardian of Ancient Kings; the aura id the 2026-09-24 combat logs show
+                393108, -- Guardian of Ancient Kings; the aura id the 2026-09-24 combat logs show
+                389539, -- Sentinel; added from the 2026-09-24 combat logs
+                6940,   -- Blessing of Sacrifice; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            HUNTER = {
+                186265, -- Aspect of the Turtle
+                264735, -- Survival of the Fittest
+            },
+            ROGUE = {
+                5277,   -- Evasion
+                31224,  -- Cloak of Shadows
+                1966,   -- Feint
+            },
+            PRIEST = {
+                47585,  -- Dispersion
+                19236,  -- Desperate Prayer
+                33206,  -- Pain Suppression; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            DEATHKNIGHT = {
+                48792,  -- Icebound Fortitude
+                48707,  -- Anti-Magic Shell
+                55233,  -- Vampiric Blood
+                49039,  -- Lichborne
+            },
+            SHAMAN = {
+                108271, -- Astral Shift
+            },
+            MAGE = {
+                45438,  -- Ice Block
+                342246, -- Alter Time
+                235450, -- Prismatic Barrier; added from the 2026-09-24 combat logs
+                11426,  -- Ice Barrier; added from the 2026-09-24 combat logs
+                414658, -- Ice Cold; added from the 2026-09-24 combat logs
+                235313, -- Blazing Barrier; added from the 2026-09-24 combat logs
+            },
+            WARLOCK = {
+                104773, -- Unending Resolve
+                108416, -- Dark Pact
+            },
+            MONK = {
+                120954, -- Fortifying Brew
+                122278, -- Dampen Harm
+                122783, -- Diffuse Magic
+                125174, -- Touch of Karma
+                122470, -- Touch of Karma; the aura id the 2026-09-24 combat logs show
+                132578, -- Invoke Niuzao, the Black Ox; added from the 2026-09-24 combat logs
+                116849, -- Life Cocoon; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            DRUID = {
+                22812,  -- Barkskin
+                61336,  -- Survival Instincts
+                102342, -- Ironbark; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            -- Metamorphosis (162264, 187827) is Offensive cooldowns only (owner 2026-09-25)
+            DEMONHUNTER = {
+                212800, -- Blur
+                196555, -- Netherwalk
+                207771, -- Fiery Brand; added from the 2026-09-24 combat logs
+            },
+            EVOKER = {
+                363916, -- Obsidian Scales
+                374349, -- Renewing Blaze; the aura id the 2026-09-24 combat logs show; replaces 374348
+                357170, -- Time Dilation; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
         }),
     },
     {
@@ -147,62 +202,133 @@ Cat.HELPFUL = {
         -- Owner 2026-09-25: Blood Shield (77535), Shuffle (215479) and Rushing Jade Wind (116847) are
         -- not active mitigation, so Monk has no entry here.
         spells = spells({
-            WARRIOR     = { 132404, 190456 },
-            PALADIN     = { 132403 },
-            DEATHKNIGHT = { 195181 },
-            DRUID       = { 192081 },
-            DEMONHUNTER = { 203819 },
+            WARRIOR = {
+                132404, -- Shield Block
+                190456, -- Ignore Pain
+            },
+            PALADIN = {
+                132403, -- Shield of the Righteous
+            },
+            DEATHKNIGHT = {
+                195181, -- Bone Shield
+            },
+            DRUID = {
+                192081, -- Ironfur
+            },
+            DEMONHUNTER = {
+                203819, -- Demon Spikes
+            },
         }),
     },
     {
         key = "raidCDs", kind = "spells", label = "Raid cooldowns",
         desc = "Group-wide cooldowns and haste effects.",
         spells = spells({
-            -- Every Bloodlust variant sits here (owner review 2026-09-25): Bloodlust, Heroism, Time Warp,
-            -- Primal Rage, Harrier's Cry, Fury of the Aspects, and the drums any class can use --
-            -- 1243972 Void-touched Drums and 444257 Thunderous Drums.
-            ALL         = { 1243972, 444257 },
-            WARRIOR     = { 97463 },
-            PALADIN     = { 31821 },
-            DEATHKNIGHT = { 145629 },
-            -- 740 Tranquility (owner review 2026-09-25)
-            DRUID       = { 740 },
-            DEMONHUNTER = { 209426 },
-            PRIEST      = { 81782 },
-            SHAMAN      = { 2825, 32182, 325174 },   -- Bloodlust, Heroism, Spirit Link Totem (the AURA; 98007 is the cast, issue #15)
-            MAGE        = { 80353 },
-            -- 466904: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            HUNTER      = { 264667, 466904 },
-            -- 374227 Zephyr: in both Raid cooldowns and Movement (owner review 2026-09-25)
-            EVOKER      = { 390386, 374227 },
+            ALL = {
+                1243972, -- Void-touched Drums; a Bloodlust variant (owner 2026-09-25); drums any class can use; added from the 2026-09-24 combat logs
+                444257,  -- Thunderous Drums; a Bloodlust variant (owner 2026-09-25); last expansion's drums, seen in the logs
+            },
+            WARRIOR = {
+                97463,   -- Rallying Cry
+            },
+            PALADIN = {
+                31821,   -- Aura Mastery
+            },
+            DEATHKNIGHT = {
+                145629,  -- Anti-Magic Zone
+            },
+            DRUID = {
+                740,     -- Tranquility; a raid cooldown (owner 2026-09-25); from the 2026-09-24 combat logs; owner review placed it here, not in Defensive cooldowns
+            },
+            DEMONHUNTER = {
+                209426,  -- Darkness
+            },
+            PRIEST = {
+                81782,   -- Power Word: Barrier
+            },
+            SHAMAN = {
+                2825,    -- Bloodlust; a Bloodlust variant (owner 2026-09-25)
+                32182,   -- Heroism; a Bloodlust variant (owner 2026-09-25)
+                325174,  -- Spirit Link Totem; the aura; 98007 is the cast (issue #15)
+            },
+            MAGE = {
+                80353,   -- Time Warp; a Bloodlust variant (owner 2026-09-25)
+            },
+            HUNTER = {
+                264667,  -- Primal Rage; a Bloodlust variant (owner 2026-09-25); the pet ability
+                466904,  -- Harrier's Cry; a Bloodlust variant (owner 2026-09-25); added from the 2026-09-24 combat logs
+            },
+            EVOKER = {
+                390386,  -- Fury of the Aspects; a Bloodlust variant (owner 2026-09-25)
+                374227,  -- Zephyr; also in Movement (owner 2026-09-25)
+            },
         }),
     },
     {
         key = "offensiveCDs", kind = "spells", label = "Offensive cooldowns",
         desc = "Damage cooldowns.",
         spells = spells({
-            -- 436358: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            WARRIOR     = { 1719, 107574, 436358 },
-            -- 454351: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PALADIN     = { 31884, 454351 },
-            DEATHKNIGHT = { 51271, 207289 },
-            -- 1276767: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            WARLOCK     = { 1276767 },
-            -- 252071: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DRUID       = { 194223, 102560, 106951, 102543, 252071 },
-            -- 186254, 1235388, 1285912: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            HUNTER      = { 288613, 19574, 360952, 186254, 1235388, 1285912 },
-            MAGE        = { 190319, 12472, 365362 },
-            ROGUE       = { 121471, 13750, 185422 },
-            -- 187827: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DEMONHUNTER = { 162264, 187827 },
-            -- 373316: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST      = { 194249, 373316 },
-            MONK        = { 137639 },
-            -- 114052, 1219480: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            SHAMAN      = { 114051, 114052, 1219480 },
-            -- 431698: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            EVOKER      = { 375087, 431698 },
+            WARRIOR = {
+                1719,    -- Recklessness
+                107574,  -- Avatar
+                436358,  -- Demolish; from the 2026-09-24 combat logs; owner review placed it here, not in Defensive cooldowns
+            },
+            PALADIN = {
+                31884,   -- Avenging Wrath
+                454351,  -- Avenging Wrath; the aura id the 2026-09-24 combat logs show; replaces 231895
+            },
+            DEATHKNIGHT = {
+                51271,   -- Pillar of Frost
+                207289,  -- Unholy Assault
+            },
+            WARLOCK = {
+                1276767, -- Tyrant's Oblation; added from the 2026-09-24 combat logs
+            },
+            DRUID = {
+                194223,  -- Celestial Alignment
+                102560,  -- Incarnation: Chosen of Elune
+                106951,  -- Berserk
+                102543,  -- Incarnation: Avatar of Ashamane
+                252071,  -- Incarnation: Avatar of Ashamane; the aura id the 2026-09-24 combat logs show
+            },
+            HUNTER = {
+                288613,  -- Trueshot
+                19574,   -- Bestial Wrath
+                360952,  -- Coordinated Assault
+                186254,  -- Bestial Wrath; the aura id the 2026-09-24 combat logs show
+                1235388, -- Bestial Wrath; the aura id the 2026-09-24 combat logs show
+                1285912, -- Bestial Wrath; the aura id the 2026-09-24 combat logs show
+            },
+            MAGE = {
+                190319,  -- Combustion
+                12472,   -- Icy Veins
+                365362,  -- Arcane Surge
+            },
+            ROGUE = {
+                121471,  -- Shadow Blades
+                13750,   -- Adrenaline Rush
+                185422,  -- Shadow Dance
+            },
+            DEMONHUNTER = {
+                162264,  -- Metamorphosis; Havoc; Offensive cooldowns only (owner 2026-09-25)
+                187827,  -- Metamorphosis; Vengeance; Offensive cooldowns only (owner 2026-09-25); the aura id the 2026-09-24 combat logs show
+            },
+            PRIEST = {
+                194249,  -- Voidform
+                373316,  -- Idol of Y'Shaarj; added from the 2026-09-24 combat logs
+            },
+            MONK = {
+                137639,  -- Storm, Earth, and Fire
+            },
+            SHAMAN = {
+                114051,  -- Ascendance
+                114052,  -- Ascendance; the aura id the 2026-09-24 combat logs show
+                1219480, -- Ascendance; the aura id the 2026-09-24 combat logs show
+            },
+            EVOKER = {
+                375087,  -- Dragonrage
+                431698,  -- Temporal Burst; added from the 2026-09-24 combat logs
+            },
         }),
     },
     {
@@ -211,67 +337,107 @@ Cat.HELPFUL = {
         key = "healing", kind = "spells", label = "Healing",
         desc = "Heal-over-time effects, shields and beacons.",
         spells = spells({
-            -- 1227806: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DRUID   = { 774, 8936, 33763, 48438, 102352, 155777, 207386, 1227806 },
-            -- 1246768: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 77489: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1253593: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST  = { 139, 17, 194384, 41635, 1246768, 77489, 1253593 },
-            -- 383648: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 382024: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            SHAMAN  = { 61295, 974, 383648, 382024 },
-            -- 1260617: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 443113: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 406220: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1260681: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            MONK    = { 119611, 124682, 115175, 1260617, 443113, 406220, 1260681 },
-            -- 367364: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 373862: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 355941: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1291636: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 376788: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 409895: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 409678: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 363534: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 373267: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            EVOKER  = { 364343, 366155, 367364, 373862, 355941, 1291636, 376788, 409895, 409678, 363534, 373267 },
-            -- 1245369: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1244893: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 156322: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PALADIN = { 53563, 156910, 200025, 287280, 1245369, 1244893, 156322 },
+            DRUID = {
+                774,     -- Rejuvenation
+                8936,    -- Regrowth
+                33763,   -- Lifebloom
+                48438,   -- Wild Growth
+                102352,  -- Cenarion Ward
+                155777,  -- Rejuvenation (Germination)
+                207386,  -- Spring Blossoms
+                1227806, -- Lifebloom; the aura id the 2026-09-24 combat logs show
+            },
+            PRIEST = {
+                139,     -- Renew
+                17,      -- Power Word: Shield
+                194384,  -- Atonement
+                41635,   -- Prayer of Mending
+                1246768, -- Power Word: Shield; the aura id the 2026-09-24 combat logs show
+                77489,   -- Echo of Light; added from the 2026-09-24 combat logs
+                1253593, -- Void Shield; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            SHAMAN = {
+                61295,   -- Riptide
+                974,     -- Earth Shield
+                383648,  -- Earth Shield; the aura id the 2026-09-24 combat logs show
+                382024,  -- Earthliving Weapon; added from the 2026-09-24 combat logs
+            },
+            MONK = {
+                119611,  -- Renewing Mist
+                124682,  -- Enveloping Mist
+                115175,  -- Soothing Mist
+                1260617, -- Soothing Mist; the aura id the 2026-09-24 combat logs show
+                443113,  -- Strength of the Black Ox; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                406220,  -- Chi Cocoon; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                1260681, -- Chi Cocoon; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+            },
+            EVOKER = {
+                364343,  -- Echo
+                366155,  -- Reversion
+                367364,  -- Reversion; the aura id the 2026-09-24 combat logs show
+                373862,  -- Temporal Anomaly; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                355941,  -- Dream Breath; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                1291636, -- Temporal Barrier; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                376788,  -- Dream Breath; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                409895,  -- Verdant Embrace; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                409678,  -- Chrono Ward; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                363534,  -- Rewind; from the 2026-09-24 combat logs; owner review placed it here, not in Raid cooldowns
+                373267,  -- Lifebind; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            PALADIN = {
+                53563,   -- Beacon of Light
+                156910,  -- Beacon of Faith
+                200025,  -- Beacon of Virtue
+                287280,  -- Glimmer of Light
+                1245369, -- Beacon of the Savior; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+                1244893, -- Beacon of the Savior; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+                156322,  -- Eternal Flame; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
         }),
     },
     {
         key = "support", kind = "spells", label = "Support",
         desc = "Buffs cast on other players.",
         spells = spells({
-            -- 34477: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            HUNTER  = { 34477 },
-            -- 57934: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 115834: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1224098: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            ROGUE   = { 57934, 115834, 1224098 },
-            -- 454863: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 474754: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DEATHKNIGHT = { 454863, 474754 },
-            -- 10060: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST  = { 10060 },   -- Void Shield (Unfolding Vision) 1300009 removed (owner 2026-09-25)
-            -- 474750: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DRUID   = { 29166, 474750 },
-            -- 413984: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 360827: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 375253: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 375230: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 375226: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 375229: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 375257: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 406789: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 375256: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- Time Spiral is one aura per class (the cast 374968 applies none); all 13 are listed. 375234,
-            -- 375238, 375240, 375252, 375254, 375255, 375258 added 2026-09-25: seen in the 2026-09-24 logs,
-            -- mapped to their class in the 12.1 spell data.
-            EVOKER  = { 369459, 413984, 360827, 375253, 375230, 375226, 375229, 375257, 406789, 375256,
-                        375234, 375238, 375240, 375252, 375254, 375255, 375258 },
+            HUNTER = {
+                34477,   -- Misdirection; added from the 2026-09-24 combat logs
+            },
+            ROGUE = {
+                57934,   -- Tricks of the Trade; added from the 2026-09-24 combat logs
+                115834,  -- Shroud of Concealment; added from the 2026-09-24 combat logs
+                1224098, -- Tricks of the Trade; added from the 2026-09-24 combat logs
+            },
+            DEATHKNIGHT = {
+                454863,  -- Lesser Anti-Magic Shell; added from the 2026-09-24 combat logs
+                474754,  -- Symbiotic Relationship; added from the 2026-09-24 combat logs
+            },
+            -- Void Shield (Unfolding Vision) 1300009 removed (owner 2026-09-25)
+            PRIEST = {
+                10060,   -- Power Infusion; moved here from Offensive cooldowns (owner review 2026-09-25)
+            },
+            DRUID = {
+                29166,   -- Innervate
+                474750,  -- Symbiotic Relationship; added from the 2026-09-24 combat logs
+            },
+            EVOKER = {
+                369459,  -- Source of Magic
+                413984,  -- Shifting Sands; added from the 2026-09-24 combat logs
+                360827,  -- Blistering Scales; added from the 2026-09-24 combat logs
+                375253,  -- Time Spiral; the Paladin buff; one aura per class; added from the 2026-09-24 combat logs
+                375230,  -- Time Spiral; the Druid buff; one aura per class; added from the 2026-09-24 combat logs
+                375226,  -- Time Spiral; the Death Knight buff; one aura per class; added from the 2026-09-24 combat logs
+                375229,  -- Time Spiral; the Demon Hunter buff; one aura per class; added from the 2026-09-24 combat logs
+                375257,  -- Time Spiral; the Warlock buff; one aura per class; added from the 2026-09-24 combat logs
+                406789,  -- Spatial Paradox; added from the 2026-09-24 combat logs
+                375256,  -- Time Spiral; the Shaman buff; one aura per class; added from the 2026-09-24 combat logs
+                375234,  -- Time Spiral; the Evoker buff; one aura per class
+                375238,  -- Time Spiral; the Hunter buff; one aura per class
+                375240,  -- Time Spiral; the Mage buff; one aura per class
+                375252,  -- Time Spiral; the Monk buff; one aura per class
+                375254,  -- Time Spiral; the Priest buff; one aura per class
+                375255,  -- Time Spiral; the Rogue buff; one aura per class
+                375258,  -- Time Spiral; the Warrior buff; one aura per class
+            },
         }),
     },
     {
@@ -281,72 +447,147 @@ Cat.HELPFUL = {
         key = "groupBuffs", kind = "spells", label = "Group buffs",
         desc = "Raid-wide buffs such as Mark of the Wild, Arcane Intellect and Battle Shout.",
         spells = spells({
-            MAGE    = { 1459 },
-            PRIEST  = { 21562 },
-            WARRIOR = { 6673 },
-            DRUID   = { 1126 },
-            SHAMAN  = { 462854 },
-            EVOKER  = { 381748, 381732, 381741, 381746, 381749, 381750, 381751, 381752, 381753, 381754,
-                        381756, 381757, 381758 },
+            MAGE = {
+                1459,   -- Arcane Intellect
+            },
+            PRIEST = {
+                21562,  -- Power Word: Fortitude
+            },
+            WARRIOR = {
+                6673,   -- Battle Shout
+            },
+            DRUID = {
+                1126,   -- Mark of the Wild
+            },
+            SHAMAN = {
+                462854, -- Skyfury
+            },
+            EVOKER = {
+                381748, -- Blessing of the Bronze; the Evoker buff; one aura per class
+                381732, -- Blessing of the Bronze; the Death Knight buff; one aura per class
+                381741, -- Blessing of the Bronze; the Demon Hunter buff; one aura per class
+                381746, -- Blessing of the Bronze; the Druid buff; one aura per class
+                381749, -- Blessing of the Bronze; the Hunter buff; one aura per class
+                381750, -- Blessing of the Bronze; the Mage buff; one aura per class
+                381751, -- Blessing of the Bronze; the Monk buff; one aura per class
+                381752, -- Blessing of the Bronze; the Paladin buff; one aura per class
+                381753, -- Blessing of the Bronze; the Priest buff; one aura per class
+                381754, -- Blessing of the Bronze; the Rogue buff; one aura per class
+                381756, -- Blessing of the Bronze; the Shaman buff; one aura per class
+                381757, -- Blessing of the Bronze; the Warlock buff; one aura per class
+                381758, -- Blessing of the Bronze; the Warrior buff; one aura per class
+            },
         }),
     },
     {
         key = "movement", kind = "spells", label = "Movement",
         desc = "Speed and freedom effects.",
         spells = spells({
-            -- 202164: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 446044: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1244157: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            WARRIOR = { 202164, 446044, 1244157 },
-            -- 36554: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            ROGUE   = { 2983, 36554 },
-            -- 48265: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 444347: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 434029: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 212552: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DEATHKNIGHT = { 48265, 444347, 434029, 212552 },
-            -- 77761, 77764: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 400126: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 252216: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DRUID   = { 1850, 106898, 77761, 77764, 400126, 252216 },   -- Travel and Mount Form are Stances (owner 2026-09-25)
-            -- 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 394454: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- Divine Steed is one aura per mount appearance, chosen by race, glyph or bridle (the cast 190784
-            -- applies none). 254473 (Vigilant Charger, seen in the logs) and 1289616, 1289617 (the pre-12.0.1
-            -- Charger models, in the 12.1 spell data but not yet seen) added 2026-09-25.
-            PALADIN = { 1044, 221886, 221883, 221885, 221887, 254471, 254472, 254473, 254474, 276111, 276112, 294133,
-                        363608, 453804, 1289616, 1289617, 394454 },
-            -- 443569: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 450552: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 119085: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            MONK    = { 116841, 443569, 450552, 119085 },
-            -- 186258: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            HUNTER  = { 186257, 186258 },
-            -- 260881: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 454025: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 58875: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 468226: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            SHAMAN  = { 192082, 79206, 2645, 260881, 454025, 58875, 468226 },
-            -- 73325: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST  = { 121557, 65081, 73325 },
-            -- 387633: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            WARLOCK = { 111400, 387633 },
-            -- 374227: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 442204: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            EVOKER  = { 358267, 374227, 442204 },
+            WARRIOR = {
+                202164,  -- Bounding Stride; added from the 2026-09-24 combat logs
+                446044,  -- Relentless Pursuit; added from the 2026-09-24 combat logs
+                1244157, -- Piercing Howl; added from the 2026-09-24 combat logs
+            },
+            ROGUE = {
+                2983,    -- Sprint
+                36554,   -- Shadowstep; added from the 2026-09-24 combat logs
+            },
+            DEATHKNIGHT = {
+                48265,   -- Death's Advance; added from the 2026-09-24 combat logs
+                444347,  -- Death Charge; added from the 2026-09-24 combat logs
+                434029,  -- Vampiric Speed; added from the 2026-09-24 combat logs
+                212552,  -- Wraith Walk; added from the 2026-09-24 combat logs
+            },
+            -- Travel and Mount Form are Stances (owner 2026-09-25)
+            DRUID = {
+                1850,    -- Dash
+                106898,  -- Stampeding Roar
+                77761,   -- Stampeding Roar; the aura id the 2026-09-24 combat logs show
+                77764,   -- Stampeding Roar; the aura id the 2026-09-24 combat logs show
+                400126,  -- Forestwalk; added from the 2026-09-24 combat logs
+                252216,  -- Tiger Dash; added from the 2026-09-24 combat logs
+            },
+            PALADIN = {
+                1044,    -- Blessing of Freedom
+                221886,  -- Divine Steed; Thalassian Charger (Blood Elf; Horde Glyph of the Trusted Steed)
+                221883,  -- Divine Steed; default Charger (Human and unlisted races; Alliance Glyph of the Trusted Steed); the aura id the 2026-09-24 combat logs show
+                221885,  -- Divine Steed; Great Sunwalker Kodo (Tauren); the aura id the 2026-09-24 combat logs show
+                221887,  -- Divine Steed; Great Exarch's Elekk (Draenei); the aura id the 2026-09-24 combat logs show
+                254471,  -- Divine Steed; Highlord's Valorous Charger (bridle); the aura id the 2026-09-24 combat logs show
+                254472,  -- Divine Steed; Highlord's Vengeful Charger (bridle); the aura id the 2026-09-24 combat logs show
+                254473,  -- Divine Steed; Highlord's Vigilant Charger (bridle)
+                254474,  -- Divine Steed; Highlord's Golden Charger (bridle); the aura id the 2026-09-24 combat logs show
+                276111,  -- Divine Steed; Dawnforge Ram (Dwarf); the aura id the 2026-09-24 combat logs show
+                276112,  -- Divine Steed; Darkforge Ram (Dark Iron Dwarf); the aura id the 2026-09-24 combat logs show
+                294133,  -- Divine Steed; Crusader's Direhorn (Zandalari Troll); the aura id the 2026-09-24 combat logs show
+                363608,  -- Divine Steed; Lightforged Ruinstrider (Lightforged Draenei); the aura id the 2026-09-24 combat logs show
+                453804,  -- Divine Steed; Earthen Ordinant's Ramolith (Earthen); the aura id the 2026-09-24 combat logs show
+                1289616, -- Divine Steed; pre-12.0.1 Charger model; in the 12.1 data, not yet seen in logs
+                1289617, -- Divine Steed; pre-12.0.1 Thalassian Charger model; in the 12.1 data, not yet seen in logs
+                394454,  -- Echoing Freedom; added from the 2026-09-24 combat logs
+            },
+            MONK = {
+                116841,  -- Tiger's Lust
+                443569,  -- Chi-Ji's Swiftness; added from the 2026-09-24 combat logs
+                450552,  -- Jade Walk; added from the 2026-09-24 combat logs
+                119085,  -- Chi Torpedo; added from the 2026-09-24 combat logs
+            },
+            HUNTER = {
+                186257,  -- Aspect of the Cheetah
+                186258,  -- Aspect of the Cheetah; the aura id the 2026-09-24 combat logs show
+            },
+            SHAMAN = {
+                192082,  -- Wind Rush
+                79206,   -- Spiritwalker's Grace
+                2645,    -- Ghost Wolf
+                260881,  -- Spirit Wolf; from the 2026-09-24 combat logs; owner review placed it here, not in Defensive cooldowns
+                454025,  -- Electroshock; added from the 2026-09-24 combat logs
+                58875,   -- Spirit Walk; added from the 2026-09-24 combat logs
+                468226,  -- Lightning Conduit; added from the 2026-09-24 combat logs
+            },
+            PRIEST = {
+                121557,  -- Angelic Feather
+                65081,   -- Body and Soul
+                73325,   -- Leap of Faith; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+            },
+            WARLOCK = {
+                111400,  -- Burning Rush
+                387633,  -- Soulburn: Demonic Circle; added from the 2026-09-24 combat logs
+            },
+            EVOKER = {
+                358267,  -- Hover
+                374227,  -- Zephyr; also in Raid cooldowns: the review moved it here, the owner kept it in both (2026-09-25)
+                442204,  -- Breath of Eons; added from the 2026-09-24 combat logs
+            },
         }),
     },
     {
         key = "utility", kind = "spells", label = "Utility",
         desc = "Soulstones, stealth, water walking and similar.",
         spells = spells({
-            WARLOCK = { 20707, 5697 },
-            PRIEST  = { 111759 },   -- Levitate (the AURA; 1706 is the cast, issue #15)
-            SHAMAN  = { 546 },
-            MAGE    = { 130, 32612 },
-            HUNTER  = { 5384 },
-            ROGUE   = { 1784 },
-            DRUID   = { 5215 },
+            WARLOCK = {
+                20707,  -- Soulstone
+                5697,   -- Unending Breath
+            },
+            PRIEST = {
+                111759, -- Levitate; the aura; 1706 is the cast (issue #15)
+            },
+            SHAMAN = {
+                546,    -- Water Walking
+            },
+            MAGE = {
+                130,    -- Slow Fall
+                32612,  -- Invisibility
+            },
+            HUNTER = {
+                5384,   -- Feign Death
+            },
+            ROGUE = {
+                1784,   -- Stealth
+            },
+            DRUID = {
+                5215,   -- Prowl
+            },
         }),
     },
     {
@@ -355,10 +596,29 @@ Cat.HELPFUL = {
         key = "stances", kind = "spells", label = "Stances",
         desc = "Warrior stances, druid forms and paladin auras.",
         spells = spells({
-            WARRIOR = { 386164, 386196, 386208 },                    -- Battle, Berserker, Defensive Stance
-            DRUID   = { 5487, 768, 24858, 114282, 165961, 1066, 40120, 210053 }, -- Bear, Cat, Moonkin, Treant, Travel (x3), Mount Form
-            PALADIN = { 465, 317920, 32223 },                        -- Devotion, Concentration, Crusader Aura
-            PRIEST  = { 232698 },                                    -- Shadowform
+            WARRIOR = {
+                386164, -- Battle Stance
+                386196, -- Berserker Stance
+                386208, -- Defensive Stance
+            },
+            DRUID = {
+                5487,   -- Bear Form
+                768,    -- Cat Form
+                24858,  -- Moonkin Form
+                114282, -- Treant Form
+                165961, -- Travel Form; Stances only, not Movement (owner 2026-09-25)
+                1066,   -- Travel Form; an alternate Travel Form aura, seen in the 2026-09-24 logs
+                40120,  -- Travel Form; an alternate Travel Form aura, seen in the 2026-09-24 logs
+                210053, -- Mount Form; Stances only, not Movement (owner 2026-09-25)
+            },
+            PALADIN = {
+                465,    -- Devotion Aura
+                317920, -- Concentration Aura
+                32223,  -- Crusader Aura
+            },
+            PRIEST = {
+                232698, -- Shadowform; owner 2026-09-25
+            },
         }),
     },
     {
@@ -370,23 +630,43 @@ Cat.HELPFUL = {
         desc = "Buffs from racial abilities, such as Stoneform, Berserking and Blood Fury.",
         spells = spells({
             ALL = {
-                65116,                                                  -- Stoneform (Dwarf)
-                26297,                                                  -- Berserking (Troll)
-                20572, 33697, 33702,                                    -- Blood Fury (Orc)
-                274739, 274740, 274741, 274742,                         -- Ancestral Call (Mag'har Orc)
-                273104,                                                 -- Fireblood (Dark Iron Dwarf)
-                58984,                                                  -- Shadowmeld (Night Elf)
-                28880, 59542, 59543, 59544, 59545, 59547, 59548, 121093, 370626, 416250, -- Gift of the Naaru (Draenei)
-                7744,                                                   -- Will of the Forsaken (Undead)
-                59752,                                                  -- Will to Survive (Human)
-                68992, 87840, 406087,                                   -- Darkflight, Running Wild, Calm the Wolf (Worgen)
-                360022, 1289789,                                        -- Chosen Identity, Battle Visage (Dracthyr)
-                256948, 256374,                                         -- Spatial Rift, Entropic Embrace (Void Elf)
-                291944, 281954,                                         -- Regeneratin', Pterrordax Swoop (Zandalari Troll)
-                255654,                                                 -- Bull Rush (Highmountain Tauren)
-                291843,                                                 -- Brush It Off (Kul Tiran)
-                436344, 461063,                                         -- Azerite Surge, Quiet Contemplation (Earthen)
-                1238467,                                                -- Thorn Bloom (Haranir)
+                65116,   -- Stoneform; Dwarf
+                26297,   -- Berserking; Troll
+                20572,   -- Blood Fury; Orc; attack power
+                33697,   -- Blood Fury; Orc; attack and spell power
+                33702,   -- Blood Fury; Orc; spell power
+                274739,  -- Rictus of the Laughing Skull; Mag'har Orc
+                274740,  -- Zeal of the Burning Blade; Mag'har Orc
+                274741,  -- Ferocity of the Frostwolf; Mag'har Orc
+                274742,  -- Might of the Blackrock; Mag'har Orc
+                273104,  -- Fireblood; Dark Iron Dwarf
+                58984,   -- Shadowmeld; Night Elf; moved here from Utility (owner 2026-09-25)
+                28880,   -- Gift of the Naaru; Draenei Warrior; one aura per class
+                59542,   -- Gift of the Naaru; Draenei Paladin; one aura per class
+                59543,   -- Gift of the Naaru; Draenei Hunter; one aura per class
+                59544,   -- Gift of the Naaru; Draenei Priest; one aura per class
+                59545,   -- Gift of the Naaru; Draenei Death Knight; one aura per class
+                59547,   -- Gift of the Naaru; Draenei Shaman; one aura per class
+                59548,   -- Gift of the Naaru; Draenei Mage; one aura per class
+                121093,  -- Gift of the Naaru; Draenei Monk; one aura per class
+                370626,  -- Gift of the Naaru; Draenei Rogue; one aura per class
+                416250,  -- Gift of the Naaru; Draenei Warlock; one aura per class
+                7744,    -- Will of the Forsaken; Undead
+                59752,   -- Will to Survive; Human
+                68992,   -- Darkflight; Worgen
+                87840,   -- Running Wild; Worgen
+                406087,  -- Calm the Wolf; Worgen (owner 2026-09-25)
+                360022,  -- Chosen Identity; Dracthyr (owner 2026-09-25)
+                1289789, -- Battle Visage; Dracthyr (owner 2026-09-25)
+                256948,  -- Spatial Rift; Void Elf
+                256374,  -- Entropic Embrace; Void Elf; a frequent proc, kept (owner 2026-09-25)
+                291944,  -- Regeneratin'; Zandalari Troll
+                281954,  -- Pterrordax Swoop; Zandalari Troll; not yet seen in logs
+                255654,  -- Bull Rush; Highmountain Tauren
+                291843,  -- Brush It Off; Kul Tiran
+                436344,  -- Azerite Surge; Earthen
+                461063,  -- Quiet Contemplation; Earthen
+                1238467, -- Thorn Bloom; Haranir; a frequent proc, kept (owner 2026-09-25)
             },
         }),
     },
@@ -537,23 +817,96 @@ Cat.HARMFUL = {
         key = "hardCC", kind = "spells", label = "Hard CC (loss of control)",
         desc = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
         spells = spells({
-            WARRIOR     = { 5246, 132168, 132169, 385954 },          -- Intimidating Shout, Shockwave, Storm Bolt, Shield Charge
-            PALADIN     = { 853, 10326, 105421 },                    -- Hammer of Justice, Turn Evil, Blinding Light
-            -- 1258508: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            HUNTER      = { 1513, 3355, 24394, 117526, 213691, 1258508 },     -- Scare Beast, Freezing Trap, Intimidation, Binding Shot, Scatter Shot
-            -- 427773: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            ROGUE       = { 408, 1776, 1833, 2094, 6770, 427773 },           -- Kidney Shot, Gouge, Cheap Shot, Blind, Sap
-            -- 200196: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST      = { 605, 8122, 9484, 64044, 200200, 205364, 200196 }, -- Mind Control, Psychic Scream, Shackle Horror, Psychic Horror, Holy Word: Chastise, Dominate Mind
-            DEATHKNIGHT = { 108194, 111673, 207167, 221562 },        -- Asphyxiate (Frost/Unholy), Control Undead, Blinding Sleet, Asphyxiate (Blood)
-            SHAMAN      = { 51514, 118905, 204437 },                 -- Hex, Capacitor Totem, Lightning Lasso
-            MAGE        = { 118, 31661, 82691, 383121 },             -- Polymorph, Dragon's Breath, Ring of Frost, Mass Polymorph
-            WARLOCK     = { 710, 1098, 5484, 118699, 6789, 30283 },  -- Banish, Subjugate Demon, Howl of Terror, Fear (the AURA; 5782 is the cast), Mortal Coil, Shadowfury
-            MONK        = { 115078, 119381, 198909 },                -- Paralysis, Leg Sweep, Song of Chi-Ji
-            DRUID       = { 99, 2637, 5211, 33786, 163505, 203123 }, -- Incapacitating Roar, Hibernate, Mighty Bash, Cyclone, Rake, Maim
-            DEMONHUNTER = { 179057, 207685, 211881, 217832, 1234195 }, -- Chaos Nova, Sigil of Misery, Fel Eruption, Imprison, Void Nova
-            EVOKER      = { 360806, 372245 },                        -- Sleep Walk, Terror of the Skies
-            ALL         = { 20549, 107079, 287712 },                 -- War Stomp, Quaking Palm, Haymaker (racials)
+            WARRIOR = {
+                5246,    -- Intimidating Shout
+                132168,  -- Shockwave
+                132169,  -- Storm Bolt
+                385954,  -- Shield Charge
+            },
+            PALADIN = {
+                853,     -- Hammer of Justice
+                10326,   -- Turn Evil
+                105421,  -- Blinding Light
+            },
+            HUNTER = {
+                1513,    -- Scare Beast
+                3355,    -- Freezing Trap
+                24394,   -- Intimidation
+                117526,  -- Binding Shot
+                213691,  -- Scatter Shot
+                1258508, -- Intimidation; the aura id the 2026-09-24 combat logs show
+            },
+            ROGUE = {
+                408,     -- Kidney Shot
+                1776,    -- Gouge
+                1833,    -- Cheap Shot
+                2094,    -- Blind
+                6770,    -- Sap
+                427773,  -- Blind; the aura id the 2026-09-24 combat logs show
+            },
+            PRIEST = {
+                605,     -- Mind Control
+                8122,    -- Psychic Scream
+                9484,    -- Shackle Horror
+                64044,   -- Psychic Horror
+                200200,  -- Holy Word: Chastise
+                205364,  -- Dominate Mind
+                200196,  -- Holy Word: Chastise; the aura id the 2026-09-24 combat logs show
+            },
+            DEATHKNIGHT = {
+                108194,  -- Asphyxiate; Frost and Unholy
+                111673,  -- Control Undead
+                207167,  -- Blinding Sleet
+                221562,  -- Asphyxiate; Blood
+            },
+            SHAMAN = {
+                51514,   -- Hex
+                118905,  -- Capacitor Totem
+                204437,  -- Lightning Lasso
+            },
+            MAGE = {
+                118,     -- Polymorph
+                31661,   -- Dragon's Breath
+                82691,   -- Ring of Frost
+                383121,  -- Mass Polymorph
+            },
+            WARLOCK = {
+                710,     -- Banish
+                1098,    -- Subjugate Demon
+                5484,    -- Howl of Terror
+                118699,  -- Fear; the aura; 5782 is the cast
+                6789,    -- Mortal Coil
+                30283,   -- Shadowfury
+            },
+            MONK = {
+                115078,  -- Paralysis
+                119381,  -- Leg Sweep
+                198909,  -- Song of Chi-Ji
+            },
+            DRUID = {
+                99,      -- Incapacitating Roar
+                2637,    -- Hibernate
+                5211,    -- Mighty Bash
+                33786,   -- Cyclone
+                163505,  -- Rake
+                203123,  -- Maim
+            },
+            DEMONHUNTER = {
+                179057,  -- Chaos Nova
+                207685,  -- Sigil of Misery
+                211881,  -- Fel Eruption
+                217832,  -- Imprison
+                1234195, -- Void Nova
+            },
+            EVOKER = {
+                360806,  -- Sleep Walk
+                372245,  -- Terror of the Skies
+            },
+            ALL = {
+                20549,   -- War Stomp; racial (Tauren); also in Racials (debuffs)
+                107079,  -- Quaking Palm; racial (Pandaren); also in Racials (debuffs)
+                287712,  -- Haymaker; racial (Kul Tiran); also in Racials (debuffs)
+            },
         }),
     },
     {
@@ -613,9 +966,23 @@ Cat.HARMFUL = {
         key = "softCC", kind = "spells", label = "Soft CC (roots & snares)",
         desc = "Roots and snares — the unit keeps control of itself but cannot move freely. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
         spells = spells({
-            WARRIOR     = { 1715, 12323 },                           -- Hamstring, Piercing Howl
-            PALADIN     = { 403695, 408383 },                        -- Truth's Wake, Judgment of Justice
-            HUNTER      = { 5116, 64803, 135299, 162480, 186387, 190925, 195645 }, -- Concussive Shot, Entrapment, Tar Trap, Steel Trap, Bursting Shot, Harpoon, Wing Clip
+            WARRIOR = {
+                1715,    -- Hamstring
+                12323,   -- Piercing Howl
+            },
+            PALADIN = {
+                403695,  -- Truth's Wake
+                408383,  -- Judgment of Justice
+            },
+            HUNTER = {
+                5116,    -- Concussive Shot
+                64803,   -- Entrapment
+                135299,  -- Tar Trap
+                162480,  -- Steel Trap
+                186387,  -- Bursting Shot
+                190925,  -- Harpoon
+                195645,  -- Wing Clip
+            },
             -- 35546 IS THE CAST AND ITS AURA IS UNKNOWN (issue #15). It applies no aura of its
             -- own and has no EffectTriggerSpell edge, so the data cannot name one; the owner's
             -- live probe could not observe one either, reporting it as a proc that fires and
@@ -623,21 +990,74 @@ Cat.HARMFUL = {
             -- KNOWINGLY: a row that matches nothing is no worse than a row that is gone, and
             -- removing it would lose the record that this slow exists. Settle it by watching a
             -- real target while an Outlaw rogue has the talent, then swap in what lands.
-            ROGUE       = { 3409, 35546, 185763 },                   -- Crippling Poison, Fatal Flourish (cast; aura unknown), Pistol Shot
-            PRIEST      = { 15407, 114404, 390669 },                 -- Mind Flay, Void Tendrils, Apathy
-            -- 444826: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 460501: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DEATHKNIGHT = { 45524, 206930, 273977, 444826, 460501 },                 -- Chains of Ice, Heart Strike, Grip of the Dead
-            SHAMAN      = { 51490, 196840, 470194, 1251059 },        -- Thunderstorm, Frost Shock, Ice Strike, Stormbind
-            MAGE        = { 122, 31589, 157981, 157997, 212792, 236299, 378760, 391104 }, -- Frost Nova, Slow, Blast Wave, Ice Nova, Cone of Cold, Chrono Shift, Frostbite, Mass Slow
-            WARLOCK     = { 334275, 384069 },                        -- Curse of Exhaustion, Shadowflame
-            -- 116706: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            MONK        = { 116095, 121253, 123586, 324382, 392983, 116706 }, -- Disable, Keg Smash, Flying Serpent Kick, Clash, Strike of the Windlord
-            DRUID       = { 339, 58180, 61391, 102359, 127797, 164812 }, -- Entangling Roots, Infected Wounds, Typhoon, Mass Entanglement, Ursol's Vortex (the AURA; 102793 is the cast), Moonfire
-            -- 370970: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DEMONHUNTER = { 198813, 204843, 213405, 370970 },        -- Vengeful Retreat, Sigil of Chains, Master of the Glaive, The Hunt
-            EVOKER      = { 355689, 357214, 368970, 370898 },        -- Landslide, Wing Buffet, Tail Swipe, Permeating Chill
-            ALL         = { 260369 },                                -- Arcane Pulse (racial)
+            ROGUE = {
+                3409,    -- Crippling Poison
+                35546,   -- Fatal Flourish; the CAST; its aura is unknown (see above)
+                185763,  -- Pistol Shot
+            },
+            PRIEST = {
+                15407,   -- Mind Flay
+                114404,  -- Void Tendrils
+                390669,  -- Apathy
+            },
+            DEATHKNIGHT = {
+                45524,   -- Chains of Ice
+                206930,  -- Heart Strike
+                273977,  -- Grip of the Dead
+                444826,  -- Chains of Ice; the aura id the 2026-09-24 combat logs show
+                460501,  -- Heart Strike; the aura id the 2026-09-24 combat logs show
+            },
+            SHAMAN = {
+                51490,   -- Thunderstorm
+                196840,  -- Frost Shock
+                470194,  -- Ice Strike
+                1251059, -- Stormbind
+            },
+            MAGE = {
+                122,     -- Frost Nova
+                31589,   -- Slow
+                157981,  -- Blast Wave
+                157997,  -- Ice Nova
+                212792,  -- Cone of Cold
+                236299,  -- Chrono Shift
+                378760,  -- Frostbite
+                391104,  -- Mass Slow
+            },
+            WARLOCK = {
+                334275,  -- Curse of Exhaustion
+                384069,  -- Shadowflame
+            },
+            MONK = {
+                116095,  -- Disable
+                121253,  -- Keg Smash
+                123586,  -- Flying Serpent Kick
+                324382,  -- Clash
+                392983,  -- Strike of the Windlord
+                116706,  -- Disable; the aura id the 2026-09-24 combat logs show
+            },
+            DRUID = {
+                339,     -- Entangling Roots
+                58180,   -- Infected Wounds
+                61391,   -- Typhoon
+                102359,  -- Mass Entanglement
+                127797,  -- Ursol's Vortex; the aura; 102793 is the cast
+                164812,  -- Moonfire
+            },
+            DEMONHUNTER = {
+                198813,  -- Vengeful Retreat
+                204843,  -- Sigil of Chains
+                213405,  -- Master of the Glaive
+                370970,  -- The Hunt; the aura id the 2026-09-24 combat logs show; replaces 323996
+            },
+            EVOKER = {
+                355689,  -- Landslide
+                357214,  -- Wing Buffet; racial (Dracthyr); also in Racials (debuffs)
+                368970,  -- Tail Swipe; racial (Dracthyr); also in Racials (debuffs)
+                370898,  -- Permeating Chill
+            },
+            ALL = {
+                260369,  -- Arcane Pulse; racial (Nightborne); also in Racials (debuffs)
+            },
         }),
     },
     {
@@ -650,13 +1070,14 @@ Cat.HARMFUL = {
         desc = "Debuffs from racial abilities, such as War Stomp and Quaking Palm. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
         spells = spells({
             ALL = {
-                20549,                                                  -- War Stomp (Tauren)
-                107079,                                                 -- Quaking Palm (Pandaren)
-                287712,                                                 -- Haymaker (Kul Tiran)
-                260369,                                                 -- Arcane Pulse (Nightborne)
-                357214, 368970,                                         -- Wing Buffet, Tail Swipe (Dracthyr)
-                255723,                                                 -- Bull Rush (Highmountain Tauren)
-                1238474,                                                -- Thorn Bloom (Haranir)
+                20549,   -- War Stomp; Tauren
+                107079,  -- Quaking Palm; Pandaren
+                287712,  -- Haymaker; Kul Tiran
+                260369,  -- Arcane Pulse; Nightborne
+                357214,  -- Wing Buffet; Dracthyr
+                368970,  -- Tail Swipe; Dracthyr
+                255723,  -- Bull Rush; Highmountain Tauren
+                1238474, -- Thorn Bloom; Haranir
             },
         }),
     },

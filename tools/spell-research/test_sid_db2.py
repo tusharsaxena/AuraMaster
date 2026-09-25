@@ -13,6 +13,7 @@ and must yield {"damage_taken_down"}.
 """
 
 import io
+import re
 import sys
 import tempfile
 import unittest
@@ -180,7 +181,7 @@ class ShippedCategoriesTest(unittest.TestCase):
         self.assertIn(114051, cats["offensiveCDs"]["classes"]["SHAMAN"])
         self.assertEqual(cats["hardCC"]["aura"], "DEBUFF")
         self.assertEqual(cats["defensives"]["aura"], "BUFF")
-        # Every id research.py's own reader sees is in exactly one class line here.
+        # Every id research.py's own reader sees is in exactly one class here.
         ours = sorted(i for c in cats.values() for ids in c["classes"].values() for i in ids)
         theirs = sorted(r["id"] for r in research.read_shipped_named(real))
         self.assertEqual(ours, theirs)
@@ -204,6 +205,117 @@ class ShippedCategoriesTest(unittest.TestCase):
 
     def test_missing_file_is_empty(self):
         self.assertEqual(sid_db2.shipped_categories(HERE / "no-such-file.lua"), [])
+
+
+MULTILINE = HERE / "fixtures" / "Categories-multiline.lua"
+REAL = HERE.parent.parent / "defaults" / "Categories.lua"
+
+# Every digit run in the multiline fixture's COMMENTS that is not itself a shipped id there: dates,
+# "replaces 374348", "98007 is the cast", "issue #15", a commented-out 999999, the legacy aside's
+# "211004 is the Spider", the header comment's "58875". None of them may ever be read as an id.
+COMMENT_DIGITS = {2026, 9, 24, 25, 374348, 231895, 98007, 15, 999999, 211004, 58875}
+
+
+class SharedReaderTest(unittest.TestCase):
+    """research.py's one reader (parse_spells_body and the functions built on it) over the shipped
+    layout: one id per line, the name in the same-line comment before its first `;`."""
+
+    def test_shipped_categories_reads_one_id_per_line_in_file_order(self):
+        cats = {c["key"]: c for c in sid_db2.shipped_categories(MULTILINE)}
+        self.assertEqual(list(cats), ["defensives", "offensiveCDs", "raidCDs", "hardCC"])
+        self.assertEqual(cats["defensives"]["classes"],
+                         {"WARRIOR": [871, 12975], "SHAMAN": [108271], "EVOKER": [363916, 374349]})
+        self.assertEqual(cats["offensiveCDs"]["classes"],
+                         {"WARRIOR": [1719, 107574], "PALADIN": [31884, 454351], "SHAMAN": [114051]})
+        self.assertEqual(cats["raidCDs"]["classes"], {"SHAMAN": [2825, 325174], "ALL": [1243972]})
+        # a block mixing the layouts: a class table, then a legacy one-line class
+        self.assertEqual(cats["hardCC"]["classes"],
+                         {"WARRIOR": [5246, 132168], "SHAMAN": [51514, 118905]})
+        self.assertEqual(cats["hardCC"]["aura"], "DEBUFF")
+        self.assertEqual(cats["raidCDs"]["aura"], "BUFF")
+
+    def test_no_id_is_ever_taken_from_a_comment(self):
+        ids = {r["id"] for r in research.read_shipped_named(MULTILINE)}
+        self.assertEqual(ids & COMMENT_DIGITS, set())
+        self.assertEqual(len(research.read_shipped_named(MULTILINE)), 17)
+        shipped = research.read_shipped(MULTILINE)
+        self.assertEqual(shipped["hardCC"],
+                         {5246: "WARRIOR", 132168: "WARRIOR", 51514: "SHAMAN", 118905: "SHAMAN"})
+        self.assertEqual(shipped["softCC"], {})
+
+    def test_names_come_from_the_same_line_comment_before_the_first_semicolon(self):
+        named = {(r["class"], r["id"]): r["comment"] for r in research.read_shipped_named(MULTILINE)}
+        self.assertEqual(named[("EVOKER", 374349)], "Renewing Blaze")
+        self.assertEqual(named[("PALADIN", 454351)], "Avenging Wrath")
+        self.assertEqual(named[("SHAMAN", 325174)], "Spirit Link Totem")
+        self.assertEqual(named[("ALL", 1243972)], "Void-touched Drums")
+        self.assertEqual(named[("WARRIOR", 871)], "Shield Wall")
+        # the legacy line keeps the positional rule, asides stripped
+        self.assertEqual(named[("SHAMAN", 51514)], "Hex")
+        self.assertEqual(named[("SHAMAN", 118905)], "Capacitor Totem")
+        self.assertTrue(all(named.values()), named)
+
+    def test_parse_spells_body_takes_both_layouts(self):
+        body = ("            -- WARRIOR = { 1 }, commented out\n"
+                "            MAGE = {\n"
+                "                45438,  -- Ice Block; 2026-09-24\n"
+                "                -- 11426,  -- commented out\n"
+                "                1, 2,   -- two ids on one line name neither\n"
+                "            },\n"
+                "            ROGUE       = { 5277, 31224 },   -- Evasion, Cloak of Shadows (a; b, c)\n"
+                "            DRUID       = { 22812, 61336 },  -- Barkskin\n")
+        self.assertEqual(research.parse_spells_body(body), [
+            {"class": "MAGE", "id": 45438, "comment": "Ice Block"},
+            {"class": "MAGE", "id": 1, "comment": None},
+            {"class": "MAGE", "id": 2, "comment": None},
+            {"class": "ROGUE", "id": 5277, "comment": "Evasion"},
+            {"class": "ROGUE", "id": 31224, "comment": "Cloak of Shadows"},
+            # a legacy line whose comment does not line up names none of its ids
+            {"class": "DRUID", "id": 22812, "comment": None},
+            {"class": "DRUID", "id": 61336, "comment": None},
+        ])
+
+    def test_legacy_names_keep_their_asides_apart(self):
+        self.assertEqual(research.legacy_names("Fear (the AURA; 5782 is the cast, issue #15), Hex"),
+                         [("Fear", "the AURA; 5782 is the cast, issue #15"), ("Hex", "")])
+
+    def test_check_shipped_names_every_id_of_the_shipped_layout(self):
+        names = {871: "Shield Wall", 12975: "Last Stand", 108271: "Astral Shift",
+                 363916: "Obsidian Scales", 374349: "Renewing Blaze", 1719: "Recklessness",
+                 107574: "Avatar", 31884: "Avenging Wrath", 454351: "Avenging Wrath",
+                 114051: "Ascendance", 2825: "Heroism", 325174: "Spirit Link Totem",
+                 1243972: "Void-touched Drums", 5246: "Intimidating Shout", 132168: "Shockwave",
+                 51514: "Hex", 118905: "Capacitor Totem"}
+        with tempfile.TemporaryDirectory() as tmp:
+            spell_name = Path(tmp) / "SpellName.csv"
+            spell_name.write_text("ID,Name_lang\n" + "".join(
+                '%d,"%s"\n' % pair for pair in sorted(names.items())), encoding="utf-8")
+            with redirect_stderr(io.StringIO()):
+                report, _failures = research.check_shipped(
+                    {"SpellName": spell_name, "SpellEffect": SPELL_EFFECT}, MULTILINE)
+        self.assertIn("Name checks ran over 17 of 17 id slots", report)
+        self.assertIn("## Ids whose name disagrees with the comment beside them — 1", report)
+        self.assertIn("the file says **Bloodlust**, the build says **Heroism**", report)
+
+    @unittest.skipUnless(REAL.exists(), "defaults/Categories.lua is not beside the tool")
+    def test_the_real_file_every_id_line_is_one_id_with_a_name(self):
+        # a count that shares no code with the reader: `<digits>,` lines inside spells({ ... })
+        count, inside = {}, None
+        for line in REAL.read_text(encoding="utf-8").splitlines():
+            key = re.match(r'\s*key = "(\w+)"', line)
+            if key:
+                current = key.group(1)
+            if re.match(r"\s*spells = spells\(\{", line):
+                inside = current
+            elif inside and re.match(r"\s*\}\)", line):
+                inside = None
+            elif inside and re.match(r"\s*\d+,", line):
+                count[inside] = count.get(inside, 0) + 1
+        cats = sid_db2.shipped_categories(REAL)
+        self.assertEqual({c["key"]: sum(len(v) for v in c["classes"].values()) for c in cats}, count)
+        records = research.read_shipped_named(REAL)
+        self.assertEqual(len(records), sum(count.values()))
+        self.assertEqual([r for r in records if not r["comment"]], [])
 
 
 class CastToAuraTest(unittest.TestCase):

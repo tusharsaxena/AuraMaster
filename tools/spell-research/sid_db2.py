@@ -246,23 +246,17 @@ def open_db2(db2_cache: Path, build: Optional[str]) -> Dict[str, Path]:
 
 # --- defaults/Categories.lua ------------------------------------------------------------------------
 
-# A category's opening line: `key = "...", kind = "spells", label = "..."`. Anchored at the start of a
-# line so a commented-out one (`-- key = ...`) is never read.
-_SPELLS_CATEGORY = re.compile(
-    r'^[ \t]*key\s*=\s*"(?P<key>\w+)"\s*,\s*kind\s*=\s*"spells"\s*,\s*label\s*=\s*"(?P<label>[^"]*)"',
-    re.MULTILINE)
-_ANY_KEY = re.compile(r'^[ \t]*key\s*=\s*"', re.MULTILINE)
 _HARMFUL = re.compile(r"^Cat\.HARMFUL\s*=", re.MULTILINE)
 
 
 def shipped_categories(categories_lua: Path) -> List[dict]:
     """Every `kind = "spells"` category, in file order.
 
-    [{"key", "label", "aura": "BUFF"|"DEBUFF", "classes": {CLASS: [ids in line order]}}], aura from
-    whether the category sits in Cat.HELPFUL or Cat.HARMFUL. research.read_shipped_named reads the
-    same class lines but drops which category they are in, so this walks each category's own
-    `spells({ ... })` block with research's ANY_SPELLS_BLOCK and SHIPPED_LINE (one class line
-    each, commented-out lines skipped, trailing comments ignored).
+    [{"key", "label", "aura": "BUFF"|"DEBUFF", "classes": {CLASS: [ids in file order]}}], aura from
+    whether the category sits in Cat.HELPFUL or Cat.HARMFUL. Read with research.py's shared reader
+    (research.read_spells_categories / parse_spells_body), the same one research.read_shipped_named
+    uses, so the two see the same ids: both the shipped one-id-per-line class tables and legacy
+    one-line class entries, commented-out lines skipped, and no id ever taken from a comment.
     """
     if not categories_lua.exists():
         return []
@@ -270,19 +264,14 @@ def shipped_categories(categories_lua: Path) -> List[dict]:
     harmful = _HARMFUL.search(text)
     harmful_at = harmful.start() if harmful else len(text)
     out: List[dict] = []
-    for cat in _SPELLS_CATEGORY.finditer(text):
-        block = research.ANY_SPELLS_BLOCK.search(text, cat.end())
-        following = _ANY_KEY.search(text, cat.end())
-        if not block or (following and following.start() < block.start()):
-            continue  # no spells table of its own: not something this tool can read
+    for cat in research.read_spells_categories(text):
         classes: Dict[str, List[int]] = {}
-        for line in research.SHIPPED_LINE.finditer(block.group("body")):
-            ids = [int(t) for t in re.findall(r"\d+", line.group("ids"))]
-            classes.setdefault(line.group("class"), []).extend(ids)
+        for rec in cat["records"]:
+            classes.setdefault(rec["class"], []).append(rec["id"])
         out.append({
-            "key": cat.group("key"),
-            "label": cat.group("label"),
-            "aura": "DEBUFF" if cat.start() > harmful_at else "BUFF",
+            "key": cat["key"],
+            "label": cat["label"],
+            "aura": "DEBUFF" if cat["start"] > harmful_at else "BUFF",
             "classes": classes,
         })
     return out

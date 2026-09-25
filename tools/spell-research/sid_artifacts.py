@@ -405,14 +405,14 @@ def _current_md(date, rows, shipped, flags, proposals, names, class_players):
             for sid in p.listed:
                 replaced[(p.category, p.klass, sid)] = p.proposed
     out = ["# Current categories — %s" % date, "",
-           "Every `spells`-kind category of defaults/Categories.lua as shipped, each class line and "
-           "each id with its combat-log status:", ""]
+           "Every `spells`-kind category of defaults/Categories.lua as shipped, each class and each "
+           "id with its combat-log status:", ""]
     out += ["- **%s** — %s" % (s, why) for s, why in STATUSES]
     for cat in shipped:
         atype = cat.get("aura", "BUFF")
         total = sum(len(ids) for ids in cat["classes"].values())
         out += ["", "## %s (`%s`)" % (cat["label"], cat["key"]), "",
-                "%s · %s on %s." % (atype, _n(total, "id"), _n(len(cat["classes"]), "class line")),
+                "%s · %s in %s." % (atype, _n(total, "id"), _n(len(cat["classes"]), "class")),
                 "", "| Class | Id | Name | Status | Evidence |", "|---|---|---|---|---|"]
         for klass, ids in cat["classes"].items():
             for sid in ids:
