@@ -332,7 +332,7 @@ test("diag: the plan verdict reads in sync, PENDING, DRIFT or not built", functi
 
     NS.ContainerManager.instances[3].plan = nil
     lines = build(NS)
-    assertTrue(has(lines, "[Plan] #3 not built") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #3 not built (") ~= nil, dump(lines))
 end)
 
 test("diag: plan groups report the engine's frame and shown counts, or ? when unreadable", function()
@@ -564,4 +564,43 @@ test("diag: QueueSnapshot hands out copies, never the live queue", function()
     assertEqual(snap.ids[1], 1)
     snap.ids[1], snap.idSet[1] = nil, nil
     assertTrue(NS.ContainerManager.QueueSnapshot().idSet[1] == true, "the live queue was handed out")
+end)
+
+-- ── a disabled or stood-down addon says so (batch 10 F8) ───────────────────────────────────────
+
+test("diag: a disabled login says so in the header, and each [Plan] not built line says why", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = { enabled = false } } } })
+    assertTrue(NS.IsDisabled(), "the login did not stand down")
+    local lines = build(NS)
+    -- red under: the header naming only the raw state flags (the owner read enabled=false as a bug)
+    assertTrue(has(lines, "[Diag] addon disabled: containers are not built; predictions only") ~= nil, dump(lines))
+    -- red under: a bare "not built" with no reason
+    assertTrue(has(lines, "[Plan] #1 not built (addon disabled)") ~= nil, dump(lines))
+    assertEqual(count(lines, "section "), 0, dump(lines))
+end)
+
+test("diag: a stood-down addon names its holds; built containers read hidden, not unbuilt", function()
+    local NS = fresh()
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    local lines = build(NS)
+    -- red under: no line for a stand-down the player did not ask for (a perf capture's hold)
+    assertTrue(has(lines, "[Diag] addon stood down (holds: perf): containers are hidden and not updated; "
+        .. "the plan lines are from the last apply") ~= nil, dump(lines))
+    assertTrue(has(lines, "addon disabled") == nil, dump(lines))
+    NS.ContainerManager.instances[2].plan = nil
+    lines = build(NS)
+    assertTrue(has(lines, "[Plan] #2 not built (addon stood down: perf)") ~= nil, dump(lines))
+    NS.lifecycle:Release(NS.HOLD_PERF)
+    lines = build(NS)
+    -- red under: the line printed while the addon runs
+    assertTrue(has(lines, "stood down (") == nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #2 not built (not applied yet)") ~= nil, dump(lines))
+end)
+
+test("diag: a container with no instance while running is not built for want of one", function()
+    local NS = fresh()
+    NS.ContainerManager.instances[3] = nil
+    local lines = build(NS)
+    assertTrue(has(lines, "[Plan] #3 not built (no instance)") ~= nil, dump(lines))
+    assertTrue(has(lines, "addon disabled") == nil, dump(lines))
 end)

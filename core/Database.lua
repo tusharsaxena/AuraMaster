@@ -987,6 +987,35 @@ function Database.MigrateV9(p)
     return removed, stamped, reset
 end
 
+--- v10 (batch 10, owner 2026-09-25, F7). Two halves of v9 (the attach side and the screen reset)
+--- joined that step after the owner's install had already stamped v9, so that install never ran
+--- them, and a stamped step never runs again. This step re-runs exactly those two halves over every
+--- profile, with v9's rules: an `attach.edge` that is missing or not one of the nine becomes
+--- "after-start", and a screen container's old 0/-4 (absent counts as the old default) becomes 0/0.
+--- Size to fit's removal is not repeated: it was v9's first half and ran everywhere v9 did.
+---
+--- The lesson (plan, F7): a step already pushed to the branch is never extended again; a new step
+--- is added instead. v9 is left exactly as it was.
+---
+--- IDEMPOTENT, and a no-op on a profile a full v9 already migrated.
+--- @return number  the containers the attach side was stamped on
+--- @return number  the screen containers whose offsets it reset
+function Database.MigrateV10(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    local stamped, reset = 0, 0
+    for _, c in pairs(p.containers) do
+        local at = type(c) == "table" and c.attach
+        if type(at) == "table" then
+            if not KNOWN_EDGE[at.edge] then
+                at.edge = DEFAULT_EDGE
+                stamped = stamped + 1
+            end
+            if resetOldSeam(at, "screen") then reset = reset + 1 end
+        end
+    end
+    return stamped, reset
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 ---
@@ -1099,6 +1128,14 @@ local SCHEMA_STEPS = {
             local removed, stamped, reset = Database.MigrateV9(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s); attach side stamped after-start on %s; the old 0/-4 offset reset on %s screen container(s)", name, removed, stamped, reset)
+            end
+        end)
+    end },
+    { to = 10, apply = function(db)
+        eachProfile(db, function(p, name)
+            local stamped, reset = Database.MigrateV10(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v10 profile '%s': attach side stamped after-start on %s container(s); the old 0/-4 offset reset on %s screen container(s)", name, stamped, reset)
             end
         end)
     end },

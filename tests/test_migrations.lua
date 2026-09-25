@@ -360,12 +360,12 @@ test("migrations: v9 removes Size to fit from bars and icons containers, and kee
     assertNil(diff(p, before))
 end)
 
-test("migrations: a v8 account climbs to v9 in every profile", function()
+test("migrations: a v8 account climbs through v9 in every profile", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v8profile(), Raid = v8profile() },
         global = { schemaVersion = 8 } } })
     -- red under: the v9 row missing from SCHEMA_STEPS
-    assertEqual(NS.SCHEMA_VERSION, 9)
-    assertEqual(NS.db.global.schemaVersion, 9)
+    assertEqual(NS.SCHEMA_VERSION, 10)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local cs = NS.db.sv.profiles[name].containers
         -- red under: the step touching the active profile only
@@ -384,7 +384,7 @@ test("migrations: a v1 account reaches v9 with Size to fit off on Text only", fu
     p.containerOrder[2] = 5
     p.nextContainerId = 6
     local NS = fresh({ savedVariables = { profiles = { Default = p } } })
-    assertEqual(NS.db.global.schemaVersion, 9)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     local cs = NS.db.sv.profiles.Default.containers
     -- red under: the style-blind v8 stamp left in place (the bars container would read false)
     assertEqual(cs[4].text.autoSize, true, "bars reads the template")
@@ -439,7 +439,7 @@ test("migrations: a v7 and a v8 account reach v9 with every chain on after-start
     for _, from in ipairs({ 7, 8 }) do
         local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
             global = { schemaVersion = from } } })
-        assertEqual(NS.db.global.schemaVersion, 9)
+        assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
         for _, name in ipairs({ "Default", "Raid" }) do
             local cs = NS.db.sv.profiles[name].containers
             -- red under: the step touching the active profile only
@@ -457,7 +457,7 @@ test("migrations: a v1 account reaches v9 with its attach edge stamped", functio
     local p = v1profile()
     p.containers[4].attach = { mode = "container", container = 9 }
     local NS = fresh({ savedVariables = { profiles = { Default = p } } })
-    assertEqual(NS.db.global.schemaVersion, 9)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(NS.db.sv.profiles.Default.containers[4].attach.edge, "after-start")
 end)
 
@@ -466,8 +466,99 @@ test("migrations: an unknown attach edge is repaired on load; a disallowed known
     p.containers[1].attach.edge = "upward"
     p.containers[2].attach.edge = "behind-start"
     p.containers[2].layout = { axis = "horizontal", perLine = 4 }
-    local NS = fresh({ savedVariables = { profiles = { Default = p }, global = { schemaVersion = 9 } } })
-    -- red under: no normalizeAttach in the backfill (the ladder did not run: the stamp is 9)
+    local NS = fresh({ savedVariables = { profiles = { Default = p }, global = { schemaVersion = 10 } } })
+    -- red under: no normalizeAttach in the backfill (the ladder did not run: the stamp is 10)
     assertEqual(NS.Database.FindContainer(1).attach.edge, "after-start")
     assertEqual(NS.Database.FindContainer(2).attach.edge, "behind-start", "runtime validity is ResolvedEdge's")
+end)
+
+-- ── v10 (batch 10 F7): the edge stamp and the screen reset again, for a v9 stamped before them ──
+
+--- A profile as an early v9 build left it: v9 had only removed Size to fit when this install stamped
+--- it, so no container has an attach side and the screen container still holds the old 0/-4. The
+--- container-mode offsets are v8's 0/0.
+local function v9early()
+    local p = v7profile()
+    local cs = p.containers
+    cs[2].attach.x, cs[2].attach.y = 0, 0
+    cs[6].attach.x, cs[6].attach.y = 0, 0
+    p.containers[8] = { name = "Screen, unstored", style = "bars", attach = { mode = "screen" } }
+    p.containerOrder[8] = 8
+    p.nextContainerId = 9
+    return p
+end
+
+test("migrations: v10 stamps the attach side and resets a screen 0/-4 that an early v9 left", function()
+    local NS = fresh()
+    local p = v9early()
+    p.containers[3].attach.edge = "ahead-end"
+    p.containers[4].attach.edge = "sideways"
+    -- red under: no MigrateV10 (F7: the v9 halves re-run as their own step)
+    local stamped, reset = NS.Database.MigrateV10(p)
+    assertEqual(stamped, 6, "1, 2, 4 (unknown), 5, 6 and 8: every attach table without a known side")
+    local at = function(id) return p.containers[id].attach end
+    for _, id in ipairs({ 1, 2, 4, 5, 6, 8 }) do
+        assertEqual(at(id).edge, "after-start", "container " .. id)
+    end
+    assertEqual(at(3).edge, "ahead-end", "a known side is the player's own")
+    assertNil(p.containers[7].attach, "no attach table: nothing created")
+    assertEqual(reset, 2, "the screen container on 0/-4 and the one with no offsets stored")
+    assertEqual(at(1).x, 0); assertEqual(at(1).y, 0, "screen 0/-4")
+    assertEqual(at(8).x, 0); assertEqual(at(8).y, 0, "screen, absent: the old default")
+    assertEqual(at(5).y, -4, "a named frame keeps it")
+    assertEqual(at(3).x, 3); assertEqual(at(3).y, -4, "a container nudge of the player's own")
+    assertEqual(at(4).y, -9, "a container drop of the player's own")
+    local before = NS.Database.DeepCopy(p)
+    local again, again2 = NS.Database.MigrateV10(p)
+    assertEqual(again + again2, 0, "a second run changes nothing")
+    assertNil(diff(p, before))
+end)
+
+test("migrations: v10 changes nothing on a profile a full v9 already migrated", function()
+    local NS = fresh()
+    local p = v7profile()
+    NS.Database.MigrateV8(p)
+    NS.Database.MigrateV9(p)
+    local before = NS.Database.DeepCopy(p)
+    local stamped, reset = NS.Database.MigrateV10(p)
+    assertEqual(stamped + reset, 0)
+    assertNil(diff(p, before))
+end)
+
+test("migrations: a v9 account missing both reaches v10 in every profile", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v9early(), Raid = v9early() },
+        global = { schemaVersion = 9 } } })
+    -- red under: no v10 row (the ladder stops at 9 and never re-runs v9's late halves)
+    assertEqual(NS.db.global.schemaVersion, 10)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local cs = NS.db.sv.profiles[name].containers
+        -- red under: the step touching the active profile only (the backfill reaches it alone)
+        assertEqual(cs[2].attach.edge, "after-start", name)
+        assertEqual(cs[5].attach.edge, "after-start", name .. ": a named frame's side too")
+        assertEqual(cs[1].attach.y, 0, name .. ": screen reset")
+        assertEqual(cs[8].attach.y, 0, name .. ": screen, absent, reset")
+        assertEqual(cs[5].attach.y, -4, name .. ": frame kept")
+        assertEqual(cs[3].attach.x, 3, name .. ": a nudge kept")
+    end
+end)
+
+test("migrations: a v8 account reaches v10 with the same result as one that climbed through a full v9", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
+        global = { schemaVersion = 8 } } })
+    assertEqual(NS.db.global.schemaVersion, 10)
+    -- stamped 8, so v8 does not run again: the ladder is v9 then v10, the same as v9 alone
+    local full = v7profile()
+    NS.Database.MigrateV9(full)
+    -- the inactive profile, read attach by attach (an absent offset reads as the template's 0)
+    local cs = NS.db.sv.profiles.Raid.containers
+    for id, c in pairs(full.containers) do
+        local want, got = c.attach, cs[id].attach
+        if want == nil then
+            assertNil(got, "container " .. id)
+        else
+            assertEqual(got.edge, want.edge, "container " .. id .. " edge")
+            assertEqual(got.x or 0, want.x or 0, "container " .. id .. " x")
+            assertEqual(got.y or 0, want.y or 0, "container " .. id .. " y")
+        end
+    end
 end)

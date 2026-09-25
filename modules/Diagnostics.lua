@@ -214,6 +214,39 @@ local function stateLine(out)
         selected)
 end
 
+--- The held stand-down keys, comma-joined ("perf"), or "?" without the lifecycle library.
+local function holdsText()
+    local lc = NS.lifecycle
+    if not (lc and lc.Holds) then return "?" end
+    return table.concat(lc:Holds(), ",")
+end
+
+--- Why the addon is not running, in plain words, or nil while it runs (batch 10 F8).
+local function downReason()
+    if NS.IsDisabled() then return "addon disabled" end
+    if NS.IsStoodDown() then return "addon stood down (holds: " .. holdsText() .. ")" end
+    return nil
+end
+
+--- Whether any container has an applied plan: a login made while down built none.
+local function anyBuilt()
+    for _, inst in pairs(NS.ContainerManager.instances) do
+        if inst.plan then return true end
+    end
+    return false
+end
+
+--- One plain line while the addon is not running (batch 10 F8): the state flags alone read like a bug.
+local function downLine(out)
+    local why = downReason()
+    if not why then return end
+    if anyBuilt() then
+        out:add("Diag", "%s: containers are hidden and not updated; the plan lines are from the last apply", why)
+    else
+        out:add("Diag", "%s: containers are not built; predictions only", why)
+    end
+end
+
 local function queueLine(out)
     local q = NS.ContainerManager.QueueSnapshot()
     local ids = {}
@@ -242,6 +275,7 @@ end
 function Diag.Header(out)
     identityLine(out)
     stateLine(out)
+    downLine(out)
     queueLine(out)
     countsLine(out)
 end
@@ -422,11 +456,21 @@ end
 -- Containers: the applied plan, and whether it is stale
 -- ---------------------------------------------------------------------------
 
+--- Why container `x` has no applied plan (batch 10 F8): the addon is down, the client has no aura
+--- engine, the manager holds no instance for it, or its first apply has not run.
+local function notBuiltReason(x)
+    if NS.IsDisabled() then return "addon disabled" end
+    if NS.IsStoodDown() then return "addon stood down: " .. holdsText() end
+    if not NS.Compat.HasAuraContainer() then return "no aura container API" end
+    if not x.inst then return "no instance" end
+    return "not applied yet"
+end
+
 --- The staleness verdict: the queue (every deferred change) against the plan comparison (the filter
 --- dimension). DRIFT is the one that points at a real bug: the settings moved, nothing was queued.
 local function verdictOf(x, fresh)
     local inst, q = x.inst, x.q
-    if not (inst and inst.plan) then return "not built" end
+    if not (inst and inst.plan) then return "not built (" .. notBuiltReason(x) .. ")" end
     local Sig = NS.FilterCompiler.Signature
     if Sig(inst.plan) == Sig(fresh) then return "plan in sync" end
     if q.all or q.idSet[x.id] then

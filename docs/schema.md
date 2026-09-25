@@ -525,7 +525,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1026`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1055`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -719,7 +719,24 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `0` / `0` (an absent offset counts as that old default, as in v8): nothing reads them on the screen,
   but a later switch to Another container added the 4px back on top of the seam. A `frame` container
   keeps its offsets. Idempotent: a second run finds nothing to remove, every side known and no screen
-  `0` / `-4`. It is unreleased, so the later batch 9 tasks extend this same step.
+  `0` / `-4`. The attach side and the screen reset joined this step after a first v9 build had been
+  pushed, so an install that ran that build carries v9 without them; v10 re-runs them.
+- **Schema v10** (`Database.MigrateV10`, `core/Database.lua`, batch 10, owner 2026-09-25, F7) runs
+  over **every** stored profile and logs one `[Migrate] v10 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `10`. It re-runs exactly v9's two late halves, with v9's
+  rules: `attach.edge = "after-start"` on every container with an `attach` table whose `edge` is
+  missing or not one of the nine tokens, and a `screen` container's old `0` / `-4` (absent counts as
+  that old default) reset to `0` / `0`. It does not repeat v9's Size to fit removal, which every v9
+  build ran. On a profile a full v9 already migrated it changes nothing, and a second run changes
+  nothing. Tests climb from v8, from a full v9 and from an early v9 profile missing both halves
+  (`tests/test_migrations.lua`).
+- **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
+  version stamp is written once per account, so a half added to a step after any build carrying it
+  has been pushed never reaches an install that already ran that build: the owner's v9 install
+  stamped 9 before the attach side and the screen reset were folded in, and both were skipped.
+  While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
+  has been pushed, a new stored-shape change takes a new step with the next version, even when the
+  earlier step is unreleased.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:243`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

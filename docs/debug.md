@@ -35,7 +35,7 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 
 | Tag | What it holds |
 |---|---|
-| `Diag` | Begin and end markers, the version and schema, the state flags, the apply queue, counts, and any `truncated` or `section ... failed` line |
+| `Diag` | Begin and end markers, the version and schema, the state flags, a plain line when the addon is disabled or stood down (below), the apply queue, counts, and any `truncated` or `section ... failed` line |
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
@@ -48,7 +48,7 @@ Example (shortened):
 
 ```
 [Diag] ==== Aura Master diagnostic begin ====
-[Diag] Aura Master v0.1.0, schema v9, profile 'Default', client 12.1.0 build 12345 (120100)
+[Diag] Aura Master v0.1.0, schema v10, profile 'Default', client 12.1.0 build 12345 (120100)
 [Diag] state: enabled=true stoodDown=false disabledHold=false locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
 [Unit] player HELPFUL: 7 aura(s)
@@ -74,8 +74,24 @@ and checks the apply queue:
   runs when combat or aura secrecy ends, or on the next frame.
 - **`DRIFT: settings changed but no apply was requested`**: the settings changed and nothing is
   queued. This is a bug in the apply path. Report it.
-- **`not built`**: the container has no engine plan. It is disabled, parked or retired, or the
-  client has no aura engine.
+- **`not built (<reason>)`**: the container has no engine plan, and the reason says why (batch 10
+  F8): `addon disabled` (`/am disable`, or a login with the addon switched off), `addon stood down:
+  <holds>` (a hold other than the player's switch, such as a perf capture's `perf`), `no aura
+  container API` (the client has no aura engine), `no instance` (the manager holds none for it:
+  parked or retired), or `not applied yet` (its first apply has not run).
+
+### A disabled or stood-down addon
+
+While the addon is not running, the header adds one plain line after the state flags, so
+`enabled=false stoodDown=true` does not read as a fault (batch 10 F8):
+
+- `[Diag] addon disabled: containers are not built; predictions only`: a login made while the
+  addon was off built no container, so every `Plan` verdict is `not built (addon disabled)` and
+  the `Shown` section holds only the `predicted:` lines.
+- `[Diag] addon disabled: containers are hidden and not updated; the plan lines are from the last
+  apply`: the addon was switched off after it had built them.
+- A stand-down that is not the player's switch names its holds instead: `addon stood down (holds:
+  perf): ...`.
 
 ### `frames=`, `shown=`, `id=?` and `predicted`
 
