@@ -1407,8 +1407,8 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_pages_layout.lua (28)
 
-- layout: the tabs are Frame, Anchor, Growth, Mouse, Name label, in that order
-- layout: the Name label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
+- layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
+- layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
 - layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
 - layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen
 - layout: in screen mode only the subsections that apply are drawn (feedback #4)

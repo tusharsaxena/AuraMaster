@@ -388,7 +388,7 @@ source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
-Name label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
+Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
 ### Filters (46 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -585,7 +585,7 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-**Name label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`, X
+**Label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`, X
 offset `container.label.x` and Y offset `container.label.y` (-200 to 200), then a *Font* subgroup, the
 composed font block on `container.label.font.` (gold Friz 12 OUTLINE by default, the strip's own
 look; class color from the container's unit). Nine rows. The text is always the container's name, so

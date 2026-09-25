@@ -330,7 +330,7 @@ L["Not in use: this container is drawn as bars. Set its Style to Icons on the Co
 L["Growth"] = "Growth"
 L["Frame"] = "Frame"
 L["Mouse"] = "Mouse"
-L["Name label"] = "Name label"
+L["Label"] = "Label"
 L["Show name label"] = "Show name label"
 L["Show this container's name where its drag handle sits, locked or unlocked: outside the container, on the side its auras do not grow into, or beside its first aura when it is attached to another container. While unlocked, the drag handle moves out past it."] = "Show this container's name where its drag handle sits, locked or unlocked: outside the container, on the side its auras do not grow into, or beside its first aura when it is attached to another container. While unlocked, the drag handle moves out past it."
 L["Move the name label left or right, in pixels."] = "Move the name label left or right, in pixels."

@@ -1250,7 +1250,7 @@ SavedVariables file for the migration lines.
      With a SharedMedia font, log in → at worst one apply at the stored size, then sized to fit; no
      lasting wrong size. Chain two Text containers, the first empty, unlocked, with Size to fit on and
      off → the strips and outlines never overlap (check 191).
-203. **The name label, locked (NL-1, NL-2, NL-4).** Layout → **Name label**, tick **Show name label**
+203. **The name label, locked (NL-1, NL-2, NL-4).** Layout → **Label**, tick **Show name label**
      on *Player buffs* while locked → its name appears in gold Friz 12 just above its first element
      (growing down), left-aligned, and nothing else moves. Grow vertically Up → the label moves below
      the first element; Grow horizontally Left → it right-aligns. X/Y offsets and every font leaf
@@ -1270,7 +1270,7 @@ SavedVariables file for the migration lines.
      alpha → the label scales and fades with the container. Visibility *Out of combat only* → entering
      combat hides container and label together; no ADDON_ACTION_BLOCKED. `/am disable` hides it and
      `/am enable` brings it back; deleting the container removes it. Containers → Copy settings from,
-     What = *Name label* → the label settings copy and the name does not. Flush against the top edge
+     What = *Label* → the label settings copy and the name does not. Flush against the top edge
      with the label above → note whether it is cut off (it is not clamped, a known limitation).
 206. **`/am diagnostics` out of combat (DG-1, DG-2).** With a target, a focus and a pet,
      `/am diagnostics` → the console opens, one chat line gives the line count, and the report runs

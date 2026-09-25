@@ -154,7 +154,7 @@ local copySource, copySection = nil, "all"
 local SECTION_KEYS = { "all", "filter", "layout", "behavior", "label", "bars", "icons", "text" }
 local SECTION_LABELS = {
     all = "Everything (what it shows and how it looks)", filter = "Filters", layout = "Layout",
-    behavior = "Mouse", label = "Name label", bars = "Bar style", icons = "Icon style", text = "Text style",
+    behavior = "Mouse", label = "Label", bars = "Bar style", icons = "Icon style", text = "Text style",
 }
 
 local function sourceCell(_, parent, rel)

@@ -41,7 +41,7 @@ and a faint outline, so even an empty container can be found. Your live auras ke
 you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
 (or its **?**) opens the Containers page with that container already selected, and the **X** beside
 the **?** turns that container off (tick its **Enabled** box on Containers to bring it back). If you
-want a container's name on screen all the time, tick **Show name label** on Layout → Name label: the
+want a container's name on screen all the time, tick **Show name label** on Layout → Label: the
 name sits where the handle does, locked or unlocked, and the handle moves out past it.
 
 Test mode fills every container with sample auras, so you can try textures, fonts and sizes without

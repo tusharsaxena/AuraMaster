@@ -222,7 +222,7 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 `NS.Schema` holds **255** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 46, Layout 35 (the Name label tab's nine among them, batch 8),
+out of General's own tab), Filters 46, Layout 35 (the Label tab's nine among them, batch 8),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one

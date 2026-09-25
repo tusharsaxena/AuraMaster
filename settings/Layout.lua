@@ -3,14 +3,14 @@ local _, NS = ...
 -- settings/Layout.lua — where a container sits and how its auras are arranged.
 --
 --     band      [Container ▾]
---     [ Frame ][ Anchor ][ Growth ][ Mouse ][ Name label ]
+--     [ Frame ][ Anchor ][ Growth ][ Mouse ][ Label ]
 --     Anchor  [Attach to]
 --             -- Screen --            [Point] [Relative point] / [X] [Y]
 --             -- Another container -- [Container]
 --             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
 --             (Named frame only: a gray hint when Point faces the growth; growsBackNote, below)
---     Name label  [Show name label] / [X offset] [Y offset] / -- Font -- (the six font leaves)
+--     Label       [Show name label] / [X offset] [Y offset] / -- Font -- (the six font leaves)
 --
 -- A container attaches to the screen, to another container (following it as it grows) or to any
 -- named frame (modules/Anchors.lua). Only the subsections the chosen mode reads are DRAWN (feedback
@@ -28,7 +28,7 @@ local C = NS.Constants
 local PAGE = "layout"
 -- Declared in this order because the tab strip is the groups' first-seen order.
 local G_FRAME, G_ANCHOR, G_GROW, G_MOUSE = L["Frame"], L["Anchor"], L["Growth"], L["Mouse"]
-local G_LABEL = L["Name label"]
+local G_LABEL = L["Label"]
 local S_SCREEN, S_CONTAINER, S_FRAME, S_OFFSET = L["Screen"], L["Another container"], L["Named frame"], L["Offset"]
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 
