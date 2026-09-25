@@ -1260,8 +1260,10 @@ SavedVariables file for the migration lines.
      past it on the same side, by the label's height plus the strip gap, never covering it;
      `/am lock` → the strip goes and the label stays where it was. `/am test` locked and unlocked →
      the placeholders, the label and (unlocked) the strip with its TEST tag, none overlapping. A
-     container attached to another with its label on → the label sits beside its first element;
-     note any overlap with the parent's last line, which the offsets fix.
+     container attached to another with its label on → the label sits beside its first element,
+     level with its top and right-aligned against it, over none of the parent's elements, and the
+     strip (unlocked) sits past the label along the growth (below it growing down); note anything
+     else the label runs over, which the offsets fix.
 205. **The label with the rest (NL-1, NL-4).** Rename the container, in combat too → the label
      changes at once. On a target container with the label's class color on, target a warrior then
      a mage → the color follows; an NPC falls back to the swatch. Scale 2.0, Opacity 0.5 and Master

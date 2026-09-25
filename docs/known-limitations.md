@@ -188,9 +188,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **The name label is not clamped to the screen.** Only the drag strip is (batch 8 NL-2). Clamping the
   label would move the container whenever the label is turned on, so a locked container flush with
   the edge on the label's side can show its label partly off screen. On a container attached to
-  another the label sits beside the first element, toward the parent, and can overlap the parent's
-  last line; its X/Y offsets move it clear. A long name overruns a narrow icon toward the growth side,
-  since the label does not wrap.
+  another the label sits beside the first element, outside the container's side edge and level with
+  its top (as the strip does, SS-3), so it covers none of the parent's elements but can run over
+  whatever lies to that side; its X/Y offsets move it clear. A long name overruns a narrow icon
+  (toward the growth side, or away from the container on a follower), since the label does not wrap.
 - **Size to fit sizes a Text container once, not per aura** (batch 8 AS-2). The engine draws every
   element of a group at one size and aura names are secret in combat, so the size comes from the
   placeholders, the sample names and the worst-case durations; a live name longer than those is cut at
