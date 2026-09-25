@@ -176,6 +176,11 @@ C.TEST_TAG_COLOR = "ffff8000"
 -- The join pin's color (batch 9 SEP-2): the drag handle's gold, the strip tooltip's attached line.
 C.JOIN_PIN_COLOR = { 1, 0.82, 0, 1 }
 
+-- The panel's muted gold for secondary text (batch 10 F6): the drag handle's gold dimmed toward its
+-- help mark, the same (0.85, 0.72, 0.38) settings/GeneralSpells.lua marks a player's own category
+-- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.
+C.SECONDARY_GOLD = "ffd9b861"
+
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "Short (1 unit)",

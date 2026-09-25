@@ -417,7 +417,7 @@ test("layout: an attached container's Fill and growth are dimmed and show its pa
         assertFalse(P.row(ws, "container.layout." .. key).disabled and true or false, key .. " stays live")
     end
     -- red under: the Growth tab without its follow line
-    assertTrue(P.hasText(ws, NS.L["Fill and growth follow '%s'"]:format("Player buffs")), "the follow line")
+    assertTrue(P.hasText(ws, NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")), "the follow line")
     -- red under: panelGet reached by every reader (/am get and the apply path read what is stored)
     assertEqual(NS.GetSetting("container.layout.axis"), "horizontal")
     assertEqual(NS.Database.FindContainer(2).layout.growH, "left")
@@ -433,13 +433,34 @@ test("layout: a screen or frame container's growth rows are its own and live, wi
         -- red under: the inherited-row predicate dimming every attached mode
         assertFalse(axis.disabled and true or false, mode .. ": Fill is live")
         assertEqual(axis.value, "horizontal", mode .. ": 2's own rows")
-        assertFalse(P.hasText(ws, NS.L["Fill and growth follow '%s'"]:format("Player buffs")), mode .. ": no line")
+        assertFalse(P.hasText(ws, NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")), mode .. ": no line")
     end
+end)
+
+test("layout: the follow line is dim gold, says why, and has a gap below it (F6)", function()
+    local NS, _, P = attachedChild()
+    local H = NS.Helpers
+    P.tab("layout", NS.L["Growth"])
+    local want = "|c" .. NS.Constants.SECONDARY_GOLD
+        .. NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs") .. "|r"
+    -- red under: the gold as the addon's muted secondary gold, not the bright heading gold
+    assertEqual(NS.Constants.SECONDARY_GOLD, "ffd9b861")
+    local kids = H.EnsureScroll(H.__pageCtx.layout).children
+    local at
+    for i, w in ipairs(kids) do
+        if w.type == "Label" and w.text == want then at = i end
+    end
+    -- red under: the line drawn plain, or in the old words without the reason
+    assertTrue(at ~= nil, "the follow line in dim gold")
+    local spacer = kids[at + 1]
+    -- red under: the line followed straight by the first Growth row
+    assertEqual(spacer and spacer.type, "SimpleGroup")
+    assertEqual(spacer and spacer.height, H.ROW_VSPACER)
 end)
 
 test("layout: the follow line is drawn on the Growth tab only", function()
     local NS, _, P = attachedChild()
-    local line = NS.L["Fill and growth follow '%s'"]:format("Player buffs")
+    local line = NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")
     for _, key in ipairs({ NS.L["Frame"], NS.L["Anchor"], NS.L["Mouse"] }) do
         local ws = (NS.Helpers.__pageCtx.layout.activeTab == key) and P.rerender("Layout") or P.tab("layout", key)
         assertTrue(#ws > 0, key .. " drew")

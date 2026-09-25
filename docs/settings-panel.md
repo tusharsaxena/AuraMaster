@@ -606,7 +606,8 @@ handle's placement and clamp all read the effective layout. A write that moves a
 attachment re-applies every container following it (`Anchors.Followers`). On this tab, in that mode,
 Fill, Grow horizontally and Grow vertically are dimmed and show the inherited values. They do that
 through a row `panelGet` that only the panel descriptor reads; `/am get` and every module read the
-stored values. The line "Fill and growth follow '*root*'" sits above them. Per row, Spacing and Line
+stored values. The line "Fill and growth follow '*root*' because this container is attached to it."
+sits above them, in the panel's muted secondary gold (`C.SECONDARY_GOLD`), with a row gap below it. Per row, Spacing and Line
 spacing stay the container's own and stay live. The stored flow is never written, so a detach
 restores it at the next apply. A container attached to a missing or looping target sits on the
 screen and keeps its own flow.

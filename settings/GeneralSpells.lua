@@ -484,7 +484,7 @@ local TYPE_MARK       = L["[{type}]"]
 -- never opened.
 local COLOR_END   = "|r"
 local TYPE_COLORS = { HELPFUL = "|cff73bf80", HARMFUL = "|cffcc7373" }
-local YOURS_COLOR = "|cffd9b861"
+local YOURS_COLOR = "|c" .. C.SECONDARY_GOLD
 
 --- `text` in `color`, or `text` unchanged when there is no color for it.
 local function colored(color, text)

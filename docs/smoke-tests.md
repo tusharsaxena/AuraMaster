@@ -415,7 +415,8 @@ listed here too, so the batch can be signed off in one pass.
     Container dropdown names the points. Set A's **Grow vertically** to up → B moves above A, with
     none of B's own settings changed, and without a reload B's own auras stack up from its first
     element too. On B's Growth tab, Fill, Grow horizontally and Grow vertically
-    are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
+    are dimmed and show A's values under "Fill and growth follow 'A' because this container is attached to it." (dim gold, with a
+    gap before the Fill row), while Spacing stays live. Set
     B's **Attach to** back to *Screen* → B's own flow returns. Repeat with an icon A that fills rows
     growing right and down (IA-1) → B starts directly under A's first icon, left edges aligned, and
     the line reads "Its Top left joins the Bottom left of 'A'"; give A a **Per row** that

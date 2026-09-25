@@ -537,11 +537,18 @@ end
 
 --- Above the Growth tab of a container that follows another: whose flow it follows. Named by the
 --- chain root, because that is where the values come from. Above a chain root's: how many follow it
---- (GC-1), since a Growth change there moves them too, with no popup.
+--- (GC-1), since a Growth change there moves them too, with no popup. The follower's note says why,
+--- in the panel's muted gold for secondary text, with a row gap before the Growth rows (batch 10 F6).
 local function growthIntro(ctx, cfg)
     if ctx.activeTab ~= G_GROW then return end
     local root = NS.Anchors.FlowRoot(cfg)
-    if root then return H.TextRow(ctx, L["Fill and growth follow '%s'"]:format(tostring(root.name))) end
+    if root then
+        local note = L["Fill and growth follow '%s' because this container is attached to it."]
+        H.TextRow(ctx, "|c" .. C.SECONDARY_GOLD .. note:format(tostring(root.name)) .. "|r")
+        local scroll = H.EnsureScroll(ctx)
+        if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
+        return
+    end
     local followers = cfg and NS.Anchors.Followers(cfg.id) or {}
     local count = #followers
     if count > 0 then

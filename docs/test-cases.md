@@ -1511,7 +1511,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (44)
+### test_pages_layout.lua (45)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1536,6 +1536,7 @@ badge and any count quoted in the docs must agree with it.
 - layout: after the banner moves, the page draws the newly selected container's values
 - layout: an attached container's Fill and growth are dimmed and show its parent's
 - layout: a screen or frame container's growth rows are its own and live, with no follow line
+- layout: the follow line is dim gold, says why, and has a gap below it (F6)
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
 - layout: Side lists every allowed side by its absolute name for the chain's growth
@@ -1850,7 +1851,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 44 |
+| test_pages_layout.lua | 45 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1870,4 +1871,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1584** |
+| **Total** | **1585** |
