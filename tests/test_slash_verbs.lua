@@ -807,7 +807,7 @@ function()
     -- list may ever be refused — a player must be able to read and repair settings, and reach the
     -- panel, while the addon is off, which is exactly when they are most likely to need to.
     for _, line in ipairs({ "config", "version", "list", "get alpha", "set alpha 0.5",
-                            "reset alpha", "debug", "debug off", "perf", "containers", "select 1" }) do
+                            "reset alpha", "debug", "debug off", "debug diag", "perf", "containers", "select 1" }) do
         local p = slash(NS2, lines, line)
         assertFalse(said(p, REFUSAL), "/am " .. line .. " must never be refused: " .. dump(p))
     end

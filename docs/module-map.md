@@ -90,7 +90,8 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `modules/FramePicker.lua` | The click-to-pick overlay: outlines the named frame under the cursor (a plain frame, `Style.DrawEdge` strips); left-click picks, right-click or Escape cancels. `FP.PickFor` is the one pick flow `/am pick` and Layout's Pick a frame... share: active-container resolve, combat refusal and the two attach writes |
 | `modules/BlizzardFrames.lua` | Reparents `BuffFrame`/`DebuffFrame` to a hidden parent and back, out of combat only |
 | `modules/Container.lua` | One live container: its anchor, handle and unlocked outline (a plain frame, `Style.DrawEdge` strips), building, updating or retiring its engine, restyling, the per-apply class snapshot, the show ladder; bucket `applyContainer` |
-| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate; `Database.PrepareProfile` is its load pass, and `docs/schema.md` → *Settings schema, registries and named non-setting state* names both), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply (each container's apply guarded, so an error is reported once and the pass goes on), a flow or attachment write re-applying the containers that follow it, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass` |
+| `modules/ContainerManager.lua` | The registry's one writer (create, delete, duplicate; `Database.PrepareProfile` is its load pass, and `docs/schema.md` → *Settings schema, registries and named non-setting state* names both), plus rename, copy-from and reset positions through the write seam; the coalesced and deferred apply (each container's apply guarded, so an error is reported once and the pass goes on), a flow or attachment write re-applying the containers that follow it, visibility and unit refresh (with the class re-apply on a swap); buckets `applyPass`, `visibilityPass`; a read-only copy of the apply queue (`QueueSnapshot`) |
+| `modules/Diagnostics.lua` | `/am debug diag`: the one-shot diagnostic report written to the debug console through the ungated `NS.DebugLog:Add` (header and apply queue, non-default settings, the auras on each unit, and per container its filters, plan verdict, non-default rows and shown buttons), secret-safe and capped below the console buffer (`docs/debug.md`) |
 
 ## `settings/` (TOC order)
 
@@ -148,6 +149,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_filtercompiler_categories.lua` | `modules/FilterCompiler.lua` against the player's own categories, peeled out of `test_filtercompiler.lua` (issue #18): a user category in the categorized union, `ClaimingCategories` (the overlap guardrail's one question), and a user category as the only shown category |
 | `test_container.lua` | `modules/Container.lua` against the recorded engine: call order, update in place vs rebuild (the growth corner included), the show ladder, preview |
 | `test_containermanager.lua` | `modules/ContainerManager.lua`: the registry's write side, coalesced apply, an apply error that leaves the rest of the pass running, followers re-applied, combat and secrecy deferral |
+| `test_diagnostics.lua` | `modules/Diagnostics.lua` through `/am debug diag`: the ungated sink and the one chat line, the verb's branch order and the disabled gate, the aura dump and its secret rules, the container sections and plan verdicts, button identity and predictions, section isolation, the caps, and the library-absent line |
 | `test_compat.lua` | `core/Compat.lua`: every shim with the client API present and absent |
 | `test_secrets.lua` | `core/Secrets.lua`: the predicates degrade to "nothing is secret", answer strict booleans, and defer to `canaccessvalue`; one pinned matrix over the library arm and the degraded one |
 | `test_bus.lua` | `core/Bus.lua`: the message catalog (strict live, plain degraded), a target per receiver, one sender per message |
@@ -233,7 +235,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:546-547`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:554-555`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:246`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |

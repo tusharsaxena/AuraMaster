@@ -103,6 +103,7 @@ Kit.run{
         "test_disabled",
         "test_slash",
         "test_slash_verbs",
+        "test_diagnostics",
         "test_bulklog",
         "test_optionssetup",
         "test_options_descriptor",

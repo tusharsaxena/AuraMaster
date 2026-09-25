@@ -191,6 +191,23 @@ function CM.RequestApply(id, system)
     end
 end
 
+--- A read-only copy of the apply queue, for modules/Diagnostics.lua: the pending ids (sorted, and as
+--- a set), whether everything is pending, whether a flush is scheduled, the cause the deferral
+--- notice last named, and whether an apply would have to wait right now. Copies, never the live
+--- tables.
+--- @return table  { all, ids, idSet, scheduled, notice, mustDefer }
+function CM.QueueSnapshot()
+    local ids, idSet = {}, {}
+    for id in pairs(pending) do
+        local n = #ids
+        ids[n + 1] = id
+        idSet[id] = true
+    end
+    table.sort(ids, function(a, b) return tostring(a) < tostring(b) end)
+    return { all = pendingAll, ids = ids, idSet = idSet, scheduled = scheduled, notice = shownReason,
+             mustDefer = CM.MustDefer() }
+end
+
 --- Whether an apply has to wait: aura buttons are locked while auras are secret, and an aura engine's
 --- ancestry must not be rebuilt under combat lockdown.
 function CM.MustDefer()

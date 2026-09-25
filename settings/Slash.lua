@@ -75,7 +75,7 @@ NS.COMMANDS = {
         function() runResetPosition() end},
     {"forgettimed",   L["Forget which buffs were learned to have a duration"],
         function() runForgetTimed() end},
-    {"debug",         L["Toggle the debug console — on/off enable or disable logging"],
+    {"debug",         L["Toggle the debug console - on/off enable or disable logging, diag writes a diagnostic report"],
         function(rest) runDebug(rest) end},
     {"perf",          L["Measure performance — try /am perf for the workflow"],
         function(rest) runPerf(rest) end},
@@ -337,8 +337,14 @@ end
 
 -- /am debug        toggles the console WINDOW (the logging flag is untouched).
 -- /am debug on|off enables or disables session logging through the one SetEnabled seam.
+-- /am debug diag   writes the diagnostic report (modules/Diagnostics.lua); first, so it never
+--                  falls through to the window toggle.
 function runDebug(rest)
     local word = firstWord(rest)
+    if word == "diag" then
+        NS.Diagnostics.Run()
+        return
+    end
     if word == "on" or word == "off" then
         NS.DebugLog:SetEnabled(word == "on")
         return
@@ -451,6 +457,8 @@ local function formatValue(row, v)
     end
     return SlashLib.FormatValue(row, v)
 end
+-- Published for modules/Diagnostics.lua, which strips its color escapes before the Copy text.
+Sl.FormatValue = formatValue
 
 cli = SlashLib:New({
     slash        = "/am",

@@ -352,6 +352,8 @@ local function rowApplies(row, cfg)
     end
     return true
 end
+-- Published for modules/Diagnostics.lua's non-default listing.
+NS.RowApplies = rowApplies
 
 --- The rows of one page, in declaration order, as they apply to the active container. `filter` is
 --- the options library's ctx.unit, passed through and unused: this addon does not filter rows per
