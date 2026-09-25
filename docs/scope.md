@@ -22,7 +22,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
   below), categories set to Show or Hide — every category `defaults/Categories.lua` ships, plus every
   category the player has made, so the number is the shipped set plus the player's own rather than a
-  fixed count (36 shipped as this is written, 17 buff and 19 debuff: spell lists, Blizzard aura flags
+  fixed count (39 shipped as this is written, 19 buff and 20 debuff: spell lists, Blizzard aura flags
   and filter tokens, dispel types, player-or-creature source, and the weapon-enchant capability) — a
   per-container Overrides whitelist and blacklist of spells (the
   whitelist always wins, `docs/data-flow.md` → Filter priority), the spell categories' lists

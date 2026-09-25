@@ -123,7 +123,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v6: the current schema version is 6
+- v7: the current schema version is 7
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -143,10 +143,14 @@ badge and any count quoted in the docs must agree with it.
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
 
-### test_database_categories.lua (18)
+### test_database_categories.lua (22)
 
 - v6: MigrateV6 stamps the user-category store, and a second run changes nothing
 - v6: a profile that predates user categories climbs the ladder and stays valid
+- v7: MigrateV7 retires Consumables and seeds the new categories from where their auras fell
+- v7: the debuff-side Racials is Hidden wherever Hard CC or Soft CC is
+- v7: a second MigrateV7 run changes nothing, and a new key's stored edit wins over a moved one
+- v7: a v6 profile climbs to v7 with every schema row still resolving
 - user categories: one round-trips through a reload, with its spells
 - user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
 - user categories: the schema row resolves, and the seam reads and writes it per container
@@ -311,7 +315,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
 - filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
 - filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
-- filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 17 for HARMFUL today
+- filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 18 for HARMFUL today
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
@@ -1137,7 +1141,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
-- general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
+- general → spell categories: a dropdown of the fourteen spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
 - general → spell categories: the markers are padded so every name starts at the same column (issue #10)
 - general → spell categories: the closed dropdown shows the marked label too (issue #10)
@@ -1479,7 +1483,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 146 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: the exclusions this repository declared suppressed 11 of 158 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1550,7 +1554,7 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 14 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
-| test_database_categories.lua | 18 |
+| test_database_categories.lua | 22 |
 | test_migrations.lua | 6 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
@@ -1605,4 +1609,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1359** |
+| **Total** | **1363** |
