@@ -370,7 +370,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:401`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:442`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a

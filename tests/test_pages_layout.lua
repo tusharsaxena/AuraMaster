@@ -258,8 +258,9 @@ test("layout: a target that would close a loop is refused; any other, or None, i
     dd:__fire("OnValueChanged", 2)
     -- red under: dropping the row's WouldCycle validate (1 follows 2 follows 1)
     assertEqual(NS.Database.FindContainer(1).attach.container, 0, "the loop was refused")
-    dd:__fire("OnValueChanged", 3)
-    assertEqual(NS.Database.FindContainer(1).attach.container, 3)
+    -- 4 flows as 1 does, so no growth-conflict popup (GC-1) stands between the pick and the store.
+    dd:__fire("OnValueChanged", 4)
+    assertEqual(NS.Database.FindContainer(1).attach.container, 4)
     dd:__fire("OnValueChanged", 0)
     assertEqual(NS.Database.FindContainer(1).attach.container, 0, "None is always allowed")
 end)
@@ -461,6 +462,9 @@ test("layout: Another container names the derived points and the container it is
     -- red under: the Container dropdown without its pairWith line
     assertTrue(P.hasText(ws, want:format(PL.BOTTOMLEFT, PL.TOPLEFT, "Player buffs")), "the derived line")
     NS.Helpers.__pageCtx.layout.panel:Show()   -- a hidden kit panel only marks itself dirty
+    -- 2's own flow made 3's (rows growing right and down), so no growth-conflict popup (GC-1) stands
+    -- between the pick and the store.
+    NS.SetByPath("container.layout.growH", "right", 2)
     -- Run any refresh the setup queued now, so the only one left to run is the target row's own.
     local settled = P.during(function() m.__fireTimers() end)
     local settledCount = #settled
@@ -644,4 +648,159 @@ test("layout: the Container row's help points at the Side row, not at points set
     -- red under: the pre-batch-9 help, which says the points are chosen for the player
     assertTrue(desc:find("points are set for you", 1, true) == nil, desc)
     assertTrue(desc:find(NS.L["Side"], 1, true) ~= nil, desc)
+end)
+
+-- ── growth conflicts on attach (batch 9 GC-1, E3) ─────────────────────────────────────────────
+
+--- Container 2 (rows growing left and down) in container mode with no target yet, selected, the
+--- Layout page drawn on its Anchor tab and open; popups recorded. Answers what the tab drew too.
+local function conflictPage()
+    local NS, m, P = layout()
+    NS.SetByPath("container.attach.mode", "container", 2)
+    m.__fireTimers()
+    NS.Helpers.SelectContainer(2)
+    local ws = P.show("Layout")
+    NS.Helpers.__pageCtx.layout.panel:Show()
+    m.__fireTimers()
+    return NS, m, P, ws, P.popups()
+end
+
+--- The popup text for 2 attaching to 1: 1 fills columns growing right.
+local function promptFor(NS, followers)
+    local L, C = NS.L, NS.Constants
+    local flow = L["Fill"] .. ": " .. L[C.AXIS_LABELS.vertical] .. ", "
+        .. L["Grow horizontally"] .. ": " .. L[C.GROW_H_LABELS.right]
+    local text = L["Attach '%s' to '%s'? '%s' will fill and grow like '%s' (%s). Its own Growth settings are kept and come back if you detach it."]
+        :format("Player debuffs", "Player buffs", "Player debuffs", "Player buffs", flow)
+    if followers then text = text .. L[" %d container(s) attached to it follow too."]:format(followers) end
+    return text
+end
+
+test("layout: a Container pick whose chain flows differently asks first and stores nothing (GC-1)", function()
+    local NS, m, P, ws, popups = conflictPage()
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    -- red under: no confirmWrite intercept (the write is stored at once)
+    assertEqual(#popups, 1, "one popup")
+    assertEqual(popups[1].which, "AURAMASTER_ATTACH_FLOW")
+    assertEqual(popups[1].text, promptFor(NS), "names both, and the flow it takes")
+    assertEqual(NS.Database.FindContainer(2).attach.container, 0, "nothing stored yet")
+    local data = popups[1].data
+    assertEqual(data.path .. "|" .. tostring(data.value) .. "|" .. tostring(data.id), "container.attach.container|1|2")
+    -- red under: no refresh (the dropdown would keep showing the unconfirmed pick)
+    local redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(#redrawn > 0, "the page is drawn again, back on the stored value")
+    assertEqual(P.row(redrawn, "container.attach.mode").value, "container")
+end)
+
+test("layout: accepting the attach popup attaches and keeps the child's own Growth settings (E3)", function()
+    local NS, m, _, ws, popups = conflictPage()
+    local P = pages(NS, m)
+    local chat = P.chat()
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    local dialog = m.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW
+    -- red under: no AURAMASTER_ATTACH_FLOW dialog
+    assertEqual(dialog.button1, NS.L["Attach"])
+    assertEqual(dialog.button2, NS.L["Cancel"])
+    dialog.OnAccept(popups[1], popups[1].data)
+    local cfg = NS.Database.FindContainer(2)
+    assertEqual(cfg.attach.container, 1, "attached")
+    assertEqual(cfg.layout.axis .. cfg.layout.growH, "horizontalleft", "its own flow is kept")
+    assertEqual(NS.Anchors.FlowRoot(cfg).id, 1, "and it follows 1")
+    -- red under: the /am set chat line printed for a write the player just confirmed
+    assertEqual(#chat, 0, "the popup said it; no chat line")
+end)
+
+test("layout: canceling the attach popup stores nothing, and accepting it in combat is refused", function()
+    local NS, m, P, ws, popups = conflictPage()
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    local dialog = m.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW
+    m.__fireTimers()
+    dialog.OnCancel(popups[1], popups[1].data)
+    assertEqual(NS.Database.FindContainer(2).attach.container, 0, "cancel stores nothing")
+    local redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(#redrawn > 0, "cancel redraws the page")
+    local chat = P.chat()
+    m.__lockdown = true
+    dialog.OnAccept(popups[1], popups[1].data)
+    -- red under: OnAccept without its InCombatLockdown gate
+    assertEqual(NS.Database.FindContainer(2).attach.container, 0, "refused in combat")
+    assertEqual(#chat, 1, "one refusal")
+    assertTrue(chat[1]:find("|cff808080", 1, true) ~= nil, "gray: " .. chat[1])
+    m.__lockdown = false
+end)
+
+test("layout: the attach popup counts the containers attached to the child", function()
+    local NS, _, P, ws, popups = conflictPage()
+    NS.SetByPath("container.attach.container", 2, 3)
+    NS.SetByPath("container.attach.mode", "container", 3)
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    -- red under: the followers sentence left out
+    assertEqual(popups[1].text, promptFor(NS, 1))
+end)
+
+test("layout: no popup when the flow matches, for None, or outside container mode", function()
+    local NS, m, P, ws, popups = conflictPage()
+    local dd = targetDropdown(NS, P, ws)
+    dd:__fire("OnValueChanged", 0)
+    assertEqual(#popups, 0, "None")
+    -- 4 already fills columns growing right and down, as 1 does.
+    NS.Helpers.SelectContainer(4)
+    NS.SetByPath("container.attach.mode", "container", 4)
+    m.__fireTimers()
+    local redraw = function() return P.during(function() NS.Helpers.RefreshAllPanels() end) end
+    dd = targetDropdown(NS, P, redraw())
+    dd:__fire("OnValueChanged", 1)
+    assertEqual(#popups, 0, "the same flow")
+    assertEqual(NS.Database.FindContainer(4).attach.container, 1, "stored at once")
+    -- Screen mode: the Attach to row with no usable target stored.
+    NS.Helpers.SelectContainer(3)
+    local ws3 = redraw()
+    P.row(ws3, "container.attach.mode"):__fire("OnValueChanged", "container")
+    assertEqual(#popups, 0, "a mode write with container None")
+    assertEqual(NS.Database.FindContainer(3).attach.mode, "container")
+end)
+
+test("layout: switching Attach to into container mode with a differing target stored asks first", function()
+    local NS, m, P = layout()
+    NS.SetByPath("container.attach.container", 1, 2)   -- stored while 2 sits on the screen
+    NS.Helpers.SelectContainer(2)
+    local ws = P.show("Layout")
+    local popups = P.popups()
+    P.row(ws, "container.attach.mode"):__fire("OnValueChanged", "container")
+    -- red under: the mode row without its confirmWrite (the stale target attaches unasked)
+    assertEqual(#popups, 1, "one popup")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "nothing stored yet")
+    m.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW.OnAccept(popups[1], popups[1].data)
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "container", "accepted")
+end)
+
+test("layout: /am set attaches without asking and prints one line; a differing detach prints one", function()
+    local NS, _, P = layout()
+    local popups = P.popups()
+    local chat = P.chat()
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("container.attach.container", 1, 2)
+    assertEqual(#popups, 0, "no popup off the panel")
+    assertEqual(NS.Database.FindContainer(2).attach.container, 1, "written")
+    -- red under: no chat line for a written growth change
+    assertEqual(#chat, 1, "one line")
+    assertTrue(chat[1]:find(NS.L["'%s' now grows like '%s'; its own Growth settings are kept."]
+        :format("Player debuffs", "Player buffs"), 1, true) ~= nil, chat[1])
+    NS.SetByPath("container.attach.container", 1, 4)   -- 4 flows like 1: nothing to say
+    NS.SetByPath("container.attach.mode", "container", 4)
+    assertEqual(#chat, 1, "a matching flow prints nothing")
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    -- red under: no detach line
+    assertEqual(#chat, 2, "the detach line")
+    assertTrue(chat[2]:find(NS.L["'%s' is no longer attached to '%s' and fills and grows by its own Growth settings again."]
+        :format("Player debuffs", "Player buffs"), 1, true) ~= nil, chat[2])
+end)
+
+test("layout: a chain root's Growth tab says how many containers follow its fill and growth", function()
+    local NS, _, P = layout()
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    local ws = P.tab("layout", NS.L["Growth"])
+    -- red under: growthIntro silent on a root
+    assertTrue(P.hasText(ws, NS.L["%d container(s) attached to this one follow its fill and growth."]:format(1)))
 end)

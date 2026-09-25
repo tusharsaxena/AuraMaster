@@ -346,3 +346,52 @@ test("edges: a write to the side, per-line count, mode or container re-applies t
     assertTrue(saw(3), "a detach re-applies the parent it left")
     CM.RequestApply = real
 end)
+
+-- ── growth conflicts on attach (batch 9 GC-1, E3) ─────────────────────────────────────────────
+-- Attaching keeps inheritance: the child flows like its chain root, and its own Growth settings are
+-- kept for a detach. FlowChangeOnAttach tells the panel (and /am set's chat line) what would change.
+
+test("anchors: FlowChangeOnAttach is nil when nothing would change or nothing is usable", function()
+    local NS = fresh()
+    local A, DB = NS.Anchors, NS.Database
+    -- 4 fills columns growing right and down, as 1 does.
+    -- red under: no FlowChangeOnAttach (GC-1)
+    assertEqual(A.FlowChangeOnAttach(DB.FindContainer(4), 1), nil, "the same flow")
+    local c2 = DB.FindContainer(2)
+    assertEqual(A.FlowChangeOnAttach(c2, 0), nil, "None")
+    assertEqual(A.FlowChangeOnAttach(c2, 2), nil, "itself")
+    assertEqual(A.FlowChangeOnAttach(c2, 99), nil, "a missing container")
+    NS.SetByPath("container.attach.container", 2, 4)
+    NS.SetByPath("container.attach.mode", "container", 4)
+    -- red under: no loop check (2 onto 4 closes 2 -> 4 -> 2, which falls back to the screen)
+    assertEqual(A.FlowChangeOnAttach(c2, 4), nil, "a loop")
+end)
+
+test("anchors: FlowChangeOnAttach names the keys that change and the followers that re-flow too", function()
+    local NS = fresh()
+    local A, DB = NS.Anchors, NS.Database
+    NS.SetByPath("container.attach.container", 2, 3)
+    NS.SetByPath("container.attach.mode", "container", 3)
+    -- 2 fills rows growing left and down; 1 columns growing right and down.
+    local change = A.FlowChangeOnAttach(DB.FindContainer(2), 1)
+    assertTrue(change ~= nil, "a change")
+    assertEqual(change.root.id, 1, "the root")
+    assertEqual(table.concat(change.keys, ","), "axis,growH", "the keys, in FLOW_KEYS order")
+    -- red under: followers not counted (3 follows 2, so it re-flows too)
+    assertEqual(change.followers, 1, "3 follows 2")
+    local own = DB.FindContainer(2).layout
+    assertEqual(own.axis .. own.growH .. own.growV, "horizontalleftdown", "nothing written")
+end)
+
+test("anchors: FlowChangeOnAttach compares with the target's chain root, not the target", function()
+    local NS = fresh()
+    local A, DB = NS.Anchors, NS.Database
+    NS.SetByPath("container.layout.growV", "up", 1)
+    NS.SetByPath("container.attach.container", 1, 4)
+    NS.SetByPath("container.attach.mode", "container", 4)
+    -- 4's own flow is columns, right, down; it follows 1, which grows up.
+    local change = A.FlowChangeOnAttach(DB.FindContainer(2), 4)
+    -- red under: comparing with the target's own layout (growV would match 4's stored down)
+    assertEqual(change.root.id, 1, "the root, not the target")
+    assertEqual(table.concat(change.keys, ","), "axis,growH,growV")
+end)

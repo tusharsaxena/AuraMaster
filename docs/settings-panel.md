@@ -524,10 +524,10 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
-| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
+| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural. Switching to Another container with a target already stored asks first when that target's chain flows differently (GC-1, below) |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the points of the side it sits on |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the points of the side it sits on |
 | *Another container:* Side | `container.attach.edge` | string (dropdown), own line | The side of the target this container sits on (batch 9 AP-3, E2), listed by absolute name for the growth in effect: Bottom left / Bottom / Bottom right, Right, top / middle / bottom, Left, top / middle / bottom growing down and right, mirrored for other growths. Never the side the chain grows away from; the Left (behind) entries only while this container is one aura wide. A stored side not allowed now stays listed, grayed with " (unavailable)". Its validate refuses the rest, `/am set` included, with the reason. Structural |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
@@ -565,6 +565,25 @@ gray line appears while the stored side is not allowed now (a Left side, and thi
 become more than one aura wide): "'*side*' needs this container to be one aura wide (Fill: Columns,
 Per row or column: 0). It sits *fallback* until then." Nothing is written, so undoing the change
 restores the side. A write to Side, Attach to or Container also re-applies the parent, old and new.
+
+**Growth conflicts (batch 9 GC-1, E3).** Attaching keeps inheritance: the container fills and grows
+like its chain root and its own Growth settings are kept, never written, for a detach. When a panel
+pick would attach it to a chain that flows differently from its own Growth settings
+(`Anchors.FlowChangeOnAttach`: the target's chain root, compared on Fill, Grow horizontally and Grow
+vertically), nothing is written: the rows' `confirmWrite` hands the write to the
+`AURAMASTER_ATTACH_FLOW` popup (`settings/OptionsSetup.lua`'s `confirmFirst`) and the page redraws
+on the stored value. The popup reads "Attach '*child*' to '*target*'? '*child*' will fill and grow
+like '*root*' (*the changed settings*). Its own Growth settings are kept and come back if you detach
+it.", plus " *n* container(s) attached to it follow too." when others follow it. **Attach** writes
+through the seam, whose validate checks the loop again; in combat it is refused with a gray line.
+**Cancel** writes nothing. It asks on the Container row in container mode, and on Attach to when
+switching to Another container with a target already stored; a matching flow, None and every other
+write attach at once. `/am set` and the resets never ask: an attachment they make that changes the
+flow prints "'*child*' now grows like '*root*'; its own Growth settings are kept.", and a detach
+that brings the container's own flow back prints "'*child*' is no longer attached to '*target*' and
+fills and grows by its own Growth settings again." (from the panel too; a line, not a popup, E9).
+A chain root's Growth tab opens with "*n* container(s) attached to this one follow its fill and
+growth."; changing it there asks nothing, and the chain re-flows.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow

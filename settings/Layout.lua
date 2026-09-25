@@ -72,6 +72,113 @@ end
 local function structural() if NS.RequestPanelRefresh then NS.RequestPanelRefresh() end end
 
 -- ---------------------------------------------------------------------------
+-- Growth conflicts on attach (batch 9 GC-1, E3)
+-- ---------------------------------------------------------------------------
+-- A container attached to another flows like its chain root, and its own Growth settings are kept
+-- for a detach (L-6; nothing is written). When the two differ, a pick on the panel asks first
+-- (AURAMASTER_ATTACH_FLOW, through the rows' confirmWrite and settings/OptionsSetup.lua's
+-- confirmFirst); a write made without asking (/am set, a reset) says so in one chat line, and so does
+-- a detach that brings the container's own flow back.
+
+local ATTACH_POPUP = "AURAMASTER_ATTACH_FLOW"
+local FLOW_ROW = { axis = L["Fill"], growH = L["Grow horizontally"], growV = L["Grow vertically"] }
+local FLOW_VALUES = { axis = C.AXIS_LABELS, growH = C.GROW_H_LABELS, growV = C.GROW_V_LABELS }
+
+-- True while the popup's OnAccept writes: the player has just read what changes, so no chat line.
+local confirmed = false
+
+--- The flow a change takes, in words: "Fill: Columns (...), Grow horizontally: Right".
+local function flowWords(change)
+    local from, base = change.root.layout or {}, NS.CONTAINER_TEMPLATE.layout or {}
+    local parts = {}
+    for i, k in ipairs(change.keys) do
+        local v = from[k] or base[k]
+        parts[i] = FLOW_ROW[k] .. ": " .. L[FLOW_VALUES[k][v] or tostring(v)]
+    end
+    return table.concat(parts, ", ")
+end
+
+--- The popup and its text when attaching `cfg` to container `targetId` changes how it flows, else nil.
+local function attachPrompt(cfg, targetId)
+    local change = NS.Anchors.FlowChangeOnAttach(cfg, targetId)
+    if not change then return nil end
+    local target = NS.Database.FindContainer(tonumber(targetId))
+    local name = tostring(cfg.name)
+    local text = L["Attach '%s' to '%s'? '%s' will fill and grow like '%s' (%s). Its own Growth settings are kept and come back if you detach it."]
+        :format(name, tostring(target.name), name, tostring(change.root.name), flowWords(change))
+    if change.followers > 0 then
+        text = text .. L[" %d container(s) attached to it follow too."]:format(change.followers)
+    end
+    return ATTACH_POPUP, text
+end
+
+--- The Container row's confirmWrite: a new target picked in container mode.
+local function confirmTarget(v, id)
+    local cfg = NS.Database.FindContainer(id)
+    local at = cfg and cfg.attach
+    if not (at and at.mode == "container") or tonumber(v) == tonumber(at.container) then return nil end
+    return attachPrompt(cfg, v)
+end
+
+--- The Attach to row's confirmWrite: a switch into container mode with a target already stored.
+local function confirmMode(v, id)
+    local cfg = NS.Database.FindContainer(id)
+    local at = cfg and cfg.attach
+    if v ~= "container" or not at or at.mode == "container" then return nil end
+    return attachPrompt(cfg, at.container)
+end
+
+StaticPopupDialogs[ATTACH_POPUP] = {
+    -- The whole question is built by attachPrompt and handed in as the one argument, so a container
+    -- name holding a % cannot break the format.
+    text         = "%s",
+    button1      = L["Attach"],
+    button2      = L["Cancel"],
+    timeout      = 0,
+    whileDead    = true,
+    hideOnEscape = true,
+    OnAccept     = function(_, data)
+        -- The same gate as the Delete popup: one accepted after combat started writes nothing.
+        if InCombatLockdown() then
+            return NS.Printf("|cff808080%s|r", L["cannot attach a container during combat; try again when combat ends"])
+        end
+        if not data then return end
+        -- The row's validate checks the loop again: the chain may have changed while the popup was up.
+        confirmed = true
+        NS.SetByPath(data.path, data.value, data.id)
+        confirmed = false
+        H.RefreshAllPanels()
+    end,
+    OnCancel     = function() NS.RequestPanelRefresh() end,
+    OnHide       = function() NS.RequestPanelRefresh() end,
+}
+
+--- The chat line for an attachment written without the popup, when it changes how `cfg` flows.
+local function sayAttached(cfg, targetId)
+    if confirmed then return end
+    local change = NS.Anchors.FlowChangeOnAttach(cfg, targetId)
+    if not change then return end
+    NS.Printf("%s", L["'%s' now grows like '%s'; its own Growth settings are kept."]:format(
+        tostring(cfg.name), tostring(change.root.name)))
+end
+
+--- The chat line for a detach from container `targetId` that brings `cfg`'s own flow back (E9 q7:
+--- a line, not a popup; its followers re-flow with it).
+local function sayDetached(cfg, targetId)
+    if not NS.Anchors.FlowChangeOnAttach(cfg, targetId) then return end
+    local target = NS.Database.FindContainer(tonumber(targetId))
+    NS.Printf("%s", L["'%s' is no longer attached to '%s' and fills and grows by its own Growth settings again."]:format(
+        tostring(cfg.name), tostring(target and target.name)))
+end
+
+--- After an attach write: a new or moved attachment (`now`, from `oldTarget` to `newTarget`), or a
+--- detach, each said in chat when it changes how the container flows.
+local function flowNotice(cfg, was, now, oldTarget, newTarget)
+    if now and (not was or tonumber(oldTarget) ~= tonumber(newTarget)) then return sayAttached(cfg, newTarget) end
+    if was and not now then sayDetached(cfg, oldTarget) end
+end
+
+-- ---------------------------------------------------------------------------
 -- The side a follower sits on (batch 9 AP-3, AP-4, E5)
 -- ---------------------------------------------------------------------------
 -- A NEW attachment starts on its style's default side (Anchors.DefaultEdge: a Text container's lines
@@ -108,7 +215,9 @@ local function modeChanged(v, id, old)
     local cfg = NS.Database.FindContainer(id)
     if not cfg then return end
     local target = cfg.attach and cfg.attach.container
-    attachMoved(cfg, old == "container" and usable(cfg, target), v == "container" and usable(cfg, target))
+    local was, now = old == "container" and usable(cfg, target), v == "container" and usable(cfg, target)
+    attachMoved(cfg, was, now)
+    flowNotice(cfg, was, now, target, target)
 end
 
 --- The target row's onChange: redraw the attachment line, re-apply the parent it left (its strip
@@ -123,7 +232,9 @@ local function targetChanged(v, id, old)
         NS.ContainerManager.RequestApply(oldId)
     end
     local inMode = cfg.attach and cfg.attach.mode == "container"
-    attachMoved(cfg, inMode and usable(cfg, old), inMode and usable(cfg, v))
+    local was, now = inMode and usable(cfg, old), inMode and usable(cfg, v)
+    attachMoved(cfg, was, now)
+    flowNotice(cfg, was, now, old, v)
 end
 
 --- The Side row's onChange: redraw (the attachment line and the fallback note read it), and remember
@@ -184,6 +295,8 @@ NS.RegisterSchemaRows({
         -- changes, from the panel, `/am set` or a reset alike. Its onChange only starts or ends an
         -- attachment (the new one's default side, E5).
         path = MODE, page = PAGE, group = G_ANCHOR, type = "string", onChange = modeChanged,
+        -- Asks first when a stored target would change how it flows (GC-1): panel only.
+        confirmWrite = confirmMode,
         values = NS.Choices(C.ATTACH_MODES, C.ATTACH_MODE_LABELS), label = L["Attach to"],
         desc = L["The screen (drag it anywhere), another container (it follows that container as it grows), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
     },
@@ -210,6 +323,8 @@ NS.RegisterSchemaRows({
         desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, Side picks which side of it this one sits on, and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = targetChanged,
+        -- Asks first when the chain it joins flows differently from its own Growth (GC-1): panel only.
+        confirmWrite = confirmTarget,
         -- `fromId` is the container the write targets, resolved by the seam: the id a caller names,
         -- else the selected container. A loop is checked from there, never from the selection.
         validate = function(v, fromId)
@@ -421,11 +536,17 @@ local function attachedLine(_, line)
 end
 
 --- Above the Growth tab of a container that follows another: whose flow it follows. Named by the
---- chain root, because that is where the values come from.
+--- chain root, because that is where the values come from. Above a chain root's: how many follow it
+--- (GC-1), since a Growth change there moves them too, with no popup.
 local function growthIntro(ctx, cfg)
     if ctx.activeTab ~= G_GROW then return end
     local root = NS.Anchors.FlowRoot(cfg)
-    if root then H.TextRow(ctx, L["Fill and growth follow '%s'"]:format(tostring(root.name))) end
+    if root then return H.TextRow(ctx, L["Fill and growth follow '%s'"]:format(tostring(root.name))) end
+    local followers = cfg and NS.Anchors.Followers(cfg.id) or {}
+    local count = #followers
+    if count > 0 then
+        H.TextRow(ctx, L["%d container(s) attached to this one follow its fill and growth."]:format(count))
+    end
 end
 
 -- ---------------------------------------------------------------------------

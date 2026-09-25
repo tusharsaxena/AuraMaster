@@ -355,6 +355,47 @@ function Anchors.Followers(id)
     return out
 end
 
+--- The container `childCfg` could attach to by id `targetId`, or nil: none, itself, missing, a loop.
+local function attachableTarget(childCfg, targetId)
+    local id = tonumber(targetId)
+    if not (childCfg and id) or id == 0 or id == childCfg.id then return nil end
+    local target = NS.Database.FindContainer(id)
+    if not target or Anchors.WouldCycle(childCfg.id, id) then return nil end
+    return target
+end
+
+--- The FLOW_KEYS on which layouts `own` and `from` differ, in order, each read over the template.
+local function flowKeysDiffering(own, from)
+    local base = D.layout or {}
+    local keys = {}
+    for _, k in ipairs(FLOW_KEYS) do
+        if (own[k] or base[k]) ~= (from[k] or base[k]) then
+            local n = #keys
+            keys[n + 1] = k
+        end
+    end
+    return keys
+end
+
+--- What attaching container `childCfg` to container `targetId` would change about how it flows
+--- (batch 9 GC-1, E3): nil when nothing would (no usable target: none, itself, missing, a loop; or
+--- the same axis and growth), else { root = the chain root it would follow, keys = the FLOW_KEYS that
+--- differ, in order, followers = how many containers re-flow with it }. The root is the target's
+--- own flow root, or the target itself when it follows none. Compared with the child's own STORED
+--- flow, which an attachment never writes, so a detach brings it back. Reads only.
+--- @return table|nil
+function Anchors.FlowChangeOnAttach(childCfg, targetId)
+    local target = attachableTarget(childCfg, targetId)
+    if not target then return nil end
+    local root = Anchors.FlowRoot(target) or target
+    local keys = flowKeysDiffering(childCfg.layout or {}, root.layout or {})
+    local changed = #keys
+    if changed == 0 then return nil end
+    local followers = Anchors.Followers(childCfg.id)
+    local count = #followers
+    return { root = root, keys = keys, followers = count }
+end
+
 --- Whether a write to `path` changes what a container's followers inherit or where they sit.
 function Anchors.MovesFollowers(path)
     return FLOW_PATHS[path] == true

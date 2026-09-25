@@ -211,6 +211,14 @@ suite covers what only the client can show.
     than on top of A, and B's handle sits beside B's first placeholder, level with B's top edge, over
     none of A's placeholders (SS-3); `/am test off` → B moves back to one element past A (A's
     outline) while unlocked (check 191), and follows A's real auras again once locked.
+    **Growth conflict (GC-1, E3).** Set B to grow Up and A to grow Down, then B → Another container
+    → pick A → a popup names B, A and the changed growth; **Cancel** → the dropdown shows None again
+    and nothing moves. Pick A again → **Attach** → B attaches and grows down; its Growth tab shows
+    the dimmed inherited values, and A's Growth tab says one container follows it. With another
+    container attached to B, the popup adds that one follows too. Attach to → Screen → B grows up
+    again and one chat line says so. `/am set container.attach.container <A's id>` on a container
+    of differing growth in container mode → no popup, one chat line. Open the popup, enter combat,
+    then press **Attach** → refused with a gray line and nothing attaches; no Lua error or taint.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout

@@ -644,7 +644,7 @@ badge and any count quoted in the docs must agree with it.
 - seam: an attached child's strip sits beside its first element, edge-aligned at the seam
 - seam: a screen container's strip keeps its place above or below its auras
 
-### test_anchors_edges.lua (16)
+### test_anchors_edges.lua (19)
 
 - edges: EDGES lists the nine tokens, after then ahead then behind, and no before or center side
 - edges: EdgePoints gives the design table's pair for every token and growth
@@ -662,6 +662,9 @@ badge and any count quoted in the docs must agree with it.
 - edges: a new attachment of a bars container stays after-start
 - edges: the Side row refuses a side the child cannot take, with the reason, through /am set
 - edges: a write to the side, per-line count, mode or container re-applies the followers and the parents (AP-4)
+- anchors: FlowChangeOnAttach is nil when nothing would change or nothing is usable
+- anchors: FlowChangeOnAttach names the keys that change and the followers that re-flow too
+- anchors: FlowChangeOnAttach compares with the target's chain root, not the target
 
 ### test_anchors_hang.lua (11)
 
@@ -1472,7 +1475,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (36)
+### test_pages_layout.lua (44)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1510,6 +1513,14 @@ badge and any count quoted in the docs must agree with it.
 - layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
 - layout: choosing a facing Point redraws the tab with the hint on the next frame
 - layout: the Container row's help points at the Side row, not at points set for you (batch 9 AP-3)
+- layout: a Container pick whose chain flows differently asks first and stores nothing (GC-1)
+- layout: accepting the attach popup attaches and keeps the child's own Growth settings (E3)
+- layout: canceling the attach popup stores nothing, and accepting it in combat is refused
+- layout: the attach popup counts the containers attached to the child
+- layout: no popup when the flow matches, for None, or outside container mode
+- layout: switching Attach to into container mode with a differing target stored asks first
+- layout: /am set attaches without asking and prints one line; a differing detach prints one
+- layout: a chain root's Growth tab says how many containers follow its fill and growth
 
 ### test_pages_bars.lua (14)
 
@@ -1773,7 +1784,7 @@ badge and any count quoted in the docs must agree with it.
 | test_lifecycle.lua | 15 |
 | test_anchors.lua | 76 |
 | test_anchors_seam.lua | 10 |
-| test_anchors_edges.lua | 16 |
+| test_anchors_edges.lua | 19 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
@@ -1801,7 +1812,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 36 |
+| test_pages_layout.lua | 44 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1821,4 +1832,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1543** |
+| **Total** | **1554** |

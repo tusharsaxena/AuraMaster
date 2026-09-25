@@ -112,6 +112,25 @@ local function panelRead(path)
     return NS.GetSetting(path)
 end
 
+--- A write from the panel that must be confirmed first (batch 9 GC-1). A row may carry
+--- `confirmWrite(value, id)`, handed the value and the selected container's id, answering nil to write
+--- at once, or the StaticPopupDialogs key of the popup to ask with and its text. Then nothing is
+--- written here: the popup carries { path, value, id } as its data and its OnAccept writes through the
+--- seam, and the panel is redrawn on the next frame, so the widget shows the stored value again until
+--- the player answers. Panel only: `/am set` and the resets write through NS.SetByPath unasked.
+--- @return boolean  true when the write was handed to a popup
+local function confirmFirst(path, value)
+    local row = NS.FindSchemaRow(path)
+    if not (row and row.confirmWrite) then return false end
+    local _, id = NS.ActiveContainer()
+    local which, text = row.confirmWrite(value, id)
+    if not which then return false end
+    local popup = StaticPopup_Show(which, text)
+    if popup then popup.data = { path = path, value = value, id = id } end
+    NS.RequestPanelRefresh()
+    return true
+end
+
 local descriptor = {
     parentTitle   = PARENT_TITLE,
     mainPanelName = "AuraMasterMainPanel",
@@ -123,8 +142,9 @@ local descriptor = {
     -- A refusal that carries its row's own reason (the Text template's parser) is printed, the same
     -- two lines `/am set` prints: the panel's EditBox re-reads the stored value on refresh, so the
     -- reason is the only trace of why the typed one did not stick. A bare refusal stays silent, as it
-    -- always has.
+    -- always has. A row's confirmWrite may hand the write to a popup instead (confirmFirst).
     set          = function(path, value)
+        if confirmFirst(path, value) then return end
         local ok, err, why = NS.SetByPath(path, value)
         if not ok and why then
             print(err)
