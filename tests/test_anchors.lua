@@ -912,27 +912,64 @@ end)
 
 -- ── inherited flow (L-6) ──────────────────────────────────────────────────────────────────────
 
--- Every parent axis and growth, and the points that continue it: a column parent stacks its child
--- below (or above), a row parent beside it.
+-- Every parent axis and growth, and the points that attach its child: the child stacks below (or
+-- above, growing up) its parent whatever the parent fills (IA-1).
 local DERIVED = {
     { axis = "vertical",   growH = "right", growV = "down", p = "TOPLEFT",     rp = "BOTTOMLEFT" },
     { axis = "vertical",   growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "BOTTOMRIGHT" },
     { axis = "vertical",   growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "TOPLEFT" },
     { axis = "vertical",   growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "TOPRIGHT" },
-    { axis = "horizontal", growH = "right", growV = "down", p = "TOPLEFT",     rp = "TOPRIGHT" },
-    { axis = "horizontal", growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "BOTTOMRIGHT" },
-    { axis = "horizontal", growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "TOPLEFT" },
-    { axis = "horizontal", growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "BOTTOMLEFT" },
+    { axis = "horizontal", growH = "right", growV = "down", p = "TOPLEFT",     rp = "BOTTOMLEFT" },
+    { axis = "horizontal", growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "TOPLEFT" },
+    { axis = "horizontal", growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "BOTTOMRIGHT" },
+    { axis = "horizontal", growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "TOPRIGHT" },
 }
 for _, c in ipairs(DERIVED) do
     test(("anchors: derived points continue a %s/%s/%s parent"):format(c.axis, c.growH, c.growV), function()
         local NS = fresh()
         local p, rp = NS.Anchors.DerivedPoints({ axis = c.axis, growH = c.growH, growV = c.growV })
-        -- red under: a table that ignores the parent's axis (a row parent stacking its child below)
+        -- red under: the old axis branch putting a row parent's child beside it
         assertEqual(p, c.p)
         assertEqual(rp, c.rp)
     end)
 end
+
+test("anchors: derived points do not depend on the parent's fill axis", function()
+    local NS = fresh()
+    for _, h in ipairs({ "right", "left" }) do
+        for _, v in ipairs({ "down", "up" }) do
+            local cp, crp = NS.Anchors.DerivedPoints({ axis = "vertical", growH = h, growV = v })
+            local rowP, rowRp = NS.Anchors.DerivedPoints({ axis = "horizontal", growH = h, growV = v })
+            local noP, noRp = NS.Anchors.DerivedPoints({ growH = h, growV = v })
+            -- red under: the old axis branch (a row parent's child beside it, not below)
+            assertEqual(rowP, cp, h .. "/" .. v .. " rows: the column point")
+            assertEqual(rowRp, crp, h .. "/" .. v .. " rows: the column relative point")
+            assertEqual(noP, cp, h .. "/" .. v .. " no axis")
+            assertEqual(noRp, crp, h .. "/" .. v .. " no axis")
+        end
+    end
+end)
+
+test("anchors: a container attached to an icon row stacks below it, on the side its rows start from", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    local L3 = NS.Database.FindContainer(3).layout
+    L3.axis, L3.growH, L3.growV = "horizontal", "right", "down"
+    local c2 = NS.Database.FindContainer(2)
+    c2.attach = { mode = "container", container = 3, x = 0, y = -4 }
+    local rec = recordAnchor(CM.instances[2])
+    assertEqual(NS.Anchors.Place(CM.instances[2]), "container")
+    local p = rec.points[1]
+    -- red under: rows placing the child beside the parent (TOPLEFT to TOPRIGHT)
+    assertEqual(p[1], "TOPLEFT"); assertTrue(p[2] == CM.instances[3].engine, "3's engine")
+    assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], 0); assertEqual(p[5], -4)
+    L3.growH = "left"
+    rec = recordAnchor(CM.instances[2])
+    NS.Anchors.Place(CM.instances[2])
+    p = rec.points[1]
+    -- red under: a left-growing row putting its child to its left
+    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
+end)
 
 --- Container 1 set to fill columns growing left and up: a flow no starter container has, so an
 --- inherited value can never be mistaken for a container's own.

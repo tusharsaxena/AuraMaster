@@ -99,8 +99,8 @@ end
 -- Inherited flow (L-6)
 -- ---------------------------------------------------------------------------
 -- A container attached to ANOTHER container continues that container's flow: its fill axis and both
--- growth directions are its chain root's, and its anchor points are derived so it picks up where the
--- parent's auras end. Its offsets, per-line count and spacing stay its own. Nothing is written: the
+-- growth directions are its chain root's, and its anchor points are derived so it stacks below the
+-- parent (above, growing up). Its offsets, per-line count and spacing stay its own. Nothing is written: the
 -- stored values stay as they are, so a detach restores them at the next apply. A frame-attached or
 -- screen container inherits nothing — a named frame has no flow to continue.
 
@@ -152,22 +152,15 @@ function Anchors.EffectiveLayout(cfg)
     return out
 end
 
---- The points that continue a parent laid out by `L`: its child's point and the parent's relative
---- point. A column parent stacks its child below it (above, growing up), on the side its columns
---- start from; a row parent puts it beside it (to the left, growing left), on the side its rows
---- start from.
+--- The points that attach a child to a parent laid out by `L`: the child's point and the parent's
+--- relative point. The child stacks below the parent (above, when it grows up), on the side the
+--- parent's lines start from, whether the parent fills rows or columns (IA-1). A wrapped row parent's
+--- target spans every line, so the child sits below the last. Chosen points: issue #22.
 --- @return string point, string relativePoint
 function Anchors.DerivedPoints(L)
-    local right = (L.growH ~= "left")
-    local down = (L.growV ~= "up")
-    if L.axis == "vertical" then
-        local h = right and "LEFT" or "RIGHT"
-        if down then return "TOP" .. h, "BOTTOM" .. h end
-        return "BOTTOM" .. h, "TOP" .. h
-    end
-    local v = down and "TOP" or "BOTTOM"
-    if right then return v .. "LEFT", v .. "RIGHT" end
-    return v .. "RIGHT", v .. "LEFT"
+    local h = (L.growH ~= "left") and "LEFT" or "RIGHT"
+    if L.growV ~= "up" then return "TOP" .. h, "BOTTOM" .. h end
+    return "BOTTOM" .. h, "TOP" .. h
 end
 
 --- Whether container `c`'s chain of container attachments passes through container `id`.

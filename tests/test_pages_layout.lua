@@ -416,8 +416,8 @@ test("layout: Another container names the derived points and the container it is
     dd:__fire("OnValueChanged", 3)
     -- red under: the target row without its structural onChange (the line would name the old target)
     local redrawn = P.during(function() m.__fireTimers() end)
-    assertTrue(P.hasText(redrawn, want:format(PL.TOPLEFT, PL.TOPRIGHT, "Target debuffs (mine)")),
-        "3 fills rows growing right and down: 2 continues beside it")
+    assertTrue(P.hasText(redrawn, want:format(PL.TOPLEFT, PL.BOTTOMLEFT, "Target debuffs (mine)")),
+        "3 fills rows growing right and down: 2 stacks below it")
     NS.SetByPath("container.attach.mode", "frame", 2)
     ws = P.during(function() NS.Helpers.RefreshAllPanels() end)
     assertTrue(#ws > 0, "the open page drew again")

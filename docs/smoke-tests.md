@@ -206,7 +206,7 @@ suite covers what only the client can show.
 
 41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
     as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked and in
-    test mode, with B attached to A → B's placeholders start just past A's last placeholder rather
+    test mode, with B attached to A → B's placeholders start just past A's last placeholder, below A's block, rather
     than on top of A, and B's handle draws above A's placeholders; `/am test off` → B follows A's real
     auras again.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
@@ -403,7 +403,11 @@ listed here too, so the batch can be signed off in one pass.
     none of B's own settings changed, and without a reload B's own auras stack up from its first
     element too. On B's Growth tab, Fill, Grow horizontally and Grow vertically
     are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
-    B's **Attach to** back to *Screen* → B's own flow returns.
+    B's **Attach to** back to *Screen* → B's own flow returns. Repeat with an icon A that fills rows
+    growing right and down (IA-1) → B starts directly under A's first icon, left edges aligned, and
+    the line reads "Attached by its Top left to the Bottom left of 'A'"; give A a **Per row** that
+    wraps it → B sits below A's last line; set A's **Grow horizontally** to left → B is right-aligned
+    under A (Top right to Bottom right).
 68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.
 69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections (now drawn by mode, not dimmed); check
     26 for the Bars page on an icon container, and the Icons page on a bar container the same way.

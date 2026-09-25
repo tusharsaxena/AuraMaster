@@ -561,8 +561,8 @@ vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40)
 **Inherited flow (L-6).** A container attached to another container continues that container's
 flow. Its fill axis and both growth directions are its chain root's, resolved up the chain by
 `Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points come from
-`Anchors.DerivedPoints`: a column parent stacks the child below it (above, when growing up), and a
-row parent puts it beside it. `container.attach.point` / `.relativePoint` are read only in `frame`
+`Anchors.DerivedPoints`: the child stacks below its parent (above, when growing up), on the side the
+parent's lines start from, whether the parent fills rows or columns (IA-1). `container.attach.point` / `.relativePoint` are read only in `frame`
 mode; the offsets apply in both attached modes. `Container.FlowSettings`, `Preview.Offset` and the
 handle's placement and clamp all read the effective layout. A write that moves a container's flow or
 attachment re-applies every container following it (`Anchors.Followers`). On this tab, in that mode,
