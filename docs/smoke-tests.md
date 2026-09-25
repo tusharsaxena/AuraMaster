@@ -1710,4 +1710,4 @@ Five changes the owner asked for after section AC (2026-09-26). None has been ru
      whole at once. A one-icon Icons container with a long name → its strip keeps the width of its
      name and marks, running past the icon, as before. `/am lock` → no strips. No Lua error.
 
-**Owner run, 2026-09-26.** Checks 246, 247 and 248 passed. 249 and 250 are still to run.
+**Owner run, 2026-09-26.** Every AD check passed (246 to 250).
