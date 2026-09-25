@@ -729,13 +729,14 @@ local function fitHeight(s, fs)
     return h
 end
 
---- The dispel type of `auras` whose word is the longest, or nil when none has one.
-local function widestDispel(auras)
+--- The dispel type whose word, as drawn (localized), is the longest of every type $dispeltype$ names:
+--- a live line can carry any of them (a buff container on a target sees an enemy's Enrage, which no
+--- buff placeholder has), so the worst case does not stop at the ones the placeholders show.
+local function widestDispel()
     local best, most = nil, 0
-    for _, a in ipairs(auras) do
-        local label = a.dispel and C.TEXT_DISPEL_LABELS[a.dispel]
-        local n = label and label:len() or 0
-        if n > most then best, most = a.dispel, n end
+    for _, t in ipairs(C.TEXT_DISPEL_TYPES) do
+        local n = L[C.TEXT_DISPEL_LABELS[t]]:len()
+        if n > most then best, most = t, n end
     end
     return best
 end
@@ -764,7 +765,7 @@ local function fitAuras(auraType)
     for _, a in ipairs(out) do
         if a.name:len() > longest:len() then longest = a.name end
     end
-    local dispel = widestDispel(out)
+    local dispel = widestDispel()
     for _, secs in ipairs(Style.TIME_SAMPLES) do
         count = #out
         out[count + 1] = { name = longest, stacks = 99, remaining = secs, duration = secs, dispel = dispel }

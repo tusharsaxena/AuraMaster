@@ -151,6 +151,7 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `compile` | `FilterCompiler.Compile` over a representative container |
 | `applyPass` | One coalesced apply over the registry (`ContainerManager.FlushPending`) |
 | `restyle` | Re-dressing every button of a live engine (`Container:Restyle`) |
+| `restyleText` | A same-shape re-dress of the Text starter with ten live buttons: it must build no frame, and its Size to fit (batch 8, AS-2) must answer from the memo, measuring no string. The runner's hidden measuring string answers a readable width, as the client's does, so the loops measure the steady path rather than a failed measure that is never remembered |
 | `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`) |
 | `unitSwap` | A target change refreshing the containers on that unit |
 | `probeOverheadOff` | The hottest bracketed path with capture off |

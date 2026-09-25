@@ -113,6 +113,14 @@ test("autosize: a placeholder's name is the client's own when it has one", funct
     assertEqual(NS.Style.ElementSize(textCfg({ template = "$spellname$", x = 0 })), 33 * 6 + 2 + 2)
 end)
 
+test("autosize: the worst case carries the longest dispel type word, not only the ones the placeholders show", function()
+    local NS, _, _, textCfg = env()
+    -- A buff container on a target sees an enemy's Enrage, which no buff placeholder carries, so the
+    -- worst case takes the longest word of every type: "Power Word: Fortitude (Disease)", 31 characters.
+    -- red under: the worst case's word picked from the placeholder set (Magic, two short)
+    assertEqual(NS.Style.ElementSize(textCfg({ template = "$spellname$[ ($dispeltype$)]", x = 0 })), 31 * 6 + 2 + 2)
+end)
+
 test("autosize: the worst-case duration is measured, not only the placeholders' short ones", function()
     local NS, _, fs, textCfg = env()
     NS.Style.ElementSize(textCfg({}))

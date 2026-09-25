@@ -46,6 +46,15 @@ local NS = {}
 rawset(_G, "AuraMasterDB", nil)
 Loader.loadAll(Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml"), NS, mocks)
 Loader.loadAll(Loader.tocFiles("AuraMaster.toc"), NS, mocks)
+-- The hidden measuring string answers a readable width, as the client's does once its font is in.
+-- A stub answers none, and every measure would then fail and never be remembered, so each pass would
+-- re-measure: a text starter's Size to fit (batch 8, AS-2) most of all, with a line per placeholder
+-- and time sample. The loops below measure the path a player runs, not that login-only one.
+local measured = 0
+local measureFS = { SetFont = function() return true end,
+    SetText = function(self, t) measured = measured + 1; self.text = t end,
+    GetStringWidth = function(self) return tostring(self.text):len() * 6 + 2 end }
+NS.Style.__measurer = function() return measureFS end
 NS.addon:OnInitialize()
 NS.addon:OnEnable()
 mocks.__fireTimers()
@@ -153,8 +162,12 @@ if textCfg then
     local frames = 0
     local create = mocks.CreateFrame
     mocks.CreateFrame = function(...) frames = frames + 1; return create(...) end
+    local measuredBefore = measured
     measure("restyleText", 200, function() instText:Restyle(textCfg) end)
     mocks.CreateFrame = create
+    -- red under: Size to fit without its memo (every dressed button re-measures every sample line)
+    assert_(measured == measuredBefore,
+        ("restyleText: a same-settings re-dress measured %d string(s)"):format(measured - measuredBefore))
     -- red under: useChain rebuilding the chain on every dress
     assert_(frames == 0, ("restyleText: a same-shape re-dress built %d frame(s)"):format(frames))
 end
