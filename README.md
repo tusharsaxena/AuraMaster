@@ -157,12 +157,10 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 1. Type `/am debug on` and reproduce the bug.
 2. Type `/am diagnostics`.
-3. Open the debug window with `/am debug`, press **Copy**, copy the ENTIRE output, and paste it into a
-   [GitHub issue](https://github.com/tusharsaxena/AuraMaster/issues).
+3. If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output,
+   and paste it into a [GitHub issue](https://github.com/tusharsaxena/AuraMaster/issues).
 
-The report is added after the debug trace in the same window, so one copy carries both. Step 2
-already opens the window; if it is showing when you reach step 3, skip `/am debug`, which would
-close it, and press **Copy**.
+The report is added after the debug trace in the same window, so one copy carries both.
 
 ## Issues and feature requests
 
