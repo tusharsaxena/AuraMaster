@@ -466,6 +466,14 @@ end
 -- Published for modules/Diagnostics.lua, which strips its color escapes before the Copy text.
 Sl.FormatValue = formatValue
 
+--- `/am set`'s parser: the library's, after a row's own `cliParse(text)` has rewritten what was
+--- typed. The anchor-point rows fold case there (batch 11 G7: `top`, `Top` and `TOP` are one
+--- point), so the library's exact match against the row's values still names what is allowed.
+local function parseValue(row, text)
+    if type(row) == "table" and type(row.cliParse) == "function" then text = row.cliParse(text) end
+    return SlashLib.ParseValue(row, text)
+end
+
 cli = SlashLib:New({
     slash        = "/am",
     slashAliases = { "/auramaster" },
@@ -510,6 +518,7 @@ cli = SlashLib:New({
     bulkBegin    = function(...) NS.Bulk.Begin(...) end,
     bulkEnd      = function(...) NS.Bulk.End(...) end,
 
+    parse       = parseValue,
     colorDecode = colorDecode,
     colorEncode = function(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end,
     format      = formatValue,

@@ -1275,7 +1275,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (34)
+### test_diagnostics.lua (35)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1304,6 +1304,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: a plan group that raises keeps later groups and the warnings
 - diag: [Cfg] lists only the settings in use; the rest go on an inert line
 - diag: [Cfg] prints no attach.edge: v11 made it two points, and no row stores it (batch 11 G4)
+- diag: [Cont] prints both points in effect, whether each is automatic, and the classification (batch 11 G7)
 - diag: a failing section is reported and the next container still reports
 - diag: the report is capped below the console buffer and says it was truncated
 - diag: predictions stop at the id cap and the report says it was truncated
@@ -1537,7 +1538,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (41)
+### test_pages_layout.lua (45)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1566,6 +1567,10 @@ badge and any count quoted in the docs must agree with it.
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
 - layout: the attachment line names the points in effect, picked or Automatic (batch 11 G2)
+- layout: Another container draws the two anchor-point dropdowns, each Automatic (<in effect>) then the nine points (G1)
+- layout: an anchor-point pick stores the point, any pair is allowed, and Automatic stores nil (G1, G2)
+- layout: /am set takes the nine point names in any case or auto; attach.edge is no longer a path (G7)
+- layout: a write to either anchor point re-places the container on its parent (G1)
 - layout: every Point and Relative point row places the first aura, since the container's full size is secret
 - layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
 - layout: the hint names the growth to pick instead, one line per facing axis
@@ -1866,7 +1871,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 34 |
+| test_diagnostics.lua | 35 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
@@ -1874,7 +1879,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 41 |
+| test_pages_layout.lua | 45 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1894,4 +1899,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1604** |
+| **Total** | **1609** |

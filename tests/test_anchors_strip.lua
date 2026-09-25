@@ -155,7 +155,7 @@ test("strip: the tooltip of a container joined to another names the parent's poi
     local lines = {}
     rawset(mocks.GameTooltip, "AddLine", function(_, s) table.insert(lines, s) end)
     NS.ContainerManager.instances[2].handle:__fire("OnEnter")
-    local want = NS.L["Joined to the %s of '%s'. Change the side on Layout > Anchor."]
+    local want = NS.L["Joined to the %s of '%s'. Change the anchor points on Layout > Anchor."]
         :format(NS.L["Bottom"], NS.Database.FindContainer(1).name)
     -- red under: the generic "Attached" line
     assertEqual(lines[2], want)

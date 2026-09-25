@@ -669,7 +669,7 @@ function Anchors.JoinText(container, cfg)
     local parent = NS.Database.FindContainer(tonumber(cfg.attach.container))
     if not parent then return nil end
     local _, rel = Anchors.AttachPoints(cfg)
-    return NS.L["Joined to the %s of '%s'. Change the side on Layout > Anchor."]:format(NS.L[C.POINT_LABELS[rel]], tostring(parent.name or ""))
+    return NS.L["Joined to the %s of '%s'. Change the anchor points on Layout > Anchor."]:format(NS.L[C.POINT_LABELS[rel]], tostring(parent.name or ""))
 end
 
 --- The tooltip descriptor the strip and its help mark share: the container's name, how to use the

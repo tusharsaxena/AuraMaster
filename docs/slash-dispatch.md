@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:559`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:568`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -44,7 +44,7 @@ eight-or-more trigger (documentation-§3).
 | 4 | `disable` | host | `NS.SetByPath("enabled", false)`; the visibility pass disables every engine through its own `SetEnabled`, combat included |
 | 5 | `list` | library | `cli:CliList()` over `NS.Schema`, grouped by page |
 | 6 | `get path` | library | `cli:CliGet` → `NS.GetSetting(path)`; also answers sub-tables such as `container.filter.whitelist` |
-| 7 | `set path value` | library | `cli:CliSet` → type-aware parse (a string row takes the whole rest of the line, trimmed) → `NS.SetByPath(path, value)`; a refusal (`false, err, why`) is returned whole and the library prints it as `Invalid value for <path>` with the reason indented under it, no echo (LibKa0s-Slash minor 15) |
+| 7 | `set path value` | library | `cli:CliSet` → type-aware parse (a string row takes the whole rest of the line, trimmed; the descriptor's `parse` hook, `parseValue`, first hands the text to a row's own `cliParse`, which the two anchor-point rows use to take the nine point names in any case or `auto`, batch 11 G7) → `NS.SetByPath(path, value)`; a refusal (`false, err, why`) is returned whole and the library prints it as `Invalid value for <path>` with the reason indented under it, no echo (LibKa0s-Slash minor 15) |
 | 8 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page. A `noReset` row (`container.name`) answers false, and the library prints `<path> has no default to restore` instead of an echo. Only that row does: a seam refusal (no container yet) prints the seam's reason from the descriptor, then the library's echo |
 | 9 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); not refused in combat, where it takes the parked teardown like Profiles → Reset Profile |
 | 10 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
@@ -129,7 +129,7 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:192`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:520`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:529`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide

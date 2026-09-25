@@ -509,6 +509,24 @@ test("diag: [Cfg] prints no attach.edge: v11 made it two points, and no row stor
     assertTrue(dump(lines):find("attach.edge", 1, true) == nil, dump(lines))
 end)
 
+test("diag: [Cont] prints both points in effect, whether each is automatic, and the classification (batch 11 G7)", function()
+    local NS = fresh()
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("container.attach.container", 1, 2)
+    local c2 = NS.Database.FindContainer(2)
+    local point, rel = NS.Anchors.AttachPoints(c2)
+    local token = NS.Anchors.AttachEdge(c2)
+    local line = has(build(NS), "[Cont] #2 ") or ""
+    -- red under: attachOf naming the target alone
+    local want = ("attach=container#1 point=%s(auto) relPoint=%s(auto) join=%s"):format(point, rel, token)
+    assertTrue(line:find(want, 1, true) ~= nil, want .. " in " .. line)
+    NS.SetByPath("container.attach.childPoint", "CENTER", 2)
+    NS.SetByPath("container.attach.relPoint", "TOP", 2)
+    line = has(build(NS), "[Cont] #2 ") or ""
+    want = "attach=container#1 point=CENTER(picked) relPoint=TOP(picked) join=free"
+    assertTrue(line:find(want, 1, true) ~= nil, want .. " in " .. line)
+end)
+
 -- ── robustness and the caps (DG-3, DG-4) ──────────────────────────────────────────────────────
 
 test("diag: a failing section is reported and the next container still reports", function()

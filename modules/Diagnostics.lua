@@ -371,9 +371,19 @@ end
 -- Containers: identity and flags
 -- ---------------------------------------------------------------------------
 
+--- A follower's join (batch 11 G7): the two points in effect, each "(auto)" or "(picked)", and the
+--- pair's classification, one of the nine sides (modules/Anchors.lua's AttachEdge) or "free".
+local function joinOf(c)
+    local A = NS.Anchors
+    local point, rel, pointAuto, relAuto = A.AttachPoints(c)
+    local token = A.AttachEdge(c)
+    return ("point=%s(%s) relPoint=%s(%s) join=%s"):format(str(point), pointAuto and "auto" or "picked",
+        str(rel), relAuto and "auto" or "picked", str(token or "free"))
+end
+
 local function attachOf(c)
     local a = type(c.attach) == "table" and c.attach or {}
-    if a.mode == "container" then return "container#" .. str(a.container) end
+    if a.mode == "container" then return "container#" .. str(a.container) .. " " .. joinOf(c) end
     if a.mode == "frame" then return "frame:" .. str(a.frame) end
     return str(a.mode or "screen")
 end

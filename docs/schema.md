@@ -83,7 +83,7 @@ path, never to a number restated in `modules/`.
 | `attach.container` | `0` | target container id (`0` = none) |
 | `attach.frame` | `""` | target global frame name |
 | `attach.point` / `.relativePoint` | `"TOPLEFT"` / `"BOTTOMLEFT"` | corners for the `frame` mode |
-| `attach.childPoint` / `.relPoint` | absent / absent | the points a container attached to another joins it by, in the `container` mode (batch 11 G2): its own point and the parent's, absolute WoW points (`TOPLEFT` … `BOTTOMRIGHT`), each absent for **Automatic** and never declared in the template, so a backfill never stamps a pick. Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3), so one picked point leaves the other automatic. A pair that is one of batch 9's nine sides under the parent's growth keeps that side's seam and spread; any other is free, placed at X/Y alone (`Anchors.AttachEdge`, G5). A stored value that is not one of the nine points is read as Automatic on load (`normalizeAttach`). Written by schema v11 from the old `attach.edge` |
+| `attach.childPoint` / `.relPoint` | absent / absent | the points a container attached to another joins it by, in the `container` mode (batch 11 G2): its own point and the parent's, absolute WoW points (`TOPLEFT` … `BOTTOMRIGHT`), each absent for **Automatic** and never declared in the template, so a backfill never stamps a pick. Their rows (Parent container anchor point, This container anchor point) are `nilAs = "auto"`: the panel and `/am get` read an absent point as `auto`, the row's default is `auto`, and `auto` is written as absent (`NS.DefaultFor`, `NS.GetSetting`); `/am set` takes the nine names in any case or `auto` (the row's `cliParse`). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3), so one picked point leaves the other automatic. A pair that is one of batch 9's nine sides under the parent's growth keeps that side's seam and spread; any other is free, placed at X/Y alone (`Anchors.AttachEdge`, G5). A stored value that is not one of the nine points is read as Automatic on load (`normalizeAttach`). Written by schema v11 from the old `attach.edge` |
 | `attach.x` / `.y` | `0` / `0` | offsets for the `frame` mode; in the `container` mode a nudge added on top of the seam gap, which is the child's own `layout.spacing` (its `lineSpacing` when it fills rows) along the chain, and its gap across (`spacing` when it fills rows, `lineSpacing` when it fills columns) on a side (`Anchors.SeamOffset`, batch 8 SS-1/SS-2, batch 9 AP-2). The template's `0` / `-4` before schema v8 |
 | `attach.edge` | removed by v11 | batch 9's side, `"<side>-<align>"` relative to the chain's flow (E2). Schema v11 dropped `after-start` and converted every other side to `attach.childPoint` / `.relPoint`; nothing reads it after the ladder |
 
@@ -224,9 +224,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **256** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **258** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 46, Layout 36 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row retired by batch 11),
+out of General's own tab), Filters 46, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
@@ -234,7 +234,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:824`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:846`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.

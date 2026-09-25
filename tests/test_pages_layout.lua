@@ -3,8 +3,8 @@
 -- page's Defaults. How an attachment is resolved is tests/test_anchors.lua's.
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
@@ -41,7 +41,8 @@ end
 local SUBSECTIONS = {
     { key = "Screen", paths = { "container.position.point", "container.position.relativePoint",
                                 "container.position.x", "container.position.y" } },
-    { key = "Another container", paths = { "container.attach.container" } },
+    { key = "Another container", paths = { "container.attach.container", "container.attach.relPoint",
+                                           "container.attach.childPoint" } },
     { key = "Named frame", paths = { "container.attach.frame", "container.attach.point",
                                      "container.attach.relativePoint" } },
     { key = "Offset", paths = { "container.attach.x", "container.attach.y" } },
@@ -511,6 +512,104 @@ test("layout: the attachment line names the points in effect, picked or Automati
     local PL = NS.Constants.POINT_LABELS
     -- red under: attachedText reading the side rather than the points
     assertTrue(P.hasText(ws, NS.L["Its %s joins the %s of '%s'"]:format(PL.LEFT, PL.RIGHT, "Player buffs")))
+end)
+
+-- ── the two anchor-point rows (batch 11 G1, G2, G7) ──────────────────────────────────────────
+
+local PARENT_ROW, CHILD_ROW = "container.attach.relPoint", "container.attach.childPoint"
+
+--- The nine points' values after Automatic's, as the dropdowns order them.
+local function pointOrder(NS)
+    return "auto," .. table.concat(NS.Constants.POINTS, ",")
+end
+
+test("layout: Another container draws the two anchor-point dropdowns, each Automatic (<in effect>) then the nine points (G1)", function()
+    local NS, _, P = attachedChild()
+    local L, PL = NS.L, NS.Constants.POINT_LABELS
+    local ws = P.rerender("Layout")
+    local rel, own = P.row(ws, PARENT_ROW), P.row(ws, CHILD_ROW)
+    -- red under: no rows (batch 9's Side row retired with nothing in its place)
+    assertTrue(rel ~= nil and own ~= nil, "both dropdowns drawn")
+    assertEqual(rel.labelText, L["Parent container anchor point"])
+    assertEqual(own.labelText, L["This container anchor point"])
+    assertEqual(table.concat(rel.order, ","), pointOrder(NS))
+    assertEqual(table.concat(own.order, ","), pointOrder(NS))
+    -- 1 fills columns growing up: 2 sits on top of it, its Bottom left on 1's Top left.
+    assertEqual(rel.list.auto, L["Automatic (%s)"]:format(L[PL.TOPLEFT]))
+    assertEqual(own.list.auto, L["Automatic (%s)"]:format(L[PL.BOTTOMLEFT]))
+    assertEqual(rel.list.TOP, L[PL.TOP])
+    -- red under: the panel showing the stored nil (a blank dropdown)
+    assertEqual(rel.value, "auto")
+    assertEqual(own.value, "auto")
+end)
+
+test("layout: an anchor-point pick stores the point, any pair is allowed, and Automatic stores nil (G1, G2)", function()
+    local NS, m, P = attachedChild()
+    local L, PL = NS.L, NS.Constants.POINT_LABELS
+    local at = NS.Database.FindContainer(2).attach
+    local ws = P.rerender("Layout")
+    NS.Helpers.__pageCtx.layout.panel:Show()
+    P.row(ws, CHILD_ROW):__fire("OnValueChanged", "TOP")
+    assertEqual(at.childPoint, "TOP")
+    assertNil(at.relPoint, "the other stays Automatic")
+    -- red under: the rows without their structural onChange (the line would name the old points)
+    local redrawn = P.during(function() m.__fireTimers() end)
+    local want = L["Its %s joins the %s of '%s'"]
+    assertTrue(P.hasText(redrawn, want:format(L[PL.TOP], L[PL.TOPLEFT], "Player buffs")), "the line reads the pick")
+    -- A pair that looks odd is still stored: "if it looks weird, it's on the user".
+    P.row(redrawn, PARENT_ROW):__fire("OnValueChanged", "TOP")
+    assertEqual(at.relPoint, "TOP", "nothing is refused")
+    redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(P.hasText(redrawn, want:format(L[PL.TOP], L[PL.TOP], "Player buffs")))
+    P.row(redrawn, CHILD_ROW):__fire("OnValueChanged", "auto")
+    -- red under: the sentinel stored instead of nil
+    assertNil(at.childPoint, "Automatic stores nil")
+    assertEqual(NS.GetSetting(CHILD_ROW, 2), "auto", "and reads as auto")
+    -- Defaults puts each back to Automatic.
+    assertTrue(NS.ApplyDefault(NS.FindSchemaRow(PARENT_ROW)))
+    assertNil(at.relPoint, "the reset is Automatic")
+end)
+
+test("layout: /am set takes the nine point names in any case or auto; attach.edge is no longer a path (G7)", function()
+    local NS, _, P = attachedChild()
+    local chat = P.chat()
+    local at = NS.Database.FindContainer(2).attach
+    NS.Slash:OnSlash("set container.attach.relPoint bottomright")
+    -- red under: the library's exact-match string parser (lower case refused)
+    assertEqual(at.relPoint, "BOTTOMRIGHT", table.concat(chat, " | "))
+    NS.Slash:OnSlash("set container.attach.childPoint Top")
+    assertEqual(at.childPoint, "TOP")
+    NS.Slash:OnSlash("set container.attach.childPoint AUTO")
+    assertNil(at.childPoint, "auto stores nil")
+    NS.Slash:OnSlash("set container.attach.relPoint auto")
+    assertNil(at.relPoint)
+    NS.Slash:OnSlash("set container.attach.childPoint middle")
+    assertNil(at.childPoint, "a name that is not a point is refused")
+    local n = #chat
+    NS.Slash:OnSlash("get container.attach.childPoint")
+    local got = chat[n + 1]:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertTrue(got:find("container.attach.childPoint = auto", 1, true) ~= nil, got)
+    n = #chat
+    NS.Slash:OnSlash("set container.attach.edge after-end")
+    assertTrue(chat[n + 1]:find(NS.L["Setting not found: %s"]:format("container.attach.edge"), 1, true) ~= nil, chat[n + 1])
+    assertNil(at.edge)
+end)
+
+test("layout: a write to either anchor point re-places the container on its parent (G1)", function()
+    local NS, m = attachedChild()
+    m.__fireTimers()
+    local inst = NS.ContainerManager.instances[2]
+    local rec = {}
+    rawset(inst.anchor, "SetPoint", function(_, ...) table.insert(rec, { ... }) end)
+    rawset(inst.anchor, "ClearAllPoints", function() end)
+    NS.Slash:OnSlash("set container.attach.childPoint center")
+    NS.Slash:OnSlash("set container.attach.relPoint right")
+    m.__fireTimers()
+    local last = rec[#rec]
+    -- red under: no row, so no CONFIG_CHANGED re-apply
+    assertTrue(last ~= nil, "placed again")
+    assertEqual(last[1], "CENTER")
+    assertEqual(last[3], "RIGHT")
 end)
 
 -- ── the Point rows and the facing-growth hint (smoke feedback 2, item 1, D-3) ────────────────────

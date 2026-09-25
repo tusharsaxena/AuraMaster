@@ -6,7 +6,7 @@ local _, NS = ...
 --     [ Frame ][ Anchor ][ Growth ][ Mouse ][ Label ]
 --     Anchor  [Attach to]
 --             -- Screen --            [Point] [Relative point] / [X] [Y]
---             -- Another container -- [Container] | joins line
+--             -- Another container -- [Container] | joins line / [Parent container anchor point] [This container anchor point]
 --             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
 --             (Named frame only: a gray hint when Point faces the growth; growsBackNote, below)
@@ -219,6 +219,72 @@ local function targetChanged(v, id, old)
     flowNotice(cfg, was, now, old, v)
 end
 
+-- ---------------------------------------------------------------------------
+-- The two anchor points (batch 11 G1, G2, G7)
+-- ---------------------------------------------------------------------------
+-- A follower joins its parent by two absolute points, each stored on its own and nil for Automatic
+-- (modules/Anchors.lua's AttachPoints: the matching half of the default pair, G3). Each dropdown
+-- offers "Automatic (<the point in effect>)" first, then the nine points; any pair is stored and
+-- nothing is refused: "if it looks weird, it's on the user". The rows are `nilAs = "auto"`
+-- (settings/Schema.lua): the panel and `/am get` read a stored nil as auto, and auto, in any case,
+-- is written as nil. `/am set` takes the nine names in any case too (cliParse).
+
+local AUTO_POINT = "auto"
+local IS_POINT = {}
+for _, point in ipairs(C.POINTS) do IS_POINT[point] = true end
+
+--- What was typed, as a row value: a point name or auto in upper case becomes the value itself.
+local function foldPoint(text)
+    local word = tostring(text or ""):match("^%s*(.-)%s*$")
+    local upper = word:upper()
+    if upper == "AUTO" then return AUTO_POINT end
+    if IS_POINT[upper] then return upper end
+    return word
+end
+
+--- Whether `v` is one of the nine points or auto, in any case; nil is Automatic too.
+local function validPoint(v)
+    if v == nil then return true end
+    if type(v) ~= "string" then return false end
+    local upper = v:upper()
+    return upper == "AUTO" or IS_POINT[upper] == true
+end
+
+--- The stored form: the point token, or nil for Automatic.
+local function storedPoint(v)
+    if type(v) ~= "string" then return nil end
+    local upper = v:upper()
+    if IS_POINT[upper] then return upper end
+    return nil
+end
+
+--- A point row's values: "Automatic (<the point in effect>)", then the nine points. `half` picks
+--- the child's (1) or the parent's (2) point out of AttachPoints.
+local function pointChoices(half)
+    return function()
+        local own, rel = NS.Anchors.AttachPoints(NS.ActiveContainer())
+        local inEffect = (half == 1) and own or rel
+        local out = { { value = AUTO_POINT, text = L["Automatic (%s)"]:format(L[C.POINT_LABELS[inEffect]]) } }
+        for _, point in ipairs(C.POINTS) do
+            local n = #out
+            out[n + 1] = { value = point, text = L[C.POINT_LABELS[point]] }
+        end
+        return out
+    end
+end
+
+--- One of the two point rows. Structural: the attachment line and the other row's Automatic entry
+--- read the pick. The write's CONFIG_CHANGED re-places the container, its parent and its followers
+--- (modules/ContainerManager.lua's PARENT_PATHS, modules/Anchors.lua's FLOW_PATHS).
+local function pointRow(path, half, label, desc, startsLine)
+    return {
+        path = path, page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER, shownWhen = CONTAINER_ONLY,
+        type = "string", values = pointChoices(half), startsLine = startsLine, label = label, desc = desc,
+        nilAs = AUTO_POINT, validate = validPoint, normalize = storedPoint, cliParse = foldPoint,
+        onChange = structural,
+    }
+end
+
 NS.RegisterSchemaRows({
     {
         path = "container.layout.scale", page = PAGE, group = G_FRAME, type = "number", min = 0.5, max = 3, step = 0.05,
@@ -268,7 +334,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
         shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
-        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, it joins it below by default, and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
+        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, the two anchor points below say where it joins it (below it, Automatic), and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = targetChanged,
         -- Asks first when the chain it joins flows differently from its own Growth (GC-1): panel only.
@@ -280,6 +346,10 @@ NS.RegisterSchemaRows({
             return id ~= nil and (id == 0 or not NS.Anchors.WouldCycle(fromId, id))
         end,
     },
+    pointRow("container.attach.relPoint", 2, L["Parent container anchor point"],
+        L["The point of the container this one is attached to where the two join. Automatic picks one from the two containers' types and the way the chain grows. Any point can be picked."], true),
+    pointRow("container.attach.childPoint", 1, L["This container anchor point"],
+        L["The point of this container's first aura that joins the parent's anchor point. Automatic picks one from the two containers' types and the way the chain grows. Any point can be picked."]),
     {
         -- Half width, so Pick a frame... (pairWith, below) can take the line's right half.
         path = "container.attach.frame", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,

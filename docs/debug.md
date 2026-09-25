@@ -55,6 +55,7 @@ Example (shortened):
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
 [Cont] #1 "Player buffs" unit=player HELPFUL style=bars enabled=true attach=screen | engine=yes shows=yes ...
+[Cont] #2 "Player debuffs" unit=player HARMFUL style=icons enabled=true attach=container#1 point=TOPLEFT(auto) relPoint=BOTTOMLEFT(auto) join=after-start | engine=yes ...
 [Filt] #1 whitelist(1)=[1459 Arcane Intellect]
 [Plan] #1 plan in sync
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
@@ -62,6 +63,11 @@ Example (shortened):
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
 [Diag] ==== end: 143 line(s) ====
 ```
+
+A container attached to another container prints its join after the target (batch 11 G7): the two
+points in effect, this container's (`point`) and its parent's (`relPoint`), each `(auto)` while
+Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the parent's growth
+(`after-start` and the like, `Anchors.AttachEdge`) or `free` for any other pair.
 
 ### The plan verdict
 

@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 256 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 258 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -51,7 +51,7 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderPage`; General draws
   no banner, and Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:350`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:370`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -515,7 +515,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (36 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (38 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -527,7 +527,8 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural. Switching to Another container with a target already stored asks first when that target's chain flows differently (GC-1, below) |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the two points in effect, picked or Automatic (`Anchors.AttachPoints`, batch 11 G2). Batch 9's Side row is retired: the points are stored as `container.attach.childPoint` / `.relPoint` (docs/schema.md) |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the two points in effect, picked or Automatic (`Anchors.AttachPoints`, batch 11 G2) |
+| *Another container:* Parent container anchor point / This container anchor point | `container.attach.relPoint` / `.childPoint` | string (dropdown) | Batch 11 G1, in place of batch 9's Side row. Each offers "Automatic (*the point in effect*)" first, then the nine points; Automatic stores nothing (`nilAs = "auto"`, docs/schema.md), a point stores its token, and one picked point leaves the other Automatic. Any pair is stored, with no validate refusal and no fallback note. Structural (the attachment line and the other row's Automatic entry redraw); the write re-places the container, its parent and its followers. `/am set` takes the nine names in any case or `auto`; `container.attach.edge` is not a path |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes: from the named frame's point, or as a nudge on top of the seam gap (SS-2) |
