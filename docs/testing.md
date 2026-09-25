@@ -106,6 +106,8 @@ Suites worth knowing by name:
 - **`tests/_kit/test_layout_cap.lua`** — every authored `.lua` over layout-§1's 1500-line cap is in
   the `### Files over the 1500-line cap` census in `docs/ARCHITECTURE.md`, with a terminal state,
   and no census row outlives its breach.
+- **`tests/_kit/test_diagnostics_contract.lua`** — the shared debug-logging-§14 diagnostics contract.
+  This runner does not set `Kit.diagnostics` yet, so it records a **skip with its reason**, not a pass.
 
 ## The degraded environment
 

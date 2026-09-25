@@ -146,6 +146,23 @@ test("debuglog: without the library, SetEnabled still flips the flag and acks, a
     assertEqual(NS2.DebugLog:BufferSize(), 0)
 end)
 
+test("debuglog: without the library the diagnostics members answer with one honest line and write nothing", function()
+    local NS2, mocks = loadDegraded()
+    local lines = degradedLines(mocks)
+    -- red under: the stub missing RunDiagnostics (DebugLog 14.1), or writing or saying nothing
+    assertEqual(NS2.DebugLog:RunDiagnostics(), 0)
+    local got = lines()
+    assertEqual(#got, 1, table.concat(got, " | "))
+    assertTrue(got[1]:find("/am diagnostics is unavailable: the LibKa0s library did not load.", 1, true) ~= nil,
+        got[1])
+    assertEqual(NS2.DebugLog:BufferSize(), 0)
+    local report = NS2.DebugLog:BuildDiagnostics()
+    assertEqual(#report.lines, 0)
+    assertFalse(report.capped)
+    assertFalse(NS2.DebugLog:DebugVerb("diagnostics"), "the host's own /am debug fallback answers")
+    assertFalse(NS2.State.debug, "the report never touches the flag")
+end)
+
 test("debuglog: without the library the console row is honest — never checked, and its tooltip says why", function()
     local NS2, mocks = loadDegraded()
     local lines = degradedLines(mocks)

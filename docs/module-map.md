@@ -210,6 +210,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares, and `.gitattributes` is the canonical body |
 | `tests/_kit/test_layout_cap.lua` | The layout-§1 cap census in `docs/ARCHITECTURE.md` agrees with the tree |
+| `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract; records a skip with its reason until the runner sets `Kit.diagnostics` |
 
 ## Root and media
 
@@ -251,7 +252,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.59.0 | Fourteen modules bound by name — table below |
+| LibKa0s v1.60.0 | Fourteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
