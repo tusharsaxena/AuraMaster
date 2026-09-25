@@ -198,7 +198,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   the box edge. A font that has not loaded yet measures nothing, so the first apply after login can
   use the stored Width and Height and the next one sizes to fit. Defaults on the Text page turns Size
   to fit on (the template's value); containers stored before schema v8 keep it off (D7).
-- **`/am debug diag` cannot always name what a container shows** (batch 8 DG-2, DG-3). While auras are
+- **`/am diagnostics` cannot always name what a container shows** (batch 8 DG-2, DG-3). While auras are
   secret it reads no aura and calls nothing on an engine button, so `shown=?` and the per-group
   frame count are all it prints. Out of combat a button's aura id may still be out of reach, so a
   shown line can carry only the name or the icon, and the `predicted:` verdict is the addon's own

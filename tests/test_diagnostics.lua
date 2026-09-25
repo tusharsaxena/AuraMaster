@@ -1,5 +1,5 @@
--- tests/test_diagnostics.lua — modules/Diagnostics.lua: `/am debug diag`, the one-shot diagnostic
--- report written to the debug console (batch 8 DG-1..DG-4, docs/debug.md). Driven through the real
+-- tests/test_diagnostics.lua — modules/Diagnostics.lua: `/am diagnostics` and `/am debug diagnostics`,
+-- the one-shot diagnostic report written to the debug console (batch 8 DG-1..DG-4, docs/debug.md). Driven through the real
 -- slash dispatcher where the verb matters, and through NS.Diagnostics.Build where only the lines do.
 
 local T = _G.AM_TEST
@@ -65,28 +65,66 @@ local function dump(lines) return "{" .. table.concat(lines, " | ") .. "}" end
 
 -- ── the verb and the sink (DG-1) ───────────────────────────────────────────────────────────────
 
-test("diag: /am debug diag writes the report to the console ungated, opens it, and says so once", function()
-    local NS, mocks = fresh()
-    local chat = capture(mocks)
-    assertFalse(NS.State.debug)
+--- Drive one slash line and return the report lines it added to the console buffer.
+local function reportFrom(NS, line)
     local before = #NS.DebugLog.buffer
-    NS.Slash:OnSlash("debug diag")
+    NS.Slash:OnSlash(line)
     local buf = NS.DebugLog.buffer
     local total = #buf
-    -- red under: routing through the gated NS.Debug (the flag is off, so nothing would land)
-    assertTrue(total > before + 5, "the report did not reach the buffer")
-    assertTrue(buf[before + 1]:find("[Diag] ==== Aura Master diagnostic begin ====", 1, true) ~= nil, buf[before + 1])
-    local last = buf[total]
-    local n = last:match("==== end: (%d+) line%(s%) ====")
-    assertTrue(n ~= nil, "no end marker: " .. last)
-    assertEqual(tonumber(n), total - before, "the end marker counts every line of the report")
-    assertTrue(NS.DebugLog:IsShown(), "the console was not revealed")
-    assertFalse(NS.State.debug, "the diagnostic must not switch logging on")
-    assertEqual(#chat, 1, dump(chat))
-    assertTrue(chat[1]:find(n .. " lines", 1, true) ~= nil, chat[1])
+    local out = {}
+    for i = before + 1, total do out[i - before] = buf[i] end
+    return out
+end
+
+-- Owner, 2026-09-25 (DG-1 amended): exactly two forms run the report, and `diag` is not one.
+local FORMS = { "diagnostics", "debug diagnostics" }
+
+for _, form in ipairs(FORMS) do
+    test("diag: /am " .. form .. " writes the report to the console ungated, opens it, and says so once", function()
+        local NS, mocks = fresh()
+        local chat = capture(mocks)
+        assertFalse(NS.State.debug)
+        local rep = reportFrom(NS, form)
+        local total = #rep
+        -- red under: routing through the gated NS.Debug (the flag is off, so nothing would land)
+        assertTrue(total > 5, "the report did not reach the buffer")
+        assertTrue(rep[1]:find("[Diag] ==== Aura Master diagnostic begin ====", 1, true) ~= nil, rep[1])
+        local last = rep[total]
+        local n = last:match("==== end: (%d+) line%(s%) ====")
+        assertTrue(n ~= nil, "no end marker: " .. last)
+        assertEqual(tonumber(n), total, "the end marker counts every line of the report")
+        assertTrue(NS.DebugLog:IsShown(), "the console was not revealed")
+        assertFalse(NS.State.debug, "the diagnostic must not switch logging on")
+        assertEqual(#chat, 1, dump(chat))
+        assertTrue(chat[1]:find(n .. " lines", 1, true) ~= nil, chat[1])
+    end)
+
+    test("diag: /am " .. form .. " answers while the addon is disabled, and the state line says so", function()
+        local NS, mocks = fresh()
+        local chat = capture(mocks)
+        NS.Slash:OnSlash("disable")
+        for k in pairs(chat) do chat[k] = nil end
+        local rep = reportFrom(NS, form)
+        assertTrue(#rep > 0, "refused while disabled: " .. dump(chat))
+        local text = table.concat(rep, "\n")
+        assertTrue(text:find("enabled=false stoodDown=true", 1, true) ~= nil, text)
+    end)
+end
+
+test("diag: /am debug diag no longer runs the report; it falls through to the window toggle", function()
+    local NS, mocks = fresh()
+    capture(mocks)
+    assertFalse(NS.DebugLog:IsShown())
+    -- red under: a `diag` alias kept in runDebug (the owner dropped it, 2026-09-25)
+    local rep = reportFrom(NS, "debug diag")
+    assertTrue(has(rep, "diagnostic begin") == nil, dump(rep))
+    assertTrue(NS.DebugLog:IsShown(), "an unknown debug word toggles the window, as before")
+    rep = reportFrom(NS, "debug DIAG")
+    assertTrue(has(rep, "diagnostic begin") == nil, dump(rep))
+    assertFalse(NS.DebugLog:IsShown())
 end)
 
-test("diag: bare /am debug and /am debug on|off keep their meaning; DIAG is read in any case", function()
+test("diag: bare /am debug and /am debug on|off keep their meaning; the forms are read in any case", function()
     local NS, mocks = fresh()
     capture(mocks)
     NS.Slash:OnSlash("debug")
@@ -98,23 +136,10 @@ test("diag: bare /am debug and /am debug on|off keep their meaning; DIAG is read
     assertTrue(NS.State.debug)
     NS.Slash:OnSlash("debug off")
     assertFalse(NS.State.debug)
-    local before = #NS.DebugLog.buffer
-    NS.Slash:OnSlash("debug DIAG")
-    local buf = NS.DebugLog.buffer
-    assertTrue(buf[before + 1]:find("diagnostic begin", 1, true) ~= nil, "DIAG did not run the report")
-end)
-
-test("diag: it answers while the addon is disabled, and the state line says so", function()
-    local NS, mocks = fresh()
-    local chat = capture(mocks)
-    NS.Slash:OnSlash("disable")
-    for k in pairs(chat) do chat[k] = nil end
-    local before = #NS.DebugLog.buffer
-    NS.Slash:OnSlash("debug diag")
-    local buf = NS.DebugLog.buffer
-    assertTrue(#buf > before, "refused while disabled: " .. dump(chat))
-    local text = table.concat(buf, "\n", before + 1)
-    assertTrue(text:find("enabled=false stoodDown=true", 1, true) ~= nil, text)
+    local rep = reportFrom(NS, "debug DIAGNOSTICS")
+    assertTrue(has(rep, "diagnostic begin") ~= nil, "DEBUG DIAGNOSTICS did not run the report")
+    rep = reportFrom(NS, "DIAGNOSTICS")
+    assertTrue(has(rep, "diagnostic begin") ~= nil, "DIAGNOSTICS did not run the report")
 end)
 
 test("diag: without LibKa0s it prints the unavailable line and raises nothing", function()

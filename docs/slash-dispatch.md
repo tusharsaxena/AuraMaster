@@ -1,12 +1,12 @@
 # Slash dispatch
 
-`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 22 commands, over the
+`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 23 commands, over the
 eight-or-more trigger (documentation-§3).
 
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:553`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:559`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -57,9 +57,10 @@ eight-or-more trigger (documentation-§3).
 | 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
 | 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
 | 19 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 20 | `debug [on\|off\|diag]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diag` runs `NS.Diagnostics.Run` (`docs/debug.md`) |
-| 21 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
-| 22 | `version` | host | `v` + `NS.Version()` |
+| 20 | `debug [on\|off\|diagnostics]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diagnostics` runs `NS.Diagnostics.Run` (`docs/debug.md`). Any other word, `diag` included, toggles the window: there is no `diag` alias (owner, 2026-09-25) |
+| 21 | `diagnostics` | host | `NS.Diagnostics.Run()`, the one-shot diagnostic report in the debug console (`docs/debug.md`); the same report as `/am debug diagnostics` |
+| 22 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
+| 23 | `version` | host | `v` + `NS.Version()` |
 
 The **Kind** column says who implements the verb, not who gates it — see below.
 
@@ -85,7 +86,9 @@ the panel, while the addon is off, and `enable` above all or the pair is one-way
 index in full with the refusal line under the header, because the player has to be able to SEE
 `enable` to type it. `containers` and `select` stay live too, and that is this addon's own addition:
 almost every schema path here is container-relative, so those two are how a player aims `get`, `set`
-and `reset` at the container they mean. Neither draws, creates or deletes anything.
+and `reset` at the container they mean. Neither draws, creates or deletes anything. `diagnostics` is
+the third addition: like `debug` it is a diagnostic, not a feature, and the report is most wanted
+when something is misbehaving.
 
 **The gate is the library's**, closed by the descriptor's `isEnabled` (`NS.EnabledStored`, the one enabled predicate `core/LifecycleSetup.lua` publishes) at the bottom of
 `settings/Slash.lua`, with `liveVerbs` naming the live set as data. There is no wrapper around the
@@ -99,7 +102,7 @@ the addon is actually inert is `tests/test_disabled.lua` steps 1–6.
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:244`):
+(`NEW_WORDS`, `settings/Slash.lua:249`):
 
 | Words | Field |
 |---|---|
@@ -126,12 +129,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:192`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:514`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:520`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:446`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:452`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -151,7 +154,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:370` builds a stub dispatcher: the host verbs
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:376` builds a stub dispatcher: the host verbs
 keep working (they never went to the library), a bare `/am` runs `config` as the library's does (the
 panel's own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`,
 `set` and `reset` each print the one library-absent line (`/am set is unavailable: the LibKa0s library

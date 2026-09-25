@@ -99,14 +99,21 @@ icon attach (#11), `SS` seam spacing (#13), `DG` diagnostics (#16).
 | `NL-3` | **While unlocked, both show** (D6). The handle moves out past the label by the label's height plus the strip gap, on the same side. |
 | `NL-4` | Settings live on the Layout page (a "Name label" group: Show, Font, X/Y). Every string goes through `NS.L`, in ASCII. |
 
-### DG — `/am debug diag` (#16)
+### DG — `/am diagnostics` (#16)
 
 | ID | Requirement |
 |---|---|
-| `DG-1` | `diag` is a sub-verb of the existing `debug` verb. It works while the addon is disabled, and `NS.COMMANDS` stays at 22. The output goes to the ungated `NS.DebugLog:Add`, which reveals the console, plus one `NS.L` chat line. |
+| `DG-1` | *(Amended 2026-09-25 by the owner; see the note below.)* The report runs from exactly two forms: `/am diagnostics`, a new top-level verb, and `/am debug diagnostics`, a sub-verb of the existing `debug` verb. There is no `diag` alias: `/am debug diag` toggles the window like any other unknown word. Both forms work while the addon is disabled (`diagnostics` joins `liveVerbs()`), and `NS.COMMANDS` goes from 22 to 23. The output goes to the ungated `NS.DebugLog:Add`, which reveals the console, plus one `NS.L` chat line. |
 | `DG-2` | Sections: the header (version, schema, profile, client build, state flags, queue), non-default profile config, and the auras on player, target and focus (plus pet) for HELPFUL and HARMFUL: auraInstanceID, spellId, name, dispel type, source, duration, left and stacks. Then every container (id, name, unit, type, style, enabled, attach), its compiled filters in full, its non-default config, and what it shows: the aura ids when they can be read, otherwise the per-group frame count or `?`. |
 | `DG-3` | It is secret-safe: while `Compat.AurasAreSecret()`, no aura API calls are made and no per-button calls either. Every field goes through `NS.SafeToString`, and each section is wrapped in `pcall`. |
 | `DG-4` | It is capped below the console buffer: at most 1200 lines, 100 auras per unit and filter, and 40 ids per list, with a closing `truncated` line when a cap is hit. Body lines are unrouted English (diagnostic output, like `[Init]`). It appends and does not clear. A new `modules/Diagnostics.lua` holds it, and `docs/debug.md` documents it. |
+
+> **Amendment, 2026-09-25 (owner, after the plan was written).** DG-1 first read: "`diag` is a
+> sub-verb of the existing `debug` verb. It works while the addon is disabled, and `NS.COMMANDS` stays
+> at 22." The owner replaced it with the two forms above, `/am debug diagnostics` and `/am diagnostics`,
+> and dropped `diag` as an alias. The README gains a *Reporting a bug* section built on them: turn on
+> `/am debug on`, reproduce, run `/am diagnostics`, then Copy the whole console, which carries the
+> trace and the report together. Implemented as plan task P13.
 
 ## 3. Constraints
 

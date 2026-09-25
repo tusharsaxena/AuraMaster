@@ -1214,7 +1214,7 @@ SavedVariables file for the migration lines.
 | #10 dispel border shape | DB-1, DB-2 | 71 (and 60, 61, 187) |
 | #11 icon attach points | IA-1, IA-2 | 67 |
 | #13 seam spacing | SS-1..SS-3 | 68 (and 14, 41) |
-| #16 `/am debug diag` | DG-1..DG-4 | 206-208 |
+| #16 `/am diagnostics` | DG-1..DG-4 | 206-209 |
 
 197. **The X on the strip (CX-1, CX-3).** `/am unlock` → every container's strip shows a gray X
      immediately left of the **?**, the same size, turning white on hover; the name stays centered
@@ -1272,19 +1272,25 @@ SavedVariables file for the migration lines.
      `/am enable` brings it back; deleting the container removes it. Containers → Copy settings from,
      What = *Name label* → the label settings copy and the name does not. Flush against the top edge
      with the label above → note whether it is cut off (it is not clamped, a known limitation).
-206. **`/am debug diag` out of combat (DG-1, DG-2).** With a target, a focus and a pet,
-     `/am debug diag` → the console opens, one chat line gives the line count, and the report runs
+206. **`/am diagnostics` out of combat (DG-1, DG-2).** With a target, a focus and a pet,
+     `/am diagnostics` → the console opens, one chat line gives the line count, and the report runs
      from the begin marker to the end marker. Its `[Aura]` names and stacks match Blizzard's own buff
      and debuff frames; every container has its `[Cont]`, `[Filt]` and `[Plan]` lines. Press **Copy**
      → the text has no color codes; paste it into a file and check nothing is cut off. Whitelist a
      spell whose buff is up → `[Shown]` lists a button and `predicted:` reads shown (rank 1); record
      whether the button line carries the aura's inst/id or only its name or icon.
-207. **In combat and while disabled (DG-1, DG-3).** In combat on a dummy, `/am debug diag` → no Lua
+207. **In combat and while disabled (DG-1, DG-3).** In combat on a dummy, `/am diagnostics` → no Lua
      error, the units read unreadable, `[Cont]`, `[Filt]` and `[Plan]` still print, `frames=` is a
      number or `?`, `shown=?`, and no `[Shown]` button lines. Change a container's Cast by in combat
      and run it again → that container reads PENDING (combat); after combat → plan in sync.
-     `/am disable`, then `/am debug diag` → it still runs and the state line reads enabled=false.
+     `/am disable`, then `/am diagnostics` and `/am debug diagnostics` → each still runs and the
+     state line reads enabled=false.
 208. **Caps and the old verbs (DG-4).** With about eight containers and a long whitelist → the report
      stays under the cap or ends with a `truncated` line, and the console never holds more than 1500
      lines. Bare `/am debug` still toggles the window, `/am debug on` and `off` still switch logging,
-     and `/am help` shows the new description for `debug`.
+     and `/am help` shows `diagnostics` right after `debug`, with a `debug` row that no longer
+     mentions diag.
+209. **The two forms, and no `diag` (DG-1 as amended 2026-09-25).** `/am debug on`, reproduce
+     anything, then `/am diagnostics` → the report appends after the trace lines, so one **Copy**
+     carries both. `/am debug diagnostics` → the same report again. `/am debug diag` → no report:
+     the console window just toggles, like any other unknown word after `debug`.

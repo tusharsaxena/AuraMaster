@@ -105,7 +105,7 @@ modules\FramePicker.lua
 modules\BlizzardFrames.lua
 modules\Container.lua
 modules\ContainerManager.lua
-# Conventional: `/am debug diag`; reads every module above at call time.
+# Conventional: `/am diagnostics` and `/am debug diagnostics`; reads every module above at call time.
 modules\Diagnostics.lua
 
 # Settings (last — depend on everything else being initialized)

@@ -396,7 +396,8 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
     disable(NS)
 
     for _, line in ipairs({ "config", "version", "list", "get alpha", "set alpha 0.5",
-                            "reset alpha", "debug", "debug off", "perf", "enable", "disable" }) do
+                            "reset alpha", "debug", "debug off", "diagnostics", "debug diagnostics", "perf",
+                            "enable", "disable" }) do
         local p = slash(NS, lines, line)
         assertFalse(said(p, REFUSAL), "/am " .. line .. " was refused: " .. dump(p))
     end
@@ -415,11 +416,13 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
     -- EVERY ENTRY in NS.COMMANDS, through the real dispatcher (slash-commands-§7 step 7), so a verb
     -- added later is classified here rather than skipped. The live set is SPELLED OUT, not read back
     -- off settings/Slash.lua: the twelve reserved verbs plus `containers` and `select`, which aim the
-    -- schema CLI. Disabled again before each verb, because `enable` and `resetall` legitimately turn
+    -- schema CLI, and `diagnostics`, a diagnostic like `debug` (owner, 2026-09-25). Disabled again before each verb, because `enable` and `resetall` legitimately turn
     -- the addon back on, and a walk without that would test the rest of the table enabled.
     local LIVE = {}
     for _, v in ipairs({ "help", "config", "version", "enable", "disable", "debug", "perf", "get",
-                         "set", "list", "reset", "resetall", "containers", "select" }) do LIVE[v] = true end
+                         "set", "list", "reset", "resetall", "containers", "select", "diagnostics" }) do
+        LIVE[v] = true
+    end
     local refused = {}
     for _, e in ipairs(NS.COMMANDS) do
         local verb = e[1]

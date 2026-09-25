@@ -1068,10 +1068,11 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (27)
+### test_slash.lua (28)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
+- slash: NS.COMMANDS carries 23 verbs, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1151,11 +1152,14 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (22)
+### test_diagnostics.lua (25)
 
-- diag: /am debug diag writes the report to the console ungated, opens it, and says so once
-- diag: bare /am debug and /am debug on|off keep their meaning; DIAG is read in any case
-- diag: it answers while the addon is disabled, and the state line says so
+- diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
+- diag: /am diagnostics answers while the addon is disabled, and the state line says so
+- diag: /am debug diagnostics writes the report to the console ungated, opens it, and says so once
+- diag: /am debug diagnostics answers while the addon is disabled, and the state line says so
+- diag: /am debug diag no longer runs the report; it falls through to the window toggle
+- diag: bare /am debug and /am debug on|off keep their meaning; the forms are read in any case
 - diag: without LibKa0s it prints the unavailable line and raises nothing
 - diag: the header names version, schema, profile, state and the apply queue
 - diag: the profile section lists non-default rows only, with no color escape
@@ -1710,9 +1714,9 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 27 |
+| test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 22 |
+| test_diagnostics.lua | 25 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
@@ -1740,4 +1744,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1470** |
+| **Total** | **1474** |

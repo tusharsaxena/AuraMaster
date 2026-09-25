@@ -2,21 +2,24 @@
 
 The debug console is LibKa0s-DebugLog-1.0's (`core/DebugLogSetup.lua` supplies the title, the face
 and the `[Init]` summary). `/am debug` toggles the window and `/am debug on|off` switches session
-logging. This page covers the one debug surface the addon adds: **`/am debug diag`**, the
-diagnostic report.
+logging. This page covers the one debug surface the addon adds: **the diagnostic report**,
+which exactly two forms run: **`/am diagnostics`** and **`/am debug diagnostics`**. There is no
+`diag` alias (owner, 2026-09-25): `/am debug diag` toggles the window like any other unknown word.
 
-## What `/am debug diag` does
+## What the report does
 
 It writes a one-shot report of what the addon sees and what it drew into the debug console, opens
 the console, and prints one chat line with the line count. Press **Copy** in the console and paste
 the text into a bug report.
 
-- It is a sub-verb of `debug`, so it answers while the addon is disabled, and `NS.COMMANDS` stays
-  at 22.
+- `diagnostics` is its own verb in `NS.COMMANDS` (23 verbs) and a sub-verb of `debug`. Both answer
+  while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
 - It writes through the **ungated** `NS.DebugLog:Add`, as debug-logging-§12 requires for an
   explicit diagnostic run. The logging flag is not read and not changed.
 - It **appends**. The console keeps the newest 1500 lines, so a long report can push older trace
-  lines out.
+  lines out. Because it appends after the trace, one Copy carries both: turn logging on with
+  `/am debug on`, reproduce the bug, run `/am diagnostics`, then Copy the whole console (the
+  README's *Reporting a bug*).
 - It is read-only. It writes no setting, requests no apply, and never calls a setter on an engine
   button.
 - The body lines are diagnostic English and do not go through `NS.L`, like every trace line. The

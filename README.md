@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1470%2F1470_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1474%2F1474_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -151,7 +151,18 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default); `/am new enchants` makes one that shows nothing else. Which weapon slots count is General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
 | A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enabled** box on the Containers page to bring it back; its settings were kept. |
-| Something looks wrong and I want to report it | Type `/am debug diag`. It writes a report of your auras and every container into the debug console; press **Copy** there and paste the text into your GitHub issue. |
+| Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
+
+## Reporting a bug
+
+1. Type `/am debug on` and reproduce the bug.
+2. Type `/am diagnostics`.
+3. Open the debug window with `/am debug`, press **Copy**, copy the ENTIRE output, and paste it into a
+   [GitHub issue](https://github.com/tusharsaxena/AuraMaster/issues).
+
+The report is added after the debug trace in the same window, so one copy carries both. Step 2
+already opens the window; if it is showing when you reach step 3, skip `/am debug`, which would
+close it, and press **Copy**.
 
 ## Issues and feature requests
 

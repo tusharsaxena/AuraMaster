@@ -1,6 +1,7 @@
 local _, NS = ...
 
--- modules/Diagnostics.lua — `/am debug diag`: a one-shot diagnostic report in the debug console
+-- modules/Diagnostics.lua — `/am diagnostics` and `/am debug diagnostics`: a one-shot diagnostic
+-- report in the debug console
 -- (batch 8 DG-1..DG-4; docs/debug.md is the reader's guide).
 --
 -- WHAT IT IS FOR. "My settings did not apply" and "this container shows the wrong auras" are the two
@@ -306,7 +307,7 @@ local function unitAuras(out, unit, secret)
         return
     end
     if secret then
-        out:add("Unit", "%s: unreadable (auras are secret - run /am debug diag out of combat)", unit)
+        out:add("Unit", "%s: unreadable (auras are secret - run /am diagnostics out of combat)", unit)
         return
     end
     for _, filter in ipairs(FILTERS) do
