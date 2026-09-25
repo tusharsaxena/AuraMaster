@@ -339,7 +339,34 @@ test("column: an ahead follower is pushed along the growth past its parent's str
     assertEqual(pointOf(NS, 2), "BOTTOMLEFT TOPLEFT 0 2", "the child's own furniture before it")
     settle(NS, mocks, true)
     x, y = placed(NS, 2)
-    assertEqual(x, gx); assertEqual(y, 0, "locked: no strip to run over it, level with its parent")
+    -- red under: the label's row counted only while the parent's strip shows
+    assertEqual(x, gx); assertEqual(y, -ROW, "locked: no strip, but the parent's label row stays")
+    cfgOf(NS, 1).label.show = false
+    settle(NS, mocks, true)
+    x, y = placed(NS, 2)
+    assertEqual(x, gx); assertEqual(y, 0, "locked with no label: level with its parent")
+end)
+
+test("column: an ahead follower clears its parent's label row, locked or not, since a long name runs on over its column", function()
+    local NS, mocks = fresh()
+    rootFlow(NS)
+    for id = 1, 2 do
+        cfgOf(NS, id).style = "icons"
+        cfgOf(NS, id).label.show = true
+    end
+    join(NS, 2, 1, "ahead-start")
+    overhang(NS, 1, 0)
+    settle(NS, mocks, true)
+    local _, y = placed(NS, 2)
+    -- red under: sideRoom reading 0 while locked, so #2's label sat on #1's overrunning one
+    assertEqual(y, -ROW, "locked: past the parent's label row")
+    settle(NS, mocks, false)
+    _, y = placed(NS, 2)
+    assertEqual(y, -ROW, "unlocked, the strip fitting its element: the label row alone, no jump on unlock")
+    rootFlow(NS, "right", "up")
+    settle(NS, mocks, true)
+    _, y = placed(NS, 2)
+    assertEqual(y, ROW, "growing up: upward")
 end)
 
 test("column: an ahead follower stays level when its parent's strip fits its own block, and growing up it is pushed upward", function()

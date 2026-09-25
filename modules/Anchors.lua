@@ -418,8 +418,8 @@ end
 --- follower spreads the chain by its OWN before-side furniture (its strip while it shows, its label
 --- while it shows), which sits between its parent's block and its own, and records it on `container`
 --- so a visibility pass that shows or hides either re-places it (Anchors.RefreshSeam). An ahead
---- follower moves past its parent's strip and label while that strip runs over its column
---- (sideRoom, in the parent's units until converted here). A behind follower takes none: the parent's
+--- follower moves past its parent's label while it shows and its strip while that runs over its
+--- column (sideRoom, in the parent's units until converted here). A behind follower takes none: the parent's
 --- strip runs away from it.
 local function seamRoom(container, cfg, side, target)
     if side == "after" then
@@ -783,8 +783,8 @@ end
 -- which put an after follower's strip beside the column, behind or ahead of its first element or
 -- inside its top band. An after follower makes the room itself: its seam is moved on along the chain
 -- by its own furniture (seamRoom, F2). A side follower's parent sits beside it, so it needs no
--- spread, but it is moved on past its parent's strip and label while that strip runs over its column
--- (sideRoom, F4).
+-- spread, but it is moved on past its parent's label while it shows and its strip while that runs
+-- over its column (sideRoom, F4).
 
 --- Whether container `c`, whose chain root is `root` (nil: itself), holds more than one element
 --- across: extendsH over its effective layout, read without copying it (EffectiveLayout allocates).
@@ -816,14 +816,17 @@ furnitureRoom = function(c)
 end
 
 --- The room, in screen units before the Master scale, that an ahead follower of `target` clears
---- (F4): `target`'s whole furniture while its strip shows and runs past its element (the width the
---- last placement measured, `stripOverhang`), since a strip that long reaches over the column beside
---- it; 0 otherwise, the label being only one element wide.
+--- (F4): `target`'s label row while its label shows, locked or not, since the label does not wrap and
+--- a name longer than the element runs on over the column beside it (its width is not read: the
+--- label can sit on secret geometry); and its strip row while that strip shows and runs past its
+--- element (the width the last placement measured, `stripOverhang`). 0 with neither.
 sideRoom = function(target)
-    if not (DRAG and target.stripShown and (target.stripOverhang or 0) > 0) then return 0 end
+    local strip = DRAG and target.stripShown and (target.stripOverhang or 0) > 0
+    local rows = (strip and 1 or 0) + (target.labelShown and 1 or 0)
+    if rows == 0 then return 0 end
     local cfg = target.Cfg and target:Cfg()
     if not cfg then return 0 end
-    return furnitureRoom(target) * ownScale(cfg)
+    return rows * (STRIP_H + STRIP_GAP) * ownScale(cfg)
 end
 
 --- Where the strip sits, and the name label with it (NL-2): out past V0, the edge the auras start

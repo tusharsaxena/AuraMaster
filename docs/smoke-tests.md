@@ -1458,7 +1458,8 @@ batch 10 on the same branch.
      - a Right-attached follower's strip sits above it; when the parent's strip is wider than the
        parent's element (a short name on a single icon is not), the follower sits one strip row
        lower (two with the parent's label on), so it overlaps neither the parent's strip nor its
-       label; `/am lock` → it moves back level with the parent;
+       label; `/am lock` → it moves back level with the parent, or stays one row lower while the
+       parent's label is on, so a long parent name never runs over the follower's own label;
      - a chain where B is on A's Left and C is below B: B's strip sits above B, lined up with its
        edge that faces A, and C's strip sits above C, covering none of B's elements;
      - no two strips stack, each label sits between its strip and its block, and on `/am lock` no

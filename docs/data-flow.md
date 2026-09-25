@@ -207,8 +207,8 @@ unlocked the strip moves out past it (D6), so the order is always strip, label, 
 follower attached on the after side makes the room itself: its seam is moved on along the chain by
 its own strip's row while the strip shows and its label's row while the label shows (F2), and the
 visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`, after
-`UpdateHandle`). A follower on the parent's ahead side (Right, growing right) is moved on the same way past the parent's strip
-and label while the parent's strip runs past its element (F4). While unlocked a small gold diamond
+`UpdateHandle`). A follower on the parent's ahead side (Right, growing right) is moved on the same way past the parent's label
+while it shows, locked or not, and its strip while that runs past its element (F4). While unlocked a small gold diamond
 (the join pin) marks the point where a container attached to another joins it, and the strip's
 tooltip names that side and the parent. The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.

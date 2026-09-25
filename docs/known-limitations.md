@@ -196,9 +196,11 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   its stored offsets do not change. A lock or unlock in combat re-places nothing until combat ends.
   Test mode spreads the chain only while unlocked, since a locked addon shows no strips. A follower
   on the parent's Right (growing right; Left growing left) is pushed along the chain past the
-  parent's strip and label rows while the parent's strip is wider than its element, whatever its
-  own alignment, so a follower at the parent's bottom end moves too even where nothing would meet
-  (F4). A follower on the other side is never pushed, since the parent's strip runs away from it. A
+  parent's label row while that label is on, locked or not, and past its strip row while the
+  parent's strip is wider than its element (F4). The label's text width is not read (the label can
+  sit on secret geometry), so the label row counts even when the name fits the parent's element,
+  and whatever the follower's own alignment, so a follower at the parent's bottom end moves too even
+  where nothing would meet. A follower on the other side is never pushed, since the parent's strip runs away from it. A
   strip wider than its element still runs over whatever lies beside its column in the direction its
   lines run.
 - **The strip's X turns a container off at once, with no confirmation.** One left click writes
