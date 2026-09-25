@@ -180,6 +180,18 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   raised above them. That raise is a frame level: a parent set to a higher strata still draws over it. Test mode ending in combat re-places nothing
   (events-frames-taint-§2): the attached container stays where it was until the first visibility
   pass after combat.
+- **A container attached to another never sits on the side the chain grows away from** (batch 9 E2,
+  E9). Layout > Anchor > Side offers Bottom (left, center, right), Right and Left growing down: no Top
+  side, not even for a child one row tall. The Left side (the side the parent's lines start from) is
+  offered only to a child one aura wide (Fill Columns, Per row or column 0), because it inherits the
+  parent's horizontal growth and would grow back over it. A child set to Left that later becomes wider
+  sits below the parent at the same alignment (`Anchors.ResolvedEdge`) until it is one wide again; the
+  stored side is kept and a gray note on the Anchor tab says so. A Side picked before the attachment
+  is made (Another container with no Container yet) is remembered for this session only; after a
+  reload the new attachment starts on its style's default side (E5). Until the strip learns which
+  sides are taken (batch 9 SEP-3), a follower's drag strip and label still sit beside its first
+  element on the side its lines start from, so on a Right-attached follower they cover the parent's
+  edge while unlocked.
 - **The strip's X turns a container off at once, with no confirmation.** One left click writes
   `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enabled
   checkbox on the Containers page (`/am set container.enabled true`, with it selected, works too). There is

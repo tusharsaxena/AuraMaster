@@ -121,8 +121,8 @@ end
 -- Inherited flow (L-6)
 -- ---------------------------------------------------------------------------
 -- A container attached to ANOTHER container continues that container's flow: its fill axis and both
--- growth directions are its chain root's, and its anchor points are derived so it stacks below the
--- parent (above, growing up), one of its own gaps past the parent's block (Anchors.SeamOffset, SS-1).
+-- growth directions are its chain root's, and it sits on the side of the parent its attach.edge names
+-- (below it by default), one of its own gaps past the parent's block (Anchors.SeamOffset, SS-1).
 -- Its offsets nudge on top of that gap; its per-line count and spacing stay its own. Nothing is
 -- written: the stored values stay as they are, so a detach restores them at the next apply. A
 -- frame-attached or screen container inherits nothing — a named frame has no flow to continue.
@@ -138,6 +138,9 @@ local FLOW_PATHS = {
     ["container.layout.growV"] = true,
     ["container.attach.mode"] = true,
     ["container.attach.container"] = true,
+    -- The side and the per-line count: behind is allowed only to a child one aura wide (EdgeAllowed).
+    ["container.attach.edge"] = true,
+    ["container.layout.perLine"] = true,
 }
 
 --- The container whose flow `cfg` follows, or nil when it follows none: not attached to a container,
@@ -175,26 +178,153 @@ function Anchors.EffectiveLayout(cfg)
     return out
 end
 
---- The points that attach a child to a parent laid out by `L`: the child's point and the parent's
---- relative point. The child stacks below the parent (above, when it grows up), on the side the
---- parent's lines start from, whether the parent fills rows or columns (IA-1). A wrapped row parent's
---- target spans every line, so the child sits below the last. Chosen points: issue #22.
+-- ---------------------------------------------------------------------------
+-- The side a follower sits on (batch 9 AP-1, AP-2, E2)
+-- ---------------------------------------------------------------------------
+-- `attach.edge` is one token, "<side>-<align>", stored RELATIVE to the chain's flow so a flip of the
+-- root's growth mirrors the whole chain and never invalidates a stored value:
+--   after   the parent's vertical growth side (below growing down): the only side before batch 9;
+--   ahead   the parent's horizontal growth side (right growing right);
+--   behind  the side the parent's lines start from, only for a child one aura wide (EdgeAllowed);
+-- and start, center or end along that edge (start is the edge lines start from). The side the chain
+-- grows away from (the top growing down) is never offered, and neither is CENTER: the owner's rule.
+-- The child point is always on its one-element anchor; the relative point is on the parent's hang
+-- target. The UI names each token absolutely for the growth in effect (EdgeLabel).
+
+local C = NS.Constants
+
+--- The nine tokens, in display order: after, ahead, behind; start, center, end within each.
+Anchors.EDGES = C.ATTACH_EDGES
+
+-- token -> { side, align }, built once so a Place parses nothing.
+local EDGE_PARTS = {}
+for _, token in ipairs(C.ATTACH_EDGES) do
+    local side, align = token:match("^(%a+)%-(%a+)$")
+    EDGE_PARTS[token] = { side, align }
+end
+local DEFAULT_EDGE = "after-start"
+
+--- The side and align of `token`; anything that is not one of the nine reads as "after", "start".
+--- @return string side, string align
+function Anchors.ParseEdge(token)
+    local parts = EDGE_PARTS[token] or EDGE_PARTS[DEFAULT_EDGE]
+    return parts[1], parts[2]
+end
+
+--- Whether `token` is one of the nine sides.
+function Anchors.IsEdge(token)
+    return EDGE_PARTS[token] ~= nil
+end
+
+--- The child's point and the parent's relative point for `token`, under layout `L`'s growth. V0/V1
+--- are the start and end vertical edges (TOP/BOTTOM growing down), H0/H1 the horizontal ones
+--- (LEFT/RIGHT growing right). The findings' design section 1 has the whole table.
+--- @return string point, string relativePoint
+function Anchors.EdgePoints(L, token)
+    local growH, growV = NS.Container.Growth(L or {})
+    local V0, V1 = "TOP", "BOTTOM"
+    if growV == "up" then V0, V1 = "BOTTOM", "TOP" end
+    local H0, H1 = "LEFT", "RIGHT"
+    if growH == "left" then H0, H1 = "RIGHT", "LEFT" end
+    local side, align = Anchors.ParseEdge(token)
+    if side == "after" then
+        local h = (align == "start" and H0) or (align == "end" and H1) or ""
+        return V0 .. h, V1 .. h
+    end
+    local v = (align == "start" and V0) or (align == "end" and V1) or ""
+    if side == "ahead" then return v .. H0, v .. H1 end
+    return v .. H1, v .. H0
+end
+
+--- The points that attach a child to a parent laid out by `L` on the default side: below the parent
+--- (above, growing up), on the side its lines start from, whatever it fills (IA-1). Every attachment
+--- had exactly these before batch 9, and the v9 stamp gives every stored one this side.
 --- @return string point, string relativePoint
 function Anchors.DerivedPoints(L)
-    local h = (L.growH ~= "left") and "LEFT" or "RIGHT"
-    if L.growV ~= "up" then return "TOP" .. h, "BOTTOM" .. h end
-    return "BOTTOM" .. h, "TOP" .. h
+    return Anchors.EdgePoints(L, DEFAULT_EDGE)
+end
+
+--- Whether a child laid out by `L` holds more than one element across: it fills rows, or wraps its
+--- columns. Such a child would grow back over its parent from the behind side, since it inherits growH.
+local function extendsH(L)
+    return L.axis ~= "vertical" or (tonumber(L.perLine) or 0) > 0
+end
+
+--- Whether container `cfg` may sit on `token`: after and ahead always, behind only while it is one
+--- aura wide under `L` (its effective layout when nil), anything else never. False carries the
+--- NS.L reason, which the Side row's validate hands `/am set`.
+--- @return boolean ok, string|nil why
+function Anchors.EdgeAllowed(cfg, token, L)
+    local parts = EDGE_PARTS[token]
+    if not parts then
+        return false, NS.L["Not a side. The sides are: %s."]:format(table.concat(C.ATTACH_EDGES, ", "))
+    end
+    if parts[1] ~= "behind" then return true end
+    L = L or (cfg and Anchors.EffectiveLayout(cfg)) or {}
+    if extendsH(L) then
+        return false, NS.L["That side needs this container to be one aura wide (Fill: Columns, Per row or column: 0), or it would grow back over the container it is attached to."]
+    end
+    return true
+end
+
+--- The side container `cfg` actually sits on: its stored token while that is allowed, else the after
+--- side at the same align. Writes nothing, so undoing what disallowed it restores the side.
+--- @return string token
+function Anchors.ResolvedEdge(cfg)
+    local stored = cfg and cfg.attach and cfg.attach.edge
+    local parts = EDGE_PARTS[stored]
+    if not parts then return DEFAULT_EDGE end
+    if Anchors.EdgeAllowed(cfg, stored) then return stored end
+    local fallback = "after-" .. parts[2]
+    if NS.Debug then
+        NS.Debug("Anchor", "container %s: side %s not allowed now, sits %s", cfg.id, stored, fallback)
+    end
+    return fallback
+end
+
+--- The side a NEW attachment of `cfg` starts on (E5): a Text container's lines up with its justify,
+--- CENTER on the center and LEFT or RIGHT on whichever end that is under the chain's growth (start is
+--- the side lines start from); every other style, and a Text container of no known justify, after-start.
+--- @return string token
+function Anchors.DefaultEdge(cfg)
+    if not (cfg and cfg.style == "text") then return DEFAULT_EDGE end
+    local j = cfg.text and cfg.text.justifyH
+    if j == "CENTER" then return "after-center" end
+    if j ~= "LEFT" and j ~= "RIGHT" then return DEFAULT_EDGE end
+    local growH = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
+    local startSide = (growH == "left") and "RIGHT" or "LEFT"
+    return (j == startSide) and DEFAULT_EDGE or "after-end"
+end
+
+--- `token`'s absolute name under layout `L`'s growth, for the Side row and the join's tooltip: an
+--- after side by the parent's point it sits at ("Bottom left"), a side by its edge and height
+--- ("Right, top"). Localized.
+--- @return string
+function Anchors.EdgeLabel(L, token)
+    local _, rel = Anchors.EdgePoints(L, token)
+    local side = Anchors.ParseEdge(token)
+    if side == "after" then return NS.L[C.POINT_LABELS[rel]] end
+    return NS.L[C.EDGE_SIDE_LABELS[rel]]
 end
 
 --- The offset that leaves one of the child's own gaps between its parent's block and itself, for a
---- child laid out by `L` (its effective layout). The chain always stacks vertically (IA-1), so the
---- gap is the one the child leaves between consecutive elements in that direction: its spacing when
---- it fills columns, its line spacing when it fills rows (SS-1). Downward when it grows down, upward
---- when it grows up, so a chain growing up no longer overlaps. The child's own values, because
---- SetPoint offsets are in the positioned frame's scale, which is the child's (Container:Apply sets
---- it on the anchor), so the seam matches its inner gaps under any Scale. Never negative.
+--- child laid out by `L` (its effective layout) on `side` (after when nil). The child's own values,
+--- because SetPoint offsets are in the positioned frame's scale, which is the child's (Container:Apply
+--- sets it on the anchor), so the seam matches its inner gaps under any Scale. Never negative.
+---   after          the gap it leaves between consecutive elements along the chain: its spacing when
+---                  it fills columns, its line spacing when it fills rows (SS-1); downward growing
+---                  down, upward growing up, so a chain growing up never overlaps;
+---   ahead, behind  its gap across: its spacing when it fills rows, its line spacing (between
+---                  columns) when it fills columns; toward the horizontal growth for ahead, away
+---                  for behind.
 --- @return number x, number y
-function Anchors.SeamOffset(L)
+function Anchors.SeamOffset(L, side)
+    if side == "ahead" or side == "behind" then
+        local gap = (L.axis == "horizontal") and L.spacing or L.lineSpacing
+        gap = math.max(0, tonumber(gap) or 0)
+        if (L.growH == "left") == (side == "ahead") then gap = -gap end
+        return gap, 0
+    end
     local gap = (L.axis == "vertical") and L.spacing or L.lineSpacing
     gap = math.max(0, tonumber(gap) or 0)
     return 0, (L.growV == "up") and gap or -gap
@@ -245,18 +375,21 @@ local function clearStrip(L, cfg, gy, room)
     return (L.growV == "up") and gy + extra or gy - extra
 end
 
---- The points and offsets container `cfg` attaches with. Attached to a container: points derived
---- from the flow it continues, and one of its own gaps across the seam with the stored X/Y added on
---- top as a nudge (SS-1, SS-2), widened where the parent's strip needs the room (EO-2). Attached to
+--- The points and offsets container `cfg` attaches with. Attached to a container: its side's points
+--- under the flow it continues (ResolvedEdge), one of its own gaps across the seam with the stored X/Y
+--- on top as a nudge (SS-1, SS-2, AP-2), widened along the chain for the parent's strip (EO-2). Attached to
 --- a named frame: the stored points and offsets as they are.
 --- @return string point, string relativePoint, number x, number y
 local function attachSpec(cfg, at, mode, target)
     local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
     if mode == "container" then
         local L = Anchors.EffectiveLayout(cfg) or {}
-        local point, relativePoint = Anchors.DerivedPoints(L)
-        local gx, gy = Anchors.SeamOffset(L)
-        gy = clearStrip(L, cfg, gy, target and stripRoom(target) or 0)
+        local edge = Anchors.ResolvedEdge(cfg)
+        local point, relativePoint = Anchors.EdgePoints(L, edge)
+        local side = Anchors.ParseEdge(edge)
+        local gx, gy = Anchors.SeamOffset(L, side)
+        -- Only along the chain: a side seam runs across it, so a parent's strip is not in its way.
+        if side == "after" then gy = clearStrip(L, cfg, gy, target and stripRoom(target) or 0) end
         return point, relativePoint, gx + x, gy + y
     end
     return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint, x, y

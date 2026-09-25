@@ -1134,7 +1134,8 @@ test("anchors: a write that moves a container's flow re-applies every container 
     -- red under: MovesFollowers answering true for every path
     assertEqual(run("container.layout.spacing", 5, 1), "1", "spacing moves no follower")
     -- red under: FLOW_PATHS without the attach paths (a detach would leave 3 on 1's flow)
-    assertEqual(run("container.attach.mode", "screen", 2), "2,3", "3 now follows 2's own flow")
+    -- 1 too since batch 9 AP-4: a parent's strip side depends on which sides its followers take.
+    assertEqual(run("container.attach.mode", "screen", 2), "1,2,3", "3 now follows 2's own flow, and 1 lost 2")
     CM.RequestApply = real
     mocks.__fireTimers()
     assertEqual(engineAnchorPoint(NS, 3), "TOPRIGHT", "3 follows 2's rows growing left and down")

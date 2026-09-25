@@ -85,6 +85,7 @@ Kit.run{
         "test_lifecycle",
         "test_anchors",
         "test_anchors_seam",
+        "test_anchors_edges",
         "test_anchors_hang",
         "test_emptywatch",
         "test_anchors_close",

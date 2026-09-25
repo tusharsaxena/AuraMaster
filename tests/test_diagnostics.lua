@@ -500,6 +500,19 @@ test("diag: [Cfg] lists only the settings in use; the rest go on an inert line",
     assertTrue(has(lines, "[Cfg] #3 inert:") == nil, "an inert line with nothing on it: " .. dump(lines))
 end)
 
+test("diag: [Cfg] lists attach.edge as in use only for a container attached to another (batch 9 AP-1)", function()
+    local NS = fresh()
+    NS.SetByPath("container.attach.edge", "ahead-end", 1)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.edge", "ahead-end", 2)
+    local lines = build(NS)
+    -- red under: the Side row without its CONTAINER_ONLY shownWhen (a screen container's side is inert)
+    assertTrue((has(lines, "[Cfg] #1 non-default:") or ""):find("attach.edge", 1, true) == nil, dump(lines))
+    assertTrue((has(lines, "[Cfg] #1 inert:") or ""):find("attach.edge=ahead-end", 1, true) ~= nil, dump(lines))
+    assertTrue((has(lines, "[Cfg] #2 non-default:") or ""):find("attach.edge=ahead-end", 1, true) ~= nil, dump(lines))
+end)
+
 -- ── robustness and the caps (DG-3, DG-4) ──────────────────────────────────────────────────────
 
 test("diag: a failing section is reported and the next container still reports", function()

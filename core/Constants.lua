@@ -109,6 +109,19 @@ C.POINT_LABELS = {
 C.ATTACH_MODES = { "screen", "container", "frame" }
 C.ATTACH_MODE_LABELS = { screen = "Screen", container = "Another container", frame = "Named frame" }
 
+-- The side a container attached to another sits on (batch 9 E2; modules/Anchors.lua's edge model),
+-- relative to the chain's flow, in display order. An after side is named by its parent point
+-- (POINT_LABELS); a side one by the parent point it sits at, here.
+C.ATTACH_EDGES = {
+    "after-start", "after-center", "after-end",
+    "ahead-start", "ahead-center", "ahead-end",
+    "behind-start", "behind-center", "behind-end",
+}
+C.EDGE_SIDE_LABELS = {
+    TOPLEFT = "Left, top", LEFT = "Left, middle", BOTTOMLEFT = "Left, bottom",
+    TOPRIGHT = "Right, top", RIGHT = "Right, middle", BOTTOMRIGHT = "Right, bottom",
+}
+
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
 C.AXIS_LABELS = { horizontal = "Rows (fill left to right first)", vertical = "Columns (fill top to bottom first)" }

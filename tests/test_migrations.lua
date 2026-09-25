@@ -391,3 +391,83 @@ test("migrations: a v1 account reaches v9 with Size to fit off on Text only", fu
     assertEqual(cs[5].text.autoSize, false, "the Text container keeps its hand-set size")
     assertEqual(cs[5].text.width, 200)
 end)
+
+-- ── v9 (batch 9 MG-1, E2, E5): the attach edge stamp and the screen-mode 0/-4 reset ───────────────
+
+test("migrations: v9 stamps attach.edge after-start where it is missing or unknown, and keeps a known one", function()
+    local NS = fresh()
+    local p = v7profile()
+    p.containers[3].attach.edge = "ahead-end"
+    p.containers[4].attach.edge = "sideways"
+    NS.Database.MigrateV8(p)
+    -- red under: MigrateV9 without the edge stamp (MG-1)
+    local _, stamped = NS.Database.MigrateV9(p)
+    assertEqual(stamped, 5, "1, 2, 4 (unknown), 5 and 6: every container with an attach table")
+    local at = function(id) return p.containers[id].attach end
+    for _, id in ipairs({ 1, 2, 5, 6 }) do
+        assertEqual(at(id).edge, "after-start", "container " .. id)
+    end
+    assertEqual(at(3).edge, "ahead-end", "a known side is the player's own")
+    assertEqual(at(4).edge, "after-start", "an unknown side is repaired")
+    assertNil(p.containers[7].attach, "no attach table: nothing created")
+end)
+
+test("migrations: v9 resets a screen container's old 0/-4 to 0/0, and leaves frame and container offsets", function()
+    local NS = fresh()
+    local p = v7profile()
+    p.containers[8] = { name = "Screen, unstored", style = "bars", attach = { mode = "screen" } }
+    p.containers[9] = { name = "Screen, own", style = "bars", attach = { mode = "screen", x = 0, y = -9 } }
+    p.containerOrder[8], p.containerOrder[9] = 8, 9
+    NS.Database.MigrateV8(p)
+    local _, _, reset = NS.Database.MigrateV9(p)
+    local at = function(id) return p.containers[id].attach end
+    -- red under: the latent seam left on a screen container (a later switch to Another container
+    -- would add the old 4px back on top of the seam)
+    assertEqual(reset, 2, "the two screen containers on the old default")
+    assertEqual(at(1).x, 0); assertEqual(at(1).y, 0, "screen 0/-4")
+    assertEqual(at(8).x, 0); assertEqual(at(8).y, 0, "screen, absent: the old default")
+    assertEqual(at(9).y, -9, "a screen offset of the player's own")
+    assertEqual(at(5).y, -4, "a named frame keeps it")
+    assertEqual(at(3).x, 3); assertEqual(at(3).y, -4, "a container nudge of the player's own")
+    local before = NS.Database.DeepCopy(p)
+    local removed, stamped, again = NS.Database.MigrateV9(p)
+    assertEqual(removed + stamped + again, 0, "a second run changes nothing")
+    assertNil(diff(p, before))
+end)
+
+test("migrations: a v7 and a v8 account reach v9 with every chain on after-start and no screen 0/-4", function()
+    for _, from in ipairs({ 7, 8 }) do
+        local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
+            global = { schemaVersion = from } } })
+        assertEqual(NS.db.global.schemaVersion, 9)
+        for _, name in ipairs({ "Default", "Raid" }) do
+            local cs = NS.db.sv.profiles[name].containers
+            -- red under: the step touching the active profile only
+            assertEqual(cs[2].attach.edge, "after-start", from .. " " .. name)
+            assertEqual(cs[1].attach.y, 0, from .. " " .. name .. ": screen reset")
+            assertEqual(cs[5].attach.y, -4, from .. " " .. name .. ": frame kept")
+        end
+        local c2 = NS.Database.FindContainer(2)
+        local p, rp = NS.Anchors.EdgePoints(NS.Anchors.EffectiveLayout(c2), NS.Anchors.ResolvedEdge(c2))
+        assertEqual(p, "TOPLEFT"); assertEqual(rp, "BOTTOMLEFT")
+    end
+end)
+
+test("migrations: a v1 account reaches v9 with its attach edge stamped", function()
+    local p = v1profile()
+    p.containers[4].attach = { mode = "container", container = 9 }
+    local NS = fresh({ savedVariables = { profiles = { Default = p } } })
+    assertEqual(NS.db.global.schemaVersion, 9)
+    assertEqual(NS.db.sv.profiles.Default.containers[4].attach.edge, "after-start")
+end)
+
+test("migrations: an unknown attach edge is repaired on load; a disallowed known one is kept", function()
+    local p = v8profile()
+    p.containers[1].attach.edge = "upward"
+    p.containers[2].attach.edge = "behind-start"
+    p.containers[2].layout = { axis = "horizontal", perLine = 4 }
+    local NS = fresh({ savedVariables = { profiles = { Default = p }, global = { schemaVersion = 9 } } })
+    -- red under: no normalizeAttach in the backfill (the ladder did not run: the stamp is 9)
+    assertEqual(NS.Database.FindContainer(1).attach.edge, "after-start")
+    assertEqual(NS.Database.FindContainer(2).attach.edge, "behind-start", "runtime validity is ResolvedEdge's")
+end)

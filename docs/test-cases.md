@@ -168,7 +168,7 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (15)
+### test_migrations.lua (20)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -185,6 +185,11 @@ badge and any count quoted in the docs must agree with it.
 - migrations: v9 removes Size to fit from bars and icons containers, and keeps every Text one
 - migrations: a v8 account climbs to v9 in every profile
 - migrations: a v1 account reaches v9 with Size to fit off on Text only
+- migrations: v9 stamps attach.edge after-start where it is missing or unknown, and keeps a known one
+- migrations: v9 resets a screen container's old 0/-4 to 0/0, and leaves frame and container offsets
+- migrations: a v7 and a v8 account reach v9 with every chain on after-start and no screen 0/-4
+- migrations: a v1 account reaches v9 with its attach edge stamped
+- migrations: an unknown attach edge is repaired on load; a disallowed known one is kept
 
 ### test_schema.lua (33)
 
@@ -638,6 +643,25 @@ badge and any count quoted in the docs must agree with it.
 - seam: while the parent previews, the child hangs from its extent with the same gap as locked
 - seam: an attached child's strip sits beside its first element, edge-aligned at the seam
 - seam: a screen container's strip keeps its place above or below its auras
+
+### test_anchors_edges.lua (16)
+
+- edges: EDGES lists the nine tokens, after then ahead then behind, and no before or center side
+- edges: EdgePoints gives the design table's pair for every token and growth
+- edges: EdgePoints(L, 'after-start') is exactly the old DerivedPoints for all 8 axis, growH and growV combinations
+- edges: after and ahead are always allowed; behind only for a child one aura wide, with a reason
+- edges: ResolvedEdge falls back to after-<align> at runtime, never writes, and restores on undo
+- edges: SeamOffset leaves the child's own gap across for a side, and after is unchanged (AP-2)
+- edges: a side-attached child is placed at its edge's points with its gap across and the nudge on top
+- edges: flipping the root's growth mirrors a side-attached child and writes nothing
+- edges: a disallowed stored side is placed at its after fallback
+- edges: a side-attached follower of a follower takes no strip room; an after one does (AP-2)
+- edges: the default side of a new attachment follows a Text container's justify; every other style is after-start (E5)
+- edges: attaching a centered Text container sets its side to after-center, by mode or by container (AP-4)
+- edges: a side picked before the attachment is kept; retargeting keeps the side
+- edges: a new attachment of a bars container stays after-start
+- edges: the Side row refuses a side the child cannot take, with the reason, through /am set
+- edges: a write to the side, per-line count, mode or container re-applies the followers and the parents (AP-4)
 
 ### test_anchors_hang.lua (11)
 
@@ -1189,7 +1213,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (30)
+### test_diagnostics.lua (31)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1217,6 +1241,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: a raising button probe costs one line, never the predictions
 - diag: a plan group that raises keeps later groups and the warnings
 - diag: [Cfg] lists only the settings in use; the rest go on an inert line
+- diag: [Cfg] lists attach.edge as in use only for a container attached to another (batch 9 AP-1)
 - diag: a failing section is reported and the next container still reports
 - diag: the report is capped below the console buffer and says it was truncated
 - diag: predictions stop at the id cap and the report says it was truncated
@@ -1447,7 +1472,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (30)
+### test_pages_layout.lua (35)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1474,6 +1499,11 @@ badge and any count quoted in the docs must agree with it.
 - layout: a screen or frame container's growth rows are its own and live, with no follow line
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
+- layout: Side lists every allowed side by its absolute name for the chain's growth
+- layout: Side names mirror with the chain's growth, and no entry names the side it grows away from
+- layout: Side offers no behind entry to a child more than one aura wide
+- layout: a stored side not allowed now stays listed as unavailable, with a note saying where the child sits
+- layout: the attachment line names the chosen side's points
 - layout: every Point and Relative point row places the first aura, since the container's full size is secret
 - layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
 - layout: the hint names the growth to pick instead, one line per facing axis
@@ -1728,7 +1758,7 @@ badge and any count quoted in the docs must agree with it.
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 22 |
-| test_migrations.lua | 15 |
+| test_migrations.lua | 20 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 85 |
@@ -1742,6 +1772,7 @@ badge and any count quoted in the docs must agree with it.
 | test_lifecycle.lua | 15 |
 | test_anchors.lua | 76 |
 | test_anchors_seam.lua | 10 |
+| test_anchors_edges.lua | 16 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
@@ -1761,7 +1792,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 30 |
+| test_diagnostics.lua | 31 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
@@ -1769,7 +1800,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 30 |
+| test_pages_layout.lua | 35 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1789,4 +1820,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1515** |
+| **Total** | **1542** |

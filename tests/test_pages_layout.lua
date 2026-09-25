@@ -41,7 +41,7 @@ end
 local SUBSECTIONS = {
     { key = "Screen", paths = { "container.position.point", "container.position.relativePoint",
                                 "container.position.x", "container.position.y" } },
-    { key = "Another container", paths = { "container.attach.container" } },
+    { key = "Another container", paths = { "container.attach.container", "container.attach.edge" } },
     { key = "Named frame", paths = { "container.attach.frame", "container.attach.point",
                                      "container.attach.relativePoint" } },
     { key = "Offset", paths = { "container.attach.x", "container.attach.y" } },
@@ -456,7 +456,7 @@ test("layout: Another container names the derived points and the container it is
     local ws = P.rerender("Layout")
     assertTrue(#ws > 0, "the Anchor tab drew")
     local PL = NS.Constants.POINT_LABELS
-    local want = NS.L["Attached by its %s to the %s of '%s'"]
+    local want = NS.L["Its %s joins the %s of '%s'"]
     -- 1 fills columns growing right and up: 2 sits on top of it.
     -- red under: the Container dropdown without its pairWith line
     assertTrue(P.hasText(ws, want:format(PL.BOTTOMLEFT, PL.TOPLEFT, "Player buffs")), "the derived line")
@@ -475,6 +475,87 @@ test("layout: Another container names the derived points and the container it is
     assertTrue(#ws > 0, "the open page drew again")
     -- red under: the line drawn for a container that follows nothing
     assertFalse(P.hasText(ws, "Target debuffs (mine)"), "no line outside container mode")
+end)
+
+-- ── the Side row (batch 9 AP-3, E2) ────────────────────────────────────────────────────────────
+
+--- The Side dropdown the Anchor tab drew for container 2 attached to 1 (growing right and up, one
+--- column), with 2 one aura wide and on `edge`.
+local function sideRow(edge)
+    local NS, m, P = attachedChild()
+    NS.SetByPath("container.layout.perLine", 0, 2)
+    if edge then NS.SetByPath("container.attach.edge", edge, 2) end
+    m.__fireTimers()
+    local ws = P.rerender("Layout")
+    return NS, m, P, P.row(ws, "container.attach.edge"), ws
+end
+
+test("layout: Side lists every allowed side by its absolute name for the chain's growth", function()
+    local NS, _, _, dd = sideRow()
+    -- red under: no Side row (AP-3)
+    assertTrue(dd ~= nil, "the Side row is drawn in container mode")
+    assertEqual(table.concat(dd.order, ","), table.concat(NS.Anchors.EDGES, ","), "one wide: all nine")
+    -- 1 grows right and up, so after is the top and lines start from the left.
+    assertEqual(dd.list["after-start"], NS.L["Top left"])
+    assertEqual(dd.list["after-center"], NS.L["Top"])
+    assertEqual(dd.list["after-end"], NS.L["Top right"])
+    assertEqual(dd.list["ahead-start"], NS.L["Right, bottom"])
+    assertEqual(dd.list["ahead-center"], NS.L["Right, middle"])
+    assertEqual(dd.list["behind-end"], NS.L["Left, top"])
+end)
+
+test("layout: Side names mirror with the chain's growth, and no entry names the side it grows away from", function()
+    for _, g in ipairs({ { "right", "down" }, { "left", "down" }, { "right", "up" }, { "left", "up" } }) do
+        local NS, m, P = attachedChild()
+        NS.SetByPath("container.layout.perLine", 0, 2)
+        NS.SetByPath("container.layout.growH", g[1], 1)
+        NS.SetByPath("container.layout.growV", g[2], 1)
+        m.__fireTimers()
+        local dd = P.row(P.rerender("Layout"), "container.attach.edge")
+        local what = g[1] .. "/" .. g[2]
+        local away = (g[2] == "down") and "Top" or "Bottom"
+        local startSide = (g[1] == "right") and "left" or "right"
+        -- red under: labels fixed to one growth
+        assertEqual(dd.list["after-start"], NS.L[((g[2] == "down") and "Bottom " or "Top ") .. startSide], what)
+        for _, v in ipairs(dd.order) do
+            assertFalse(dd.list[v]:find("^" .. away) ~= nil, what .. ": " .. dd.list[v])
+        end
+    end
+end)
+
+test("layout: Side offers no behind entry to a child more than one aura wide", function()
+    local NS, _, P = sideRow("after-start")
+    NS.SetByPath("container.layout.perLine", 3, 2)
+    local dd = P.row(P.rerender("Layout"), "container.attach.edge")
+    -- red under: an unfiltered list
+    assertEqual(table.concat(dd.order, ","),
+        "after-start,after-center,after-end,ahead-start,ahead-center,ahead-end")
+end)
+
+test("layout: a stored side not allowed now stays listed as unavailable, with a note saying where the child sits", function()
+    local NS, _, P = sideRow("behind-start")
+    NS.SetByPath("container.layout.perLine", 3, 2)
+    local ws = P.rerender("Layout")
+    local dd = P.row(ws, "container.attach.edge")
+    local n = #dd.order
+    -- red under: a stored value missing from the list (the dropdown would show blank)
+    assertEqual(dd.order[n], "behind-start")
+    assertTrue(dd.list["behind-start"]:find(NS.L[" (unavailable)"], 1, true) ~= nil, dd.list["behind-start"])
+    local note = NS.L["'%s' needs this container to be one aura wide (Fill: Columns, Per row or column: 0). It sits %s until then."]
+        :format(NS.L["Left, bottom"], NS.L["Top left"])
+    -- red under: no edgeFallbackNote
+    assertTrue(P.hasText(ws, note), "the fallback note")
+    NS.SetByPath("container.layout.perLine", 0, 2)
+    ws = P.rerender("Layout")
+    assertFalse(P.hasText(ws, note), "back to one wide: no note")
+end)
+
+test("layout: the attachment line names the chosen side's points", function()
+    local NS, _, P = sideRow("ahead-center")
+    local ws = P.rerender("Layout")
+    local PL = NS.Constants.POINT_LABELS
+    -- red under: attachedText reading the old fixed points
+    assertTrue(P.hasText(ws, NS.L["Its %s joins the %s of '%s'"]:format(PL.LEFT, PL.RIGHT, "Player buffs")))
 end)
 
 -- ── the Point rows and the facing-growth hint (smoke feedback 2, item 1, D-3) ────────────────────

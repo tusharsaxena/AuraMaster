@@ -176,6 +176,22 @@ local function seedStarters(p)
     return seeded
 end
 
+-- The attach sides a container may store (batch 9 E2), as a set.
+local KNOWN_EDGE = {}
+for _, token in ipairs(NS.Constants.ATTACH_EDGES) do KNOWN_EDGE[token] = true end
+local DEFAULT_EDGE = "after-start"
+
+--- Map an unknown `attach.edge` on container `c` to after-start (batch 9 MG-1): hand-edited or
+--- imported data never reaches the anchor code as a token it cannot place. Whether a KNOWN side is
+--- allowed right now is never rewritten here: it depends on the chain, and Anchors.ResolvedEdge falls
+--- back at runtime so undoing the change restores the side.
+local function normalizeAttach(c)
+    local at = c.attach
+    if type(at) ~= "table" or KNOWN_EDGE[at.edge] then return end
+    if NS.Debug then NS.Debug("Migrate", "container %s: unknown attach side '%s' read as %s", c.id, at.edge, DEFAULT_EDGE) end
+    at.edge = DEFAULT_EDGE
+end
+
 --- Backfill every stored container from the template and stamp its id from its key. An entry that
 --- is not a table is dropped: clearing a key while `pairs` walks the table is allowed in Lua, only
 --- adding one is not.
@@ -186,6 +202,7 @@ local function backfillContainers(p)
         if type(c) == "table" then
             Database.Backfill(c, NS.CONTAINER_TEMPLATE, true)
             c.id = id
+            normalizeAttach(c)
             if id > maxId then maxId = id end
         else
             p.containers[id] = nil
@@ -897,8 +914,8 @@ end
 --- @return number  the containers Size to fit was stamped off on
 local V8_OLD_X, V8_OLD_Y = 0, -4
 
-local function resetOldSeam(at)
-    if type(at) ~= "table" or at.mode ~= "container" then return false end
+local function resetOldSeam(at, mode)
+    if type(at) ~= "table" or at.mode ~= (mode or "container") then return false end
     local x, y = at.x, at.y
     if x == nil then x = V8_OLD_X end
     if y == nil then y = V8_OLD_Y end
@@ -928,26 +945,46 @@ function Database.MigrateV8(p)
     return reset, stamped
 end
 
---- v9 (batch 9, owner 2026-09-25, E6/MG-1): Size to fit is Text-only. The style-blind v8 stamp that
---- shipped on this branch wrote `text.autoSize = false` on bars and icons containers too, where the
---- Text page is disabled and nothing reads it, so it is removed from every container whose style is
---- not Text (no stored style is the template's bars). The backfill after the ladder then hands it the
---- template's value, the same as a container that climbed from before v8. A Text container's value
---- is the player's own and is kept. A text block that is missing is not created.
+--- v9 (batch 9, owner 2026-09-25, MG-1). Unreleased, so later batch 9 tasks extend this same step.
 ---
---- IDEMPOTENT: a second run finds no value to remove. Unreleased, so later batch 9 tasks extend this
---- same step (MG-1: the attach edge stamp and the screen-mode 0/-4 reset).
+--- 1. Size to fit is Text-only (E6). The style-blind v8 stamp that shipped on this branch wrote
+---    `text.autoSize = false` on bars and icons containers too, where the Text page is disabled and
+---    nothing reads it, so it is removed from every container whose style is not Text (no stored
+---    style is the template's bars). The backfill after the ladder then hands it the template's
+---    value, the same as a container that climbed from before v8. A Text container's value is the
+---    player's own and is kept. A text block that is missing is not created.
+--- 2. The attach side (E2, E5). Every container with an attach table whose `edge` is missing or not
+---    one of the nine gets "after-start", exactly the points every attachment had before (a test pins
+---    EdgePoints(L, "after-start") to the old DerivedPoints), so nothing moves. Every container, not
+---    only container-mode ones (the D8 rationale): a later switch to Another container keeps today's
+---    placement even if the template default ever changes. A known side is the player's own.
+--- 3. The latent seam (findings Problem D, fix C). v8 reset the old template's 0/-4 offset only in
+---    container mode; a SCREEN container still holding it reads nothing from it, until a switch to
+---    Another container added the 4px back on top of the seam. The same rule (an absent offset is the
+---    old default) now resets it in screen mode. A named frame reads it as its gap, and keeps it.
+---
+--- IDEMPOTENT: a second run finds no value to remove, every edge known and no screen 0/-4.
 --- @return number  the containers Size to fit was removed from
+--- @return number  the containers the attach side was stamped on
+--- @return number  the screen containers whose offsets it reset
 function Database.MigrateV9(p)
-    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
-    local removed = 0
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0, 0 end
+    local removed, stamped, reset = 0, 0, 0
     for _, c in pairs(p.containers) do
-        if type(c) == "table" and c.style ~= "text" and type(c.text) == "table" and c.text.autoSize ~= nil then
-            c.text.autoSize = nil
-            removed = removed + 1
+        if type(c) == "table" then
+            if c.style ~= "text" and type(c.text) == "table" and c.text.autoSize ~= nil then
+                c.text.autoSize = nil
+                removed = removed + 1
+            end
+            local at = c.attach
+            if type(at) == "table" and not KNOWN_EDGE[at.edge] then
+                at.edge = DEFAULT_EDGE
+                stamped = stamped + 1
+            end
+            if resetOldSeam(at, "screen") then reset = reset + 1 end
         end
     end
-    return removed
+    return removed, stamped, reset
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -1059,9 +1096,9 @@ local SCHEMA_STEPS = {
     end },
     { to = 9, apply = function(db)
         eachProfile(db, function(p, name)
-            local removed = Database.MigrateV9(p)
+            local removed, stamped, reset = Database.MigrateV9(p)
             if NS.Debug then
-                NS.Debug("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s)", name, removed)
+                NS.Debug("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s); attach side stamped after-start on %s; the old 0/-4 offset reset on %s screen container(s)", name, removed, stamped, reset)
             end
         end)
     end },

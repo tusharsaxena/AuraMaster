@@ -167,10 +167,14 @@ NS.CONTAINER_TEMPLATE = {
     -- What the container is attached to (modules/Anchors.lua). `container` is a container id; `frame`
     -- is a global frame name, re-resolved when the add-on that owns it loads. `x`/`y` are a nudge: on
     -- a container attached to another they add to the seam gap, which is the child's own spacing
-    -- (batch 8 SS-1, SS-2); the old default 0/-4 is reset to 0/0 there by schema v8.
+    -- (batch 8 SS-1, SS-2); the old default 0/-4 is reset to 0/0 there by schema v8, and on a screen
+    -- container by v9. `edge` is the side of the container it is attached to that it sits on,
+    -- relative to the chain's flow (batch 9 E2: modules/Anchors.lua's edge model); after-start is
+    -- below it, on the side its lines start from, the only side there was before v9.
     attach = {
         mode = "screen", container = 0, frame = "",
         point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = 0,
+        edge = "after-start",
     },
 
     -- How elements are arranged.

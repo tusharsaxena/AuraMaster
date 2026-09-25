@@ -588,6 +588,24 @@ local function requestFollowers(p)
     for _, id in ipairs(NS.Anchors.Followers(p.containerId)) do CM.RequestApply(id) end
 end
 
+-- The writes that change which side of its parent a container occupies (batch 9 AP-4).
+local PARENT_PATHS = {
+    ["container.attach.edge"] = true,
+    ["container.attach.mode"] = true,
+    ["container.attach.container"] = true,
+}
+
+--- A write to a container's side, attach mode or target re-applies the container it names too: a
+--- parent's strip and label sit on a side its followers leave free. The parent it LEFT on a target
+--- change is re-applied by the target row's own onChange (settings/Layout.lua), which is handed the
+--- old value; the one named now is re-applied here, attached or not, so a detach reaches it as well.
+local function requestParents(p)
+    if not (p.containerId and PARENT_PATHS[p.path]) then return end
+    local cfg = NS.Database.FindContainer(p.containerId)
+    local id = cfg and cfg.attach and tonumber(cfg.attach.container)
+    if id and id ~= p.containerId and CM.instances[id] then CM.RequestApply(id) end
+end
+
 --- Subscribe to the bus. Separate from CM.Init because the stand-down UNREGISTERS these three
 --- (slash-commands-§7) and the stand-up has to put them back -- a handler left registered and gated
 --- on a flag is the draw gate the section exists to end (anti-pattern #85).
@@ -604,6 +622,7 @@ function CM.StartListening()
             elseif effect ~= "none" then
                 CM.RequestApply(p.containerId)
                 requestFollowers(p)
+                requestParents(p)
             end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)

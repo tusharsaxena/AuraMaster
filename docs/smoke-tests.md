@@ -407,7 +407,7 @@ listed here too, so the batch can be signed off in one pass.
     are dimmed and show A's values under "Fill and growth follow 'A'", while Spacing stays live. Set
     B's **Attach to** back to *Screen* → B's own flow returns. Repeat with an icon A that fills rows
     growing right and down (IA-1) → B starts directly under A's first icon, left edges aligned, and
-    the line reads "Attached by its Top left to the Bottom left of 'A'"; give A a **Per row** that
+    the line reads "Its Top left joins the Bottom left of 'A'"; give A a **Per row** that
     wraps it → B sits below A's last line; set A's **Grow horizontally** to left → B is right-aligned
     under A (Top right to Bottom right).
 68. **Attached handle while unlocked (L-4, SS-3).** Check 41, and check 14's attached-container paragraph.
