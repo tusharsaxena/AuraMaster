@@ -1,0 +1,3522 @@
+{
+  "addition|activeMitigation|DEATHKNIGHT|boiling point|1265968#1265968#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0176",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|boiling point|1265982#1265982#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0177",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|coagulating blood|463730#463730#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0170",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|hemostasis|273947#273947#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0172",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|lifeblood|1264304#1264304#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0174",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|sanguine ground|391459#391459#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0169",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|visceral strength|461130#461130#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0195",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEATHKNIGHT|voracious|274009#274009#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0179",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DEMONHUNTER|soul fragments|203981#203981#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0191",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|after the wildfire|400734#400734#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0205",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|celestial might|1272376#1272376#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0197",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|galactic guardian|213708#213708#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0185",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|gift of an ancient guardian|1251877#1251877#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0196",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|gorestained claws|1301286#1301286#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0200",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|gore|93622#93622#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0187",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|gory fur|1307881#1307881#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0203",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|DRUID|ravage|441602#441602#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0201",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|blackout combo|228563#228563#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0184",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|counterstrike|383800#383800#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0188",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|elevated stagger|1260619#1260619#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0190",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|elusive brawler|195630#195630#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0173",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|empty barrel|1265307#1265307#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0194",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|hot potato|1301477#1301477#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0198",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|niuzao's resolve|1241109#1241109#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0199",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|pretense of instability|393515#393515#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0192",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|MONK|rushing jade wind|116847#116847#addition": {
+    "category": "activeMitigation",
+    "date": "2026-09-25",
+    "reason": "review sheet R0202",
+    "ruling": "accept"
+  },
+  "addition|activeMitigation|PALADIN|bulwark of righteous fury|386652#386652#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0175",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|consecration|188370#188370#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0186",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|grand crusader|85416#85416#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0178",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|light-blessed shield|1272298#1272298#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0182",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|redoubt|280375#280375#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0183",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|shining light|182104#182104#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0180",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|shining light|327510#327510#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0193",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|strength in adversity|393038#393038#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0171",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|PALADIN|valor|1269179#1269179#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0181",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|WARRIOR|shield slam!|224324#224324#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0189",
+    "ruling": "reject"
+  },
+  "addition|activeMitigation|WARRIOR|vengeful shield|1300681#1300681#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0204",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|\"the 50 verses of radiance\"|450699#450699#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0674",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|\"the 50 verses of resilience\"|450696#450696#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0677",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|50-lb midnight salmon|1308013#1308013#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0485",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|a restless soul|1265566#1265566#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0493",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|adroit intuition|1241530#1241530#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0483",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|akil'zon's clarity|1247577#1247577#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0453",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|akil'zon's rite|1297664#1297664#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0449",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|algeth'ar puzzle|383781#383781#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0475",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|alnscorned essence|1266687#1266687#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0440",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|alnsight|1266686#1266686#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0438",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|amirdrassil's swiftness|1258887#1258887#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0529",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|araz's ritual forge|1232802#1232802#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0633",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|arcanoweave audacity|1241289#1241289#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0617",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|artisanal flourish|449108#449108#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0566",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ascendance|458503#458503#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0521",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ascendance|458524#458524#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0519",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ascension|458502#458502#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0512",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ascension|458525#458525#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0511",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|astral antenna|1239640#1239640#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0503",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|astral antenna|1239641#1239641#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0508",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|authority of radiant power|448730#448730#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0527",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|battle fervor|1295735#1295735#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0543",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|bear|1266182#1266182#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0561",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|blessing of potency|1272321#1272321#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0627",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|blessing of the capybara|1252524#1252524#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0471",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|blessing of zeal|1272350#1272350#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0598",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|blinky's collar|1282029#1282029#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0642",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|blood|1245969#1245969#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0662",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|bolstering light|443531#443531#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0649",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|boon of azerothian blessings|1252202#1252202#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0597",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|bound by fire and blaze|383926#383926#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0590",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|brittle torga totem|1292300#1292300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0490",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|burning embers|387028#387028#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0448",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|cauterizing bolts|1236118#1236118#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0535",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|charge!|1259633#1259633#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0516",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|charged bolts|1236110#1236110#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0580",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|coaching|389581#389581#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0657",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|cosmic bell|1272482#1272482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0482",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|cosmic siphon|1264404#1264404#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0472",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|crimson blessing|1272710#1272710#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0624",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|critical overload|1236935#1236935#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0583",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|critical ritual|1295899#1295899#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0461",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|curse of the wound|1294941#1294941#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0664",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|cursed stone idol|1241806#1241806#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0629",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|dawnthread lining|457666#457666#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0523",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|deadly precision|71564#71564#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0574",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|deepening temptation|1268058#1268058#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0531",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|desecrated aura|1265327#1265327#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0578",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|despair|1265323#1265323#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0575",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|devoured strength|1305376#1305376#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0545",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|diamantine voidcore|1239221#1239221#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0542",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|diverting power...|1250609#1250609#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0567",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|draconic augmentation|393438#393438#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0661",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|dragon games equipment|386692#386692#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0655",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|drain shield|1237842#1237842#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0569",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|draught of rampant abandon|1236998#1236998#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0676",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|drink|1269918#1269918#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0553",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|drink|1277461#1277461#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0671",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|drink|1291791#1291791#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0554",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|drink|1303338#1303338#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0644",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|echoing roar|1254331#1254331#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0506",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|egg sac|452146#452146#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0587",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|emberwing heatwave|1250508#1250508#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0473",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|embrace of pa'ku|292361#292361#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0634",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|embrace of pa'ku|292463#292463#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0504",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|empowering venom|1293316#1293316#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0476",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|empyrean swiftness|1264337#1264337#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0639",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|encapsulated destiny|415603#415603#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0555",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|entertained|1224312#1224312#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0581",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ethereal augmentation|1234969#1234969#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0631",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ethereal reaping|1217101#1217101#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0622",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ethereal reconstitution|1217103#1217103#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0665",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ever-collapsing void fissure|1253114#1253114#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0594",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|explosive adrenaline|1218713#1218713#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0538",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|faith in ula'tek|1296714#1296714#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0462",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|fanatical inspiration|1266299#1266299#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0441",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|farstrider's guile|1245025#1245025#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0570",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|favored by kulzi|1259061#1259061#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0562",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ferocity of the frostwolf|274741#274741#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0637",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|fiber of living agony|1276677#1276677#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0492",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|find fish|43308#43308#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0564",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|find herbs|2383#2383#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0549",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|find high-value beasts|1250491#1250491#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0626",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|find lumber|1256697#1256697#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0544",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|find minerals|2580#2580#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0552",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|flask of the blood knights|1235110#1235110#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0571",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|flask of the magisters|1235108#1235108#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0547",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|flask of the shattered sun|1235111#1235111#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0534",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|flight style: skyriding|404464#404464#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0498",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|flight style: steady|404468#404468#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0653",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|focus of ula'tek|1295582#1295582#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0456",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|focused hunt|1252487#1252487#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0447",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|food & drink|1232065#1232065#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0551",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|forged tenacity|449115#449115#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0559",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|freightrunner's flask|1250533#1250533#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0469",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|frenzied focus|1241762#1241762#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0442",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|genius insight|1241759#1241759#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0443",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|gift of light|1259228#1259228#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0510",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|gladiator's badge|345228#345228#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0647",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|gladiator's insignia|345230#345230#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0514",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|golden luster|271107#271107#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0582",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ground skimming|404184#404184#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0669",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|halazzi's rite|1297663#1297663#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0439",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|halazzi's swiftness|1247578#1247578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0614",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hasty hunt|1252486#1252486#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0444",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hasty ritual|1295900#1295900#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0458",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|heart of ancient hunger|1262753#1262753#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0478",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hearty vilebranch stew|1269056#1269056#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0640",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hearty well fed|1233712#1233712#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0678",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hearty well fed|1233724#1233724#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0607",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hearty well fed|1285644#1285644#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0638",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hex lord's doom|1295885#1295885#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0658",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|hex lord's doom|1307470#1307470#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0641",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|impending execution|1263357#1263357#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0522",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|inner radiance|450720#450720#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0672",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|inner resilience|450706#450706#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0673",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|interrogate|1216737#1216737#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0615",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|jan'alai's rite|1297655#1297655#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0466",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|jan'alai's warmth|1247579#1247579#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0537",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|keen prowess|449091#449091#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0605",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|killer instincts|1307361#1307361#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0593",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|light company guidon|1262496#1262496#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0517",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|light's blessing|1263768#1263768#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0467",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|light's potential|1236616#1236616#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0470",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|lynx|1266197#1266197#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0565",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|mana divining stone|227723#227723#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0635",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|mark of frost|1260316#1260316#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0548",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|masterful hunt|1252488#1252488#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0436",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|masterful ritual|1295901#1295901#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0459",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|maybe stop blowing up|1218715#1218715#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0539",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|might of the void|1241715#1241715#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0432",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|mite-y feast|1243843#1243843#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0608",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|mutating elixir|1310012#1310012#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0630",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nalorakk's call to war|1257183#1257183#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0526",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nalorakk's rage|1258223#1258223#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0464",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nalorakk's rite|1297665#1297665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0505",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nascent empowerment|449275#449275#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0541",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nature's tenacity|1241764#1241764#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0568",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nordrassil's sagacity|1258886#1258886#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0533",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|noxious venom gland|267402#267402#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0663",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|nullsight|1260459#1260459#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0495",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ophidian bone whistle|1296890#1296890#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0599",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ophidian maw|1291580#1291580#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0584",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|pangolin|1266184#1266184#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0558",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|potion of recklessness|1236994#1236994#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0497",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|precious's ribbon|72968#72968#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0659",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|precision of the dragonhawk|1241761#1241761#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0460",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|prismatic bauble|223143#223143#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0592",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|protective toadstools|1285161#1285161#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0452",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|radiant acumen|1230366#1230366#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0525",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|radiant blessing|1254624#1254624#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0632",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|radiant plume|1260615#1260615#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0494",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|refueling orb|1254577#1254577#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0455",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rescue|370667#370667#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0623",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|restlessness|281744#281744#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0457",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rictus of the laughing skull|274739#274739#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0610",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|riftwalker's temptation|1259317#1259317#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0477",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rotting voidfin|1308014#1308014#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0489",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rune of burning haste|1287774#1287774#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0434",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rune of critical power|1287772#1287772#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0433",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rune of echoes|1289063#1289063#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0513",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0491",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rune of masterful cunning|1287771#1287771#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0435",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rune of the versatile warrior|1287770#1287770#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0463",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|rush of fangs|1296884#1296884#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0500",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sacred duty|1266403#1266403#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0480",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sanguine rancor|1303479#1303479#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0577",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sealed chaos urn|1253115#1253115#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0621",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|seed of radiant hope|1263644#1263644#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0656",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|seed of the devouring wild|1259352#1259352#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0579",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|seized power|1259230#1259230#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0451",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sentinel's blessing|1272713#1272713#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0612",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|seriously sharp seashell|1292299#1292299#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0488",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|shadow shard sliver|1308559#1308559#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0589",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|shaladrassil's strength|1258890#1258890#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0530",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of battle|186403#186403#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0528",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the critter|186406#186406#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0600",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the destroyer|335150#335150#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0573",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the dragonflights|1305981#1305981#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0591",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the emissary|225788#225788#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0613",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the explorer|471521#471521#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0557",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the mists|335151#335151#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0618",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the scourge|335149#335149#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0654",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the skirmisher|186401#186401#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0586",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sign of the warrior|225787#225787#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0550",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|siphoning wind|1260572#1260572#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0595",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sleepy ruby warmth|383813#383813#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0515",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|slick and slimy gralstone|1308012#1308012#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0486",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|solar core igniter|1257988#1257988#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0576",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|solarflare prism|1255504#1255504#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0445",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|soul fang alacrity|1305360#1305360#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0518",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|soulcoiler ritual vessel|1291894#1291894#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0563",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|spelunker's candle|455444#455444#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0660",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|spiderling|452226#452226#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0509",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|sporelord's mycelium|1284698#1284698#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0502",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|storm's fury|449100#449100#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0556",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|tangle of vibrant vines|1255367#1255367#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0620",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|tattered amani war banner|1293326#1293326#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0560",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|tattered tortollan scroll|1306870#1306870#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0487",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|teldrassil's tenacity|1258885#1258885#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0532",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|telluric leyblossom|1272942#1272942#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0536",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|tempered potion|431932#431932#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0643",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|the king's unyielding wind|1294745#1294745#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0616",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|the king's unyielding wind|1295275#1295275#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0609",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|the wind awoken|1263318#1263318#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0437",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|thorn bloom|1238467#1238467#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0484",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|tidal insight|1295057#1295057#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0450",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|toggle find lumber|1263084#1263084#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0619",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|touch of elune - day|154796#154796#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0667",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|trovehunter's bounty|1293799#1293799#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0652",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ula'tek's gift|1291581#1291581#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0645",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|umbral plume|1265808#1265808#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0540",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|under red wings|389820#389820#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0572",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|veiled blessing|1272711#1272711#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0628",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|venomcursed ascendance|1317581#1317581#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0465",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|venomcursed critical strike|1307910#1307910#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0479",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|venomcursed haste|1307927#1307927#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0474",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|venomcursed mastery|1307922#1307922#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0496",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|versatile hunt|1252489#1252489#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0446",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|versatile ritual|1295898#1295898#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0454",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|void execution mandate|1250557#1250557#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0520",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|void glass|1244617#1244617#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0499",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|void suffusion|1258534#1258534#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0468",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|void-touched|1264426#1264426#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0648",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|volatile energy|451303#451303#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0675",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|volatile power|1270343#1270343#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0636",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|voracious heart of ula'tek|1297761#1297761#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0546",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|ward of the uncoiled|1305773#1305773#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0601",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|well fed|1232086#1232086#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0670",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|well fed|1232585#1232585#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0585",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|well fed|1294727#1294727#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0606",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|whispers of l'ura|250768#250768#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0666",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|winds of mysterious fortune|1214848#1214848#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0524",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|withered saptor's paw|1255226#1255226#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0481",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|woven fate|1244029#1244029#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0611",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|wraps of cosmic madness|1259153#1259153#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0650",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|xathuux's last roar|1254180#1254180#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0507",
+    "ruling": "reject"
+  },
+  "addition|consumables|ALL|zeal of the burning blade|274740#274740#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0625",
+    "ruling": "reject"
+  },
+  "addition|consumables|DEATHKNIGHT|akil'zon's cry of victory|1252818#1252818#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0646",
+    "ruling": "reject"
+  },
+  "addition|consumables|DEATHKNIGHT|blood beast|460605#460605#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0501",
+    "ruling": "reject"
+  },
+  "addition|consumables|DRUID|echo of frenzied regeneration|1269645#1269645#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0596",
+    "ruling": "reject"
+  },
+  "addition|consumables|DRUID|echo of ironfur|1269633#1269633#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0588",
+    "ruling": "reject"
+  },
+  "addition|consumables|DRUID|gift of frenzied regeneration|1269661#1269661#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0604",
+    "ruling": "reject"
+  },
+  "addition|consumables|DRUID|gift of ironfur|1269659#1269659#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0602",
+    "ruling": "reject"
+  },
+  "addition|consumables|DRUID|gift of maul|1269660#1269660#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0603",
+    "ruling": "reject"
+  },
+  "addition|consumables|PRIEST|archbishop benedictus' restitution|211336#211336#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0651",
+    "ruling": "reject"
+  },
+  "addition|consumables|WARLOCK|summoning disorientation|32752#32752#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0668",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|blood draw|454871#454871#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0100",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|blood-soaked ground|434034#434034#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0074",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|coalesced jelly|1254514#1254514#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0152",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|consumption|1263861#1263861#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0144",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|ethereal barrier|1223612#1223612#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0137",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|frost shield|207203#207203#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0065",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|gelatinous protection|1254520#1254520#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0130",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|newly turned|433981#433981#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0167",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|perseverance of the ebon blade|374748#374748#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0127",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|rotting globule|1254641#1254641#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0128",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|rune carved plates|440289#440289#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0070",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|rune carved plates|440290#440290#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0069",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0105",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|solar core igniter|1254638#1254638#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0111",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEATHKNIGHT|umbilicus eternus|391527#391527#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0079",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|deflecting dance|427901#427901#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0073",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|demon muzzle|1266616#1266616#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0095",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|fel flame fortification|393009#393009#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0103",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|fiery brand|207771#207771#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0109",
+    "ruling": "accept"
+  },
+  "addition|defensives|DEMONHUNTER|first in, last out|1266619#1266619#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0076",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|revel in pain|1265857#1265857#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0077",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0108",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|soul barrier|263648#263648#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0097",
+    "ruling": "reject"
+  },
+  "addition|defensives|DEMONHUNTER|tangle of vibrant vines|1255367#1255367#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0164",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|bear form|5487#5487#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0089",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|ethereal barrier|1223612#1223612#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0145",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|gelatinous protection|1254520#1254520#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0157",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|gloom-spattered dreadscale|1263141#1263141#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0162",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|matted fur|385787#385787#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0082",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|moonkin form|24858#24858#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0086",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|natural resilience|1278800#1278800#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0093",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0123",
+    "ruling": "reject"
+  },
+  "addition|defensives|DRUID|tranquility|740#740#addition": {
+    "category": "raidCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0124",
+    "ruling": "move"
+  },
+  "addition|defensives|DRUID|ursoc's fury|372505#372505#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0066",
+    "ruling": "reject"
+  },
+  "addition|defensives|EVOKER|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0139",
+    "ruling": "reject"
+  },
+  "addition|defensives|EVOKER|stretch time|410355#410355#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0101",
+    "ruling": "reject"
+  },
+  "addition|defensives|EVOKER|temporality|431872#431872#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0141",
+    "ruling": "reject"
+  },
+  "addition|defensives|HUNTER|don't look back|451447#451447#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0085",
+    "ruling": "reject"
+  },
+  "addition|defensives|HUNTER|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0125",
+    "ruling": "reject"
+  },
+  "addition|defensives|HUNTER|stoneform|65116#65116#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0158",
+    "ruling": "reject"
+  },
+  "addition|defensives|MAGE|blazing barrier|235313#235313#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0120",
+    "ruling": "accept"
+  },
+  "addition|defensives|MAGE|ice barrier|11426#11426#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0084",
+    "ruling": "accept"
+  },
+  "addition|defensives|MAGE|ice cold|414658#414658#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0106",
+    "ruling": "accept"
+  },
+  "addition|defensives|MAGE|merely a setback|449336#449336#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0083",
+    "ruling": "reject"
+  },
+  "addition|defensives|MAGE|prismatic barrier|235450#235450#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0081",
+    "ruling": "accept"
+  },
+  "addition|defensives|MAGE|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0112",
+    "ruling": "reject"
+  },
+  "addition|defensives|MAGE|stoneform|65116#65116#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0159",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|awakening spirit|1263631#1263631#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0114",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|celestial infusion|1241059#1241059#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0099",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|elixir of determination|455179#455179#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0135",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|ethereal barrier|1223612#1223612#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0140",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|gloom-spattered dreadscale|1263141#1263141#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0165",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|invoke niuzao, the black ox|132578#132578#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0121",
+    "ruling": "accept"
+  },
+  "addition|defensives|MONK|jade sanctuary|448508#448508#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0118",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|mantra of purity|451253#451253#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0090",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|niuzao's protection|442749#442749#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0166",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|predictive training|451230#451230#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0098",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0122",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|solar core igniter|1254638#1254638#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0163",
+    "ruling": "reject"
+  },
+  "addition|defensives|MONK|yu'lon's grace|414143#414143#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0067",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|adjudication|1277046#1277046#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0116",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|blessed word|1301739#1301739#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0113",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|bulwark of order|209388#209388#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0068",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|coalesced jelly|1254514#1254514#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0154",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|ethereal barrier|1223612#1223612#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0143",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|gelatinous protection|1254520#1254520#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0134",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|palisade's protection|1237611#1237611#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0096",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|rotting globule|1254641#1254641#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0161",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0094",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|sacrosanct crusade|461867#461867#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0071",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|sentinel|389539#389539#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0091",
+    "ruling": "accept"
+  },
+  "addition|defensives|PALADIN|solar core igniter|1254638#1254638#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0131",
+    "ruling": "reject"
+  },
+  "addition|defensives|PALADIN|stoneform|65116#65116#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0160",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|angelic bulwark|114214#114214#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0136",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|fade|586#586#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0102",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|focused will|426401#426401#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0117",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|focused will|45242#45242#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0107",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|mental fortitude|377066#377066#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0075",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|protective light|193065#193065#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0080",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0132",
+    "ruling": "reject"
+  },
+  "addition|defensives|PRIEST|ultimate penitence|421453#421453#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0150",
+    "ruling": "reject"
+  },
+  "addition|defensives|ROGUE|cheating death|45182#45182#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0151",
+    "ruling": "reject"
+  },
+  "addition|defensives|ROGUE|exhilarating execution|428488#428488#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0087",
+    "ruling": "reject"
+  },
+  "addition|defensives|ROGUE|fade to nothing|386237#386237#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0088",
+    "ruling": "reject"
+  },
+  "addition|defensives|ROGUE|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0148",
+    "ruling": "reject"
+  },
+  "addition|defensives|SHAMAN|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0129",
+    "ruling": "reject"
+  },
+  "addition|defensives|SHAMAN|spirit wolf|260881#260881#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0092",
+    "ruling": "move"
+  },
+  "addition|defensives|SHAMAN|stoneform|65116#65116#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0156",
+    "ruling": "reject"
+  },
+  "addition|defensives|SHAMAN|wind barrier|457387#457387#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0072",
+    "ruling": "reject"
+  },
+  "addition|defensives|SHAMAN|windveil|355634#355634#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0104",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARLOCK|abyss walker|389614#389614#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0149",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARLOCK|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0115",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARLOCK|soulburn: drain life|394810#394810#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0146",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|battle-scarred veteran|386397#386397#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0155",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|coalesced jelly|1254514#1254514#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0168",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|defensive stance|386208#386208#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0142",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|demolish|436358#436358#addition": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0110",
+    "ruling": "move"
+  },
+  "addition|defensives|WARRIOR|gelatinous protection|1254520#1254520#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0138",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|keep your feet on the ground|438591#438591#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0078",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|palisade's protection|1237611#1237611#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0147",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|rune of void-tainted shell|1287955#1287955#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0126",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|second wind|458245#458245#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0119",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|solar core igniter|1254638#1254638#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0153",
+    "ruling": "reject"
+  },
+  "addition|defensives|WARRIOR|worldsoul aegis|1242032#1242032#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0133",
+    "ruling": "reject"
+  },
+  "addition|healing|MAGE|protective toadstools|1285161#1285161#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0258",
+    "ruling": "reject"
+  },
+  "addition|healing|MONK|refreshing drink|1265145#1265145#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0257",
+    "ruling": "reject"
+  },
+  "addition|healing|PALADIN|holy bulwark|432607#432607#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0256",
+    "ruling": "reject"
+  },
+  "addition|healing|PRIEST|echo of light|77489#77489#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0255",
+    "ruling": "accept"
+  },
+  "addition|healing|SHAMAN|earthliving weapon|382024#382024#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0254",
+    "ruling": "accept"
+  },
+  "addition|movement|DEATHKNIGHT|death charge|444347#444347#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0378",
+    "ruling": "accept"
+  },
+  "addition|movement|DEATHKNIGHT|death's advance|48265#48265#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0369",
+    "ruling": "accept"
+  },
+  "addition|movement|DEATHKNIGHT|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0415",
+    "ruling": "reject"
+  },
+  "addition|movement|DEATHKNIGHT|nitro boosts|54861#54861#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0417",
+    "ruling": "reject"
+  },
+  "addition|movement|DEATHKNIGHT|vampiric speed|434029#434029#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0380",
+    "ruling": "accept"
+  },
+  "addition|movement|DEATHKNIGHT|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0393",
+    "ruling": "reject"
+  },
+  "addition|movement|DEATHKNIGHT|wraith walk|212552#212552#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0389",
+    "ruling": "accept"
+  },
+  "addition|movement|DEMONHUNTER|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0396",
+    "ruling": "reject"
+  },
+  "addition|movement|DEMONHUNTER|felfire haste|389847#389847#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0373",
+    "ruling": "reject"
+  },
+  "addition|movement|DEMONHUNTER|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0386",
+    "ruling": "reject"
+  },
+  "addition|movement|DRUID|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0397",
+    "ruling": "reject"
+  },
+  "addition|movement|DRUID|forestwalk|400126#400126#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0370",
+    "ruling": "accept"
+  },
+  "addition|movement|DRUID|lycara's teachings|378991#378991#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0375",
+    "ruling": "reject"
+  },
+  "addition|movement|DRUID|mount form|210053#210053#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0431",
+    "ruling": "accept"
+  },
+  "addition|movement|DRUID|tiger dash|252216#252216#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0408",
+    "ruling": "accept"
+  },
+  "addition|movement|DRUID|travel form|165961#165961#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0384",
+    "ruling": "accept"
+  },
+  "addition|movement|DRUID|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0377",
+    "ruling": "reject"
+  },
+  "addition|movement|EVOKER|breath of eons|442204#442204#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0405",
+    "ruling": "accept"
+  },
+  "addition|movement|EVOKER|deep breath|433874#433874#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0391",
+    "ruling": "reject"
+  },
+  "addition|movement|EVOKER|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0426",
+    "ruling": "reject"
+  },
+  "addition|movement|EVOKER|flow state|390148#390148#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0425",
+    "ruling": "reject"
+  },
+  "addition|movement|EVOKER|motes of acceleration|432061#432061#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0429",
+    "ruling": "reject"
+  },
+  "addition|movement|EVOKER|twin guardian|370889#370889#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0430",
+    "ruling": "reject"
+  },
+  "addition|movement|EVOKER|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0400",
+    "ruling": "reject"
+  },
+  "addition|movement|HUNTER|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0395",
+    "ruling": "reject"
+  },
+  "addition|movement|HUNTER|quick draw|1279347#1279347#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0371",
+    "ruling": "reject"
+  },
+  "addition|movement|HUNTER|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0399",
+    "ruling": "reject"
+  },
+  "addition|movement|MAGE|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0392",
+    "ruling": "reject"
+  },
+  "addition|movement|MAGE|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0381",
+    "ruling": "reject"
+  },
+  "addition|movement|MONK|chi torpedo|119085#119085#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0390",
+    "ruling": "accept"
+  },
+  "addition|movement|MONK|chi-ji's swiftness|443569#443569#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0367",
+    "ruling": "accept"
+  },
+  "addition|movement|MONK|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0423",
+    "ruling": "reject"
+  },
+  "addition|movement|MONK|initiator's edge|1272850#1272850#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0409",
+    "ruling": "reject"
+  },
+  "addition|movement|MONK|jade walk|450552#450552#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0382",
+    "ruling": "accept"
+  },
+  "addition|movement|MONK|reinvigoration|1266743#1266743#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0406",
+    "ruling": "reject"
+  },
+  "addition|movement|MONK|swift as a coursing river|1263345#1263345#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0404",
+    "ruling": "reject"
+  },
+  "addition|movement|MONK|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0410",
+    "ruling": "reject"
+  },
+  "addition|movement|PALADIN|dawnlight|431381#431381#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0372",
+    "ruling": "reject"
+  },
+  "addition|movement|PALADIN|echoing freedom|394454#394454#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0420",
+    "ruling": "accept"
+  },
+  "addition|movement|PALADIN|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0413",
+    "ruling": "reject"
+  },
+  "addition|movement|PALADIN|hammer of wrath|24275#24275#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0401",
+    "ruling": "reject"
+  },
+  "addition|movement|PALADIN|judgment|20271#20271#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0388",
+    "ruling": "reject"
+  },
+  "addition|movement|PALADIN|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0374",
+    "ruling": "reject"
+  },
+  "addition|movement|PALADIN|will of the dawn|431752#431752#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0411",
+    "ruling": "reject"
+  },
+  "addition|movement|PRIEST|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0422",
+    "ruling": "reject"
+  },
+  "addition|movement|PRIEST|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0398",
+    "ruling": "reject"
+  },
+  "addition|movement|ROGUE|acrobatic strikes|455144#455144#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0418",
+    "ruling": "reject"
+  },
+  "addition|movement|ROGUE|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0424",
+    "ruling": "reject"
+  },
+  "addition|movement|ROGUE|shadowstep|36554#36554#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0394",
+    "ruling": "accept"
+  },
+  "addition|movement|ROGUE|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0421",
+    "ruling": "reject"
+  },
+  "addition|movement|SHAMAN|electroshock|454025#454025#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0376",
+    "ruling": "accept"
+  },
+  "addition|movement|SHAMAN|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0412",
+    "ruling": "reject"
+  },
+  "addition|movement|SHAMAN|lightning conduit|468226#468226#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0414",
+    "ruling": "accept"
+  },
+  "addition|movement|SHAMAN|spirit walk|58875#58875#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0402",
+    "ruling": "accept"
+  },
+  "addition|movement|SHAMAN|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0385",
+    "ruling": "reject"
+  },
+  "addition|movement|WARLOCK|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0403",
+    "ruling": "reject"
+  },
+  "addition|movement|WARLOCK|nitro boosts|54861#54861#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0428",
+    "ruling": "reject"
+  },
+  "addition|movement|WARLOCK|soulburn: demonic circle|387633#387633#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0427",
+    "ruling": "accept"
+  },
+  "addition|movement|WARLOCK|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0387",
+    "ruling": "reject"
+  },
+  "addition|movement|WARRIOR|bounding stride|202164#202164#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0379",
+    "ruling": "accept"
+  },
+  "addition|movement|WARRIOR|enrage|184362#184362#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0366",
+    "ruling": "reject"
+  },
+  "addition|movement|WARRIOR|farstrider's step|1242775#1242775#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0416",
+    "ruling": "reject"
+  },
+  "addition|movement|WARRIOR|piercing howl|1244157#1244157#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0419",
+    "ruling": "accept"
+  },
+  "addition|movement|WARRIOR|relentless pursuit|446044#446044#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0383",
+    "ruling": "accept"
+  },
+  "addition|movement|WARRIOR|voidlust|1277482#1277482#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0407",
+    "ruling": "reject"
+  },
+  "addition|movement|WARRIOR|war machine|262232#262232#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0368",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DEATHKNIGHT|blood debt|1310372#1310372#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0228",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DEATHKNIGHT|chosen of frostbrood|1265630#1265630#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0236",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DEATHKNIGHT|essence of the blood queen|433925#433925#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0232",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DEATHKNIGHT|relentless rider's strength|1300369#1300369#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0230",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DEATHKNIGHT|swift and painful|469169#469169#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0229",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DEMONHUNTER|akil'zon's cry of victory|1252818#1252818#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0245",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DRUID|abundance|207640#207640#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0227",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DRUID|berserking|26297#26297#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0248",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DRUID|lycara's teachings|378990#378990#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0226",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DRUID|touch of elune - day|154796#154796#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0247",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|DRUID|touch of elune - night|154797#154797#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0246",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|EVOKER|risen fury|1271799#1271799#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0250",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|EVOKER|rising fury|1271783#1271783#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0238",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|EVOKER|temporal burst|431698#431698#addition": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0240",
+    "ruling": "accept"
+  },
+  "addition|offensiveCDs|EVOKER|time convergence|431991#431991#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0243",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|MAGE|berserking|26297#26297#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0251",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|MAGE|hyperthermia|383874#383874#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0241",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|MAGE|lesser time warp|1260277#1260277#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0249",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|MONK|akil'zon's cry of victory|1252818#1252818#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0237",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|MONK|heart of the jade serpent|1238904#1238904#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0233",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|MONK|heart of the jade serpent|443616#443616#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0234",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|PALADIN|akil'zon's cry of victory|1252818#1252818#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0235",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|PRIEST|ancient madness|1304485#1304485#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0239",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|PRIEST|idol of y'shaarj|373316#373316#addition": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0231",
+    "ruling": "accept"
+  },
+  "addition|offensiveCDs|ROGUE|jackpot|1214937#1214937#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0253",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|ROGUE|lingering darkness|457273#457273#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0244",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|SHAMAN|berserking|26297#26297#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0252",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|WARLOCK|tyrant's oblation|1276767#1276767#addition": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0225",
+    "ruling": "accept"
+  },
+  "addition|offensiveCDs|WARRIOR|battle stance|386164#386164#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0242",
+    "ruling": "reject"
+  },
+  "addition|offensiveCDs|WARRIOR|violent euphoria|1270731#1270731#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0224",
+    "ruling": "reject"
+  },
+  "addition|raidCDs|DRUID|void-touched drums|1243972#1243972#addition": {
+    "category": "raidCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0222",
+    "ruling": "accept"
+  },
+  "addition|raidCDs|EVOKER|chrono ward|409678#409678#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0215",
+    "ruling": "move"
+  },
+  "addition|raidCDs|EVOKER|defy fate|404381#404381#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0219",
+    "ruling": "reject"
+  },
+  "addition|raidCDs|EVOKER|dream breath|355941#355941#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0208",
+    "ruling": "move"
+  },
+  "addition|raidCDs|EVOKER|dream breath|376788#376788#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0211",
+    "ruling": "move"
+  },
+  "addition|raidCDs|EVOKER|litany of lightblind wrath|1263727#1263727#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0218",
+    "ruling": "reject"
+  },
+  "addition|raidCDs|EVOKER|rewind|363534#363534#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0216",
+    "ruling": "move"
+  },
+  "addition|raidCDs|EVOKER|temporal anomaly|373862#373862#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0207",
+    "ruling": "move"
+  },
+  "addition|raidCDs|EVOKER|temporal barrier|1291636#1291636#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0209",
+    "ruling": "move"
+  },
+  "addition|raidCDs|EVOKER|verdant embrace|409895#409895#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0213",
+    "ruling": "move"
+  },
+  "addition|raidCDs|HUNTER|harrier's cry|466904#466904#addition": {
+    "category": "raidCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0220",
+    "ruling": "accept"
+  },
+  "addition|raidCDs|MONK|chi cocoon|1260681#1260681#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0214",
+    "ruling": "move"
+  },
+  "addition|raidCDs|MONK|chi cocoon|406220#406220#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0210",
+    "ruling": "move"
+  },
+  "addition|raidCDs|MONK|strength of the black ox|443113#443113#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0206",
+    "ruling": "move"
+  },
+  "addition|raidCDs|PALADIN|veneration|414407#414407#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0212",
+    "ruling": "reject"
+  },
+  "addition|raidCDs|PRIEST|litany of lightblind wrath|1263727#1263727#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0217",
+    "ruling": "reject"
+  },
+  "addition|raidCDs|ROGUE|void-touched drums|1243972#1243972#addition": {
+    "category": "raidCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0223",
+    "ruling": "accept"
+  },
+  "addition|raidCDs|WARLOCK|void-touched drums|1243972#1243972#addition": {
+    "category": "raidCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0221",
+    "ruling": "accept"
+  },
+  "addition|support|DEATHKNIGHT|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0280",
+    "ruling": "reject"
+  },
+  "addition|support|DEATHKNIGHT|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0321",
+    "ruling": "reject"
+  },
+  "addition|support|DEATHKNIGHT|lesser anti-magic shell|454863#454863#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0317",
+    "ruling": "accept"
+  },
+  "addition|support|DEATHKNIGHT|newly turned|434493#434493#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0362",
+    "ruling": "reject"
+  },
+  "addition|support|DEATHKNIGHT|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0309",
+    "ruling": "reject"
+  },
+  "addition|support|DEATHKNIGHT|symbiotic relationship|474754#474754#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0359",
+    "ruling": "accept"
+  },
+  "addition|support|DEATHKNIGHT|vampiric aura|434107#434107#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0333",
+    "ruling": "reject"
+  },
+  "addition|support|DEMONHUNTER|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0278",
+    "ruling": "reject"
+  },
+  "addition|support|DEMONHUNTER|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0331",
+    "ruling": "reject"
+  },
+  "addition|support|DEMONHUNTER|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0284",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0279",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|duskwraith's infusion|1263447#1263447#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0289",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|ethereal guard|1223453#1223453#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0306",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0325",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|ironbark|102342#102342#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0305",
+    "ruling": "move"
+  },
+  "addition|support|DRUID|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0272",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|soulcoil barrier|1307578#1307578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0337",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|symbiotic blooms|439530#439530#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0264",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|symbiotic relationship|474750#474750#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0344",
+    "ruling": "accept"
+  },
+  "addition|support|DRUID|tangle of vibrant vines|1255367#1255367#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0343",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|time to shine!|383799#383799#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0345",
+    "ruling": "reject"
+  },
+  "addition|support|DRUID|worldsoul cradle|1242003#1242003#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0319",
+    "ruling": "reject"
+  },
+  "addition|support|EVOKER|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0294",
+    "ruling": "reject"
+  },
+  "addition|support|EVOKER|black attunement|403295#403295#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0334",
+    "ruling": "reject"
+  },
+  "addition|support|EVOKER|blistering scales|360827#360827#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0351",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|inferno's blessing|410263#410263#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0292",
+    "ruling": "reject"
+  },
+  "addition|support|EVOKER|lifebind|373267#373267#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0304",
+    "ruling": "move"
+  },
+  "addition|support|EVOKER|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0301",
+    "ruling": "reject"
+  },
+  "addition|support|EVOKER|shifting sands|413984#413984#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0283",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|spatial paradox|406789#406789#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0363",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|time dilation|357170#357170#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0322",
+    "ruling": "move"
+  },
+  "addition|support|EVOKER|time spiral|375226#375226#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0356",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|time spiral|375229#375229#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0357",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|time spiral|375230#375230#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0355",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|time spiral|375253#375253#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0354",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|time spiral|375256#375256#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0364",
+    "ruling": "accept"
+  },
+  "addition|support|EVOKER|time spiral|375257#375257#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0361",
+    "ruling": "accept"
+  },
+  "addition|support|HUNTER|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0287",
+    "ruling": "reject"
+  },
+  "addition|support|HUNTER|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0348",
+    "ruling": "reject"
+  },
+  "addition|support|HUNTER|misdirection|34477#34477#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0293",
+    "ruling": "accept"
+  },
+  "addition|support|HUNTER|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0308",
+    "ruling": "reject"
+  },
+  "addition|support|HUNTER|visage|372014#372014#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0340",
+    "ruling": "reject"
+  },
+  "addition|support|MAGE|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0276",
+    "ruling": "reject"
+  },
+  "addition|support|MAGE|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0335",
+    "ruling": "reject"
+  },
+  "addition|support|MONK|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0299",
+    "ruling": "reject"
+  },
+  "addition|support|MONK|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0338",
+    "ruling": "reject"
+  },
+  "addition|support|MONK|life cocoon|116849#116849#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0312",
+    "ruling": "move"
+  },
+  "addition|support|MONK|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0277",
+    "ruling": "reject"
+  },
+  "addition|support|MONK|soulcoil barrier|1307578#1307578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0339",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0270",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|beacon of the savior|1244893#1244893#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0261",
+    "ruling": "move"
+  },
+  "addition|support|PALADIN|beacon of the savior|1245369#1245369#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0260",
+    "ruling": "move"
+  },
+  "addition|support|PALADIN|blessing of sacrifice|6940#6940#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0310",
+    "ruling": "move"
+  },
+  "addition|support|PALADIN|duskwraith's infusion|1263447#1263447#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0315",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|echoing protection|387804#387804#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0323",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|eternal flame|156322#156322#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0266",
+    "ruling": "move"
+  },
+  "addition|support|PALADIN|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0300",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|glistening radiance|1241866#1241866#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0282",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|holy bulwark|432496#432496#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0296",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|lesser bulwark|1239002#1239002#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0288",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|lesser weapon|1239091#1239091#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0274",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|overflowing light|461499#461499#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0290",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|rune of echoes|1289063#1289063#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0326",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0269",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|sacred weapon|432502#432502#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0286",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|saved by the light|157128#157128#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0267",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|soulcoil barrier|1307578#1307578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0327",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|sun sear|431415#431415#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0263",
+    "ruling": "reject"
+  },
+  "addition|support|PALADIN|time to shine!|383799#383799#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0352",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0291",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|blaze of light|355851#355851#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0295",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|consecrated chalice|1259988#1259988#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0349",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|divine aegis|47753#47753#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0268",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|duskwraith's infusion|1263447#1263447#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0316",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|inspiration|390677#390677#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0273",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|leap of faith|73325#73325#addition": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0353",
+    "ruling": "move"
+  },
+  "addition|support|PRIEST|pain suppression|33206#33206#addition": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0330",
+    "ruling": "move"
+  },
+  "addition|support|PRIEST|power word: shield (unfolding vision)|1300008#1300008#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0365",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|preternatural antivenom|1305846#1305846#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0318",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0275",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|soulcoil barrier|1307578#1307578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0313",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|visage|372014#372014#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0307",
+    "ruling": "reject"
+  },
+  "addition|support|PRIEST|void shield (unfolding vision)|1300009#1300009#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0324",
+    "ruling": "accept"
+  },
+  "addition|support|PRIEST|void shield|1253593#1253593#addition": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0271",
+    "ruling": "move"
+  },
+  "addition|support|PRIEST|worldsoul cradle|1242003#1242003#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0329",
+    "ruling": "reject"
+  },
+  "addition|support|ROGUE|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0298",
+    "ruling": "reject"
+  },
+  "addition|support|ROGUE|shroud of concealment|115834#115834#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0346",
+    "ruling": "accept"
+  },
+  "addition|support|ROGUE|tricks of the trade|1224098#1224098#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0347",
+    "ruling": "accept"
+  },
+  "addition|support|ROGUE|tricks of the trade|57934#57934#addition": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0336",
+    "ruling": "accept"
+  },
+  "addition|support|SHAMAN|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0285",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|coached|386578#386578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0360",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|condensation|1300642#1300642#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0262",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|duskwraith's infusion|1263447#1263447#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0311",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|elemental resistance|462568#462568#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0259",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0303",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|radiant blessing|1254624#1254624#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0358",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|rune of echoes|1289063#1289063#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0342",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0265",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|soulcoil barrier|1307578#1307578#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0328",
+    "ruling": "reject"
+  },
+  "addition|support|SHAMAN|time to shine!|383799#383799#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0320",
+    "ruling": "reject"
+  },
+  "addition|support|WARLOCK|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0281",
+    "ruling": "reject"
+  },
+  "addition|support|WARLOCK|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0332",
+    "ruling": "reject"
+  },
+  "addition|support|WARLOCK|rune of echoes|1289063#1289063#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0350",
+    "ruling": "reject"
+  },
+  "addition|support|WARLOCK|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0314",
+    "ruling": "reject"
+  },
+  "addition|support|WARRIOR|arcanoweave insight|1229746#1229746#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0297",
+    "ruling": "reject"
+  },
+  "addition|support|WARRIOR|fanatically inspired|1266300#1266300#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0341",
+    "ruling": "reject"
+  },
+  "addition|support|WARRIOR|rune of lingering|1287665#1287665#addition": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0302",
+    "ruling": "reject"
+  },
+  "add|defensives|DEMONHUNTER|metamorphosis|162264#162264#correction-add": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0026",
+    "ruling": "reject"
+  },
+  "add|defensives|MONK|touch of karma|122470#122470#correction-add": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0060",
+    "ruling": "accept"
+  },
+  "add|defensives|PALADIN|divine protection|403876#403876#correction-add": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0032",
+    "ruling": "accept"
+  },
+  "add|defensives|PALADIN|guardian of ancient kings|212641,393108#212641#correction-add": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0044",
+    "ruling": "accept"
+  },
+  "add|defensives|PALADIN|guardian of ancient kings|212641,393108#393108#correction-add": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0045",
+    "ruling": "accept"
+  },
+  "add|defensives|WARRIOR|spell reflection|385391#385391#correction-add": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0031",
+    "ruling": "accept"
+  },
+  "add|hardCC|HUNTER|intimidation|1258508#1258508#correction-add": {
+    "category": "hardCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0061",
+    "ruling": "accept"
+  },
+  "add|hardCC|PRIEST|holy word: chastise|200196#200196#correction-add": {
+    "category": "hardCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0048",
+    "ruling": "accept"
+  },
+  "add|hardCC|ROGUE|blind|427773#427773#correction-add": {
+    "category": "hardCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0043",
+    "ruling": "accept"
+  },
+  "add|healing|DRUID|lifebloom|1227806#1227806#correction-add": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0037",
+    "ruling": "accept"
+  },
+  "add|healing|EVOKER|reversion|367364#367364#correction-add": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0014",
+    "ruling": "accept"
+  },
+  "add|healing|MONK|soothing mist|1260617#1260617#correction-add": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0035",
+    "ruling": "accept"
+  },
+  "add|healing|PRIEST|power word: shield|1246768#1246768#correction-add": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0007",
+    "ruling": "accept"
+  },
+  "add|healing|SHAMAN|earth shield|383648#383648#correction-add": {
+    "category": "healing",
+    "date": "2026-09-25",
+    "reason": "review sheet R0046",
+    "ruling": "accept"
+  },
+  "add|movement|DRUID|stampeding roar|77761,77764#77761#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0010",
+    "ruling": "accept"
+  },
+  "add|movement|DRUID|stampeding roar|77761,77764#77764#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0011",
+    "ruling": "accept"
+  },
+  "add|movement|HUNTER|aspect of the cheetah|186258#186258#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0036",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#221883#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0015",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#221885#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0016",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#221887#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0017",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#254471#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0018",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#254472#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0019",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#254474#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0020",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#276111#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0021",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#276112#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0022",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#294133#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0023",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#363608#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0024",
+    "ruling": "accept"
+  },
+  "add|movement|PALADIN|divine steed|221883,221885,221887,254471,254472,254474,276111,276112,294133,363608,453804#453804#correction-add": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0025",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|DEMONHUNTER|metamorphosis|187827#187827#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0040",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|DRUID|incarnation: avatar of ashamane|252071#252071#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0064",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|HUNTER|bestial wrath|186254,1235388,1285912#1235388#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0003",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|HUNTER|bestial wrath|186254,1235388,1285912#1285912#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0004",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|HUNTER|bestial wrath|186254,1235388,1285912#186254#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0002",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|SHAMAN|ascendance|114052,1219480#114052#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0029",
+    "ruling": "accept"
+  },
+  "add|offensiveCDs|SHAMAN|ascendance|114052,1219480#1219480#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0030",
+    "ruling": "accept"
+  },
+  "add|softCC|DEATHKNIGHT|chains of ice|444826#444826#correction-add": {
+    "category": "softCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0005",
+    "ruling": "accept"
+  },
+  "add|softCC|DEATHKNIGHT|heart strike|460501#460501#correction-add": {
+    "category": "softCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0008",
+    "ruling": "accept"
+  },
+  "add|softCC|MONK|disable|116706#116706#correction-add": {
+    "category": "softCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0038",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381732#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0049",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381741#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0050",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381746#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0051",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381749#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0052",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381750#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0053",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381751#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0054",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381752#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0055",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381756#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0056",
+    "ruling": "accept"
+  },
+  "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381757#correction-add": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0057",
+    "ruling": "accept"
+  },
+  "move|defensives|WARRIOR|avatar|107574#107574#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0012",
+    "ruling": "reject"
+  },
+  "move|defensives|WARRIOR|ignore pain|190456#190456#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0013",
+    "ruling": "reject"
+  },
+  "move|movement|EVOKER|zephyr|374227#374227#move": {
+    "category": "movement",
+    "date": "2026-09-25",
+    "reason": "review sheet R0039",
+    "ruling": "accept"
+  },
+  "move|raidCDs|PALADIN|beacon of virtue|200025#200025#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0006",
+    "ruling": "reject"
+  },
+  "move|support|PALADIN|beacon of faith|156910#156910#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0062",
+    "ruling": "reject"
+  },
+  "move|support|PALADIN|beacon of light|53563#53563#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0063",
+    "ruling": "reject"
+  },
+  "move|support|PALADIN|blessing of freedom|1044#1044#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0033",
+    "ruling": "reject"
+  },
+  "move|support|PRIEST|atonement|194384#194384#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0009",
+    "ruling": "reject"
+  },
+  "move|support|PRIEST|power infusion|10060#10060#move": {
+    "category": "support",
+    "date": "2026-09-25",
+    "reason": "review sheet R0034",
+    "ruling": "accept"
+  },
+  "move|support|PRIEST|prayer of mending|41635#41635#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0001",
+    "ruling": "reject"
+  },
+  "move|support|SHAMAN|earth shield|974#974#move": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0047",
+    "ruling": "reject"
+  },
+  "replace|defensives|EVOKER|renewing blaze|374349#374348#deletion": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0041",
+    "ruling": "accept"
+  },
+  "replace|defensives|EVOKER|renewing blaze|374349#374349#correction-add": {
+    "category": "defensives",
+    "date": "2026-09-25",
+    "reason": "review sheet R0042",
+    "ruling": "accept"
+  },
+  "replace|offensiveCDs|PALADIN|avenging wrath|454351#231895#deletion": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0027",
+    "ruling": "accept"
+  },
+  "replace|offensiveCDs|PALADIN|avenging wrath|454351#454351#correction-add": {
+    "category": "offensiveCDs",
+    "date": "2026-09-25",
+    "reason": "review sheet R0028",
+    "ruling": "accept"
+  },
+  "replace|softCC|DEMONHUNTER|the hunt|370970#323996#deletion": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0058",
+    "ruling": "accept"
+  },
+  "replace|softCC|DEMONHUNTER|the hunt|370970#370970#correction-add": {
+    "category": "softCC",
+    "date": "2026-09-25",
+    "reason": "review sheet R0059",
+    "ruling": "accept"
+  }
+}

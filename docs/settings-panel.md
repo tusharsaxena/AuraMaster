@@ -177,8 +177,8 @@ that can never match carries a gray note naming what to use instead, because the
 chat and is gone by the next login.
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
-dropdown of the eleven shipped spell categories, plus every category the player has made — the nine buff ones (defensives, activeMitigation, raidCDs,
-offensiveCDs, healing, support, movement, utility, consumables) and the two debuff ones issue #11
+dropdown of the thirteen shipped spell categories, plus every category the player has made — the eleven buff ones (defensives, activeMitigation, raidCDs,
+offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials; schema v7 retired consumables) and the two debuff ones issue #11
 added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
 KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry
 carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of control)` — read out of
@@ -452,7 +452,7 @@ section, and only that section, for the selected container, as one bulk act (`NS
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
 | Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | *every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
+| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | *every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
 | Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 

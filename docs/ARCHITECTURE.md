@@ -695,7 +695,7 @@ return value.
   build; Axe Toss (89766) and Seduction (6358), on a pet skill line with ClassMask 0, which the same
   test that excludes professions and mounts throws away; and Earthbind Totem (2484) and Earthgrab
   Totem (64695), whose root auras carry no mechanic and no matching name, so Shaman ships no root at
-  all. The KNOWN GAPS comment above `hardCC` records each one and why (`defaults/Categories.lua:360-378`)
+  all. The KNOWN GAPS comment above `hardCC` records each one and why (`defaults/Categories.lua:512-529`)
   rather than papering over it. A player who
   wants any of the five adds it by id on General → Spell Categories, which is a profile-wide edit
   every container picks up.

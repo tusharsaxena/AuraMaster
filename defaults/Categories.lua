@@ -69,8 +69,7 @@ local _, NS = ...
 -- id per category, and those edits live in the profile (profile.categorySpells, shared by every
 -- container since schema v2), never here.
 -- An id that does not exist in the current client simply never matches, so a stale entry costs
--- nothing but a row in the editor. Consumables change every expansion and are the list most likely to
--- need a player's own additions.
+-- nothing but a row in the editor.
 --
 -- PROVENANCE (issue #11 part C, spec section C6). `hardCC` and `softCC` below are the first lists
 -- here that were DERIVED rather than hand-assembled: `tools/spell-research/research.py` reads the
@@ -102,19 +101,36 @@ Cat.HELPFUL = {
         key = "defensives", kind = "spells", label = "Defensive cooldowns",
         desc = "Personal defensive cooldowns.",
         spells = spells({
-            WARRIOR     = { 118038, 184364, 871, 23920, 12975 },
-            PALADIN     = { 642, 498, 31850, 86659, 184662, 205191 },
+            -- 385391: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            WARRIOR     = { 118038, 184364, 871, 23920, 12975, 385391 },
+            -- 403876: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 212641, 393108: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 389539: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 6940: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PALADIN     = { 642, 498, 31850, 86659, 184662, 205191, 403876, 212641, 393108, 389539, 6940 },
             HUNTER      = { 186265, 264735 },
             ROGUE       = { 5277, 31224, 1966 },
-            PRIEST      = { 47585, 19236 },
+            -- 33206: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PRIEST      = { 47585, 19236, 33206 },
             DEATHKNIGHT = { 48792, 48707, 55233, 49039 },
             SHAMAN      = { 108271 },
-            MAGE        = { 45438, 342246 },
+            -- 235450: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 11426: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 414658: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 235313: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            MAGE        = { 45438, 342246, 235450, 11426, 414658, 235313 },
             WARLOCK     = { 104773, 108416 },
-            MONK        = { 120954, 122278, 122783, 125174 },
-            DRUID       = { 22812, 61336 },
-            DEMONHUNTER = { 212800, 196555, 187827 },
-            EVOKER      = { 363916, 374348 },
+            -- 122470: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 132578: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 116849: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            MONK        = { 120954, 122278, 122783, 125174, 122470, 132578, 116849 },
+            -- 102342: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DRUID       = { 22812, 61336, 102342 },
+            -- 207771: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DEMONHUNTER = { 212800, 196555, 207771 },   -- Metamorphosis (162264, 187827) is Offensive cooldowns only (owner 2026-09-25)
+            -- 374349: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 357170: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            EVOKER      = { 363916, 374349, 357170 },
         }),
     },
     {
@@ -134,21 +150,30 @@ Cat.HELPFUL = {
             DEATHKNIGHT = { 77535, 195181 },
             DRUID       = { 192081 },
             DEMONHUNTER = { 203819 },
-            MONK        = { 215479 },
+            -- 116847: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            MONK        = { 215479, 116847 },
         }),
     },
     {
         key = "raidCDs", kind = "spells", label = "Raid cooldowns",
         desc = "Group-wide cooldowns and haste effects.",
         spells = spells({
+            -- Every Bloodlust variant sits here (owner review 2026-09-25): Bloodlust, Heroism, Time Warp,
+            -- Primal Rage, Harrier's Cry, Fury of the Aspects, and the drums any class can use --
+            -- 1243972 Void-touched Drums and 444257 Thunderous Drums.
+            ALL         = { 1243972, 444257 },
             WARRIOR     = { 97463 },
             PALADIN     = { 31821 },
             DEATHKNIGHT = { 145629 },
+            -- 740 Tranquility (owner review 2026-09-25)
+            DRUID       = { 740 },
             DEMONHUNTER = { 209426 },
             PRIEST      = { 81782 },
             SHAMAN      = { 2825, 32182, 325174 },   -- Bloodlust, Heroism, Spirit Link Totem (the AURA; 98007 is the cast, issue #15)
             MAGE        = { 80353 },
-            HUNTER      = { 264667 },
+            -- 466904: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            HUNTER      = { 264667, 466904 },
+            -- 374227 Zephyr: in both Raid cooldowns and Movement (owner review 2026-09-25)
             EVOKER      = { 390386, 374227 },
         }),
     },
@@ -156,18 +181,28 @@ Cat.HELPFUL = {
         key = "offensiveCDs", kind = "spells", label = "Offensive cooldowns",
         desc = "Damage cooldowns.",
         spells = spells({
-            WARRIOR     = { 1719, 107574 },
-            PALADIN     = { 31884, 231895 },
+            -- 436358: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            WARRIOR     = { 1719, 107574, 436358 },
+            -- 454351: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PALADIN     = { 31884, 454351 },
             DEATHKNIGHT = { 51271, 207289 },
-            DRUID       = { 194223, 102560, 106951, 102543 },
-            HUNTER      = { 288613, 19574, 360952 },
+            -- 1276767: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            WARLOCK     = { 1276767 },
+            -- 252071: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DRUID       = { 194223, 102560, 106951, 102543, 252071 },
+            -- 186254, 1235388, 1285912: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            HUNTER      = { 288613, 19574, 360952, 186254, 1235388, 1285912 },
             MAGE        = { 190319, 12472, 365362 },
             ROGUE       = { 121471, 13750, 185422 },
-            DEMONHUNTER = { 162264 },
-            PRIEST      = { 194249, 10060 },
+            -- 187827: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DEMONHUNTER = { 162264, 187827 },
+            -- 373316: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PRIEST      = { 194249, 373316 },
             MONK        = { 137639 },
-            SHAMAN      = { 114051 },
-            EVOKER      = { 375087 },
+            -- 114052, 1219480: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            SHAMAN      = { 114051, 114052, 1219480 },
+            -- 431698: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            EVOKER      = { 375087, 431698 },
         }),
     },
     {
@@ -176,39 +211,124 @@ Cat.HELPFUL = {
         key = "healing", kind = "spells", label = "Healing",
         desc = "Heal-over-time effects, shields and beacons.",
         spells = spells({
-            DRUID   = { 774, 8936, 33763, 48438, 102352, 155777, 207386 },
-            PRIEST  = { 139, 17, 194384, 41635 },
-            SHAMAN  = { 61295, 974 },
-            MONK    = { 119611, 124682, 115175 },
-            EVOKER  = { 364343, 366155 },
-            PALADIN = { 53563, 156910, 200025, 287280 },
+            -- 1227806: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DRUID   = { 774, 8936, 33763, 48438, 102352, 155777, 207386, 1227806 },
+            -- 1246768: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 77489: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1253593: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PRIEST  = { 139, 17, 194384, 41635, 1246768, 77489, 1253593 },
+            -- 383648: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 382024: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            SHAMAN  = { 61295, 974, 383648, 382024 },
+            -- 1260617: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 443113: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 406220: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1260681: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            MONK    = { 119611, 124682, 115175, 1260617, 443113, 406220, 1260681 },
+            -- 367364: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 373862: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 355941: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1291636: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 376788: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 409895: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 409678: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 363534: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 373267: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            EVOKER  = { 364343, 366155, 367364, 373862, 355941, 1291636, 376788, 409895, 409678, 363534, 373267 },
+            -- 1245369: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1244893: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 156322: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PALADIN = { 53563, 156910, 200025, 287280, 1245369, 1244893, 156322 },
         }),
     },
     {
         key = "support", kind = "spells", label = "Support",
-        desc = "Raid buffs and buffs cast on other players.",
+        desc = "Buffs cast on other players.",
+        spells = spells({
+            -- 34477: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            HUNTER  = { 34477 },
+            -- 57934: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 115834: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1224098: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            ROGUE   = { 57934, 115834, 1224098 },
+            -- 454863: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 474754: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DEATHKNIGHT = { 454863, 474754 },
+            -- 10060: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1300009: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PRIEST  = { 10060, 1300009 },
+            -- 474750: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DRUID   = { 29166, 474750 },
+            -- 413984: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 360827: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 375253: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 375230: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 375226: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 375229: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 375257: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 406789: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 375256: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            EVOKER  = { 369459, 413984, 360827, 375253, 375230, 375226, 375229, 375257, 406789, 375256 },
+        }),
+    },
+    {
+        -- Split out of Support (owner 2026-09-25): the raid-wide buffs every group member carries.
+        -- Blessing of the Bronze has one aura per class; the ids are the ones the 2026-09-24 combat
+        -- logs saw (docs/spell-research/2026-09-24-logs).
+        key = "groupBuffs", kind = "spells", label = "Group buffs",
+        desc = "Raid-wide buffs such as Mark of the Wild, Arcane Intellect and Battle Shout.",
         spells = spells({
             MAGE    = { 1459 },
             PRIEST  = { 21562 },
             WARRIOR = { 6673 },
-            DRUID   = { 1126, 29166 },
-            EVOKER  = { 381748, 369459 },
+            DRUID   = { 1126 },
             SHAMAN  = { 462854 },
+            EVOKER  = { 381748, 381732, 381741, 381746, 381749, 381750, 381751, 381752, 381753, 381754,
+                        381756, 381757, 381758 },
         }),
     },
     {
         key = "movement", kind = "spells", label = "Movement",
         desc = "Speed and freedom effects.",
         spells = spells({
-            ROGUE   = { 2983 },
-            DRUID   = { 1850, 106898 },
-            PALADIN = { 1044, 221886 },
-            MONK    = { 116841 },
-            HUNTER  = { 186257 },
-            SHAMAN  = { 192082, 79206, 2645 },
-            PRIEST  = { 121557, 65081 },
-            WARLOCK = { 111400 },
-            EVOKER  = { 358267 },
+            -- 202164: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 446044: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 1244157: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            WARRIOR = { 202164, 446044, 1244157 },
+            -- 36554: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            ROGUE   = { 2983, 36554 },
+            -- 48265: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 444347: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 434029: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 212552: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DEATHKNIGHT = { 48265, 444347, 434029, 212552 },
+            -- 77761, 77764: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 400126: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 165961: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 252216: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 210053: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DRUID   = { 1850, 106898, 77761, 77764, 400126, 165961, 252216, 210053 },
+            -- 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 394454: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PALADIN = { 1044, 221886, 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804, 394454 },
+            -- 443569: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 450552: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 119085: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            MONK    = { 116841, 443569, 450552, 119085 },
+            -- 186258: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            HUNTER  = { 186257, 186258 },
+            -- 260881: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 454025: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 58875: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 468226: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            SHAMAN  = { 192082, 79206, 2645, 260881, 454025, 58875, 468226 },
+            -- 73325: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PRIEST  = { 121557, 65081, 73325 },
+            -- 387633: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            WARLOCK = { 111400, 387633 },
+            -- 374227: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 442204: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            EVOKER  = { 358267, 374227, 442204 },
         }),
     },
     {
@@ -222,14 +342,45 @@ Cat.HELPFUL = {
             HUNTER  = { 5384 },
             ROGUE   = { 1784 },
             DRUID   = { 5215 },
-            ALL     = { 58984 },
         }),
     },
     {
-        key = "consumables", kind = "spells", label = "Consumables",
-        desc = "Flasks and similar. Changes every expansion — add your own ids.",
+        -- Owner 2026-09-25. Travel Form and Mount Form are in Movement too: a druid form is a form.
+        key = "stances", kind = "spells", label = "Stances",
+        desc = "Warrior stances, druid forms and paladin auras.",
         spells = spells({
-            ALL = { 431971, 431972, 431973, 431974, 432021 },
+            WARRIOR = { 386164, 386196, 386208 },                    -- Battle, Berserker, Defensive Stance
+            DRUID   = { 5487, 768, 24858, 114282, 165961, 1066, 40120, 210053 }, -- Bear, Cat, Moonkin, Treant, Travel (x3), Mount Form
+            PALADIN = { 465, 317920, 32223 },                        -- Devotion, Concentration, Crusader Aura
+        }),
+    },
+    {
+        -- Owner 2026-09-25. The buffs of the DB2 "Racial - <race>" skill lines' active abilities and
+        -- procs (build 12.1.0.69875), passives left out; every id here but four was seen as a player
+        -- buff in the 2026-09-24 combat logs (not seen: 28880, 121093, 370626 Gift of the Naaru and
+        -- 281954 Pterrordax Swoop). The racial DEBUFFS (War Stomp, Quaking Palm, Haymaker, Arcane
+        -- Pulse) stay in Hard CC and Soft CC below.
+        key = "racials", kind = "spells", label = "Racials",
+        desc = "Buffs from racial abilities, such as Stoneform, Berserking and Blood Fury.",
+        spells = spells({
+            ALL = {
+                65116,                                                  -- Stoneform (Dwarf)
+                26297,                                                  -- Berserking (Troll)
+                20572, 33697, 33702,                                    -- Blood Fury (Orc)
+                274739, 274740, 274741, 274742,                         -- Ancestral Call (Mag'har Orc)
+                273104,                                                 -- Fireblood (Dark Iron Dwarf)
+                58984,                                                  -- Shadowmeld (Night Elf)
+                28880, 59542, 59543, 59544, 59545, 59547, 59548, 121093, 370626, 416250, -- Gift of the Naaru (Draenei)
+                7744,                                                   -- Will of the Forsaken (Undead)
+                59752,                                                  -- Will to Survive (Human)
+                68992, 87840,                                           -- Darkflight, Running Wild (Worgen)
+                256948, 256374,                                         -- Spatial Rift, Entropic Embrace (Void Elf)
+                291944, 281954,                                         -- Regeneratin', Pterrordax Swoop (Zandalari Troll)
+                255654,                                                 -- Bull Rush (Highmountain Tauren)
+                291843,                                                 -- Brush It Off (Kul Tiran)
+                436344, 461063,                                         -- Azerite Surge, Quiet Contemplation (Earthen)
+                1238467,                                                -- Thorn Bloom (Haranir)
+            },
         }),
     },
     {
@@ -381,9 +532,12 @@ Cat.HARMFUL = {
         spells = spells({
             WARRIOR     = { 5246, 132168, 132169, 385954 },          -- Intimidating Shout, Shockwave, Storm Bolt, Shield Charge
             PALADIN     = { 853, 10326, 105421 },                    -- Hammer of Justice, Turn Evil, Blinding Light
-            HUNTER      = { 1513, 3355, 24394, 117526, 213691 },     -- Scare Beast, Freezing Trap, Intimidation, Binding Shot, Scatter Shot
-            ROGUE       = { 408, 1776, 1833, 2094, 6770 },           -- Kidney Shot, Gouge, Cheap Shot, Blind, Sap
-            PRIEST      = { 605, 8122, 9484, 64044, 200200, 205364 }, -- Mind Control, Psychic Scream, Shackle Horror, Psychic Horror, Holy Word: Chastise, Dominate Mind
+            -- 1258508: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            HUNTER      = { 1513, 3355, 24394, 117526, 213691, 1258508 },     -- Scare Beast, Freezing Trap, Intimidation, Binding Shot, Scatter Shot
+            -- 427773: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            ROGUE       = { 408, 1776, 1833, 2094, 6770, 427773 },           -- Kidney Shot, Gouge, Cheap Shot, Blind, Sap
+            -- 200196: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            PRIEST      = { 605, 8122, 9484, 64044, 200200, 205364, 200196 }, -- Mind Control, Psychic Scream, Shackle Horror, Psychic Horror, Holy Word: Chastise, Dominate Mind
             DEATHKNIGHT = { 108194, 111673, 207167, 221562 },        -- Asphyxiate (Frost/Unholy), Control Undead, Blinding Sleet, Asphyxiate (Blood)
             SHAMAN      = { 51514, 118905, 204437 },                 -- Hex, Capacitor Totem, Lightning Lasso
             MAGE        = { 118, 31661, 82691, 383121 },             -- Polymorph, Dragon's Breath, Ring of Frost, Mass Polymorph
@@ -464,13 +618,17 @@ Cat.HARMFUL = {
             -- real target while an Outlaw rogue has the talent, then swap in what lands.
             ROGUE       = { 3409, 35546, 185763 },                   -- Crippling Poison, Fatal Flourish (cast; aura unknown), Pistol Shot
             PRIEST      = { 15407, 114404, 390669 },                 -- Mind Flay, Void Tendrils, Apathy
-            DEATHKNIGHT = { 45524, 206930, 273977 },                 -- Chains of Ice, Heart Strike, Grip of the Dead
+            -- 444826: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            -- 460501: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DEATHKNIGHT = { 45524, 206930, 273977, 444826, 460501 },                 -- Chains of Ice, Heart Strike, Grip of the Dead
             SHAMAN      = { 51490, 196840, 470194, 1251059 },        -- Thunderstorm, Frost Shock, Ice Strike, Stormbind
             MAGE        = { 122, 31589, 157981, 157997, 212792, 236299, 378760, 391104 }, -- Frost Nova, Slow, Blast Wave, Ice Nova, Cone of Cold, Chrono Shift, Frostbite, Mass Slow
             WARLOCK     = { 334275, 384069 },                        -- Curse of Exhaustion, Shadowflame
-            MONK        = { 116095, 121253, 123586, 324382, 392983 }, -- Disable, Keg Smash, Flying Serpent Kick, Clash, Strike of the Windlord
+            -- 116706: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            MONK        = { 116095, 121253, 123586, 324382, 392983, 116706 }, -- Disable, Keg Smash, Flying Serpent Kick, Clash, Strike of the Windlord
             DRUID       = { 339, 58180, 61391, 102359, 127797, 164812 }, -- Entangling Roots, Infected Wounds, Typhoon, Mass Entanglement, Ursol's Vortex (the AURA; 102793 is the cast), Moonfire
-            DEMONHUNTER = { 198813, 204843, 213405, 323996 },        -- Vengeful Retreat, Sigil of Chains, Master of the Glaive, The Hunt
+            -- 370970: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
+            DEMONHUNTER = { 198813, 204843, 213405, 370970 },        -- Vengeful Retreat, Sigil of Chains, Master of the Glaive, The Hunt
             EVOKER      = { 355689, 357214, 368970, 370898 },        -- Landslide, Wing Buffet, Tail Swipe, Permeating Chill
             ALL         = { 260369 },                                -- Arcane Pulse (racial)
         }),
