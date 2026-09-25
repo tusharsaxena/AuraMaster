@@ -109,6 +109,26 @@ test("v7: MigrateV7 retires Consumables and seeds the new categories from where 
     assertNil(spellEdits.utility, "a list left with no edits is not stored")
 end)
 
+test("v7: the debuff-side Racials is Hidden wherever Hard CC or Soft CC is", function()
+    local NS = fresh()
+    local p = { containers = {
+        [1] = { filter = { categories = { hardCC = "hide", softCC = "show" } } },
+        [2] = { filter = { categories = { hardCC = "show", softCC = "hide" } } },
+        [3] = { filter = { categories = { hardCC = "show", softCC = "show" } } },
+        [4] = { filter = { categories = { hardCC = "show", racialDebuffs = "show", softCC = "hide" } } },
+        [5] = { filter = { categories = { defensives = "show" } } },
+    } }
+    NS.Database.MigrateV7(p)
+    local function state(i) return p.containers[i].filter.categories.racialDebuffs end
+    -- red under: leaving it to the backfill's Show, whose claim would beat Hard CC's Hide and draw a
+    -- War Stomp the container hid
+    assertEqual(state(1), "hide")
+    assertEqual(state(2), "hide")
+    assertEqual(state(3), "show")
+    assertEqual(state(4), "show", "a stored state is a choice")
+    assertNil(state(5), "a buff container gets no debuff key")
+end)
+
 test("v7: a second MigrateV7 run changes nothing, and a new key's stored edit wins over a moved one", function()
     local NS = fresh()
     local p = {

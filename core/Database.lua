@@ -808,6 +808,10 @@ end
 --- drawing raid buffs or stances it never drew. So each new key takes the state of where its auras
 --- used to fall: `groupBuffs` Support's, `stances` and `racials` Uncategorized's. A key already
 --- there is a choice and is kept; a source that is absent leaves the new key to the backfill.
+--- `racialDebuffs`, the debuff-side Racials, is Hidden wherever Hard CC or Soft CC is Hidden (seven of
+--- its eight ids sit in those lists too, and a Show claim beats a Hide, so a shown racial list would
+--- rescue a War Stomp the container hid); otherwise it takes Show. Only a container carrying one of
+--- those two debuff keys gets one.
 --- `consumables` is simply dropped: its five flask ids fall to Uncategorized, like any unlisted buff.
 ---
 --- The player's own list edits follow the ids that moved: a Support edit on a group buff, and a
@@ -853,6 +857,9 @@ function Database.MigrateV7(p)
             cats.consumables = nil
             for key, from in pairs(V7_SEEDS) do
                 if cats[key] == nil and cats[from] ~= nil then cats[key] = cats[from] end
+            end
+            if cats.racialDebuffs == nil and (cats.hardCC ~= nil or cats.softCC ~= nil) then
+                cats.racialDebuffs = (cats.hardCC == "hide" or cats.softCC == "hide") and "hide" or "show"
             end
             walked = walked + 1
         end

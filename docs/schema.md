@@ -502,7 +502,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:899`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:906`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -662,7 +662,9 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   seeds the three that arrived with it so that no stored container draws differently: each
   container's `groupBuffs` takes its `support` state (the raid buffs were Support's), and `stances`
   and `racials` take its `uncategorized` state (those auras were on no list), a stored state or an
-  absent source being left alone. `consumables` is deleted from every container and from
+  absent source being left alone. The debuff-side `racialDebuffs` is `"hide"` on a container that
+  Hides `hardCC` or `softCC` (seven of its eight ids are in those lists, and a Show claim beats a
+  Hide) and `"show"` on any other container carrying either key. `consumables` is deleted from every container and from
   `categorySpells`; a player's Support edit on a group buff, and a Utility edit on Shadowmeld, move
   to the new category unless it already holds its own. Idempotent: the seeds are `== nil` tests.
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after

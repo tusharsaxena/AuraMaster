@@ -318,7 +318,7 @@ test("general → spell categories: the list draws two columns, filled row-major
 end)
 
 
-test("general → spell categories: a dropdown of the thirteen spell categories plus Weapon enchants, opening on the first", function()
+test("general → spell categories: a dropdown of the fourteen spell categories plus Weapon enchants, opening on the first", function()
     local NS, _, _, ws = spells()
     local dd
     for _, w in ipairs(ws) do
@@ -327,11 +327,11 @@ test("general → spell categories: a dropdown of the thirteen spell categories 
     assertTrue(dd ~= nil, "the category dropdown is drawn")
     assertTrue(inScroll(NS, dd), "in the tab body")
     -- red under: the dropdown offering a flag or token category (only spell categories and the
-    -- enchant row belong here). 14 = eleven buff spell lists + weaponEnchants + issue #11's hardCC and
-    -- softCC, which are `spells`-kind on Cat.HARMFUL: this tab is keyed on the KIND, never on the
+    -- enchant row belong here). 15 = eleven buff spell lists + weaponEnchants + issue #11's hardCC and
+    -- softCC and schema v7's racialDebuffs, which are `spells`-kind on Cat.HARMFUL: this tab is keyed on the KIND, never on the
     -- aura type, or a shipped debuff list would have no editor and its `See spells` link would go
     -- nowhere.
-    assertEqual(#dd.order, 14)
+    assertEqual(#dd.order, 15)
     for _, k in ipairs(dd.order) do
         assertTrue(NS.Categories.IsSpellCategory(k) or k == "weaponEnchants", "a spell category or the enchant row: " .. k)
     end
@@ -345,6 +345,7 @@ test("general → spell categories: a dropdown of the thirteen spell categories 
     assertEqual(dd.order[12], "weaponEnchants", "the buff rows first, in defaults/Categories.lua's order")
     assertEqual(dd.order[13], "hardCC", "then Cat.HARMFUL's, in its own order")
     assertEqual(dd.order[14], "softCC")
+    assertEqual(dd.order[15], "racialDebuffs")
     assertEqual(dd.value, "defensives")
 end)
 

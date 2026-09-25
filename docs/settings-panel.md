@@ -177,9 +177,9 @@ that can never match carries a gray note naming what to use instead, because the
 chat and is gone by the next login.
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
-dropdown of the thirteen shipped spell categories, plus every category the player has made — the eleven buff ones (defensives, activeMitigation, raidCDs,
-offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials; schema v7 retired consumables) and the two debuff ones issue #11
-added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
+dropdown of the fourteen shipped spell categories, plus every category the player has made — the eleven buff ones (defensives, activeMitigation, raidCDs,
+offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials; schema v7 retired consumables) and the three debuff ones (hardCC and
+softCC from issue #11, racialDebuffs from schema v7) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
 KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry
 carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of control)` — read out of
 `C.AURA_TYPE_LABELS` rather than worded again here, so the picker uses the same two words the

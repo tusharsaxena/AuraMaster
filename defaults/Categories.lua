@@ -304,10 +304,8 @@ Cat.HELPFUL = {
             DEATHKNIGHT = { 48265, 444347, 434029, 212552 },
             -- 77761, 77764: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 400126: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 165961: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 252216: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 210053: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            DRUID   = { 1850, 106898, 77761, 77764, 400126, 165961, 252216, 210053 },
+            DRUID   = { 1850, 106898, 77761, 77764, 400126, 252216 },   -- Travel and Mount Form are Stances (owner 2026-09-25)
             -- 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 394454: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             PALADIN = { 1044, 221886, 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804, 394454 },
@@ -345,21 +343,22 @@ Cat.HELPFUL = {
         }),
     },
     {
-        -- Owner 2026-09-25. Travel Form and Mount Form are in Movement too: a druid form is a form.
+        -- Owner 2026-09-25. Travel Form and Mount Form are here only, not in Movement; Ghost Wolf stays
+        -- in Movement.
         key = "stances", kind = "spells", label = "Stances",
         desc = "Warrior stances, druid forms and paladin auras.",
         spells = spells({
             WARRIOR = { 386164, 386196, 386208 },                    -- Battle, Berserker, Defensive Stance
             DRUID   = { 5487, 768, 24858, 114282, 165961, 1066, 40120, 210053 }, -- Bear, Cat, Moonkin, Treant, Travel (x3), Mount Form
             PALADIN = { 465, 317920, 32223 },                        -- Devotion, Concentration, Crusader Aura
+            PRIEST  = { 232698 },                                    -- Shadowform
         }),
     },
     {
         -- Owner 2026-09-25. The buffs of the DB2 "Racial - <race>" skill lines' active abilities and
         -- procs (build 12.1.0.69875), passives left out; every id here but four was seen as a player
         -- buff in the 2026-09-24 combat logs (not seen: 28880, 121093, 370626 Gift of the Naaru and
-        -- 281954 Pterrordax Swoop). The racial DEBUFFS (War Stomp, Quaking Palm, Haymaker, Arcane
-        -- Pulse) stay in Hard CC and Soft CC below.
+        -- 281954 Pterrordax Swoop). The racial DEBUFFS are the debuff list `racialDebuffs` below.
         key = "racials", kind = "spells", label = "Racials",
         desc = "Buffs from racial abilities, such as Stoneform, Berserking and Blood Fury.",
         spells = spells({
@@ -373,7 +372,8 @@ Cat.HELPFUL = {
                 28880, 59542, 59543, 59544, 59545, 59547, 59548, 121093, 370626, 416250, -- Gift of the Naaru (Draenei)
                 7744,                                                   -- Will of the Forsaken (Undead)
                 59752,                                                  -- Will to Survive (Human)
-                68992, 87840,                                           -- Darkflight, Running Wild (Worgen)
+                68992, 87840, 406087,                                   -- Darkflight, Running Wild, Calm the Wolf (Worgen)
+                360022, 1289789,                                        -- Chosen Identity, Battle Visage (Dracthyr)
                 256948, 256374,                                         -- Spatial Rift, Entropic Embrace (Void Elf)
                 291944, 281954,                                         -- Regeneratin', Pterrordax Swoop (Zandalari Troll)
                 255654,                                                 -- Bull Rush (Highmountain Tauren)
@@ -631,6 +631,26 @@ Cat.HARMFUL = {
             DEMONHUNTER = { 198813, 204843, 213405, 370970 },        -- Vengeful Retreat, Sigil of Chains, Master of the Glaive, The Hunt
             EVOKER      = { 355689, 357214, 368970, 370898 },        -- Landslide, Wing Buffet, Tail Swipe, Permeating Chill
             ALL         = { 260369 },                                -- Arcane Pulse (racial)
+        }),
+    },
+    {
+        -- Owner 2026-09-25: the debuffs of the DB2 "Racial - <race>" skill lines, every one seen in the
+        -- 2026-09-24 combat logs. They stay in Hard CC and Soft CC as well; this list only groups them.
+        -- Mechagnome's Recently Failed (313015) is left out: a lockout on yourself, where Blizzard
+        -- discards a debuff spell list anyway. A key of its own, not `racials`: a key names one
+        -- category across both aura types (`Cat.AuraTypeOf`).
+        key = "racialDebuffs", kind = "spells", label = "Racials",
+        desc = "Debuffs from racial abilities, such as War Stomp and Quaking Palm. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
+        spells = spells({
+            ALL = {
+                20549,                                                  -- War Stomp (Tauren)
+                107079,                                                 -- Quaking Palm (Pandaren)
+                287712,                                                 -- Haymaker (Kul Tiran)
+                260369,                                                 -- Arcane Pulse (Nightborne)
+                357214, 368970,                                         -- Wing Buffet, Tail Swipe (Dracthyr)
+                255723,                                                 -- Bull Rush (Highmountain Tauren)
+                1238474,                                                -- Thorn Bloom (Haranir)
+            },
         }),
     },
     {
