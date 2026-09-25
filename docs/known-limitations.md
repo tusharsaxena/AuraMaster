@@ -188,6 +188,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`Anchors.AttachEdge`); any other pair is placed at its X/Y alone, so its strip and label can overlap
   its parent's. Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
   leaves a picked one where it is.
+- **Schema v11 can move a follower that was on the old default side** (batch 11 G4). A stored
+  `after-start`, which schemas v9 and v10 stamped on every attachment, becomes Automatic and takes
+  G3's default: a Text follower justified Center, or to the end its lines grow toward, moves to its
+  parent's center or that end, and an Icons or Bars follower under a Text parent justified Center
+  moves to the center. Any other side was converted to the points it sat on and does not move. Pick
+  the two points on Layout > Anchor to put one back (`docs/schema.md`, v11).
 - **Nothing on screen marks where two containers join** (batch 11 G6). Batch 9's gold diamond at the
   join is gone at the owner's request. The join is named by the strip's tooltip while unlocked
   ("Joined to the *point* of '*parent*'") and by the Layout > Anchor joins line, and

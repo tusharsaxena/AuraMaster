@@ -1629,9 +1629,11 @@ before the upgrade, growing down.
      `[Migrate] v11 profile '<name>'` line per profile, and no v9 or v10 line. #14 and #15 (Side
      Bottom before) sit exactly where they did; their Parent container anchor point reads **Bottom**
      and This container anchor point **Top**, both picks, not Automatic. A container that was on the
-     old default (Bottom left, Top left growing up) now reads Automatic in both rows; it sits where it
-     did, except that a Text follower under a Text parent may re-center under the justify rule of
-     check 237 (accepted by G4). `/am get container.attach.edge` on any container → "Setting not
+     old default (Side Bottom left, or Top left growing up) now reads Automatic in both rows and takes
+     G3's default, so it sits where it did unless G3 aligns it differently: a Text follower justified
+     Center moves to the center, and one justified to the end side (Right growing right) to that end,
+     as in check 237; an Icons or Bars follower under a Text parent justified Center moves to the
+     center, as in check 239. Every other one stays put (G4 accepts the re-centering). `/am get container.attach.edge` on any container → "Setting not
      found". `/reload` → no `[Migrate]` line at all.
 243. **No join dot (G6).** With the chains of 237, 238 and 240: `/am unlock` → no dot, diamond or
      other mark sits on any join; `/am test` → none either, and each block keeps its own test-mode

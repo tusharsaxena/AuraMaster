@@ -743,7 +743,9 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `attach.childPoint` / `attach.relPoint`, so a side the owner picked never moves. Points already
   stored are kept. `attach.edge` is removed from every container with an `attach` table, whatever its
   mode. The conversion is frozen inside the step and never calls the live anchor code. Accepted
-  consequence: an Automatic Text chain under a Text parent may re-center under G3. Idempotent: a
+  consequence: a container dropped to Automatic takes G3's default, so a Text follower justified
+  Center or to its end side, and an Icons or Bars follower under a Text parent justified Center, may
+  move to the center or the end (G4 names the Text-under-Text case); every other one stays put. Idempotent: a
   second run finds no `attach.edge`. Tests climb from v1, v8, v9 and v10 (`tests/test_migrations.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
