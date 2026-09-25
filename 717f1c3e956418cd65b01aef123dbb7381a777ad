@@ -1,0 +1,1 @@
+fixed: helper migration conforms to STD-08/15/16, rulings and section-4 (no alias, both forms while disabled), 33 diag cases red on revert; d073ecc scopes the aura cache to its report (a spec-sections build reused stale auras)
