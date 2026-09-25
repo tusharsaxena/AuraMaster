@@ -66,7 +66,8 @@ files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per cont
 continues its chain root's flow (`Anchors.EffectiveLayout`, `Anchors.DerivedPoints`), and a write to a
 flow or attachment path re-applies its followers (`Anchors.Followers`). While a container previews,
 the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
-block (`Anchors.PlaceAttached`). Previewing is the session-only **test mode**
+block; while it is unlocked and not previewing, from its one-element anchor, which its outline marks;
+otherwise from its engine (`Anchors.HangMode`, re-placed by `Anchors.PlaceAttached`). Previewing is the session-only **test mode**
 (`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
 auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
 each under its drag handle and a faint outline one element in size, so an empty container can

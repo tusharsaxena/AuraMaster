@@ -602,7 +602,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a write that moves a container's flow re-applies every container following it
 - anchors: a parent's growth flip rebuilds its follower's engine, pinned at the derived corner, and re-anchors it to the parent's new engine
 - anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
-- anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
+- anchors: ending test mode re-anchors an attached container off the extent, and starting it back to the extent (L-4)
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 - handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)

@@ -12,7 +12,9 @@ local _, NS = ...
 --   screen     UIParent, at container.position — the only mode a drag can change;
 --   container  another container's ENGINE frame, so it follows that container as it grows. The
 --              anchor inherits DisableUntrustedLayoutScriptsTemplate, Blizzard's opt-in for a frame
---              that anchors to an aura container (whose layout scripts are forbidden to addons);
+--              that anchors to an aura container (whose layout scripts are forbidden to addons).
+--              While that container previews it hangs from its preview extent instead, and while
+--              it is unlocked from its one-element anchor (Anchors.HangMode);
 --   frame      any named frame — a unit frame, another add-on's bar — re-resolved when the add-on
 --              that creates it loads, and again when combat ends (Anchors.ResolvePending).
 -- A chain that would loop back on itself, a target that does not exist, or a frame that is forbidden
@@ -24,6 +26,9 @@ local D = NS.CONTAINER_TEMPLATE
 
 -- Frame-mode containers whose frame did not exist yet, by container id.
 local pending = {}
+
+-- The room a container's followers leave for its drag strip, defined with the strip below.
+local stripRoom
 
 --- Whether attaching container `fromId` to container `toId` would close a loop.
 --- @return boolean
@@ -77,13 +82,29 @@ local function targetContainer(container, at)
     return nil
 end
 
+--- What a container attached to container `t` hangs from, as ContainerClass:ApplyVisibility last
+--- recorded it (`t.hangMode`):
+---   preview  test mode: its preview extent, since its engine is disabled and keeps a stale rect (L-4);
+---   slot     unlocked and not previewing: its anchor, exactly one element, the rect its outline
+---            marks. Its engine holds a 1x1 provisional rect while it has no aura, so a follower
+---            hung from it sat about 5px under the parent's top, and an empty chain collapsed onto
+---            itself (EO-1, feedback #9);
+---   engine   anything else (locked): the engine, so a follower grows and shrinks with its auras.
+--- Before its first visibility pass a container answers from its preview state.
+--- @return string  "preview" | "slot" | "engine"
+function Anchors.HangMode(t)
+    return t.hangMode or (t.previewShown and "preview") or "engine"
+end
+
+--- The frame to hang from, the mode that names it and, for a container target, the live container.
 local function targetFor(container, at)
     if at.mode == "container" then
         local target = targetContainer(container, at)
         if target then
-            -- A previewing target's engine is disabled and keeps a stale rect; its preview extent
-            -- covers its placeholders instead (Preview.Extent, L-4).
-            return (target.previewShown and target.previewExtent) or target.engine or target.anchor, "container"
+            local mode = Anchors.HangMode(target)
+            if mode == "preview" and target.previewExtent then return target.previewExtent, "container", target end
+            if mode == "slot" then return target.anchor, "container", target end
+            return target.engine or target.anchor, "container", target
         end
     elseif at.mode == "frame" then
         local f = Anchors.ResolveFrame(at.frame)
@@ -208,16 +229,33 @@ function Anchors.MovesFollowers(path)
     return FLOW_PATHS[path] == true
 end
 
+--- A container's own scale, which its anchor's SetPoint offsets are in. The Master scale multiplies
+--- every container alike (Container:Apply), so it cancels between a parent and its follower.
+local function ownScale(cfg)
+    return math.max(0.1, tonumber(cfg.layout and cfg.layout.scale) or 1)
+end
+
+--- The seam's y offset `gy`, widened when the parent's strip needs more room than the seam leaves
+--- (`room`, in the parent's screen units: stripRoom). Along the chain's growth, only by the shortfall,
+--- so a seam with room enough is the locked one (SS-3) and no two strips in a chain overlap (EO-2).
+local function clearStrip(L, cfg, gy, room)
+    if room <= 0 then return gy end
+    local extra = math.max(0, room / ownScale(cfg) - math.abs(gy))
+    return (L.growV == "up") and gy + extra or gy - extra
+end
+
 --- The points and offsets container `cfg` attaches with. Attached to a container: points derived
 --- from the flow it continues, and one of its own gaps across the seam with the stored X/Y added on
---- top as a nudge (SS-1, SS-2). Attached to a named frame: the stored points and offsets as they are.
+--- top as a nudge (SS-1, SS-2), widened where the parent's strip needs the room (EO-2). Attached to
+--- a named frame: the stored points and offsets as they are.
 --- @return string point, string relativePoint, number x, number y
-local function attachSpec(cfg, at, mode)
+local function attachSpec(cfg, at, mode, target)
     local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
     if mode == "container" then
         local L = Anchors.EffectiveLayout(cfg) or {}
         local point, relativePoint = Anchors.DerivedPoints(L)
         local gx, gy = Anchors.SeamOffset(L)
+        gy = clearStrip(L, cfg, gy, target and stripRoom(target) or 0)
         return point, relativePoint, gx + x, gy + y
     end
     return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint, x, y
@@ -237,9 +275,9 @@ function Anchors.Place(container)
     pending[container.id] = nil
 
     local at = cfg.attach or {}
-    local target, mode = targetFor(container, at)
+    local target, mode, owner = targetFor(container, at)
     if target then
-        local point, relativePoint, x, y = attachSpec(cfg, at, mode)
+        local point, relativePoint, x, y = attachSpec(cfg, at, mode, owner)
         local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint, x, y)
         if ok then return mode end
         anchor:ClearAllPoints()
@@ -251,15 +289,18 @@ function Anchors.Place(container)
     return "screen"
 end
 
---- Re-place every container attached to `target` once its preview has come or gone since they were
---- last placed (L-4): they hang from its preview extent while it previews and from its engine
---- otherwise (targetFor). Called on every visibility pass (ContainerClass:ApplyVisibility), so a pass
---- that changes nothing re-places nothing. Layout work beside an aura engine, so never under
---- lockdown: the last placement stands, unrecorded, and the first pass after combat catches up.
+--- Re-place every container attached to `target` once what they hang from has changed since they
+--- were last placed: its hang mode (Anchors.HangMode; test mode, lock and unlock: L-4, EO-1) or the
+--- room its strip needs (stripRoom, EO-2). Called on every visibility pass
+--- (ContainerClass:ApplyVisibility), so a pass that changes nothing re-places nothing. Layout work
+--- beside an aura engine, so never under lockdown: the last placement stands, unrecorded, and the
+--- first pass after combat catches up.
 function Anchors.PlaceAttached(target)
-    local previewing = target.previewShown == true
-    if target.attachedPlacedFor == previewing or InCombatLockdown() then return end
-    target.attachedPlacedFor = previewing
+    local mode, room = Anchors.HangMode(target), stripRoom(target)
+    if (target.attachedPlacedFor == mode and target.attachedPlacedRoom == room) or InCombatLockdown() then
+        return
+    end
+    target.attachedPlacedFor, target.attachedPlacedRoom = mode, room
     local CM = NS.ContainerManager
     if not CM then return end
     for _, inst in pairs(CM.instances) do
@@ -484,6 +525,28 @@ local function besideSeam(cfg)
     return Anchors.FlowRoot(cfg) ~= nil
 end
 
+--- How tall the block a follower of `target` hangs from is, in `target`'s units: its preview extent
+--- in test mode (Preview.Extent records it), otherwise one element, its anchor.
+local function hangHeight(target, cfg)
+    local _, h = NS.Style.ElementSize(cfg)
+    local extent = target.previewExtent
+    if Anchors.HangMode(target) == "preview" and extent and extent.height then return extent.height end
+    return h
+end
+
+--- The room, in screen units before the Master scale, that a container attached to `target` leaves
+--- for `target`'s own strip (EO-2): only while that strip shows, and only when it sits beside
+--- `target`'s first element (a follower's, SS-3), where it runs down along the block the follower
+--- hangs from; a root's strip sits on the far side, away from its followers. Enough that the
+--- follower's strip, level with its own edge, starts one strip gap past the end of `target`'s. 0 when
+--- the block is already that tall.
+stripRoom = function(target)
+    if not (DRAG and target.stripShown) then return 0 end
+    local cfg = target.Cfg and target:Cfg()
+    if not (cfg and besideSeam(cfg)) then return 0 end
+    return math.max(0, DRAG.HEIGHT + DRAG.GAP - hangHeight(target, cfg)) * ownScale(cfg)
+end
+
 --- The strip of a container attached to another: beside the anchor, on the side its lines do not
 --- grow into, level with its edge that faces the parent (its top growing down, its bottom growing
 --- up), so the strip runs into the child's own rows and never back over the parent. As wide as its
@@ -568,6 +631,7 @@ function Anchors.UpdateHandle(container, show)
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
     handle:SetLabel(handleText(cfg))
+    container.stripShown = show   -- what a follower leaves room for (stripRoom)
     if not InCombatLockdown() then
         if show then
             clampToHandle(container, cfg, placeHandle(container, cfg))

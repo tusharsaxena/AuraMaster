@@ -209,7 +209,8 @@ suite covers what only the client can show.
     as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked and in
     test mode, with B attached to A → B's placeholders start one of B's Spacings past A's last placeholder, below A's block, rather
     than on top of A, and B's handle sits beside B's first placeholder, level with B's top edge, over
-    none of A's placeholders (SS-3); `/am test off` → B follows A's real auras again.
+    none of A's placeholders (SS-3); `/am test off` → B moves back to one element past A (A's
+    outline) while unlocked (check 191), and follows A's real auras again once locked.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout
@@ -1170,3 +1171,26 @@ nothing. Nothing in the client can answer the mapping, so the addon carries it i
      test mode → the placeholders swap without a `/reload`, and a container attached to it still sits
      just past the last placeholder (six for debuffs, five for buffs). **Max auras** 3 on a debuff
      container → only SW:P, Hex and Frost Fever.
+
+## Y. Empty unlocked chains (batch 8 item 9, owner to run)
+
+191. **An empty chain unlocked.** Chain three Text containers (B attached to A, C attached to B),
+     none with a matching aura. `/am unlock` with test mode off → each faint outline sits in its own
+     slot under the one before, one Spacing apart (a few pixels more between B and C, so B's strip
+     clears C's); A's strip sits above A, B's and C's beside their own outlines, and no strip covers
+     another strip or another container's outline. Before this every link sat about 5px under the
+     last, the strips and outlines piled together.
+192. **Lock and unlock.** Same chain, `/am lock` → nothing shows (all empty) and there is no Lua
+     error. Give A real auras while locked → B starts one Spacing past A's last aura (check 41
+     unchanged). Unlock with A holding two or more auras → B moves up to one element past A's first
+     aura, and A's later auras draw under B (known limitation); `/am lock` → B jumps back past A's
+     last aura.
+193. **Test mode.** Unlocked, `/am test` → B's placeholders start past A's placeholder block (L-4),
+     and the strips still do not overlap. `/am test` off while still unlocked → B returns to one
+     element past A, with no error.
+194. **Drag and reload.** Drag A while unlocked → B and C follow. `/reload` → the positions persist and
+     the chain re-forms the same way.
+195. **Other shapes.** An Icons chain → B's outline sits one icon plus B's Line spacing under A's
+     first icon. A chain growing up → B sits above A, its strip beside it, clear of A's outline.
+196. **Combat.** Unlocked, enter combat and `/am lock` → nothing re-anchors in combat, and there is no
+     ADDON_ACTION_BLOCKED or taint report. Leave combat → the followers snap onto the engines.

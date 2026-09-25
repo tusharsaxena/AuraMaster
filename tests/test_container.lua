@@ -871,3 +871,32 @@ test("container: an engine whose frame level reads secret leaves the blocker at 
     assertTrue(ok, tostring(err))
     assertEqual(inst.blocker:GetFrameLevel(), 0)
 end)
+
+-- What a container attached to this one hangs from (batch 8 EO-1, feedback #9): its preview extent in
+-- test mode, its one-element anchor while unlocked, its engine otherwise.
+test("container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.db.profile.visibility = "always"
+    NS.db.profile.locked = true
+    inst:ApplyVisibility()
+    assertEqual(inst.hangMode, "engine", "locked")
+    NS.db.profile.locked = false
+    inst:ApplyVisibility()
+    -- red under: ApplyVisibility recording no hang mode (a follower hung from the 1x1 empty engine)
+    assertEqual(inst.hangMode, "slot", "unlocked, not previewing")
+    assertTrue(inst.stripShown, "the strip shows while unlocked")
+    NS.State.testMode = true
+    inst:ApplyVisibility()
+    assertEqual(inst.hangMode, "preview", "test mode")
+    NS.State.testMode = false
+    inst:Park()
+    assertEqual(inst.hangMode, "engine", "parked")
+    assertFalse(inst.stripShown, "parked: no strip")
+    inst.parked = false
+    inst:ApplyVisibility()
+    assertEqual(inst.hangMode, "slot")
+    inst:Destroy()
+    assertEqual(inst.hangMode, "engine", "destroyed")
+    assertFalse(inst.stripShown, "destroyed: no strip")
+end)

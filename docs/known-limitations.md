@@ -177,6 +177,18 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   a parent set to a higher strata still draws over it. Test mode ending in combat re-places nothing
   (events-frames-taint-§2): the attached container stays where it was until the first visibility
   pass after combat.
+- **While unlocked (and not in test mode), a container attached to another sits one element past
+  it, whatever that container holds.** It hangs from the parent's anchor, the one-element slot its
+  outline marks, instead of its engine, which holds a 1x1 rect while it is empty, so an empty chain
+  no longer collapses onto itself (EO-1). A parent with two or more live auras therefore draws the
+  second and later ones under its follower until `/am lock`, which puts the follower back on the
+  engine, past the last aura: followers visibly shift on lock and unlock, as they do on test mode.
+  Following the live count instead is not possible: engine geometry can read secret, and
+  re-anchoring on a count change is layout work that is illegal under lockdown. Where the parent is
+  itself attached, its strip runs beside its first element, and a parent shorter than the strip
+  (a 16px Text line) pushes its follower a few pixels further while the strips show, so no two
+  strips in a chain overlap (EO-2); locked, the seam is the follower's own spacing again. A lock or
+  unlock in combat re-places nothing until combat ends.
 - **With "Show the spark on auras without a duration" off, a timed bar's spark sits just inside its
   moving edge, not centered on it.** No binding can tell a region whether its aura has a duration,
   and the duration is secret, so the spark is clipped to the elapsed region, which a timeless aura

@@ -482,6 +482,13 @@ function ContainerClass:ApplyOutline(cfg, on)
     o:Show()
 end
 
+--- What a container attached to this one hangs from (Anchors.HangMode): the placeholder block in test
+--- mode (L-4), the one-element anchor its outline marks while unlocked (EO-1), else the engine.
+local function hangModeFor(previewing, unlocked)
+    if previewing then return "preview" end
+    return unlocked and "slot" or "engine"
+end
+
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
 --- SetEnabled rather than hiding the anchor, because this runs on every combat transition, when an
 --- aura button's ancestry must not be shown or hidden. The blocker is OUR OWN frame, not the engine's
@@ -509,7 +516,7 @@ function ContainerClass:ApplyVisibility()
     local unlocked = (show and p and not p.locked) and true or false
     self:ApplyOutline(cfg, unlocked and not previewing)
     NS.Anchors.UpdateHandle(self, unlocked)
-    -- Containers attached to this one hang from its preview extent while it previews (L-4).
+    self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg)
     NS.Anchors.PlaceAttached(self)
     return show, previewing, deferred
 end
@@ -530,6 +537,7 @@ function ContainerClass:Park()
     if self.outline then self.outline:Hide() end
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
+    self.hangMode, self.stripShown = "engine", false   -- re-evaluated by the next visibility pass
     self.parked = true
 end
 
@@ -541,6 +549,7 @@ function ContainerClass:Destroy()
     NS.Preview.Hide(self)
     if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
+    self.hangMode, self.stripShown = "engine", false
     self.anchor:Hide()
     self.anchor:ClearAllPoints()
 end

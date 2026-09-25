@@ -341,7 +341,10 @@ player's forget is announced like a setting change.
 
 `Anchors.Place` (`modules/Anchors.lua:229`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
-previews, its preview extent, because the disabled engine keeps a stale rect), unless that would loop;
+previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked
+and not previewing, its one-element anchor, because an engine holding no aura is a 1x1 rect: the
+three-state `Anchors.HangMode`, recorded as `hangMode` by `ContainerClass:ApplyVisibility`, EO-1),
+unless that would loop;
 to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container
 pending, re-placed on the next `ADDON_LOADED`; a forbidden one is never waited on, since no add-on
 loading makes it a target); else to the screen at `container.position`. A pending resolve

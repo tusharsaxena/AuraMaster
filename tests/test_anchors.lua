@@ -1207,14 +1207,15 @@ test("anchors: while its parent previews, an attached container hangs from the p
     assertTrue(two.previewExtent ~= nil and lastTarget(rec3) == two.previewExtent, "a chain: 3 hangs from 2's extent")
 end)
 
-test("anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)", function()
+test("anchors: ending test mode re-anchors an attached container off the extent, and starting it back to the extent (L-4)", function()
     local NS, mocks, CM = previewPair()
     local one, two = CM.instances[1], CM.instances[2]
     local rec = recordAnchor(two)
     NS.Preview.SetTestMode(false)
     mocks.__fireTimers()
     -- red under: ApplyVisibility leaving the followers where the preview put them
-    assertTrue(lastTarget(rec) == one.engine, "test mode off: the engine, which lays out the real auras again")
+    -- previewPair is unlocked, so 1's followers hang from its one-element anchor (EO-1)
+    assertTrue(lastTarget(rec) == one.anchor, "test mode off, unlocked: the anchor its outline marks")
     NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     assertTrue(lastTarget(rec) == one.previewExtent, "test mode on: the extent again")
@@ -1236,7 +1237,7 @@ test("anchors: under lockdown ending test mode leaves an attached container wher
     mocks.__lockdown = false
     NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
     -- red under: recording the followers as placed when lockdown skipped them
-    assertTrue(lastTarget(rec) == CM.instances[1].engine, "combat over: onto the engine")
+    assertTrue(lastTarget(rec) == CM.instances[1].anchor, "combat over, unlocked: onto the anchor (EO-1)")
 end)
 
 test("handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)", function()

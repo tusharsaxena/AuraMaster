@@ -212,6 +212,9 @@ function Preview.Extent(container, count)
     extent:ClearAllPoints()
     extent:SetPoint(corner, container.anchor, corner, 0, 0)
     extent:SetSize(farX + w, farY + h)
+    -- Kept as a plain number: what a follower's strip room reads (Anchors, EO-2). The frame's own
+    -- height can read secret under an attached anchor.
+    extent.height = farY + h
     extent.placed = true
     return extent
 end
