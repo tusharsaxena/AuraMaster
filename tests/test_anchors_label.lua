@@ -72,12 +72,14 @@ local STRIP_H, STRIP_GAP = 18, 2
 
 -- ── the stored shape (NL-1) ───────────────────────────────────────────────────────────────────
 
-test("label: the template carries label = { show = false, x = 0, y = 0, font = gold Friz 12 OUTLINE }", function()
+test("label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Friz 12 OUTLINE }", function()
     local NS = fresh()
     local lb = NS.CONTAINER_TEMPLATE.label
     -- red under: no label block in the template
     assertTrue(lb ~= nil, "a label block")
     assertFalse(lb.show); assertEqual(lb.x, 0); assertEqual(lb.y, 0)
+    -- red under: a template with no justify leaf (the row's path would not resolve, architecture-5)
+    assertEqual(lb.justifyH, NS.Constants.LABEL_JUSTIFY_AUTO, "no pick: the style default (B9 E7)")
     local f = lb.font
     assertEqual(f.font, "Friz Quadrata TT"); assertEqual(f.fontSize, 12); assertEqual(f.fontFlags, "OUTLINE")
     assertFalse(f.fontShadow); assertFalse(f.useClassColorFont)
@@ -202,6 +204,8 @@ end)
 
 -- ── placement (NL-2) ──────────────────────────────────────────────────────────────────────────
 
+-- An icons container (B9 E7): its label's default justify is toward the element, LEFT unless its
+-- auras grow left. Bars and Text center it (the cases after this loop).
 local GROWTHS = {
     { "right", "down", "BOTTOMLEFT", "TOPLEFT", STRIP_GAP, "LEFT" },
     { "left", "down", "BOTTOMRIGHT", "TOPRIGHT", STRIP_GAP, "RIGHT" },
@@ -212,6 +216,7 @@ local GROWTHS = {
 for _, g in ipairs(GROWTHS) do
     test(("label: growing %s and %s it sits where the strip does, plus its X/Y, text justified %s"):format(g[1], g[2], g[6]), function()
         local NS, mocks, inst = withLabel(1)
+        NS.SetByPath("container.style", "icons", 1)
         NS.SetByPath("container.layout.growH", g[1], 1)
         NS.SetByPath("container.layout.growV", g[2], 1)
         NS.SetByPath("container.label.x", 5, 1)
@@ -231,6 +236,70 @@ for _, g in ipairs(GROWTHS) do
         assertEqual(rec[#rec][1], g[3]); assertEqual(rec[#rec][3], g[4]); assertEqual(rec[#rec][5], g[5])
     end)
 end
+
+-- ── justify (B9 LJ-1, E7) ─────────────────────────────────────────────────────────────────────
+
+--- The text's point on its host, and the justify it was given, after the last apply.
+local function textPlacement(inst)
+    local p = lastPointOn(inst.labelText, inst.label)
+    return p, last(inst.labelText, "SetJustifyH")[1]
+end
+
+test("label justify: with no pick, Bars and Text center the name on its host, whatever the growth", function()
+    for _, style in ipairs({ "bars", "text" }) do
+        for _, growH in ipairs({ "right", "left" }) do
+            local NS, mocks, inst = withLabel(1)
+            NS.SetByPath("container.style", style, 1)
+            NS.SetByPath("container.layout.growH", growH, 1)
+            mocks.__fireTimers()
+            local p, j = textPlacement(inst)
+            local what = style .. " growing " .. growH
+            -- red under: the old rule (justified toward the first element for every style)
+            assertEqual(j, "CENTER", what)
+            assertEqual(p[1], "CENTER", what); assertEqual(p[3], "CENTER", what); assertEqual(p[4], 0, what)
+            assertEqual(NS.Anchors.LabelJustify(NS.Database.FindContainer(1)), "CENTER", what)
+        end
+    end
+end)
+
+test("label justify: a pick wins over the style default, Left and Right inset 4, Center none", function()
+    local NS, mocks, inst = withLabel(1)
+    local want = { LEFT = 4, RIGHT = -4, CENTER = 0 }
+    for _, pick in ipairs({ "LEFT", "RIGHT", "CENTER" }) do
+        assertTrue(NS.SetByPath("container.label.justifyH", pick, 1), pick)
+        mocks.__fireTimers()
+        local p, j = textPlacement(inst)
+        -- red under: PlaceLabel ignoring the stored justify
+        assertEqual(j, pick); assertEqual(p[1], pick); assertEqual(p[3], pick); assertEqual(p[4], want[pick], pick)
+        assertEqual(NS.Database.FindContainer(1).label.justifyH, pick, "stored as picked")
+    end
+end)
+
+test("label justify: an icons pick holds when the growth flips; AUTO goes back to the style default", function()
+    local NS, mocks, inst = withLabel(1)
+    NS.SetByPath("container.style", "icons", 1)
+    NS.SetByPath("container.label.justifyH", "CENTER", 1)
+    NS.SetByPath("container.layout.growH", "left", 1)
+    mocks.__fireTimers()
+    local _, j = textPlacement(inst)
+    assertEqual(j, "CENTER", "the pick, not the growth's side")
+    NS.SetByPath("container.label.justifyH", NS.Constants.LABEL_JUSTIFY_AUTO, 1)
+    mocks.__fireTimers()
+    _, j = textPlacement(inst)
+    assertEqual(j, "RIGHT", "no pick again: icons growing left")
+end)
+
+test("label justify: LabelJustify answers the style default for nil, AUTO and an unknown stored value", function()
+    local NS = fresh()
+    local cfg = NS.Database.FindContainer(1)
+    for _, v in ipairs({ false, "AUTO", "SIDEWAYS" }) do
+        cfg.label.justifyH = v or nil
+        -- red under: a stored value used without checking it is one of the three
+        assertEqual(NS.Anchors.LabelJustify(cfg), "CENTER", tostring(v))
+    end
+    assertTrue(NS.Anchors.LabelJustify(nil) ~= nil, "no container: still an answer")
+    assertFalse(NS.SetByPath("container.label.justifyH", "SIDEWAYS", 1), "the seam refuses an unknown value")
+end)
 
 --- Container 2 attached to container 1, the label on 2, unlocked.
 local function follower()

@@ -616,21 +616,40 @@ local function labelPush(container, growV, beside)
     return out and (STRIP_H + STRIP_GAP) or -(STRIP_H + STRIP_GAP)
 end
 
+local LABEL_JUSTIFY = { LEFT = true, CENTER = true, RIGHT = true }
+
+--- The name label's justify in effect (B9 LJ-1, E7): the player's pick, or with none (AUTO, nil or
+--- anything unknown) the style's own. Bars and Text center it. Icons justify it toward the element it
+--- names: LEFT, RIGHT when the auras grow left, mirrored for a label beside a follower's first
+--- element (SS-3), which sits on the far side of it. The Label tab's Justify row shows this.
+--- @return string "LEFT"|"CENTER"|"RIGHT"
+function Anchors.LabelJustify(cfg)
+    if not cfg then return "CENTER" end
+    local pick = cfg.label and cfg.label.justifyH
+    if LABEL_JUSTIFY[pick] then return pick end
+    if NS.Style.StyleKey(cfg) ~= "icons" then return "CENTER" end
+    local growH = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
+    return ((growH == "left") ~= besideSeam(cfg)) and "RIGHT" or "LEFT"
+end
+
+--- How far the label's text sits in from its host's edge, by justify: none when centered.
+local LABEL_INSET = { LEFT = 4, CENTER = 0, RIGHT = -4 }
+
 --- Place a container's name label on the strip's spot, nudged by its X/Y (NL-2): one element wide and
---- one strip tall, its text on one line, justified toward the element it names. Layout work, so run
+--- one strip tall, its text on one line, justified per Anchors.LabelJustify. Layout work, so run
 --- from Container:Apply (kept out of lockdown) and once on a first show (Container:ApplyLabelShown).
 function Anchors.PlaceLabel(container, cfg)
     local host, fs = container.label, container.labelText
     if not (host and fs and cfg) then return end
     local lc = cfg.label or D.label
     host:SetFrameLevel(levelOf(container.anchor, cfg) + 1)
-    local point, rel, x, y, growH, _, beside = Anchors.StripPoints(cfg)
+    local point, rel, x, y = Anchors.StripPoints(cfg)
     host:ClearAllPoints()
     host:SetPoint(point, container.anchor, rel, x + (tonumber(lc.x) or 0), y + (tonumber(lc.y) or 0))
     host:SetSize(NS.Style.ElementSize(cfg), STRIP_H)
-    local side = ((growH == "left") ~= beside) and "RIGHT" or "LEFT"
+    local side = Anchors.LabelJustify(cfg)
     fs:ClearAllPoints()
-    fs:SetPoint(side, host, side, side == "LEFT" and 4 or -4, 0)
+    fs:SetPoint(side, host, side, LABEL_INSET[side], 0)
     fs:SetJustifyH(side)
     fs:SetWordWrap(false)
     host.placed = true

@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 255 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 256 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -515,7 +515,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (35 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (36 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -585,10 +585,15 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
 
-**Label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`, X
+**Label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`,
+Justify `container.label.justifyH` (Left, Center, Right; batch 9 LJ-1, E7), X
 offset `container.label.x` and Y offset `container.label.y` (-200 to 200), then a *Font* subgroup, the
 composed font block on `container.label.font.` (gold Friz 12 OUTLINE by default, the strip's own
-look; class color from the container's unit). Nine rows. The text is always the container's name, so
+look; class color from the container's unit). Ten rows. Justify is stored `"AUTO"` until the player
+picks one, and the dropdown shows the justify in effect (the row's `panelGet`,
+`Anchors.LabelJustify`): Bars and Text center the name, Icons line it up with the first icon (Left,
+Right when the icons grow left, mirrored beside a follower's first element). The row's reset writes
+`"AUTO"` back. The text is always the container's name, so
 a rename redraws it. Every row but Show is dimmed while the label is off, except the color swatch,
 which is never dimmed (anti-pattern #74). The label sits where the drag strip sits, outside the first
 element on the side the auras do not grow into, or beside the first element on a container attached

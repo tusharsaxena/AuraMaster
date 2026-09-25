@@ -662,9 +662,9 @@ badge and any count quoted in the docs must agree with it.
 - close: in combat the X still disables the container, raising nothing and moving no anchor
 - close: the X's tooltip names the container (following a rename) and says how to turn it back on
 
-### test_anchors_label.lua (19)
+### test_anchors_label.lua (23)
 
-- label: the template carries label = { show = false, x = 0, y = 0, font = gold Friz 12 OUTLINE }
+- label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Friz 12 OUTLINE }
 - label: a stored container without a label gains the whole block, and a stored one survives the backfill
 - label: off by default, no label frame is ever built
 - label: on and locked, the name shows in a plain, mouse-less frame; turned off it hides
@@ -677,6 +677,10 @@ badge and any count quoted in the docs must agree with it.
 - label: growing left and down it sits where the strip does, plus its X/Y, text justified RIGHT
 - label: growing right and up it sits where the strip does, plus its X/Y, text justified LEFT
 - label: growing left and up it sits where the strip does, plus its X/Y, text justified RIGHT
+- label justify: with no pick, Bars and Text center the name on its host, whatever the growth
+- label justify: a pick wins over the style default, Left and Right inset 4, Center none
+- label justify: an icons pick holds when the growth flips; AUTO goes back to the style default
+- label justify: LabelJustify answers the style default for nil, AUTO and an unknown stored value
 - label: a container attached to another puts its label beside its first element, like its strip; the strip moves down past it
 - label: a follower's follower leaves room for its parent's label and strip beside the seam
 - label: a rename lands on the label at once, also under lockdown, with no apply queued
@@ -1417,10 +1421,12 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (28)
+### test_pages_layout.lua (30)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
+- layout: Label > Justify shows the justify in effect with no pick, stores a pick, and Defaults clears it (B9 LJ-1)
+- layout: the Label Justify row is dimmed while the label is off
 - layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
 - layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen
 - layout: in screen mode only the subsections that apply are drawn (feedback #4)
@@ -1712,7 +1718,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_seam.lua | 10 |
 | test_anchors_hang.lua | 11 |
 | test_anchors_close.lua | 6 |
-| test_anchors_label.lua | 19 |
+| test_anchors_label.lua | 23 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -1736,7 +1742,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 28 |
+| test_pages_layout.lua | 30 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1756,4 +1762,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1486** |
+| **Total** | **1492** |

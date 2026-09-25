@@ -108,6 +108,7 @@ backfills it onto every stored container, so it needs no schema step.
 | Key | Default | Meaning |
 |---|---|---|
 | `label.show` | `false` | draw the container's `name` where its drag strip sits, locked or unlocked; while unlocked the strip moves out past it (D6) |
+| `label.justifyH` | `"AUTO"` | `"LEFT"`, `"CENTER"` or `"RIGHT"` once picked (batch 9 LJ-1). `"AUTO"` (`C.LABEL_JUSTIFY_AUTO`) is no pick: the style's default, Bars and Text `CENTER`, Icons `LEFT` (`RIGHT` when growing left, mirrored beside a follower's first element), resolved by `Anchors.LabelJustify` and never written. A value, not nil, so the row's path resolves against the template (architecture-§5); an unknown stored value reads as `"AUTO"` |
 | `label.x` / `.y` | `0` / `0` | pixels, a nudge from that spot (-200 to 200) |
 | `label.font` | the six font leaves, `"Friz Quadrata TT"` 12, gold `{ r=1, g=0.82, b=0, a=1 }`, `"OUTLINE"`, no shadow, no class color | the strip's own look; a class color follows the container's unit |
 
@@ -138,7 +139,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:170`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:175`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -191,7 +192,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:277`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:279`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -221,9 +222,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **255** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **256** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 46, Layout 35 (the Label tab's nine among them, batch 8),
+out of General's own tab), Filters 46, Layout 36 (the Label tab's ten among them, batch 8 and B9 LJ-1),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one

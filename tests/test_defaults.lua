@@ -285,9 +285,13 @@ test("defaults: every dropdown's default is one of its choices", function()
     local bad = {}
     for _, row in ipairs(NS.Schema) do
         local allowed = choices(row)
+        -- What the dropdown opens on: a row with its own panelGet shows that, not the stored default
+        -- (the label's Justify stores AUTO for "no pick" and shows the justify in effect, B9 E7).
+        local shown = row.default
+        if row.panelGet then shown = row.panelGet() or shown end
         -- red under: a template default the dropdown cannot show (it opens on a blank)
-        if allowed and row.default ~= nil and not allowed[row.default] then
-            bad[#bad + 1] = row.path .. " = " .. tostring(row.default)
+        if allowed and shown ~= nil and not allowed[shown] then
+            bad[#bad + 1] = row.path .. " = " .. tostring(shown)
         end
     end
     assertEqual(#bad, 0, table.concat(bad, "; "))

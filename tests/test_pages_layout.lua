@@ -119,6 +119,41 @@ test("layout: the Label rows write the selected container's label, dimmed while 
     assertFalse(NS.Database.FindContainer(2).label.show, "another container is untouched")
 end)
 
+test("layout: Label > Justify shows the justify in effect with no pick, stores a pick, and Defaults clears it (B9 LJ-1)", function()
+    local NS, m, P = layout()
+    local L, AUTO = NS.L, NS.Constants.LABEL_JUSTIFY_AUTO
+    NS.SetByPath("container.label.show", true, 1)
+    m.__fireTimers()
+    local ws = P.tab("layout", L["Label"])
+    local dd = P.row(ws, "container.label.justifyH")
+    -- red under: no Justify row on the Label tab
+    assertTrue(dd ~= nil, "a Justify dropdown")
+    assertEqual(table.concat(dd.order, ","), "LEFT,CENTER,RIGHT", "Left, Center, Right and nothing else")
+    -- red under: the panel showing the stored AUTO (a blank dropdown) instead of what is in effect
+    assertEqual(dd.value, "CENTER", "container 1 draws as Bars: centered")
+    assertEqual(NS.GetSetting("container.label.justifyH", 1), AUTO, "while nothing is picked")
+    dd:__fire("OnValueChanged", "RIGHT")
+    m.__fireTimers()
+    assertEqual(NS.Database.FindContainer(1).label.justifyH, "RIGHT")
+    NS.SetByPath("container.label.justifyH", AUTO, 1)
+    NS.SetByPath("container.style", "icons", 1)
+    NS.SetByPath("container.layout.growH", "left", 1)
+    m.__fireTimers()
+    P.tab("layout", L["Frame"])
+    ws = P.tab("layout", L["Label"])
+    assertEqual(P.row(ws, "container.label.justifyH").value, "RIGHT", "icons growing left, no pick")
+    NS.SetByPath("container.label.justifyH", "CENTER", 1)
+    -- red under: the row with no default (Defaults could never go back to the style's own)
+    assertTrue(NS.ApplyDefault(NS.FindSchemaRow("container.label.justifyH")))
+    assertEqual(NS.Database.FindContainer(1).label.justifyH, AUTO, "the reset is back to no pick")
+end)
+
+test("layout: the Label Justify row is dimmed while the label is off", function()
+    local NS, _, P = layout()
+    local ws = P.tab("layout", NS.L["Label"])
+    assertTrue(P.row(ws, "container.label.justifyH").disabled)
+end)
+
 test("layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)", function()
     local L = T.NS.L
     local want = {

@@ -1269,8 +1269,12 @@ on the same branch.
      off → the strips and outlines never overlap (check 191).
 203. **The name label, locked (NL-1, NL-2, NL-4).** Layout → **Label**, tick **Show name label**
      on *Player buffs* while locked → its name appears in gold Friz 12 just above its first element
-     (growing down), left-aligned, and nothing else moves. Grow vertically Up → the label moves below
-     the first element; Grow horizontally Left → it right-aligns. X/Y offsets and every font leaf
+     (growing down), centered on it (a Bars container, batch 9 E7), and nothing else moves. Grow
+     vertically Up → the label moves below the first element. The **Justify** dropdown reads Center
+     with nothing picked; pick Left, then Right → the name moves to that edge (4px in); Center → back.
+     On *Player debuffs* (Icons) Justify reads Left, and Grow horizontally Left → it reads Right and the
+     name right-aligns; pick Center there and flip the growth → it stays centered. Change a Bars
+     container's style to Text → it stays centered. X/Y offsets and every font leaf
      (face, size, flags, shadow, color) apply live; with Show off the offsets and the font rows are
      grayed, but the color swatch is not.
 204. **Unlocked, both show (NL-3, D6).** `/am unlock` → the label stays, and the drag strip sits

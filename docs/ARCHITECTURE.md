@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:39`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:48`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:277`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:279`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -79,7 +79,7 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **255** rows across seven pages (General 18, Containers 5, Filters 46, Layout 35,
+`NS.Schema` holds **256** rows across seven pages (General 18, Containers 5, Filters 46, Layout 36,
 Bars 72, Icons 42, Text 37), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 

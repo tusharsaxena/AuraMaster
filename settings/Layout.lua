@@ -220,6 +220,9 @@ NS.RegisterSchemaRows({
 -- Show is dimmed while the label is off. The rows carry no `effect`: a write re-applies the selected
 -- container (CONFIG_CHANGED), where the label is restyled and placed.
 
+local JUSTIFY_OK = {}
+for _, k in ipairs(C.JUSTIFY) do JUSTIFY_OK[k] = true end
+
 --- A `disabledIf` predicate: the selected container's label is off.
 local function labelOff()
     local c = NS.ActiveContainer()
@@ -231,6 +234,16 @@ NS.RegisterSchemaRows({
         path = "container.label.show", page = PAGE, group = G_LABEL, type = "bool",
         label = L["Show name label"],
         desc = L["Show this container's name where its drag handle sits, locked or unlocked: outside the container, on the side its auras do not grow into, or beside its first aura when it is attached to another container. While unlocked, the drag handle moves out past it."],
+    },
+    -- Stored AUTO until the player picks (B9 E7); the dropdown shows the justify in effect through
+    -- panelGet, never AUTO itself, and the row's reset writes AUTO back (the template's value).
+    {
+        path = "container.label.justifyH", page = PAGE, group = G_LABEL, type = "string",
+        values = NS.Choices(C.JUSTIFY, C.JUSTIFY_LABELS), label = L["Justify"],
+        desc = L["How the name lines up in its space. Until you pick one, Bars and Text containers center it and Icons containers line it up with the first icon."],
+        validate = function(v) return v == C.LABEL_JUSTIFY_AUTO or JUSTIFY_OK[v] == true end,
+        panelGet = function() return NS.Anchors.LabelJustify(NS.ActiveContainer()) end,
+        disabledIf = labelOff,
     },
     {
         path = "container.label.x", page = PAGE, group = G_LABEL, type = "number", min = -200, max = 200, step = 1,

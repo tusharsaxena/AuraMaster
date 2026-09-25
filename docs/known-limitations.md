@@ -190,8 +190,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   the edge on the label's side can show its label partly off screen. On a container attached to
   another the label sits beside the first element, outside the container's side edge and level with
   its top (as the strip does, SS-3), so it covers none of the parent's elements but can run over
-  whatever lies to that side; its X/Y offsets move it clear. A long name overruns a narrow icon
-  (toward the growth side, or away from the container on a follower), since the label does not wrap.
+  whatever lies to that side; its X/Y offsets move it clear. A long name overruns a narrow element,
+  since the label does not wrap: past both edges when centered (the Bars and Text default, batch 9
+  E7), otherwise away from the edge it is justified to.
 - **Size to fit sizes a Text container once, not per aura** (batch 8 AS-2). The engine draws every
   element of a group at one size and aura names are secret in combat, so the size comes from the
   placeholders, the sample names and the worst-case durations. A live name longer than those is not cut

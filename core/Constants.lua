@@ -135,6 +135,11 @@ C.DRAIN_DIRECTION_LABELS = { left = "Toward the left", right = "Toward the right
 
 C.JUSTIFY = { "LEFT", "CENTER", "RIGHT" }
 C.JUSTIFY_LABELS = { LEFT = "Left", CENTER = "Center", RIGHT = "Right" }
+-- The name label's stored "no pick" (B9 E7): its justify is then its style's default
+-- (modules/Anchors.lua's LabelJustify). A value rather than nil because every schema row's path
+-- must resolve against the template (architecture-5). Never offered in the dropdown, which shows the
+-- justify in effect; a reset writes it back.
+C.LABEL_JUSTIFY_AUTO = "AUTO"
 
 C.TOOLTIP_ANCHORS = { "ANCHOR_BOTTOMLEFT", "ANCHOR_BOTTOMRIGHT", "ANCHOR_TOPLEFT", "ANCHOR_TOPRIGHT",
     "ANCHOR_LEFT", "ANCHOR_RIGHT", "ANCHOR_CURSOR" }

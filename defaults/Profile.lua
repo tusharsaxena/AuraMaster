@@ -189,7 +189,9 @@ NS.CONTAINER_TEMPLATE = {
     -- The optional name label (batch 8 NL-1): off by default. Its text is always `name`; it sits
     -- where the unlock strip does (modules/Anchors.lua's StripPoints), nudged by x/y, locked or not,
     -- and while unlocked the strip moves out past it (D6). Gold, like the strip's own label.
-    label = { show = false, x = 0, y = 0, font = labelFont() },
+    -- justifyH "AUTO" is no pick: Bars and Text center the name, Icons justify it toward the
+    -- element (B9 E7, modules/Anchors.lua's LabelJustify).
+    label = { show = false, justifyH = "AUTO", x = 0, y = 0, font = labelFont() },
 
     bars = {
         width = 220, height = 18,
