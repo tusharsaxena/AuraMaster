@@ -653,8 +653,9 @@ test("anchors: a container attaches to its target's engine frame at the derived 
     -- Container 1 fills columns growing right and down, so 2 continues below it (L-6).
     -- red under: Place handing SetPoint the stored attach.point in container mode
     assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "BOTTOMLEFT")
-    -- red under: the derived points dropping the stored offsets
-    assertEqual(p[4], -3); assertEqual(p[5], 4)
+    -- red under: the derived points dropping the stored offsets (they nudge on top of one of 2's
+    -- spacings below 1's block: SS-1, SS-2)
+    assertEqual(p[4], -3); assertEqual(p[5], 4 - c2.layout.spacing)
     local engine = CM.instances[1].engine
     CM.instances[1].engine = nil
     rec = recordAnchor(CM.instances[2])
@@ -962,7 +963,8 @@ test("anchors: a container attached to an icon row stacks below it, on the side 
     local p = rec.points[1]
     -- red under: rows placing the child beside the parent (TOPLEFT to TOPRIGHT)
     assertEqual(p[1], "TOPLEFT"); assertTrue(p[2] == CM.instances[3].engine, "3's engine")
-    assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], 0); assertEqual(p[5], -4)
+    -- The chain stacks vertically, so the seam is one of 2's line spacings, the stored -4 on top.
+    assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], 0); assertEqual(p[5], -4 - c2.layout.lineSpacing)
     L3.growH = "left"
     rec = recordAnchor(CM.instances[2])
     NS.Anchors.Place(CM.instances[2])
@@ -1036,7 +1038,8 @@ test("anchors: a container attached to another takes derived points from the par
     local p = rec.points[1]
     -- red under: Place reading the stored attach points in container mode
     assertEqual(p[1], "BOTTOMRIGHT"); assertEqual(p[3], "TOPRIGHT")
-    assertEqual(p[4], 6); assertEqual(p[5], -2)
+    -- Growing up, the seam gap (2's spacing) is upward and the stored -2 nudges on top of it.
+    assertEqual(p[4], 6); assertEqual(p[5], -2 + c2.layout.spacing)
 end)
 
 test("anchors: a frame-attached container keeps its stored points", function()
@@ -1068,14 +1071,15 @@ test("anchors: the engine's flow, the placeholders and the handle all read the i
     assertEqual(y, h + c2.layout.spacing, "the second placeholder stacks up the column")
     local inst = NS.ContainerManager.instances[2]
     local hdl = recordedHandle(mocks, NS, inst)
-    local top, bottom
-    rawset(inst.anchor, "SetClampRectInsets", function(_, _, _, t, b) top, bottom = t, b end)
+    local left, right
+    rawset(inst.anchor, "SetClampRectInsets", function(_, l, r) left, right = l, r end)
     NS.Anchors.UpdateHandle(inst, true)
     local p = last(hdl, "SetPoint")
-    -- red under: placeHandle reading cfg.layout (2's own flow grows down: the strip would sit above)
-    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
-    -- red under: clampToHandle reading cfg.layout
-    assertEqual(top, 0); assertEqual(bottom, -20)
+    -- red under: placeHandle reading cfg.layout (2's own rows grow left and down: the strip would be
+    -- level with its top). Beside its first element, level with its bottom edge (SS-3).
+    assertEqual(p[1], "BOTTOMLEFT"); assertEqual(p[3], "BOTTOMRIGHT")
+    -- red under: clampToHandle reading cfg.layout (2's own growth reaches left)
+    assertEqual(left, 0); assertTrue(right > 0, "the strip beside it reaches right")
 end)
 
 --- The anchor point the engine was last told for container `id`.

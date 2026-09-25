@@ -339,7 +339,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:213`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:229`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect), unless that would loop;
 to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container

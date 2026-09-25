@@ -115,7 +115,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
         shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
-        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, and the attachment points are set for you. A chain that would loop falls back to the screen."],
+        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, the attachment points are set for you, and the gap to it is this container's own Spacing (its Line spacing when it fills rows). The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = structural,
         -- `fromId` is the container the write targets, resolved by the seam: the id a caller names,
@@ -145,12 +145,12 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.x", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
         type = "number", min = -500, max = 500, step = 1,
-        label = L["X offset"], desc = L["Horizontal offset from the attachment point, in pixels."],
+        label = L["X offset"], desc = L["Horizontal offset from the attachment point, in pixels. Attached to another container, it nudges this one from the gap its Spacing leaves."],
     },
     {
         path = "container.attach.y", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
         type = "number", min = -500, max = 500, step = 1,
-        label = L["Y offset"], desc = L["Vertical offset from the attachment point, in pixels."],
+        label = L["Y offset"], desc = L["Vertical offset from the attachment point, in pixels. Attached to another container, it nudges this one from the gap its Spacing leaves."],
     },
 
     -- Fill and both growth rows are dimmed, showing the inherited values, while the container follows

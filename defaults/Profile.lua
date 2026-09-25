@@ -158,10 +158,12 @@ NS.CONTAINER_TEMPLATE = {
     position = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },
 
     -- What the container is attached to (modules/Anchors.lua). `container` is a container id; `frame`
-    -- is a global frame name, re-resolved when the add-on that owns it loads.
+    -- is a global frame name, re-resolved when the add-on that owns it loads. `x`/`y` are a nudge: on
+    -- a container attached to another they add to the seam gap, which is the child's own spacing
+    -- (batch 8 SS-1, SS-2); the old default 0/-4 is reset to 0/0 there by schema v8.
     attach = {
         mode = "screen", container = 0, frame = "",
-        point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = -4,
+        point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = 0,
     },
 
     -- How elements are arranged.

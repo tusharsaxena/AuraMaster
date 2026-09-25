@@ -843,6 +843,18 @@ local function moveEdits(edits)
     end
 end
 
+--- One container's category states: Consumables dropped, the new keys seeded from where their
+--- auras used to fall.
+local function seedV7(cats)
+    cats.consumables = nil
+    for key, from in pairs(V7_SEEDS) do
+        if cats[key] == nil and cats[from] ~= nil then cats[key] = cats[from] end
+    end
+    if cats.racialDebuffs == nil and (cats.hardCC ~= nil or cats.softCC ~= nil) then
+        cats.racialDebuffs = (cats.hardCC == "hide" or cats.softCC == "hide") and "hide" or "show"
+    end
+end
+
 function Database.MigrateV7(p)
     if type(p) ~= "table" then return 0 end
     if type(p.categorySpells) == "table" then
@@ -854,17 +866,42 @@ function Database.MigrateV7(p)
     for _, c in pairs(p.containers) do
         local cats = type(c) == "table" and type(c.filter) == "table" and c.filter.categories
         if type(cats) == "table" then
-            cats.consumables = nil
-            for key, from in pairs(V7_SEEDS) do
-                if cats[key] == nil and cats[from] ~= nil then cats[key] = cats[from] end
-            end
-            if cats.racialDebuffs == nil and (cats.hardCC ~= nil or cats.softCC ~= nil) then
-                cats.racialDebuffs = (cats.hardCC == "hide" or cats.softCC == "hide") and "hide" or "show"
-            end
+            seedV7(cats)
             walked = walked + 1
         end
     end
     return walked
+end
+
+--- v8 (batch 8, owner 2026-09-25, D5/D8): the seam between a container and the container it is
+--- attached to is now the child's own spacing (Anchors.SeamOffset, SS-1), and `attach.x`/`attach.y`
+--- add on top as a nudge (SS-2). A container attached to another whose offsets are still the old
+--- template default, 0/-4, would otherwise sit 4px further off than its own gaps, so they become
+--- 0/0. An ABSENT offset is that same old default (the template carried it when the container was
+--- stored, and the backfill after the ladder would otherwise hand it the new template's 0 without
+--- the step saying so), so it is stamped 0 too. Any other value is the player's own and is kept, and
+--- a named-frame or screen container keeps its offsets whatever they are. IDEMPOTENT: a second run
+--- finds 0/0 and resets nothing. Unreleased, so later batch 8 tasks extend this same step (D8).
+--- @return number  the containers whose offsets it reset
+local V8_OLD_X, V8_OLD_Y = 0, -4
+
+local function resetOldSeam(at)
+    if type(at) ~= "table" or at.mode ~= "container" then return false end
+    local x, y = at.x, at.y
+    if x == nil then x = V8_OLD_X end
+    if y == nil then y = V8_OLD_Y end
+    if x ~= V8_OLD_X or y ~= V8_OLD_Y then return false end
+    at.x, at.y = 0, 0
+    return true
+end
+
+function Database.MigrateV8(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local reset = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" and resetOldSeam(c.attach) then reset = reset + 1 end
+    end
+    return reset
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -963,6 +1000,14 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV7(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v7 profile '%s': Consumables retired; Group buffs, Stances and Racials seeded over %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 8, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV8(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another", name, n)
             end
         end)
     end },

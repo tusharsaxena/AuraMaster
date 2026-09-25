@@ -530,7 +530,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
-| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
+| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes: from the named frame's point, or as a nudge on top of the seam gap (SS-2) |
 
 Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
 feedback #4), so only the subsections the mode reads are drawn, each heading with its rows: in
@@ -563,7 +563,10 @@ flow. Its fill axis and both growth directions are its chain root's, resolved up
 `Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points come from
 `Anchors.DerivedPoints`: the child stacks below its parent (above, when growing up), on the side the
 parent's lines start from, whether the parent fills rows or columns (IA-1). `container.attach.point` / `.relativePoint` are read only in `frame`
-mode; the offsets apply in both attached modes. `Container.FlowSettings`, `Preview.Offset` and the
+mode. The gap across the seam is the child's own gap between consecutive elements in the direction
+the chain stacks: its Spacing when it fills columns, its Line spacing when it fills rows
+(`Anchors.SeamOffset`, SS-1), upward when the chain grows up. The offsets add on top of it as a
+nudge (SS-2). `Container.FlowSettings`, `Preview.Offset` and the
 handle's placement and clamp all read the effective layout. A write that moves a container's flow or
 attachment re-applies every container following it (`Anchors.Followers`). On this tab, in that mode,
 Fill, Grow horizontally and Grow vertically are dimmed and show the inherited values. They do that

@@ -84,6 +84,7 @@ Kit.run{
         "test_state",
         "test_lifecycle",
         "test_anchors",
+        "test_anchors_seam",
         "test_texttemplate",
         "test_style",
         "test_castaura",

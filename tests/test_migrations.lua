@@ -172,3 +172,68 @@ test("migrations: an inactive profile is migrated too", function()
         assertEqual(type(NS.db.sv.profiles[name].userCategories), "table", name)
     end
 end)
+
+-- ── v8 (batch 8 SS-2): the old 0/-4 attach offset on a container attached to another ──────────
+
+--- A profile at v7 whose containers carry every attach shape v8 has to tell apart.
+local function v7profile()
+    local function c(name, attach)
+        return { name = name, unit = "player", auraType = "HELPFUL", style = "bars", attach = attach }
+    end
+    return {
+        seeded = true, nextContainerId = 8, containerOrder = { 1, 2, 3, 4, 5, 6, 7 },
+        userCategories = {}, userCategoryOrder = {},
+        containers = {
+            [1] = c("Parent", { mode = "screen", container = 0, x = 0, y = -4 }),
+            [2] = c("Old default", { mode = "container", container = 1, x = 0, y = -4 }),
+            [3] = c("Own nudge", { mode = "container", container = 1, x = 3, y = -4 }),
+            [4] = c("Own drop", { mode = "container", container = 1, x = 0, y = -9 }),
+            [5] = c("Named frame", { mode = "frame", frame = "PlayerFrame", x = 0, y = -4 }),
+            [6] = c("Unstored", { mode = "container", container = 1 }),
+            [7] = c("No attach", nil),
+        },
+    }
+end
+
+test("migrations: v8 zeroes the old 0/-4 offset on a container attached to another, and nothing else", function()
+    local NS = fresh()
+    local p = v7profile()
+    -- red under: no MigrateV8 (the step that carries SS-2's reset)
+    assertEqual(NS.Database.MigrateV8(p), 2)
+    local at = function(id) return p.containers[id].attach end
+    assertEqual(at(2).x, 0); assertEqual(at(2).y, 0, "the old default: reset")
+    -- An absent offset is the template's, which was 0/-4 when it was stored (the backfill after the
+    -- ladder would otherwise hand it the new template's 0/0 without the step saying so).
+    assertEqual(at(6).x, 0); assertEqual(at(6).y, 0, "absent: the old default, reset")
+    -- red under: resetting any container-mode offset (a value the player chose is theirs)
+    assertEqual(at(3).x, 3); assertEqual(at(3).y, -4, "a nudge of the player's own")
+    assertEqual(at(4).y, -9, "a drop of the player's own")
+    -- red under: resetting outside container mode (a named frame still reads the offset as its gap)
+    assertEqual(at(5).y, -4, "a named frame keeps it")
+    assertEqual(at(1).y, -4, "a screen container keeps it")
+    assertNil(p.containers[7].attach, "no attach table: nothing created")
+    local before = NS.Database.DeepCopy(p)
+    assertEqual(NS.Database.MigrateV8(p), 0, "a second run resets nothing")
+    assertNil(diff(p, before))
+end)
+
+test("migrations: a v7 account climbs to v8 in every profile", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
+        global = { schemaVersion = 7 } } })
+    -- red under: the v8 row missing from SCHEMA_STEPS
+    assertEqual(NS.SCHEMA_VERSION, 8)
+    assertEqual(NS.db.global.schemaVersion, 8)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local cs = NS.db.sv.profiles[name].containers
+        -- red under: the step touching the active profile only
+        assertEqual(cs[2].attach.y, 0, name)
+        assertEqual(cs[5].attach.y, -4, name)
+    end
+end)
+
+test("migrations: a new container's attach offset is 0/0", function()
+    local NS = fresh()
+    -- red under: the template still carrying the old 0/-4 (every new chain would start 4px apart)
+    assertEqual(NS.CONTAINER_TEMPLATE.attach.x, 0)
+    assertEqual(NS.CONTAINER_TEMPLATE.attach.y, 0)
+end)

@@ -100,9 +100,10 @@ end
 -- ---------------------------------------------------------------------------
 -- A container attached to ANOTHER container continues that container's flow: its fill axis and both
 -- growth directions are its chain root's, and its anchor points are derived so it stacks below the
--- parent (above, growing up). Its offsets, per-line count and spacing stay its own. Nothing is written: the
--- stored values stay as they are, so a detach restores them at the next apply. A frame-attached or
--- screen container inherits nothing — a named frame has no flow to continue.
+-- parent (above, growing up), one of its own gaps past the parent's block (Anchors.SeamOffset, SS-1).
+-- Its offsets nudge on top of that gap; its per-line count and spacing stay its own. Nothing is
+-- written: the stored values stay as they are, so a detach restores them at the next apply. A
+-- frame-attached or screen container inherits nothing — a named frame has no flow to continue.
 
 local FLOW_KEYS = { "axis", "growH", "growV" }
 
@@ -163,6 +164,20 @@ function Anchors.DerivedPoints(L)
     return "BOTTOM" .. h, "TOP" .. h
 end
 
+--- The offset that leaves one of the child's own gaps between its parent's block and itself, for a
+--- child laid out by `L` (its effective layout). The chain always stacks vertically (IA-1), so the
+--- gap is the one the child leaves between consecutive elements in that direction: its spacing when
+--- it fills columns, its line spacing when it fills rows (SS-1). Downward when it grows down, upward
+--- when it grows up, so a chain growing up no longer overlaps. The child's own values, because
+--- SetPoint offsets are in the positioned frame's scale, which is the child's (Container:Apply sets
+--- it on the anchor), so the seam matches its inner gaps under any Scale. Never negative.
+--- @return number x, number y
+function Anchors.SeamOffset(L)
+    local gap = (L.axis == "vertical") and L.spacing or L.lineSpacing
+    gap = math.max(0, tonumber(gap) or 0)
+    return 0, (L.growV == "up") and gap or -gap
+end
+
 --- Whether container `c`'s chain of container attachments passes through container `id`.
 local function follows(c, id)
     local at, hops = c.attach, 0
@@ -193,11 +208,19 @@ function Anchors.MovesFollowers(path)
     return FLOW_PATHS[path] == true
 end
 
---- The anchor points container `cfg` attaches with: derived from the flow it continues when it is
---- attached to a container, else the stored ones (a named frame).
-local function attachPoints(cfg, at, mode)
-    if mode == "container" then return Anchors.DerivedPoints(Anchors.EffectiveLayout(cfg) or {}) end
-    return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint
+--- The points and offsets container `cfg` attaches with. Attached to a container: points derived
+--- from the flow it continues, and one of its own gaps across the seam with the stored X/Y added on
+--- top as a nudge (SS-1, SS-2). Attached to a named frame: the stored points and offsets as they are.
+--- @return string point, string relativePoint, number x, number y
+local function attachSpec(cfg, at, mode)
+    local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
+    if mode == "container" then
+        local L = Anchors.EffectiveLayout(cfg) or {}
+        local point, relativePoint = Anchors.DerivedPoints(L)
+        local gx, gy = Anchors.SeamOffset(L)
+        return point, relativePoint, gx + x, gy + y
+    end
+    return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint, x, y
 end
 
 --- Place one container's anchor from its settings. Returns the mode it actually ended up in, which
@@ -216,9 +239,8 @@ function Anchors.Place(container)
     local at = cfg.attach or {}
     local target, mode = targetFor(container, at)
     if target then
-        local point, relativePoint = attachPoints(cfg, at, mode)
-        local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint,
-            tonumber(at.x) or 0, tonumber(at.y) or 0)
+        local point, relativePoint, x, y = attachSpec(cfg, at, mode)
+        local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint, x, y)
         if ok then return mode end
         anchor:ClearAllPoints()
     end
@@ -436,10 +458,13 @@ end
 --- below when they grow up, its edge lined up with the edge they start from so it runs along the
 --- first line. At least as wide as one element, and as its label with room for the help mark. The
 --- growth is the effective one: an attached container's auras grow the way its parent's do (L-6).
+--- A container attached to another is the exception: that side faces the parent across the seam,
+--- so its strip sits beside its first element instead (placeBeside, SS-3).
 --- The strip's frame level, set wherever it is placed, since the first apply sets its anchor's level
 --- after BuildHandle ran: HANDLE_LEVEL above its anchor. A container attached to another also clears
---- that one's placeholders (L-4), which it sits beside with its strip toward them; every placeholder,
---- inner frames included, stacks under that container's own strip, HANDLE_LEVEL above its anchor.
+--- that one's placeholders (L-4), which its strip can still meet where the two blocks sit side by
+--- side; every placeholder, inner frames included, stacks under that container's own strip,
+--- HANDLE_LEVEL above its anchor.
 --- Levels order frames within one strata only: a target in a higher strata still draws on top.
 --- Every level is read through levelOf (feedback E).
 local function handleLevel(container, cfg)
@@ -452,20 +477,44 @@ local function handleLevel(container, cfg)
     return level
 end
 
---- @return number  how far the strip runs past the anchor along the line
+--- A container that follows another's flow stacks against it across the seam, so the side away
+--- from its growth faces the parent's last aura: its strip goes beside its first element instead
+--- (SS-3). One that follows nothing keeps the strip above or below.
+local function besideSeam(cfg)
+    return Anchors.FlowRoot(cfg) ~= nil
+end
+
+--- The strip of a container attached to another: beside the anchor, on the side its lines do not
+--- grow into, level with its edge that faces the parent (its top growing down, its bottom growing
+--- up), so the strip runs into the child's own rows and never back over the parent. As wide as its
+--- label with room for the help mark, not the element: it sits beside it, not along it.
+--- @return number  how far the strip reaches out from the anchor's side, its gap included
+local function placeBeside(handle, anchor, growH, growV)
+    local v = (growV == "down") and "TOP" or "BOTTOM"
+    local right = (growH ~= "left")
+    handle:SetPoint(v .. (right and "RIGHT" or "LEFT"), anchor, v .. (right and "LEFT" or "RIGHT"),
+        right and -DRAG.GAP or DRAG.GAP, 0)
+    return handle:ApplyWidth(0) + DRAG.GAP
+end
+
+--- @return number, boolean  how far the strip runs past the anchor (along the line, or out from its
+---                          side), and whether it sits beside the anchor rather than above or below
 local function placeHandle(container, cfg)
     local handle = container.handle
     handle:SetFrameLevel(handleLevel(container, cfg))
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
+    handle:ClearAllPoints()
+    handle.placed = true
+    if besideSeam(cfg) then
+        return placeBeside(handle, container.anchor, growH, growV), true
+    end
     local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
     local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
     local w = NS.Style.ElementSize(cfg)
-    handle:ClearAllPoints()
     handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and DRAG.GAP or -DRAG.GAP)
-    handle.placed = true
     -- The widget measures its own label on a detached string of its own and floors the width at the
     -- element, which is the arithmetic this file used to carry (labelWidth + HANDLE_PAD + …).
-    return handle:ApplyWidth(w) - w
+    return handle:ApplyWidth(w) - w, false
 end
 
 --- Set the anchor's clamp insets only when they change. This runs on every visibility pass, and a
@@ -481,14 +530,23 @@ local function setClamp(container, l, r, t, b)
     container.anchor:SetClampRectInsets(l, r, t, b)
 end
 
+--- A strip beside the anchor (SS-3) sits on the side its lines do not grow into, so the clamp reaches
+--- out from that side only, by the strip's width and gap.
+local function clampBeside(container, growH, reach)
+    if growH == "left" then return setClamp(container, 0, reach, 0, 0) end
+    setClamp(container, -reach, 0, 0, 0)
+end
+
 --- The anchor is clamped to the screen; while its handle shows, the clamp rect reaches over the strip
---- too, so the handle cannot be dragged off-screen. Out of combat only (Anchors.UpdateHandle).
-local function clampToHandle(container, cfg, overhang)
+--- too, so the handle cannot be dragged off-screen. Out of combat only (Anchors.UpdateHandle). A
+--- strip beside the anchor (SS-3) reaches out from that side only.
+local function clampToHandle(container, cfg, overhang, beside)
     if not overhang then
         setClamp(container, 0, 0, 0, 0)
         return
     end
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
+    if beside then return clampBeside(container, growH, overhang) end
     local reach = DRAG.HEIGHT + DRAG.GAP
     local left = (growH == "left") and -overhang or 0
     local right = (growH == "right") and overhang or 0
@@ -511,7 +569,11 @@ function Anchors.UpdateHandle(container, show)
     show = (show and cfg) and true or false
     handle:SetLabel(handleText(cfg))
     if not InCombatLockdown() then
-        clampToHandle(container, cfg, show and placeHandle(container, cfg) or nil)
+        if show then
+            clampToHandle(container, cfg, placeHandle(container, cfg))
+        else
+            clampToHandle(container, cfg, nil)
+        end
     elseif show and not handle.placed then
         placeHandle(container, cfg)
     end

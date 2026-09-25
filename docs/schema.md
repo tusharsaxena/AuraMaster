@@ -83,7 +83,7 @@ path, never to a number restated in `modules/`.
 | `attach.container` | `0` | target container id (`0` = none) |
 | `attach.frame` | `""` | target global frame name |
 | `attach.point` / `.relativePoint` | `"TOPLEFT"` / `"BOTTOMLEFT"` | corners for the `container` and `frame` modes |
-| `attach.x` / `.y` | `0` / `-4` | offsets for the `container` and `frame` modes |
+| `attach.x` / `.y` | `0` / `0` | offsets for the `frame` mode; in the `container` mode a nudge added on top of the seam gap, which is the child's own `layout.spacing` (its `lineSpacing` when it fills rows; `Anchors.SeamOffset`, batch 8 SS-1/SS-2). The template's `0` / `-4` before schema v8 |
 
 ### `layout` and `behavior`
 
@@ -177,7 +177,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:259`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:261`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -502,7 +502,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:906`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:943`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -667,6 +667,15 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   Hide) and `"show"` on any other container carrying either key. `consumables` is deleted from every container and from
   `categorySpells`; a player's Support edit on a group buff, and a Utility edit on Shadowmeld, move
   to the new category unless it already holds its own. Idempotent: the seeds are `== nil` tests.
+- **Schema v8** (`Database.MigrateV8`, `core/Database.lua`, batch 8, owner 2026-09-25, D5/D8) runs over
+  **every** stored profile and logs one `[Migrate] v8 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `8`. The seam between a container and the container it is
+  attached to is now the child's own spacing, and `attach.x` / `attach.y` nudge on top of it, so a
+  container in the `container` mode whose offsets are still the old template default `0` / `-4` has
+  them reset to `0` / `0`. An absent offset counts as that old default. Any other value is the
+  player's own and is kept, and a `frame` or `screen` container keeps its offsets whatever they are.
+  Idempotent: a second run finds `0` / `0` and resets nothing. It is unreleased, so the later batch 8
+  tasks extend this same step (D8).
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

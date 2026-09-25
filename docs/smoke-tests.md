@@ -55,8 +55,9 @@ suite covers what only the client can show.
     screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
     its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
     **Attached container.** Attach one container to another (Layout → Anchor), unlock and `/am test` → the
-    attached container's placeholders start just past the target's last placeholder, and its handle
-    draws above the target's placeholders (check 41).
+    attached container's placeholders start one of its own Spacings past the target's last placeholder,
+    and its handle sits beside its own first placeholder, on the side away from its growth, covering
+    none of the target's placeholders (check 41, SS-3).
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
     the help mark moves it too. Right-click a handle, then its **?** → each time the settings open on
     the **Containers** page with that container selected in the band's picker (feedback #9); in combat
@@ -206,9 +207,9 @@ suite covers what only the client can show.
 
 41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
     as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked and in
-    test mode, with B attached to A → B's placeholders start just past A's last placeholder, below A's block, rather
-    than on top of A, and B's handle draws above A's placeholders; `/am test off` → B follows A's real
-    auras again.
+    test mode, with B attached to A → B's placeholders start one of B's Spacings past A's last placeholder, below A's block, rather
+    than on top of A, and B's handle sits beside B's first placeholder, level with B's top edge, over
+    none of A's placeholders (SS-3); `/am test off` → B follows A's real auras again.
 42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
     under the cursor with its name beside it; left-click your player frame → the container attaches to
     it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout
@@ -408,7 +409,16 @@ listed here too, so the batch can be signed off in one pass.
     the line reads "Attached by its Top left to the Bottom left of 'A'"; give A a **Per row** that
     wraps it → B sits below A's last line; set A's **Grow horizontally** to left → B is right-aligned
     under A (Top right to Bottom right).
-68. **Attached handle while unlocked (L-4).** Check 41, and check 14's attached-container paragraph.
+68. **Attached handle while unlocked (L-4, SS-3).** Check 41, and check 14's attached-container paragraph.
+    **Seam (SS-1, SS-2).** Locked, real auras, B attached to A, A a column growing down: the gap from
+    A's last bar to B's first equals the gap between B's bars (2px at Spacing 2, not 4). Set A's
+    **Grow vertically** to up → B sits above A with one B Spacing between them and no overlap. Make A
+    an icon row growing right → B starts under A, one B **Line spacing** below A's last line. Set B's
+    Spacing to 10 → B's inner gaps and the seam change together, and A does not move. B's **Scale**
+    1.5 with A at 1 → the seam still equals B's on-screen gap. `/am test` → the seam between the
+    placeholders equals the locked one. Set B's **Y offset** to -3 → B drops 3px further (a nudge on
+    top). After updating from a build before schema v8, a container that was attached to another with
+    the old 0/-4 offsets reads 0/0 on its Layout page; any other offsets are unchanged.
 69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections (now drawn by mode, not dimmed); check
     26 for the Bars page on an icon container, and the Icons page on a bar container the same way.
 70. **ID lists take a link (X-1).** On General → Spell Categories click into **Add a spell** and
