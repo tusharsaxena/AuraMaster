@@ -664,8 +664,8 @@ nothing).
 104. **The pandemic-window blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
      in 0.01 s increments with delays under REPEAT, so it reads as a blink, not a flicker or a smooth
      fade.
-105. **Nested clipping.** A template wider than the box, on a narrow Text container: the line is cut
-     at the box edge, never drawn past it or under a neighboring container.
+105. **Nested clipping.** A template wider than the box, on a narrow Text container with Size to fit off:
+     the line is cut at the box edge, never drawn past it or under a neighboring container.
 106. **Dispel type text.** `[$dispeltype$]` on a Bleed debuff and on an Enrage-type buff: Bleed prints
      "Bleed"; check what Enrage's own dispel name actually reads (is it really "Enrage"?) and record
      it.
@@ -1256,7 +1256,8 @@ on the same branch.
 201. **It follows the content (AS-2).** With it on, change the font size, the template, the countdown
      format, Icon Left with size 24, and Justify Center with a three-field template → each resizes the
      box. Icon size 0 with Bounce → neither the icon nor the text is cut at the right, and at Justify
-     vertical Middle or Bottom the bounce is not cut at the top (Top still is, as before). A long-lived
+     vertical Middle or Bottom the bounce is not cut at the top (at Top, which gets no headroom, it rises
+     above the box, uncut since batch 9 TX-1). A long-lived
      aura (hours or days) shows its whole time string.
 202. **Its limits (AS-2, batch 9 TX-1).** A live buff with a name longer than the samples (Guardian of
      Ancient Kings, Incarnation: Chosen of Elune) draws in full, not cut at either end, at Justify Left,

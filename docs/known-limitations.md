@@ -198,8 +198,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (batch 9 TX-1, E8): under Size to fit the element's frames do not clip, so the line draws in full
   from its justify point past the box, both ways when centered. That overflow can run over an icon on
   the side it grows toward and, in a horizontal row, over the next element; the layout, the outline
-  and the drag strip still use the fitted box. A hand-set Width (Size to fit off) cuts at the box as
-  before. A font that has not loaded yet measures nothing, so the first apply after login can
+  and the drag strip still use the fitted box. For the same reason a Bounce at Justify vertical Top,
+  which gets no headroom, rises above the box instead of being cut there. A hand-set Width (Size to
+  fit off) cuts at the box as before. A font that has not loaded yet measures nothing, so the first apply after login can
   use the stored Width and Height and the next one sizes to fit. Defaults on the Text page turns Size
   to fit on (the template's value); Text containers stored before schema v8 keep it off (D7). Size to
   fit is Text-only (batch 9 E6): a bars or icons container stores no value of its own (schema v9
