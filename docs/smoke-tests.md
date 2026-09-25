@@ -1216,6 +1216,20 @@ SavedVariables file for the migration lines.
 | #13 seam spacing | SS-1..SS-3 | 68 (and 14, 41) |
 | #16 `/am diagnostics` | DG-1..DG-4 | 206-209 |
 
+**Owner run, 2026-09-25.** Everything passed except the items below. Those go to feedback batch 9,
+on the same branch.
+
+| Item | Checks | Result |
+|---|---|---|
+| #1 spark | 85 | pass |
+| #3 close mark | 197-199 | pass |
+| #4 test-mode debuffs | 186-190 | pass |
+| #8 name label | 203-205 | pass (the tab is renamed Label; batch 9 adds a Justify option) |
+| #10 dispel border shape | 71 | pass |
+| #7 Size to fit | 200-202 | **fail**: live auras longer than the samples are clipped (202's stated limit is rejected), test-mode columns misalign after a width change or Size to fit, and existing Text containers were not stamped off |
+| #9, #11, #13 attached containers | 191-196, 67, 68 | **fail**: an attached child's strip sits beside the parent's first element, so the child reads as attached elsewhere and its test-mode auras read as the parent's. Batch 9 reworks attach points so they can be chosen |
+| #16 `/am diagnostics` | 206-209 | **fail**: out of combat, every container's plan and shown sections error on a secret boolean compare (`Diagnostics.lua:453`) |
+
 197. **The X on the strip (CX-1, CX-3).** `/am unlock` → every container's strip shows a gray X
      immediately left of the **?**, the same size, turning white on hover; the name stays centered
      and does not run under the X, even for a long name with the orange TEST tag in test mode.
