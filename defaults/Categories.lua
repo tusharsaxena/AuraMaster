@@ -144,14 +144,14 @@ Cat.HELPFUL = {
     {
         key = "activeMitigation", kind = "spells", label = "Active mitigation",
         desc = "Short, frequently refreshed tank mitigation.",
+        -- Owner 2026-09-25: Blood Shield (77535), Shuffle (215479) and Rushing Jade Wind (116847) are
+        -- not active mitigation, so Monk has no entry here.
         spells = spells({
             WARRIOR     = { 132404, 190456 },
             PALADIN     = { 132403 },
-            DEATHKNIGHT = { 77535, 195181 },
+            DEATHKNIGHT = { 195181 },
             DRUID       = { 192081 },
             DEMONHUNTER = { 203819 },
-            -- 116847: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            MONK        = { 215479, 116847 },
         }),
     },
     {
@@ -255,8 +255,7 @@ Cat.HELPFUL = {
             -- 474754: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             DEATHKNIGHT = { 454863, 474754 },
             -- 10060: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            -- 1300009: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PRIEST  = { 10060, 1300009 },
+            PRIEST  = { 10060 },   -- Void Shield (Unfolding Vision) 1300009 removed (owner 2026-09-25)
             -- 474750: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             DRUID   = { 29166, 474750 },
             -- 413984: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
@@ -268,7 +267,11 @@ Cat.HELPFUL = {
             -- 375257: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 406789: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 375256: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            EVOKER  = { 369459, 413984, 360827, 375253, 375230, 375226, 375229, 375257, 406789, 375256 },
+            -- Time Spiral is one aura per class (the cast 374968 applies none); all 13 are listed. 375234,
+            -- 375238, 375240, 375252, 375254, 375255, 375258 added 2026-09-25: seen in the 2026-09-24 logs,
+            -- mapped to their class in the 12.1 spell data.
+            EVOKER  = { 369459, 413984, 360827, 375253, 375230, 375226, 375229, 375257, 406789, 375256,
+                        375234, 375238, 375240, 375252, 375254, 375255, 375258 },
         }),
     },
     {
@@ -308,7 +311,11 @@ Cat.HELPFUL = {
             DRUID   = { 1850, 106898, 77761, 77764, 400126, 252216 },   -- Travel and Mount Form are Stances (owner 2026-09-25)
             -- 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 394454: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
-            PALADIN = { 1044, 221886, 221883, 221885, 221887, 254471, 254472, 254474, 276111, 276112, 294133, 363608, 453804, 394454 },
+            -- Divine Steed is one aura per mount appearance, chosen by race, glyph or bridle (the cast 190784
+            -- applies none). 254473 (Vigilant Charger, seen in the logs) and 1289616, 1289617 (the pre-12.0.1
+            -- Charger models, in the 12.1 spell data but not yet seen) added 2026-09-25.
+            PALADIN = { 1044, 221886, 221883, 221885, 221887, 254471, 254472, 254473, 254474, 276111, 276112, 294133,
+                        363608, 453804, 1289616, 1289617, 394454 },
             -- 443569: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 450552: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)
             -- 119085: combat-log evidence, docs/spell-research/2026-09-24-logs (SID)

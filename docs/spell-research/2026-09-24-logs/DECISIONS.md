@@ -2,7 +2,7 @@
 
 The owner's rulings on this bundle's review sheet (`REVIEW.csv`), copied from `tools/spell-research/decisions.json` (the durable record; one entry per sheet row, keyed `<proposal key>#<spell id>#<row type>`). `logs.py ingest` applied the accept and move rulings to `defaults/Categories.lua`; a rejected row is never asked again.
 
-Accepted 109, accepted into another category 24, rejected 545, pending 0.
+Accepted 107, accepted into another category 24, rejected 547, pending 0.
 
 | Row | Ruling | Type | Class | Spell id | Spell | Category | Date | Proposal |
 |---|---|---|---|---|---|---|---|---|
@@ -207,7 +207,7 @@ Accepted 109, accepted into another category 24, rejected 545, pending 0.
 | R0199 | reject | addition | MONK | 1241109 | Niuzao's Resolve | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|MONK\|niuzao's resolve\|1241109` |
 | R0200 | reject | addition | DRUID | 1301286 | Gorestained Claws | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|DRUID\|gorestained claws\|1301286` |
 | R0201 | reject | addition | DRUID | 441602 | Ravage | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|DRUID\|ravage\|441602` |
-| R0202 | accept | addition | MONK | 116847 | Rushing Jade Wind | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|MONK\|rushing jade wind\|116847` |
+| R0202 | reject | addition | MONK | 116847 | Rushing Jade Wind | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|MONK\|rushing jade wind\|116847` |
 | R0203 | reject | addition | DRUID | 1307881 | Gory Fur | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|DRUID\|gory fur\|1307881` |
 | R0204 | reject | addition | WARRIOR | 1300681 | Vengeful Shield | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|WARRIOR\|vengeful shield\|1300681` |
 | R0205 | reject | addition | DRUID | 400734 | After the Wildfire | activeMitigation | 2026-09-25 | `addition\|activeMitigation\|DRUID\|after the wildfire\|400734` |
@@ -329,7 +329,7 @@ Accepted 109, accepted into another category 24, rejected 545, pending 0.
 | R0321 | reject | addition | DEATHKNIGHT | 1266300 | Fanatically Inspired | support | 2026-09-25 | `addition\|support\|DEATHKNIGHT\|fanatically inspired\|1266300` |
 | R0322 | move | addition | EVOKER | 357170 | Time Dilation | defensives | 2026-09-25 | `addition\|support\|EVOKER\|time dilation\|357170` |
 | R0323 | reject | addition | PALADIN | 387804 | Echoing Protection | support | 2026-09-25 | `addition\|support\|PALADIN\|echoing protection\|387804` |
-| R0324 | accept | addition | PRIEST | 1300009 | Void Shield (Unfolding Vision) | support | 2026-09-25 | `addition\|support\|PRIEST\|void shield (unfolding vision)\|1300009` |
+| R0324 | reject | addition | PRIEST | 1300009 | Void Shield (Unfolding Vision) | support | 2026-09-25 | `addition\|support\|PRIEST\|void shield (unfolding vision)\|1300009` |
 | R0325 | reject | addition | DRUID | 1266300 | Fanatically Inspired | support | 2026-09-25 | `addition\|support\|DRUID\|fanatically inspired\|1266300` |
 | R0326 | reject | addition | PALADIN | 1289063 | Rune of Echoes | support | 2026-09-25 | `addition\|support\|PALADIN\|rune of echoes\|1289063` |
 | R0327 | reject | addition | PALADIN | 1307578 | Soulcoil Barrier | support | 2026-09-25 | `addition\|support\|PALADIN\|soulcoil barrier\|1307578` |

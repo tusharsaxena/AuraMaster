@@ -125,10 +125,9 @@
     "ruling": "reject"
   },
   "addition|activeMitigation|MONK|rushing jade wind|116847#116847#addition": {
-    "category": "activeMitigation",
     "date": "2026-09-25",
     "reason": "review sheet R0202",
-    "ruling": "accept"
+    "ruling": "reject"
   },
   "addition|activeMitigation|PALADIN|bulwark of righteous fury|386652#386652#addition": {
     "date": "2026-09-25",
@@ -3019,10 +3018,9 @@
     "ruling": "reject"
   },
   "addition|support|PRIEST|void shield (unfolding vision)|1300009#1300009#addition": {
-    "category": "support",
     "date": "2026-09-25",
     "reason": "review sheet R0324",
-    "ruling": "accept"
+    "ruling": "reject"
   },
   "addition|support|PRIEST|void shield|1253593#1253593#addition": {
     "category": "healing",

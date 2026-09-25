@@ -62,8 +62,8 @@ Example: a bar option.
    plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list is honored only on a HOSTILE target or focus; the engine
    discards its ids on you or a friendly unit (the identity gate, `docs/midnight-quirks.md`). That
-   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:530`,
-   `:606`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
+   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:537`,
+   `:613`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
    where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
 
