@@ -1498,7 +1498,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (48)
+### test_pages_filters.lua (49)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1545,7 +1545,8 @@ badge and any count quoted in the docs must agree with it.
 - filters: an entry with a verdict keeps its place in the two-column grid
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
-- filters: Show all and Hide all head the Blizzard and Spell Categories sections, and no other (feedback #10)
+- filters: Show all and Hide all head every Categories section, one pair each (feedback #10, B11-T10)
+- filters: Show all / Hide all on Dispel Types and Who Cast It set exactly their own section, for this container only (B11-T10)
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
@@ -1892,7 +1893,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 48 |
+| test_pages_filters.lua | 49 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
@@ -1913,4 +1914,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1619** |
+| **Total** | **1620** |

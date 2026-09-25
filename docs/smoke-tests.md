@@ -1665,7 +1665,7 @@ before the upgrade, growing down.
 
 ## AD. Batch 11 follow-ups (owner to run)
 
-Three changes the owner asked for after section AC (2026-09-26). None has been run here.
+Four changes the owner asked for after section AC (2026-09-26). None has been run here.
 
 246. **An attached container's strip name is gray, and its tooltip says why.** `/am unlock` → a
      container on the screen shows its strip name in the usual gold; #14 (attached to #13) and a
@@ -1691,3 +1691,11 @@ Three changes the owner asked for after section AC (2026-09-26). None has been r
      dummy → still lined up through the fight; unlocked in combat (unlock before the pull) → still
      lined up. Give Target Buffs (Mine) an aura and let it fall off → Target Debuffs moves only up
      and down the column, never sideways. No Lua error.
+249. **Show all / Hide all on Dispel Types and Who Cast It (T10).** Filters, select Player debuffs →
+     Categories → the Dispel Types and Who Cast It headings each have **Show all** and **Hide all**
+     beside them, looking like the Blizzard Categories and Spell Categories pairs; hover one → "Set
+     every category in this section to Show (Hide), for this container.". Click Hide all under Dispel
+     Types → every Dispel Types row reads Hide, and the Blizzard, Spell and Who Cast It rows do not
+     change; Hide all under Who Cast It → both of its rows read Hide, Dispel Types unchanged; Show all
+     on each → back to Show. Select Target debuffs (mine) → its rows were never touched. A buff
+     container still shows only its two pairs. No Lua error.
