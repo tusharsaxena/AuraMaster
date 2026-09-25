@@ -86,6 +86,7 @@ Kit.run{
         "test_anchors",
         "test_anchors_seam",
         "test_anchors_hang",
+        "test_anchors_close",
         "test_texttemplate",
         "test_style",
         "test_castaura",

@@ -366,13 +366,14 @@ end
 -- ---------------------------------------------------------------------------
 
 -- A labeled strip OUTSIDE the anchor, on the side the auras do not grow into: a dark fill with a 1px
--- gold edge, a gold label, and the media catalog's help mark inside its far end. Outside, because
+-- gold edge, a gold label, and inside its far end the media catalog's close mark (an X that disables
+-- the container, batch 8 CX-3) immediately left of its help mark. Outside, because
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
--- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 2): the fill, the
--- edge, the label, the help mark with its own art fallback, the tooltip, the drag scripts and the
--- width arithmetic were all this file's and are the library's. ConsumableMaster drew the same strip
+-- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 3): the fill, the
+-- edge, the label, the help and close marks with their own art fallbacks, the tooltips, the drag
+-- scripts and the width arithmetic are the library's; what the X DOES (disableContainer) is ours. ConsumableMaster drew the same strip
 -- over its macro bar, which is why the widget exists. Resolved at file load like every other library
 -- seam here; absent, Anchors.BuildHandle answers nil and a container simply has no handle, which
 -- Anchors.UpdateHandle and Container:Park already tolerate.
@@ -432,6 +433,37 @@ local function tooltipSpec(container)
     }
 end
 
+--- The close mark's left click (batch 8 CX-3): disable THIS container through the one write seam,
+--- with no confirmation, and say in chat which one and how to bring it back. The row's `visibility`
+--- effect does the rest exactly as the Enabled checkbox does: the visibility pass hides the preview,
+--- the outline and this strip and re-places its followers, and none of that touches the protected
+--- anchor, so it is combat-legal. A refused write prints its reason and nothing else.
+local function disableContainer(container)
+    local cfg = container:Cfg()
+    local name = cfg and cfg.name or NS.L["Container"]
+    local ok, err = NS.SetByPath("container.enabled", false, container.id)
+    if not ok then
+        if err then NS.Print(err) end
+        return
+    end
+    NS.Printf(NS.L["%s disabled. Turn Enabled back on for it on the Containers page to bring it back."], name)
+end
+
+--- The close mark's own tooltip: the container's name (a function, read on every hover, so a rename
+--- shows through) and what the click does. Cursor-owned like the strip's, through the same
+--- `tooltipOwner` (see tooltipSpec).
+local function closeTooltipSpec(container)
+    return {
+        title = function()
+            local cfg = container:Cfg()
+            return cfg and cfg.name or NS.L["Container"]
+        end,
+        body = {
+            NS.L["Click to disable this container. Its settings are kept; turn Enabled back on for it on the Containers page to bring it back."],
+        },
+    }
+end
+
 --- Asked by the widget at every OnDragStart. Only a screen-attached container moves by dragging; an
 --- attached one follows its target, and its offsets are set on the Layout page. Never mid-combat:
 --- the anchor parents an aura engine.
@@ -473,6 +505,9 @@ function Anchors.BuildHandle(container)
         label        = handleText(container:Cfg()),
         moveFrame    = anchor,
         helpIcon     = NS.Icon and NS.Icon("help") or nil,
+        closeIcon    = NS.Icon and NS.Icon("close") or nil,
+        onClose      = function() disableContainer(container) end,
+        closeTooltip = closeTooltipSpec(container),
         canDrag      = function() return canDrag(container) end,
         onDragStop   = function() Anchors.SavePosition(container) end,
         onRightClick = function() openSettings(container) end,

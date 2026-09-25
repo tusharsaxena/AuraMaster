@@ -222,7 +222,10 @@ end
 --- strip's natural width is the measured label plus twice this. It replaced this file's own
 --- `HANDLE_PAD + HANDLE_HELP * 2` (24 + 28 = 52), and it is 58: the mark's click target grew to the
 --- strip's full height while its art shrank to 8px, which is the widget's correction, not a drift.
-local RESERVE2 = 58
+--- It is 94 since batch 8 CX-3: the strip carries a close mark left of the "?", and the widget grows
+--- the reserve by that mark's frame (HELP_HIT, 18) on BOTH sides so the label stays centered:
+--- 2 * (29 + 18). The widget answers it as handle:Reserve().
+local RESERVE2 = 94
 
 test("handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
