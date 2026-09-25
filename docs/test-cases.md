@@ -653,7 +653,7 @@ badge and any count quoted in the docs must agree with it.
 - hang: a test-mode chain locked shows no strips and keeps its own seams
 - hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
 
-### test_emptywatch.lua (22)
+### test_emptywatch.lua (23)
 
 - empty: a token-only group holding an aura is not empty, asked with a count of one
 - empty: a token-only group with nothing to show is empty
@@ -677,6 +677,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: UNIT_AURA is heard only while unlocked, and a lock drops it
 - empty: target and focus are heard on a second frame only while a target or focus container shows
 - empty: test mode, secret auras and a stand-down each drop UNIT_AURA
+- empty: the player frame filters UNIT_AURA alone; pet and inventory changes ride AceEvent
 
 ### test_anchors_close.lua (6)
 
@@ -1742,7 +1743,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 76 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_hang.lua | 11 |
-| test_emptywatch.lua | 22 |
+| test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_texttemplate.lua | 26 |
@@ -1788,4 +1789,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1514** |
+| **Total** | **1515** |

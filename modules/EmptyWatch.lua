@@ -18,9 +18,9 @@ local _, NS = ...
 -- modules/TimedSpells.lua does: RegisterUnitEvent allows two units per frame, so there are two
 -- frames, held on the module (EW.unitFrames), built once and reused, one for player and pet and one
 -- for target and focus, each registered only while a shown container on those units needs a
--- prediction, and unregistered by hand in EW.Stop. The player frame also hears UNIT_PET and
--- UNIT_INVENTORY_CHANGED for the player; the target and focus swaps come through AceEvent on this
--- file's own target. The gate is narrow: unlocked, not in test mode, out of combat (the combat edge
+-- prediction, and unregistered by hand in EW.Stop. Each frame filters UNIT_AURA and nothing else (the
+-- carve-out's whole permission); the player's pet and gear changes and the target and focus swaps
+-- come through AceEvent on this file's own target. The gate is narrow: unlocked, not in test mode, out of combat (the combat edge
 -- is PLAYER_REGEN_DISABLED, which fires before lockdown: EW.SetCombat) and while auras are readable.
 -- A handler only marks the pass due; one pass, PASS_DELAY later, re-predicts every watched container
 -- and re-runs the visibility pass of any whose answer changed. Nothing is allocated per event.
@@ -277,6 +277,12 @@ local function onUnitEvent()
     schedulePass()
 end
 
+--- UNIT_PET and UNIT_INVENTORY_CHANGED through AceEvent, which does not filter by unit: only the
+--- player's own pet or gear marks the pass due.
+local function onPlayerUnit(_, unit)
+    if unit == "player" then schedulePass() end
+end
+
 -- Game events that are not unit events, on a target of their own (architecture-§4).
 local events = NS.NewBusTarget()
 
@@ -315,8 +321,8 @@ local function openPlayer()
     local f, rejected = unitFrame(1), NS.RejectedEvents
     onPlayer = NS.SafeRegisterUnitEvent(f, "UNIT_AURA", rejected, "player", "pet")
     if onPlayer then
-        NS.SafeRegisterUnitEvent(f, "UNIT_PET", rejected, "player")
-        NS.SafeRegisterUnitEvent(f, "UNIT_INVENTORY_CHANGED", rejected, "player")
+        NS.SafeRegisterEvent(events, "UNIT_PET", onPlayerUnit, rejected)
+        NS.SafeRegisterEvent(events, "UNIT_INVENTORY_CHANGED", onPlayerUnit, rejected)
     end
 end
 
@@ -330,17 +336,20 @@ end
 
 local function closePlayer()
     if EW.unitFrames[1] then EW.unitFrames[1]:UnregisterAllEvents() end
+    events:UnregisterEvent("UNIT_PET")
+    events:UnregisterEvent("UNIT_INVENTORY_CHANGED")
     onPlayer = false
 end
 
 local function closeOther()
     if EW.unitFrames[2] then EW.unitFrames[2]:UnregisterAllEvents() end
-    events:UnregisterAllEvents()
+    events:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    events:UnregisterEvent("PLAYER_FOCUS_CHANGED")
     onOther = false
 end
 
---- Stop listening: both unit frames closed by hand (AceEvent never reaches them), the swap events
---- dropped, and a queued pass or expiry timer canceled.
+--- Stop listening: both unit frames closed by hand (AceEvent never reaches them), the AceEvent
+--- ones dropped, and a queued pass or expiry timer canceled.
 function EW.Stop()
     if onPlayer then closePlayer() end
     if onOther then closeOther() end
