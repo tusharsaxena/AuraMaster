@@ -121,6 +121,13 @@ local function font(size)
     }
 end
 
+--- The name label's font: the six leaves, gold at 12 (the strip's own look).
+local function labelFont()
+    local t = font(12)
+    t.fontColor = color(1, 0.82, 0, 1)
+    return t
+end
+
 --- The font block every Bars and Icons text element carries: the six font leaves, then where the
 --- text sits.
 local function text(show, size, point, x, y, justify)
@@ -178,6 +185,11 @@ NS.CONTAINER_TEMPLATE = {
         tooltips = true, tooltipAnchor = "ANCHOR_BOTTOMLEFT", tooltipInCombat = true,
         clickThrough = false, cancelOnRightClick = true,
     },
+
+    -- The optional name label (batch 8 NL-1): off by default. Its text is always `name`; it sits
+    -- where the unlock strip does (modules/Anchors.lua's StripPoints), nudged by x/y, locked or not,
+    -- and while unlocked the strip moves out past it (D6). Gold, like the strip's own label.
+    label = { show = false, x = 0, y = 0, font = labelFont() },
 
     bars = {
         width = 220, height = 18,

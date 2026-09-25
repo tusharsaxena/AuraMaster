@@ -462,9 +462,10 @@ function CM.Rename(id, name)
     return NS.SetByPath("container.name", name, id)
 end
 
---- A container's name changed: every picker and handle lists names.
+--- A container's name changed: every picker, handle and name label shows names.
 function CM.NotifyRenamed()
     for _, inst in pairs(CM.instances) do
+        inst:RefreshLabelText()
         if inst.handle and inst.handle:IsShown() then NS.Anchors.UpdateHandle(inst, true) end
     end
     NS.bus:SendMessage(NS.MSG.CONTAINERS_CHANGED)
@@ -486,7 +487,7 @@ end
 
 -- What "copy settings from" copies. Identity (name), placement (position, attach) and the registry's
 -- own id are never copied: copying a container onto another is about how it looks and what it shows.
-CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons", "text" }
+CM.COPY_SECTIONS = { "filter", "layout", "behavior", "label", "bars", "icons", "text" }
 -- What "everything" copies: what the container IS, then every section. Identity first, because the
 -- Style row's onChange resets Fill (B5, settings/Containers.lua): the copied layout lands after that
 -- reset, so the copy keeps the source's Fill.

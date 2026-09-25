@@ -381,6 +381,9 @@ function ContainerClass:Apply()
         end
         self:ApplyBlocker(cfg)
     end
+    -- After SnapshotClass (its class color is the tracked unit's) and outside the engine branch: the
+    -- label is our own frame and draws on a client without the engine too.
+    self:ApplyLabel(cfg)
 
     -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
     self.previewDirty = true
@@ -482,6 +485,47 @@ function ContainerClass:ApplyOutline(cfg, on)
     o:Show()
 end
 
+--- The optional NAME LABEL (batch 8 NL-1..NL-3): the container's name where its strip sits
+--- (Anchors.PlaceLabel), built on the first apply that turns it on. A PLAIN frame under the anchor,
+--- taking no mouse and never a backdrop, like the outline: it inherits the anchor's scale, alpha and
+--- stand-down. Its font, text and place are set here, in Apply, which is kept out of lockdown; the
+--- visibility pass only shows or hides it (ApplyLabelShown). Its class color is the snapshot's, or the
+--- player's for a player container (Style.ColorWith).
+function ContainerClass:ApplyLabel(cfg)
+    local lc = cfg.label
+    if not (lc and lc.show) then return end
+    if not self.label then
+        local host = CreateFrame("Frame", nil, self.anchor)
+        host:EnableMouse(false)
+        self.label, self.labelText = host, host:CreateFontString(nil, "OVERLAY")
+    end
+    local fs = self.labelText
+    NS.Style.ApplyFont(fs, lc.font or D.label.font, D.label.font, self.classColor or false)
+    fs:SetText(tostring(cfg.name or ""))
+    NS.Anchors.PlaceLabel(self, cfg)
+end
+
+--- Show or hide the name label: shown whenever the container is, locked or unlocked, whatever it holds
+--- (its contents are secret), and while unlocked beside the strip, which moves out past it (D6). Our
+--- own unprotected frame, so combat-legal; it moves only on a first show, having no points before.
+--- `labelShown` is what the strip (Anchors.UpdateHandle) and a follower's seam (stripRoom) read.
+--- `show` is whether the container shows at all (ShouldShow).
+function ContainerClass:ApplyLabelShown(cfg, show)
+    local host = self.label
+    local lc = cfg and cfg.label
+    local on = (show and host and lc and lc.show) and true or false
+    self.labelShown = on
+    if not host then return end
+    if on and not host.placed then NS.Anchors.PlaceLabel(self, cfg) end
+    host:SetShown(on)
+end
+
+--- Set a renamed container's label text (CM.NotifyRenamed): a rename applies nothing else.
+function ContainerClass:RefreshLabelText()
+    local cfg = self.labelText and self:Cfg()
+    if cfg then self.labelText:SetText(tostring(cfg.name or "")) end
+end
+
 --- What a container attached to this one hangs from (Anchors.HangMode): the placeholder block in test
 --- mode (L-4), the one-element anchor its outline marks while unlocked (EO-1), else the engine.
 local function hangModeFor(previewing, unlocked)
@@ -515,6 +559,8 @@ function ContainerClass:ApplyVisibility()
     end
     local unlocked = (show and p and not p.locked) and true or false
     self:ApplyOutline(cfg, unlocked and not previewing)
+    -- Before the strip, which moves out past a shown label (D6).
+    self:ApplyLabelShown(cfg, show)
     NS.Anchors.UpdateHandle(self, unlocked)
     self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg)
     NS.Anchors.PlaceAttached(self)
@@ -537,7 +583,8 @@ function ContainerClass:Park()
     if self.outline then self.outline:Hide() end
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
-    self.hangMode, self.stripShown = "engine", false   -- re-evaluated by the next visibility pass
+    if self.label then self.label:Hide() end
+    self.hangMode, self.stripShown, self.labelShown = "engine", false, false   -- re-evaluated by the next visibility pass
     self.parked = true
 end
 
@@ -549,7 +596,8 @@ function ContainerClass:Destroy()
     NS.Preview.Hide(self)
     if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
-    self.hangMode, self.stripShown = "engine", false
+    if self.label then self.label:Hide() end
+    self.hangMode, self.stripShown, self.labelShown = "engine", false, false
     self.anchor:Hide()
     self.anchor:ClearAllPoints()
 end

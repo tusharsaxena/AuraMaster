@@ -196,7 +196,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:542`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
 (`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -234,7 +234,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:447`).
+  aura buttons (`modules/Container.lua:450`).
 
 ## An unknown event name raises
 
@@ -360,7 +360,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:483`):
+`modules/Style.lua:498`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -489,7 +489,7 @@ values was secret.
   (`modules/ContainerManager.lua:196`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:447`).
+  button's ancestry (`modules/Container.lua:450`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
@@ -561,7 +561,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:888`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:903`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

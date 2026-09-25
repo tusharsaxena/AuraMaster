@@ -56,10 +56,17 @@ local dressClass
 --- container reads the player's class. The stored alpha always survives. The in-combat staleness
 --- after a unit swap is the residual ratified in docs/ARCHITECTURE.md → Documented deviations.
 function Style.Color(stored, useClass)
-    if useClass and dressClass then
+    return Style.ColorWith(dressClass, stored, useClass)
+end
+
+--- Style.Color with the class named rather than read off the dress in progress, for a surface drawn
+--- outside Style.Element (the name label, modules/Container.lua): `classColor` is a container's
+--- snapshot, or nil / false for the player's own class.
+function Style.ColorWith(classColor, stored, useClass)
+    if useClass and classColor then
         local r, g, b, a = NS.ResolveColor(stored, false)
-        if dressClass.r == nil then return r, g, b, a end
-        return dressClass.r, dressClass.g, dressClass.b, a
+        if classColor.r == nil then return r, g, b, a end
+        return classColor.r, classColor.g, classColor.b, a
     end
     return NS.ResolveColor(stored, useClass, "player")
 end
@@ -85,9 +92,12 @@ local function styleBlock(cfg)
     return cfg[Style.StyleKey(cfg)]
 end
 
---- Whether the container's active style block (or one of its text blocks) turns a class color on.
---- Allocation-free: it runs on every unit swap for each container tracking the swapped unit.
+--- Whether the container's active style block (or one of its text blocks), or its shown name label,
+--- turns a class color on. Allocation-free: it runs on every unit swap for each container tracking
+--- the swapped unit.
 function Style.UsesClassColor(cfg)
+    local lb = cfg.label
+    if lb and lb.show and lb.font and lb.font.useClassColorFont then return true end
     local s = styleBlock(cfg)
     if type(s) ~= "table" then return false end
     if anyClassFlag(s) then return true end
@@ -109,13 +119,18 @@ end
 
 --- Apply the six canonical font leaves of `t` (options-ui-§16) to a FontString: face, size, flags,
 --- color (with its class-color companion) and shadow. `tdef` is the template's block for the same
---- text, which the size falls back to.
-function Style.ApplyFont(fs, t, tdef)
+--- text, which the size falls back to. `classColor`, when given (a snapshot, or false for the
+--- player), names the class outright instead of reading the dress in progress (Style.ColorWith).
+function Style.ApplyFont(fs, t, tdef, classColor)
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
     local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
-    fs:SetTextColor(Style.Color(t.fontColor, t.useClassColorFont))
+    if classColor ~= nil then
+        fs:SetTextColor(Style.ColorWith(classColor, t.fontColor, t.useClassColorFont))
+    else
+        fs:SetTextColor(Style.Color(t.fontColor, t.useClassColorFont))
+    end
     if t.fontShadow then
         fs:SetShadowColor(0, 0, 0, 1)
         fs:SetShadowOffset(1, -1)

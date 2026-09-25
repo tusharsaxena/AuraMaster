@@ -606,6 +606,7 @@ local SECTIONS = {
     ["container.filter"]   = "filters",
     ["container.layout"]   = "layout",
     ["container.behavior"] = "layout",
+    ["container.label"]    = "layout",
     ["container.position"] = "layout",
     ["container.bars"]     = "bars",
     ["container.icons"]    = "icons",

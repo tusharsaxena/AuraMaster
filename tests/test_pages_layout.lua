@@ -94,12 +94,29 @@ local ON = {
     frame     = { ["Named frame"] = true, Offset = true },
 }
 
-test("layout: the tabs are Frame, Anchor, Growth, Mouse, in that order", function()
+test("layout: the tabs are Frame, Anchor, Growth, Mouse, Name label, in that order", function()
     local NS, _, P = layout()
     local L = NS.L
     -- red under: the Position rows declared before the Frame rows (tab order is first-seen group order)
     assertEqual(table.concat(P.tabKeys("layout"), ","),
-        table.concat({ L["Frame"], L["Anchor"], L["Growth"], L["Mouse"] }, ","))
+        table.concat({ L["Frame"], L["Anchor"], L["Growth"], L["Mouse"], L["Name label"] }, ","))
+end)
+
+test("layout: the Name label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)", function()
+    local NS, m, P = layout()
+    local ws = P.tab("layout", NS.L["Name label"])
+    assertTrue(P.row(ws, "container.label.x").disabled, "X is dimmed while the label is off")
+    assertTrue(P.row(ws, "container.label.font.fontSize").disabled, "and the font")
+    assertFalse(P.row(ws, "container.label.font.fontColor").disabled and true or false, "a swatch is never grayed")
+    P.row(ws, "container.label.show"):__fire("OnValueChanged", true)
+    m.__fireTimers()
+    P.tab("layout", NS.L["Frame"])
+    ws = P.tab("layout", NS.L["Name label"])
+    assertFalse(P.row(ws, "container.label.x").disabled and true or false, "live once it is on")
+    P.row(ws, "container.label.y"):__fire("OnMouseUp", 6)
+    local c1 = NS.Database.FindContainer(1)
+    assertTrue(c1.label.show); assertEqual(c1.label.y, 6)
+    assertFalse(NS.Database.FindContainer(2).label.show, "another container is untouched")
 end)
 
 test("layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)", function()

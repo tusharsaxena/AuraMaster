@@ -386,6 +386,12 @@ local DRAG = KW and KW.DRAG_HANDLE
 -- engine stacks above its anchor.
 local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
 
+-- The strip's height and gap as the name label (batch 8 NL-2) reads them: the label takes the strip's
+-- spot and is as tall as the strip, and it still draws on a build without the widget, so the widget's
+-- own figures stand in when it is missing.
+local STRIP_H   = DRAG and DRAG.HEIGHT or 18
+local STRIP_GAP = DRAG and DRAG.GAP or 2
+
 --- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
 --- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
 --- selection is left where it was: a refused click moves nothing. NS.OpenOptionsPage is the one
@@ -575,41 +581,77 @@ end
 --- hangs from; a root's strip sits on the far side, away from its followers. Enough that the
 --- follower's strip, level with its own edge, starts one strip gap past the end of `target`'s. 0 when
 --- the block is already that tall.
+--- A shown name label beside that element counts too (NL-3): the strip moves on past it, so the room
+--- is for both.
 stripRoom = function(target)
-    if not (DRAG and target.stripShown) then return 0 end
+    local n = ((DRAG and target.stripShown) and 1 or 0) + (target.labelShown and 1 or 0)
+    if n == 0 then return 0 end
     local cfg = target.Cfg and target:Cfg()
     if not (cfg and besideSeam(cfg)) then return 0 end
-    return math.max(0, DRAG.HEIGHT + DRAG.GAP - hangHeight(target, cfg)) * ownScale(cfg)
+    return math.max(0, n * (STRIP_H + STRIP_GAP) - hangHeight(target, cfg)) * ownScale(cfg)
 end
 
---- The strip of a container attached to another: beside the anchor, on the side its lines do not
---- grow into, level with its edge that faces the parent (its top growing down, its bottom growing
---- up), so the strip runs into the child's own rows and never back over the parent. As wide as its
---- label with room for the help mark, not the element: it sits beside it, not along it.
---- @return number  how far the strip reaches out from the anchor's side, its gap included
-local function placeBeside(handle, anchor, growH, growV)
-    local v = (growV == "down") and "TOP" or "BOTTOM"
-    local right = (growH ~= "left")
-    handle:SetPoint(v .. (right and "RIGHT" or "LEFT"), anchor, v .. (right and "LEFT" or "RIGHT"),
-        right and -DRAG.GAP or DRAG.GAP, 0)
-    return handle:ApplyWidth(0) + DRAG.GAP
-end
-
---- @return number, boolean  how far the strip runs past the anchor (along the line, or out from its
----                          side), and whether it sits beside the anchor rather than above or below
-local function placeHandle(container, cfg)
-    local handle = container.handle
-    handle:SetFrameLevel(handleLevel(container, cfg))
+--- Where the strip sits, and the name label with it (NL-2): on the side the auras do not grow into,
+--- its edge lined up with the edge they start from; beside the first element for a container that
+--- follows another (SS-3), level with the edge that faces the parent.
+--- @return string point, string relativePoint, number x, number y, string growH, string growV, boolean beside
+function Anchors.StripPoints(cfg)
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    handle:ClearAllPoints()
-    handle.placed = true
     if besideSeam(cfg) then
-        return placeBeside(handle, container.anchor, growH, growV), true
+        local v = (growV == "down") and "TOP" or "BOTTOM"
+        local right = (growH ~= "left")
+        return v .. (right and "RIGHT" or "LEFT"), v .. (right and "LEFT" or "RIGHT"),
+            right and -STRIP_GAP or STRIP_GAP, 0, growH, growV, true
     end
     local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
     local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
+    return away, toward, 0, (growV == "down") and STRIP_GAP or -STRIP_GAP, growH, growV, false
+end
+
+--- How far the strip moves to clear a shown name label (D6, NL-3): the label's height and the gap,
+--- out on the far side of the anchor, or on along the growth when it sits beside the first element.
+local function labelPush(container, growV, beside)
+    if not container.labelShown then return 0 end
+    local out = (growV == "down") ~= beside
+    return out and (STRIP_H + STRIP_GAP) or -(STRIP_H + STRIP_GAP)
+end
+
+--- Place a container's name label on the strip's spot, nudged by its X/Y (NL-2): one element wide and
+--- one strip tall, its text on one line, justified toward the element it names. Layout work, so run
+--- from Container:Apply (kept out of lockdown) and once on a first show (Container:ApplyLabelShown).
+function Anchors.PlaceLabel(container, cfg)
+    local host, fs = container.label, container.labelText
+    if not (host and fs and cfg) then return end
+    local lc = cfg.label or D.label
+    host:SetFrameLevel(levelOf(container.anchor, cfg) + 1)
+    local point, rel, x, y, growH, _, beside = Anchors.StripPoints(cfg)
+    host:ClearAllPoints()
+    host:SetPoint(point, container.anchor, rel, x + (tonumber(lc.x) or 0), y + (tonumber(lc.y) or 0))
+    host:SetSize(NS.Style.ElementSize(cfg), STRIP_H)
+    local side = ((growH == "left") ~= beside) and "RIGHT" or "LEFT"
+    fs:ClearAllPoints()
+    fs:SetPoint(side, host, side, side == "LEFT" and 4 or -4, 0)
+    fs:SetJustifyH(side)
+    fs:SetWordWrap(false)
+    host.placed = true
+end
+
+--- The strip goes where Anchors.StripPoints says, moved past a shown name label (D6). Beside the
+--- anchor (a container attached to another) it runs into the child's own rows and never back over
+--- the parent, as wide as its label with room for the help mark, not the element: it sits beside it,
+--- not along it.
+--- @return number, boolean  how far the strip runs past the anchor (along the line, or out from its
+---                          side, its gap included), and whether it sits beside the anchor rather
+---                          than above or below
+local function placeHandle(container, cfg)
+    local handle = container.handle
+    handle:SetFrameLevel(handleLevel(container, cfg))
+    handle:ClearAllPoints()
+    handle.placed = true
+    local point, rel, x, y, _, growV, beside = Anchors.StripPoints(cfg)
+    handle:SetPoint(point, container.anchor, rel, x, y + labelPush(container, growV, beside))
+    if beside then return handle:ApplyWidth(0) + DRAG.GAP, true end
     local w = NS.Style.ElementSize(cfg)
-    handle:SetPoint(away, container.anchor, toward, 0, (growV == "down") and DRAG.GAP or -DRAG.GAP)
     -- The widget measures its own label on a detached string of its own and floors the width at the
     -- element, which is the arithmetic this file used to carry (labelWidth + HANDLE_PAD + …).
     return handle:ApplyWidth(w) - w, false
@@ -645,7 +687,7 @@ local function clampToHandle(container, cfg, overhang, beside)
     end
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
     if beside then return clampBeside(container, growH, overhang) end
-    local reach = DRAG.HEIGHT + DRAG.GAP
+    local reach = DRAG.HEIGHT + DRAG.GAP + math.abs(labelPush(container, growV, false))
     local left = (growH == "left") and -overhang or 0
     local right = (growH == "right") and overhang or 0
     local top = (growV == "down") and reach or 0

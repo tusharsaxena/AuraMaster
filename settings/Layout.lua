@@ -3,13 +3,14 @@ local _, NS = ...
 -- settings/Layout.lua — where a container sits and how its auras are arranged.
 --
 --     band      [Container ▾]
---     [ Frame ][ Anchor ][ Growth ][ Mouse ]
+--     [ Frame ][ Anchor ][ Growth ][ Mouse ][ Name label ]
 --     Anchor  [Attach to]
 --             -- Screen --            [Point] [Relative point] / [X] [Y]
 --             -- Another container -- [Container]
 --             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
 --             (Named frame only: a gray hint when Point faces the growth; growsBackNote, below)
+--     Name label  [Show name label] / [X offset] [Y offset] / -- Font -- (the six font leaves)
 --
 -- A container attaches to the screen, to another container (following it as it grows) or to any
 -- named frame (modules/Anchors.lua). Only the subsections the chosen mode reads are DRAWN (feedback
@@ -27,6 +28,7 @@ local C = NS.Constants
 local PAGE = "layout"
 -- Declared in this order because the tab strip is the groups' first-seen order.
 local G_FRAME, G_ANCHOR, G_GROW, G_MOUSE = L["Frame"], L["Anchor"], L["Growth"], L["Mouse"]
+local G_LABEL = L["Name label"]
 local S_SCREEN, S_CONTAINER, S_FRAME, S_OFFSET = L["Screen"], L["Another container"], L["Named frame"], L["Offset"]
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 
@@ -209,6 +211,46 @@ NS.RegisterSchemaRows({
         label = L["Click-through"], desc = L["Let the mouse pass through this container: no tooltips and no clicks. This is the escape hatch for tooltips' whole-rect mouse capture — turn it on if this container sits over a unit frame or open ground and mouseover targeting or a mouseover macro needs to reach through it."],
     },
 })
+
+-- ---------------------------------------------------------------------------
+-- The name label (batch 8 NL-4)
+-- ---------------------------------------------------------------------------
+-- The label's text is always the container's name (modules/Container.lua's ApplyLabel), so the tab
+-- holds only whether it shows, where (an X/Y nudge from the strip's spot) and its font. Every row but
+-- Show is dimmed while the label is off. The rows carry no `effect`: a write re-applies the selected
+-- container (CONFIG_CHANGED), where the label is restyled and placed.
+
+--- A `disabledIf` predicate: the selected container's label is off.
+local function labelOff()
+    local c = NS.ActiveContainer()
+    return not (c and c.label and c.label.show)
+end
+
+NS.RegisterSchemaRows({
+    {
+        path = "container.label.show", page = PAGE, group = G_LABEL, type = "bool",
+        label = L["Show name label"],
+        desc = L["Show this container's name where its drag handle sits, locked or unlocked: outside the container, on the side its auras do not grow into, or beside its first aura when it is attached to another container. While unlocked, the drag handle moves out past it."],
+    },
+    {
+        path = "container.label.x", page = PAGE, group = G_LABEL, type = "number", min = -200, max = 200, step = 1,
+        label = L["X offset"], desc = L["Move the name label left or right, in pixels."], disabledIf = labelOff,
+    },
+    {
+        path = "container.label.y", page = PAGE, group = G_LABEL, type = "number", min = -200, max = 200, step = 1,
+        label = L["Y offset"], desc = L["Move the name label up or down, in pixels."], disabledIf = labelOff,
+    },
+})
+-- The composer carries no disabledIf, so the font rows take it here (settings/Bars.lua's tooltips
+-- are set the same way). Not the color swatch: a swatch is never grayed (anti-pattern #74).
+local labelFont = H.FontGroup({
+    prefix = "container.label.font.", page = PAGE, group = G_LABEL, subgroup = L["Font"],
+    classColor = { source = "unit" },
+})
+for _, row in ipairs(labelFont) do
+    if row.type ~= "color" then row.disabledIf = labelOff end
+end
+NS.RegisterSchemaRows(labelFont)
 
 -- ---------------------------------------------------------------------------
 -- The frame picker

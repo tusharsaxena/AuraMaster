@@ -52,7 +52,7 @@ A task has been **reviewed** when a later commit `B8-<task>R: ` exists, or when 
 | P7 Text size to fit + v8 (autosize) | AS-1…3 | AM | P6 | done | this commit | text.autoSize (template true) + Size to fit row dims Width/Height under a note; Style.ElementSize -> Text.AutoSize (font/icon/stack/bounce height, WidestLine over placeholders + client names + sample + TIME_SAMPLES worst cases, clamp 40-600, memo, failures not cached); MigrateV8 also stamps autoSize=false (one log line); test_style_text_autosize suite; review (B8-P7R): worst case takes the longest dispel word of every type, perf runner measures on a readable string + memo assert |
 | P8 LibKa0s DragHandle close, v1.59.0 | CX-1 CX-2 | LK | — | todo | | local tag only |
 | P9 re-vendor v1.59.0 + X button | CX-3 | AM | P8, P7 | done | 2abe552 + 5826f75 | re-vendor v1.59.0 (WidgetsDragHandle 3, bundle docs/revendor/2026-09-25-v1.59.0); BuildHandle passes closeIcon/onClose/closeTooltip, X disables via NS.SetByPath + one chat line; test_anchors_close suite; RESERVE2 58->94; review (B8-P9R): the new suite hid code from lizard behind two `#` lines, split out |
-| P10 name label | NL-1…4 | AM | P9 | todo | | |
+| P10 name label | NL-1…4 | AM | P9 | done | this commit | container.label (template, no schema step) + Anchors.StripPoints/PlaceLabel; label shows locked and unlocked, strip pushed out by STRIP_H+GAP (D6), beside the first element for followers; stripRoom/clamp count it; Name label Layout tab (swatch never dimmed, AP #74); rename refresh, Copy section; test_anchors_label suite; doc citations re-pointed |
 | P11 /am debug diag | DG-1…4 | AM | P10 | todo | | |
 | P12 docs sync + full battery | all | AM | P11 | todo | | |
 
