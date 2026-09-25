@@ -138,5 +138,6 @@ Kit.run{
         "test_lintconfig",
         { name = "test_eol", dir = "tests/_kit/" },
         { name = "test_layout_cap", dir = "tests/_kit/" },
+        { name = "test_diagnostics_contract", dir = "tests/_kit/" },
     },
 }

@@ -54,6 +54,19 @@ if not lib then
         LastLine        = function() return nil end,
         FindLine        = function() return nil end,
         MakeCloseButton = function() return nil end,
+        -- The diagnostics report (DebugLog 14.1, debug-logging-§14). With no console there is nowhere
+        -- to write it, so one line says so and nothing is written: 0 lines, as the library counts.
+        RunDiagnostics  = function()
+            if NS.Printf then
+                NS.Printf(NS.L["%s is unavailable: the LibKa0s library did not load."], "/am diagnostics")
+            end
+            return 0
+        end,
+        BuildDiagnostics = function()
+            return { lines = {}, dropped = 0, capped = false, capsHit = false }
+        end,
+        -- `false` for every word, so the host's own `/am debug` fallback answers.
+        DebugVerb       = function() return false end,
         ConsoleCheckbox = function()
             return {
                 label   = NS.L["Debug console"],

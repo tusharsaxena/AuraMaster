@@ -1751,7 +1751,7 @@ badge and any count quoted in the docs must agree with it.
 - perf: resume re-registers exactly the lifecycle events suspend took away
 - perf: without the library, /am perf answers one honest line
 
-### test_debuglogsetup.lua (8)
+### test_debuglogsetup.lua (9)
 
 - debuglog: enabling logging writes the [Init] summary — name, version, schema, profile and container count
 - debuglog: the flag is NS.State.debug itself — the sink and IsEnabled read it live
@@ -1760,6 +1760,7 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: the Debug console row shows and hides the window and never touches the logging flag
 - debuglog: Reset all closes an open console, because the console row carries a default
 - debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
+- debuglog: without the library the diagnostics members answer with one honest line and write nothing
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
 ### test_locale.lua (7)
@@ -1848,6 +1849,10 @@ badge and any count quoted in the docs must agree with it.
 - layoutcap self-test: a census that states nothing is told apart from one that states none
 - layoutcap self-test: the exempt set takes folders as well as paths
 
+### test_diagnostics_contract.lua (1)
+
+- diagnostics contract: debug-logging-§14 (skipped: Kit.diagnostics is not set in the runner, so this repo's dispatcher is not wired to the shared contract yet. Every Ka0s addon owes debug-logging-§14's report; wire Kit.diagnostics once the report exists)
+
 ## Totals
 
 | Suite | Cases |
@@ -1915,7 +1920,7 @@ badge and any count quoted in the docs must agree with it.
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 30 |
 | test_perf.lua | 8 |
-| test_debuglogsetup.lua | 8 |
+| test_debuglogsetup.lua | 9 |
 | test_locale.lua | 7 |
 | test_docs.lua | 6 |
 | test_prose.lua | 18 |
@@ -1924,4 +1929,5 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1626** |
+| test_diagnostics_contract.lua | 1 |
+| **Total** | **1628** |
