@@ -20,3 +20,4 @@ global constraints and resume rules apply unchanged, with commit prefix `B11-`.
 
 | When | Milestone | Evidence |
 |---|---|---|
+| 2026-09-26 | B11 | 1608 passed / 0 failed / 0 skipped (16 shards); luacheck 0 warnings / 0 errors in 136 files; lizard no function above CCN 15 (4233 functions, 0 warnings); head 6c0bc41 |
