@@ -1228,7 +1228,7 @@ on the same branch.
 | #10 dispel border shape | 71 | pass |
 | #7 Size to fit | 200-202 | **fail**: live auras longer than the samples are clipped (202's stated limit is rejected), test-mode columns misalign after a width change or Size to fit, and existing Text containers were not stamped off |
 | #9, #11, #13 attached containers | 191-196, 67, 68 | **fail**: an attached child's strip sits beside the parent's first element, so the child reads as attached elsewhere and its test-mode auras read as the parent's. Batch 9 reworks attach points so they can be chosen |
-| #16 `/am diagnostics` | 206-209 | **fail**: out of combat, every container's plan and shown sections error on a secret boolean compare (`Diagnostics.lua:453`) |
+| #16 `/am diagnostics` | 206-209 | **fail**: out of combat, every container's plan and shown sections error on a secret boolean compare (`modules/Diagnostics.lua` line 453 in the build tested) |
 
 197. **The X on the strip (CX-1, CX-3).** `/am unlock` → every container's strip shows a gray X
      immediately left of the **?**, the same size, turning white on hover; the name stays centered
