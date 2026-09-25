@@ -258,11 +258,13 @@ local function storedPoint(v)
     return nil
 end
 
---- A point row's values: "Automatic (<the point in effect>)", then the nine points. `half` picks
---- the child's (1) or the parent's (2) point out of AttachPoints.
+--- A point row's values: "Automatic (<the point Automatic puts in effect>)", then the nine points.
+--- The Automatic entry names Automatic's own point even while the row holds a pick (AutoPoints, not
+--- AttachPoints), so it says what choosing it would do. `half` picks the child's (1) or the
+--- parent's (2) point.
 local function pointChoices(half)
     return function()
-        local own, rel = NS.Anchors.AttachPoints(NS.ActiveContainer())
+        local own, rel = NS.Anchors.AutoPoints(NS.ActiveContainer())
         local inEffect = (half == 1) and own or rel
         local out = { { value = AUTO_POINT, text = L["Automatic (%s)"]:format(L[C.POINT_LABELS[inEffect]]) } }
         for _, point in ipairs(C.POINTS) do

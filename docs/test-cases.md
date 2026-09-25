@@ -1538,7 +1538,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (45)
+### test_pages_layout.lua (46)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1569,6 +1569,7 @@ badge and any count quoted in the docs must agree with it.
 - layout: the attachment line names the points in effect, picked or Automatic (batch 11 G2)
 - layout: Another container draws the two anchor-point dropdowns, each Automatic (<in effect>) then the nine points (G1)
 - layout: an anchor-point pick stores the point, any pair is allowed, and Automatic stores nil (G1, G2)
+- layout: a picked point's Automatic entry still names what Automatic would give, not the pick (G2)
 - layout: /am set takes the nine point names in any case or auto; attach.edge is no longer a path (G7)
 - layout: a write to either anchor point re-places the container on its parent (G1)
 - layout: every Point and Relative point row places the first aura, since the container's full size is secret
@@ -1879,7 +1880,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 45 |
+| test_pages_layout.lua | 46 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1899,4 +1900,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1609** |
+| **Total** | **1610** |

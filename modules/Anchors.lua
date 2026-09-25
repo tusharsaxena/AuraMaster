@@ -349,6 +349,16 @@ function Anchors.AttachPoints(cfg)
     return own, rel, ownAuto, relAuto, growH, growV
 end
 
+--- The pair Automatic gives container `cfg` (G3), whatever is picked: what each dropdown's Automatic
+--- entry names, so a picked row still says what choosing Automatic would do. Allocates nothing.
+--- @return string point, string relativePoint
+function Anchors.AutoPoints(cfg)
+    local c = cfg or {}
+    local growH, growV = flowGrowth(c)
+    local pair = EDGE_PAIRS[growH][growV][defaultToken(c, parentOf(c.attach), growH)]
+    return pair[1], pair[2]
+end
+
 --- The token the pair in effect is under the chain's growth, or nil when it is free (G5).
 --- Allocates nothing.
 --- @return string|nil

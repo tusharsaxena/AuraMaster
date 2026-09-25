@@ -570,6 +570,20 @@ test("layout: an anchor-point pick stores the point, any pair is allowed, and Au
     assertNil(at.relPoint, "the reset is Automatic")
 end)
 
+test("layout: a picked point's Automatic entry still names what Automatic would give, not the pick (G2)", function()
+    local NS, _, P = attachedChild()
+    local L, PL = NS.L, NS.Constants.POINT_LABELS
+    NS.SetByPath(CHILD_ROW, "TOP", 2)
+    NS.SetByPath(PARENT_ROW, "CENTER", 2)
+    local ws = P.rerender("Layout")
+    local rel, own = P.row(ws, PARENT_ROW), P.row(ws, CHILD_ROW)
+    assertEqual(own.value, "TOP")
+    assertEqual(rel.value, "CENTER")
+    -- red under: the Automatic entry naming the pick ("Automatic (Top)"), which is not what picking it gives
+    assertEqual(own.list.auto, L["Automatic (%s)"]:format(L[PL.BOTTOMLEFT]))
+    assertEqual(rel.list.auto, L["Automatic (%s)"]:format(L[PL.TOPLEFT]))
+end)
+
 test("layout: /am set takes the nine point names in any case or auto; attach.edge is no longer a path (G7)", function()
     local NS, _, P = attachedChild()
     local chat = P.chat()
