@@ -210,9 +210,11 @@ visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`,
 `UpdateHandle`). A follower on the parent's ahead side (Right, growing right) is moved on the same way past the parent's label
 while it shows, locked or not, and its strip while that runs past its element (F4). Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
-pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`), and the strip's name is dim gold
-(`C.SECONDARY_GOLD`) while the container is attached to another container or a named frame, since it
-follows that and cannot be dragged on its own (the owner, 2026-09-26). The strip's close mark (X) writes `container.enabled = false` through
+pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
+container is attached to another container or a named frame, which it follows and cannot be dragged
+away from, its strip name is a warm gray (`C.ATTACHED_NAME_COLOR`) and the tooltip's first line says
+so instead of "Drag to move": "Anchored to '*parent or frame*', so it cannot be dragged" (the owner,
+2026-09-26). The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview

@@ -139,6 +139,9 @@ test("strip: the tooltip of a container joined to another names the parent's poi
         :format(NS.L["Bottom"], NS.Database.FindContainer(1).name)
     -- red under: the generic "Attached" line
     assertEqual(lines[2], want)
+    -- red under: "Drag to move" on a follower a drag cannot move (owner, 2026-09-26)
+    assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]
+        :format(NS.Database.FindContainer(1).name))
 end)
 
 -- ── the test-mode block outline (SEP-1) ───────────────────────────────────────────────────────

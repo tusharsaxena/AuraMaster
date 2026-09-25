@@ -859,8 +859,11 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     h:__fire("OnEnter")
     assertEqual(#lines, 1, "a screen container: how to drag, nothing more")
     NS.Database.FindContainer(1).attach.mode = "frame"
+    NS.Database.FindContainer(1).attach.frame = "PlayerFrame"
     lines = {}
     h:__fire("OnEnter")
+    -- red under: "Drag to move" on a container a drag cannot move (owner, 2026-09-26)
+    assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format("PlayerFrame"))
     -- red under: showTooltip without its attached line (the player drags and nothing moves)
     assertEqual(lines[2], NS.L["Attached — set its offsets on the Layout page."])
 end)
@@ -1431,7 +1434,7 @@ test("handle: under combat lockdown the right-click is refused in gray and selec
     assertTrue(table.concat(lines, "\n"):find("cannot open settings during combat", 1, true) ~= nil, table.concat(lines, " | "))
 end)
 
-test("handle: an attached container's name is dim gold, to the screen it keeps the plain color (owner, 2026-09-26)", function()
+test("handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[2]
     local h = recordedHandle(mocks, NS, inst)
@@ -1441,7 +1444,9 @@ test("handle: an attached container's name is dim gold, to the screen it keeps t
         texts[n + 1] = s
     end)
     local name = NS.Database.FindContainer(2).name
-    local dim = "|c" .. NS.Constants.SECONDARY_GOLD .. name .. "|r"
+    local dim = "|c" .. NS.Constants.ATTACHED_NAME_COLOR .. name .. "|r"
+    -- red under: the dim gold of the first cut, which the owner found not muted enough
+    assertEqual(NS.Constants.ATTACHED_NAME_COLOR, "ff8c8a84", "a warm gray, not a gold")
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(texts[#texts], name, "on the screen: the name as it was")
     NS.SetByPath("container.attach.container", 1, 2)
@@ -1449,11 +1454,11 @@ test("handle: an attached container's name is dim gold, to the screen it keeps t
     mocks.__fireTimers()
     NS.Anchors.UpdateHandle(inst, true)
     -- red under: handleText writing the bare name whatever the attachment
-    assertEqual(texts[#texts], dim, "attached to another container: dim gold")
+    assertEqual(texts[#texts], dim, "attached to another container: gray")
     NS.SetByPath("container.attach.mode", "frame", 2)
     mocks.__fireTimers()
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(texts[#texts], dim, "attached to a named frame: dim gold")
+    assertEqual(texts[#texts], dim, "attached to a named frame: gray")
     NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     NS.Anchors.UpdateHandle(inst, true)

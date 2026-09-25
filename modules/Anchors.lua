@@ -698,6 +698,21 @@ end
 --- object would inherit forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on
 --- nothing under the anchor.
 local function tooltipSpec(container)
+    -- How to use the strip: drag it, or, attached, why a drag does nothing (canDrag) and what it
+    -- follows, by the parent container's name or the frame's (the owner, 2026-09-26).
+    local function howTo()
+        local cfg = container:Cfg()
+        local at = cfg and cfg.attach
+        local target
+        if at and at.mode == "container" then
+            local parent = NS.Database.FindContainer(tonumber(at.container))
+            target = parent and parent.name
+        elseif at and at.mode == "frame" then
+            target = at.frame
+        end
+        if not (target and target ~= "") then return NS.L["Drag to move. Right-click for settings."] end
+        return NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format(tostring(target))
+    end
     local function attached()
         local cfg = container:Cfg()
         if not (cfg and cfg.attach and cfg.attach.mode ~= "screen") then return nil end
@@ -709,7 +724,7 @@ local function tooltipSpec(container)
             return cfg and cfg.name or NS.L["Container"]
         end,
         body = {
-            NS.L["Drag to move. Right-click for settings."],
+            howTo,
             { attached, 1, 0.82, 0 },
         },
     }
@@ -754,7 +769,7 @@ local function canDrag(container)
     return (cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown()) and true or false
 end
 
---- The handle's label: the container's name, dim gold (C.SECONDARY_GOLD) while it is attached to
+--- The handle's label: the container's name, a warm gray (C.ATTACHED_NAME_COLOR) while it is attached to
 --- another container or a named frame, the sign that it follows that and cannot be dragged on its
 --- own (canDrag; the owner, 2026-09-26); and while test mode is on an orange TEST tag after it
 --- (feedback #8), so the placeholders on screen read as placeholders. It sits ABOVE BuildHandle
@@ -764,7 +779,7 @@ local function handleText(cfg)
     local name = cfg.name or ""
     local mode = cfg.attach and cfg.attach.mode
     if mode == "container" or mode == "frame" then
-        name = "|c" .. NS.Constants.SECONDARY_GOLD .. name .. "|r"
+        name = "|c" .. NS.Constants.ATTACHED_NAME_COLOR .. name .. "|r"
     end
     if not (NS.State and NS.State.testMode) then return name end
     return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])

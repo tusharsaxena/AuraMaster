@@ -638,7 +638,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)
 - handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
-- handle: an attached container's name is dim gold, to the screen it keeps the plain color (owner, 2026-09-26)
+- handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
 
 ### test_anchors_seam.lua (10)
 
