@@ -41,8 +41,9 @@ NS.Perf = lib:New({
     -- containment rather than this table's claim.
     -- WHAT IS NOT HERE: the containers' aura events and timer ticks. Blizzard's aura engine owns both
     -- — it handles each container's UNIT_AURA and animates every bar and countdown in its own code.
-    -- The addon has one aura-driven Lua path of its own, the readable-state timed-spell scan, and it
-    -- is bracketed (`timedScan`). The rest of its cost is the configuration work below, plus the
+    -- The addon has two aura-driven Lua paths of its own, both bracketed: the readable-state
+    -- timed-spell scan (`timedScan`) and, only while unlocked, the empty-container prediction
+    -- (`emptyPass`). The rest of its cost is the configuration work below, plus the
     -- engine's own, which the capture's frame-time arms measure (performance-§7).
     buckets = {
         -- core/AuraMaster.lua: target / focus / pet changed, so every container on that unit is told
@@ -61,6 +62,9 @@ NS.Perf = lib:New({
         -- modules/TimedSpells.lua: one readable-state scan of the player's and pet's buffs, 0.5 s
         -- after their auras changed.
         { key = "timedScan" },
+        -- modules/EmptyWatch.lua: one re-prediction of the unlocked containers, 0.2 s after their
+        -- units' auras changed. Only while unlocked, out of test mode and out of combat.
+        { key = "emptyPass" },
     },
 
     -- THE SUSPENDED ARM IS A HOLD ON THE ADDON'S LATCH, not a second teardown path

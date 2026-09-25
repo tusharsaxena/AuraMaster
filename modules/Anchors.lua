@@ -14,7 +14,7 @@ local _, NS = ...
 --              anchor inherits DisableUntrustedLayoutScriptsTemplate, Blizzard's opt-in for a frame
 --              that anchors to an aura container (whose layout scripts are forbidden to addons).
 --              While that container previews it hangs from its preview extent instead, and while
---              it is unlocked from its one-element anchor (Anchors.HangMode);
+--              it is unlocked and predicted empty from its one-element anchor (Anchors.HangMode);
 --   frame      any named frame — a unit frame, another add-on's bar — re-resolved when the add-on
 --              that creates it loads, and again when combat ends (Anchors.ResolvePending).
 -- A chain that would loop back on itself, a target that does not exist, or a frame that is forbidden
@@ -85,11 +85,12 @@ end
 --- What a container attached to container `t` hangs from, as ContainerClass:ApplyVisibility last
 --- recorded it (`t.hangMode`):
 ---   preview  test mode: its preview extent, since its engine is disabled and keeps a stale rect (L-4);
----   slot     unlocked and not previewing: its anchor, exactly one element, the rect its outline
----            marks. Its engine holds a 1x1 provisional rect while it has no aura, so a follower
----            hung from it sat about 5px under the parent's top, and an empty chain collapsed onto
----            itself (EO-1, feedback #9);
----   engine   anything else (locked): the engine, so a follower grows and shrinks with its auras.
+---   slot     unlocked, not previewing and predicted EMPTY (modules/EmptyWatch.lua, batch 9 HG-1):
+---            its anchor, exactly one element, the rect its placeholder outline marks. Its engine
+---            holds a 1x1 provisional rect while it has no aura, so a follower hung from it sat
+---            about 5px under the parent's top, and an empty chain collapsed onto itself (#9);
+---   engine   anything else (locked, or unlocked holding auras or not knowable): the engine, so a
+---            follower grows and shrinks with its auras.
 --- Before its first visibility pass a container answers from its preview state.
 --- @return string  "preview" | "slot" | "engine"
 function Anchors.HangMode(t)
@@ -290,7 +291,8 @@ function Anchors.Place(container)
 end
 
 --- Re-place every container attached to `target` once what they hang from has changed since they
---- were last placed: its hang mode (Anchors.HangMode; test mode, lock and unlock: L-4, EO-1) or the
+--- were last placed: its hang mode (Anchors.HangMode; test mode, lock, unlock and the empty
+--- prediction: L-4, HG-1) or the
 --- room its strip needs (stripRoom, EO-2). Called on every visibility pass
 --- (ContainerClass:ApplyVisibility), so a pass that changes nothing re-places nothing. Layout work
 --- beside an aura engine, so never under lockdown: the last placement stands, unrecorded, and the

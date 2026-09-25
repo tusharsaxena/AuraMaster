@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:594
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:599
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
@@ -250,6 +250,7 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 |---|---|
 | The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
+| `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its target and focus swap events, and a queued pass or enchant-expiry timer, canceled |
 | `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
@@ -320,6 +321,32 @@ Create and delete are refused in combat on every surface this addon owns. Reset 
 combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open panel, because every
 banner lists containers.
 
+## Predicting an empty container
+
+While unlocked and out of test mode, a container's followers hang from its one-element anchor, and its
+placeholder outline shows, only while `Container:PredictEmpty()` (`EmptyWatch.Predict`) answers
+true (batch 9 HG-1, E1 as amended by the owner on 2026-09-25). The engine cannot say whether it is
+empty: its frame count is a pool that never shrinks, and its size is secret. So the prediction asks
+`C_UnitAuras` the engine's question, per compiled group: a group with no candidate filters asks
+`GetAuraSlots(unit, filter, 1)` whether any slot comes back; one with candidate filters reads each
+slot's `AuraData` and tests the spell-id lists (only where the engine honors them: buffs of a friendly
+unit, debuffs of a hostile one), the dispel types, the max duration (a permanent aura never passes)
+and the boolean flags. Weapon enchants come from `GetWeaponEnchantInfo`, with Hide permanent applied.
+A group whose engine pool reads 0, or a unit that does not exist, needs no read. The answer is nil
+(counted as not empty) in combat, while auras are secret, on a secret or raising read, and for a flag
+the aura data does not carry.
+
+`ContainerClass:ApplyHang` reads the prediction on every visibility pass that finds the container
+shown, unlocked and not previewing, and marks it `watchEmpty`. `EW.Sync`, run after every visibility
+pass and every apply pass, registers `UNIT_AURA` on the module's two frames only for the units of
+watched containers, and only while unlocked, out of test mode, out of combat and while auras are
+readable. An event marks one pass due 0.2 s later; that pass re-predicts every watched container and
+re-runs the visibility pass of each whose answer changed, which re-places its followers through
+`Anchors.PlaceAttached`. A timer at the soonest enchant's expiry does the same, since a lapsing
+enchant fires no `UNIT_AURA`. `PLAYER_REGEN_DISABLED` reaches `EW.SetCombat` before the combat
+visibility pass, so that pass predicts nil and moves every follower onto its engine while that is
+still allowed; `PLAYER_REGEN_ENABLED` predicts again.
+
 ## Learning timed buffs
 
 `modules/TimedSpells.lua` listens only while an enabled buff container uses "only auras without a
@@ -343,11 +370,12 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:267`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:268`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
-previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked
-and not previewing, its one-element anchor, because an engine holding no aura is a 1x1 rect: the
-three-state `Anchors.HangMode`, recorded as `hangMode` by `ContainerClass:ApplyVisibility`, EO-1),
+previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
+not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
+1x1 rect: the three-state `Anchors.HangMode`, recorded as `hangMode` by `ContainerClass:ApplyHang`,
+batch 9 HG-1 and "Predicting an empty container" below),
 unless that would loop;
 to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container
 pending, re-placed on the next `ADDON_LOADED`; a forbidden one is never waited on, since no add-on

@@ -457,10 +457,12 @@ function ContainerClass:ApplyAlpha(cfg, p)
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
 end
 
---- The unlocked container's OUTLINE (B1): a faint one-pixel box, one element's size, at the corner
---- its flow starts from, so an EMPTY container can still be seen and grabbed while unlocked. A frame
---- of ours under the anchor, never the engine's; hidden when locked, and in test mode (the
---- placeholders are there then). It takes no mouse: the drag handle does the grabbing. A PLAIN frame
+--- The unlocked container's OUTLINE (B1), its empty-only PLACEHOLDER (batch 9 HG-1): a faint
+--- one-pixel box, one element's size, at the corner its flow starts from, so an EMPTY container can
+--- still be seen while unlocked and its followers hang from it. Shown only while the container is
+--- predicted empty (modules/EmptyWatch.lua) and hung as `slot`; hidden when it holds auras or that is
+--- not knowable, when locked, and in test mode (the placeholders are there then). A frame of ours
+--- under the anchor, never the engine's. It takes no mouse: the drag handle does the grabbing. A PLAIN frame
 --- with its edge drawn as strips (Style.DrawEdge), never a BackdropTemplate: under an anchor attached
 --- to another frame or container its size can read secret, and the Backdrop does arithmetic on the
 --- size on every SetBackdrop and resize (docs/midnight-quirks.md, "A backdrop on an engine button
@@ -527,10 +529,31 @@ function ContainerClass:RefreshLabelText()
 end
 
 --- What a container attached to this one hangs from (Anchors.HangMode): the placeholder block in test
---- mode (L-4), the one-element anchor its outline marks while unlocked (EO-1), else the engine.
-local function hangModeFor(previewing, unlocked)
+--- mode (L-4); the one-element anchor its outline marks while unlocked, ONLY when predicted empty
+--- (`empty == true`, batch 9 HG-1 as amended 2026-09-25); else the engine. Nil, not knowable, counts
+--- as not empty: a wrong "not empty" costs the #9 collapse, a wrong "empty" an overlap.
+local function hangModeFor(previewing, unlocked, empty)
     if previewing then return "preview" end
-    return unlocked and "slot" or "engine"
+    return (unlocked and empty == true) and "slot" or "engine"
+end
+
+--- Whether this container is empty right now: true, false, or nil when that is not knowable
+--- (modules/EmptyWatch.lua).
+--- @return boolean|nil
+function ContainerClass:PredictEmpty()
+    return NS.EmptyWatch.Predict(self)
+end
+
+--- Record what this container's followers hang from and show its placeholder outline to match. The
+--- prediction is read only while it can matter: shown, unlocked and not previewing (`watchEmpty`,
+--- which EmptyWatch's re-evaluation pass reads).
+function ContainerClass:ApplyHang(cfg, show, previewing, unlocked)
+    local watch = (unlocked and cfg and not previewing) and true or false
+    local empty = nil
+    if watch then empty = self:PredictEmpty() end
+    self.watchEmpty, self.predictedEmpty = watch, empty
+    self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg, empty)
+    self:ApplyOutline(cfg, watch and self.hangMode == "slot")
 end
 
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
@@ -558,11 +581,10 @@ function ContainerClass:ApplyVisibility()
         NS.Preview.Hide(self)
     end
     local unlocked = (show and p and not p.locked) and true or false
-    self:ApplyOutline(cfg, unlocked and not previewing)
+    self:ApplyHang(cfg, show, previewing, unlocked)
     -- Before the strip, which moves out past a shown label (D6).
     self:ApplyLabelShown(cfg, show)
     NS.Anchors.UpdateHandle(self, unlocked)
-    self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg)
     NS.Anchors.PlaceAttached(self)
     return show, previewing, deferred
 end
@@ -585,6 +607,7 @@ function ContainerClass:Park()
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false   -- re-evaluated by the next visibility pass
+    self.watchEmpty, self.predictedEmpty = false, nil
     self.parked = true
 end
 
@@ -598,6 +621,7 @@ function ContainerClass:Destroy()
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false
+    self.watchEmpty, self.predictedEmpty = false, nil
     self.anchor:Hide()
     self.anchor:ClearAllPoints()
 end

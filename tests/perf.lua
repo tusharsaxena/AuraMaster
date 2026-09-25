@@ -242,6 +242,36 @@ if auraUnits then
     mocks.__fireTimers()
 end
 
+-- 9. EmptyWatch hears UNIT_AURA on its own two frames (player and pet, target and focus), only while
+--    unlocked and out of test mode and combat. The handler only marks its coalesced pass due, so a
+--    burst with that pass already queued must allocate nothing and arm no further timer; a locked
+--    addon registers nothing at all.
+NS.SetByPath("container.filter.durationMode", "any", 1)
+mocks.__fireTimers()
+local EW = NS.EmptyWatch
+local lockedFrame = EW.unitFrames[1]
+assert_(not (lockedFrame and lockedFrame.__unitEvents.UNIT_AURA),
+    "emptyWatchAura: UNIT_AURA registered while locked")
+NS.SetByPath("locked", false)
+mocks.__fireTimers()
+local watchFrame = EW.unitFrames[1]
+local watchUnits = watchFrame and watchFrame.__unitEvents.UNIT_AURA
+assert_(watchUnits ~= nil, "emptyWatchAura: EmptyWatch did not register UNIT_AURA while unlocked")
+if watchUnits then
+    local onEvent = watchFrame.__scripts.OnEvent
+    onEvent(watchFrame, "UNIT_AURA", "player")   -- queue the one pass; the loop measures the latched path
+    local queued = #mocks.__timers
+    local burst = measure("emptyWatchAura", 1000, function() onEvent(watchFrame, "UNIT_AURA", "player") end)
+    assert_(#mocks.__timers == queued,
+        ("emptyWatchAura: a UNIT_AURA burst armed %d more timer(s)"):format(#mocks.__timers - queued))
+    -- red under: a table or closure built in EmptyWatch's handler, or a pass run per event.
+    assert_(burst.bytesPerIter == 0,
+        ("emptyWatchAura: a UNIT_AURA allocated %.1f B/iter"):format(burst.bytesPerIter))
+    mocks.__fireTimers()
+end
+NS.SetByPath("locked", true)
+mocks.__fireTimers()
+
 for _, r in ipairs(results) do
     assert_(r.bytesPerIter >= 0, ("%s reports negative bytes per iteration (%.1f)"):format(r.name, r.bytesPerIter))
 end

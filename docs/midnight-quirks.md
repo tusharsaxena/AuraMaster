@@ -96,6 +96,20 @@ engine hid (test mode disables every engine).
 knowable), prints `shown=?` or `shown=<n>+<k>?` for a group, and lists a button it cannot judge as
 `shown=?` rather than dropping it (batch 9, DX-1).
 
+## An engine cannot say whether it is empty
+
+**The restriction.** `GetAuraGroupFrameCount` answers the pool of buttons the engine has created,
+which never shrinks: a released button is kept, and stays anchored, so which ones are in use is not
+revealed. The engine sets its own size through a secret after each layout, and there is no callback
+when it fills or empties. Anchors cannot express "the larger of the engine and a placeholder", and
+writing a minimum size onto the engine would taint it.
+
+**What this addon does.** It predicts emptiness instead (`modules/EmptyWatch.lua`, batch 9 HG-1): a
+readable pool of 0, or a unit that does not exist, is certainly empty; otherwise it asks `C_UnitAuras`
+the engine's question per compiled group, and `GetWeaponEnchantInfo` for enchant slots. Anything
+secret, raising or outside what it can check answers nil, which counts as not empty. Only a parent
+predicted empty hangs its followers from its one-element placeholder while unlocked.
+
 ## Anchoring an aura container
 
 **The restriction.** Once an engine has an aura group, it forbids untrusted layout scripts, and an
@@ -229,7 +243,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:112-124`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:115-127`).
 
 ## Weapon enchants
 

@@ -325,6 +325,9 @@ function CM.FlushPending(edge)
     pending, pendingAll, userPending = {}, false, false
     local applied, failed = applyDirty(all, which)
     replaceAttached()
+    -- A unit or filter write can change which units are watched, and a new plan's engine has not
+    -- gathered yet: a pass re-predicts once it has (modules/EmptyWatch.lua).
+    if NS.EmptyWatch then NS.EmptyWatch.Sync() end
     if t0 then Perf.Note("applyPass", debugprofilestop() - t0) end
     if NS.Debug then NS.Debug("Apply", "applied %s container(s)", applied) end
     if failed ~= nil then error(failed, 0) end
@@ -342,6 +345,8 @@ function CM.ApplyVisibility()
         local _, _, deferred = inst:ApplyVisibility()
         if deferred then done = false end
     end
+    -- Listen for aura changes, or stop, from the lock, test mode and combat state this pass saw.
+    if NS.EmptyWatch then NS.EmptyWatch.Sync() end
     if t0 then Perf.Note("visibilityPass", debugprofilestop() - t0) end
     return done
 end

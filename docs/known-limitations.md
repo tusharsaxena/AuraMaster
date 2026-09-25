@@ -213,14 +213,19 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   button's aura id may still be out of reach, so a shown line can carry only the name or the icon, and the `predicted:` verdict is the addon's own
   reading of its spell lists, not the engine's answer. The report appends to the console, whose
   1500-line buffer can push older trace lines out.
-- **While unlocked (and not in test mode), a container attached to another sits one element past
-  it, whatever that container holds.** It hangs from the parent's anchor, the one-element slot its
-  outline marks, instead of its engine, which holds a 1x1 rect while it is empty, so an empty chain
-  no longer collapses onto itself (EO-1). A parent with two or more live auras therefore draws the
-  second and later ones under its follower until `/am lock`, which puts the follower back on the
-  engine, past the last aura: followers visibly shift on lock and unlock, as they do on test mode.
-  Following the live count instead is not possible: engine geometry can read secret, and
-  re-anchoring on a count change is layout work that is illegal under lockdown. Where the parent is
+- **While unlocked (and not in test mode), an empty chain is laid out from a prediction, and still
+  collapses where that cannot be made.** The engine cannot say whether it is empty (its frame count
+  is a pool that never shrinks, its size is secret), so the addon predicts it from `C_UnitAuras` and
+  `GetWeaponEnchantInfo` (`modules/EmptyWatch.lua`, batch 9 HG-1). Only a parent predicted empty shows
+  its one-element placeholder outline and hangs its followers from it; one that holds auras hangs
+  them from its engine, past its last aura, as locked. Where the prediction is not knowable (in
+  combat, while auras are secret, a secret or raising read, a flag the aura data does not carry, such
+  as role or priority auras) the parent counts as not empty, so an empty chain collapses onto itself
+  there (the #9 look, each link about 5px under the last): lay such chains out in test mode. The
+  prediction is re-read 0.2 s after an aura change, so for that moment a follower can sit on the
+  placeholder over a new first aura, or past an aura that just ended. It relies on `C_UnitAuras`
+  reading a filter string as the engine does (smoke check 191). Combat moves every follower onto its
+  engine at the pull (PLAYER_REGEN_DISABLED, before lockdown) and back after it. Where the parent is
   itself attached, its strip runs beside its first element, and a parent shorter than the strip
   (a 16px Text line) pushes its follower a few pixels further while the strips show, so no two
   strips in a chain overlap (EO-2); locked, the seam is the follower's own spacing again. A lock or

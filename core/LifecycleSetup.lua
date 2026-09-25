@@ -91,6 +91,8 @@ local function standDown()
     local addon = NS.addon
     if addon and addon.UnregisterLifecycleEvents then addon:UnregisterLifecycleEvents() end
     if NS.TimedSpells and NS.TimedSpells.StandDown then NS.TimedSpells.StandDown() end
+    -- Its unit frames and swap events, closed by hand (modules/EmptyWatch.lua).
+    if NS.EmptyWatch and NS.EmptyWatch.Stop then NS.EmptyWatch.Stop() end
     if NS.ContainerManager and NS.ContainerManager.StopListening then NS.ContainerManager.StopListening() end
     -- The frame picker's overlay runs an OnUpdate; a stood-down addon runs none.
     if NS.FramePicker and NS.FramePicker.Stop then NS.FramePicker.Stop() end
@@ -106,6 +108,8 @@ local function standUp()
     if addon and addon.RegisterLifecycleEvents then addon:RegisterLifecycleEvents() end
     if NS.ContainerManager and NS.ContainerManager.StartListening then NS.ContainerManager.StartListening() end
     if NS.TimedSpells and NS.TimedSpells.StandUp then NS.TimedSpells.StandUp() end
+    -- A combat edge missed while down (its events were unregistered) is settled from the state now.
+    if NS.EmptyWatch and NS.EmptyWatch.SetCombat then NS.EmptyWatch.SetCombat(InCombatLockdown()) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.ContainerManager then
         -- Build (or revive) what a disabled login or a profile switch made while down never built,

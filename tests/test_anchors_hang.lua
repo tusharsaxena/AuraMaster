@@ -1,10 +1,12 @@
 -- tests/test_anchors_hang.lua - what a container attached to another hangs from (batch 8 EO-1/EO-2,
--- owner feedback #9). While a parent is unlocked and not previewing, its followers hang from its
+-- owner feedback #9). While a parent is unlocked, not previewing and predicted EMPTY (batch 9 HG-1:
+-- here every engine's pool is 0, so each parent is), its followers hang from its
 -- ANCHOR, which is exactly one element, the rect its white outline marks, instead of its engine,
 -- which holds a 1x1 provisional rect while it has no auras: an empty unlocked chain collapsed into
 -- about 5px steps, every strip and outline piled on the last. In test mode they hang from the
 -- preview extent (L-4) and locked from the engine. Wherever the strips show, a follower of a
--- follower leaves room for its parent's strip, so no two strips in a chain overlap.
+-- follower leaves room for its parent's strip, so no two strips in a chain overlap. A parent that
+-- is not predicted empty is tests/test_emptywatch.lua's.
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
 
 local T = _G.AM_TEST

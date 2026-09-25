@@ -653,6 +653,31 @@ badge and any count quoted in the docs must agree with it.
 - hang: a test-mode chain locked shows no strips and keeps its own seams
 - hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
 
+### test_emptywatch.lua (22)
+
+- empty: a token-only group holding an aura is not empty, asked with a count of one
+- empty: a token-only group with nothing to show is empty
+- empty: a unit that does not exist is empty without reading an aura
+- empty: a readable pool of 0 is empty without reading an aura
+- empty: an include id hits and misses
+- empty: spell ids are ignored on a hostile target's buffs, as the engine ignores them
+- empty: a max duration drops a permanent aura and one that runs longer
+- empty: dispel types include and exclude
+- empty: a flag the aura data does not carry is not knowable
+- empty: a read that raises, a secret field and secret auras are not knowable
+- empty: weapon enchants present, absent, and permanent under Hide permanent
+- empty: an enchant on a container with no aura is not empty even when its unit's auras are unknowable
+- empty: unlocked and predicted empty, the follower hangs from the slot and the placeholder shows
+- empty: a parent that gains an aura moves its follower onto the engine and hides its placeholder; losing it moves it back
+- empty: a prediction that is not knowable hangs from the engine with the placeholder hidden
+- empty: 50 UNIT_AURA events cost one pass
+- empty: PLAYER_REGEN_DISABLED puts every follower on the engine before lockdown, and combat's end brings the slot back
+- empty: under lockdown nothing is re-placed, whatever the prediction
+- empty: an oil on the weapon arms one pass at its expiry, and the lapse brings the placeholder back
+- empty: UNIT_AURA is heard only while unlocked, and a lock drops it
+- empty: target and focus are heard on a second frame only while a target or focus container shows
+- empty: test mode, secret auras and a stand-down each drop UNIT_AURA
+
 ### test_anchors_close.lua (6)
 
 - close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
@@ -1630,7 +1655,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 167 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 169 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1717,6 +1742,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 76 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_hang.lua | 11 |
+| test_emptywatch.lua | 22 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_texttemplate.lua | 26 |
@@ -1762,4 +1788,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1492** |
+| **Total** | **1514** |
