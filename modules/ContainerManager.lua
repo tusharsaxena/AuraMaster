@@ -141,10 +141,10 @@ local function destroyParked()
     end
 end
 
---- The parked instances, by id (a test seam; production never reads it).
+--- The parked instances, by id (a test seam; Diagnostics reads it too).
 function CM.__retiring() return retiring end
 
---- The destroyed instances kept for their id's return, by id (a test seam; production never reads it).
+--- The destroyed instances kept for their id's return, by id (a test seam; Diagnostics reads it too).
 function CM.__dormant() return dormant end
 
 --- The registry changed: follow it, re-apply everything, and tell whoever is listening.

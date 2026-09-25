@@ -586,7 +586,11 @@ local function predictions(out, x)
     local FC, ctx, listed = NS.FilterCompiler, NS.FilterCompiler.ProfileContext(), 0
     for _, a in ipairs(list or {}) do
         local id = a.spellId
-        if NS.Secrets.IsSafeKey(id) and type(id) == "number" and listed < Diag.MAX_IDS then
+        if NS.Secrets.IsSafeKey(id) and type(id) == "number" then
+            if listed >= Diag.MAX_IDS then
+                out.capped = true
+                return
+            end
             listed = listed + 1
             out:add("Shown", "#%s predicted: %s %s -> %s", x.id, id, spellName(id),
                 explainText(FC.ExplainSpell(c, id, ctx)))

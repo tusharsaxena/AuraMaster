@@ -387,6 +387,17 @@ test("diag: the report is capped below the console buffer and says it was trunca
     assertTrue(#NS.DebugLog.buffer - before <= max, "more lines reached the console than the cap")
 end)
 
+test("diag: predictions stop at the id cap and the report says it was truncated", function()
+    local NS, mocks = fresh()
+    local many = {}
+    for i = 1, NS.Diagnostics.MAX_IDS + 5 do many[i] = aura(i, 1000 + i, "Buff" .. i) end
+    withAuras(mocks, { ["player:HELPFUL"] = many })
+    local lines = build(NS)
+    assertEqual(count(lines, "[Shown] #1 predicted:"), NS.Diagnostics.MAX_IDS, "prediction cap")
+    -- red under: predictions dropping the auras past MAX_IDS without flagging the cap
+    assertTrue(has(lines, "[Diag] truncated:") ~= nil, "no truncated line: " .. dump(lines))
+end)
+
 test("diag: QueueSnapshot hands out copies, never the live queue", function()
     local NS, mocks = fresh()
     mocks.__aurasSecret = true
