@@ -14,8 +14,8 @@ the text into a bug report.
 
 - `diagnostics` is its own verb in `NS.COMMANDS` (23 verbs) and a sub-verb of `debug`. Both answer
   while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
-- It writes through the **ungated** `NS.DebugLog:Add`, as debug-logging-§12 requires for an
-  explicit diagnostic run. The logging flag is not read and not changed.
+- It writes through the **ungated** append, as debug-logging-§12 requires for an explicit
+  diagnostic run. The logging flag is printed in the header and is not changed.
 - It **appends**. The console keeps the newest 1500 lines, so a long report can push older trace
   lines out. Because it appends after the trace, one Copy carries both: turn logging on with
   `/am debug on`, reproduce the bug, run `/am diagnostics`, then Copy the whole console (the
@@ -26,8 +26,12 @@ the text into a bug report.
   chat line does go through it.
 - Without LibKa0s there is no console, so it prints one line saying the report is unavailable.
 
-The code is `modules/Diagnostics.lua`. `NS.Diagnostics.Build()` returns the lines and
-`NS.Diagnostics.Run()` writes them.
+The report is built by LibKa0s's diagnostics helper (DebugLog 14.1, debug-logging-§14). The helper
+writes the markers, the identity header, the cap and its `truncated` line, runs each section under
+its own pcall, and appends the lines. This addon writes only the sections, in `modules/Diagnostics.lua`
+(`NS.Diagnostics.Sections()`, handed to the console through the descriptor's `diagnostics` field in
+`core/DebugLogSetup.lua`). `NS.DebugLog:BuildDiagnostics()` returns the lines and
+`NS.DebugLog:RunDiagnostics()` writes them.
 
 ## Reading the report
 
@@ -35,7 +39,7 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 
 | Tag | What it holds |
 |---|---|
-| `Diag` | Begin and end markers, the version and schema, the state flags, a plain line when the addon is disabled or stood down (below), the apply queue, counts, and any `truncated` or `section ... failed` line |
+| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, and any `truncated` or `section ... failed` line |
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
@@ -47,9 +51,14 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 Example (shortened):
 
 ```
-[Diag] ==== Aura Master diagnostic begin ====
-[Diag] Aura Master v0.1.0, schema v11, profile 'Default', client 12.1.0 build 12345 (120100)
-[Diag] state: enabled=true stoodDown=false disabledHold=false locked=true testMode=false ...
+[Diag] ==== Ka0s Aura Master diagnostics begin ====
+[Diag] AuraMaster v0.1.0, schema v11, profile 'Default', 4 container(s)
+[Diag] client: version=12.1.0 build=12345 date=Sep 1 2026 interface=120100
+[Diag] locale: enUS
+[Diag] debug logging: on
+[Diag] combat: InCombatLockdown=false UnitAffectingCombat=false
+[Diag] LibKa0s running: Core 8, Env 1, Compat 1, Lifecycle 2, ...
+[Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
@@ -61,7 +70,7 @@ Example (shortened):
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
 [Shown] #1 g1 btn1 name="Arcane Intellect"
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
-[Diag] ==== end: 143 line(s) ====
+[Diag] ==== Ka0s Aura Master diagnostics end: 143 line(s) ====
 ```
 
 A container attached to another container prints its join after the target (batch 11 G7): the two

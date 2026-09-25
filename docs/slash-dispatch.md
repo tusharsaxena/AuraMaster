@@ -57,8 +57,8 @@ eight-or-more trigger (documentation-§3).
 | 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
 | 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
 | 19 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 20 | `debug [on\|off\|diagnostics]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diagnostics` runs `NS.Diagnostics.Run` (`docs/debug.md`). Any other word, `diag` included, toggles the window: there is no `diag` alias (owner, 2026-09-25) |
-| 21 | `diagnostics` | host | `NS.Diagnostics.Run()`, the one-shot diagnostic report in the debug console (`docs/debug.md`); the same report as `/am debug diagnostics` |
+| 20 | `debug [on\|off\|diagnostics]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diagnostics` runs `NS.DebugLog:RunDiagnostics` (`docs/debug.md`). Any other word, `diag` included, toggles the window: there is no `diag` alias (owner, 2026-09-25) |
+| 21 | `diagnostics` | host | `NS.DebugLog:RunDiagnostics()`, the one-shot diagnostic report in the debug console (`docs/debug.md`); the same report as `/am debug diagnostics` |
 | 22 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
 | 23 | `version` | host | `v` + `NS.Version()` |
 

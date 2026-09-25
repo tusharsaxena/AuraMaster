@@ -9,10 +9,15 @@ local _, NS = ...
 -- container was told to draw, whether that is still what its settings say, and what it drew. The
 -- report writes that picture, one line per fact, where the Copy button can hand it back.
 --
--- THE SINK IS THE UNGATED NS.DebugLog:Add (debug-logging-§12): an explicit, user-initiated run is
--- written whatever the logging flag says, and the flag is never touched. The body lines are
--- diagnostic English, not routed through NS.L, like every trace and the [Init] summary; the one chat
--- line that says where the report went is routed.
+-- THE FRAME IS THE LIBRARY'S (debug-logging-§14, DR-AM-02). LibKa0s's diagnostics helper
+-- (DebugLog 14.1, DebugLogDiagnostics.lua) owns everything around the sections: the branded begin
+-- and end markers, the identity header (this addon's initSummary, the client, locale, the debug
+-- flag, the two combat reads, the running LibKa0s minors), one pcall per section, the secret-safe
+-- formatting and escape stripping, the cap (lib.DIAG_MAX_LINES clamped below the console buffer)
+-- with its truncated line, the ungated append that never clears and never touches the flag, the
+-- reveal and the one chat line. core/DebugLogSetup.lua hands the helper Diag.Sections through the
+-- descriptor's `diagnostics`; the dispatcher calls NS.DebugLog:RunDiagnostics(). The body lines
+-- are diagnostic English, not routed through NS.L, like every trace and the [Init] summary.
 --
 -- SECRET-SAFE (DG-3, B9 DX-1). While auras are secret (Compat.AurasAreSecret: any combat, an
 -- encounter, a key, a match) every aura read raises and so does touching an engine button, so the
@@ -20,14 +25,14 @@ local _, NS = ...
 -- count alone. "Auras are not secret" does NOT mean "an engine button is readable": out of combat a
 -- button's IsShown can still answer a SECRET boolean (docs/midnight-quirks.md, "An engine button's
 -- shown state is secret out of combat"), so every value read off a button is tested with
--- Secrets.CanAccess before it is compared, and an unknowable one prints `?`. Every field is
--- stringified through NS.SafeToString before a format sees it, every number is tested with
--- Secrets.IsReadableNumber before arithmetic, and every section, every plan group, every group's
--- button listing and the predictions each run under their own pcall, so one failure costs one line.
+-- Secrets.CanAccess before it is compared, and an unknowable one prints `?`. The writer stringifies
+-- every argument through NS.SafeToString before a format sees it, every number is tested with
+-- Secrets.IsReadableNumber before arithmetic, and every plan group, every group's button listing and
+-- the predictions run under their own out:section pcall, so one failure costs one line.
 --
--- CAPPED (DG-4). The console keeps the newest MAX_BUFFER lines and Copy copies only those, so the
--- report stops short of it: MAX_LINES in all, MAX_AURAS per unit and filter, MAX_IDS per id list. A
--- cap that bites ends the report with a `truncated` line. It appends; it never clears the console.
+-- CAPPED (DG-4). The helper caps the whole report; this file caps its own lists: MAX_AURAS per unit
+-- and filter, MAX_IDS per id list. A list cap that bites sets the writer's per-list flag
+-- (`out.capsHit`), which the helper's `truncated` line reports.
 --
 -- READ-ONLY. No settings write, no apply request, no Set/Add/Clear on a button (each one re-runs the
 -- engine's ApplyAuraInstance).
@@ -35,93 +40,26 @@ local _, NS = ...
 NS.Diagnostics = NS.Diagnostics or {}
 local Diag = NS.Diagnostics
 
-local L = NS.L
-
-local lib = LibStub and LibStub("LibKa0s-DebugLog-1.0", true)
-local BUFFER = (lib and lib.MAX_BUFFER) or 1500
-
-Diag.MAX_LINES = math.min(1200, BUFFER - 100)
 Diag.MAX_AURAS = 100
 Diag.MAX_IDS = 40
 
 local FILTERS = { "HELPFUL", "HARMFUL" }
-local JOIN_WIDTH = 200
+
+-- The auras read this run, keyed "unit:FILTER", so the predictions reuse what the aura section read.
+-- Reset by Diag.Sections, which the helper calls once per report.
+local auraCache = {}
 
 local function str(v)
     return NS.SafeToString(v)
-end
-
---- `s` with the client's color and texture escapes removed, so the Copy text is plain.
-local function plain(s)
-    s = str(s):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|T.-|t", "")
-    return s
 end
 
 local function yesno(v)
     return v and "yes" or "no"
 end
 
--- ---------------------------------------------------------------------------
--- The line buffer
--- ---------------------------------------------------------------------------
-
-local Out = {}
-Out.__index = Out
-
-local function newOut()
-    return setmetatable({ lines = {}, dropped = 0, capped = false, auras = {} }, Out)
-end
-
-local function formatLine(fmt, ...)
-    local n = select("#", ...)
-    local args = {}
-    for i = 1, n do args[i] = str((select(i, ...))) end
-    local ok, msg = pcall(string.format, fmt, unpack(args, 1, n))
-    if not ok then msg = fmt .. " " .. table.concat(args, " ") end
-    return plain(msg)
-end
-
---- Append one line. Format strings use %s only: every argument is already a string by then.
---- The body stops two short of MAX_LINES, which the truncated and end markers are kept for.
-function Out:add(tag, fmt, ...)
-    local n = #self.lines
-    if n >= Diag.MAX_LINES - 2 then
-        self.dropped = self.dropped + 1
-        return
-    end
-    self.lines[n + 1] = { tag, formatLine(fmt, ...) }
-end
-
---- Append past the cap: the two closing markers only.
-function Out:close(tag, fmt, ...)
-    local n = #self.lines
-    self.lines[n + 1] = { tag, formatLine(fmt, ...) }
-end
-
---- Add `parts` as as few lines as fit JOIN_WIDTH, each led by `lead`; `-` for none.
-local function joined(out, tag, lead, parts)
-    if not parts[1] then
-        out:add(tag, "%s -", lead)
-        return
-    end
-    local line = {}
-    local width = 0
-    for _, p in ipairs(parts) do
-        if width > 0 and width + string.len(p) > JOIN_WIDTH then
-            out:add(tag, "%s %s", lead, table.concat(line, ", "))
-            line, width = {}, 0
-        end
-        local n = #line
-        line[n + 1] = p
-        width = width + string.len(p) + 2
-    end
-    out:add(tag, "%s %s", lead, table.concat(line, ", "))
-end
-
---- Run one section; a raise costs its own line and nothing else.
-local function section(out, name, fn, ...)
-    local ok, err = pcall(fn, out, ...)
-    if not ok then out:add("Diag", "section %s failed: %s", name, err) end
+--- A list cap bit: the helper's truncated line reports it as `per-list caps hit=yes`.
+local function flagCap(out)
+    out.capsHit = true
 end
 
 -- ---------------------------------------------------------------------------
@@ -133,14 +71,6 @@ local function unitExists(unit)
     if type(fn) ~= "function" then return unit == "player" end
     local ok, yes = pcall(fn, unit)
     return ok and yes == true
-end
-
-local function buildInfo()
-    local fn = _G.GetBuildInfo
-    if type(fn) ~= "function" then return "?" end
-    local ok, version, build, _, toc = pcall(fn)
-    if not ok then return "?" end
-    return str(version) .. " build " .. str(build) .. " (" .. str(toc) .. ")"
 end
 
 --- The unit's auras under `filter`, capped at MAX_AURAS, or nil and why not. Never called while
@@ -155,7 +85,7 @@ local function readAuras(out, unit, filter)
         if not ok then return nil, "read failed: " .. str(a) end
         if type(a) ~= "table" then break end
         if i > Diag.MAX_AURAS then
-            out.capped = true
+            flagCap(out)
             break
         end
         list[i] = a
@@ -166,10 +96,10 @@ end
 --- readAuras, remembered for this run, so the predictions reuse what the aura section read.
 local function cachedAuras(out, unit, filter)
     local key = unit .. ":" .. filter
-    local hit = out.auras[key]
+    local hit = auraCache[key]
     if hit then return hit.list, hit.why end
     local list, why = readAuras(out, unit, filter)
-    out.auras[key] = { list = list, why = why }
+    auraCache[key] = { list = list, why = why }
     return list, why
 end
 
@@ -188,7 +118,8 @@ local function countKeys(t)
 end
 
 -- ---------------------------------------------------------------------------
--- The header
+-- The state section. The helper's identity header comes first: version, schema, profile and
+-- container count from initSummary, then the client, locale, debug flag and combat reads.
 -- ---------------------------------------------------------------------------
 
 local function profileOf()
@@ -196,29 +127,24 @@ local function profileOf()
     return (db and db.profile) or {}
 end
 
-local function identityLine(out)
-    local db = NS.db
-    local g = (db and db.global) or {}
-    local profileName = db and db.GetCurrentProfile and db:GetCurrentProfile()
-    out:add("Diag", "%s v%s, schema v%s, profile '%s', client %s",
-        "Aura Master", NS.Version(), g.schemaVersion, profileName, buildInfo())
-end
-
-local function stateLine(out)
-    local p = profileOf()
-    local _, selected = NS.ActiveContainer()
-    out:add("Diag", "state: enabled=%s stoodDown=%s disabledHold=%s locked=%s testMode=%s visibility=%s "
-        .. "combat=%s lockdown=%s aurasSecret=%s selected=#%s",
-        NS.EnabledStored(), NS.IsStoodDown(), NS.IsDisabled(), p.locked, NS.State.testMode,
-        p.visibility, UnitAffectingCombat("player"), InCombatLockdown(), NS.Compat.AurasAreSecret(),
-        selected)
-end
-
---- The held stand-down keys, comma-joined ("perf"), or "?" without the lifecycle library.
+--- The held stand-down keys, comma-joined ("perf"), "-" for none, or "?" without the lifecycle
+--- library.
 local function holdsText()
     local lc = NS.lifecycle
     if not (lc and lc.Holds) then return "?" end
-    return table.concat(lc:Holds(), ",")
+    local text = table.concat(lc:Holds(), ",")
+    if text == "" then return "-" end
+    return text
+end
+
+--- The combat reads are the helper header's, each pcall'd there, so they are not repeated here.
+local function stateLine(out)
+    local p = profileOf()
+    local _, selected = NS.ActiveContainer()
+    out:add("Diag", "state: enabled=%s stoodDown=%s disabledHold=%s holds=%s locked=%s testMode=%s "
+        .. "visibility=%s aurasSecret=%s selected=#%s",
+        NS.EnabledStored(), NS.IsStoodDown(), NS.IsDisabled(), holdsText(), p.locked, NS.State.testMode,
+        p.visibility, NS.Compat.AurasAreSecret(), selected)
 end
 
 --- Why the addon is not running, in plain words, or nil while it runs (batch 10 F8).
@@ -273,7 +199,6 @@ local function countsLine(out)
 end
 
 function Diag.Header(out)
-    identityLine(out)
     stateLine(out)
     downLine(out)
     queueLine(out)
@@ -284,11 +209,13 @@ end
 -- Non-default settings
 -- ---------------------------------------------------------------------------
 
+--- A value as `/am get` prints it. Its color and texture escapes are left in: the writer strips
+--- every part it joins, so the Copy text is plain either way.
 local function formatValue(row, v)
     local fmt = NS.Slash and NS.Slash.FormatValue
     if type(fmt) == "function" then
         local ok, s = pcall(fmt, row, v)
-        if ok then return plain(s) end
+        if ok then return str(s) end
     end
     return str(v)
 end
@@ -315,7 +242,7 @@ function Diag.ProfileConfig(out)
             end
         end
     end
-    joined(out, "Cfg", "profile non-default:", parts)
+    out:joined("Cfg", "profile non-default:", parts)
 end
 
 -- ---------------------------------------------------------------------------
@@ -363,7 +290,7 @@ end
 function Diag.Auras(out)
     local secret = NS.Compat.AurasAreSecret()
     for _, unit in ipairs(NS.Constants.UNITS) do
-        section(out, "auras " .. unit, unitAuras, unit, secret)
+        out:section("auras " .. unit, unitAuras, unit, secret)
     end
 end
 
@@ -428,7 +355,7 @@ local function listLine(out, id, name, set)
     local named = {}
     for i, spell in ipairs(ids) do
         if i > Diag.MAX_IDS then
-            out.capped = true
+            flagCap(out)
             break
         end
         named[i] = str(spell) .. " " .. spellName(spell)
@@ -567,7 +494,7 @@ local function planLines(out, x)
     local plan = x.inst and x.inst.plan
     if not plan then return end
     for _, g in ipairs(plan.groups or {}) do
-        section(out, "plan #" .. str(x.id) .. " " .. groupKey(g), groupLine, x, g)
+        out:section("plan #" .. str(x.id) .. " " .. groupKey(g), groupLine, x, g)
     end
     for _, w in ipairs(x.inst.warnings or {}) do out:add("Plan", "#%s warning: %s", x.id, w) end
 end
@@ -625,8 +552,8 @@ local function cfgLines(out, x)
             end
         end
     end
-    joined(out, "Cfg", "#" .. str(x.id) .. " non-default:", parts)
-    if inert[1] then joined(out, "Cfg", "#" .. str(x.id) .. " inert:", inert) end
+    out:joined("Cfg", "#" .. str(x.id) .. " non-default:", parts)
+    if inert[1] then out:joined("Cfg", "#" .. str(x.id) .. " inert:", inert) end
 end
 
 -- ---------------------------------------------------------------------------
@@ -687,7 +614,7 @@ local function groupButtons(out, x, g)
         if shown ~= false then
             listed = listed + 1
             if listed > Diag.MAX_IDS then
-                out.capped = true
+                flagCap(out)
                 return
             end
             out:add("Shown", "#%s %s btn%s %s%s", x.id, g.key, i, shown and "" or "shown=? ", identify(frame))
@@ -717,7 +644,7 @@ local function predictions(out, x)
         local id = a.spellId
         if NS.Secrets.IsSafeKey(id) and type(id) == "number" then
             if listed >= Diag.MAX_IDS then
-                out.capped = true
+                flagCap(out)
                 return
             end
             listed = listed + 1
@@ -735,10 +662,10 @@ local function shownLines(out, x)
     local inst = x.inst
     if inst and inst.engine and inst.plan then
         for _, g in ipairs(inst.plan.groups or {}) do
-            section(out, "shown #" .. str(x.id) .. " " .. groupKey(g), groupButtons, x, g)
+            out:section("shown #" .. str(x.id) .. " " .. groupKey(g), groupButtons, x, g)
         end
     end
-    section(out, "predictions #" .. str(x.id), predictions, x)
+    out:section("predictions #" .. str(x.id), predictions, x)
 end
 
 local CONTAINER_SECTIONS = {
@@ -756,43 +683,24 @@ function Diag.Containers(out)
     for _, c in ipairs(NS.Database.GetContainers()) do
         local x = { c = c, id = c.id, inst = CM.instances[c.id], q = q, secret = secret }
         for _, s in ipairs(CONTAINER_SECTIONS) do
-            section(out, s[1] .. " #" .. str(c.id), s[2], x)
+            out:section(s[1] .. " #" .. str(c.id), s[2], x)
         end
     end
 end
 
 -- ---------------------------------------------------------------------------
--- The report
+-- The sections the helper runs
 -- ---------------------------------------------------------------------------
 
---- Build the whole report as lines `{ tag, msg }`, without writing it anywhere.
---- @return table  { lines = { { tag, msg } }, dropped = n, capped = bool }
-function Diag.Build()
-    local out = newOut()
-    out:add("Diag", "==== Aura Master diagnostic begin ====")
-    section(out, "header", Diag.Header)
-    section(out, "profile config", Diag.ProfileConfig)
-    section(out, "auras", Diag.Auras)
-    section(out, "containers", Diag.Containers)
-    if out.dropped > 0 or out.capped then
-        out:close("Diag", "truncated: %s line(s) omitted, per-list caps hit=%s", out.dropped, yesno(out.capped))
-    end
-    local n = #out.lines
-    out:close("Diag", "==== end: %s line(s) ====", n + 1)
-    return out
-end
-
---- Write the report to the debug console, reveal it, and say so once in chat. Returns the line
---- count, 0 when the console library is missing.
-function Diag.Run()
-    if not lib then
-        NS.Printf(L["%s, so the diagnostic report is unavailable."], NS.LIBKA0S_MISSING)
-        return 0
-    end
-    local out = Diag.Build()
-    for _, line in ipairs(out.lines) do NS.DebugLog:Add(line[1], line[2]) end
-    if not NS.DebugLog:IsShown() then NS.DebugLog:Show() end
-    local n = #out.lines
-    NS.Printf(L["Diagnostic report written to the debug console: %s lines. Use Copy to share it."], n)
-    return n
+--- The report's sections, in order, for the descriptor's `diagnostics` (core/DebugLogSetup.lua).
+--- The helper calls this once per report, at run time, so it starts that run's aura cache afresh.
+--- @return table  { { name, fn(out) }, ... }
+function Diag.Sections()
+    auraCache = {}
+    return {
+        { "state",          Diag.Header },
+        { "profile config", Diag.ProfileConfig },
+        { "auras",          Diag.Auras },
+        { "containers",     Diag.Containers },
+    }
 end

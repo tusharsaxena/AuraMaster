@@ -56,6 +56,20 @@ AM_TEST = Kit.expose{
     Loader = Loader, buildMocks = buildMocks,
 }
 
+-- The kit's diagnostics contract (debug-logging-§14), run against this addon's own dispatcher:
+-- both forms, while disabled, append, ungated, the branded markers, and no `diag` or `dx`. The
+-- switches write state directly, so no case pays for a chat line or a [Set] echo.
+Kit.diagnostics = {
+    brand       = "Ka0s Aura Master",
+    dispatch    = function(line) NS.Slash:OnSlash(line) end,
+    console     = function() return NS.DebugLog end,
+    setDebug    = function(on) NS.State.debug = on and true or false end,
+    setDisabled = function(off)
+        NS.SetByPath("enabled", not off)
+        NS.SyncEnabled()
+    end,
+}
+
 -- Suites, in load-order-sensitive order. `dir` is explicit, so Kit.run asserts the inventory: a
 -- tests/test_*.lua on disk but missing here, or listed but absent, takes the run down.
 --

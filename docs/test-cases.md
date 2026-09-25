@@ -1295,7 +1295,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (35)
+### test_diagnostics.lua (37)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1303,8 +1303,10 @@ badge and any count quoted in the docs must agree with it.
 - diag: /am debug diagnostics answers while the addon is disabled, and the state line says so
 - diag: /am debug diag no longer runs the report; it falls through to the window toggle
 - diag: bare /am debug and /am debug on|off keep their meaning; the forms are read in any case
-- diag: without LibKa0s it prints the unavailable line and raises nothing
-- diag: the header names version, schema, profile, state and the apply queue
+- diag: without LibKa0s both forms print the unavailable line and raise nothing
+- diag: the module writes sections only; the buffer, markers, cap and Run are the library's
+- diag: the library's identity header leads, then the addon's state
+- diag: the header names version, schema, profile, state, holds and the apply queue
 - diag: the profile section lists non-default rows only, with no color escape
 - diag: auras on the player are dumped per filter with every field
 - diag: a secret aura field prints as secret, never compares, and is left out of predictions
@@ -1849,9 +1851,15 @@ badge and any count quoted in the docs must agree with it.
 - layoutcap self-test: a census that states nothing is told apart from one that states none
 - layoutcap self-test: the exempt set takes folders as well as paths
 
-### test_diagnostics_contract.lua (1)
+### test_diagnostics_contract.lua (7)
 
-- diagnostics contract: debug-logging-§14 (skipped: Kit.diagnostics is not set in the runner, so this repo's dispatcher is not wired to the shared contract yet. Every Ka0s addon owes debug-logging-§14's report; wire Kit.diagnostics once the report exists)
+- diagnostics contract: both forms run the report
+- diagnostics contract: the debug word is matched in any case
+- diagnostics contract: both markers carry the brand and the end counts the report
+- diagnostics contract: the report appends after what the console already holds
+- diagnostics contract: the report lands with logging off and leaves it off
+- diagnostics contract: both forms run while the addon is disabled
+- diagnostics contract: no other name runs the report
 
 ## Totals
 
@@ -1901,7 +1909,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 35 |
+| test_diagnostics.lua | 37 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
@@ -1929,5 +1937,5 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| test_diagnostics_contract.lua | 1 |
-| **Total** | **1628** |
+| test_diagnostics_contract.lua | 7 |
+| **Total** | **1636** |
