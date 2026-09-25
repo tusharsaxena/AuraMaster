@@ -210,6 +210,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares, and `.gitattributes` is the canonical body |
 | `tests/_kit/test_layout_cap.lua` | The layout-§1 cap census in `docs/ARCHITECTURE.md` agrees with the tree |
+| `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract; records a skip with its reason until the runner sets `Kit.diagnostics` |
 
 ## Root and media
 
