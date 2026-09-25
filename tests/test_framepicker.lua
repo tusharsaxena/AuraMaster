@@ -227,3 +227,65 @@ test("picker: a new pick waits for the buttons to be released again before it ca
     assertNil(second)
     assertTrue(NS.FramePicker.IsActive())
 end)
+
+-- ── the one pick flow ─────────────────────────────────────────────────────────────────────────
+
+test("framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes", function()
+    -- red under: PickFor absent
+    local NS, mocks = fresh()
+    --- Append `v` to `list`.
+    local function push(list, v)
+        local n = #list
+        list[n + 1] = v
+    end
+    local lines = {}
+    rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) push(lines, tostring(msg)) end)
+    local writes = {}
+    local realSet = NS.SetByPath
+    NS.SetByPath = function(path, value, id)
+        push(writes, { path, value, id })
+        return realSet(path, value, id)
+    end
+    local done, canceled = {}, 0
+    local function onDone(c, name) push(done, { c, name }) end
+    local function onCancel() canceled = canceled + 1 end
+
+    mocks.__lockdown = true
+    assertFalse(NS.FramePicker.PickFor(onDone, onCancel), "combat: answers false")
+    assertFalse(NS.FramePicker.IsActive(), "combat: nothing started")
+    assertEqual(#lines, 1, "combat: one line")
+    assertTrue(lines[1]:find("|cff808080cannot pick a frame during combat", 1, true) ~= nil, lines[1])
+    mocks.__lockdown = false
+
+    NS.State.SetActiveContainer(2)
+    local c, id = NS.ActiveContainer()
+    assertTrue(NS.FramePicker.PickFor(onDone, onCancel), "a container and no combat: answers true")
+    assertTrue(NS.FramePicker.IsActive())
+    NS.State.SetActiveContainer(3)   -- the selection moves while the player is picking
+    local target = plant(mocks, "FocusFrame")
+    mocks.__foci = { target }
+    local overlay = mocks.__globals.AuraMasterFramePicker
+    overlay:__fire("OnUpdate")       -- arms
+    mocks.__mouseDown.LeftButton = true
+    overlay:__fire("OnUpdate")
+    assertEqual(#writes, 2, "exactly two writes")
+    assertEqual(writes[1][1], "container.attach.frame")
+    assertEqual(writes[1][2], "FocusFrame")
+    assertEqual(writes[1][3], id)
+    assertEqual(writes[2][1], "container.attach.mode")
+    assertEqual(writes[2][2], "frame")
+    assertEqual(writes[2][3], id)
+    assertEqual(#done, 1)
+    assertEqual(done[1][1], c)
+    assertEqual(done[1][2], "FocusFrame")
+    assertEqual(canceled, 0)
+    mocks.__mouseDown.LeftButton = false
+
+    for _, row in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(row.id) end
+    for k in pairs(lines) do lines[k] = nil end
+    assertFalse(NS.FramePicker.PickFor(onDone, onCancel), "no container: answers false")
+    assertFalse(NS.FramePicker.IsActive())
+    assertEqual(#lines, 1)
+    assertTrue(lines[1]:find(NS.L["No containers yet — /am new creates one"], 1, true) ~= nil, lines[1])
+    assertEqual(#writes, 2, "no further writes")
+end)

@@ -13,17 +13,18 @@ auras are secret**: no ticker and no `OnUpdate` driving a display. Its one aura-
 readable-state timed-spell scan, bracketed `timedScan` (below). What remains is configuration work,
 and one path that runs on ordinary play (a target, focus or pet change).
 
-Other timers and frames of the addon's own: a next-frame `C_Timer.After(0)` that coalesces applies
-(`modules/ContainerManager.lua:155`), the half-second timed-spell scan timer, armed by a player or pet
+Other timers and frames of the addon's own: a next-frame `C_Timer.NewTimer(0)` that coalesces applies
+(`modules/ContainerManager.lua:187`), the half-second timed-spell scan timer, armed by a player or pet
 `UNIT_AURA` only while a container uses "only auras without a duration" and auras are readable, and
-the frame picker's `OnUpdate`, which runs only while a pick is in progress.
+the frame picker's `OnUpdate`, which runs only while a pick is in progress. Both
+timers keep their handle, and a stand-down cancels them rather than leaving them armed.
 
 ### The timed-spell listener's cost
 
-`modules/TimedSpells.lua` hears `UNIT_AURA` through AceEvent on its own target (events-frames-taint-§1).
-The vendored AceEvent has no `RegisterUnitEvent`, so the event arrives bare, for every unit, raid
-members and nameplates included, where a private frame's unit-filtered registration would have let
-the client drop them.
+`modules/TimedSpells.lua` hears `UNIT_AURA` on the module's one private frame, `TS.unitFrame`,
+registered with `RegisterUnitEvent` for `player` and `pet` only (events-frames-taint-§1's carve-out;
+the vendored AceEvent has no `RegisterUnitEvent`). The client drops every other unit's event, raid
+members and nameplates included, before any Lua runs.
 
 - **The gate bounds it.** `UNIT_AURA` is registered only while a container needs the scan, the addon
   is not suspended, there is no combat lockdown and auras are not secret. `PLAYER_REGEN_DISABLED`
@@ -31,11 +32,13 @@ the client drop them.
   `InCombatLockdown()` still reads false in the handler. In combat and in every
   secret stretch (encounters, keys, PvP matches, restricted maps) it is not registered at all, so the
   cost there is **zero**.
-- **Registered and readable, each event costs** one AceEvent dispatch, one `Secrets.IsSafeKey` and
-  one string compare, with no allocation. Only a player or pet event arms the 0.5 s scan.
-- **The volume is not bounded.** In a city, or a raid group between pulls, out-of-combat `UNIT_AURA`
-  can exceed the ~1000 events/min guide figure (events-frames-taint-§1). The work per event is small
-  and fixed; the in-game figure is recorded below.
+- **Registered and readable, each event costs** one `OnEvent` call, one `Secrets.IsSafeKey` and one
+  string compare (kept as defense in depth), with no allocation, and only for the player's and pet's
+  own aura changes. The first arms the 0.5 s scan; the rest fall on its latch. Offline
+  (`unitAuraFiltered`): 0.00027 ms/iter, 0 B/iter on the development machine.
+- **The volume is now the player's and pet's.** Before this frame (AuraMaster-R-03) the listener
+  heard every unit's `UNIT_AURA`, which in a city or a raid group between pulls can exceed the ~1000
+  events/min guide figure (events-frames-taint-§1). The in-game figure is recorded below.
 
 | Where | Out-of-combat `UNIT_AURA`/min (`/etrace`) | Recorded |
 |---|---|---|
@@ -48,11 +51,11 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:47`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:107`, `:98` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:266-270` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `unitSwap` | — | `core/AuraMaster.lua:113`, `:121` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:307-311` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:350-393` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:287` | The show ladder over every container, on combat transitions, world entry and the master rows |
-| `styleElement` | — | `modules/Style.lua:772-780` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `visibilityPass` | — | `modules/ContainerManager.lua:328` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `styleElement` | — | `modules/Style.lua:774-784` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path; absent from a capture with no "without a duration" container |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children
@@ -95,20 +98,20 @@ as described in `docs/perf-analysis/README.md`.
 Arm B suspends the addon without a reload (performance-§6), and **it is not a mechanism of the perf
 module's own**: the probe takes the `perf` hold on the addon's one latch, and the addon goes down the
 same way it goes down when a player unticks *Enable Aura Master* (slash-commands-§7,
-`docs/ARCHITECTURE.md` → *The disabled state*). A second teardown path beside this one is
+`docs/data-flow.md` → *The disabled state*). A second teardown path beside this one is
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:87`) calls `addon:UnregisterLifecycleEvents()` — the eight
+So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the eight
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
 own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopListening()`,
 `FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:100`) re-registers the events, subscribes again, and re-applies every
-container from the settings **as they are then**, never a snapshot. `NS.Perf.suspended` still reads
-true through the whole of arm B — the field is now the latch's answer to `IsHeld("perf")` rather than
-a boolean beside it — and the hold is session-only.
+(`core/LifecycleSetup.lua:103`) re-registers the events, subscribes again, builds any container
+the addon never built while down, and re-applies every container from the settings **as they are
+then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
+field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.
 
 **Releasing the `perf` hold does not stand up an addon the player also disabled**, and that is the
 whole reason the latch exists: `/am disable` is live during a capture, so without it a resume at the
@@ -153,7 +156,7 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `probeOverheadOff` | The hottest bracketed path with capture off |
 | `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
 | `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9) |
-| `unitAuraOther` | TimedSpells' `UNIT_AURA` handler for a unit it never scans (`nameplate1`); must allocate 0 B/iter and arm no scan |
+| `unitAuraFiltered` | TimedSpells' unit frame, dispatched as the client does from its `RegisterUnitEvent` unit list: a `nameplate1` `UNIT_AURA` must never reach the handler, which must be registered for exactly `player,pet`; the measured loop is a player `UNIT_AURA` with its scan already queued, which must allocate 0 B/iter and arm no further timer |
 
 **What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
 makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it

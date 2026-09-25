@@ -215,20 +215,11 @@ NS.RegisterSchemaRows({
 -- ---------------------------------------------------------------------------
 
 local function pickFrame()
-    local cfg, id = NS.ActiveContainer()
-    if not cfg then return end
-    if InCombatLockdown() then
-        return NS.Printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
+    local function reopen() NS.OpenOptionsPage(PAGE) end
+    if NS.FramePicker.PickFor(reopen, reopen) then
+        -- Get the settings window out of the way so the frames behind it can be clicked.
+        if SettingsPanel and SettingsPanel.Close then pcall(SettingsPanel.Close, SettingsPanel, true) end
     end
-    -- Get the settings window out of the way so the frames behind it can be clicked.
-    if SettingsPanel and SettingsPanel.Close then pcall(SettingsPanel.Close, SettingsPanel, true) end
-    NS.FramePicker.Start(function(name)
-        NS.SetByPath("container.attach.frame", name, id)
-        NS.SetByPath("container.attach.mode", "frame", id)
-        NS.OpenOptionsPage(PAGE)
-    end, function()
-        NS.OpenOptionsPage(PAGE)
-    end)
 end
 
 --- Pick a frame..., as Frame name's right half (the flow engine's pairWith seam, options-ui-§6). It

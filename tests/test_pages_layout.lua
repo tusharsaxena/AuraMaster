@@ -19,7 +19,7 @@ end
 
 --- The attach-target dropdown. The banner is labeled "Container" too, so it is excluded by identity.
 local function targetDropdown(NS, P, ws)
-    local banner = NS.Helpers.__pageCtx.layout.__bannerWidget
+    local banner = P.banner(NS.Helpers.__pageCtx.layout)
     for _, w in ipairs(P.all(ws, "Dropdown", NS.L["Container"])) do
         if w ~= banner then return w end
     end
@@ -49,8 +49,8 @@ local SUBSECTIONS = {
 
 --- How many widgets a render drew under each label, the banner's excepted (it is a second
 --- "Container" dropdown). Counts, because Screen and Named frame both have a Point and a Relative point.
-local function drawnLabels(NS, ws)
-    local banner = NS.Helpers.__pageCtx.layout.__bannerWidget
+local function drawnLabels(NS, P, ws)
+    local banner = P.banner(NS.Helpers.__pageCtx.layout)
     local out = {}
     for _, w in ipairs(ws) do
         local label = w.labelText
@@ -73,8 +73,8 @@ end
 
 --- Assert which subsections `mode` draws: each row label drawn exactly as many times as the `on`
 --- subsections hold it (so a row of any other subsection is not drawn at all), and Attach to once.
-local function assertShown(NS, ws, mode, on)
-    local labels = drawnLabels(NS, ws)
+local function assertShown(NS, P, ws, mode, on)
+    local labels = drawnLabels(NS, P, ws)
     local want = {}
     for _, sub in ipairs(SUBSECTIONS) do
         for _, path in ipairs(sub.paths) do
@@ -139,7 +139,7 @@ for _, mode in ipairs({ "screen", "container", "frame" }) do
         NS.SetByPath("container.attach.mode", mode, 1)
         local ws = P.rerender("Layout")
         -- red under: a subsection's rows without their shownWhen, or naming the wrong mode
-        assertShown(NS, ws, mode, ON[mode])
+        assertShown(NS, P, ws, mode, ON[mode])
         -- Pick a frame is Frame name's partner, so it is drawn with Named frame alone.
         assertEqual(P.find(ws, "Button", NS.L["Pick a frame..."]) ~= nil, mode == "frame", "Pick a frame...")
     end)
@@ -148,18 +148,18 @@ end
 test("layout: changing Attach to redraws the tab on the next frame with the chosen subsections (feedback #4)", function()
     local NS, m, P, ws = layout()
     NS.Helpers.__pageCtx.layout.panel:Show()
-    assertShown(NS, ws, "screen", ON.screen)
+    assertShown(NS, P, ws, "screen", ON.screen)
     local during = P.during(function() P.row(ws, "container.attach.mode"):__fire("OnValueChanged", "frame") end)
     -- red under: the tab redrawn inside the dropdown's own callback (it would release the dropdown)
     assertEqual(#during, 0, "nothing drawn inside the callback")
     local redrawn = P.during(function() m.__fireTimers() end)
     -- red under: no selector watch (the tab keeps showing the Screen rows)
-    assertShown(NS, redrawn, "frame", ON.frame)
+    assertShown(NS, P, redrawn, "frame", ON.frame)
     redrawn = P.during(function()
         P.row(redrawn, "container.attach.mode"):__fire("OnValueChanged", "container")
         m.__fireTimers()
     end)
-    assertShown(NS, redrawn, "container", ON.container)
+    assertShown(NS, P, redrawn, "container", ON.container)
 end)
 
 test("layout: Attach to writes the mode and redraws an open page on the next frame", function()
@@ -326,7 +326,7 @@ test("layout: after the banner moves, the page draws the newly selected containe
     P.show("Layout")
     local ws = P.tab("layout", NS.L["Frame"])
     assertEqual(P.row(ws, "container.layout.scale").value, 1, "container 1's scale")
-    NS.Helpers.__pageCtx.layout.__bannerWidget:__fire("OnValueChanged", 3)
+    P.banner(NS.Helpers.__pageCtx.layout):__fire("OnValueChanged", 3)
     ws = P.show("Layout")
     -- red under: the page caching the container it first drew, or losing its tab on the switch
     assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Frame"], "the tab survives the switch")

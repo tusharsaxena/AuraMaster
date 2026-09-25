@@ -90,6 +90,9 @@ suite covers what only the client can show.
     above Name, and the three rows are visibly one block apart from the two), then Duplicate
     and Delete, then (with two or more containers) Copy settings from. Select a container and
     **Delete** it → the picker and New container are still there, and the picker lists what is left.
+    **New container** creates a container and selects it. Hover it → its tooltip. The pair is the
+    library's page banner with its create button (LibKa0s v1.56.0, AM-17): flip the picker between
+    containers 20 times and `/dump collectgarbage("count")` stays flat.
     Rename a container and change its Unit, then press the page's **Defaults** → Enabled, Unit, Aura
     type and Style go back to their defaults and the name stays.
     **Style switch with auras up.** Locked, with live auras in a container, switch its **Style** from
@@ -163,8 +166,9 @@ suite covers what only the client can show.
 ## F. Filters
 
 34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Consumables* to **Hide**, every other category (including
-    *Uncategorized*) left at Show → your flask disappears from it, nothing else changes. Now also set
+35. **Categories.** On a buff container set *Group buffs* to **Hide**, every other category (including
+    *Uncategorized*) left at Show → your Mark of the Wild / Arcane Intellect / Battle Shout disappears
+    from it, nothing else changes. Now also set
     *Defensive cooldowns* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
     still shows (rank 3: a Show elsewhere rescues it). Set every category to **Hide**, *Uncategorized*
     included, with the Overrides whitelist empty → the container goes empty and shows "These filters
@@ -316,9 +320,11 @@ page under the header.
 
 ## O. Master switch from chat
 
-57. Out of combat, `/am disable` → `Aura Master disabled — /am enable turns it back on` and every
-    container hides; General → **Enable Aura Master** is unticked. `/am enable` → `Aura Master
-    enabled` and every enabled container shows again. Repeat both **in combat** → the same lines, no
+57. Out of combat, `/am disable` → `enabled = false` (gold key, white value: the line `/am get enabled`
+    prints, slash-commands-§5's set shape) and every container hides; General → **Enable Aura Master**
+    is unticked. `/am enable` → `enabled = true` and every enabled container shows again; `/am unlock`
+    and `/am lock` confirm the same way, `locked = false` and `locked = true`. Repeat enable and
+    disable **in combat** → the same lines, no
     gray refusal, no "will apply when combat ends" notice and no taint warning; containers stop
     drawing and return at once (the anchors themselves finish hiding when combat ends, step 59).
 58. **The disabled addon is inert, not merely blank** (slash-commands-§7). With it disabled: Blizzard's
@@ -326,8 +332,13 @@ page under the header.
     combat and summoning a pet all do nothing at all; `/am` still opens the settings panel and
     `/am list`, `/am get` and `/am set` still read and repair settings; `/am lock` answers
     `Ka0s Aura Master is disabled — enable it with /am enable` on one line; **left-clicking the
-    minimap button** answers that same one line and changes nothing, while **right-clicking** still
-    opens the panel. Then `/reload` while disabled → it comes up disabled and still answers `/am`.
+    minimap button** still opens the panel, and **right-clicking** it shows Locked and Test mode
+    grayed (`(enable the addon first)`) with only Enabled clickable; ticking **General → Master
+    controls → Test mode** answers that same one line and the box stays unticked (after
+    `/am enable`, the box and the menu's Test mode entry both toggle test mode). Then `/reload` while disabled → it comes up disabled and still answers `/am`,
+    and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
+    `/dump AuraMasterAnchor1` is nil. `/am enable` draws every container at once. Switch to another
+    profile while disabled and back, then `/am enable` → its containers draw.
 59. **Disable it in combat.** Enter combat with containers shown, `/am disable` → the containers'
     engines go quiet at once and the anchors finish hiding when combat ends; no taint warning either
     side of the transition.
@@ -476,8 +487,8 @@ one. None of this is reproducible headlessly; these checks are.
     Categories → Spell Categories, click **See spells** on a category that is NOT the first row
     (say *Support* or *Utility*) → General → Spell Categories opens with the tab selected AND that
     same category already chosen in the **Category** dropdown, not defensives or whatever was last
-    selected there. Do it again from a DIFFERENT category (say *Consumables*) on a different
-    container → it lands on Consumables, not Support. Click **See spells** on the **Weapon enchants**
+    selected there. Do it again from a DIFFERENT category (say *Racials*) on a different
+    container → it lands on Racials, not Support. Click **See spells** on the **Weapon enchants**
     row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
     slot toggles, not a spell list.
 80. **The priority block reads as one rank per line, once, at the foot of General (`F-4`,
@@ -553,27 +564,45 @@ nothing).
 86. **The AddOns list.** Esc → AddOns (or the character-select AddOns list) → *Ka0s Aura Master*
     shows **the addon's own logo**, not a blank square and not a Blizzard icon.
 87. **The button is there.** A round button wearing that same logo sits on the minimap ring. Drag it
-    around the ring → it follows; `/reload` → it is still where you left it.
-88. **Left-click = test mode.** Left-click the button → every container shows its placeholder
-    auras without unlocking, and General → Master controls → **Test mode** ticks. Left-click again →
-    they go and the checkbox unticks.
-89. **Right-click = settings.** Right-click the button → Settings opens at **Ka0s Aura Master**, and
-    test mode does **not** change.
+    around the ring → it follows; `/reload` → it is still where you left it. **Hover it** → the
+    tooltip reads `Ka0s Aura Master  v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`,
+    `Test mode: On|Off` (green or red, matching General → Master controls), `Left-click: Open
+    settings`, `Right-click: Options menu`, and nothing twice. `/am unlock` or `/am test` → the next
+    hover says so. `/am disable` → hover again: the tooltip still shows, `Enabled: No`, with the same
+    two hints; `/am enable` puts it back.
+88. **Left-click = settings.** Left-click the button → Settings opens at **Ka0s Aura Master**, and
+    neither the lock nor test mode changes. `/am disable`, left-click again → the panel still opens
+    (it is where you turn the addon back on). `/am enable`.
+89. **Right-click = the options menu.** Right-click the button → a menu titled **Ka0s Aura Master**
+    with exactly three checkboxes, **Enabled**, **Locked**, **Test mode** (no Show window), each
+    ticked to match General → Master controls. Click **Test mode** → the menu closes, every container
+    shows its placeholder auras, chat prints the line `/am test` prints, and the Test mode checkbox
+    ticks; right-click again → Test mode is ticked; click it → they go. Click **Locked** → chat
+    prints what `/am unlock` (or `/am lock`) prints and the handles appear (or go). Click **Enabled**
+    → chat prints what `/am disable` prints and the containers go. Right-click now → **Locked (enable
+    the addon first)** and **Test mode (enable the addon first)** are grayed and do nothing when
+    clicked; **Enabled** is live: click it → the addon comes back with the `/am enable` line. In
+    combat, click Test mode while it is off → the same combat refusal `/am test` prints.
 90. **The checkbox and the button agree, both ways.** Untick General → Master controls → **Minimap
     button** → the button vanishes at once, no reload. Tick it → it comes back **at the same angle**.
-    Now hide it from LibDBIcon's own right-click menu instead → reopen the settings and the checkbox
-    is unticked too.
+    Now hide it from chat instead, `/am set global.minimap.shown false` → reopen the settings and the
+    checkbox is unticked too.
 91. **It survives a profile switch and BOTH resets.** Hide the button, then Profiles → create and
     switch to a new profile → it stays hidden. Switch back, then General → **Reset all settings** →
     the button stays hidden and the checkbox stays unticked. Now press General's own **Defaults**
     button → still hidden, still unticked, while every other General row on the page goes back to
     its default. Whether the button is shown is a per-installation preference, like the angle you
-    dragged it to, so no reset moves it. `/am reset global.minimap.hide` — you naming that one row —
+    dragged it to, so no reset moves it. `/am reset global.minimap.shown` — you naming that one row —
     → it comes back.
+    **From chat, in the shown sense:** `/am get global.minimap.shown` → `true` while the button
+    shows; `/am set global.minimap.shown false` → the button hides; `/reload` → still hidden;
+    `/am reset global.minimap.shown` → it comes back. `/am get global.minimap.hide` → `Setting not
+    found` (the storage key is not a path).
 92. **A broker display, if one is installed.** With Titan Panel, Bazooka or ElvUI data texts, add
     *Ka0s Aura Master* as a plugin → one row labeled exactly that, **grouped with the other Ka0s
     addons** rather than filed under `A`, the same logo, **no empty value cell beside it**, and its
-    left and right clicks do exactly what the minimap button's do.
+    left click opens the settings and its right click opens the same three-entry menu as the
+    minimap button's.
 93. **Without the libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one chat line naming
     Aura Master and the missing library, **no error frame**, and the addon otherwise works. Rename
     `libs/LibDataBroker-1.1` aside too, `/reload` → the same. Put both back.
@@ -632,7 +661,7 @@ nothing).
      outline and its handle; an EMPTY container can still be dragged by its handle.
 112. **Test mode.** The Master controls checkbox and `/am test` show placeholders without unlocking.
      Pull a mob: test mode ends and the checkbox unticks. `/am test` in combat prints one gray line
-     and starts nothing. The minimap left-click toggles it.
+     and starts nothing. The minimap button's right-click menu toggles it.
 113. **Spell lists.** General → Spell Categories: an X on the left of every row and no checkboxes.
      X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
      the X too, and it removes the spell. Check the X row's height and vertical alignment against the

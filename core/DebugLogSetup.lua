@@ -2,7 +2,7 @@ local addonName, NS = ...
 
 -- core/DebugLogSetup.lua — the LibKa0s-DebugLog-1.0 seam: the on-screen debug console.
 --
--- The console window, the copy window, both formatters, the 500-line buffer, the scrollbar and the
+-- The console window, the copy window, both formatters, the 1500-line buffer, the scrollbar and the
 -- enable seam are the library's and are NOT in this addon's source (debug-logging). This file supplies
 -- only what is ours: the frame-name prefix, the title, the monospace face, where the flag lives, and
 -- what the [Init] session summary says.
@@ -16,7 +16,7 @@ if not lib then
     -- Degrade, never error. The stub answers EVERY member the addon calls — `/am debug`, the Master
     -- controls tab's console row and core/PerfSetup.lua's log sink all reach for one — and the flag
     -- itself still works, because NS.State.debug is ours. What is lost is the window, said once.
-    local missing = NS.LIBKA0S_MISSING .. ", " .. NS.L["so the debug console window is unavailable."]
+    local missing = NS.L["%s, so the debug console window is unavailable."]:format(NS.LIBKA0S_MISSING)
     local announced = false
     local function sayOnce()
         if announced then return end
@@ -92,10 +92,18 @@ NS.DebugLog = lib:New({
         local schemaVer = NS.db and NS.db.global and NS.db.global.schemaVersion
         local profile = NS.db and NS.db.GetCurrentProfile and NS.db:GetCurrentProfile()
         local containers = NS.ContainerManager and NS.ContainerManager.Count and NS.ContainerManager.Count()
-        return ("%s v%s, schema v%s, profile '%s', %s container(s)"):format(
+        local line = ("%s v%s, schema v%s, profile '%s', %s container(s)"):format(
             NS.SafeToString(NS.name), NS.SafeToString(NS.Version and NS.Version() or NS.version),
             NS.SafeToString(schemaVer or "?"), NS.SafeToString(profile or "?"),
             NS.SafeToString(containers or "?"))
+        -- Where a player sees the event names this client refused (events-frames-taint-§1). Read at
+        -- call time: the library calls this each time logging turns on.
+        local rejected = NS.RejectedEvents or {}
+        local count = #rejected
+        if count > 0 then
+            line = line .. ", rejected events: " .. table.concat(rejected, ", ")
+        end
+        return line
     end,
 
     -- The Master controls tab's console row mirrors the window, so `/am debug` has to move the

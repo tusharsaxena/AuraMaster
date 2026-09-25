@@ -7,6 +7,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local NS, mocks = T.NS, T.mocks
 local fresh = dofile("tests/fresh_env.lua")
+local pages = dofile("tests/page_helpers.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
 -- Pages, by key and tree label. Filters, Layout, Bars, Icons and Text are sub-pages of Containers
@@ -79,7 +80,7 @@ end)
 test("options: the General page leads with Master controls, in canonical order", function()
     local rows = NS.SchemaForPage("general")
     local want = { "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole",
-                   "global.minimap.hide", "state.testMode" }
+                   "global.minimap.shown", "state.testMode" }
     for i, path in ipairs(want) do
         assertEqual(rows[i].path, path)
         assertEqual(rows[i].group, NS.Helpers.MASTER_GROUP)
@@ -93,11 +94,12 @@ test("options: the General page leads with Master controls, in canonical order",
 end)
 
 test("options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     local ctx = NS2.Helpers.__pageCtx.filters
     local function tabs()
         local keys = {}
-        for _, t in ipairs(ctx.__tabs or {}) do keys[t.key] = true end
+        for _, t in ipairs(P.drawnTabs(ctx)) do keys[t.key] = true end
         return keys
     end
     NS2.State.SetActiveContainer(1)
@@ -109,7 +111,7 @@ test("options: the Filters page offers the Overrides tab only for a buff or debu
     -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
     NS2.Helpers.RefreshAllPanels()
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
-    -- red under: collectTabs ignoring a bespoke tab's auraTypes
+    -- red under: the page's tabs handed to the library without their auraTypes filter
     assertNil(tabs().overrides)
 end)
 
@@ -117,12 +119,13 @@ end)
 -- collection and tab validation moved into local helpers.
 
 test("options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     local ctx = NS2.Helpers.__pageCtx.filters
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
     -- Batch 8: the Filters page's `overrides` tab carries `before = Sorting`, so it is INSERTED
-    -- ahead of that group rather than appended after every group (placeTab). A bespoke tab with no
+    -- ahead of that group rather than appended after every group (the library places it). A bespoke tab with no
     -- `before` still lands last; this page no longer has one to prove it with, so the expectation
     -- below is the insertion, derived from the schema rather than written out.
     local want, seen = {}, {}
@@ -136,7 +139,7 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
         end
     end
     local got = {}
-    for i, t in ipairs(ctx.__tabs) do got[i] = t.key end
+    for i, t in ipairs(P.drawnTabs(ctx)) do got[i] = t.key end
     assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups, the bespoke tab where it asked")
     ctx.activeTab = "no such tab"
     NS2.Helpers.RefreshAllPanels()   -- a hidden panel is marked dirty, and re-renders on its next show
@@ -145,21 +148,24 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
 end)
 
 test("options: with no containers a container page draws one placeholder tab", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     for _, c in ipairs(NS2.Database.GetContainers()) do NS2.ContainerManager.Delete(c.id) end
     NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.filters
-    assertEqual(#ctx.__tabs, 1, "one tab")
-    assertEqual(ctx.__tabs[1].key, "__empty")
+    local tabs = P.drawnTabs(ctx)
+    assertEqual(#tabs, 1, "one tab")
+    assertEqual(tabs[1].key, "__empty")
     assertEqual(ctx.activeTab, "__empty")
 end)
 
 test("options: the banner is the picker — choosing a container retargets every page", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    local ctx = NS2.Helpers.__pageCtx.bars
-    assertTrue(ctx.__bannerWidget ~= nil, "the page drew its banner")
-    ctx.__bannerWidget:__fire("OnValueChanged", 3)
+    local banner = P.banner(NS2.Helpers.__pageCtx.bars)
+    assertTrue(banner ~= nil, "the page drew its banner")
+    banner:__fire("OnValueChanged", 3)
     assertEqual(NS2.State.activeContainerId, 3)
     assertEqual(NS2.GetSetting("container.unit"), "target")
 end)
@@ -315,6 +321,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
             return f
         end
     end })
+    local P = pages(NS2, m)
     local H = NS2.Helpers
     local ctx = H.__pageCtx.bars
     ctx.chrome:__setGeom(200, 0)
@@ -322,7 +329,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
 
     local function snapshot()
         local ys = {}
-        for i in ipairs(ctx.__tabs) do
+        for i in ipairs(P.drawnTabs(ctx)) do
             local b = ctx.__tabKids[i]
             assertEqual(b.__stripRel, ctx.chrome, "tab " .. i .. " anchors to the chrome")
             ys[i] = b.__stripY
@@ -334,7 +341,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
     clear()
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local keys = {}
-    for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
+    for i, t in ipairs(P.drawnTabs(ctx)) do keys[i] = t.key end
     assertTrue(#keys >= 2, "the page draws several tabs")
     assertEqual(ctx.activeTab, keys[1])
     assertEqual(H.__tabArtHeight(), m.__atlasSizes["Options_Tab_Left"][2], "the probe measured the inactive art")
@@ -366,7 +373,6 @@ test("options: the degraded stub completes the load — every page's rows still 
         assertEqual(type(NS2.Helpers[member]), "function", member)
     end
     assertEqual(NS2.Helpers.MASTER_GROUP, "Master controls")
-    assertEqual(#NS2.Schema, #NS.Schema, "the degraded schema has every row the live one has")
     local lines = {}
     rawset(m2.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
         lines[#lines + 1] = tostring(msg)
@@ -378,6 +384,55 @@ test("options: the degraded stub completes the load — every page's rows still 
     assertTrue(count >= 1 and count <= 2, "at most the one-time notice and the refusal")
     local last = lines[count] or ""
     assertTrue(last:find("settings panel is unavailable", 1, true) ~= nil, last)
+end)
+
+--- A full load whose Options instance records every row its five composers answer, so the rows the
+--- library-absent build lacks are DERIVED from what the live composers emitted, never typed.
+local COMPOSERS = { "ColorPair", "FontGroup", "BorderGroup", "BarGroup", "MasterControls" }
+local function loadRecordingComposers()
+    local Loader     = dofile("tests/_kit/loader.lua")
+    local buildMocks = dofile("tests/wow_mock.lua")
+    Loader.addonName = "AuraMaster"
+    local m, NS3, composed = buildMocks(), {}, {}
+    Loader.loadAll(Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml"), NS3, m)
+    local lib = m.LibStub("LibKa0s-Options-1.0")
+    local new = lib.New
+    lib.New = function(self, d)
+        local inst = new(self, d)
+        for _, name in ipairs(COMPOSERS) do
+            local compose = inst[name]
+            inst[name] = function(...)
+                local rows, tail = compose(...)
+                for _, row in ipairs(rows) do composed[row.path] = name end
+                return rows, tail
+            end
+        end
+        return inst
+    end
+    Loader.loadAll(Loader.tocFiles("AuraMaster.toc"), NS3, m)
+    lib.New = new
+    return NS3, composed
+end
+
+test("options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)", function()
+    local NS2 = loadDegraded()
+    local NS3, composed = loadRecordingComposers()
+    local nComposed = 0
+    for _ in pairs(composed) do nComposed = nComposed + 1 end
+    assertTrue(nComposed > 0, "the recording load saw the composers emit rows")
+    local full, degraded = #NS3.Schema, #NS2.Schema
+    -- The full-load count: the recording load registers what the shared suite's load registers.
+    assertEqual(full, #NS.Schema, "the full-load row count")
+    -- red under: a non-empty stub composer
+    assertEqual(degraded, full - nComposed, "the library-absent row count")
+    local have = {}
+    for _, row in ipairs(NS2.Schema) do have[row.path] = true end
+    for _, row in ipairs(NS3.Schema) do
+        -- The delta, by name: every row the library-absent build lacks is a composed one, and no
+        -- composed row survived into it.
+        assertEqual(not have[row.path], composed[row.path] ~= nil, "row " .. tostring(row.path))
+    end
+    assertEqual(NS2.ValidateSchema(), 0, "the smaller schema still validates")
 end)
 
 test("options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)", function()
@@ -392,6 +447,6 @@ test("options: a page drawn for another style heads its tabs with the notice in 
     for _, t in ipairs(P.texts(ws)) do
         if t:find("Not in use:", 1, true) then hit = t end
     end
-    -- red under: drawDisabledNotice keeping the old gray |cff808080
+    -- red under: mutedNotice keeping the old gray |cff808080
     assertTrue(hit ~= nil and hit:sub(1, #want) == want, tostring(hit))
 end)

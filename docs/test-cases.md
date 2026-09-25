@@ -6,11 +6,12 @@ badge and any count quoted in the docs must agree with it.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_loadorder.lua (7)
+### test_loadorder.lua (8)
 
 - loadorder: the TOC lists the locale first and the Profiles page last
 - loadorder: every TOC path exists, and none is a library
 - loadorder: the load-bearing pairs are in order, and the TOC says why
+- loadorder: GeneralDispel loads after GeneralSpells and before General
 - loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Conventional note
 - loadorder: the runner loaded exactly the TOC's files and the XML's library files
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
@@ -33,15 +34,25 @@ badge and any count quoted in the docs must agree with it.
 - core: every close button is built with this addon's folder, so it can draw the catalog mark
 - namespace: NS is private — no global — and carries the folder name and the [AM] tag
 
-### test_launcher.lua (20)
+### test_launcher.lua (30)
 
 - launcher: one broker object, of type launcher, registered with LibDBIcon under the FOLDER name
 - launcher: Register is idempotent, so a second call builds no second button
 - launcher: the icon is this addon's own 128 logo — the file ## IconTexture names
 - launcher: the icon file ships as an uncompressed 32-bit 128x128 TGA
-- launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)
-- launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses
-- launcher: the RIGHT click opens the settings panel, whatever the left button does
+- launcher: the descriptor passes the three toggle pairs this addon has, and no retired field
+- launcher: the LEFT click opens the settings panel and changes nothing else
+- launcher: the LEFT click opens the panel while disabled too — it is where the addon is re-enabled
+- launcher menu: titled with the brand, entries Enabled, Locked, Test mode, in that order
+- launcher menu: every checkbox reads the live state when the menu opens
+- launcher menu: Enabled calls the enable/disable handler, and prints what /am disable prints
+- launcher menu: Locked calls the lock/unlock handler, and prints what /am unlock prints
+- launcher menu: Test mode calls the /am test handler, through the switch the checkbox uses
+- launcher menu: while disabled, Locked and Test mode are grayed and Enabled stays live
+- launcher menu: on a client without MenuUtil the right click opens the settings panel
+- launcher tooltip: enabled, locked, test mode off — the whole block, in the library's order
+- launcher tooltip: every state is read on the show — unlock and test mode change the next hover
+- launcher tooltip: shown while disabled, with the same two hints
 - minimap row: composed, stored not session, default SHOWN, in its canonical position
 - minimap row: the seam inverts — the row says shown, LibDBIcon's key says hidden
 - minimap row: one record of one state — LibDBIcon writes the very table the row writes
@@ -50,13 +61,13 @@ badge and any count quoted in the docs must agree with it.
 - minimap row: /am set and /am reset reach it through the same seam, inverted the same way
 - verbs: /am enable and /am disable are aliases of the Enable row's path, holding no state
 - verbs: the dispatcher answers while the addon is disabled, or the pair is one-way
-- verbs: the launcher's click, /am test and the Test mode checkbox are three doors onto one switch
+- verbs: the launcher's menu, /am test and the Test mode checkbox are three doors onto one switch
 - launcher: a host with neither broker library does not raise, and still records the choice
 - launcher: with LibDataBroker but no LibDBIcon, the broker plugin still exists
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (91)
+### test_database.lua (73)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -112,7 +123,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v6: the current schema version is 6
+- v7: the current schema version is 7
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -131,8 +142,15 @@ badge and any count quoted in the docs must agree with it.
 - v5: MigrateV5 logs one [Migrate] line per converted container, naming it (feedback #6)
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
+
+### test_database_categories.lua (22)
+
 - v6: MigrateV6 stamps the user-category store, and a second run changes nothing
 - v6: a profile that predates user categories climbs the ladder and stays valid
+- v7: MigrateV7 retires Consumables and seeds the new categories from where their auras fell
+- v7: the debuff-side Racials is Hidden wherever Hard CC or Soft CC is
+- v7: a second MigrateV7 run changes nothing, and a new key's stored edit wins over a moved one
+- v7: a v6 profile climbs to v7 with every schema row still resolving
 - user categories: one round-trips through a reload, with its spells
 - user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
 - user categories: the schema row resolves, and the seam reads and writes it per container
@@ -150,7 +168,16 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_schema.lua (29)
+### test_migrations.lua (6)
+
+- migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
+- migrations: a legacy v1 account with NO stamp runs every step
+- migrations: a stored stamp survives the logout strip, so the next build's step runs
+- migrations: every step is idempotent on a fresh default profile
+- migrations: a step that raises leaves the stamp where it was and the addon loads
+- migrations: an inactive profile is migrated too
+
+### test_schema.lua (33)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -181,6 +208,10 @@ badge and any count quoted in the docs must agree with it.
 - schema: a section write runs the normalize hook of every row under it, with the target id
 - schema: CheckWrite answers what SetByPath would, and stores and announces nothing
 - schema: a row's own refusal reason travels as the third return of SetByPath and CheckWrite
+- schema: with LibKa0s the bracket, registry and validator are the library's
+- schema: the registry follows an insert and a removal, the library's and the host's
+- schema: without LibKa0s the host arm still answers
+- schema: -0 over 0 is still no change under SameValue
 
 ### test_schema_paths.lua (36)
 
@@ -221,7 +252,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
-### test_filtercompiler.lua (94)
+### test_filtercompiler.lua (85)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -284,7 +315,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
 - filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
 - filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
-- filter: one Hide on the real shipped category list explodes to one group per other shown category — 15 for HELPFUL, 17 for HARMFUL today
+- filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 18 for HARMFUL today
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
@@ -308,6 +339,9 @@ badge and any count quoted in the docs must agree with it.
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
+
+### test_filtercompiler_categories.lua (9)
+
 - categories: a user category joins the categorized union, so Uncategorized stops rescuing what it claims
 - categories: a user category reaches the compiler as an ordinary spells-kind def of Categories.For
 - categories: ClaimingCategories names every spells-kind category of the aura type that holds an id, in declaration order
@@ -372,7 +406,7 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine a container is deleted without error
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 
-### test_containermanager.lua (51)
+### test_containermanager.lua (53)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -401,6 +435,8 @@ badge and any count quoted in the docs must agree with it.
 - manager: a profile copy in combat keeps a reused id parked until the deferred apply rebuilds it
 - manager: a parked id revived by a profile change in combat stays parked until the deferred apply
 - manager: an id a later Create reuses after a profile reset while auras are secret stays parked until the deferred apply
+- manager: an id that returns out of combat revives its destroyed instance
+- manager: an id a profile reset hands out again out of combat revives its destroyed instance
 - manager: creating or duplicating a container in combat is refused and creates nothing
 - manager: ResetPositions puts every container back on the screen, staggered
 - manager: a target swap under lockdown leaves the class color silently stale and re-applies after combat
@@ -426,7 +462,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (26)
+### test_compat.lua (27)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -449,7 +485,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: a rule formatter is built with its breakpoints, and nil without the API or when refused
 - compat: a duration binding writes nothing for a timeless or expired aura, and refreshes only when asked
 - compat: the blink curve alternates the running-out color's alpha every quarter second, then the normal color
-- compat: the mouse focus is the topmost frame GetMouseFoci returns, else the legacy global
+- compat: the mouse focus is the topmost frame GetMouseFoci returns
+- compat: GetMouseFocus answers from GetMouseFoci and has no pre-11.0 rung
 - compat: spell info comes from C_Spell, and the pre-11.0 global only when C_Spell is absent
 - compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
 - compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
@@ -480,7 +517,7 @@ badge and any count quoted in the docs must agree with it.
 - state: the session flags start off, are never saved, and a reload starts them clean
 - state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)
 
-### test_lifecycle.lua (10)
+### test_lifecycle.lua (15)
 
 - lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
@@ -492,6 +529,11 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a copied profile is prepared before its containers are built
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
+- lifecycle: the degraded latch stands up and down only on an edge
+- lifecycle: one bad event name leaves the other seven registered and is recorded
+- lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
+- lifecycle: a rejection while logging is on is traced at the moment it happens
+- lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
 
 ### test_anchors.lua (74)
 
@@ -671,10 +713,12 @@ badge and any count quoted in the docs must agree with it.
 - castaura: the help lines come with a severity — red for never-matches, the caller's for its own line
 - castaura: a non-number is not resolved
 
-### test_timedspells.lua (19)
+### test_timedspells.lua (22)
 
 - timed: nothing is needed until a container shows only timeless auras
-- timed: it hears UNIT_AURA through AceEvent only while needed and readable
+- timed: it hears UNIT_AURA only while needed and readable
+- timedspells: UNIT_AURA is registered for player and pet only, on the module's own frame
+- timedspells: disable unregisters the unit frame and enable reuses it
 - timed: UNIT_AURA for another unit schedules nothing
 - timed: combat drops UNIT_AURA and its end restores it with a scan
 - timed: a scan queued before combat is dropped in combat, and the gate reopening scans again
@@ -692,6 +736,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a scan tick the gate drops is never bracketed; one that reads is, once
 - timed: a disabled container, or one showing debuffs, needs no scan
 - timed: a client without the aura API learns nothing and raises nothing
+- timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, and the rest loads
 
 ### test_style_bars.lua (62)
 
@@ -887,7 +932,7 @@ badge and any count quoted in the docs must agree with it.
 - blizzard: in combat nothing moves and Apply says it has to wait; with no profile, nothing is waiting
 - blizzard: a profile switch applies the new profile's choice
 
-### test_framepicker.lua (14)
+### test_framepicker.lua (15)
 
 - picker: the screen and the world are never a target, and the walk ends there
 - picker: the walk climbs past one of this addon's own frames to a named frame above it
@@ -903,23 +948,30 @@ badge and any count quoted in the docs must agree with it.
 - picker: Escape keeps its key from the game for that press only, and cancels
 - picker: any other key passes through and the pick continues
 - picker: a new pick waits for the buttons to be released again before it can pick
+- framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes
 
-### test_disabled.lua (12)
+### test_disabled.lua (18)
 
 - disabled: enabled, the addon registers a non-empty set
 - disabled: every registration the addon owns is UNREGISTERED, not gated
+- disabled: TimedSpells' private unit frame is in the census while enabled and gone when disabled
 - disabled: what MUST survive does — the dispatcher, the panel, AceDB and the launcher
 - disabled: nothing is left armed, and nothing arms itself afterwards
+- disabled: a queued apply and a queued scan are canceled, not left armed
 - disabled: every frame that was shown is hidden, at the source
 - disabled: firing every baseline event writes nothing, says nothing and shows nothing
 - disabled: every reserved verb answers, and the bare /am opens the panel
 - disabled: this addon's own feature verbs refuse on one line and reach no write seam
-- disabled: the launcher's left-click is refused and its right-click still opens the panel
+- disabled: the launcher's left-click opens the panel and its menu grays every feature toggle
+- disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line
 - disabled: re-enabling restores the registration set, from the settings as they are NOW
 - disabled: releasing one hold does not stand up an addon the other still holds down
 - disabled: a profile switch to an enabled profile stands the addon back up
+- disabled: a disabled login builds no container frame
+- disabled: a profile switch while disabled builds nothing until enable
+- disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (25)
+### test_slash.lua (27)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -936,7 +988,8 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am disable in combat is not refused; the master switch is a visibility write
 - slash: /am enable prints the seam's error instead of the success line
 - slash: enable and disable are listed by /am help and on the landing page
-- slash: the degraded stub still answers /am enable and /am disable
+- slash: the degraded stub's /am disable and /am enable store the switch through writeThrough
+- slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough
 - slash: /am delete removes a container by id
 - slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
@@ -946,8 +999,9 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am pick starts the frame picker for the selected container
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
+- slash: the dispatcher's isEnabled is NS.EnabledStored
 
-### test_slash_verbs.lua (42)
+### test_slash_verbs.lua (50)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -963,7 +1017,10 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: set clamps a number to the row's range and echoes what was stored
 - slash verbs: set refuses what the row's type cannot take, and stores and announces nothing
 - slash verbs: set writes a color in the stored {r, g, b, a} shape; get decodes a partial one channel by channel
-- slash verbs: a value the parser takes but the seam refuses prints the seam's reason, then the unchanged value
+- slash verbs: a value the parser takes but the seam refuses prints the refusal and no echo of the unchanged value
+- slash verbs: /am set with a refused value prints INVALID and the row's reason once each, and does not echo the unchanged value
+- slash verbs: /am reset container.name prints the library's no-default line once
+- slash verbs: /am reset with no container prints the seam's reason, not the no-default line
 - slash verbs: set and reset reach a session row, which never lands in the profile
 - slash verbs: reset restores the selected container's row only, and its echo carries no note
 - slash verbs: set on a global row writes the profile through the seam
@@ -972,6 +1029,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am resetall without the settings helpers says it cannot, and resets nothing
 - slash verbs: the Reset-all confirmation is options-ui-§12's wording, a Yes/No pair that waits
 - slash verbs: /am lock and /am unlock go through the seam: unlocked shows the handle, and live auras keep drawing (B1)
+- slash verbs: /am enable, /am disable, /am lock, /am unlock echo the stored value in the set shape
 - slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)
 - slash verbs: /am pick with no containers, or in combat, never starts the picker
 - slash verbs: /am pick attaches the container selected when it began, even if the selection moves
@@ -984,7 +1042,11 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
 - slash verbs: /am resetposition and /am forgettimed do their act and say so
+- slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true
+- slash verbs: the old path global.minimap.hide is not a setting, and nothing is written
+- slash verbs: a legacy store's minimap.hide reads through the renamed path with no migration
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
+- slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
@@ -1012,10 +1074,10 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: a session row written in a bracket is counted through its own get
 - bulklog: each act starts its own count and its own error mark
 - bulklog: an error inside a nested bracket marks the outer act's one line
-- bulklog: Bulk.Run stays silent only when its act answers true, the profile reset's signal
+- bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
-### test_optionssetup.lua (18)
+### test_optionssetup.lua (19)
 
 - options: NS.Helpers IS the library instance
 - options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
@@ -1034,6 +1096,7 @@ badge and any count quoted in the docs must agree with it.
 - options: the Background block is composed in canonical order, and its tooltips name the background
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
+- options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)
 - options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
 ### test_options_descriptor.lua (19)
@@ -1050,15 +1113,15 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
-- options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it
+- options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
 - options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
-- options descriptor: the stub's composers emit the paths and types the live composers do
+- options descriptor: every stub composer answers an empty row list
 
-### test_pages_general.lua (67)
+### test_pages_general.lua (35)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1078,7 +1141,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
-- general → spell categories: a dropdown of the eleven spell categories plus Weapon enchants, opening on the first
+- general → spell categories: a dropdown of the fourteen spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
 - general → spell categories: the markers are padded so every name starts at the same column (issue #10)
 - general → spell categories: the closed dropdown shows the marked label too (issue #10)
@@ -1086,6 +1149,18 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: every starter is listed with an X on its left, and no checkbox (B2)
 - general → spell categories: adding by id writes categorySpells whole through the seam, and its X takes it off
 - general → spell categories: a name resolves through the candidates — any category's starter, or a learned timed spell
+- general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
+- general → spell categories: the Weapon enchants entry explains the all-slots fallback
+- general → spell categories: unticking a weapon slot writes the profile, one row at a time
+- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
+- general: Select accepts the enchant key too, and lands the tab on it
+- general → spell categories: the tab and Dispel Colors are drawn with no container at all
+- general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
+- general → dispel colors: a swatch writes its own type's color and re-applies every container
+- general → dispel colors: the page's Defaults restores them
+
+### test_pages_general_categories.lua (32)
+
 - general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)
 - general → spell categories: the create form makes a category, shows it, and it is usable at once
 - general → spell categories: the name box renames without moving the key, and keeps the container's Show/Hide
@@ -1118,15 +1193,6 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: choosing another category lists its starters, by name where the client knows them
 - general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
 - general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
-- general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
-- general → spell categories: the Weapon enchants entry explains the all-slots fallback
-- general → spell categories: unticking a weapon slot writes the profile, one row at a time
-- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
-- general: Select accepts the enchant key too, and lands the tab on it
-- general → spell categories: the tab and Dispel Colors are drawn with no container at all
-- general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
-- general → dispel colors: a swatch writes its own type's color and re-applies every container
-- general → dispel colors: the page's Defaults restores them
 
 ### test_pages_containers.lua (31)
 
@@ -1153,7 +1219,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: re-choosing the same Style keeps a Fill set by hand (B5)
 - containers: /am set container.style resets Fill the same way, one apply and one rebuild (B5)
 - containers: a duplicate and a copy-from keep the source's Fill (B5)
-- containers: in combat the library refuses Duplicate; New reaches CM.Create's own gray refusal; nothing is created
+- containers: in combat the library refuses Duplicate and New container; nothing is created
 - containers: Duplicate copies the selected container and selects the copy
 - containers: Delete asks first, naming the container, and deletes it only on Yes
 - containers: the copy block offers every other container and copies only the chosen section
@@ -1162,7 +1228,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (47)
+### test_pages_filters.lua (48)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1174,6 +1240,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: the max-duration description says there is no minimum
 - filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
 - filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
+- filters: the Dispel Types grid draws no 4th cell, blank or otherwise
 - filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
@@ -1302,6 +1369,16 @@ badge and any count quoted in the docs must agree with it.
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
 - text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
 
+### test_pages_tabs.lua (7)
+
+- tabs: each of the seven pages draws its tab keys and labels in order
+- tabs: a container switch that takes the active tab away heals the strip to its first tab
+- tabs: Bars, Icons and Text on a mismatched style draw the muted-red notice above every row, drawn disabled
+- tabs: the Filters page draws the engine's warnings above the tab's rows
+- tabs: with no containers every per-container page draws one placeholder tab and the empty-registry line
+- tabs: the Containers page's band holds the picker and New container, out of the tab body
+- tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
+
 ### test_pages_about.lua (3)
 
 - about: the landing page lists every slash command, in /am help's own words
@@ -1328,7 +1405,7 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (29)
+### test_defaults.lua (30)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
@@ -1346,7 +1423,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: spell lists and dispel colors are profile-wide, never a container's (schema v2)
 - defaults: one Healing category holds both retired healing lists, where Core healing was
 - defaults: a container draws in the Medium strata, the default UI's own layer (X-3)
-- defaults: the global schema stamp defaults to 1, never the current version
+- defaults: the global schema stamp defaults to 0, never the current version
 - defaults: StatesShowing hides every buff category but the ones named, and leaves the debuff ones at Show
 - defaults: no shipped category key sits in the reserved 'user' namespace
 - defaults: SanitizeUserName strips the escape character and control characters, trims and caps
@@ -1355,6 +1432,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: a user category materializes among the spell lists, above Weapon enchants, Uncategorized still last
 - defaults: schema order tracks Cat.For order per aura type, user categories included
 - defaults: a user category's name is unrouted by design, and its description is not
+- defaults: a sync canonicalizes a stored user name in the store, not only at the draw
 - defaults: a corrupt user record is skipped and left on disk, never coerced
 - defaults: a record outside the reserved namespace cannot hijack a shipped category
 - defaults: a user category's name is shown as typed even when it is a shipped locale key
@@ -1382,7 +1460,7 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: without the library, SetEnabled still flips the flag and acks, and says once that the window is gone
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (6)
+### test_locale.lua (7)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
@@ -1390,20 +1468,22 @@ badge and any count quoted in the docs must agree with it.
 - locale: every enUS value is its own key, so the English build shows the source string
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
 - locale: every value is ASCII, the em dash excepted (T-1)
+- locale: no library-missing line joins a routed fragment
 
-### test_docs.lua (5)
+### test_docs.lua (6)
 
 - README.md carries no angle-bracket argument placeholders
 - every Tier 2 documentation-map row agrees with docs/
 - every .md under docs/ appears in the documentation map
 - docs: every file:line citation names an existing file and a non-blank line inside it
+- docs: no file:line citation lands on a comment-only or blank line
 - docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
 
 ### test_prose.lua (18)
 
-- prose: no authored file carries a British spelling from localization-5's published list
-- prose: the gate carries localization-5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 3 of 148 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (3): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md
+- prose: no authored file carries a British spelling from localization-§5's published list
+- prose: the gate carries localization-§5's two lists whole, and nothing of its own
+- prose: the exclusions this repository declared suppressed 11 of 158 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1420,7 +1500,7 @@ badge and any count quoted in the docs must agree with it.
 - prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
 - prose self-test: a malformed waived is a failure, not a silence
 
-### test_surface_parity.lua (6)
+### test_surface_parity.lua (7)
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
@@ -1428,6 +1508,7 @@ badge and any count quoted in the docs must agree with it.
 - parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls
 - parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires
 - parity: the Slash stub carries every dispatcher member the addon calls
+- parity: the Slash stub's refusal line is the library's own format, byte for byte
 
 ### test_vendor_sync.lua (3)
 
@@ -1435,24 +1516,25 @@ badge and any count quoted in the docs must agree with it.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_lintconfig.lua (5)
+### test_lintconfig.lua (6)
 
 - lintconfig: .luacheckrc sets no top-level ignore
 - lintconfig: .luacheckrc switches no warning class off wholesale
 - lintconfig: every files[...] ignore is narrowed to a file or a name
 - lintconfig: no source file carries a bare inline luacheck ignore
 - lintconfig: no length operator shares its line with a keyword or brace lizard must see
+- lintconfig: every read_globals name is referenced as a global by some authored file
 
 ### test_eol.lua (2)
 
 - eol: every tracked file carries the terminator .gitattributes declares for it
-- eol: .gitattributes is line-endings-5's canonical body for this repo kind
+- eol: .gitattributes is line-endings-§5's canonical body for this repo kind
 
 ### test_layout_cap.lua (13)
 
 - layoutcap: every authored file over the 1500-line cap is named in the census
 - layoutcap: no census row outlives the breach it records
-- layoutcap: every over-cap census row carries one of layout-1's three terminal states
+- layoutcap: every over-cap census row carries one of layout-§1's three terminal states
 - layoutcap: the census and the exempt set agree about which paths were exempted
 - layoutcap: an empty census is written as a result rather than left standing empty
 - layoutcap self-test: the parser reads the census nested under the register, and stops there
@@ -1468,58 +1550,63 @@ badge and any count quoted in the docs must agree with it.
 
 | Suite | Cases |
 |-------|------:|
-| test_loadorder.lua | 7 |
+| test_loadorder.lua | 8 |
 | test_setups.lua | 14 |
-| test_launcher.lua | 20 |
-| test_database.lua | 91 |
-| test_schema.lua | 29 |
+| test_launcher.lua | 30 |
+| test_database.lua | 73 |
+| test_database_categories.lua | 22 |
+| test_migrations.lua | 6 |
+| test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
-| test_filtercompiler.lua | 94 |
+| test_filtercompiler.lua | 85 |
+| test_filtercompiler_categories.lua | 9 |
 | test_container.lua | 51 |
-| test_containermanager.lua | 51 |
-| test_compat.lua | 26 |
+| test_containermanager.lua | 53 |
+| test_compat.lua | 27 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
-| test_lifecycle.lua | 10 |
+| test_lifecycle.lua | 15 |
 | test_anchors.lua | 74 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 59 |
 | test_castaura.lua | 7 |
-| test_timedspells.lua | 19 |
+| test_timedspells.lua | 22 |
 | test_style_bars.lua | 62 |
 | test_style_icons.lua | 28 |
 | test_style_text.lua | 54 |
 | test_preview.lua | 21 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
-| test_framepicker.lua | 14 |
-| test_disabled.lua | 12 |
-| test_slash.lua | 25 |
-| test_slash_verbs.lua | 42 |
+| test_framepicker.lua | 15 |
+| test_disabled.lua | 18 |
+| test_slash.lua | 27 |
+| test_slash_verbs.lua | 50 |
 | test_bulklog.lua | 20 |
-| test_optionssetup.lua | 18 |
+| test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 67 |
+| test_pages_general.lua | 35 |
+| test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 47 |
+| test_pages_filters.lua | 48 |
 | test_pages_layout.lua | 27 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 29 |
+| test_pages_tabs.lua | 7 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 29 |
+| test_defaults.lua | 30 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 8 |
-| test_locale.lua | 6 |
-| test_docs.lua | 5 |
+| test_locale.lua | 7 |
+| test_docs.lua | 6 |
 | test_prose.lua | 18 |
-| test_surface_parity.lua | 6 |
+| test_surface_parity.lua | 7 |
 | test_vendor_sync.lua | 3 |
-| test_lintconfig.lua | 5 |
+| test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1296** |
+| **Total** | **1363** |

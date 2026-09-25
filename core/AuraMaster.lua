@@ -43,7 +43,8 @@ function addon:OnEnable()
     -- The panel and the dispatcher are SETUP and come up in either state; everything else is a
     -- FEATURE and comes up only if the addon is actually running (slash-commands-§7). A disabled
     -- addon that registered its events at login and unregistered them a moment later would still
-    -- have been watching for that moment, and would draw a container before hiding it.
+    -- have been watching for that moment, and would draw a container before hiding it. CM.Init reads
+    -- the latch itself: a disabled login builds no container frame, and the stand-up builds them.
     if not NS.IsStoodDown() then
         self:RegisterLifecycleEvents()
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
@@ -52,27 +53,32 @@ function addon:OnEnable()
     if NS.CreateOptionsPanel then NS.CreateOptionsPanel() end
 end
 
---- Every event the addon registers. Extracted so the perf probe's resume restores exactly what suspend
---- removed (core/PerfSetup.lua), instead of a hand-kept copy of this list.
-function addon:RegisterLifecycleEvents()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnEnterWorld")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED", "OnCombatChanged")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnCombatChanged")
-    self:RegisterEvent("PLAYER_TARGET_CHANGED", "OnUnitSwap")
-    self:RegisterEvent("PLAYER_FOCUS_CHANGED", "OnUnitSwap")
-    self:RegisterEvent("UNIT_PET", "OnUnitPet")
-    self:RegisterEvent("ADDON_LOADED", "OnAddonLoaded")
+--- Every event the addon itself registers, and the method each is registered to. ONE list, read by
+--- both the stand-up and the stand-down, so the two cannot drift apart.
+local LIFECYCLE_EVENTS = {
+    { "PLAYER_ENTERING_WORLD", "OnEnterWorld" },
+    { "PLAYER_REGEN_DISABLED", "OnCombatChanged" },
+    { "PLAYER_REGEN_ENABLED", "OnCombatChanged" },
+    { "PLAYER_TARGET_CHANGED", "OnUnitSwap" },
+    { "PLAYER_FOCUS_CHANGED", "OnUnitSwap" },
+    { "UNIT_PET", "OnUnitPet" },
+    { "ADDON_LOADED", "OnAddonLoaded" },
     -- Fires when aura secrecy starts or stops; a rebuild queued while auras were secret runs here.
-    self:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionChanged")
+    { "ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionChanged" },
+}
+
+--- Register the lifecycle events. Extracted so the stand-up restores exactly what the stand-down
+--- removed (core/LifecycleSetup.lua). Each goes through NS.SafeRegisterEvent: a name this client
+--- does not know costs only itself and is recorded in NS.RejectedEvents (events-frames-taint-§1).
+function addon:RegisterLifecycleEvents()
+    for _, e in ipairs(LIFECYCLE_EVENTS) do
+        NS.SafeRegisterEvent(self, e[1], e[2], NS.RejectedEvents)
+    end
 end
 
 function addon:UnregisterLifecycleEvents()
-    for _, event in ipairs({
-        "PLAYER_ENTERING_WORLD", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-        "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED", "UNIT_PET", "ADDON_LOADED",
-        "ADDON_RESTRICTION_STATE_CHANGED",
-    }) do
-        self:UnregisterEvent(event)
+    for _, e in ipairs(LIFECYCLE_EVENTS) do
+        self:UnregisterEvent(e[1])
     end
 end
 
@@ -162,8 +168,8 @@ end
 
 local function rebuildProfile()
     -- The registry still follows the new profile while the addon is down -- its containers are the
-    -- ones the stand-up will build -- but nothing below the panel refresh draws or registers, because
-    -- the show ladder and CM.Init both read the latch.
+    -- ones the stand-up will build -- but nothing below the panel refresh draws, builds or registers,
+    -- because the show ladder and CM.Announce both read the latch.
     if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end

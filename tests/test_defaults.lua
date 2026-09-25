@@ -50,7 +50,7 @@ end
 -- is no longer exempted here.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
 -- userCategories and userCategoryOrder (issue #10 checkpoint 3) join categorySpells here for the
--- same reason: they are maps the PLAYER fills, written by defaults/Categories.lua's create and
+-- same reason: they are maps the PLAYER fills, written by defaults/UserCategories.lua's create and
 -- rename acts rather than by a settings row, so there is no row for a row-shaped test to find.
 local PROFILE_CARVE_OUTS = set({ "categorySpells", "userCategories", "userCategoryOrder" })
 
@@ -336,10 +336,15 @@ test("defaults: one Healing category holds both retired healing lists, where Cor
     assertTrue(def ~= nil and def.kind == "spells", "a healing spell category")
     assertEqual(def.label, "Healing")
     assertEqual(def.desc, "Heal-over-time effects, shields and beacons.")
+    -- What the owner's review of the 2026-09-24 combat-log bundle added since (SID, 2026-09-25).
+    local FROM_LOGS = { 1227806, 1246768, 77489, 1253593, 383648, 382024, 1260617, 443113, 406220,
+        1260681, 367364, 373862, 355941, 1291636, 376788, 409895, 409678, 363534, 373267, 1245369,
+        1244893, 156322 }
     for _, id in ipairs(HEALING) do assertTrue(def.spells[id] ~= nil, "starter " .. id) end
+    for _, id in ipairs(FROM_LOGS) do assertTrue(def.spells[id] ~= nil, "from the logs " .. id) end
     local n = 0
     for _ in pairs(def.spells) do n = n + 1 end
-    assertEqual(n, #HEALING, "the union, nothing more")
+    assertEqual(n, #HEALING + #FROM_LOGS, "the union and the reviewed additions, nothing more")
     assertEqual(Cat.Find("HELPFUL", "coreHealing"), nil)
     assertEqual(Cat.Find("HELPFUL", "lesserHealing"), nil)
     -- red under: appending healing at the end (the editor's category order would move)
@@ -354,10 +359,12 @@ test("defaults: a container draws in the Medium strata, the default UI's own lay
     assertEqual(NS.CONTAINER_TEMPLATE.layout.strata, "MEDIUM")
 end)
 
-test("defaults: the global schema stamp defaults to 1, never the current version", function()
-    -- red under: defaulting the stamp to the current schema version — AceDB fills an absent key
-    -- before NS.RunMigrations reads it, so every old database would read as already migrated
-    assertEqual(NS.defaults.global.schemaVersion, 1)
+test("defaults: the global schema stamp defaults to 0, never the current version", function()
+    -- red under: defaulting the stamp to 1 or to the current schema version. AceDB fills an absent
+    -- key before NS.RunMigrations reads it (a current-version default reads every old database as
+    -- already migrated), and strips a stored value equal to its default at logout (a stamp equal
+    -- to a non-zero default is lost). 0 is safe against both (savedvariables-§1, v2.65.0).
+    assertEqual(NS.defaults.global.schemaVersion, 0)
     assertEqual(type(NS.defaults.global.timedSpells), "table")
     assertEqual(next(NS.defaults.global.timedSpells), nil, "nothing learned by default")
 end)
@@ -399,7 +406,7 @@ end
 test("defaults: no shipped category key sits in the reserved 'user' namespace", function()
     -- red under: a category added to defaults/Categories.lua with a key like `userFavorites`. The
     -- prefix is what guarantees a generated user key can never shadow a shipped one, so it is a
-    -- promise about THIS file, not about the generator (defaults/Categories.lua's Cat.NewUserKey).
+    -- promise about THIS file, not about the generator (defaults/UserCategories.lua's Cat.NewUserKey).
     for _, list in ipairs({ Cat.HELPFUL, Cat.HARMFUL }) do
         for _, def in ipairs(list) do
             assertTrue(def.key:find("^user") == nil, def.key .. " takes the reserved user namespace")
@@ -410,7 +417,7 @@ end)
 test("defaults: SanitizeUserName strips the escape character and control characters, trims and caps", function()
     local s = Cat.SanitizeUserName
     -- red under: storing a name that can open a color, texture or hyperlink escape in the grid row
-    -- and the tooltip the label reaches (defaults/Categories.lua's note above the function).
+    -- and the tooltip the label reaches (defaults/UserCategories.lua's note above the function).
     assertEqual(s("|cffff0000Mine|r"), "cffff0000Miner")
     assertEqual(s("Big\tCDs"), "BigCDs")
     assertEqual(s("  Raid cooldowns  "), "Raid cooldowns")
@@ -491,7 +498,7 @@ test("defaults: a user category materializes among the spell lists, above Weapon
     for i, def in ipairs(C2.HELPFUL) do at[def.key] = i end
     -- red under: appending a user definition after Weapon enchants or after Uncategorized (U-1)
     assertTrue(at[keys[1]] < at.weaponEnchants, "a user category sits above Weapon enchants")
-    assertTrue(at.consumables < at[keys[1]], "and below the shipped spell lists it is a sibling of")
+    assertTrue(at.racials < at[keys[1]], "and below the shipped spell lists it is a sibling of")
     assertEqual(C2.HELPFUL[#C2.HELPFUL].key, "uncategorized", "U-1 survives materialization")
     assertEqual(C2.HARMFUL[#C2.HARMFUL].key, "uncategorizedDebuffs")
     local def = C2.Find("HELPFUL", keys[1])
@@ -544,6 +551,23 @@ test("defaults: a user category's name is unrouted by design, and its descriptio
     -- red under: building the description out of the name, which would drag the player's text into
     -- the one field the guard still checks
     assertTrue(defined[def.desc], "the description is a shipped string and stays routed: " .. def.desc)
+end)
+
+test("defaults: a sync canonicalizes a stored user name in the store, not only at the draw", function()
+    -- A characterization (AM-13, before Cat.SyncUserCategories was split into phases): the
+    -- materialize phase writes the sanitized name back to the record and stamps its key.
+    local NS2 = fresh()
+    local p = NS2.db.profile
+    p.userCategories = { userpadded = { name = "  Padded  ", auraType = "HARMFUL" } }
+    p.userCategoryOrder = { "userpadded" }
+    assertEqual(NS2.Categories.SyncUserCategories(p), 1)
+    -- red under: sanitizing only the definition's label, which leaves two versions of one name
+    assertEqual(p.userCategories.userpadded.name, "Padded", "the stored name is canonical")
+    assertEqual(p.userCategories.userpadded.key, "userpadded", "and the record carries its key")
+    assertEqual(NS2.Categories.Find("HARMFUL", "userpadded").label, "Padded")
+    assertEqual(NS2.FindSchemaRow("container.filter.categories.userpadded").label, "Padded")
+    assertEqual(NS2.CONTAINER_TEMPLATE.filter.categories.userpadded, "show")
+    assertEqual(NS2.ValidateSchema(), 0)
 end)
 
 test("defaults: a corrupt user record is skipped and left on disk, never coerced", function()

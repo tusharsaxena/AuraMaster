@@ -70,7 +70,7 @@ end
 --- at all; and since LibKa0s v1.51.0 an entry that has something to say draws a "?" mark BETWEEN
 --- its X and its name, so the Icon immediately before a label may be the mark rather than the X.
 --- The mark is the Icon that records `__helpTint` (libs/LibKa0s/OptionsWidgets.lua:2860-2861),
---- which is exactly how tests/test_pages_general.lua tells the two Icons apart.
+--- which is exactly how tests/general_page_helpers.lua tells the two Icons apart.
 local function entry(ws, id)
     for _, w in ipairs(ws) do
         local kids = w.children or {}
@@ -96,7 +96,7 @@ end
 --- `nth` picks between the two lists: the Whitelist draws first, so an id sitting on both is the
 --- first match on the whitelist and the second on the blacklist.
 ---
---- WALKED IN ORDER for the reason tests/test_pages_general.lua gives: the library draws
+--- WALKED IN ORDER for the reason tests/general_page_helpers.lua gives: the library draws
 --- [X] [?] [label] per entry, two entries to a row, so the mark in force when a label is reached
 --- is the one belonging to it.
 local function entryHelp(ws, id, nth)
@@ -275,6 +275,18 @@ test("filters: a debuff container's Categories tab is Blizzard Categories, Spell
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
     assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: restored for debuffs (fix round 3)")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
+end)
+
+test("filters: the Dispel Types grid draws no 4th cell, blank or otherwise", function()
+    local NS, _, _, ws = categories(2)
+    -- A characterization (AM-13, before renderCategories went table-dispatched): the plain grids
+    -- pass no extraColumn at all, so their lines stay three cells wide.
+    -- red under: the plain-grid branch passing CATEGORY_EXTRA and letting the cell answer nil
+    for _, key in ipairs({ "dispels", "magic", "curse", "disease", "poison", "bleed" }) do
+        local line = gridLine(NS, ws, key)
+        assertTrue(line ~= nil, key .. " draws a grid line")
+        assertNil(line[4], key .. " carries no extra cell")
+    end
 end)
 
 test("filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)", function()
@@ -537,7 +549,7 @@ test("filters: the four tabs read General, Categories, Overrides, Sorting (batch
     assertEqual(table.concat(P.tabKeys("filters"), ","),
         table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"] }, ","))
     -- red under: tabs keyed globally rather than per page, which would fuse this General with the
-    -- Text and Bars pages' own General tabs (settings/OptionsSetup.lua's collectTabs builds a strip
+    -- Text and Bars pages' own General tabs (the library's O.RenderTabbedSchema builds a strip
     -- out of NS.SchemaForPage(pageKey) alone, so the name is the PAGE's)
     P.show("Text")
     assertEqual(P.tabKeys("text")[1], L["General"], "the Text page keeps its own General tab")

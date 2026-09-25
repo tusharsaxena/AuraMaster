@@ -1,6 +1,6 @@
 -- tests/test_docs.lua — the shipped prose is checkable, so it is checked.
 --
--- Five rules about text that no code path enforces and no reviewer reliably catches:
+-- Six rules about text that no code path enforces and no reviewer reliably catches:
 --
 --   1. Angle-bracket argument placeholders must not appear in README.md. CurseForge's renderer treats
 --      `<path>` as an unknown HTML tag and strips it — inside backticks too — so a command that reads
@@ -20,6 +20,8 @@
 --      still passes. It is a
 --      heuristic, not a proof: whether the cited code still does what the prose says stays a
 --      reviewer's job.
+--   6. No such citation lands on a comment-only or blank line: a citation's first line is code, so
+--      a line that slid under it from a doc comment above fails even when rule 5's slack forgives it.
 --
 -- Out of scope, named rather than inferred (localization-§5): `libs/` and `tests/_kit/` (vendored),
 -- the frozen bundles under `docs/audits/`, `docs/reviews/` and `docs/automated-tests/<run>/`,
@@ -207,6 +209,39 @@ test("docs: every file:line citation names an existing file and a non-blank line
   end
   assertTrue(checked > 50, "matched only " .. checked .. " citations -- the pattern or the glob broke")
   assertEqual(#offenders, 0, "citations that do not resolve: " .. table.concat(offenders, "; "))
+end)
+
+--- True when a cited source line holds no code: blank, or a Lua comment and nothing else. A cited
+--- range is judged by its first line, the one a reader's editor jumps to. A TOC's `#` lines are held
+--- only to the blank rule: they head its blocks (`# Libraries`) or are packager directives
+--- (`#@no-lib-strip@`), and a doc naming a block cites its heading on purpose.
+local function isCommentOrBlank(path, text)
+  if not text:match("%S") then return true end
+  return path:match("%.lua$") ~= nil and text:match("^%s*%-%-") ~= nil
+end
+
+test("docs: no file:line citation lands on a comment-only or blank line", function()
+  -- red under: citations landing on '--' lines
+  local checked, offenders = 0, {}
+  for _, doc in ipairs(citingDocs()) do
+    local lineNo = 0
+    for line in (readFile(doc) .. "\n"):gmatch("([^\n]*)\n") do
+      lineNo = lineNo + 1
+      for path, a, b in line:gmatch(CITATION) do
+        local first = tonumber(a)
+        if isSource(path) and not citationFault(path, first, tonumber(b ~= "" and b or a)) then
+          checked = checked + 1
+          if isCommentOrBlank(path, sourceLines(path)[first]) then
+            offenders[#offenders + 1] = ("%s:%d cites %s:%s%s (a comment or blank line)"):format(
+              doc, lineNo, path, a, b ~= "" and ("-" .. b) or "")
+          end
+        end
+      end
+    end
+  end
+  assertTrue(checked > 50, "matched only " .. checked .. " citations -- the pattern or the glob broke")
+  assertEqual(#offenders, 0, #offenders .. " citations land on no code:\n  "
+    .. table.concat(offenders, "\n  "))
 end)
 
 -- ── file:line citations still point at what their sentence names ──────────────────────────────

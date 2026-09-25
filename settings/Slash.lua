@@ -24,6 +24,12 @@ local print = NS.Print
 local printf = NS.Printf
 
 local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
+-- The refusal line's format, byte for byte the library's DISABLED_LINE_FORMAT (slash-commands-§7),
+-- for the library-absent stub. Published as Sl.__stubDisabledLineFormat in BOTH builds so
+-- tests/test_surface_parity.lua compares it against the live major: the copy that could drift is
+-- falsifiable rather than trusted.
+local STUB_DISABLED_LINE_FORMAT = "%s is disabled \226\128\148 enable it with |cFFFFFF00%s|r"
+Sl.__stubDisabledLineFormat = STUB_DISABLED_LINE_FORMAT
 -- Built at the bottom, once NS.COMMANDS exists; every handler reaches it at CALL time.
 local cli
 
@@ -102,14 +108,6 @@ NS.COMMANDS = {
 -- it lives in core/LifecycleSetup.lua; this file only decides what the command surface says about
 -- it. A green gate here says nothing about whether anything is still registered.
 
---- Is the addon enabled, from the stored path? Asked at DISPATCH TIME by the library, never cached,
---- so the command after an `/am enable` works. EXPLICITLY false only: before core/Database.lua builds
---- NS.db the read answers nil, and reading nil as "off" would refuse every feature verb on a load
---- that has not finished.
-local function isEnabled()
-    return NS.GetSetting("enabled") ~= false
-end
-
 --- The verbs that keep answering. The library's own default is the standard's twelve reserved verbs
 --- and it is named rather than copied, so a change upstream arrives with the re-vendor instead of
 --- being missed here.
@@ -185,13 +183,28 @@ end
 -- The gray combat refusal (options-ui-§2's canonical shape).
 local function refuse(line) printf("|cff808080%s|r", line) end
 
+--- Confirm a host verb's write the way `/am set` confirms one (slash-commands-§5's set shape): the
+--- stored value read back through the library's own CliGet, so the line is exactly what
+--- `/am get <path>` prints (`enabled = true`), with no private variant of the formatter (§5 MUST
+--- NOT). The degraded stub has no formatter and its CliGet names the missing library, so there the
+--- verb's own sentence (`prose`) is the confirmation.
+local function echo(path, prose)
+    if SlashLib and SlashLib.FormatKV then return cli:CliGet(path) end
+    print(prose)
+end
+
 -- The master switch, through the same seam as General → Master controls' "Enable Aura Master" and
 -- `/am set enabled`: the [Set] line, CONFIG_CHANGED and the visibility pass. Not refused in combat —
 -- the pass flips each engine through its own SetEnabled, which is combat-legal.
+--
+-- The latch is synced HERE as well as in the row's onChange: idempotent on the live path, where the
+-- row's onChange already ran, and required without LibKa0s, where the path is a writeThrough one
+-- with no row and so no onChange (settings/Schema.lua, NS.WRITE_THROUGH).
 function runEnabled(on)
     local ok, err = NS.SetByPath("enabled", on)
     if not ok then return print(err) end
-    print(on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
+    NS.SyncEnabled()
+    echo("enabled", on and L["Aura Master enabled"] or L["Aura Master disabled — /am enable turns it back on"])
 end
 
 function runResetAll()
@@ -280,8 +293,9 @@ function runDelete(rest)
 end
 
 function runLock(locked)
-    NS.SetByPath("locked", locked)
-    print(locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
+    local ok, err = NS.SetByPath("locked", locked)
+    if not ok then return print(err) end
+    echo("locked", locked and L["Containers locked"] or L["Containers unlocked — drag a container by its handle"])
 end
 
 -- `/am test` toggles; `on` / `off` set. Through Preview.SetTestMode, the switch the Master controls
@@ -301,19 +315,14 @@ function runTest(rest)
 end
 
 function runPick()
-    local c, id = NS.ActiveContainer()
-    if not c then return print(L["No containers yet — /am new creates one"]) end
-    if InCombatLockdown() then
-        return printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
-    end
-    printf(L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."], c.name)
-    NS.FramePicker.Start(function(name)
-        NS.SetByPath("container.attach.frame", name, id)
-        NS.SetByPath("container.attach.mode", "frame", id)
-        printf(L["'%s' is now attached to %s"], c.name, name)
+    local started, c = NS.FramePicker.PickFor(function(picked, name)
+        printf(L["'%s' is now attached to %s"], picked.name, name)
     end, function()
         print(L["Frame pick canceled"])
     end)
+    if started then
+        printf(L["Point at a frame and left-click to attach '%s'. Right-click or Escape cancels."], c.name)
+    end
 end
 
 function runResetPosition()
@@ -357,8 +366,9 @@ if not SlashLib then
 
     function SlashLib.New(_, d)
         local stub = { SetRowAnnotator = function() end }
+        -- The library-absent line, one sentence through the locale (WS-02).
         local function absent(verb)
-            return function() printf(L["/am %s is unavailable. %s."], verb, NS.LIBKA0S_MISSING) end
+            return function() printf(L["%s is unavailable: the LibKa0s library did not load."], "/am " .. verb) end
         end
         for _, verb in ipairs({ "List", "Get", "Set", "Reset" }) do
             stub["Cli" .. verb] = absent(verb:lower())
@@ -381,13 +391,13 @@ if not SlashLib then
                 if e[1] == name then return e end
             end
         end
-        -- The refusal line, spelled as the library spells it (slash-commands-§7) rather than as a
-        -- second wording invented for the library-less build. Plain text plus the one gold command.
+        -- The refusal line, in the library's exact bytes (slash-commands-§7): the file-level
+        -- STUB_DISABLED_LINE_FORMAT, which tests/test_surface_parity.lua pins to the live major's
+        -- DISABLED_LINE_FORMAT. Plain text plus the one gold command.
         local live = {}
         for _, name in ipairs(d.liveVerbs or {}) do live[name] = true end
         stub.DisabledLine = function()
-            return ("%s is disabled \226\128\148 enable it with |cFFFFFF00%s enable|r")
-                :format(tostring(d.brandName or d.slash), d.slash)
+            return STUB_DISABLED_LINE_FORMAT:format(tostring(d.brandName or d.slash), d.slash .. " enable")
         end
         stub.OnSlash = function(_, msg)
             local raw = (msg or ""):match("^%s*(.-)%s*$") or ""
@@ -449,7 +459,9 @@ cli = SlashLib:New({
     aliases      = { options = "config" },
 
     -- The disabled gate (see the section above).
-    isEnabled    = isEnabled,
+    -- The one enabled predicate, core/LifecycleSetup.lua's (loaded earlier by the TOC); the library
+    -- asks it at DISPATCH TIME, never cached, so the command after an `/am enable` works.
+    isEnabled    = NS.EnabledStored,
     -- THE BRAND NAME IN PLAIN TEXT, the same string core/LauncherSetup.lua hands the broker object
     -- as its `label` (launcher-§1). One brand spelling per addon, and that field is already
     -- forbidden escape sequences, which is what makes it safe to drop into a colored line.
@@ -462,19 +474,20 @@ cli = SlashLib:New({
     -- The schema seams. SetByPath rather than a bare write, so a CLI change takes the path a panel
     -- change takes — the [Set] line, the row's onChange, CONFIG_CHANGED and the panel re-sync.
     get          = function(path) return NS.GetSetting(path) end,
-    -- A refusal with its row's reason (the Text template's parser) prints the reason indented
-    -- under it, the shape slash-commands-§6 gives a failed parse.
-    set          = function(path, v)
-        local ok, err, why = NS.SetByPath(path, v)
-        if not ok and err then print(err) end
-        if not ok and why then print("  " .. why) end
-    end,
+    -- The seam's answer, returned whole (LibKa0s-Slash minor 15): a refusal answers `false, err,
+    -- why` and CliSet prints it as INVALID, then err and the row's reason (the Text template's
+    -- parser) each indented, the shape slash-commands-§6 gives a failed parse, with no echo after.
+    set          = function(path, v) return NS.SetByPath(path, v) end,
     findRow      = function(path) return NS.FindSchemaRow(path) end,
-    -- A row with no meaningful default (the container name's `noReset`) is refused with a reason:
-    -- say it, or `/am reset` would echo the unchanged value as if the reset had worked.
+    -- Only a row with no meaningful default (the container name's `noReset`) answers false, and
+    -- CliReset prints NO_DEFAULT ("<path> has no default to restore"). CliReset discards err, so a
+    -- seam refusal (no container yet) prints its own reason here and answers nil, not false: that
+    -- row HAS a default, and NO_DEFAULT would misreport it.
     applyDefault = function(row)
-        local ok, why = NS.ApplyDefault(row)
-        if ok == false and why then print(why) end
+        local ok, err, why = NS.ApplyDefault(row)
+        if ok ~= false or not err then return ok end
+        print(err)
+        if why then print("  " .. why) end
     end,
     allRows      = function() return NS.Schema end,
     groupKey     = function(row) return row.page end,
@@ -502,8 +515,8 @@ end)
 Sl.__cli = cli
 
 --- The one refusal line, built by the library from `brandName` and `slash`. Published because the
---- launcher's refused left-click prints THIS line rather than a second spelling of it
---- (launcher-§2, slash-commands-§7).
+--- panel's refused Test mode tick (settings/General.lua) prints THIS line rather than a second
+--- spelling of it (slash-commands-§7).
 function Sl.DisabledLine()
     return cli.DisabledLine and cli:DisabledLine() or ""
 end
@@ -514,9 +527,19 @@ function Sl.LandingRows() return cli:LandingRows() end
 
 function Sl.OnSlash(_, msg) cli:OnSlash(msg) end
 
---- Toggle test mode -- what a bare `/am test` runs, published so the launcher's left click
---- (core/LauncherSetup.lua, rung (b)) drives the SAME switch and prints the same line. The mode lives
---- once, in NS.State.testMode, written only by Preview.SetTestMode.
+-- THE LAUNCHER MENU'S THREE HANDLERS (launcher-§2, LibKa0s-Launcher-1.0 minor 4). The right-click
+-- menu's Enabled, Locked and Test mode entries (core/LauncherSetup.lua) call these, and each is the
+-- verb's OWN handler rather than a second path to the same setting, so the menu confirms, refuses
+-- and prints exactly as the slash command does.
+
+--- Enable or disable -- what `/am enable` / `/am disable` run.
+function Sl.SetEnabled(on) runEnabled(on and true or false) end
+
+--- Flip the lock -- what `/am lock` / `/am unlock` run, handed the state the lock moves TO.
+function Sl.ToggleLock() runLock(not NS.GetSetting("locked")) end
+
+--- Toggle test mode -- what a bare `/am test` runs. The mode lives once, in NS.State.testMode,
+--- written only by Preview.SetTestMode.
 function Sl.ToggleTestMode() runTest("") end
 
 function Sl.Register()

@@ -16,12 +16,13 @@ local _, NS = ...
 -- sub-pages (N-2, marked by NS.SubPageLabel — settings/OptionsSetup.lua's D6 section).
 --
 -- THE PICKER AND NEW CONTAINER SIT IN THE BAND ABOVE THE STRIP (feedback #2, 2026-09-19), in the
--- library's chrome block (Helpers.ContainerHeader, settings/OptionsSetup.lua): the identity controls
--- options-ui-§14 puts there, on one row. The acts on the selected container — Name, Enabled,
+-- library's page banner with its create action (O.PageBanner's `action`, through
+-- Helpers.ContainerBanner in settings/OptionsSetup.lua): the identity controls options-ui-§14 puts
+-- there, on one row. The acts on the selected container — Name, Enabled,
 -- Duplicate, Delete, Copy settings from — stay on the page's one tab, which options-ui-§14 then names General.
--- This retired the page's options-ui-§14 deviation (docs/ARCHITECTURE.md). The block is drawn anew
--- on every render, so a Delete's two refreshes cannot lose it; the widgets of the render before are
--- released after each render (releaseStale), never during one.
+-- This retired the page's options-ui-§14 deviation (docs/ARCHITECTURE.md). The band is drawn anew
+-- on every render, so a Delete's two refreshes cannot lose it; the library gives the widgets of the
+-- band before back to AceGUI once the new band exists, never during a render.
 --
 -- This file registers its own rows and its own page, at the bottom, like every other page file.
 
@@ -61,8 +62,9 @@ local ROWS = {
         -- name, so a rename queues no apply and, in combat, announces no deferral.
         onChange = function() CM.NotifyRenamed() end, effect = "none",
         -- A name has no meaningful default (owner, 2026-09-13): neither this page's Defaults nor
-        -- `/am reset` restores it, and `/am reset` says why. The template's name still backfills.
-        noReset = true, noResetReason = L["A container's name has no default."],
+        -- `/am reset` restores it, and `/am reset` prints the library's no-default line. The
+        -- template's name still backfills.
+        noReset = true,
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",
@@ -240,34 +242,23 @@ local PAGE_SPEC = {
     tabs      = { { key = GROUP, label = GROUP, render = render } },
 }
 
-local HEADER = { onNew = doNew }
-local function header(ctx) H.ContainerHeader(ctx, HEADER) end
-
---- Hand the previous render's chrome widgets back to AceGUI. AFTER the render, never before: the
---- render is usually running inside one of their callbacks (the picker's, New's), and a widget
---- released on the way in could be handed straight back out, re-initialized, under its own callback.
----
---- Final review, Minor #1 (this file duplicates `Helpers.ContainerHeader`'s own swap-and-release):
---- kept on purpose. `ContainerHeader` swaps `ctx.__chromeWidgets` too, but by the time it runs here
---- it is swapping the EMPTY table this wrapper just installed (line below), so its own release is a
---- no-op on this path -- the widgets this function actually frees are the ones captured before that
---- swap. Only the tab-strip's own `onSelect` (`Helpers.RenderTabbedPage`'s direct call to `header`,
---- bypassing this wrapper) relies on `ContainerHeader`'s release doing the real work. No test in the
---- suite targets the three paths (first build, a `renderPage` redraw, tab `onSelect`) individually
---- for a leak or a double-release, only the whole-suite live-heap gate, which is indirect evidence
---- rather than proof. Removing this wrapper's capture without that proof risks a widget leak on the
---- `renderPage` path the first time `ContainerHeader`'s internals change, so it stays.
-local function releaseStale(stale)
-    local AceGUI = NS.AceGUI
-    if not (AceGUI and AceGUI.Release and stale) then return end
-    for _, w in ipairs(stale) do AceGUI:Release(w) end
-end
+-- The band above the strip (options-ui-§14): the container picker every per-container page shares,
+-- with this page's own tooltip, and New container beside it as O.PageBanner's `action` -- the
+-- picker+create band, drawn and released by the library (LibKa0s OptionsTabs minor 4). A create act
+-- re-renders the page from inside the button's own OnClick; the library holds the old Button aside
+-- until the new band exists, so it is never handed back under its own callback.
+local BAND = {
+    tooltip = L["Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."],
+    action  = {
+        text    = L["New container"],
+        tooltip = L["Create a container showing the player's buffs as bars. Change what it shows below."],
+        onClick = doNew,
+    },
+}
+local function banner(ctx) H.ContainerBanner(ctx, BAND) end
 
 local function renderPage(ctx)
-    local stale = ctx.__chromeWidgets
-    ctx.__chromeWidgets = {}
-    H.RenderTabbedPage(ctx, PAGE, PAGE_SPEC, header)
-    releaseStale(stale)
+    H.RenderPage(ctx, PAGE, PAGE_SPEC, banner)
 end
 
 local function build(mainCategory)

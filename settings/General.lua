@@ -11,7 +11,7 @@ local _, NS = ...
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
 --     Display          -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
 --     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
---     Dispel Colors    settings/GeneralSpells.lua: one color per dispel type, profile-wide
+--     Dispel Colors    settings/GeneralDispel.lua: one color per dispel type, profile-wide
 --
 -- A container's OWN identity — create, name, enable, unit, aura type, style, duplicate, delete,
 -- copy — is the top-level Containers page's (`settings/Containers.lua`, N-1, batch 7). It used to
@@ -32,21 +32,23 @@ local _, NS = ...
 -- the launcher's left-click also use. Off after a reload, ended when combat starts, refused in
 -- combat, and ended by Reset all settings (the row's default is false).
 --
--- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.hide`, and that is not an
--- oversight of the empty prefix above: the table is LibDBIcon's own and lives in the GLOBAL store,
--- outside any profile (launcher-§3). The row says SHOWN and the key says HIDDEN;
--- settings/Schema.lua inverts once, at the write seam.
+-- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.shown` (NS.MINIMAP_PATH,
+-- published by settings/Schema.lua), and that is not an oversight of the empty prefix above: the
+-- table is LibDBIcon's own and lives in the GLOBAL store, outside any profile (launcher-§3). The
+-- path reads in the row's SHOWN sense; the stored key is LibDBIcon's `hide`, and settings/Schema.lua
+-- inverts once, at its read and write seams.
 
 local L = NS.L
 local H = NS.Helpers
 local print = NS.Print
 local GS = NS.GeneralSpells
+local GD = NS.GeneralDispel
 
 local DEBUG_CONSOLE_PATH = "state.debugConsole"
 -- Session state, like the console row: the path names no stored leaf.
 local TEST_MODE_PATH = "state.testMode"
--- VERBATIM: the global store, outside the profile prefix (launcher-§3).
-local MINIMAP_PATH = "global.minimap.hide"
+-- VERBATIM: the global store, outside the profile prefix (launcher-§3). Spelled once, in Schema.lua.
+local MINIMAP_PATH = NS.MINIMAP_PATH
 
 local masterRows, masterTail = H.MasterControls({
     prefix           = "",
@@ -107,8 +109,20 @@ for _, row in ipairs(masterRows) do
     if row.path == TEST_MODE_PATH then
         -- Bound to the one switch, which refuses a start in combat, sends the visibility pass
         -- itself and re-syncs this checkbox (a refused start reads false again).
+        --
+        -- AND A START IS REFUSED WHILE THE ADDON IS DISABLED (slash-commands-§7, launcher-§2), the
+        -- same refusal `/am test` and the launcher's left click answer: the dispatcher's one line,
+        -- then a panel refresh so the checkbox reads off again. Turning it OFF stays allowed, since
+        -- stopping a preview is not a feature.
         row.get = function() return NS.State.testMode end
-        row.set = function(v) NS.Preview.SetTestMode(v) end
+        row.set = function(v)
+            if v and NS.IsDisabled() then
+                if NS.Slash and NS.Slash.DisabledLine then NS.Print(NS.Slash.DisabledLine()) end
+                if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+                return
+            end
+            NS.Preview.SetTestMode(v)
+        end
         row.default = false
         row.onChange = function() end
     end
@@ -136,7 +150,7 @@ NS.RegisterSchemaRows({
 -- After the Display rows, the enchant-slot rows, so Spell Categories (their group) takes the third
 -- place; the Dispel Colors rows after those, so theirs is last.
 NS.RegisterSchemaRows(GS.ENCHANT_ROWS)
-NS.RegisterSchemaRows(GS.DISPEL_ROWS)
+NS.RegisterSchemaRows(GD.ROWS)
 
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →
 -- Reset Profile.
@@ -158,14 +172,14 @@ StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {
     end,
 }
 
--- The page's tabs: its schema groups, with Spell Categories and Dispel Colors
--- (settings/GeneralSpells.lua) as its bespoke ones. `addonWide`: every tab is drawn whether or not a
+-- The page's tabs: its schema groups, with Spell Categories (settings/GeneralSpells.lua) and
+-- Dispel Colors (settings/GeneralDispel.lua) as its bespoke ones. `addonWide`: every tab is drawn whether or not a
 -- container exists.
 local PAGE_SPEC = {
     addonWide  = true,
     -- The group name IS the hook key, read off the instance rather than spelled again.
     afterGroup = { [H.MASTER_GROUP] = masterTail },
-    tabs       = { GS.TABS[1], GS.TABS[2] },
+    tabs       = { GS.TABS[1], GD.TAB },
 }
 
 local function build(mainCategory)
@@ -183,7 +197,7 @@ local function build(mainCategory)
     ctx.panel.defaultsOnClick = function() H.RestoreDefaults("general", ctx) end
     H.__pageCtx.general = ctx
     -- Through SetRenderer, which owns WHEN the page draws and refuses under combat (options-ui-§11).
-    H.SetRenderer(ctx, function(c) H.RenderTabbedPage(c, "general", PAGE_SPEC) end)
+    H.SetRenderer(ctx, function(c) H.RenderPage(c, "general", PAGE_SPEC) end)
     return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, L["General"])
 end
 

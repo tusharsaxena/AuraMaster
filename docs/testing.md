@@ -14,9 +14,16 @@ Both must pass before **every** commit (testing-§4):
 | Syntax-check one file | `luac -p path/to/file.lua` | no output |
 
 `tests/_kit/run-automated-tests.sh --suite lint --suite tests --no-bundle` runs exactly that pair and
-writes nothing, so it may stand in for the two commands. If the serial suite ever passes about ten
-seconds, `lua tests/run.lua -j auto` fans it across CPUs (testing-§14); check it agrees with the
-serial run before relying on it.
+writes nothing, so it may stand in for the two commands.
+
+`lua tests/run.lua` is **sharded by default** (`jobs = "auto"` in `tests/run.lua`, testing-§14):
+contiguous slices of the suite list run in parallel workers and their output is relayed in suite
+order. `lua tests/run.lua -j 1` is the serial run. Measured on a WSL2 `/mnt` checkout (1,348
+cases): serial 13.4–17.0 s wall at about 60% CPU, sharded (16 workers) 5.6–7.1 s. The rule: the
+sharded run MUST match the serial one — the same pass/fail/skip totals, the same case transcript
+and the same exit code (the sharded totals line only adds `(N shards)`). A suite that passes only
+serially depends on state an earlier suite left behind, and that is the bug to fix, not a reason
+to drop back to `-j 1`.
 
 ## The four out-of-game suites and their checkpoints
 
@@ -75,8 +82,9 @@ Suites worth knowing by name:
   the settings as they are then; the `disabled` and `perf` holds release independently. The slash
   step walks every entry in `NS.COMMANDS`: the reserved verbs, the schema CLI, `containers`,
   `select` and the bare `/am` (which opens the panel) answer normally, and only the feature verbs
-  refuse on the collection's one line with no SavedVariables write. The launcher's left-click is
-  refused the same way; its right-click still opens the panel. The negative steps carry testing-§12
+  refuse on the collection's one line with no SavedVariables write. The launcher's left-click still
+  opens the panel; its right-click menu grays *Locked* and *Test mode*, and a grayed entry clicked
+  anyway writes nothing. The negative steps carry testing-§12
   falsification comments.
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
@@ -88,7 +96,8 @@ Suites worth knowing by name:
   this, where existence alone passes. It is a heuristic, not a proof: whether the cited code still
   does what the prose says is still for review to decide.
 - **`tests/test_lintconfig.lua`** — `.luacheckrc` carries no blanket suppression, so `0/0` is a
-  statement about the code.
+  statement about the code, and every `read_globals` name is one some authored file reads as a
+  global, so a retired API (anti-pattern #10) cannot be declared back into lint-clean.
 - **`tests/test_vendor_sync.lua`** — `libs/LibKa0s/` and `tests/_kit/` are byte-identical to the
   LibKa0s tag named in `CLAUDE.md`. With no `../LibKa0s` checkout beside this repo it records a
   **skip with its reason**, not a pass (testing-§11).
@@ -105,7 +114,11 @@ out**, so every setup file takes its real degradation stub — the options stub 
 load, the slash stub has to answer, the perf stub has to carry every member the addon calls
 (testing-§8). Suites compare that environment against the live one; nothing hand-stubs a namespace
 member to test it. `tests/fresh_env.lua` builds an isolated, fully loaded environment for any suite
-that mutates state, so suite order cannot change a result.
+that mutates state, so suite order cannot change a result. Both builders reuse the runner's one
+`Loader`, mock builder and load lists (`AM_TEST.Loader`, `AM_TEST.buildMocks`,
+`AM_TEST.loadedLibFiles` / `loadedAddonFiles`): a build re-RUNS the cached chunks and never re-reads
+a file, which is what keeps the gate fast (testing-§14). A builder that `dofile`s its own
+`tests/_kit/loader.lua` gets an empty chunk cache and re-parses the whole tree per environment.
 
 ## The case inventory and the badge
 

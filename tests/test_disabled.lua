@@ -122,21 +122,66 @@ end
 -- code under test for the expected answer would pass on any wording at all.
 local REFUSAL = "Ka0s Aura Master is disabled — enable it with /am enable"
 
+-- ---------------------------------------------------------------------------
+-- What is on screen, and whose it is
+-- ---------------------------------------------------------------------------
+--
+-- The kit builds a frame SHOWN, as the client's CreateFrame does (kit revision 26), so its
+-- `__shownFrames()` survey lists two kinds of frame this suite must not count as "ours on screen".
+--
+-- The CLIENT'S OWN: UIParent, the chat frame and AceAddon's event frame exist before a line of this
+-- addon loads and are shown whether it runs or not. They are recorded before the addon's files load
+-- (`client`, below), with UIParent named outright because a kit that builds it hidden would leave
+-- it out of that snapshot.
+--
+-- A CHILD OF A HIDDEN FRAME: shown by its own flag and never drawn. The client's `IsVisible` walks
+-- the parent chain; the kit's answers the frame's own flag (revision 26's docs say so). Stand-down
+-- hides a container's anchor, not every button under it, which is what the client needs and all a
+-- stand-down should do. So "on screen" here is what the client means by it: shown, and every
+-- ancestor up to a client root shown too. A frame of ours with no parent is judged by its own flag.
+
+--- The frames of this build that exist before the addon loads, as a set.
+local function clientFrames(mocks)
+    local set = { [mocks.UIParent] = true }
+    for _, f in ipairs(mocks.__shownFrames()) do set[f] = true end
+    return set
+end
+
+--- Every frame of OURS the client would draw right now, in creation order.
+local function onScreen(mocks, client)
+    local out = {}
+    for _, f in ipairs(mocks.__shownFrames()) do
+        if not client[f] then
+            local p = f.__parent
+            while p and not client[p] and p.__shown do p = p.__parent end
+            if p == nil or client[p] then
+                local n = #out
+                out[n + 1] = f
+            end
+        end
+    end
+    return out
+end
+
 --- Bring the addon up enabled and take the three baseline snapshots step 1 asks for. `broker`
---- installs the LibDataBroker / LibDBIcon fakes so the launcher's OnClick can be driven.
+--- installs the LibDataBroker / LibDBIcon fakes so the launcher's OnClick can be driven. The last
+--- return is the client's own frames, for `onScreen`.
 local function baseline(broker)
     local rec = { objects = {} }
-    local opts = broker and { before = function(mocks)
+    local client
+    local opts = { before = function(mocks)
+        client = clientFrames(mocks)
+        if not broker then return end
         local LDB = mocks.LibStub:NewLibrary("LibDataBroker-1.1", 4)
         LDB.NewDataObject = function(_, name, obj) rec.objects[name] = obj; return obj end
         LDB.GetDataObjectByName = function(_, name) return rec.objects[name] end
         local Icon = mocks.LibStub:NewLibrary("LibDBIcon-1.0", 45)
         Icon.Register, Icon.Show, Icon.Hide = function() end, function() end, function() end
         Icon.IsRegistered = function() return true end
-    end } or nil
+    end }
     local NS, mocks = fresh(opts)
     mocks.__fireTimers()
-    return NS, mocks, regs(mocks), mocks.__timers(), mocks.__shownFrames(), rec
+    return NS, mocks, regs(mocks), mocks.__timers(), onScreen(mocks, client), rec, client
 end
 
 --- Disable through the SINGLE WRITE SEAM — never by calling the teardown directly. The checkbox and
@@ -179,6 +224,24 @@ test("disabled: every registration the addon owns is UNREGISTERED, not gated", f
     assertEqual(dumpRegs(regs(mocks)), "{message:Ka0s_AuraMaster_ContainersChangedx1}")
 end)
 
+test("disabled: TimedSpells' private unit frame is in the census while enabled and gone when disabled", function()
+    -- The unit-filter frame (events-frames-taint-§1's carve-out): UNIT_AURA for player and pet, on a
+    -- frame AceEvent's UnregisterAllEvents never reaches, so the stand-down must drop it by hand.
+    -- No starter uses the "only without a duration" mode, so the case turns it on first.
+    local NS, mocks = baseline()
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    local frame = NS.TimedSpells.unitFrame
+    assertTrue(frame ~= nil, "no unit frame while a timeless container is enabled")
+    assertEqual(dump(regsOn(mocks, frame)), "{unit:UNIT_AURA | unit:UNIT_AURA}")
+    local R = regs(mocks)
+    assertEqual(R["unit:UNIT_AURA:player"], 1, "player row: " .. dumpRegs(R))
+    assertEqual(R["unit:UNIT_AURA:pet"], 1, "pet row: " .. dumpRegs(R))
+    disable(NS)
+    -- red under: TS.Stop without its hand-written unregistration of the unit frame.
+    assertEqual(#regsOn(mocks, frame), 0, "the unit frame still watches " .. dump(regsOn(mocks, frame)))
+    assertEqual(dumpRegs(regs(mocks)), "{message:Ka0s_AuraMaster_ContainersChangedx1}")
+end)
+
 test("disabled: what MUST survive does — the dispatcher, the panel, AceDB and the launcher", function()
     local NS, mocks = baseline()
     local lines = capture(mocks)
@@ -205,8 +268,8 @@ end)
 test("disabled: nothing is left armed, and nothing arms itself afterwards", function()
     local NS, mocks = baseline()
     disable(NS)
-    -- Drain whatever one-shot was already in flight when the switch flipped: C_Timer.After hands
-    -- back no handle, so a tick already queued cannot be canceled, only made to find nothing.
+    -- Nothing needs draining: a one-shot in flight when the switch flipped is canceled by the
+    -- stand-down (the next case). Firing the queue anyway proves nothing re-arms from it.
     mocks.__fireTimers()
 
     -- red under: drop the NS.IsStoodDown guard at the top of CM.RequestApply, which re-arms the
@@ -221,15 +284,49 @@ test("disabled: nothing is left armed, and nothing arms itself afterwards", func
     assertEqual(#mocks.__timers(), 0, "a stood-down addon armed a timer")
 end)
 
+test("disabled: a queued apply and a queued scan are canceled, not left armed", function()
+    local NS, mocks = baseline()
+    local CM = NS.ContainerManager
+    -- A 'timeless' container, so TimedSpells opens its UNIT_AURA gate.
+    NS.SetByPath("container.filter.durationMode", "timeless", 1)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    assertEqual(#mocks.__timers(), 0, "the baseline settled")
+
+    -- Arm both one-shots: the coalescing apply and the timed-spell scan.
+    NS.SetByPath("container.bars.width", 180, 1)
+    mocks.__fire("UNIT_AURA", "player")
+    assertEqual(#mocks.__timers(), 2, "the apply and the scan are both armed")
+
+    disable(NS)
+    -- red under: C_Timer.After -- no handle, so both would stay queued to wake up and find the latch.
+    -- The kit's NewTimer:Cancel takes a handle out of the live set (revision 17).
+    assertEqual(#mocks.__timers(), 0, "a queued one-shot is still going to wake up")
+
+    -- The stand-up's own RequestApply(nil, true) is not swallowed by a `scheduled` left set on the
+    -- way down: it arms a fresh flush, and that flush applies.
+    local passes, realFlush = 0, CM.FlushPending
+    CM.FlushPending = function(...)
+        local n = realFlush(...)
+        if n > 0 then passes = passes + 1 end
+        return n
+    end
+    enable(NS)
+    mocks.__fireTimers()
+    CM.FlushPending = realFlush
+    assertEqual(passes, 1, "the stand-up's apply pass")
+end)
+
 test("disabled: every frame that was shown is hidden, at the source", function()
-    local NS, mocks, _, _, F_on = baseline()
+    local NS, mocks, _, _, F_on, _, client = baseline()
     assertTrue(#F_on > 0, "the baseline draws something")
     disable(NS)
 
+    local after = {}
+    for _, f in ipairs(onScreen(mocks, client)) do after[f] = true end
     for _, f in ipairs(F_on) do
-        assertFalse(f.__shown and true or false, "a frame shown at baseline is still shown")
+        assertFalse(after[f] or false, "a frame shown at baseline is still shown")
     end
-    assertEqual(#mocks.__shownFrames(), 0, "something of ours is still on screen")
+    assertEqual(#onScreen(mocks, client), 0, "something of ours is still on screen")
 
     -- AT THE SOURCE, not imperatively: a hidden frame comes back on a combat transition or a target
     -- swap unless the show ladder itself answers no. red under: make standDown hide the anchors
@@ -238,7 +335,7 @@ test("disabled: every frame that was shown is hidden, at the source", function()
         assertFalse((inst:ShouldShow()), "the show ladder says yes while the addon is off")
         inst:ApplyVisibility()
     end
-    assertEqual(#mocks.__shownFrames(), 0, "a visibility pass re-showed a container")
+    assertEqual(#onScreen(mocks, client), 0, "a visibility pass re-showed a container")
 end)
 
 -- ---------------------------------------------------------------------------
@@ -246,7 +343,7 @@ end)
 -- ---------------------------------------------------------------------------
 
 test("disabled: firing every baseline event writes nothing, says nothing and shows nothing", function()
-    local NS, mocks, R_on = baseline()
+    local NS, mocks, R_on, _, _, _, client = baseline()
     local lines = capture(mocks)
     disable(NS)
     mocks.__fireTimers()
@@ -279,7 +376,7 @@ test("disabled: firing every baseline event writes nothing, says nothing and sho
 
     assertEqual(#mocks.__svWrites(), 0, "a game event wrote SavedVariables while the addon was off")
     assertEqual(#plain(lines), 0, "a game event printed while the addon was off: " .. dump(plain(lines)))
-    assertEqual(#mocks.__shownFrames(), 0, "a game event showed a frame while the addon was off")
+    assertEqual(#onScreen(mocks, client), 0, "a game event showed a frame while the addon was off")
 end)
 
 -- ---------------------------------------------------------------------------
@@ -370,8 +467,9 @@ end)
 -- 8. The launcher
 -- ---------------------------------------------------------------------------
 
-test("disabled: the launcher's left-click is refused and its right-click still opens the panel", function()
-    local NS, mocks, _, _, _, rec = baseline(true)
+test("disabled: the launcher's left-click opens the panel and its menu grays every feature toggle", function()
+    local NS, mocks, _, _, _, rec, client = baseline(true)
+    local menu = dofile("tests/mock_menu.lua")(mocks)
     local lines = capture(mocks)
     local opened = 0
     NS.OpenOptionsPanel = function() opened = opened + 1 end
@@ -380,25 +478,57 @@ test("disabled: the launcher's left-click is refused and its right-click still o
     clear(lines)
 
     -- The BUTTON stays: `minimap.hide` is a per-installation display preference and says nothing
-    -- about whether the addon is running (launcher-§3). What the click does is what changes.
+    -- about whether the addon is running (launcher-§3). What the clicks do is what is pinned.
     local obj = rec.objects.AuraMaster
     assertTrue(obj ~= nil and obj.OnClick ~= nil, "the launcher stays registered while disabled")
 
-    -- red under: drop the NS.IsDisabled guard in core/LauncherSetup.lua's onClick. Rung (b)'s left
-    -- button drives the preview switch, which is a feature — and a click with no gate at all
-    -- rewrites the stored tree of an addon the player switched off.
+    -- LEFT-CLICK OPENS THE PANEL in either state (launcher-§2, LibKa0s-Launcher-1.0 minor 4): the
+    -- panel is setup, and slash-commands-§7 lists it among the things that survive a stand-down.
     obj.OnClick(obj, "LeftButton")
-    local p_ = plain(lines)
-    assertEqual(#p_, 1, "the left click answered " .. dump(p_))
-    assertEqual(p_[1], REFUSAL)
-    assertEqual(#mocks.__svWrites(), 0, "a disabled launcher click wrote SavedVariables")
-    assertEqual(#mocks.__shownFrames(), 0, "a disabled launcher click showed a frame")
-    assertEqual(opened, 0)
+    assertEqual(opened, 1, "left-click must open the panel while disabled")
+    assertEqual(#plain(lines), 0, "the left click printed " .. dump(plain(lines)))
 
-    -- RIGHT-CLICK IS UNCHANGED in either state: it opens the panel, which slash-commands-§7 lists
-    -- among the things that survive a stand-down.
+    -- RIGHT-CLICK OPENS THE MENU, whose feature toggles are grayed. red under: a descriptor whose
+    -- isEnabled answers true while disabled, so Test mode stays clickable and a click on it
+    -- rewrites the stored tree of an addon the player switched off.
     obj.OnClick(obj, "RightButton")
-    assertEqual(opened, 1, "right-click must still open the panel")
+    local m = menu.last
+    assertTrue(m ~= nil, "the right click opened the menu")
+    assertTrue(m:Find("Enabled").enabled, "Enabled stays live: it is how the addon comes back")
+    assertFalse(m:Find("Locked").enabled, "Locked is grayed")
+    assertFalse(m:Find("Test mode").enabled, "Test mode is grayed")
+    assertEqual(m:Click("Test mode"), nil, "a grayed entry does nothing")
+    m:ForceClick("Test mode")
+    m:ForceClick("Locked")
+    assertFalse(NS.State.testMode, "a disabled menu started test mode")
+    assertEqual(#mocks.__svWrites(), 0, "a disabled launcher click wrote SavedVariables")
+    assertEqual(#onScreen(mocks, client), 0, "a disabled launcher click showed a frame")
+    assertEqual(opened, 1, "and the right click opened no panel beside the menu")
+end)
+
+test("disabled: the panel's Test mode row refuses to start while disabled and prints one refusal line", function()
+    local NS, mocks = baseline()
+    local lines = capture(mocks)
+    disable(NS)
+    clear(lines)
+
+    -- The third door onto the switch. `/am test` and the launcher's grayed menu entry already refuse, so
+    -- the checkbox (reached through the one write seam, as the panel reaches it) must too, or a tick
+    -- while stood down brings the addon back up in test mode.
+    -- red under: row.set bound straight to Preview.SetTestMode
+    NS.SetByPath("state.testMode", true)
+    assertFalse(NS.State.testMode, "a disabled panel tick started test mode")
+    local p = plain(lines)
+    assertEqual(#p, 1, "the tick answered " .. dump(p))
+    assertEqual(p[1], REFUSAL)
+    assertEqual(p[1], strip(NS.Slash.DisabledLine()), "the dispatcher's own line")
+
+    -- Turning it OFF is not a feature and stays allowed while disabled.
+    NS.State.testMode = true
+    clear(lines)
+    NS.SetByPath("state.testMode", false)
+    assertFalse(NS.State.testMode, "turning test mode off was refused while disabled")
+    assertFalse(said(plain(lines), REFUSAL), "turning it off printed the refusal: " .. dump(plain(lines)))
 end)
 
 -- ---------------------------------------------------------------------------
@@ -473,4 +603,118 @@ test("disabled: a profile switch to an enabled profile stands the addon back up"
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown(), "the new profile has the addon enabled")
     assertEqual(#regsOn(mocks, NS.addon), 8)
+end)
+
+-- ---------------------------------------------------------------------------
+-- 11. Coming up disabled: nothing is built until the stand-up
+-- ---------------------------------------------------------------------------
+--
+-- Every case above starts enabled and stands down. These two start DOWN: a login with the stored
+-- switch off, and a profile switch made while it is off. Built frames are the record here, counted
+-- at CreateFrame, because an anchor the kit starts shown (revision 26) would draw even while empty.
+
+--- A fresh environment whose Default profile is stored disabled, with CreateFrame spied for the
+--- container anchors from before the first file loads. `extra` adds stored profiles.
+local function loginDisabled(extra)
+    local profiles = { Default = { enabled = false } }
+    for name, p in pairs(extra or {}) do profiles[name] = p end
+    local made = { 0 }
+    local NS, mocks = fresh({
+        savedVariables = { profiles = profiles },
+        before = function(m)
+            local orig = m.CreateFrame
+            m.CreateFrame = function(frameType, name, ...)
+                if type(name) == "string" and name:find("AuraMasterAnchor", 1, true) == 1 then
+                    made[1] = made[1] + 1
+                end
+                return orig(frameType, name, ...)
+            end
+        end,
+    })
+    return NS, mocks, made
+end
+
+local function instanceCount(NS)
+    local n = 0
+    for _ in pairs(NS.ContainerManager.instances) do n = n + 1 end
+    return n
+end
+
+test("disabled: a disabled login builds no container frame", function()
+    local NS, mocks, made = loginDisabled()
+    assertTrue(NS.IsStoodDown(), "the stored switch is off")
+    -- red under: CM.Init building before the latch check
+    assertEqual(made[1], 0, "a disabled login built an anchor")
+    assertEqual(instanceCount(NS), 0, "a disabled login holds a live container")
+    assertEqual(#mocks.__timers(), 0, "a disabled login armed a timer")
+
+    -- The stand-up builds what the login did not, and draws it.
+    enable(NS)
+    mocks.__fireTimers()
+    local list = NS.Database.GetContainers()
+    assertTrue(#list > 0, "the starters are stored")
+    assertEqual(made[1], #list, "one anchor per stored container")
+    for _, c in ipairs(list) do
+        local inst = NS.ContainerManager.instances[c.id]
+        assertTrue(inst ~= nil, "container " .. c.id .. " was built on enable")
+        assertTrue(inst.engine ~= nil and inst.engine.__enabled, "container " .. c.id .. " draws")
+    end
+end)
+
+test("disabled: a profile switch while disabled builds nothing until enable", function()
+    local raid = {
+        enabled = false, seeded = true, nextContainerId = 10,
+        containers = { [9] = { name = "Raid", unit = "player", auraType = "HELPFUL", style = "icons" } },
+        containerOrder = { 9 },
+    }
+    local NS, mocks, made = loginDisabled({ Raid = raid })
+    made[1] = 0
+
+    NS.db:SetProfile("Raid")
+    mocks.__fireTimers()
+    assertTrue(NS.IsStoodDown(), "the Raid profile is stored disabled too")
+    -- red under: CM.Announce syncing while the addon is stood down
+    assertEqual(made[1], 0, "a disabled profile switch built an anchor")
+    assertEqual(instanceCount(NS), 0, "a disabled profile switch holds a live container")
+
+    enable(NS)
+    mocks.__fireTimers()
+    assertEqual(made[1], 1, "the stand-up builds the Raid profile's one container")
+    local inst = NS.ContainerManager.instances[9]
+    assertTrue(inst ~= nil and inst.engine ~= nil and inst.engine.__enabled, "container 9 draws")
+    assertEqual(instanceCount(NS), 1)
+end)
+
+test("disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked", function()
+    -- Built while running, for the OLD container 1 (unit focus); then down, then a switch to a
+    -- profile whose container 1 is someone else. The stand-up comes in combat, where no apply may
+    -- run, so the instance under the reused id must not draw the old container's data.
+    local raid = {
+        enabled = false, seeded = true, nextContainerId = 2,
+        containers = { [1] = { name = "Raid", unit = "player", auraType = "HELPFUL", style = "icons" } },
+        containerOrder = { 1 },
+    }
+    local NS, mocks = fresh({ savedVariables = { profiles = { Raid = raid } } })
+    local CM = NS.ContainerManager
+    assertTrue(NS.SetByPath("container.unit", "focus", 1))
+    mocks.__fireTimers()
+    local inst = CM.instances[1]
+    assertEqual(inst.unit, "focus")
+
+    NS.SetByPath("enabled", false)
+    mocks.__fireTimers()
+    NS.db:SetProfile("Raid")
+    mocks.__fireTimers()
+    assertTrue(NS.IsStoodDown(), "the Raid profile is stored disabled")
+
+    mocks.__lockdown = true
+    enable(NS)
+    assertTrue(CM.instances[1] == inst, "the id is kept")
+    -- red under: the stand-up's CM.Sync forgetting the profile switch it skipped while down
+    assertFalse(inst.engine.__enabled, "the old container's engine does not draw under the new one's id")
+
+    mocks.__lockdown = false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertEqual(inst.unit, "player", "rebuilt for the Raid profile's container 1")
+    assertTrue(inst.engine.__enabled, "and drawing")
 end)

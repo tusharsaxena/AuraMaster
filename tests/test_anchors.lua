@@ -1357,7 +1357,7 @@ test("handle: a right-click on the ? opens the Containers page with this contain
     assertEqual(NS.State.activeContainerId, 2)
     P.show("Containers")
     -- red under: the Containers page opening on the container it was last drawn for
-    assertEqual(NS.Helpers.__pageCtx.containers.__bannerWidget.value, 2, "the band's picker names container 2")
+    assertEqual(P.banner(NS.Helpers.__pageCtx.containers).value, 2, "the band's picker names container 2")
 end)
 
 test("handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)", function()

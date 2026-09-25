@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1296%2F1296_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1363%2F1363_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -15,9 +15,12 @@ anywhere on screen or attach to another container or any in-game frame.
 Aura Master is built on top of the new Aura Container APIs introduced in 12.1. The game hides aura details from addons during combat, so Aura Master never reads your auras at all. It tells the game's own aura display what to show and how to style it, and the game handles the rest, in combat and out of it.
 
 Everything is set up from the addon's page under Settings → AddOns, from the button on your
-minimap, or from chat with `/am`. Left-clicking the minimap button turns test mode on, filling
-every container with sample auras, and clicking it again turns it off; right-clicking it opens the
-settings.
+minimap, or from chat with `/am`. Left-clicking the minimap button opens the settings.
+Right-clicking it opens a small menu with three checkboxes: **Enabled**, **Locked** and **Test
+mode**, each doing exactly what `/am enable`/`disable`, `/am lock`/`unlock` and `/am test` do. While
+the addon is turned off, Locked and Test mode are grayed out until you enable it again. Hovering
+the button shows whether the addon is enabled, whether the containers are locked and whether test
+mode is on, even while the addon is turned off.
 If you would rather not have the button, the Minimap button checkbox under General → Master
 controls turns it off, and it stays off — resetting your settings does not put it back, any more
 than it drags the button to a different spot on the ring. The same addon appears as *Ka0s Aura
@@ -25,8 +28,7 @@ Master* in Titan Panel, Bazooka or ElvUI's data texts if you use one.
 
 ## Screenshots
 
-No screenshots yet. They'll come before the first release, taken in the game itself: a bar
-container, an icon container, an unlocked container with its handle, and each settings page.
+No screenshots yet. They have to be taken in the game, and that work is tracked in [issue #3](https://github.com/tusharsaxena/AuraMaster/issues/3).
 
 ## Usage
 
@@ -41,7 +43,7 @@ you're unlocked. Drag the handles where you want them and type `/am lock`. Right
 
 Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
 waiting for a real buff to turn up. Turn it on with the Test mode checkbox under General → Master
-controls, with `/am test`, or with a left-click on the minimap button; you don't have to unlock
+controls, with `/am test`, or from the minimap button's right-click menu; you don't have to unlock
 first. Real auras stay hidden while it's on. It ends by itself when combat starts, and it can't be
 started during combat.
 
@@ -153,7 +155,7 @@ Please file reports there rather than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.1.0 | 2026-09-11 | - First release: buff, debuff and weapon enchant containers for player, target, focus and pet, drawn as bars or icons, with category filters, spell lists, attach-anywhere placement and a preview mode |
+| 0.1.0 | 2026-09-11 | - First release: buff and debuff containers for player, target, focus and pet, with weapon enchants as a buff category, drawn as bars, icons or text, with category filters, spell lists, attach-anywhere placement and a Test mode |
 
 ## Credits
 

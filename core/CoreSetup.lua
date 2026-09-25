@@ -15,6 +15,18 @@ NS.LIBKA0S_MISSING = NS.L["The LibKa0s library is missing from this installation
 
 local lib = LibStub and LibStub("LibKa0s-Core-1.0", true)
 
+-- Every event name this client refused, in the order refused, each once (events-frames-taint-§1).
+-- Every registration in the addon goes through NS.SafeRegisterEvent below with THIS list as its
+-- `rejected` argument; the [Init] summary reads it at call time (core/DebugLogSetup.lua). Set above
+-- the branch so both halves publish it. The append itself is the trace point: a name refused while
+-- logging is on is traced the moment it is refused, whichever helper or half refused it.
+NS.RejectedEvents = setmetatable(NS.RejectedEvents or {}, {
+    __newindex = function(t, k, name)
+        rawset(t, k, name)
+        if NS.Debug then NS.Debug("Init", "event %s rejected by this client", name) end
+    end,
+})
+
 if not lib then
     -- Degrade, never error. Settings files do `local print = NS.Print` at load, so a nil printer
     -- would take the settings UI with it and a no-op one would make /am answer nothing. These are
@@ -69,7 +81,7 @@ if not lib then
         if not announced then
             announced = true
             DEFAULT_CHAT_FRAME:AddMessage(NS.SafeToString(NS.PREFIX) .. " " ..
-                NS.LIBKA0S_MISSING .. "; " .. NS.L["running on reduced built-in fallbacks."])
+                NS.L["%s; running on reduced built-in fallbacks."]:format(NS.LIBKA0S_MISSING))
         end
         DEFAULT_CHAT_FRAME:AddMessage(table.concat(parts, " "))
     end
@@ -87,10 +99,49 @@ if not lib then
     end
     Util.printf = NS.Printf
 
+    -- The event-registration helpers, one rung: pcall and no IsEventValid front gate, as the Core
+    -- minor-8 Degradation note prescribes. The library's signatures; a refused name is appended to
+    -- `rejected` once, and the answer is whether the registration took.
+    local function noteRejected(rejected, event)
+        if type(rejected) ~= "table" then return end
+        local n = #rejected
+        for i = 1, n do
+            if rejected[i] == event then return end
+        end
+        rejected[n + 1] = event
+    end
+
+    function NS.SafeRegisterEvent(target, event, handler, rejected)
+        local ok = pcall(target.RegisterEvent, target, event, handler)
+        if not ok then noteRejected(rejected, event) end
+        return ok
+    end
+
+    function NS.SafeRegisterUnitEvent(frame, event, rejected, u1, u2)
+        local ok = pcall(frame.RegisterUnitEvent, frame, event, u1, u2)
+        if not ok then noteRejected(rejected, event) end
+        return ok
+    end
+
+    function NS.SafeRegisterEvents(target, events, handler, rejected)
+        local n = 0
+        for _, event in ipairs(type(events) == "table" and events or {}) do
+            if NS.SafeRegisterEvent(target, event, handler, rejected) then n = n + 1 end
+        end
+        return n
+    end
+
     return
 end
 
 NS.SafeToString = lib.SafeToString
+
+-- The one way this addon registers a game event (events-frames-taint-§1): an unknown name costs
+-- only itself and lands in NS.RejectedEvents, which every caller passes as `rejected`. Handed over by
+-- reference; the library keeps no state of ours.
+NS.SafeRegisterEvent     = lib.SafeRegisterEvent
+NS.SafeRegisterUnitEvent = lib.SafeRegisterUnitEvent
+NS.SafeRegisterEvents    = lib.SafeRegisterEvents
 
 -- ONE class-color resolver for the collection (options-ui-§17). Handed over by reference: it closes
 -- over nothing of ours, and the memoized player color is the library's to keep.

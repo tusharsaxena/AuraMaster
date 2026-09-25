@@ -77,6 +77,9 @@ core\Database.lua
 # LOAD-BEARING: Categories before Profile — the container template's category states are built
 # from the category lists.
 defaults\Categories.lua
+# LOAD-BEARING: UserCategories directly after Categories — it takes the NS.Categories table that
+# file creates as a file-scope upvalue.
+defaults\UserCategories.lua
 # Conventional: a generated lookup, read at add time by settings/GeneralSpells.lua.
 defaults\CastToAura.lua
 defaults\Profile.lua
@@ -112,9 +115,11 @@ settings\Slash.lua
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.
 settings\About.lua
-# LOAD-BEARING: GeneralSpells before General, which registers its rows after its own (so the
-# Spell Categories and Dispel Colors tabs follow Display).
+# LOAD-BEARING: GeneralSpells, then GeneralDispel (which reads GeneralSpells' bullet constants),
+# both before General, which registers their rows after its own (so the Spell Categories and
+# Dispel Colors tabs follow Display).
 settings\GeneralSpells.lua
+settings\GeneralDispel.lua
 settings\General.lua
 # LOAD-BEARING: Containers is a top-level page (N-1); its tree position, right after General
 # and before its sub-pages, is fixed by this load position (N-2).

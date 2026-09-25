@@ -540,6 +540,64 @@ test("manager: an id a later Create reuses after a profile reset while auras are
     assertTrue(inst5.engine.__enabled, "and drawing again")
 end)
 
+--- Assert `inst` came back for stored container `id` as a live, drawing container: unparked, its
+--- anchor shown and pointed again after Destroy hid it and cleared its points, its engine enabled.
+local function drawsAgain(inst, points)
+    assertNil(inst.parked, "the apply unparks it")
+    assertTrue(inst.anchor:IsShown(), "the anchor Destroy hid is shown again")
+    assertTrue(points[1] >= 1, "the anchor Destroy unpointed is placed again")
+    assertTrue(inst.engine ~= nil and inst.engine.__enabled, "a fresh engine, drawing")
+end
+
+test("manager: an id that returns out of combat revives its destroyed instance", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    local home = NS.db:GetCurrentProfile()
+    assertEqual(CM.Create({}), 5, "profile A holds containers 1-5")
+    assertTrue(NS.SetByPath("container.unit", "focus", 3))
+    mocks.__fireTimers()
+    local inst3, inst5 = CM.instances[3], CM.instances[5]
+    NS.db:SetProfile("Raid")
+    mocks.__fireTimers()
+    CM.Delete(3)
+    CM.Delete(4)
+    mocks.__fireTimers()
+    assertEqual(#NS.Database.GetContainers(), 2, "profile B holds containers 1-2")
+    local made3 = spyCreate(mocks, "AuraMasterAnchor3")
+    local made5 = spyCreate(mocks, "AuraMasterAnchor5")
+    local points = counted(inst3.anchor, "SetPoint")
+    NS.db:SetProfile(home)
+    mocks.__fireTimers()
+    -- red under: CM.Sync dropping a destroyed instance
+    assertEqual(made3[1], 0, "no second AuraMasterAnchor3 global")
+    assertEqual(made5[1], 0, "no second AuraMasterAnchor5 global")
+    assertTrue(CM.instances[3] == inst3, "the destroyed instance is revived")
+    assertTrue(CM.instances[5] == inst5)
+    drawsAgain(inst3, points)
+    assertEqual(inst3.unit, "focus", "rebuilt for profile A's container 3")
+    assertNil(next(CM.__dormant()), "nothing left dormant")
+end)
+
+test("manager: an id a profile reset hands out again out of combat revives its destroyed instance", function()
+    local NS, mocks = fresh()
+    local CM = NS.ContainerManager
+    assertEqual(CM.Create({}), 5)
+    mocks.__fireTimers()
+    local inst5 = CM.instances[5]
+    NS.db:ResetProfile()
+    mocks.__fireTimers()
+    assertNil(CM.instances[5], "the reset profile has no container 5")
+    local made = spyCreate(mocks, "AuraMasterAnchor5")
+    local points = counted(inst5.anchor, "SetPoint")
+    assertEqual(CM.Create({ unit = "focus" }), 5, "the reset counter hands id 5 out again")
+    mocks.__fireTimers()
+    -- red under: CM.Sync dropping a destroyed instance
+    assertEqual(made[1], 0, "no second AuraMasterAnchor5 global")
+    assertTrue(CM.instances[5] == inst5, "revived, not rebuilt")
+    drawsAgain(inst5, points)
+    assertEqual(inst5.unit, "focus", "rebuilt for the new container 5")
+end)
+
 test("manager: creating or duplicating a container in combat is refused and creates nothing", function()
     local NS, mocks = fresh()
     local CM = NS.ContainerManager

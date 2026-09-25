@@ -100,13 +100,15 @@ test("bulklog: the degraded build's Reset all is one line in total, too", functi
     local NS2 = loadDegraded()
     rawset(_G, "AuraMasterDB", nil)
     NS2.addon:OnInitialize()
-    NS2.SetByPath("state.debugConsole", true)
+    -- A hand-written row: this build registers no composed one, the console's session row among
+    -- them (options-ui-§1).
+    NS2.SetByPath("hideBlizzardBuffs", true)
     local lines = capture(NS2)
     NS2.Helpers.RestoreAllDefaults()
-    -- red under: the stub's own loop logging the session row, or a bulk line beside the handler's
+    -- red under: the stub's own loop logging a row it walks, or a bulk line beside the handler's
     assertEqual(#lines, 1, dump(lines))
     assertEqual(lines[1], RESET_LINE)
-    assertFalse(NS2.DebugLog:IsShown())
+    assertFalse(NS2.db.profile.hideBlizzardBuffs)
 end)
 
 test("bulklog: Slash's CliResetAll, handed the same pair, is one [Set] reset all line", function()
@@ -335,23 +337,37 @@ test("bulklog: an error inside a nested bracket marks the outer act's one line",
     assertEqual(dump(lines), "{[Set] reset outer: 1 rows (stopped by an error)}")
 end)
 
-test("bulklog: Bulk.Run stays silent only when its act answers true, the profile reset's signal", function()
-    local NS2 = fresh()
-    NS2.SetByPath("alpha", 1)
-    local lines = capture(NS2)
-    NS2.Bulk.Run("reset", "whole", function()
-        NS2.SetByPath("alpha", 0.5)
-        return true
-    end)
-    -- red under: Run ignoring fn's return (the act logs beside the profile handler's line)
-    assertEqual(#lines, 0, dump(lines))
-    assertEqual(NS2.db.profile.alpha, 0.5, "the write still happened, muted")
-    NS2.Bulk.Run("reset", "truthy", function()
-        NS2.SetByPath("alpha", 0.25)
-        return 1
-    end)
-    -- red under: `fn() == true` loosened to a truthiness test
-    assertEqual(dump(lines), "{[Set] reset truthy: 1 rows}")
+-- JC-9 (issue #21): the act reports a profile reset on `info`, the library's BulkRun contract, and
+-- no longer by returning true. Pinned in both builds: the live one runs the Schema instance's
+-- BulkRun, the degraded one the host bracket that mirrors it.
+test("bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2
+        if build == "live" then
+            NS2 = fresh()
+        else
+            NS2 = loadDegraded()
+            rawset(_G, "AuraMasterDB", nil)
+            NS2.addon:OnInitialize()
+        end
+        -- A hand-written row, present in both builds: the degraded one has no composed rows.
+        local PATH = "hideBlizzardBuffs"
+        NS2.SetByPath(PATH, false)
+        local lines = capture(NS2)
+        NS2.Bulk.Run("reset", "whole", function(info)
+            NS2.SetByPath(PATH, true)
+            info.profileReset = true
+        end)
+        -- red under: Run ignoring info.profileReset (the act logs beside the profile handler's line)
+        assertEqual(#lines, 0, build .. ": " .. dump(lines))
+        assertEqual(NS2.db.profile[PATH], true, build .. ": the write still happened, muted")
+        NS2.Bulk.Run("reset", "returned", function()
+            NS2.SetByPath(PATH, false)
+            return true
+        end)
+        -- red under: the host arm still reading fn's return as the signal
+        assertEqual(dump(lines), "{[Set] reset returned: 1 rows}", build)
+    end
 end)
 
 test("bulklog: a library Defaults a row's onChange stops counts the write it stored", function()

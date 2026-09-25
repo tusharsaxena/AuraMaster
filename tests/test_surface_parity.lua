@@ -94,3 +94,13 @@ test("parity: the Slash stub carries every dispatcher member the addon calls", f
         "HelpHeader", "HelpRows", "BuildListLines", "CliVersion", "CliResetAll", "Text",
     })
 end)
+
+test("parity: the Slash stub's refusal line is the library's own format, byte for byte", function()
+    local NS2 = loadDegraded()
+    -- Published by both branches of settings/Slash.lua, so the stub's copy is falsifiable against the
+    -- live major rather than trusted (slash-commands-§7).
+    assertTrue(NS.Slash.__stubDisabledLineFormat == NS2.Slash.__stubDisabledLineFormat,
+        "both branches publish the one format")
+    -- red under: the library rewording
+    T.assertLibraryConstant(NS2.Slash.__stubDisabledLineFormat, "LibKa0s-Slash-1.0", "DISABLED_LINE_FORMAT")
+end)

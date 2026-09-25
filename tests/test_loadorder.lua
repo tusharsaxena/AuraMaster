@@ -46,6 +46,7 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/PerfSetup.lua", "core/AuraMaster.lua" },
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },
+        { "defaults/Categories.lua", "defaults/UserCategories.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },
         { "modules/TextTemplate.lua", "modules/Style_Text.lua" },
@@ -68,6 +69,18 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
     end
     assertTrue(readFile("AuraMaster.toc"):find("Constants.FONT_MONO is resolved from", 1, true) ~= nil,
         "the MediaSetup position carries its note")
+end)
+
+test("loadorder: GeneralDispel loads after GeneralSpells and before General", function()
+    -- red under: settings/GeneralDispel.lua missing from the TOC, or moved out from between the two
+    -- (it reads NS.GeneralSpells' BULLET and BULLET_GAP at file load, and General.lua reads its
+    -- ROWS and TAB at file load).
+    local index = indexOf()
+    local spells, dispel, general =
+        index["settings/GeneralSpells.lua"], index["settings/GeneralDispel.lua"], index["settings/General.lua"]
+    assertTrue(dispel ~= nil, "settings/GeneralDispel.lua must be in the TOC")
+    assertTrue(spells < dispel, "settings/GeneralSpells.lua must load before settings/GeneralDispel.lua")
+    assertTrue(dispel < general, "settings/GeneralDispel.lua must load before settings/General.lua")
 end)
 
 -- The note that governs each addon file line (toc-file-§5). Groups are runs of non-blank lines;
@@ -137,8 +150,12 @@ test("loadorder: the offline perf runner and the degraded list derive from the T
     local perf = readFile("tests/perf.lua")
     assertTrue(perf:find("Loader.tocFiles", 1, true) ~= nil)
     assertTrue(perf:find("Loader.xmlFiles", 1, true) ~= nil)
-    assertTrue(readFile("tests/degraded_env.lua"):find("Loader.tocFiles", 1, true) ~= nil)
-    assertTrue(readFile("tests/fresh_env.lua"):find("Loader.tocFiles", 1, true) ~= nil)
+    -- The two environment builders load the runner's lists, which the case above pins to the TOC
+    -- and the XML; re-deriving them per build re-read both files for every environment.
+    assertTrue(readFile("tests/degraded_env.lua"):find("Loader.loadAll(T.loadedAddonFiles", 1, true) ~= nil)
+    local fresh = readFile("tests/fresh_env.lua")
+    assertTrue(fresh:find("Loader.loadAll(T.loadedLibFiles", 1, true) ~= nil)
+    assertTrue(fresh:find("Loader.loadAll(T.loadedAddonFiles", 1, true) ~= nil)
 end)
 
 test("loadorder: the library registered — NS.Perf is the real probe, not the stub", function()

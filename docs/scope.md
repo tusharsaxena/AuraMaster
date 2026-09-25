@@ -7,7 +7,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:128`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:132`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:39`).
 - **Two aura types:** buffs (`HELPFUL`) and debuffs (`HARMFUL`). The player's temporary weapon
   enchants are a buff category, not an aura type (schema v5, feedback #6): a player-buff container
@@ -22,10 +22,10 @@ client. The player-facing contract is the README; the engineering boundary is th
   anyone but me), timed-only or permanent-only, a maximum full duration (no minimum — *Out of reach*
   below), categories set to Show or Hide — every category `defaults/Categories.lua` ships, plus every
   category the player has made, so the number is the shipped set plus the player's own rather than a
-  fixed count (36 shipped as this is written, 17 buff and 19 debuff: spell lists, Blizzard aura flags
+  fixed count (39 shipped as this is written, 19 buff and 20 debuff: spell lists, Blizzard aura flags
   and filter tokens, dispel types, player-or-creature source, and the weapon-enchant capability) — a
   per-container Overrides whitelist and blacklist of spells (the
-  whitelist always wins, `docs/ARCHITECTURE.md` → Filter priority), the spell categories' lists
+  whitelist always wins, `docs/data-flow.md` → Filter priority), the spell categories' lists
   (editable, and shared by every container in the profile), sort method and direction, and a
   per-group cap.
 - **Categories the player makes** (issue #10). A name, a buff-or-debuff choice and a spell list of
@@ -41,7 +41,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
   or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Test mode:** placeholder auras drawn through the same `Style` code, switched by the Master
-  controls *Test mode* checkbox, `/am test` or the minimap button's left click; session-only and
+  controls *Test mode* checkbox, `/am test` or the minimap button's right-click menu; session-only and
   ended when combat starts. Unlocking only makes containers draggable, and live auras keep drawing.
 - **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
 - **Profiles** through AceDB, with a Profiles sub-page.
@@ -72,7 +72,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   serialization layer. When one is written (issue #9) it has to answer two questions user categories
   raise: a shared container naming a category the importing player does not have, and a record whose
   key that account already uses, which the import must re-key rather than merge
-  (`docs/ARCHITECTURE.md` → Known Limitations).
+  (`docs/known-limitations.md`).
 - **Hiding Blizzard frames during combat.** Reparenting a Blizzard frame under lockdown is refused, so
   the switch applies on the next `PLAYER_REGEN_ENABLED`.
 
@@ -94,7 +94,7 @@ These are not declined; the game forbids them, and a request for one is answered
   friendly units and debuffs on hostile units. The addon warns per container
   (`identityWarning`, `modules/FilterCompiler.lua:417`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
-  (`CM.MustDefer`, `modules/ContainerManager.lua:161`).
+  (`CM.MustDefer`, `modules/ContainerManager.lua:196`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
 - **Which aura a spell applies.** The addon filters on the id the aura carries, and a great many
@@ -137,7 +137,7 @@ These are not declined; the game forbids them, and a request for one is answered
 - **Categories have two states** (schema v3, owner's 2026-09-15 revision), labeled Show and Hide and
   stored `"show"` / `"hide"`; Show is the default and is a *positive claim*, not merely "not
   excluded" — an aura in even one Show category is drawn even if another of its categories says Hide,
-  and only an aura whose every category says Hide is removed by them (`docs/ARCHITECTURE.md` →
+  and only an aura whose every category says Hide is removed by them (`docs/data-flow.md` →
   Filter priority). **The real limitation this costs:** Categories alone can no longer build "only
   Defensive cooldowns" the way the old exclusive Whitelist did — hiding every other category is not the same
   thing, because an aura in no category at all still shows (nothing removed it). Getting that back

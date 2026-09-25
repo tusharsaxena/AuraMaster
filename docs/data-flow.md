@@ -15,17 +15,17 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:711
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:821
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:533
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:576
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
-        │  batched with C_Timer.After(0) — a slider drag or a profile reset applies once
+        │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:249
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:284
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -70,11 +70,61 @@ Blizzard-frame toggle made under lockdown is not queued (`BlizzardFrames.Apply` 
 `PLAYER_REGEN_ENABLED`), but its `onChange` announces the wait through
 `ContainerManager.NoteDeferred` under the same rule, so one fight prints the line once.
 
+## Filter priority
+
+`modules/FilterCompiler.lua` decides whether one container draws a given aura by one order, highest
+rank first (revised by the owner 2026-09-15). `FC.ExplainSpell` answers the same question for a
+single spell id, under the same order, and is what the settings panel reads it from — the per-entry
+notes under Filters → Overrides' Whitelist and Blacklist (K-3), and the warnings `FilterCompiler.Compile`
+attaches to the container.
+
+| Rank | Rule | Outcome |
+|---|---|---|
+| 1 | On the Overrides **whitelist** | **Shown.** Always, whatever anything else says |
+| 2 | On the Overrides **blacklist** | **Hidden**, unless rank 1 already claimed it |
+| 3 | In **at least one** category set to Show | **Shown**, even if it is also in a category set to Hide |
+| 4 | In one or more categories, **all** of them set to Hide | **Hidden** |
+| 5 | In **no** category at all | **Shown** — nothing removed it |
+
+Stated as one sentence: an aura is hidden when the blacklist names it, or when every category it
+belongs to says Hide; everything else is drawn, and the whitelist overrides both. A category set to
+Show is a positive claim, not merely the absence of a Hide, so rank 3 rescues an aura from a Hide
+elsewhere — a Defensive that is also Cancelable is not dropped just because Cancelable says Hide.
+
+**How that compiles.** The engine ANDs the constraints inside one group and ORs the groups, so "in
+ANY shown category" is a union and needs a group per Shown category. With nothing Hidden, exactly
+one group is emitted (the base minus the whitelist) — a Show cannot rescue anything when nothing is
+hiding, so the extra groups would be pure cost. Once anything is Hidden, one group per Shown category
+is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
+container with anything Hidden therefore compiles to roughly 15 groups on buffs and 17 on debuffs,
+not one, and the "Max auras"
+cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
+`docs/schema.md`). The catch-all is skipped instead of joined whenever an `uncategorized` category
+exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
+and its state actually supersedes the catch-all: Hide always does, on either aura type — that row's
+Hide IS the catch-all, made controllable, reproducing the retired **"only these categories"** toggle
+exactly. Show does too, but only where `FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the
+`player` and `pet`, and nowhere else (issue #11, 2026-09-20). There the row's own group is a real
+rescue, already a strict superset of what the catch-all would draw. Everywhere else Show contributes
+NO group of its own and the catch-all runs normally, because the row's only constraint is
+`excludeSpellIDs` and the engine discards spell ids for buffs on a hostile unit and for debuffs on a
+friendly one: the group would carry no effective constraint at all, drawing every aura of its type
+and defeating every other category's Hide. That reaches further than the debuff case issue #11
+added — a hostile `target`/`focus` **buff** container has always been able to emit exactly that
+group, which is why the gate asks the unit rather than the aura type. The per-container **"only these
+categories"** toggle that used to drop the catch-all a different way (`container.filter.onlyShown`)
+is RETIRED (batch 7 fix round 2): once `uncategorized`'s Hide correctly reproduces it on both aura
+types (fix round 3 restored the debuff row after fix round 1 dropped it), the toggle had nothing left
+to do. A schema v4 migration (`docs/schema.md` → Migration path) converts a stored
+`onlyShown = true` accordingly on either aura type; only a container of some other, unrecognized
+shape has no category to migrate onto and loses the narrowing, logged and told to the player
+directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
+
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:774`) turns one container into
-`{ groups, enchants, warnings }`, under the five-rank priority `docs/ARCHITECTURE.md` → Filter
-priority states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:778`) turns one container into
+`{ groups, enchants, warnings }`, under the five-rank priority *Filter
+priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
 - **A player buff container** appends the enchant slots the profile's `enchantSlots` names (falling
   back to all three when none are ticked), with `hidePermanent` from the settings, unless its
@@ -138,7 +188,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:424`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:425`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
@@ -167,7 +217,7 @@ after they were hidden; a visibility pass alone leaves them as they are.
 |---|---|
 | File load | Every file in TOC order; the options category registers its pages; LSM registration |
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
-| `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them; `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
+| `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them (a disabled login builds none: the stand-up builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
 | `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
@@ -175,10 +225,72 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
 
+## The disabled state
+
+**Disabled means the addon is not running.** Not hidden, not quiet, not skipping a repaint — not
+running (slash-commands-§7). Unticking *Enable Aura Master*, or `/am disable`, or a profile switch to
+a profile where the path is false, all land on the same seam and all produce the same outcome.
+
+**One latch, two named holds.** `core/LifecycleSetup.lua` builds one `LibKa0s-Lifecycle-1.0`
+instance. `disabled` is taken from the stored `enabled` path and is persisted; `perf` is taken by
+`LibKa0s-Perf-1.0` for a capture's suspended arm and is session-only. The addon is down whenever at
+least one hold is taken and comes back only when the last one is released, so `/am enable` during a
+capture does not resurrect it mid-run and a resume at the end of one does not stand up an addon the
+player switched off. There is no `StandUp()` to call; the only route out is releasing a hold.
+
+**What stands down**, in the same turn as the write:
+
+| | |
+|---|---|
+| The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
+| `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
+| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
+| The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
+| `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
+| Every container | `ContainerClass:ShouldShow` answers no at **step 0**, so the engine is disabled, the preview and handle hidden and the anchor hidden |
+| Blizzard's buff and debuff frames | reparented back where they belong: an addon that is not running must not still be hiding them |
+
+**What survives, because it is setup and not a feature:** the chat command registration, the
+dispatcher and `NS.COMMANDS`; the settings-category registration and the panel body; the AceDB
+handle, `NS.SetByPath` and AceDB's three profile callbacks; the launcher's registration. The slash
+surface is unchanged — see `docs/ARCHITECTURE.md` → *Slash Commands*.
+
+**The combat carve-out.** Hiding a container's anchor is hiding an aura engine's ancestry, and
+reparenting a Blizzard frame is refused under lockdown, so neither is attempted in combat. The
+stand-down holds that half pending and finishes it on `PLAYER_REGEN_ENABLED` — the one registration a
+disabled addon keeps — releasing it the moment it fires.
+
+**Without LibKa0s the switch still works.** The master switch's row comes from the Master controls
+composer, which answers no rows in a library-absent build (options-ui-§1). `enabled` and `locked` are
+therefore declared in `NS.WRITE_THROUGH` (`settings/Schema.lua`), and `NS.SetByPath` stores such a
+path raw when no row declares it, then logs and announces it; a path with a row always takes the row.
+With no row there is no onChange, so `runEnabled` (`settings/Slash.lua`) calls `NS.SyncEnabled()`
+after every successful write: idempotent on the live build, where the row's onChange already synced,
+and what moves the latch on the library-absent one. The same list is handed to the Schema instance as
+`writeThrough`, so a later adoption of the library's `Set` inherits it.
+
+**Standing up rebuilds from current state**, never from a snapshot taken on the way down: a setting
+changed while the addon was off is reflected when it comes back.
+
+**A stood-down addon builds no container frame.** A login with the addon disabled builds none
+(`CM.Init` reads the latch before `CM.Sync`), and neither does a profile switch, copy or reset made
+while it is down (`CM.Announce` skips its sync, but still sends `CONTAINERS_CHANGED` so an open panel
+re-renders). The stand-up calls `CM.Sync` before its visibility pass, so it builds, or revives, every
+container the registry holds at that moment and draws them in the same turn. A profile change made
+while down is remembered and passed to that sync, so a stand-up in combat parks every id the switch
+reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it.
+
+**Not a draw gate.** A handler that early-returns has not stopped watching, it has stopped reacting,
+and the client still walks the registration list and still enters Lua on every event
+(anti-pattern #85). `tests/test_disabled.lua` therefore asserts on the registration set, the live
+timer set, the shown frames, the SavedVariables writes and the printed lines — never on a handler's
+return value.
+
 ## Registry changes
 
 Create, delete and duplicate live in `modules/ContainerManager.lua`, the registry's one writer;
-`Database.PrepareProfile` is its load pass (`docs/ARCHITECTURE.md` → Settings Schema). Rename,
+`Database.PrepareProfile` is its load pass (`docs/schema.md` → *Settings schema, registries and
+named non-setting state*). Rename,
 copy-from and reset positions live there too, but write through the seam. A structural change calls
 `Announce` (instances follow the stored registry, everything re-applies, `CONTAINERS_CHANGED`).
 Copy-from and reset positions are settings writes, not registry changes: each section they replace
@@ -190,24 +302,29 @@ seam. Under `MustDefer`, an instance that leaves the registry is parked rather t
 `Container:Park` disables its engine and hides only the preview and handle. The next `FlushPending`
 that may touch frames destroys every parked instance before it applies; a parked id that returns
 first is revived in place and redrawn at once. A profile switch, copy or reset
-(`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception: ids are reused across profiles, so
+(`NS.OnProfileChanged` → `CM.Announce(true)`) is the exception (and while the addon is stood down
+it builds nothing; the stand-up syncs): ids are reused across profiles, so
 under `MustDefer` every kept or revived instance is parked, and `Container:ShouldShow` keeps it off
 until the deferred apply rebuilds it for the new data. One that leaves the registry on a profile
 change is marked `staleData` as it parks, so a Create or Duplicate that reuses its id before that
-apply (a reset rewinds the id counter) revives it still parked. Create and delete are refused in
-combat on every surface this addon owns. Reset all is not: it is Profiles → Reset Profile, so in
+apply (a reset rewinds the id counter) revives it still parked. A destroyed instance is kept dormant
+under its id, never dropped: an id that returns out of combat revives it, marked `staleData`, and the
+queued apply rebuilds it for the new data, so no second `AuraMasterAnchor<id>` is ever built.
+Create and delete are refused in combat on every surface this addon owns. Reset all is not: it is Profiles → Reset Profile, so in
 combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open panel, because every
 banner lists containers.
 
 ## Learning timed buffs
 
 `modules/TimedSpells.lua` listens only while an enabled buff container uses "only auras without a
-duration" and the addon is not suspended. It registers through AceEvent on its own target:
+duration" and the addon is not suspended. The gate events go through AceEvent on its own target:
 `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED` and `ADDON_RESTRICTION_STATE_CHANGED` all re-check
 one gate, and `UNIT_AURA` is registered only while that gate is open (no combat lockdown, auras not
 secret). `PLAYER_REGEN_DISABLED` closes it on the event itself: it fires before the lockdown begins.
-The vendored AceEvent has no unit filter, so `UNIT_AURA` arrives for every unit; the handler proves
-the unit a safe key and keeps only the player and pet. Such an event, or the gate reopening,
+The vendored AceEvent has no unit filter, so `UNIT_AURA` goes on the module's one private frame
+(`TS.unitFrame`, events-frames-taint-§1's carve-out), registered with `RegisterUnitEvent` for the
+player and pet only; the handler still proves the unit a safe key and compares it, as defense in
+depth. Such an event, or the gate reopening,
 schedules a scan half a second later, bracketed `timedScan`. A scan that comes due after the gate
 closed (in combat, or while auras are secret) is dropped, and the gate reopening schedules a fresh
 one. The scan runs only when `Compat.AurasAreSecret()` is false, reads the player's and pet's buffs

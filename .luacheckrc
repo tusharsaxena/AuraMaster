@@ -8,13 +8,14 @@ codes = true
 -- records, not source.
 exclude_files = { "libs/", "tests/_kit/", "docs/audits/", "docs/reviews/", "docs/automated-tests/", "_dev/" }
 
--- The WoW client API this addon reads. Each entry is a name some file under core/, modules/ or
--- settings/ actually references; a name nothing reads comes off the list.
+-- The WoW client API this addon reads. Each entry is a name some authored file (core/, modules/,
+-- settings/, defaults/, locales/ or the tests/ tree outside _kit/) reads as a global; a name nothing
+-- reads comes off the list, and tests/test_lintconfig.lua holds it to that. The retired GetSpellInfo stays off: declaring it would let anti-pattern #10 lint clean.
 read_globals = {
-    "_G", "LibStub", "CreateFrame", "UIParent", "GameTooltip", "DEFAULT_CHAT_FRAME",
-    "C_Timer", "C_AddOns", "C_Spell", "GetAddOnMetadata", "GetSpellInfo",
+    "_G", "LibStub", "CreateFrame", "UIParent", "DEFAULT_CHAT_FRAME",
+    "C_Timer", "C_AddOns",
     "GetTime", "InCombatLockdown", "UnitAffectingCombat", "UnitClass", "RAID_CLASS_COLORS",
-    "UnitGUID", "time",   -- the user-category key generator's seed (defaults/Categories.lua)
+    "UnitGUID", "time",   -- the user-category key generator's seed (defaults/UserCategories.lua)
     "IsMouseButtonDown", "GetCursorPosition",
     "Settings", "SettingsPanel", "StaticPopup_Show",
     "debugprofilestop",   -- the perf bracket's clock (performance-§2)

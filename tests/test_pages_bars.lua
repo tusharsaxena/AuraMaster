@@ -46,7 +46,7 @@ test("bars: on an icons container every row of every tab is drawn disabled; on a
         local rows = P.rowWidgets(ws, "bars", key)
         assertTrue(rows[1] ~= nil, key .. " drew its rows")
         for _, w in ipairs(rows) do
-            -- red under: renderActiveTab dropping spec.disabledFor (opts.disabled never reaches RenderRows)
+            -- red under: RenderPage dropping spec.disabledFor (opts.disabled never reaches RenderRows)
             assertTrue(w.disabled, key .. ": " .. w.labelText)
         end
     end)
@@ -129,7 +129,7 @@ test("bars: the seven tabs are drawn in order, whatever the container shows (S-1
     local L = NS.L
     -- red under: Size still a tab of its own, or Icon back among the bar's own look (it moved to
     -- second-last, ahead of Pandemic, on 2026-09-20 -- a tab's place is where its group is FIRST
-    -- declared, settings/OptionsSetup.lua's collectTabs)
+    -- declared, the library's O.RenderTabbedSchema)
     local want = table.concat({ L["General"], L["Background & border"], L["Name text"],
         L["Time text"], L["Stack text"], L["Icon"], L["Pandemic"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
@@ -165,7 +165,7 @@ test("bars: Width writes the selected container, and the page re-reads after the
     -- red under: the row resolving against anything but the selection
     assertEqual(NS.Database.FindContainer(1).bars.width, 300)
     assertEqual(NS.Database.FindContainer(2).bars.width, NS.CONTAINER_TEMPLATE.bars.width)
-    NS.Helpers.__pageCtx.bars.__bannerWidget:__fire("OnValueChanged", 2)
+    P.banner(NS.Helpers.__pageCtx.bars):__fire("OnValueChanged", 2)
     ws = P.show("Bars")
     assertEqual(P.row(ws, "container.bars.width").value, NS.CONTAINER_TEMPLATE.bars.width, "container 2's width")
 end)

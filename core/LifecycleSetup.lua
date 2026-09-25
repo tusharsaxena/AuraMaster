@@ -26,10 +26,12 @@ local addonName, NS = ...
 
 --- Is the addon enabled, from the stored path? EXPLICITLY false only: before core/Database.lua
 --- builds NS.db the read answers nil, and reading nil as "off" would hold the addon down on a load
---- that has not finished.
-local function enabledStored()
+--- that has not finished. Published: settings/Slash.lua hands this same function to the dispatcher
+--- as its `isEnabled`, asked at dispatch time, so the gate and the stand-down read one predicate.
+function NS.EnabledStored()
     return NS.GetSetting("enabled") ~= false
 end
+local enabledStored = NS.EnabledStored
 
 -- ---------------------------------------------------------------------------
 -- The secure half, which combat can refuse
@@ -67,13 +69,14 @@ local function holdPending()
     if pendingHeld then return end
     local addon = NS.addon
     if not (addon and addon.RegisterEvent) then return end
-    pendingHeld = true
-    addon:RegisterEvent(PENDING_EVENT, function()
+    -- Held only if the registration took. A client that refused the name leaves the hold untaken
+    -- (the name is in NS.RejectedEvents), and the secure half is retried on the next stand-down or up.
+    pendingHeld = NS.SafeRegisterEvent(addon, PENDING_EVENT, function()
         -- Released FIRST: the registration is permitted only while work is owed, and a handler that
         -- unregistered itself after re-arming would keep a registration nothing is waiting on.
         releasePending()
         if NS.IsStoodDown() and not applySecure() then holdPending() end
-    end)
+    end, NS.RejectedEvents)
 end
 
 -- ---------------------------------------------------------------------------
@@ -105,6 +108,9 @@ local function standUp()
     if NS.TimedSpells and NS.TimedSpells.StandUp then NS.TimedSpells.StandUp() end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.ContainerManager then
+        -- Build (or revive) what a disabled login or a profile switch made while down never built,
+        -- before the visibility pass that shows it.
+        if NS.ContainerManager.Sync then NS.ContainerManager.Sync() end
         if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
         -- The addon's own request: a player change held by the stand-down keeps its notice.
         if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
@@ -118,15 +124,28 @@ end
 local Lifecycle = LibStub and LibStub("LibKa0s-Lifecycle-1.0", true)
 
 if not Lifecycle then
-    -- Degrade, never error. Without the library there is no latch, so the stored path answers the
-    -- one question the rest of the addon asks — which keeps the show ladder honest and leaves
-    -- modules/Container.lua's step 0 reading the same seam on every build.
+    -- Degrade, never error. Without the library there is no hold registry, so a local one-hold
+    -- latch, fed from the stored path by SyncEnabled, answers the one question the rest of the
+    -- addon asks — which keeps the show ladder honest and leaves modules/Container.lua's step 0
+    -- reading the same seam on every build.
+    --
+    -- EDGE-TRIGGERED, LIKE THE LIBRARY. `down` is the stub's one-hold latch and starts where the
+    -- library's empty latch starts, up: the load-time SyncEnabled of an enabled install is then a
+    -- no-op, as it is with LibKa0s-Lifecycle, and a profile switch that agrees with the old one
+    -- costs nothing. A stub that ran standUp on every call re-registered every event and armed an
+    -- apply pass each time. This mirrors the member's edge semantics as a correctness property of
+    -- the degraded path; it is not a library-stack-§7 copy of the member. The two readers answer
+    -- from `down`, not the store, so the show ladder and the last edge always agree.
     NS.lifecycle = nil
     NS.HOLD_DISABLED, NS.HOLD_PERF = "disabled", "perf"
-    function NS.IsStoodDown() return not enabledStored() end
-    function NS.IsDisabled() return not enabledStored() end
+    local down = false
+    function NS.IsStoodDown() return down end
+    function NS.IsDisabled() return down end
     function NS.SyncEnabled()
-        if NS.IsStoodDown() then standDown() else standUp() end
+        local want = not enabledStored()
+        if want == down then return end
+        down = want
+        if want then standDown() else standUp() end
     end
     return
 end

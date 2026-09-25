@@ -193,20 +193,40 @@ assert_(off.bytesPerIter <= absent.bytesPerIter,
     ("a dormant bracket allocated: %.1f B/iter vs %.1f with no bracket")
         :format(off.bytesPerIter, absent.bytesPerIter))
 
--- 8. TimedSpells listens to UNIT_AURA for every unit while a scan could read anything; for a unit
---    it never scans, the handler must allocate nothing and arm no scan.
+-- 8. TimedSpells hears UNIT_AURA on its own frame, registered with RegisterUnitEvent for player and
+--    pet only (events-frames-taint-§1's carve-out). The client applies that filter before Lua runs,
+--    so `deliver` below does the same from the frame's recorded unit list: a nameplate's UNIT_AURA
+--    must never reach the handler, and the player's (with its scan already queued, so the loop
+--    measures the latched path) must allocate nothing.
 NS.SetByPath("container.filter.durationMode", "timeless", 1)
 mocks.__fireTimers(); mocks.__fireTimers()
-local onUnitAura = NS.TimedSpells.__events().__events.UNIT_AURA
-assert_(type(onUnitAura) == "function", "unitAuraOther: TimedSpells did not register UNIT_AURA")
-if type(onUnitAura) == "function" then
+local unitFrame = NS.TimedSpells.unitFrame
+local auraUnits = unitFrame and unitFrame.__unitEvents.UNIT_AURA
+assert_(auraUnits ~= nil, "unitAuraFiltered: TimedSpells did not register UNIT_AURA on its unit frame")
+if auraUnits then
+    assert_(table.concat(auraUnits, ",") == "player,pet",
+        ("unitAuraFiltered: UNIT_AURA registered for {%s}, expected {player,pet}"):format(table.concat(auraUnits, ",")))
+    local onEvent = unitFrame.__scripts.OnEvent
+    local reached = 0
+    local function handler(f, event, unit) reached = reached + 1; return onEvent(f, event, unit) end
+    -- The client's dispatch: the OnEvent script runs only for a unit the registration names.
+    local nUnits = #auraUnits
+    local function deliver(unit)
+        for i = 1, nUnits do
+            if auraUnits[i] == unit then return handler(unitFrame, "UNIT_AURA", unit) end
+        end
+    end
+    for _ = 1, 1000 do deliver("nameplate1") end
+    assert_(reached == 0, ("unitAuraFiltered: a nameplate's UNIT_AURA reached the handler %d time(s)"):format(reached))
+    deliver("player")   -- queue the one scan; the measured loop is the latched path
     local timersBeforeAura = #mocks.__timers
-    local other = measure("unitAuraOther", 1000, function() onUnitAura("UNIT_AURA", "nameplate1") end)
+    local filtered = measure("unitAuraFiltered", 1000, function() deliver("player") end)
     assert_(#mocks.__timers == timersBeforeAura,
-        ("unitAuraOther: a non-player UNIT_AURA armed %d timer(s)"):format(#mocks.__timers - timersBeforeAura))
-    -- red under: a table built at the top of TimedSpells' onUnitAura.
-    assert_(other.bytesPerIter == 0,
-        ("unitAuraOther: a non-player UNIT_AURA allocated %.1f B/iter"):format(other.bytesPerIter))
+        ("unitAuraFiltered: repeated player UNIT_AURA armed %d more timer(s)"):format(#mocks.__timers - timersBeforeAura))
+    -- red under: a table built at the top of TimedSpells' onUnitAura or its frame's OnEvent.
+    assert_(filtered.bytesPerIter == 0,
+        ("unitAuraFiltered: a player UNIT_AURA allocated %.1f B/iter"):format(filtered.bytesPerIter))
+    mocks.__fireTimers()
 end
 
 for _, r in ipairs(results) do

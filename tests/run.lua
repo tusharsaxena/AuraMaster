@@ -50,20 +50,32 @@ AM_TEST = Kit.expose{
     NS = NS, mocks = mocks,
     loadedAddonFiles = ADDON_FILES,
     loadedLibFiles   = LIB_FILES,
+    -- The one Loader and mock builder of this process, so every fresh environment reuses the
+    -- compiled-chunk cache and the parsed mock stack instead of re-reading both (tests/fresh_env.lua
+    -- says why). The builder hands back a fresh mock on every call (tests/_kit/mock_base.lua).
+    Loader = Loader, buildMocks = buildMocks,
 }
 
 -- Suites, in load-order-sensitive order. `dir` is explicit, so Kit.run asserts the inventory: a
 -- tests/test_*.lua on disk but missing here, or listed but absent, takes the run down.
+--
+-- `jobs = "auto"`: the serial gate is past testing-§14's ten seconds, so the suites fan out across
+-- contiguous shards by default; `-j 1` runs them serially. The sharded run must match the serial
+-- one (same totals, same transcript, same exit code) — docs/testing.md has the figures.
 Kit.run{
     dir = "tests/",
+    jobs = "auto",
     suites = {
         "test_loadorder",
         "test_setups",
         "test_launcher",
         "test_database",
+        "test_database_categories",
+        "test_migrations",
         "test_schema",
         "test_schema_paths",
         "test_filtercompiler",
+        "test_filtercompiler_categories",
         "test_container",
         "test_containermanager",
         "test_compat",
@@ -90,12 +102,14 @@ Kit.run{
         "test_optionssetup",
         "test_options_descriptor",
         "test_pages_general",
+        "test_pages_general_categories",
         "test_pages_containers",
         "test_pages_filters",
         "test_pages_layout",
         "test_pages_bars",
         "test_pages_icons",
         "test_pages_text",
+        "test_pages_tabs",
         "test_pages_about",
         "test_pages_profiles",
         "test_envsetup",

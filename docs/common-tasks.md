@@ -50,20 +50,20 @@ Example: a bar option.
    `label`/`desc`.
 2. That is the whole wiring: `DefaultStates()` backfills the key as `"show"` into every stored
    container (schema v3 — Show is a positive claim, not merely "not excluded";
-   `docs/ARCHITECTURE.md` → Filter priority), `settings/Filters.lua` generates its row and draws it
+   `docs/data-flow.md` → Filter priority), `settings/Filters.lua` generates its row and draws it
    in its kind's grid on Filters → Categories, and `modules/FilterCompiler.lua` applies it by kind: a
    Hide excludes (`excludeCategory`), and a Show's own positive constraint
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
    something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
    Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
-   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:223`) — and its profile-wide
+   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:216`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list is honored only on a HOSTILE target or focus; the engine
    discards its ids on you or a friendly unit (the identity gate, `docs/midnight-quirks.md`). That
-   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:379`,
-   `:452`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
+   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:530`,
+   `:606`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
    where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
 
@@ -85,15 +85,16 @@ path it walks, for when something about it has to be changed or debugged.
    `NS.CategoryRow` in front of that aura type's Weapon enchants or Uncategorized row.
    `Cat.CreateUserCategory` then runs `Database.PrepareProfile`, so every stored container carries the
    key before the Filters grid is next drawn — without it the grid would light neither Show nor Hide.
-4. **Where to hook a change:** the acts and the sync are `defaults/Categories.lua`; the block that
+4. **Where to hook a change:** the acts and the sync are `defaults/UserCategories.lua`; the block that
    draws them is `settings/GeneralSpells.lua`; the row shape is `settings/Filters.lua`'s
    `NS.CategoryRow`. Never add a second labeling rule — every site that shows a category's name asks
    `Cat.LabelOf`, and the panel's `(yours)` marker (`NS.GeneralSpells.MarkedName`) wraps that answer.
 5. **Never route a player-supplied name through `NS.L`.** That is the locale guard's one exemption and
-   it is written out in `docs/ARCHITECTURE.md` → *Locale routing, and its one exemption*.
+   it is written out in *Locale routing, and its one exemption*, below.
 6. A test for any of this goes in `tests/test_defaults.lua` (definitions and names),
-   `tests/test_database.lua` (the store, the sweep, profile switches) or
-   `tests/test_pages_general.lua` (the block's widgets).
+   `tests/test_database_categories.lua` (the store, the sweep, profile switches),
+   `tests/test_filtercompiler_categories.lua` (what the compiler makes of one) or
+   `tests/test_pages_general_categories.lua` (the block's widgets).
 
 ## Re-derive the Hard CC / Soft CC spell lists
 
@@ -202,9 +203,34 @@ from, and mixing them silently is how a diff stops meaning anything.
 4. A label routed by value (a `core/Constants.lua` `*_LABELS` table, a category label) still needs its
    `enUS` key; `NS.Choices` looks them up with `L[…]`, and every site that draws a category name asks
    `Cat.LabelOf`. The one exemption is a **user category's** name: it is the player's own text, it has
-   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/Categories.lua`). The exemption,
-   what it covers and what it deliberately does not, is `docs/ARCHITECTURE.md` → *Locale routing, and
-   its one exemption*.
+   no `enUS` line, and `Cat.LabelOf` returns it untouched (`defaults/UserCategories.lua`). The exemption,
+   what it covers and what it deliberately does not, is *Locale routing, and its one exemption*,
+   below.
+
+## Locale routing, and its one exemption
+
+Every user-visible string routes through `NS.L`, the key being the English text itself
+(localization-§2), and `tests/test_locale.lua` fails the build twice over: on a routed string with no
+`locales/enUS.lua` line, and on an `enUS` line nothing routes. A label routed BY VALUE — a
+`core/Constants.lua` `*_LABELS` entry, a category's `label` and `desc` — still needs its own line,
+because `NS.Choices` and the drawing sites look them up with `L[…]`.
+
+**A user category's name is the one exemption** (issue #10), and it is written here so the guard test
+can be read from it. The name is the PLAYER'S OWN TEXT: it is data, no `enUS` line can exist for it,
+and none should. The exemption is exactly one FIELD of exactly one flagged definition kind —
+`def.label` on a definition carrying `userCategory = true`. Its `desc` is still checked, and a user
+category's description is a fixed shipped string precisely so that it can be; if that description ever
+has to name the category, the name is a `%s` ARGUMENT to a routed format string and never concatenated
+into one, because a `%` inside a player-supplied name is an ordinary character.
+
+The exemption is enforced at the draw by `Cat.LabelOf`, which is why every site that shows a category
+name asks it rather than indexing `NS.L`. This is not tidiness: `NS.L` answers its own miss path, so
+`L[def.label]` looks correct for a user category right up until a player names one "Healing" — at
+which point the lookup finds a real shipped line and the panel shows the shipped string instead of the
+name that was typed. Invisible on enUS, plainly wrong on any translated client. The guard proves the
+exemption narrow from both sides: `tests/test_locale.lua` asserts that NO shipped definition claims it
+on the shipped load, and `tests/test_defaults.lua` asserts that a user definition's name is unrouted
+while its description is not.
 
 ## Add a container field that changes shape (a migration)
 
@@ -213,14 +239,17 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:833`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:906`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure
    function over one profile table, as `Database.MigrateV2` is, so a test can run it over a raw one.
    Test the stored value with `== nil`, never `or` (savedvariables-§5).
-3. `RunMigrations` calls the step, stamps its `to`, logs one `[Migrate]` line, and then
-   `PrepareProfile` backfills whatever the step did not set.
+3. `RunMigrations` calls the step under `pcall`, stamps its `to` only if it returned without
+   raising, logs one `[Migrate]` line, and then `PrepareProfile` backfills whatever the step did not
+   set. `NS.SCHEMA_VERSION` follows the new last step by itself; `defaults/Profile.lua`'s
+   `schemaVersion` stays 0 (savedvariables-§1). The step must leave a fresh default profile
+   unchanged, because a fresh install runs the whole ladder.
 4. A case in `tests/test_database.lua` with a v1-shaped profile (and a second, inactive profile), and
    the migration in `docs/schema.md`.
 

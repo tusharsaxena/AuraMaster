@@ -238,7 +238,7 @@ test("slash verbs: set writes a color in the stored {r, g, b, a} shape; get deco
         "{container.bars.barColor = {0.50, 1.00, 1.00, 1.00}  (Player buffs)}")
 end)
 
-test("slash verbs: a value the parser takes but the seam refuses prints the seam's reason, then the unchanged value", function()
+test("slash verbs: a value the parser takes but the seam refuses prints the refusal and no echo of the unchanged value", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("select 2")
@@ -246,12 +246,47 @@ test("slash verbs: a value the parser takes but the seam refuses prints the seam
     NS2.Slash:OnSlash("set container.attach.container 1")
     NS2.Slash:OnSlash("select 1")
     NS2.Slash:OnSlash("set container.attach.mode container")
-    -- red under: the descriptor's set swallowing SetByPath's error
+    -- red under: the descriptor's set swallowing SetByPath's answer (the unchanged value echoes)
     assertEqual(dump(slash(NS2, lines, "set container.attach.container 2")),
-        "{Invalid value for container.attach.container | container.attach.container = 0  (Player buffs)}")
+        "{Invalid value for container.attach.container}")
     deleteAll(NS2)
     assertEqual(dump(slash(NS2, lines, "set container.bars.width 300")),
-        "{" .. MISSING_ROW .. " | container.bars.width = nil}")
+        "{Invalid value for container.bars.width |   " .. MISSING_ROW .. "}")
+end)
+
+test("slash verbs: /am set with a refused value prints INVALID and the row's reason once each, and does not echo the unchanged value", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.State.SetActiveContainer(1)
+    local before = NS2.Database.FindContainer(1).text.template
+    local why = NS2.L["$%s$ appears twice — each token can be used once."]:format("spellname")
+    -- red under: the host wrapper printing and returning nil
+    assertEqual(dump(slash(NS2, lines, "set container.text.template $spellname$[ $spellname$]")),
+        "{Invalid value for container.text.template |   " .. why .. "}")
+    assertEqual(NS2.Database.FindContainer(1).text.template, before)
+end)
+
+test("slash verbs: /am reset container.name prints the library's no-default line once", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.State.SetActiveContainer(1)
+    local SlashLib = mocks.LibStub("LibKa0s-Slash-1.0")
+    -- red under: the host's applyDefault printing the row's reason and returning nil (an echo follows)
+    assertEqual(dump(slash(NS2, lines, "reset container.name")),
+        "{" .. SlashLib.STRINGS.NO_DEFAULT:format("container.name") .. "}")
+    assertEqual(NS2.Database.FindContainer(1).name, "Player buffs")
+end)
+
+test("slash verbs: /am reset with no container prints the seam's reason, not the no-default line", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    deleteAll(NS2)
+    local SlashLib = mocks.LibStub("LibKa0s-Slash-1.0")
+    local out = dump(slash(NS2, lines, "reset container.bars.width"))
+    -- red under: the descriptor's applyDefault handing the seam's refusal to CliReset as false,
+    -- which prints NO_DEFAULT for a row that has a default and drops the real reason
+    assertEqual(out:find(SlashLib.STRINGS.NO_DEFAULT:format("container.bars.width"), 1, true), nil, out)
+    assertTrue(out:find(MISSING_ROW, 1, true) ~= nil, out)
 end)
 
 test("slash verbs: set and reset reach a session row, which never lands in the profile", function()
@@ -368,16 +403,38 @@ test("slash verbs: /am lock and /am unlock go through the seam: unlocked shows t
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     local inst = NS2.ContainerManager.instances[1]
-    assertEqual(dump(slash(NS2, lines, "unlock")), "{Containers unlocked — drag a container by its handle}")
+    assertEqual(dump(slash(NS2, lines, "unlock")), "{locked = false}")
     assertFalse(NS2.db.profile.locked)
     assertTrue(inst.handle:IsShown(), "unlocked: the handle shows")
     -- red under: ShouldShow still reading the lock as the preview
     assertFalse(inst.previewShown, "unlocked: no placeholders")
     assertTrue(inst.engine.__enabled, "unlocked: real auras draw")
-    assertEqual(dump(slash(NS2, lines, "lock")), "{Containers locked}")
+    assertEqual(dump(slash(NS2, lines, "lock")), "{locked = true}")
     assertTrue(NS2.db.profile.locked)
     -- red under: runLock writing profile.locked around the seam (no CONFIG_CHANGED, no visibility pass)
     assertFalse(inst.handle:IsShown(), "locked: the handle goes")
+end)
+
+test("slash verbs: /am enable, /am disable, /am lock, /am unlock echo the stored value in the set shape", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    local SlashLib = mocks.LibStub("LibKa0s-Slash-1.0")
+    --- The line `/am get <path>` prints for `value`: the library's formatter, no private variant.
+    local function setShape(path, value)
+        return SlashLib.FormatKV(path, SlashLib.FormatValue(NS2.FindSchemaRow(path), value))
+    end
+    for _, step in ipairs({ { "disable", "enabled", false }, { "enable", "enabled", true },
+                            { "unlock", "locked", false }, { "lock", "locked", true } }) do
+        local verb, path, value = step[1], step[2], step[3]
+        slash(NS2, lines, verb)
+        assertEqual(NS2.GetSetting(path), value, "/am " .. verb .. " wrote " .. path)
+        local count = #lines
+        -- red under: the prose confirmation
+        assertEqual(lines[count] and strip(lines[count]), strip(setShape(path, value)), "/am " .. verb)
+        assertTrue(lines[count] and lines[count]:find(setShape(path, value), 1, true) ~= nil,
+            "/am " .. verb .. " kept the formatter's colors: " .. tostring(lines[count]))
+        assertEqual(count, 1, "/am " .. verb .. " prints one line")
+    end
 end)
 
 test("slash verbs: /am test in combat refuses on one gray line and starts nothing (B1)", function()
@@ -568,6 +625,49 @@ test("slash verbs: /am resetposition and /am forgettimed do their act and say so
     assertNil(NS2.db.global.timedSpells[774])
 end)
 
+-- ── the minimap row: the CLI path reads in its shown sense (launcher-§3) ──────────────────────
+
+test("slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    -- red under: the path spelled hide
+    assertEqual(dump(slash(NS2, lines, "get global.minimap.shown")), "{global.minimap.shown = true}")
+    assertEqual(dump(slash(NS2, lines, "set global.minimap.shown false")), "{global.minimap.shown = false}")
+    -- The STORAGE did not move: LibDBIcon's own `hide`, inverted once at the seam.
+    assertEqual(NS2.db.global.minimap.hide, true)
+    assertEqual(NS2.Launcher:IsShown(), false)
+    assertEqual(dump(slash(NS2, lines, "reset global.minimap.shown")), "{global.minimap.shown = true}")
+    assertEqual(NS2.db.global.minimap.hide, false)
+end)
+
+test("slash verbs: the old path global.minimap.hide is not a setting, and nothing is written", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    local sent = announcements(NS2)
+    -- red under: the path spelled hide
+    assertEqual(dump(slash(NS2, lines, "get global.minimap.hide")), "{Setting not found: global.minimap.hide}")
+    assertEqual(dump(slash(NS2, lines, "set global.minimap.hide true")), "{Setting not found: global.minimap.hide}")
+    assertEqual(dump(slash(NS2, lines, "reset global.minimap.hide")), "{Setting not found: global.minimap.hide}")
+    assertEqual(NS2.db.global.minimap.hide, false)
+    assertEqual(sent[1], 0)
+end)
+
+test("slash verbs: a legacy store's minimap.hide reads through the renamed path with no migration", function()
+    -- A SavedVariables file written before the rename: LibDBIcon's own table, `hide` and a drag.
+    local NS2, mocks = fresh({ savedVariables = { global = { minimap = { hide = true, minimapPos = 200 } } } })
+    local lines = capture(mocks)
+    -- red under: the path spelled hide
+    assertEqual(dump(slash(NS2, lines, "get global.minimap.shown")), "{global.minimap.shown = false}")
+    assertEqual(NS2.Launcher:IsShown(), false, "the button stays hidden")
+    assertEqual(NS2.db.global.minimap.minimapPos, 200, "the drag is untouched")
+    slash(NS2, lines, "set global.minimap.shown true")
+    slash(NS2, lines, "set global.minimap.shown false")
+    -- The raw SV, not the AceDB view: no `shown` key is ever stored (anti-pattern #81).
+    assertNil(_G.AuraMasterDB.global.minimap.shown)
+    assertEqual(_G.AuraMasterDB.global.minimap.hide, true)
+    assertEqual(_G.AuraMasterDB.global.minimap.minimapPos, 200)
+end)
+
 -- ── the degradation stub ──────────────────────────────────────────────────────────────────────
 
 --- The degraded environment, initialized so it has a database and containers.
@@ -585,9 +685,29 @@ test("slash verbs: without the library each schema verb names what is missing, a
         local verb = cmd:match("^%a+")
         local p = slash(NS2, lines, cmd)
         -- red under: a stub Cli* verb answering nothing
-        assertTrue(said(p, "/am " .. verb .. " is unavailable. " .. NS2.LIBKA0S_MISSING .. "."), cmd .. ": " .. dump(p))
+        assertTrue(said(p, "/am " .. verb .. " is unavailable: the LibKa0s library did not load."), cmd .. ": " .. dump(p))
     end
     assertEqual(NS2.db.profile.alpha, 1)
+end)
+
+test("slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing", function()
+    local NS2, mocks = degraded()
+    local lines = capture(mocks)
+    local c = NS2.ActiveContainer()
+    local alpha = c.bars.barAlpha
+    -- The degraded printer names the missing library once, on the first line it ever prints
+    -- (core/CoreSetup.lua); spend it here so each line below stands alone.
+    slash(NS2, lines, "containers")
+    -- A composed row (the Bars page's BarGroup) that this build never registered, and the master
+    -- switch that the host verbs still reach through writeThrough: `/am set` is the library's verb,
+    -- so both answer the library-absent line (options-ui-§1), exactly once and alone.
+    for _, cmd in ipairs({ "set container.bars.barAlpha 0.5", "set enabled false" }) do
+        local p = slash(NS2, lines, cmd)
+        -- red under: the stub's CliSet reaching the seam
+        assertEqual(dump(p), "{/am set is unavailable: the LibKa0s library did not load.}", cmd)
+    end
+    assertEqual(c.bars.barAlpha, alpha, "the composed row is unchanged")
+    assertTrue(NS2.db.profile.enabled, "the switch is unchanged")
 end)
 
 test("slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so", function()

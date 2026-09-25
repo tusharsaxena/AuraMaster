@@ -10,11 +10,17 @@ local _, NS = ...
 -- account-wide (db.global.timedSpells), and modules/FilterCompiler.lua hands that set to the engine as
 -- excludeSpellIDs. A timed buff never yet seen out of combat shows up once, then is learned for good.
 --
--- HOW IT LISTENS. Through AceEvent on this file's own target, never a private frame
--- (events-frames-taint-§1). The vendored AceEvent has no RegisterUnitEvent, so UNIT_AURA arrives for
--- every unit, raid members and nameplates included, and the handler keeps only the player and pet.
--- That cost is bounded by registering UNIT_AURA only while a scan could read anything: out of combat
--- lockdown and while auras are not secret. PLAYER_REGEN_DISABLED closes that gate (lockdown begins
+-- HOW IT LISTENS. The gate events go through AceEvent on this file's own target. UNIT_AURA cannot:
+-- the vendored AceEvent still has no RegisterUnitEvent, and through AceEvent UNIT_AURA would arrive
+-- for every unit, raid members and nameplates included. So UNIT_AURA takes events-frames-taint-§1's
+-- unit-filter frame carve-out: TS.unitFrame, registered with RegisterUnitEvent for "player" and "pet"
+-- only, so the client filters every other unit out before Lua is entered. The carve-out's MUSTs, and
+-- where each is met: the frame is HELD ON THE MODULE (TS.unitFrame, built once, lazily, by the first
+-- gate opening); it is UNREGISTERED IN THE DISABLE PATH by hand (TS.Stop, which the stand-down runs,
+-- because AceEvent's UnregisterAllEvents never reaches it); and it is REUSED ACROSS CYCLES, never
+-- rebuilt. It carries one OnEvent script and nothing else. Registration is bounded further by
+-- opening the gate only while a scan could read anything: out of combat lockdown and while auras are
+-- not secret. PLAYER_REGEN_DISABLED closes that gate (lockdown begins
 -- only after it fires); PLAYER_REGEN_ENABLED and ADDON_RESTRICTION_STATE_CHANGED re-check it, and
 -- reopening it schedules one scan. In combat and in every secret stretch UNIT_AURA is not registered
 -- at all, and a scan queued before the gate closed is dropped when it comes due, so combat never
@@ -28,9 +34,12 @@ local TS = NS.TimedSpells
 local Perf = NS.Perf
 
 local scanScheduled = false
+local scanTimer = nil      -- the queued scan's handle, so TS.Stop can cancel it
 local listening = false    -- whether UNIT_AURA is registered right now
-local SCAN_UNITS = { "player", "pet" }
+local SCAN_UNITS = { "player", "pet" }   -- also the unit frame's RegisterUnitEvent filter
 local MAX_INDEX = 40
+-- The events that open and close the UNIT_AURA gate (syncAuraListen).
+local GATE_EVENTS = { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "ADDON_RESTRICTION_STATE_CHANGED" }
 
 -- Game events, on a target of their own: apart from the message target below, so
 -- UnregisterAllEvents can never touch a message registration.
@@ -103,13 +112,38 @@ end
 local function scheduleScan()
     if scanScheduled then return end
     scanScheduled = true
-    C_Timer.After(0.5, scanTick)
+    scanTimer = C_Timer.NewTimer(0.5, function()
+        scanTimer = nil
+        scanTick()
+    end)
 end
 
---- UNIT_AURA arrives for every unit. The payload is secret while auras are, so the unit is proven a
+--- UNIT_AURA, from the unit frame. The payload is secret while auras are, so the unit is proven a
 --- safe key before it is compared.
 local function onUnitAura(_, unit)
+    -- The frame's RegisterUnitEvent already delivers only player and pet; the comparison stays as
+    -- defense in depth, so a widened registration still scans for nothing else.
     if NS.Secrets.IsSafeKey(unit) and (unit == "player" or unit == "pet") then scheduleScan() end
+end
+
+--- The module's one private frame (events-frames-taint-§1 carve-out), built on first use and reused
+--- for every later gate opening. One OnEvent script, nothing else.
+TS.unitFrame = TS.unitFrame or nil
+local function unitFrame()
+    local f = TS.unitFrame
+    if not f then
+        f = CreateFrame("Frame")
+        f:SetScript("OnEvent", function(_, _, unit) onUnitAura(nil, unit) end)
+        TS.unitFrame = f
+    end
+    return f
+end
+
+--- Drop the unit frame's UNIT_AURA registration, if the frame exists. UnregisterAllEvents rather
+--- than UnregisterEvent: the frame holds UNIT_AURA and nothing else, so the two agree in the client,
+--- and only the former clears a RegisterUnitEvent registration in the test kit's frame stub.
+local function closeUnitFrame()
+    if TS.unitFrame then TS.unitFrame:UnregisterAllEvents() end
 end
 
 --- Register UNIT_AURA while a scan could read anything, and drop it while none could. The client
@@ -118,28 +152,39 @@ end
 local function syncAuraListen(event)
     local open = event ~= "PLAYER_REGEN_DISABLED" and readable()
     if open and not listening then
-        events:RegisterEvent("UNIT_AURA", onUnitAura)
-        listening = true
-        scheduleScan()
+        -- Listening only if the registration took: a client that refuses UNIT_AURA leaves the
+        -- queued scan to find `listening` false and drop itself (events-frames-taint-§1).
+        listening = NS.SafeRegisterUnitEvent(unitFrame(), "UNIT_AURA", NS.RejectedEvents,
+            SCAN_UNITS[1], SCAN_UNITS[2])
+        if listening then scheduleScan() end
     elseif not open and listening then
-        events:UnregisterEvent("UNIT_AURA")
+        closeUnitFrame()
         listening = false
     end
 end
 
---- Stop listening (perf suspend, and any time no container needs it).
+--- Stop listening (perf suspend, stand-down, and any time no container needs it). The unit frame is
+--- closed by hand: AceEvent's UnregisterAllEvents below never reaches a private frame. A scan
+--- already queued is canceled with it, and `scanScheduled` reset so the next gate opening can queue
+--- a fresh one.
 function TS.Stop()
+    closeUnitFrame()
     events:UnregisterAllEvents()
     listening = false
+    if scanTimer then
+        scanTimer:Cancel()
+        scanTimer = nil
+    end
+    scanScheduled = false
 end
 
 --- Start or stop listening, from what the containers need right now. THE LATCH WINS
 --- (slash-commands-§7): a stood-down addon registers nothing, for either reason it is down.
 function TS.Sync()
     if not (TS.Needed() and not NS.IsStoodDown()) then return TS.Stop() end
-    events:RegisterEvent("PLAYER_REGEN_DISABLED", syncAuraListen)
-    events:RegisterEvent("PLAYER_REGEN_ENABLED", syncAuraListen)
-    events:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", syncAuraListen)
+    for _, event in ipairs(GATE_EVENTS) do
+        NS.SafeRegisterEvent(events, event, syncAuraListen, NS.RejectedEvents)
+    end
     syncAuraListen()
     scheduleScan()
 end
@@ -159,9 +204,10 @@ function TS.StartListening()
     bus:RegisterMessage(NS.MSG.CONTAINERS_CHANGED, function() TS.Sync() end)
 end
 
---- Everything this file has registered, gone: the two subscriptions and whatever UNIT_AURA gate
---- TS.Sync last opened. A scan already queued is dropped by scanTick's `listening` guard rather than
---- canceled -- C_Timer.After hands back no handle to cancel.
+--- Everything this file has registered, gone: the two subscriptions, the gate events and the unit
+--- frame's UNIT_AURA that TS.Sync last opened, and the scan it may have queued: TS.Stop cancels that timer rather than
+--- leaving it armed to wake up and find the latch. scanTick's `listening` guard stays as defense in
+--- depth.
 function TS.StandDown()
     TS.Stop()
     bus:UnregisterAllMessages()

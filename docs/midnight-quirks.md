@@ -65,10 +65,10 @@ after its `initializeFrame` has run. Its child regions cannot be reparented afte
 applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 
 **What this addon does.**
-- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:39`), before the restrictions apply, so every
+- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:42`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:161`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:196`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
@@ -85,7 +85,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:223-227`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:225-227`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -197,7 +197,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:490`), and then adds again
-(`modules/Style_Bars.lua:313`, `modules/Style_Icons.lua:153`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:322-329`, `modules/Style_Icons.lua:165-170`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -210,7 +210,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:89-101`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:112-124`).
 
 ## Weapon enchants
 
@@ -234,7 +234,37 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:446`).
+  aura buttons (`modules/Container.lua:447`).
+
+## An unknown event name raises
+
+**The restriction.** Registering a name the client does not know raises `Attempt to register unknown
+event "<NAME>"` instead of being ignored. In a block of plain `RegisterEvent` calls, every event after
+the failing one is skipped and nothing is reported. Every name this addon registers is valid on 12.1,
+so the failure is latent: it would only show up once a patch retires one of them.
+
+**What this addon does.** Every registration goes through `NS.SafeRegisterEvent`, which is
+`LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`), or its unit-event twin
+`NS.SafeRegisterUnitEvent`. That covers the eight lifecycle events (`LIFECYCLE_EVENTS` in
+`core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
+(`modules/TimedSpells.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
+(`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
+line adds `rejected events: …` when that list is not empty, and a name refused while logging is on
+is traced right away, as `[Init] event <NAME> rejected by this client`.
+
+**The trade, taken on purpose (events-frames-taint-§1).** The library asks the client first:
+`C_EventUtils.IsEventValid` when it is there, and a private probe frame when it is not. A refused name
+never reaches AceEvent, so on a client that does not know an event, the addon loses what that event
+would have told it and keeps everything else:
+
+- a refused lifecycle event loses its own handler's trigger;
+- a refused `UNIT_AURA` leaves the timed-spell scan not listening (the "without a duration" filter
+  stops learning new spells);
+- a refused `PLAYER_REGEN_ENABLED` leaves the stand-down's secure half unheld, so it is retried on the
+  next stand-down or stand-up rather than when combat ends.
+
+Losing one of those is survivable. Losing the whole block is not. Without LibKa0s, the `Core` stub has
+only the `pcall` step and no front gate, as the library's degradation note prescribes.
 
 ## Smaller API moves this addon absorbs
 
@@ -431,3 +461,108 @@ Magic (1), Poison (4). Being cast by the player does not strip the type. The oth
 `dispelName` `nil` and enum 0 ("None"). The engine itself reports those debuffs as typeless, so
 showing no `$dispeltype$` word and keeping the surface's color is correct. Out of combat none of the
 values was secret.
+
+## Taint notes
+
+- **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
+  container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:43-44`).
+- **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
+  anchored under the anchor, the drag handle and its help mark included, and the client refuses
+  `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
+  forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
+  `UIParent` and follows the cursor (`modules/Anchors.lua`, `showTooltip`).
+- **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
+  with `StartMoving`), and the client saves a movable frame's position and restores it at login.
+  `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
+  position an anchor ever has.
+- **The drag handle sits outside the anchor and never re-anchors anything.** It is our own strip,
+  placed against the anchor on the side the auras do not grow into; the anchor, the engine and the
+  preview stay where they are. While it shows, the anchor's clamp rect is widened over it
+  (`SetClampRectInsets`). Placing the strip and widening the clamp both happen only out of combat,
+  because the anchor parents an aura engine: under lockdown the handle keeps its last placement and
+  only shows or hides, except that a handle never placed (first shown in combat) is placed once so
+  it draws. The next visibility pass after combat catches both up.
+- **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
+  anchor it (`modules/Container.lua:225-227`).
+- **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
+  (`modules/ContainerManager.lua:196`) holds every build, update and restyle; aura buttons refuse addon
+  access while auras are secret.
+- **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
+  button's ancestry (`modules/Container.lua:447`).
+- **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
+  (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
+- **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:301`), the frame picker and a handle drag all
+  refuse under `InCombatLockdown()`.
+- **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
+  page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header
+  band, the container band and the tab strip included — by the library's gray "Settings are locked
+  during combat." cover; nothing renders, and every write through the options surface (a control,
+  Defaults, a library-drawn button, a tab click) is refused with one gray notice per combat, until
+  `PLAYER_REGEN_ENABLED` lifts the cover and draws the page from current state. Nothing of ours
+  touches Blizzard's settings window in combat (closing it from addon code ran its commit path
+  tainted). This addon keeps no page-level lock of its own; its act-level gates stay, since each also
+  serves a slash verb: `CM.Create` (New, Duplicate, `/am new`), the Delete popup (`/am delete`) and
+  the frame picker (`/am pick`), which closes the settings window only out of combat.
+- **Teardown under lockdown is parked, never hidden.** A container that leaves the registry while
+  `MustDefer` is true is parked (`Container:Park`): its engine is disabled through `SetEnabled`, its
+  preview and handle (our own frames) are hidden, and the anchor and engine ancestry are left alone.
+  The next `FlushPending` that may touch frames destroys it; if its id comes back first, the same
+  instance is revived and no second `AuraMasterAnchor<id>` is created.
+- **A destroyed instance is kept dormant under its id.** Frames are never freed, so `CM.Sync` (and
+  the parked teardown after combat) keeps every destroyed instance in a dormant table instead of
+  dropping it. An id that comes back out of combat (a profile switch between profiles with different
+  container counts, a copy, or a reset that rewinds the id counter) revives that instance marked
+  `staleData`, and the apply `CM.Announce` queues rebuilds it for the data now stored there, re-places
+  and re-shows its anchor, and unparks it. `CreateFrame("Frame", "AuraMasterAnchor"..id)` runs once
+  per id per session.
+- **A profile change in combat parks every reused id.** Ids are reused across profiles (a reset
+  reseeds the starters from id 1), so an instance kept or revived under its id by a switch, copy or
+  reset may be built for another container. Under `MustDefer`, `CM.Sync(true)` parks each one
+  (engine disabled, nothing hidden); `Container:ShouldShow` keeps a parked instance off through every
+  visibility pass, and the deferred apply rebuilds it for the new data and unparks it. An instance a
+  profile change parks because the new profile lacks its id is marked `staleData`, so a later Create
+  or Duplicate that reuses the id (a reset rewinds the counter) revives it still parked too.
+- **Registry verbs that create or destroy frames are refused in combat** with a gray line
+  (options-ui-§2): `/am new`, `/am delete`, and Containers' New container, Duplicate and
+  Delete popup. `ContainerManager.Create` refuses itself, so every creating caller is covered.
+- **Reset all is Profiles → Reset Profile, in combat as well (options-ui-§12).** `/am resetall` and
+  the General page's Reset-all popup both run `db:ResetProfile()`, the same call AceDBOptions' button
+  makes, and neither is refused. In combat all three take the parked teardown above: a container the
+  reset drops draws nothing until combat ends and is torn down then. Ours also restore the session
+  rows, so the debug console closes and test mode ends; AceDBOptions' button leaves them alone. The
+  reset profile is locked, so the handles and outlines go through `ApplyVisibility` (combat-safe).
+- **Test mode ends when combat starts.** `PLAYER_REGEN_DISABLED` switches it off before the
+  visibility pass (`addon:OnCombatChanged`), so no placeholder covers real auras in a fight, and
+  `Preview.SetTestMode` refuses a start under `InCombatLockdown()` with one gray line. Unlocking
+  keeps the live engine drawing under the drag handle and a faint outline, a frame of ours under the
+  anchor that takes no mouse.
+- **A profile switch, copy or reset in combat may create anchor frames.** Those are plain frames,
+  which is combat-legal; their engines are built by the deferred apply once combat ends.
+- **Every engine and button binding is `pcall`-guarded** (`callEngine`, `Style.Bind`), so a binding
+  the client rejects costs that binding, never the engine's frame batch. A live re-dress is guarded
+  per button (`Container:Restyle`), and a Text line's icon block per dress, so a refusal there costs
+  the button, or only the icon; neither is silent: `Style.ReportError` writes a `[Style]` debug line
+  every time and hands the error to the client's error handler once per session per message.
+- **No aura-button border reads its size** (B2-3). A laid-out engine button's size reads secret, and
+  so does every frame anchored to it, while Blizzard's Backdrop does arithmetic on the frame's size on
+  every `SetBackdrop` and from `BackdropTemplate`'s `OnSizeChanged` (line 226 of Blizzard's
+  `Backdrop.lua`). Every border frame is a plain frame (`Style.NewBorder`); Solid, the default, is
+  drawn with four strip textures, and any other style with a backdrop on a plain frame that mixes in
+  `BackdropTemplateMixin` without the template's size script, applied only while its size reads plain
+  and recolored otherwise (`Style.ApplyBorder`). The Icons and Bars border steps run through
+  `Style.GuardedBorder`, so a refused border never costs the engine bindings after it
+  (*A backdrop on an engine button reads a secret size*, above). The unlocked outline, the drag handle (both under the anchor, whose
+  geometry reads secret when the container is attached to a secret frame) and the frame picker's
+  outline are plain frames too, their edges the same strips (`Style.DrawEdge`) and the handle's fill a
+  texture of its own, so none of them runs Backdrop arithmetic when built or resized.
+- **Secret values never reach a string operation.** Only `modules/TimedSpells.lua` reads aura data,
+  only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
+  debug lines go through `NS.SafeToString`.
+- **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
+  and release cannot cancel the wrong aura (`modules/Style.lua:828`).
+- **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
+  three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
+  restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is
+  logged. There is no Scale loop: glyphs scaled past their anchored boxes overlap the next piece.

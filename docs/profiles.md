@@ -27,8 +27,8 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:173`,
-`core/AuraMaster.lua:184`, `core/AuraMaster.lua:191`):
+`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:179`,
+`core/AuraMaster.lua:190`, `core/AuraMaster.lua:197`):
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
@@ -73,9 +73,9 @@ General → Master controls → **Reset all settings** and `/am resetall` both r
 `NS.Helpers.RestoreAllDefaults`. The options descriptor's `resetProfile` makes that
 `db:ResetProfile()` (options-ui-§12), so the global reset and Profiles → Reset Profile are the same
 act, with the same popup wording. The global reset's own row walk skips the Profiles page and every
-profile-backed row (`vetoedFromResetAll`, `settings/OptionsSetup.lua:47`), leaving it only the
+profile-backed row (`vetoedFromResetAll`, `settings/OptionsSetup.lua:48`), leaving it only the
 session rows a profile reset cannot reach. It also skips the **Minimap button** row, which is not a
-profile setting at all and which no reset may move (launcher-§3, `docs/ARCHITECTURE.md` → Launcher). Other profiles are untouched. Neither surface is refused
+profile setting at all and which no reset may move (launcher-§3, `docs/settings-panel.md` → Launcher). Other profiles are untouched. Neither surface is refused
 in combat: like Reset Profile, both take the parked teardown described above.
 
 The button's tooltip names the equivalence, because the options descriptor sets `profilesPage =

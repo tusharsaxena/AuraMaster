@@ -46,7 +46,7 @@ local BUFFS_DEBUFFS = { HELPFUL = true, HARMFUL = true }
 
 -- The first tab was "What to show" until the owner renamed it (2026-09-20): every other container
 -- sub-page opens on a tab called General, and this one asks the same kind of question. The name is
--- per PAGE — settings/OptionsSetup.lua's collectTabs builds a page's strip out of the groups of
+-- per PAGE — the library's O.RenderTabbedSchema builds a page's strip out of the groups of
 -- NS.SchemaForPage(pageKey) alone — so it does not meet the General groups on the Text and Bars
 -- pages.
 local G_SHOW, G_CATS, G_SORT = L["General"], L["Categories"], L["Sorting"]
@@ -126,7 +126,7 @@ end
 local STATE_DESC = L["Show: this category shows the aura, even if another of its categories says Hide. Hide: this category alone never shows it — a Show on another of its categories still can."]
 
 --- One category's Show/Hide row. EXPORTED because a user category's row (issue #10 checkpoint 3,
---- defaults/Categories.lua's Cat.SyncUserCategories) has to be built by this exact function rather
+--- defaults/UserCategories.lua's Cat.SyncUserCategories) has to be built by this exact function rather
 --- than by a second one written to look like it: the two would otherwise drift in `grid`,
 --- `skipRender`, `printLabel`, `auraTypes`, `values` or the shape of `desc`, and every one of those
 --- is read by code whose correctness rests on not being able to tell a user row from a shipped one.
@@ -296,7 +296,7 @@ local CATEGORY_EXTRA = {
 -- General tab. Rank 1 is the whitelist, rank 2 the blacklist (revised 2026-09-15: the whitelist
 -- beats the blacklist, and rank 3's Show is a positive claim that rescues an aura from a Hide
 -- elsewhere).
--- Fix round 2 (batch 7): rank 5's trailing "UNLESS 'Only these categories' is on" clause is gone —
+-- Batch 7: rank 5's trailing "UNLESS 'Only these categories' is on" clause is gone —
 -- the toggle is retired (D8/R-8..R-11 superseded; `Uncategorized = Hide` says the same thing now, on
 -- buffs — see `UNCATEGORIZED_NOTE` below).
 --
@@ -385,7 +385,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- rows regardless of unit.
 local SPELL_LIST_DEBUFF_NOTE = L["Hard CC and Soft CC only work on a hostile target or focus. Blizzard discards spell lists for debuffs on you, your pet or a friendly unit, so on those containers the two rows change nothing."]
 
--- T-2 fix round 4 (batch 7, readability): "These are the lists on General -> Spell Categories..."
+-- T-2 (batch 7, readability): "These are the lists on General -> Spell Categories..."
 -- claims the grid holds EDITABLE lists. True wherever the grid carries a `spells`-kind row or the
 -- `weaponEnchants` row, both of which own a list on General -> Spell Categories — which since issue
 -- #11 is BOTH aura types' grids, not the buff one alone (`Cat.HARMFUL` carries `hardCC` and
@@ -487,11 +487,53 @@ local function bulkButtons(ctx, rows, gridKey)
           onClick = function() setGrid(rows, "hide", gridKey) end })
 end
 
+--- The Spell Categories grid (kind `custom`): heading, bulk buttons, the editable-list blurb, the
+--- grid with its extra column, hidePermanentEnchants under it and the two gated notes.
+local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
+    H.Section(ctx, g.heading)
+    bulkButtons(ctx, mine, g.key)
+    if customGridHasEditableList(mine) then
+        H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
+    end
+    H.ChoiceGrid(ctx, { rows = markedRows(mine), columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
+    if hideRow then
+        H.TextRow(ctx, WEAPON_ENCHANT_TIE)
+        H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
+    end
+    if auraType == "HARMFUL" and customGridHasEditableList(mine) then
+        H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
+    end
+    if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
+        H.TextRow(ctx, UNCATEGORIZED_NOTE)
+    end
+end
+
+--- The Blizzard Categories grid: heading, bulk buttons, then the grid with its extra column.
+local function renderBlizzardGrid(ctx, g, mine)
+    -- Its heading drawn here rather than by ChoiceGrid, so Show all / Hide all sit
+    -- between the heading and the grid (feedback #10). N-5: only this grid gets the
+    -- extra column.
+    H.Section(ctx, g.heading)
+    bulkButtons(ctx, mine, g.key)
+    H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
+end
+
+--- Every other grid: the grid alone, its heading drawn by ChoiceGrid.
+local function renderPlainGrid(ctx, g, mine)
+    -- Dispel Types and Who Cast It: no bulk buttons, and no extraColumn at all, so they
+    -- draw no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
+    -- every cell() call answer nil), which keeps their rows the width they always were.
+    H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
+end
+
+--- Grid key -> its drawer; a key not listed draws as `renderPlainGrid`.
+local GRID_RENDER = { custom = renderCustomGrid, blizzard = renderBlizzardGrid }
+
 --- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell Categories grid (kind
 --- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three
 --- separate gates, deliberately, because the three sentences stopped being true together the moment
---- `Cat.HARMFUL` gained spell lists: the blurb asks whether this grid holds an editable list (T-2 fix
---- round 4, now true on both aura types), the debuff note asks whether it is a debuff grid holding
+--- `Cat.HARMFUL` gained spell lists: the blurb asks whether this grid holds an editable list (T-2, now
+--- true on both aura types), the debuff note asks whether it is a debuff grid holding
 --- one, and UNCATEGORIZED_NOTE asks whether the engine is CERTAIN to honor spell ids for this
 --- container's unit, which is the only place the rescue it describes can happen. It also carries
 --- F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide choice —
@@ -508,36 +550,7 @@ local function renderCategories(ctx, cfg, rows)
             end
         end
         if mine[1] then
-            if g.key == "custom" then
-                H.Section(ctx, g.heading)
-                bulkButtons(ctx, mine, g.key)
-                if customGridHasEditableList(mine) then
-                    H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
-                end
-                H.ChoiceGrid(ctx, { rows = markedRows(mine), columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
-                if hideRow then
-                    H.TextRow(ctx, WEAPON_ENCHANT_TIE)
-                    H.RenderRows(ctx, { forRenderRows(hideRow) }, nil, nil, { noHeadings = true })
-                end
-                if auraType == "HARMFUL" and customGridHasEditableList(mine) then
-                    H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
-                end
-                if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
-                    H.TextRow(ctx, UNCATEGORIZED_NOTE)
-                end
-            elseif g.key == "blizzard" then
-                -- Its heading drawn here rather than by ChoiceGrid, so Show all / Hide all sit
-                -- between the heading and the grid (feedback #10). N-5: only this grid gets the
-                -- extra column.
-                H.Section(ctx, g.heading)
-                bulkButtons(ctx, mine, g.key)
-                H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
-            else
-                -- Dispel Types and Who Cast It: no bulk buttons, and no extraColumn at all, so they
-                -- draw no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
-                -- every cell() call answer nil), which keeps their rows the width they always were.
-                H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
-            end
+            (GRID_RENDER[g.key] or renderPlainGrid)(ctx, g, mine, cfg, auraType, hideRow)
         end
     end
 end
@@ -558,12 +571,12 @@ end
 -- that no category claims, or whose categories only confirm what this very list already decided,
 -- gets none; the note fires only when a category genuinely disagrees, or the id sits on BOTH lists.
 --
--- WORDING RULE (fix round 3): a note describes what the LISTS and the CATEGORIES decide. It never
+-- WORDING RULE: a note describes what the LISTS and the CATEGORIES decide. It never
 -- claims what the aura will finally do, because `ExplainSpell` never reads `castBy`, `durationMode`
 -- or `maxDuration` — the catch-all group this spell would fall into inherits those from the
 -- container's base, so a duration cap or a cast-by restriction can still keep it off screen even
 -- when the lists and categories alone would draw it. Say "the categories say Show" / "no category
--- hides it", never "it would show" / "it would be drawn". (Fix round 2 retired the one exception
+-- hides it", never "it would show" / "it would be drawn". (Batch 7 retired the one exception
 -- this used to carry — the "Only these categories" toggle's rank-5 case, whose definite wording came
 -- from the toggle dropping the catch-all outright; the toggle is gone, and rank 5 can no longer be
 -- "hidden" at all, so that branch is gone too.)
@@ -621,7 +634,7 @@ local function overrideNote(cfg, id, ctx, key)
             return L["Shown here anyway — it is also on the whitelist, which outranks the blacklist."]
         end
         -- Fire on the counterfactual's VERDICT ("shown"), the mirror of the whitelist branch below —
-        -- not on rank 3 alone (fix round 2 of batch 6: rank 3 missed rank 5, where an uncategorized
+        -- not on rank 3 alone (rank 3 alone would miss rank 5, where an uncategorized
         -- blacklisted id would be drawn by the ordinary catch-all if the entry were removed; that is
         -- as real a mismatch as a category disagreeing, and the player was not told either way).
         local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)
@@ -640,7 +653,7 @@ local function overrideNote(cfg, id, ctx, key)
     -- Fire on the counterfactual's VERDICT ("hidden"), not on rank 4 alone: `uncategorized = "hide"`
     -- (rank 4, on buffs) hides an unlisted id exactly as rank 4 does, and this is the one case most
     -- worth a note — without the whitelist this id would vanish from the container entirely, not
-    -- merely lose a category fight. Rank 5 can never be "hidden" (fix round 2: the "Only these
+    -- merely lose a category fight. Rank 5 can never be "hidden" (the "Only these
     -- categories" toggle that once made it so is retired — see the WORDING RULE comment above), so
     -- there is no rank-5 branch here any more; every reachable "hidden" verdict now names a category.
     local cat = FC.ExplainSpell(withoutOverrides(cfg, id), id, ctx)

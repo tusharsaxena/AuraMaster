@@ -192,7 +192,7 @@ end
 --- Its level is read from the engine's ACTUAL, current level and set one below that (floored at 0)
 --- EVERY apply, never assumed or computed from the anchor: the anchor's own level can be raised by a
 --- later apply (layout.level) without the engine's level following it, so deriving the blocker from
---- anything but the engine itself would only hold by coincidence (review round 2). GetFrameLevel is
+--- anything but the engine itself would only hold by coincidence. GetFrameLevel is
 --- a read, not a protected mutation, so this never goes through callEngine; ApplyBlocker still never
 --- WRITES to the engine, which forbids untrusted work once a group exists (Retire's comment,
 --- callEngine) and might refuse a level change reached through the Update path on a live engine.
@@ -412,8 +412,9 @@ end
 --- behind the latch's back, which is why the stand-down refuses AT THE SOURCE rather than hiding
 --- frames imperatively: a hidden frame comes back on the next combat transition or target swap.
 --- The stored `enabled` path is NOT read again here: on a build with no LibKa0s the degraded
---- NS.IsStoodDown answers from that path itself, so step 0 is the one question. A parked container (Park) shows nothing either: its engine may still be
---- built for a container that no longer lives under its id.
+--- NS.IsStoodDown answers from that path itself, so step 0 is the one question.
+--- A parked container (Park) shows nothing either: its engine may still be built for a container
+--- that no longer lives under its id.
 ---
 --- PREVIEWING IS THE TEST MODE (NS.State.testMode), not the lock (B1): unlocking makes a container
 --- draggable and its live auras keep drawing. An UNLOCKED container shows whatever its visibility
@@ -486,8 +487,7 @@ end
 --- aura button's ancestry must not be shown or hidden. The blocker is OUR OWN frame, not the engine's
 --- ancestry, so it is hidden outright rather than disabled — gated the same as the engine's enable,
 --- or a disabled-but-still-drawn engine (out-of-combat visibility, the master switch, perf suspend, a
---- parked container) would leave an invisible mouse-blocking rect over the world where nothing shows
---- (review round 1, B-9: the inverse of the reported bug).
+--- parked container) would leave an invisible mouse-blocking rect over the world where nothing shows.
 --- @return boolean show, boolean previewing, boolean deferred -- `deferred` when combat refused the
 --- anchor half of a stand-down (core/LifecycleSetup.lua re-runs it on PLAYER_REGEN_ENABLED).
 function ContainerClass:ApplyVisibility()

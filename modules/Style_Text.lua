@@ -201,8 +201,8 @@ local function placeIcon(am, s, pos, size)
 end
 
 --- The icon at `pos` ("LEFT" | "RIGHT") of the animated frame, and the text area beside it; with no
---- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (fix round 1,
---- feedback #1): a stacked Center's box holds several rows, and "line height" is one of them, not the
+--- icon the area is the whole element. An `iconSize` of 0 takes ONE ROW's height (feedback #1): a
+--- stacked Center's box holds several rows, and "line height" is one of them, not the
 --- whole stack. The text area is anchored FIRST, from plain arithmetic, and the icon block after it,
 --- guarded as Style.Bind guards a binding (smoke batch 2, item 7): a client call the icon or its
 --- border refuses costs the icon alone (hidden, and reported through Style.ReportError), never the
@@ -445,11 +445,11 @@ end
 
 -- A single fully transparent color, shared by every dispel type the profile's palette does not cover
 -- (Enrage): the engine still calls Show for it (it has a dispelName, and showWithoutDispelType is
--- false only for a TYPELESS aura), so nothing but a transparent tint keeps it invisible (fix round 1,
--- controller ruling: an out-of-palette type gets no visible tint, the same as a typeless aura).
+-- false only for a TYPELESS aura), so nothing but a transparent tint keeps it invisible (controller
+-- ruling: an out-of-palette type gets no visible tint, the same as a typeless aura).
 local invisible
 
---- The backdrop and edge's color map (feedback #7, fix round 1): every type in C.TEXT_DISPEL_TYPES the
+--- The backdrop and edge's color map (feedback #7): every type in C.TEXT_DISPEL_TYPES the
 --- profile's palette colors takes that color at full alpha (the backdrop's own opacity is
 --- `dispelBackdropAlpha`'s SetAlpha, not this alpha); a type it does not cover (Enrage) takes
 --- `invisible`. Unlike Style.DispelColorMap (Bars, Task 11), no entry here falls back to a surface
@@ -620,7 +620,7 @@ local function previewRunColor(fs, aura, s)
 end
 
 --- A placeholder's backdrop and edge (feedback #7): shown in tintColorMap's color for its aura's
---- dispel type -- the SAME map the live engine is handed (fix round 1), so the preview and a live
+--- dispel type -- the SAME map the live engine is handed, so the preview and a live
 --- button cannot disagree -- left hidden (dressDispelTints) for an aura with no type, and for a type
 --- the palette does not cover (Enrage: invisible, not shown, controller ruling).
 local function previewTints(am, aura, s)

@@ -32,21 +32,26 @@ only the tree entry is marked.
   descriptor (`get`/`set`/`applyDefault` over the write seam, `rowsForPage` over
   `NS.SchemaForPage`, `skipRestoreAll`, `resetProfile`, `scheduleTimer`, the color codec) and the
   library draws the canvas, header, tab strip, two-column flow and widgets. The parent category
-  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:52`) and every body is built on its first
+  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:53`) and every body is built on its first
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
 - **Four pages edit one container.** Filters, Layout, Bars and Icons are registered with
   `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`, which is the container
-  banner plus `Helpers.RenderTabbedPage` (`settings/OptionsSetup.lua`): the page's schema groups
-  become tabs, the page's bespoke tabs follow (one may name the tab it is drawn ahead of, as
-  General's Spell Categories does), and every row resolves against the selected container. These
+  banner plus `Helpers.RenderPage` (`settings/OptionsSetup.lua`). `RenderPage` maps the page's spec
+  onto the library's `O.RenderTabbedSchema` (LibKa0s v1.56.0, `opts`: `tabs`, `cfg`, `disabledFor`,
+  `disabledNotice`, `chrome`), which draws the tabbed page: the page's schema groups become tabs, the
+  page's own tabs that the container's aura type admits follow (one keyed by a group takes that
+  group's place and is handed its rows; one may name the tab it is drawn ahead of, as Filters'
+  Overrides does), a stale active tab heals to the first, a page disabled for its container draws
+  the muted-red notice above rows drawn disabled, and every row resolves against the selected
+  container. The host keeps no tab renderer of its own (anti-pattern #47, `AuraMaster-R-04`). These
   four are also sub-pages of Containers in the tree (`N-2`, `D6`) — their Blizzard subcategory
   registers under a marked label, but their page key, heading and everything above is unaffected.
-  General and Containers are both addon-wide and render through `Helpers.RenderTabbedPage` with no
-  banner; Containers' one tab edits the selected container's identity.
+  General and Containers are both addon-wide and render through `Helpers.RenderPage`; General draws
+  no banner, and Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:274`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:350`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -69,11 +74,13 @@ band holds **the picker itself** (options-ui-§14):
   the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
   page's only picker.
 - **Containers** carries the page's identity controls in the band, as options-ui-§14 asks: its Container
-  picker and **New container** on one row, drawn by `Helpers.ContainerHeader` through the library's
-  `PageHeader` chrome block (feedback #2, 2026-09-19; `PageBanner` draws exactly one dropdown). The acts
-  on the selected container (Name, Enabled, Duplicate, Delete, Copy settings from) stay on the page's
-  one tab, which options-ui-§14 then names **General**. The block is drawn on every render, so a Delete's two
-  refreshes cannot lose it, and the widgets of the render before are released after each render.
+  picker and **New container** on one row: `Helpers.ContainerBanner` with the page's own tooltip and
+  New container as the library's `PageBanner` `action` (feedback #2, 2026-09-19; the picker+create
+  band, LibKa0s v1.56.0). The acts on the selected container (Name, Enabled, Duplicate, Delete, Copy
+  settings from) stay on the page's one tab, which options-ui-§14 then names **General**. The band is
+  drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
+  widgets of the render before once the new band exists, and refuses New container in combat as it
+  refuses the picker's selection.
 - **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
   **Copy settings from**'s source and Layout's *Another container* all read
   `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
@@ -105,7 +112,7 @@ band holds **the picker itself** (options-ui-§14):
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`)
+### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralDispel.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -118,7 +125,7 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 | Master alpha | `alpha` | number | Multiplies each container's own Layout → Frame opacity; applied as a visibility pass, legal in combat |
 | Lock frame | `locked` | bool | Unlocked shows every container's drag handle and a faint outline one element in size, and live auras keep drawing; an unlocked container shows whatever its visibility rule, so one set to *In combat* can still be found and moved. Locking hides them |
 | Debug console | `state.debugConsole` | bool, session | Shows or hides the console window; never written to the profile |
-| Minimap button | `global.minimap.hide` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label says SHOWN and the stored key says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.hide` still restores it |
+| Minimap button | `global.minimap.shown` | bool | Shows or hides the minimap button. **The one row stored outside the profile** — the path is verbatim and absolute, and the table is LibDBIcon's own, in the GLOBAL store (launcher-§3). The label and the path say SHOWN (`global.minimap.shown` is true while the button shows) and the stored key, LibDBIcon's `global.minimap.hide`, says HIDDEN, so `settings/Schema.lua`'s read and write seams invert; the write also calls `NS.Launcher:SetShown`, so the button follows the checkbox at once. **No reset on this page moves it**: whether the button is shown is a per-installation display preference, so this page's **Defaults** button skips the row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`) and *Reset all settings* never reaches it. `/am reset global.minimap.shown` still restores it |
 | Test mode | `state.testMode` | bool, session | Every container shows its placeholder auras, without unlocking; never written to the profile (below) |
 
 **Test mode** (`state.testMode`, bool, session) sits beside Minimap button, composed from
@@ -170,9 +177,9 @@ that can never match carries a gray note naming what to use instead, because the
 chat and is gone by the next login.
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
-dropdown of the eleven shipped spell categories, plus every category the player has made — the nine buff ones (defensives, activeMitigation, raidCDs,
-offensiveCDs, healing, support, movement, utility, consumables) and the two debuff ones issue #11
-added (hardCC, softCC) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
+dropdown of the fourteen shipped spell categories, plus every category the player has made — the eleven buff ones (defensives, activeMitigation, raidCDs,
+offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials; schema v7 retired consumables) and the three debuff ones (hardCC and
+softCC from issue #11, racialDebuffs from schema v7) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
 KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry
 carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of control)` — read out of
 `C.AURA_TYPE_LABELS` rather than worded again here, so the picker uses the same two words the
@@ -445,7 +452,7 @@ section, and only that section, for the selected container, as one bulk act (`NS
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
 | Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, movement, utility, consumables, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | *every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
+| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | *every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
 | Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 
@@ -501,7 +508,7 @@ above the controls on two tabs at once. The wording is unchanged, and drives `FC
 per-entry notes above: (1) on the Overrides whitelist — always shown; (2) on the Overrides blacklist
 — hidden, unless the whitelist already claimed it; (3) in at least one category set to Show — shown,
 even if another of its categories says Hide; (4) in categories that all say Hide — hidden; (5) in no
-category at all — shown, nothing removed it. Full detail and how it compiles: `docs/ARCHITECTURE.md`
+category at all — shown, nothing removed it. Full detail and how it compiles: `docs/data-flow.md`
 → Filter priority.
 
 A container that shows only weapon enchants is a buff container (schema v5): on its Categories tab
@@ -580,7 +587,8 @@ container), Click-through `container.behavior.clickThrough` (no tooltips and no 
 When the selected container is drawn as icons, a small muted-red note heads every tab — "Not in use: this
 container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
 and every control below it is drawn disabled (the spec's `disabledFor`,
-`settings/OptionsSetup.lua`'s drawDisabledNotice). It was a large orange banner until batch 8, which
+`settings/OptionsSetup.lua`'s `mutedNotice`, drawn by the library's `O.RenderTabbedSchema` above
+the rows). It was a large orange banner until batch 8, which
 shouted for what is an aside; orange is left to the engine warnings, which can head the same page.
 The tabs and the container picker stay live.
 
@@ -700,7 +708,7 @@ the note and the dimming follow it at once.
 **Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
 stored values did not change) holds three opt-in stand-ins for "color the text by dispel
 type", all off by default, since no engine binding colors a font string by the aura's type
-(`docs/ARCHITECTURE.md` → Known Limitations). `dispelTypeColor` writes the `$dispeltype$` word in its
+(`docs/known-limitations.md`). `dispelTypeColor` writes the `$dispeltype$` word in its
 palette color: each value of the engine's `customDispelTextMap` carries a `|cffRRGGBB…|r` escape
 around the word, the bracket text keeping the font color (dimmed without a `$dispeltype$` token).
 `dispelBackdrop` fills the text area behind the chain with a white texture the engine tints and shows
@@ -745,16 +753,59 @@ With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `f
 player, which is the one exemption options-ui-§17 makes: `expiringColor` and `pandemicColor` on both
 pages, and the five `dispelColors.*` on General → Dispel Colors.
 
+## Launcher
+
+**One object, registered twice** (launcher-§1). `core/LauncherSetup.lua` owns it: it builds a single
+LibDataBroker-1.1 object of `type = "launcher"` through `LibKa0s-Launcher-1.0` and hands that very
+object to LibDBIcon-1.0, so the minimap button and any broker display (Titan Panel, ElvUI data
+texts, Bazooka) draw from one icon, one label and one `OnClick`. `NS.Launcher:Register()` is called
+from `OnInitialize` after `InitDB`, and is idempotent.
+
+| | |
+|---|---|
+| Owner | `core/LauncherSetup.lua` → `NS.Launcher` |
+| Registered as | `AuraMaster` — the **folder name**, on both registrations, because LibDBIcon keys the button's saved position by it |
+| Icon | `C.LOGO_ICON_PATH`, the same file `## IconTexture` names (launcher-§4) |
+| Label | `Ka0s Aura Master` — the **brand name in plain text** (launcher-§1). What a broker display prints in its row, beside the other ten Ka0s addons, so it is spelled the way they are. Deliberately not the TOC `## Title` (a Title may carry color escapes) and not the folder name |
+| Left click | **Opens the settings panel** (`openSettings` → `NS.OpenOptionsPanel`), in either state (launcher-§2, `LibKa0s-Launcher-1.0` minor 4): the panel is where a disabled addon is switched back on |
+| Right click | **Opens the options menu** — the client's context menu, drawn by the library, titled `Ka0s Aura Master`, with one checkbox per pair the descriptor passes: **Enabled** (`isEnabled` + `setEnabled` → `NS.Slash.SetEnabled`, what `/am enable`/`disable` run), **Locked** (`isLocked` + `toggleLock` → `NS.Slash.ToggleLock`, what `/am lock`/`unlock` run) and **Test mode** (`isTestMode` + `toggleTestMode` → `NS.Slash.ToggleTestMode`, what a bare `/am test` runs). No *Show window*: the addon has no primary window. Each state is read when the menu opens; each click runs the verb's own handler, so the refusals and chat lines are the verb's. **While the addon is disabled** *Locked* and *Test mode* are grayed (`(enable the addon first)`) and *Enabled* stays live. On a client without `MenuUtil` the right click opens the panel instead |
+| Tooltip | **Drawn by `LibKa0s-Launcher-1.0`** (minor 3, launcher-§1) on every hover, **including while the addon is disabled**: `Ka0s Aura Master  v<version>` (the TOC's `## Version`, through `NS.Version`), `Enabled: Yes\|No`, `Locked: Yes\|No` (the Lock frame row's `locked`), `Test mode: On\|Off` (the Test mode row's `state.testMode`), `Left-click: Open settings`, `Right-click: Options menu` (fixed since minor 4, the same in either state). The descriptor only answers the questions (`version`, `isEnabled`, `isLocked`, `isTestMode`), each asked on the show and never cached. No `onTooltipShow`: the addon has no lines of its own, and a hook drawing a title or a click hint would draw a second copy (anti-pattern #89) |
+| Visibility | The **Minimap button** row. Its CLI path is `global.minimap.shown`, which answers true while the button shows; its storage is LibDBIcon's own `global.minimap.hide`, in the global store, never a second `shown` key (launcher-§3, anti-pattern #81, General's Master controls in this file) |
+| Survives every reset | A per-installation display preference, like the button's position, so **no** reset the panel runs may move it — neither *Reset all settings* nor the General page's **Defaults** button. The one veto is `vetoedFromPanelReset` in the options descriptor's `applyDefault`, the library's single reset seam. `/am reset global.minimap.shown` is deliberately **not** vetoed: that is the player naming this one row |
+
+**Three menu entries, because the addon has three toggles.** This addon has no primary window; its
+preview is the session-only test mode, switched by the Master controls *Test mode* checkbox
+(unlocking no longer previews: live auras keep drawing while containers are unlocked). So the menu
+carries *Enabled*, *Locked* and *Test mode*, the row the standard's `ADDONS.md` records for it, and
+no *Show window*. Neither button is reassignable and there is no setting for either; the menu and
+the click routing are the library's, never the addon's (launcher-§2, anti-pattern #81).
+
+**Both broker libraries are optional.** `LibKa0s-Launcher-1.0` resolves them with
+`LibStub(…, true)` at Register time, so a client with LibDataBroker but no LibDBIcon gets the
+broker plugin and no button, one with neither gets a line naming what is missing, and one without
+LibKa0s at all gets `core/LauncherSetup.lua`'s stub. In every case the stored `hide` is still written, so the
+checkbox reflects what the player chose and a later reload draws the button where they left it.
+
 ## The degraded panel
 
 With `libs/LibKa0s/` missing, `settings/OptionsSetup.lua` installs a **load-completing** stub
 (options-ui-§1): the five composers (`ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`,
 `MasterControls`) and `MASTER_GROUP` (every member a page file touches at file load), and a real
-`RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`), so
-every row still registers and `/am list|get|set` and the defaults keep working. Every other function
-member of the live instance, this addon's decorations (`SelectContainer`, `ContainerHeader`,
-`RenderTabbedPage`, …) included, is carried as a no-op, so no call site finds a member missing
+`RestoreAllDefaults` (one bulk act under `NS.Bulk.Run`, logged once by `NS.OnProfileReset`). Every
+composer answers an **empty row list** (`MasterControls` answers `{}` and a no-op tail), so the page
+files finish loading and register their hand-written rows while every composed row (the Master
+controls block, the font, border, bar and color-pair blocks) is absent from that build's schema: a
+host copy of a composed block in the stub is anti-pattern #73. `/am set` on a composed path, like
+every schema verb in that build, prints the library-absent line (`/am set is unavailable: the LibKa0s
+library did not load.`). `/am enable`, `/am disable`, `/am lock` and `/am unlock` keep working: their
+two paths, `enabled` and `locked`, are declared in `NS.WRITE_THROUGH` (`settings/Schema.lua`), and
+`NS.SetByPath` stores a listed path that has no row raw, with no validate, normalize or onChange, then
+logs and announces it (route (a)); `runEnabled` syncs the latch itself. Every other function
+member of the live instance, this addon's decorations (`SelectContainer`, `ContainerBanner`,
+`RenderPage`, …) included, is carried as a no-op, so no call site finds a member missing
 (testing-§8); the library's layout and composer constants, `AceGUI` and `LSMValues` are not copied.
 The panel itself (`CreateOptionsPanel`, `OpenOptionsPanel`) answers one line naming the missing
-library. `tests/degraded_env.lua` builds that environment for the suite, and
-`tests/test_surface_parity.lua` compares its member set against the live instance.
+library. `tests/degraded_env.lua` builds that environment for the suite,
+`tests/test_surface_parity.lua` compares its member set against the live instance, and
+`tests/test_optionssetup.lua` pins the full row count, the library-absent count and the delta, derived
+from what the live composers emit.

@@ -182,14 +182,15 @@ test("slash: /am disable and /am enable write the master switch through the seam
     assertEqual(calls[1] and calls[1].path, "enabled")
     assertEqual(calls[1] and calls[1].value, false)
     assertFalse(NS2.db.profile.enabled)
-    assertTrue(said(lines, "Aura Master disabled — /am enable turns it back on"), lastLine(lines))
+    -- The set shape (slash-commands-§5), read back through the library's CliGet.
+    assertTrue(said(lines, "enabled|r = |cFFFFFFFFfalse|r"), lastLine(lines))
     local on, off = enginesEnabled(NS2)
     assertTrue(on == 0 and off > 0, "the visibility pass disabled every engine")
     NS2.Slash:OnSlash("enable")
     assertEqual(calls[2] and calls[2].path, "enabled")
     assertEqual(calls[2] and calls[2].value, true)
     assertTrue(NS2.db.profile.enabled, "disable then enable round-trips")
-    assertTrue(said(lines, "Aura Master enabled"), lastLine(lines))
+    assertTrue(said(lines, "enabled|r = |cFFFFFFFFtrue|r"), lastLine(lines))
     on, off = enginesEnabled(NS2)
     assertTrue(on > 0 and off == 0, "the visibility pass re-enabled every engine")
 end)
@@ -213,7 +214,7 @@ test("slash: /am enable prints the seam's error instead of the success line", fu
     NS2.Slash:OnSlash("enable")
     assertTrue(said(lines, "the seam said no"), lastLine(lines))
     -- red under: runEnabled printing the success line whatever the seam answered
-    assertFalse(said(lines, "Aura Master enabled"), lastLine(lines))
+    assertFalse(said(lines, "enabled|r = "), lastLine(lines))
     assertEqual(#lines, 1, "one line: the error")
 end)
 
@@ -230,18 +231,43 @@ test("slash: enable and disable are listed by /am help and on the landing page",
     end
 end)
 
-test("slash: the degraded stub still answers /am enable and /am disable", function()
+--- The library-absent environment, initialized so it has a database and containers.
+local function degraded()
     local NS2, mocks = dofile("tests/degraded_env.lua")()
-    local calls = recordSeam(NS2, function() return true end)
+    rawset(_G, "AuraMasterDB", nil)
+    NS2.addon:OnInitialize()
+    return NS2, mocks
+end
+
+test("slash: the degraded stub's /am disable and /am enable store the switch through writeThrough", function()
+    local NS2, mocks = degraded()
+    -- No composed row in this build: the path is reached through NS.WRITE_THROUGH alone.
+    assertNil(NS2.FindSchemaRow("enabled"), "the stub composer registered no enabled row")
     local lines = capture(mocks)
     NS2.Slash:OnSlash("disable")
+    -- red under: writeThrough absent (Setting not found)
+    assertFalse(NS2.db.profile.enabled, "disable stored false")
+    assertFalse(said(lines, "Setting not found"), lastLine(lines))
+    assertTrue(NS2.IsStoodDown(), "the latch followed the stored switch")
     NS2.Slash:OnSlash("enable")
-    assertEqual(#calls, 2, "both verbs reached the seam without the library")
-    assertEqual(calls[1].value, false)
-    assertEqual(calls[2].value, true)
+    assertTrue(NS2.db.profile.enabled, "enable stored true")
+    assertFalse(NS2.IsStoodDown(), "the latch followed it back up")
     assertTrue(said(lines, "Aura Master enabled"), lastLine(lines))
     local rows = table.concat(NS2.Slash.LandingRows(), "\n")
     assertTrue(rows:find("/am disable", 1, true) ~= nil, "the stub lists the verb")
+end)
+
+test("slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough", function()
+    local NS2, mocks = degraded()
+    assertNil(NS2.FindSchemaRow("locked"), "the stub composer registered no locked row")
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("unlock")
+    -- red under: writeThrough absent (Setting not found)
+    assertFalse(NS2.db.profile.locked, "unlock stored false")
+    NS2.Slash:OnSlash("lock")
+    assertTrue(NS2.db.profile.locked, "lock stored true")
+    assertFalse(said(lines, "Setting not found"), lastLine(lines))
+    assertTrue(said(lines, "Containers locked"), lastLine(lines))
 end)
 
 test("slash: /am delete removes a container by id", function()
@@ -385,4 +411,30 @@ test("slash: /am debug on and off flip the session flag; it never reaches the pr
     assertFalse(NS2.State.debug)
     -- red under: DebugLogSetup's setEnabled writing NS.db.profile.debug (reached via /am debug off)
     assertNil(NS2.db.profile.debug)
+end)
+
+test("slash: the dispatcher's isEnabled is NS.EnabledStored", function()
+    -- A descriptor spy: the same load fresh_env.lua does, with LibKa0s-Slash's New wrapped between
+    -- the library and the TOC, so the descriptor settings/Slash.lua builds is the one inspected.
+    local Loader     = dofile("tests/_kit/loader.lua")
+    local buildMocks = dofile("tests/wow_mock.lua")
+    Loader.addonName = "AuraMaster"
+    local mocks, NS2 = buildMocks(), {}
+    rawset(_G, "AuraMasterDB", nil)
+    Loader.loadAll(Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml"), NS2, mocks)
+    local lib = (mocks.LibStub or _G.LibStub)("LibKa0s-Slash-1.0")
+    local realNew, seen = lib.New, nil
+    lib.New = function(self, d)
+        if d and d.slash == "/am" then seen = d end
+        return realNew(self, d)
+    end
+    local ok, err = pcall(Loader.loadAll, Loader.tocFiles("AuraMaster.toc"), NS2, mocks)
+    lib.New = realNew
+    if not ok then error(err, 0) end
+    assertTrue(seen ~= nil, "settings/Slash.lua built its dispatcher through LibKa0s-Slash:New")
+    assertTrue(type(NS2.EnabledStored) == "function", "core/LifecycleSetup.lua publishes NS.EnabledStored")
+    -- red under: a second, private isEnabled in settings/Slash.lua
+    assertTrue(seen.isEnabled == NS2.EnabledStored, "one enabled predicate, not two")
+    -- Before InitDB the stored read answers nil, and nil is enabled.
+    assertTrue(NS2.EnabledStored())
 end)

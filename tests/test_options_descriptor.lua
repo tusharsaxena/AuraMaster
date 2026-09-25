@@ -8,6 +8,7 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
+local pages = dofile("tests/page_helpers.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
 --- The newest AceGUI widget of `wtype` whose label is `label`.
@@ -37,9 +38,9 @@ local function counter(tbl, name)
     return n
 end
 
---- Click the tab `key` on a rendered container page.
-local function clickTab(ctx, key)
-    for i, t in ipairs(ctx.__tabs) do
+--- Click the tab `key` on a rendered container page (P: tests/page_helpers.lua's strip recorder).
+local function clickTab(P, ctx, key)
+    for i, t in ipairs(P.drawnTabs(ctx)) do
         if t.key == key then return ctx.__tabKids[i]:__fire("OnClick") end
     end
     error("no tab " .. tostring(key))
@@ -71,10 +72,11 @@ end)
 
 test("options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape", function()
     local NS2, m = fresh()
+    local P = pages(NS2, m)
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local row = NS2.FindSchemaRow("container.bars.barColor")
-    clickTab(NS2.Helpers.__pageCtx.bars, row.group)
+    clickTab(P, NS2.Helpers.__pageCtx.bars, row.group)
     local cp = widget(m, "ColorPicker", row.label)
     assertTrue(cp ~= nil, "the " .. row.group .. " tab drew the bar color swatch")
     local stored = NS2.Database.FindContainer(1).bars.barColor
@@ -170,24 +172,27 @@ test("options descriptor: the degraded Reset all resets the profile whole and wa
     rawset(_G, "AuraMasterDB", nil)
     NS2.addon:OnInitialize()
     local walked = { 0 }
-    NS2.FindSchemaRow("alpha").onChange = function() walked[1] = walked[1] + 1 end
-    NS2.SetByPath("alpha", 0.5)
+    -- A hand-written profile row: the degraded build registers no composed one (options-ui-§1).
+    local PATH = "hideBlizzardBuffs"
+    NS2.FindSchemaRow(PATH).onChange = function() walked[1] = walked[1] + 1 end
+    NS2.SetByPath(PATH, true)
     walked[1] = 0
     local resets = counter(NS2.db, "ResetProfile")
     NS2.Helpers.RestoreAllDefaults()
-    -- red under: the stub's loop dropping the `not row.sessionOnly` veto (alpha is written, then discarded)
+    -- red under: the stub's loop dropping the `not row.sessionOnly` veto (the row is written, then discarded)
     assertEqual(walked[1], 0)
     assertEqual(resets[1], 1)
-    assertEqual(NS2.db.profile.alpha, 1)
+    assertEqual(NS2.db.profile[PATH], false)
 end)
 
 -- ── the banner, the picker, the page renderer ─────────────────────────────────────────────────
 
 test("options descriptor: the banner lists every container by name and ignores a re-pick of the selection", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.State.SetActiveContainer(2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    local dd = NS2.Helpers.__pageCtx.bars.__bannerWidget
+    local dd = P.banner(NS2.Helpers.__pageCtx.bars)
     -- Player buffs, Player cooldowns, Player debuffs, Target debuffs (mine): by name (B2-2)
     assertEqual(table.concat(dd.order, ","), "1,4,2,3")
     assertEqual(dd.list[2], "Player debuffs  |cff888888(Player debuffs, icons)|r")
@@ -203,18 +208,19 @@ test("options descriptor: the banner lists every container by name and ignores a
 end)
 
 test("options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.State.SetActiveContainer(1)
     NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.containers
-    local dd = ctx.__bannerWidget
+    local dd = P.banner(ctx)
     -- red under: the picker still drawn in the tab body (the retired options-ui-§14 deviation)
     assertTrue(dd ~= nil and dd.type == "Dropdown", "the band carries the picker")
     assertEqual(dd.labelText, "Container")
     assertTrue((ctx.__bannerHeight or 0) > 0, "and reserves the band above the strip")
     assertEqual(table.concat(dd.order, ","), "1,4,2,3", "by name (B2-2)")
     dd:__fire("OnValueChanged", 2)
-    -- red under: the header's callback not reaching SelectContainer
+    -- red under: the band's callback not reaching SelectContainer
     assertEqual(NS2.State.activeContainerId, 2)
 end)
 
@@ -222,14 +228,15 @@ end)
 -- breaking a tie (names differing only in case are refused by CM.UniqueName, so the tie is written
 -- straight to the store), with the gray "(unit, style)" suffix kept.
 test("options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     local cs = NS2.db.profile.containers
     cs[1].name, cs[2].name, cs[3].name, cs[4].name = "zeta", "Alpha", "beta", "ALPHA"
     NS2.State.SetActiveContainer(1)
     for _, page in ipairs({ "containers", "filters", "layout", "bars", "icons", "text" }) do
         local ctx = NS2.Helpers.__pageCtx[page]
         ctx.panel:__fire("OnShow")
-        local dd = ctx.__bannerWidget
+        local dd = P.banner(ctx)
         -- red under: the picker in display order (1,2,3,4), or a byte sort (4,2,3,1: "ALPHA" < "Alpha")
         assertEqual(table.concat(dd.order, ","), "2,4,3,1", page)
         assertTrue(dd.list[2]:find("Alpha  |cff888888(", 1, true) == 1, page .. ": the gray suffix stays: " .. dd.list[2])
@@ -238,7 +245,8 @@ test("options descriptor: every page's Container picker sorts by name, case-inse
 end)
 
 test("options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     NS2.State.SetActiveContainer(2)                   -- a debuff container
@@ -256,12 +264,12 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
     }
     NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
     local keys = {}
-    for _, t in ipairs(ctx.__tabs) do keys[t.key] = true end
+    for _, t in ipairs(P.drawnTabs(ctx)) do keys[t.key] = true end
     assertTrue(keys.extra)
-    -- red under: collectTabs ignoring a bespoke tab's auraTypes
+    -- red under: the page's tabs handed to the library without their auraTypes filter
     assertNil(keys.buffsOnly)
     assertEqual(table.concat(intro, ","), "2", "the intro, with the selected container")
-    clickTab(ctx, "extra")
+    clickTab(P, ctx, "extra")
     assertEqual(ctx.activeTab, "extra")
     assertEqual(table.concat(drawn, ","), "2", "the bespoke tab's render, with the container")
     -- The library's strip already ignores a click on the active tab, so the page's own guard is
@@ -277,12 +285,14 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
     onSelect("extra")
     -- red under: the strip's onSelect without its `key == ctx.activeTab` guard (it re-renders)
     assertEqual(table.concat(intro, ","), renders, "selecting the active tab draws nothing")
-    onSelect(ctx.__tabs[1].key)
-    assertEqual(ctx.activeTab, ctx.__tabs[1].key, "another tab still switches")
+    local first = P.drawnTabs(ctx)[1].key
+    onSelect(first)
+    assertEqual(ctx.activeTab, first, "another tab still switches")
 end)
 
 test("options descriptor: with no containers a page draws the one empty-registry line and no intro", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     deleteAll(NS2)
@@ -293,10 +303,10 @@ test("options descriptor: with no containers a page draws the one empty-registry
         return textRow(c, text, ...)
     end
     NS2.Helpers.RenderContainerPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end })
-    -- red under: renderActiveTab calling spec.intro with a nil cfg
+    -- red under: RenderPage handing the library an intro chrome with a nil cfg
     assertEqual(introduced[1], 0)
     assertEqual(table.concat(rows, "|"), "No containers yet. Create one on Containers, or type /am new.")
-    assertEqual(ctx.__tabs[1].label, "Container", "the placeholder tab")
+    assertEqual(P.drawnTabs(ctx)[1].label, "Container", "the placeholder tab")
 end)
 
 test("options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after", function()
@@ -310,7 +320,7 @@ test("options descriptor: a page disabled for its container hands the disable to
         end } } }
     ctx.activeTab = "extra"
     NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
-    -- red under: renderActiveTab rendering a bespoke tab outside the page's disable
+    -- red under: RenderPage dropping disabledFor (a page tab rendered outside the page's disable)
     assertTrue(seen[1] == true)
     -- red under: the flag left on the ctx (every later render of the page drawn disabled)
     assertNil(ctx.__renderDisabled)
@@ -320,27 +330,29 @@ test("options descriptor: a page disabled for its container hands the disable to
     assertNil(ctx.__renderDisabled, "even when the tab raises")
 end)
 
-test("options descriptor: RenderTabbedPage draws no banner; RenderContainerPage is the banner plus it", function()
-    local NS2 = fresh()
+test("options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it", function()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    local ctx = NS2.Helpers.__pageCtx.bars
-    assertTrue(ctx.__bannerWidget ~= nil, "a container page draws the banner")
+    assertTrue(P.banner(NS2.Helpers.__pageCtx.bars) ~= nil, "a container page draws the banner")
+    local ctx = NS2.Helpers.__pageCtx.general
     local strips = counter(NS2.Helpers, "TabStrip")
-    NS2.Helpers.RenderTabbedPage(ctx, "bars", {})
-    -- red under: RenderTabbedPage drawing the container banner (General would grow one, against D1)
-    assertNil(ctx.__bannerWidget)
+    NS2.Helpers.RenderPage(ctx, "general", { addonWide = true })
+    -- red under: RenderPage drawing the container banner (General would grow one, against D1)
+    assertNil(P.banner(ctx))
     assertEqual(strips[1], 1, "the strip is still drawn")
-    NS2.Helpers.RenderContainerPage(ctx, "bars", {})
-    assertTrue(ctx.__bannerWidget ~= nil, "and the container page draws it again")
+    NS2.Helpers.RenderContainerPage(ctx, "general", { addonWide = true })
+    assertTrue(P.banner(ctx) ~= nil, "and the container page draws it")
 end)
 
 test("options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.containers
     deleteAll(NS2)
     local drawn = {}
-    NS2.Helpers.RenderTabbedPage(ctx, "containers", {
+    NS2.Helpers.RenderPage(ctx, "containers", {
         addonWide = true,
         tabs = { { key = "General", label = "General", render = function(_, cfg, rows)
             local list = rows or {}
@@ -349,31 +361,32 @@ test("options descriptor: an addon-wide tabbed page draws every tab with no cont
         end } },
     })
     local keys = {}
-    for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
-    -- red under: collectTabs returning no tabs without a container, or adding the bespoke tab twice
+    for i, t in ipairs(P.drawnTabs(ctx)) do keys[i] = t.key end
+    -- red under: RenderPage drawing no tabs without a container, or the bespoke tab added twice
     assertEqual(table.concat(keys, ","), "General")
-    clickTab(ctx, "General")
+    clickTab(P, ctx, "General")
     assertEqual(#drawn, 1, "the bespoke render replaced the group's rows")
     assertNil(drawn[1].cfg, "with no container")
     assertEqual(drawn[1].rows, 5, "and was handed the group's rows")
 end)
 
 test("options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last", function()
-    local NS2 = fresh()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
     NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     local function strip(before)
-        NS2.Helpers.RenderTabbedPage(ctx, "general", {
+        NS2.Helpers.RenderPage(ctx, "general", {
             addonWide = true,
             tabs = { { key = "Extra", label = "Extra", before = before, render = function() end } },
         })
         local keys = {}
-        for i, t in ipairs(ctx.__tabs) do keys[i] = t.key end
+        for i, t in ipairs(P.drawnTabs(ctx)) do keys[i] = t.key end
         return table.concat(keys, ",")
     end
-    -- red under: placeTab ignoring `before` (every bespoke tab appended after the schema groups)
+    -- red under: RenderPage dropping `before` (every bespoke tab appended after the schema groups)
     assertEqual(strip("Display"), "Master controls,Extra,Display,Spell Categories,Dispel Colors")
-    -- red under: placeTab dropping a tab whose `before` names nothing this render draws
+    -- red under: a tab whose `before` names nothing this render draws being dropped
     assertEqual(strip("No such tab"), "Master controls,Display,Spell Categories,Dispel Colors,Extra")
     assertEqual(strip(nil), "Master controls,Display,Spell Categories,Dispel Colors,Extra")
 end)
@@ -442,30 +455,22 @@ end)
 
 -- ── the degradation stub's composers ──────────────────────────────────────────────────────────
 
-test("options descriptor: the stub's composers emit the paths and types the live composers do", function()
+test("options descriptor: every stub composer answers an empty row list", function()
     local NS2 = loadDegraded()
-    local live = fresh().Helpers
     local SPECS = {
         { "ColorPair", { prefix = "p.", key = "barColor", page = "bars", group = "G" } },
-        { "ColorPair", { prefix = "p.", key = "tint", companionKey = "useTint", page = "bars", group = "G" } },
-        { "FontGroup", { prefix = "p.text.", page = "bars", group = "G", omit = { fontShadow = true } } },
-        { "BorderGroup", { prefix = "p.", page = "icons", group = "G", show = true } },
-        { "BorderGroup", { prefix = "p.", page = "icons", group = "G" } },
-        { "BarGroup", { prefix = "p.", page = "bars", group = "G", keys = { barTexture = "bgTexture" } } },
-        { "MasterControls", { prefix = "", page = "general", addonName = "Aura Master", frameless = true } },
+        { "FontGroup", { prefix = "p.text.", page = "bars", group = "G" } },
+        { "BorderGroup", { prefix = "p.", page = "icons", group = "G", show = true,
+                           extra = { { path = "p.extra", type = "bool" } } } },
+        { "BarGroup", { prefix = "p.", page = "bars", group = "G" } },
         { "MasterControls", { prefix = "", page = "general", addonName = "Aura Master",
-                              debugConsolePath = "state.console" } },
+                              minimapPath = "global.minimap.shown", testModePath = "state.testMode" } },
     }
-    local function shape(rows)
-        local out = {}
-        for i, r in ipairs(rows) do
-            out[i] = ("%s:%s%s"):format(tostring(r.path), tostring(r.type), r.sessionOnly and ":session" or "")
-        end
-        return table.concat(out, ",")
-    end
     for _, s in ipairs(SPECS) do
-        local want, got = shape((live[s[1]](s[2]))), shape((NS2.Helpers[s[1]](s[2])))
-        -- red under: a stub composer drifting from the live one (a leaf, an order, a key or an omission)
-        assertEqual(got, want, s[1])
+        local rows, tail = NS2.Helpers[s[1]](s[2])
+        -- red under: a host copy of a composed block in the stub (anti-pattern #73, options-ui-§1)
+        assertEqual(type(rows), "table", s[1])
+        assertNil(next(rows), s[1] .. " answered rows")
+        if s[1] == "MasterControls" then assertEqual(type(tail), "function", "MasterControls' tail") end
     end
 end)

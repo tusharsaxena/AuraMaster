@@ -1,11 +1,11 @@
 -- tests/test_launcher.lua — the launcher (launcher-§1..§5): the one broker object behind both
--- surfaces, the rung its left click sits on, the Minimap button row's inverting seam, the two
--- reserved verbs, and the degraded install with neither broker library.
+-- surfaces, its two buttons and the options menu's entries, the Minimap button row's inverting seam,
+-- the two reserved verbs, and the degraded install with neither broker library.
 --
 -- The object, the click dispatch and the Show/Hide plumbing are LibKa0s-Launcher-1.0's and are
 -- tested there (testing-§8). What is pinned here is the wiring this addon owns: the folder name it
--- registers under, the icon file it points at, WHICH state the left button drives, where the
--- visibility is stored, and which way round the row's sense runs.
+-- registers under, the icon file it points at, WHICH toggles the right-click menu offers and which
+-- handler each reaches, where the visibility is stored, and which way round the row's sense runs.
 --
 -- The two broker libraries are NOT vendored into the headless load list (they are `libs\` rows, and
 -- tests/run.lua loads only the addon's own TOC files), so each case that needs a real registration
@@ -19,7 +19,7 @@ local NS = T.NS
 local fresh = dofile("tests/fresh_env.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
-local MINIMAP_PATH = "global.minimap.hide"
+local MINIMAP_PATH = "global.minimap.shown"
 
 --- A client with both broker libraries: an environment, plus the recorder they wrote into.
 ---
@@ -135,47 +135,277 @@ test("launcher: the icon file ships as an uncompressed 32-bit 128x128 TGA", func
     assertEqual(size, 18 + 128 * 128 * 4 + 26, "header + pixels + Pillow's TGA footer")
 end)
 
--- ── The rung ──────────────────────────────────────────────────────────────────────────────────
+-- ── The two buttons (launcher-§2, LibKa0s-Launcher-1.0 minor 4) ─────────────────────────────────
+--
+-- Left-click opens the settings panel; right-click opens the client's context menu with one
+-- checkbox per toggle this addon really has. The menu itself is the library's and tested there; what
+-- is pinned here is WHICH entries this addon supplies and that each one reaches the SAME handler its
+-- slash verb runs, so the refusals, the combat rules and the chat lines are the addon's.
 
-test("launcher: rung (b) — the LEFT click toggles test mode, and the lock is left alone (B1)",
+--- A client with both broker libraries and the context-menu API (tests/mock_menu.lua), installed
+--- after load: the library resolves `MenuUtil` on every right click, never at load.
+local function withMenu(opts)
+    local NS2, rec, mocks = withBroker(opts)
+    local menu = dofile("tests/mock_menu.lua")(mocks)
+    return NS2, rec, mocks, menu
+end
+
+--- Right-click the one object, as LibDBIcon's button would, and answer the menu that opened.
+local function rightClick(rec, menu)
+    local before = menu.opens
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "RightButton")
+    assertEqual(menu.opens, before + 1, "the right click opened the context menu")
+    return menu.last
+end
+
+--- The chat lines a call prints, color escapes stripped, in order.
+local function printed(mocks, fn)
+    local lines = capture(mocks)
+    fn()
+    local out = {}
+    for i, line in ipairs(lines) do
+        out[i] = line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    end
+    return out
+end
+
+test("launcher: the descriptor passes the three toggle pairs this addon has, and no retired field",
 function()
-    local NS2, rec = withBroker()
-    local click = rec.objects.AuraMaster.OnClick
-    assertTrue(type(click) == "function", "the object carries the one click implementation")
-    click(rec.objects.AuraMaster, "LeftButton")
-    -- red under: an onClick still toggling the lock (unlocking no longer previews)
-    assertTrue(NS2.State.testMode, "test mode on: the preview")
-    assertTrue(NS2.db.profile.locked, "the lock is untouched")
-    click(rec.objects.AuraMaster, "LeftButton")
+    local f = assert(io.open("core/LauncherSetup.lua", "r"))
+    local src = f:read("*a")
+    f:close()
+    -- red under: a descriptor missing a pair — the menu draws only entries with BOTH halves
+    for _, field in ipairs({ "isEnabled", "setEnabled", "isLocked", "toggleLock", "isTestMode",
+        "toggleTestMode", "version" }) do
+        assertTrue(src:find("\n%s*" .. field .. "%s*=%s*function") ~= nil, "descriptor." .. field)
+    end
+    -- No primary window (the preview is the test mode), so no Show window pair.
+    assertNil(src:find("\n%s*isWindowShown%s*="), "no isWindowShown: this addon has no primary window")
+    assertNil(src:find("\n%s*toggleWindow%s*="), "no toggleWindow")
+    -- red under: dead configuration the library ignores since minor 4 (launcher-§5)
+    for _, field in ipairs({ "onClick", "leftClickLabel", "disabledLine", "slash", "onTooltipShow" }) do
+        assertNil(src:find("\n%s*" .. field .. "%s*="), "retired or unowed field " .. field)
+    end
+end)
+
+test("launcher: the LEFT click opens the settings panel and changes nothing else", function()
+    local NS2, rec = withMenu()
+    local opened = 0
+    NS2.OpenOptionsPanel = function() opened = opened + 1 end
+    local locked, testMode = NS2.GetSetting("locked"), NS2.State.testMode
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    -- red under: a descriptor still routing the left button to the test mode (rung (b), retired)
+    assertEqual(opened, 1, "left-click opens the panel (launcher-§2)")
+    assertEqual(NS2.GetSetting("locked"), locked, "the lock is untouched")
+    assertEqual(NS2.State.testMode, testMode, "the test mode is untouched")
+end)
+
+test("launcher: the LEFT click opens the panel while disabled too — it is where the addon is re-enabled",
+function()
+    local NS2, rec = withMenu()
+    local opened = 0
+    NS2.OpenOptionsPanel = function() opened = opened + 1 end
+    NS2.SetByPath("enabled", false)
+    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    assertEqual(opened, 1, "no refusal on the left button since Launcher minor 4")
+    assertFalse(NS2.State.testMode, "and no feature ran")
+end)
+
+test("launcher menu: titled with the brand, entries Enabled, Locked, Test mode, in that order", function()
+    local NS2, rec, _, menu = withMenu()
+    local opened = 0
+    NS2.OpenOptionsPanel = function() opened = opened + 1 end
+    local m = rightClick(rec, menu)
+    assertEqual(m.titles[1], "Ka0s Aura Master", "the plain-text label")
+    -- red under: a missing pair, or a Show window entry for a window this addon does not have.
+    -- The row the standard's ADDONS.md records for this addon: Enabled · Locked · Test mode.
+    assertEqual(table.concat(m:Texts(), " | "), "Enabled | Locked | Test mode")
+    assertEqual(opened, 0, "the menu opened instead of the panel")
+end)
+
+test("launcher menu: every checkbox reads the live state when the menu opens", function()
+    local NS2, rec, _, menu = withMenu()
+    NS2.SetByPath("locked", true)
+    local m = rightClick(rec, menu)
+    assertTrue(m:Checked("Enabled"))
+    assertTrue(m:Checked("Locked"))
+    assertFalse(m:Checked("Test mode"))
+    NS2.SetByPath("locked", false)
+    NS2.Slash.ToggleTestMode()
+    -- red under: an accessor reading a copy captured at New
+    m = rightClick(rec, menu)
+    assertFalse(m:Checked("Locked"))
+    assertTrue(m:Checked("Test mode"))
+end)
+
+test("launcher menu: Enabled calls the enable/disable handler, and prints what /am disable prints",
+function()
+    local NS2, rec, mocks, menu = withMenu()
+    -- By routing: the host's handler, handed the state it moves TO.
+    local asked = {}
+    local real = NS2.Slash.SetEnabled
+    NS2.Slash.SetEnabled = function(on)
+        local n = #asked
+        asked[n + 1] = tostring(on)
+        return real(on)
+    end
+    local viaMenu = printed(mocks, function() rightClick(rec, menu):Click("Enabled") end)
+    NS2.Slash.SetEnabled = real
+    -- red under: setEnabled wired to NS.SetByPath directly, past the verb's handler
+    assertEqual(table.concat(asked, ","), "false", "one call, moving to disabled")
+    assertFalse(NS2.db.profile.enabled, "the SAME stored path the checkbox and the verb write")
+    -- By effect: the verb's own words, byte for byte.
+    NS2.SetByPath("enabled", true)
+    local viaVerb = printed(mocks, function() NS2.Slash:OnSlash("disable") end)
+    assertEqual(table.concat(viaMenu, "\n"), table.concat(viaVerb, "\n"), "the menu and /am disable say one thing")
+    assertTrue(#viaMenu >= 1, "and it said something")
+    -- And back on, from the disabled state: Enabled stays live.
+    rightClick(rec, menu):Click("Enabled")
+    assertTrue(NS2.db.profile.enabled, "Enabled re-enables from the menu")
+end)
+
+test("launcher menu: Locked calls the lock/unlock handler, and prints what /am unlock prints", function()
+    local NS2, rec, mocks, menu = withMenu()
+    NS2.SetByPath("locked", true)
+    local calls = 0
+    local real = NS2.Slash.ToggleLock
+    NS2.Slash.ToggleLock = function() calls = calls + 1 return real() end
+    local viaMenu = printed(mocks, function() rightClick(rec, menu):Click("Locked") end)
+    NS2.Slash.ToggleLock = real
+    assertEqual(calls, 1, "one call to the host's toggle")
+    assertFalse(NS2.GetSetting("locked"), "unlocked")
+    NS2.SetByPath("locked", true)
+    local viaVerb = printed(mocks, function() NS2.Slash:OnSlash("unlock") end)
+    -- red under: toggleLock writing the setting itself, with no confirmation line
+    assertEqual(table.concat(viaMenu, "\n"), table.concat(viaVerb, "\n"), "the menu and /am unlock say one thing")
+    rightClick(rec, menu):Click("Locked")
+    assertTrue(NS2.GetSetting("locked"), "and the next click locks again")
+end)
+
+test("launcher menu: Test mode calls the /am test handler, through the switch the checkbox uses", function()
+    local NS2, rec, mocks, menu = withMenu()
+    local calls, switched = 0, {}
+    local real, set = NS2.Slash.ToggleTestMode, NS2.Preview.SetTestMode
+    NS2.Slash.ToggleTestMode = function() calls = calls + 1 return real() end
+    NS2.Preview.SetTestMode = function(on)
+        local n = #switched
+        switched[n + 1] = tostring(on)
+        return set(on)
+    end
+    local viaMenu = printed(mocks, function() rightClick(rec, menu):Click("Test mode") end)
+    NS2.Slash.ToggleTestMode, NS2.Preview.SetTestMode = real, set
+    -- red under: core/LauncherSetup.lua writing NS.State.testMode itself
+    assertEqual(calls, 1, "one call to the verb's handler")
+    assertEqual(table.concat(switched, ","), "true", "one call to the one writer of the mode")
+    assertTrue(NS2.State.testMode)
+    assertNil(rawget(NS2.db.profile, "testMode"), "nothing stored")
+    local viaVerb = printed(mocks, function() NS2.Slash:OnSlash("test") end)
+    assertFalse(NS2.State.testMode)
+    local again = printed(mocks, function() rightClick(rec, menu):Click("Test mode") end)
+    assertEqual(table.concat(again, "\n"), table.concat(viaMenu, "\n"), "the same line each time it turns on")
+    assertTrue(#viaVerb >= 1)
+end)
+
+test("launcher menu: while disabled, Locked and Test mode are grayed and Enabled stays live", function()
+    local NS2, rec, _, menu = withMenu()
+    NS2.SetByPath("enabled", false)
+    local m = rightClick(rec, menu)
+    assertEqual(table.concat(m:Texts(), " | "),
+        "Enabled | Locked (enable the addon first) | Test mode (enable the addon first)")
+    assertTrue(m:Find("Enabled").enabled, "Enabled is live")
+    assertFalse(m:Find("Locked").enabled, "Locked is grayed")
+    assertFalse(m:Find("Test mode").enabled, "Test mode is grayed")
+    -- A grayed entry the client dispatched anyway calls no handler (the library's gate).
+    local reached = 0
+    NS2.Slash.ToggleTestMode = function() reached = reached + 1 end
+    m:ForceClick("Test mode")
+    assertEqual(reached, 0, "a grayed Test mode reached the handler")
     assertFalse(NS2.State.testMode)
 end)
 
-test("launcher: the left click holds no copy of the test mode — it goes through the switch the checkbox uses",
-function()
-    local NS2, rec = withBroker()
-    local asked = {}
-    local set = NS2.Preview.SetTestMode
-    NS2.Preview.SetTestMode = function(on)
-        local n = #asked
-        asked[n + 1] = tostring(on)
-        return set(on)
-    end
-    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
-    NS2.Preview.SetTestMode = set
-    -- red under: core/LauncherSetup.lua writing NS.State.testMode itself
-    assertEqual(table.concat(asked, ","), "true", "one call to the switch")
-    assertNil(rawget(NS2.db.profile, "testMode"), "nothing stored")
-end)
-
-test("launcher: the RIGHT click opens the settings panel, whatever the left button does", function()
-    local NS2, rec = withBroker()
+test("launcher menu: on a client without MenuUtil the right click opens the settings panel", function()
+    local NS2, rec, _, menu = withMenu()
+    menu.remove()
     local opened = 0
     NS2.OpenOptionsPanel = function() opened = opened + 1 end
-    local before = NS2.GetSetting("locked")
     rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "RightButton")
-    assertEqual(opened, 1, "right-click ALWAYS opens the panel (launcher-§2)")
-    -- red under: a right click that also toggled the rung's switch.
-    assertEqual(NS2.GetSetting("locked"), before, "and changes nothing else")
+    -- The panel holds every toggle the menu would have.
+    assertEqual(opened, 1, "the degraded right click")
+end)
+
+-- ── The status tooltip (launcher-§1, LibKa0s-Launcher-1.0 minor 3; hints since minor 4) ─────────
+--
+-- The library draws the block; this addon only answers its questions. What is pinned here is which
+-- questions it answers (the lock and the test mode it really has), through which accessor. The
+-- shape itself, the click hints included, is the library's and tested there.
+
+--- The descriptor's tooltip, drawn into a recording GameTooltip, color escapes stripped.
+local function hover(rec)
+    local lines = {}
+    local tt = {}
+    function tt.AddLine(_, text)
+        local n = #lines
+        lines[n + 1] = tostring(text)
+    end
+    rec.objects.AuraMaster.OnTooltipShow(tt)
+    for i, line in ipairs(lines) do
+        lines[i] = line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    end
+    return lines
+end
+
+--- A TOC reader answering Version = `v`, installed at call time as tests/test_envsetup.lua does.
+local function tocVersion(mocks, v)
+    mocks.C_AddOns = { GetAddOnMetadata = function(_, field)
+        if field == "Version" then return v end
+        return nil
+    end }
+end
+
+test("launcher tooltip: enabled, locked, test mode off — the whole block, in the library's order",
+function()
+    local NS2, rec, mocks = withBroker()
+    tocVersion(mocks, "9.8.7")
+    NS2.SetByPath("locked", true)
+    local lines = hover(rec)
+    -- red under: `version` reading core/Namespace.lua's constant instead of the TOC (9.8.7 here)
+    assertEqual(table.concat(lines, "\n"), table.concat({
+        "Ka0s Aura Master  v9.8.7",
+        "Enabled: Yes",
+        "Locked: Yes",
+        "Test mode: Off",
+        "Left-click: Open settings",
+        "Right-click: Options menu",
+    }, "\n"))
+end)
+
+test("launcher tooltip: every state is read on the show — unlock and test mode change the next hover",
+function()
+    local NS2, rec = withBroker()
+    NS2.SetByPath("locked", false)
+    NS2.Slash.ToggleTestMode()
+    assertTrue(NS2.State.testMode, "test mode on through the one switch")
+    local lines = hover(rec)
+    -- red under: an accessor reading a copy, or a value captured at New
+    assertEqual(lines[3], "Locked: No")
+    assertEqual(lines[4], "Test mode: On")
+    NS2.Slash.ToggleTestMode()
+    assertEqual(hover(rec)[4], "Test mode: Off")
+end)
+
+test("launcher tooltip: shown while disabled, with the same two hints", function()
+    local NS2, rec = withBroker()
+    NS2.SetByPath("locked", true)
+    NS2.SetByPath("enabled", false)
+    local lines = hover(rec)
+    -- red under: no isEnabled passed (the line would read Yes), or no tooltip while disabled, which
+    -- is when the player most needs to ask.
+    assertEqual(lines[2], "Enabled: No")
+    assertEqual(lines[3], "Locked: Yes", "the status lines still draw")
+    assertEqual(lines[4], "Test mode: Off")
+    assertEqual(lines[5], "Left-click: Open settings", "the left button is never refused")
+    assertEqual(lines[6], "Right-click: Options menu")
+    assertEqual(#lines, 6)
 end)
 
 -- ── The Minimap button row ────────────────────────────────────────────────────────────────────
@@ -342,18 +572,19 @@ test("verbs: the dispatcher answers while the addon is disabled, or the pair is 
     assertEqual(NS2.db.profile.enabled, true)
 end)
 
-test("verbs: the launcher's click, /am test and the Test mode checkbox are three doors onto one switch",
+test("verbs: the launcher's menu, /am test and the Test mode checkbox are three doors onto one switch",
 function()
-    local NS2, rec = withBroker()
-    rec.objects.AuraMaster.OnClick(rec.objects.AuraMaster, "LeftButton")
+    local NS2, rec, _, menu = withMenu()
+    rightClick(rec, menu):Click("Test mode")
     assertTrue(NS2.State.testMode)
     NS2.Slash:OnSlash("test off")
     assertFalse(NS2.State.testMode)
     NS2.SetByPath("state.testMode", true)
     assertTrue(NS2.State.testMode)
-    -- red under: core/LauncherSetup.lua reaching past NS.Slash.ToggleTestMode
-    assertTrue(type(NS2.Slash.ToggleTestMode) == "function", "published for exactly one caller")
-    assertNil(NS2.Slash.SetLocked, "the lock is no longer the launcher's")
+    -- red under: core/LauncherSetup.lua reaching past the published verb handlers
+    for _, name in ipairs({ "SetEnabled", "ToggleLock", "ToggleTestMode" }) do
+        assertTrue(type(NS2.Slash[name]) == "function", "NS.Slash." .. name .. " published for the menu")
+    end
 end)
 
 -- ── The degraded install ──────────────────────────────────────────────────────────────────────

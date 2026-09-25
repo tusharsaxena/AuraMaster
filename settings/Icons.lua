@@ -118,7 +118,7 @@ NS.RegisterSchemaRows({
 })
 
 -- A container drawn as bars sees every row here disabled, under a note naming where its style is
--- changed (B-2; settings/OptionsSetup.lua's drawDisabledNotice, which draws it small and gray).
+-- changed (B-2; settings/OptionsSetup.lua's mutedNotice, which the library draws small, in muted red).
 -- The wording states the condition first ("nothing here is in use") and then the one thing to do
 -- about it, and names the page the style lives on rather than parenthesizing it.
 NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {

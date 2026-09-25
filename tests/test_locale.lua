@@ -128,9 +128,9 @@ test("locale: every string routed by value has its key — Constants labels, cat
     -- The exemption is exactly one FIELD of exactly one flagged definition kind: `desc` is still
     -- checked, and a user category's description is a fixed shipped string precisely so that it can
     -- be. If that description ever has to name the category, the name is a `%s` ARGUMENT to a routed
-    -- format string, never concatenated into one -- see defaults/Categories.lua's USER_DESC.
+    -- format string, never concatenated into one -- see defaults/UserCategories.lua's USER_DESC.
     -- Written out in full, with why Cat.LabelOf is what enforces it at the draw, in
-    -- docs/ARCHITECTURE.md -> Locale routing, and its one exemption.
+    -- docs/common-tasks.md -> Locale routing, and its one exemption.
     local exempted = 0
     for _, list in ipairs({ NS.Categories.HELPFUL, NS.Categories.HARMFUL }) do
         for _, def in ipairs(list) do
@@ -172,4 +172,23 @@ test("locale: every value is ASCII, the em dash excepted (T-1)", function()
         end
     end
     assertEqual(#bad, 0, "non-ASCII byte outside the em dash: " .. table.concat(bad, "; "))
+end)
+
+test("locale: no library-missing line joins a routed fragment", function()
+    -- red under: the concatenation at the four sites (CoreSetup, DebugLogSetup, LauncherSetup,
+    -- PerfSetup). localization-§1: a sentence is one key with a placeholder, never NS.LIBKA0S_MISSING
+    -- glued to an unrouted ", " / "; " and a separately routed fragment a translator cannot reorder.
+    local bad = {}
+    local p = io.popen("ls -1 core/*.lua 2>/dev/null")
+    for path in p:lines() do
+        local n = 0
+        for line in (readFile(path) .. "\n"):gmatch("(.-)\n") do
+            n = n + 1
+            if line:find("LIBKA0S_MISSING%s*%.%.") then
+                bad[#bad + 1] = ("%s:%d"):format(path, n)
+            end
+        end
+    end
+    p:close()
+    assertEqual(#bad, 0, "library-missing line concatenated at: " .. table.concat(bad, ", "))
 end)

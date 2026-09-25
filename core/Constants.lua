@@ -145,7 +145,7 @@ C.TOOLTIP_ANCHOR_LABELS = {
 }
 
 -- The "Not in use" notice over a container page drawn for another style (settings/OptionsSetup.lua's
--- drawDisabledNotice): a muted red, about (0.80, 0.40, 0.40), readable on the dark panel and quieter
+-- mutedNotice): a muted red, about (0.80, 0.40, 0.40), readable on the dark panel and quieter
 -- than an error red. The owner asked for gold first (2026-09-19, B3), then for this red on the same
 -- day, on bars, icons and text pages alike (Task 20). The AARRGGBB body of a "|c" escape.
 C.NOTICE_COLOR = "ffcc6666"
@@ -240,7 +240,7 @@ C.TEXT_BUILTINS = {
     timeOfMax      = { template = "$spellname$[ $remainingduration$ / $maxduration$]" },
     nameType       = { template = "$spellname$[ ($dispeltype$)]" },
     nameTypeTime   = { template = "$spellname$[ ($dispeltype$)][ - $remainingduration$]" },
-    -- No " - " separator (fix round 1, feedback #1): Center STACKS this in two rows, and a leading
+    -- No " - " separator (feedback #1): Center STACKS this in two rows, and a leading
     -- dash on the second row (" - 11s") is not clean.
     centered       = { template = "$spellname$[$remainingduration$]", justifyH = "CENTER" },
 }
