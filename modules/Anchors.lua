@@ -754,12 +754,18 @@ local function canDrag(container)
     return (cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown()) and true or false
 end
 
---- The handle's label: the container's name, and while test mode is on an orange TEST tag after it
+--- The handle's label: the container's name, dim gold (C.SECONDARY_GOLD) while it is attached to
+--- another container or a named frame, the sign that it follows that and cannot be dragged on its
+--- own (canDrag; the owner, 2026-09-26); and while test mode is on an orange TEST tag after it
 --- (feedback #8), so the placeholders on screen read as placeholders. It sits ABOVE BuildHandle
 --- because the strip is born with its text — `label` is the widget's one required string.
 local function handleText(cfg)
     if not cfg then return "" end
     local name = cfg.name or ""
+    local mode = cfg.attach and cfg.attach.mode
+    if mode == "container" or mode == "frame" then
+        name = "|c" .. NS.Constants.SECONDARY_GOLD .. name .. "|r"
+    end
     if not (NS.State and NS.State.testMode) then return name end
     return ("%s  |c%s%s|r"):format(name, NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
 end

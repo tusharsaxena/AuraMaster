@@ -1430,3 +1430,38 @@ test("handle: under combat lockdown the right-click is refused in gray and selec
     assertEqual(NS.State.activeContainerId, 1)
     assertTrue(table.concat(lines, "\n"):find("cannot open settings during combat", 1, true) ~= nil, table.concat(lines, " | "))
 end)
+
+test("handle: an attached container's name is dim gold, to the screen it keeps the plain color (owner, 2026-09-26)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    local texts = {}
+    rawset(h, "SetText", function(_, s)
+        local n = #texts
+        texts[n + 1] = s
+    end)
+    local name = NS.Database.FindContainer(2).name
+    local dim = "|c" .. NS.Constants.SECONDARY_GOLD .. name .. "|r"
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], name, "on the screen: the name as it was")
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    -- red under: handleText writing the bare name whatever the attachment
+    assertEqual(texts[#texts], dim, "attached to another container: dim gold")
+    NS.SetByPath("container.attach.mode", "frame", 2)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], dim, "attached to a named frame: dim gold")
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], dim .. "  |c" .. NS.Constants.TEST_TAG_COLOR .. NS.L["TEST"] .. "|r",
+        "the TEST tag still follows in orange")
+    NS.Preview.SetTestMode(false)
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], name, "back on the screen: plain again")
+end)

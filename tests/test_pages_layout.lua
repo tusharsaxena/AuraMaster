@@ -44,8 +44,8 @@ local SUBSECTIONS = {
     { key = "Offset", paths = { "container.attach.x", "container.attach.y" } },
 }
 
---- How many widgets a render drew under each label, the banner's excepted (it is a second
---- "Parent container" dropdown). Counts, because Screen and Named frame both have a Point and a Relative point.
+--- How many widgets a render drew under each label, the banner's excepted (the page's Container
+--- picker). Counts, because a label can be drawn more than once.
 local function drawnLabels(NS, P, ws)
     local banner = P.banner(NS.Helpers.__pageCtx.layout)
     local out = {}
@@ -863,4 +863,19 @@ test("layout: a chain root's Growth tab says how many containers follow its fill
     local ws = P.tab("layout", NS.L["Growth"])
     -- red under: growthIntro silent on a root
     assertTrue(P.hasText(ws, NS.L["%d container(s) attached to this one follow its fill and growth."]:format(1)))
+end)
+
+test("layout: Named frame reads Named frame anchor point on the left and This container anchor point on the right (owner, 2026-09-26)", function()
+    local NS, _, P, ws = layoutIn("frame")
+    local rel, own = P.row(ws, "container.attach.relativePoint"), P.row(ws, "container.attach.point")
+    -- red under: the rows still labeled Relative point and Point
+    assertEqual(rel.labelText, NS.L["Named frame anchor point"])
+    assertEqual(own.labelText, NS.L["This container anchor point"])
+    local line
+    for _, w in ipairs(ws) do
+        if w.children and (w.children[1] == rel or w.children[2] == rel) then line = w end
+    end
+    assertTrue(line ~= nil, "the two share a line")
+    -- red under: Point drawn first (this container on the left)
+    assertTrue(line.children[1] == rel and line.children[2] == own, "the named frame's point on the left")
 end)

@@ -1662,3 +1662,19 @@ before the upgrade, growing down.
      A container on the screen or a named frame prints no `point=` or `join=`. No Lua error.
 
 **Owner run, 2026-09-26.** Every AC check passed.
+
+## AD. Batch 11 follow-ups (owner to run)
+
+Two changes the owner asked for after section AC (2026-09-26). None has been run here.
+
+246. **An attached container's strip name is dim gold.** `/am unlock` → a container on the screen
+     shows its strip name in the usual gold; #14 (attached to #13) and a container attached to a named
+     frame show theirs in the dim gold of the Growth tab's inherited note. `/am test` → the orange
+     TEST tag still follows the dim name. Set #14's Attach to back to Screen → its name turns the
+     usual gold at once; back to Another container → dim again.
+247. **Named frame's two anchor points.** Layout → Anchor, Attach to *Named frame* → below Frame
+     name one line reads **Named frame anchor point** on the left and **This container anchor point**
+     on the right, holding the frame's corner and the container's corner as before the change (a
+     container set to Bottom left / Top left before now reads Top left on the left and Bottom left on
+     the right). Pick a corner in each → the container moves at once. The Screen section still reads
+     Point / Relative point.

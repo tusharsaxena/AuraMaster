@@ -560,7 +560,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
 
-### test_anchors.lua (76)
+### test_anchors.lua (77)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -638,6 +638,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)
 - handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
+- handle: an attached container's name is dim gold, to the screen it keeps the plain color (owner, 2026-09-26)
 
 ### test_anchors_seam.lua (10)
 
@@ -1538,7 +1539,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (46)
+### test_pages_layout.lua (47)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1586,6 +1587,7 @@ badge and any count quoted in the docs must agree with it.
 - layout: switching Attach to into container mode with a differing target stored asks first
 - layout: /am set attaches without asking and prints one line; a differing detach prints one
 - layout: a chain root's Growth tab says how many containers follow its fill and growth
+- layout: Named frame reads Named frame anchor point on the left and This container anchor point on the right (owner, 2026-09-26)
 
 ### test_pages_bars.lua (14)
 
@@ -1847,7 +1849,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 15 |
-| test_anchors.lua | 76 |
+| test_anchors.lua | 77 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
@@ -1880,7 +1882,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 46 |
+| test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1900,4 +1902,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1610** |
+| **Total** | **1612** |

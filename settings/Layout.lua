@@ -358,16 +358,19 @@ NS.RegisterSchemaRows({
         type = "string", dialogControl = "EditBox", maxLetters = 120, label = L["Frame name"],
         desc = L["The global name of the frame to attach to when 'Named frame' is chosen — or use Pick a frame... beside it. /fstack shows frame names."],
     },
+    -- The named frame's point on the left and this container's on the right, as the owner asked
+    -- (2026-09-26): the same order and names as Another container's two anchor-point rows.
+    {
+        path = "container.attach.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
+        type = "string", values = POINTS, startsLine = true, label = L["Named frame anchor point"],
+        desc = L["The corner of the target the first aura's point is attached to."],
+    },
     {
         path = "container.attach.point", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
-        type = "string", values = POINTS, startsLine = true, label = L["Point"],
+        type = "string", values = POINTS, label = L["This container anchor point"],
         desc = L["The corner of the container's first aura that is attached — the container's full size is secret, so it cannot be anchored itself. The other auras grow away from it as the Growth tab says."],
         -- Structural: the facing-growth hint under the tab (growsBackNote) reads it.
         onChange = structural,
-    },
-    {
-        path = "container.attach.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
-        type = "string", values = POINTS, label = L["Relative point"], desc = L["The corner of the target the first aura's point is attached to."],
     },
     {
         path = "container.attach.x", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
