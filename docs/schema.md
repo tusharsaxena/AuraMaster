@@ -109,7 +109,7 @@ backfills it onto every stored container, so it needs no schema step.
 | Key | Default | Meaning |
 |---|---|---|
 | `label.show` | `false` | draw the container's `name` where its drag strip sits, locked or unlocked; while unlocked the strip moves out past it (D6) |
-| `label.justifyH` | `"AUTO"` | `"LEFT"`, `"CENTER"` or `"RIGHT"` once picked (batch 9 LJ-1). `"AUTO"` (`C.LABEL_JUSTIFY_AUTO`) is no pick: the style's default, Bars and Text `CENTER`, Icons `LEFT` (`RIGHT` when growing left, mirrored beside a follower's first element), resolved by `Anchors.LabelJustify` and never written. A value, not nil, so the row's path resolves against the template (architecture-§5); an unknown stored value reads as `"AUTO"` |
+| `label.justifyH` | `"AUTO"` | `"LEFT"`, `"CENTER"` or `"RIGHT"` once picked (batch 9 LJ-1). `"AUTO"` (`C.LABEL_JUSTIFY_AUTO`) is no pick: the style's default, Bars and Text `CENTER`, Icons `LEFT` (`RIGHT` when growing left, mirrored for a follower on its parent's behind side, whose label lines up with the edge that faces the parent), resolved by `Anchors.LabelJustify` and never written. A value, not nil, so the row's path resolves against the template (architecture-§5); an unknown stored value reads as `"AUTO"` |
 | `label.x` / `.y` | `0` / `0` | pixels, a nudge from that spot (-200 to 200) |
 | `label.font` | the six font leaves, `"Friz Quadrata TT"` 12, gold `{ r=1, g=0.82, b=0, a=1 }`, `"OUTLINE"`, no shadow, no class color | the strip's own look; a class color follows the container's unit |
 

@@ -224,10 +224,10 @@ test("edges: a side-attached follower of a follower takes no strip room; an afte
     local rec = recordAnchor(inst)
     NS.Anchors.Place(inst)
     local spacing = NS.Database.FindContainer(3).layout.spacing
-    assertTrue(rec[#rec][5] < -spacing, "after: the seam widened for 2's strip (EO-2)")
+    assertTrue(rec[#rec][5] < -spacing, "after: the seam widened for its own strip (batch 10 F2)")
     NS.Database.FindContainer(3).attach.edge = "ahead-start"
     NS.Anchors.Place(inst)
-    -- red under: clearStrip applied to a side seam
+    -- red under: the after room (seamRoom) applied to a side seam: 2's strip fits its own block
     assertEqual(rec[#rec][5], 0, "ahead: no strip room along the chain")
 end)
 

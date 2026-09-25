@@ -641,7 +641,7 @@ badge and any count quoted in the docs must agree with it.
 - seam: a frame-attached container keeps its stored offsets and takes no gap
 - seam: a container whose target cannot be used sits at its screen position, with no gap
 - seam: while the parent previews, the child hangs from its extent with the same gap as locked
-- seam: an attached child's strip sits beside its first element, edge-aligned at the seam
+- seam: an attached child's strip sits before its own block, in its own column (batch 10 F1)
 - seam: a screen container's strip keeps its place above or below its auras
 
 ### test_anchors_edges.lua (19)
@@ -673,8 +673,8 @@ badge and any count quoted in the docs must agree with it.
 - hang: locking re-anchors followers onto the parent's engine, unlocking puts them back; a pass that changes nothing re-places nothing
 - hang: unlocked, ending test mode moves followers from the preview extent to the parent's anchor, and starting it moves them back
 - hang: under lockdown a lock leaves a follower where it is; the pass after combat moves it
-- hang: three empty Text containers chained and unlocked: no two strips overlap, and each sits a strip gap past the one before
-- hang: the room for a strip is the parent's: a follower of the screen root keeps the locked seam (SS-3)
+- hang: three empty Text containers chained and unlocked: no two strips overlap, and each sits between its parent's block and its own
+- hang: the room for a strip is the follower's own: unlocked it adds its strip's row to the seam, locked the seam alone (F2)
 - hang: locked, a follower of a follower keeps its own seam: no strip shows, so none needs room
 - hang: in test mode a chain leaves the same room for its strips (EO-2)
 - hang: a test-mode chain locked shows no strips and keeps its own seams
@@ -734,32 +734,45 @@ badge and any count quoted in the docs must agree with it.
 - label justify: a pick wins over the style default, Left and Right inset 4, Center none
 - label justify: an icons pick holds when the growth flips; AUTO goes back to the style default
 - label justify: LabelJustify answers the style default for nil, AUTO and an unknown stored value
-- label: a container attached to another puts its label beside its first element, like its strip; the strip moves down past it
-- label: a follower's follower leaves room for its parent's label and strip beside the seam
+- label: a container attached to another puts its label on its own block's before side, like a root's; the strip moves out past it
+- label: a follower's follower makes room for its own strip, not for its parent's label and strip
 - label: a rename lands on the label at once, also under lockdown, with no apply queued
 - label: Copy settings copies the label section and not the name; Everything includes it
 - label: its class color makes a tracked container re-apply on a unit swap, only while the label shows
 - label: ApplyFont paints an explicit class, falls back to the swatch for none, and keeps its three-argument path
 
-### test_anchors_strip.lua (17)
+### test_anchors_strip.lua (8)
 
-- strip: a root's strip is before its first element; an after follower's behind it
-- strip: an after follower whose behind side holds a follower moves ahead, or inside when that side is taken too
-- strip: an after follower wider than one aura with its behind side taken puts the strip inside
-- strip: a follower on a side puts its strip before, the side its parent leaves free
-- strip: StripSide allocates nothing, so a repeat visibility pass costs nothing
-- strip: StripPoints puts each side's strip where the design says, mirrored by the growth
 - strip: a behind follower's strip sits before it, lined up with the edge that faces its parent, so it runs away from it
-- strip: an ahead follower of a root is pushed out past its parent's strip and label rows, so strips never stack
-- strip: the clamp reaches out from whichever side the strip is on
 - strip: a behind follower's before strip clamps over its own column, not toward its parent
-- strip: an icons label mirrors wherever its strip sits on the far side of the element
-- strip: a follower of a side follower keeps its own seam unlocked: the side follower's strip is before it
+- strip: an icons label mirrors only for a behind follower, whose strip lines up with the edge facing its parent
 - strip: unlocked, a gold diamond marks the join at the child's attach point; locked, screen and frame show none
 - strip: Park and Destroy hide the join pin
 - strip: the tooltip of a container joined to another names the side and the parent
 - strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
+
+### test_anchors_column.lua (19)
+
+- column: an after follower's strip sits before its own block, like a root's, mirrored by the growth
+- column: a follower's strip stays before it whatever other followers hold its sides
+- column: unlocked with the label on, a follower reads strip, label, block before its own block
+- column: locked with the label on, a follower's label sits on its block's before side, not beside the column
+- column: a label is justified inside its own block per LJ-1, with no mirror for an after follower
+- column: an after follower sits past its parent by its own strip's room while unlocked, and by the seam alone locked
+- column: the label's row counts locked and unlocked, the strip's only while it shows
+- column: growing up, the chain spreads upward, the furniture below each block
+- column: the X/Y nudge adds on top of the spread seam
+- column: a lock or unlock re-places a follower through its own visibility pass, and a repeat pass re-places nothing
+- column: under lockdown the seam waits; the first pass after combat catches up
+- column: RefreshSeam allocates nothing when the seam already fits
+- column: test mode, unlocked, spreads the chain the same way and hangs from the preview block
+- column: the owner's Text chain reads strip, block, strip, block, strip, block in one column
+- column: an ahead follower is pushed along the growth past its parent's strip and label while that strip runs over it
+- column: an ahead follower stays level when its parent's strip fits its own block, and growing up it is pushed upward
+- column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
+- column: a follower of a side follower spreads by its own strip, as any after follower does
+- column: the join pin stays at the child's attach point while unlocked
 
 ### test_texttemplate.lua (26)
 
@@ -1811,7 +1824,8 @@ badge and any count quoted in the docs must agree with it.
 | test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
-| test_anchors_strip.lua | 17 |
+| test_anchors_strip.lua | 8 |
+| test_anchors_column.lua | 19 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -1855,4 +1869,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1573** |
+| **Total** | **1583** |

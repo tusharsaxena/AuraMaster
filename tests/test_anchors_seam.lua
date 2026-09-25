@@ -1,7 +1,8 @@
 -- tests/test_anchors_seam.lua — the seam between a container and the container it is attached to
 -- (batch 8 SS-1..SS-3, owner feedback #13): the gap across it is the child's own spacing between
 -- consecutive elements in the direction it stacks, the stored X/Y offsets nudge on top of it, and
--- the child's drag strip sits beside its first element instead of over the parent's last aura.
+-- the child's drag strip sits before its own block, in its own column (batch 10 F1; the room it
+-- takes along the chain is tests/test_anchors_column.lua's).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
 
 local T = _G.AM_TEST
@@ -166,18 +167,19 @@ local function stripOf(NS)
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b)
         rec.insets = { l, r, t, b }
     end)
+    inst.clampInsets = nil   -- so the placement below sets the insets, even to what they were
     return inst, rec
 end
 
-test("seam: an attached child's strip sits beside its first element, edge-aligned at the seam", function()
+test("seam: an attached child's strip sits before its own block, in its own column (batch 10 F1)", function()
     local NS = fresh()
     local cases = {
-        -- growH, growV, point, relativePoint, x: on the side opposite the growth, level with the
-        -- child's edge that faces the parent, so the strip runs into the child's rows, never the parent's.
-        { "right", "down", "TOPRIGHT", "TOPLEFT", -2 },
-        { "left", "down", "TOPLEFT", "TOPRIGHT", 2 },
-        { "right", "up", "BOTTOMRIGHT", "BOTTOMLEFT", -2 },
-        { "left", "up", "BOTTOMLEFT", "BOTTOMRIGHT", 2 },
+        -- growH, growV, point, relativePoint, y: out past the edge its auras start from, lined up
+        -- with the side its lines start from, exactly where a screen container's sits.
+        { "right", "down", "BOTTOMLEFT", "TOPLEFT", 2 },
+        { "left", "down", "BOTTOMRIGHT", "TOPRIGHT", 2 },
+        { "right", "up", "TOPLEFT", "BOTTOMLEFT", -2 },
+        { "left", "up", "TOPRIGHT", "BOTTOMRIGHT", -2 },
     }
     for _, axis in ipairs({ "vertical", "horizontal" }) do
         for _, c in ipairs(cases) do
@@ -187,19 +189,22 @@ test("seam: an attached child's strip sits beside its first element, edge-aligne
             NS.Anchors.UpdateHandle(inst, true)
             local p = rec.points[#rec.points]
             local what = axis .. "/" .. c[1] .. "/" .. c[2]
-            -- red under: the strip on the side away from growth (over the parent's last aura)
+            -- red under: batch 9's strip beside the first element (TOPRIGHT on TOPLEFT growing right, down)
             assertEqual(p[1], c[3], what)
             assertTrue(p[3] == c[4], what)
             assertTrue(p[2] == inst.anchor, what)
-            assertEqual(p[4], c[5], what)
-            assertEqual(p[5], 0, what)
+            assertEqual(p[4], 0, what)
+            assertEqual(p[5], c[5], what)
             local ins = rec.insets
-            -- red under: a top or bottom clamp reach for a strip that sits beside the anchor
-            assertEqual(ins[3], 0, what .. " top"); assertEqual(ins[4], 0, what .. " bottom")
-            if c[1] == "right" then
-                assertTrue(ins[1] < 0 and ins[2] == 0, what .. " reaches left")
+            if c[2] == "down" then
+                assertTrue(ins[3] > 0 and ins[4] == 0, what .. " reaches up")
             else
-                assertTrue(ins[2] > 0 and ins[1] == 0, what .. " reaches right")
+                assertTrue(ins[4] < 0 and ins[3] == 0, what .. " reaches down")
+            end
+            if c[1] == "right" then
+                assertTrue(ins[1] == 0 and ins[2] >= 0, what .. " never left")
+            else
+                assertTrue(ins[2] == 0 and ins[1] <= 0, what .. " never right")
             end
         end
     end

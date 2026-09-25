@@ -27,8 +27,9 @@ local D = NS.CONTAINER_TEMPLATE
 -- Frame-mode containers whose frame did not exist yet, by container id.
 local pending = {}
 
--- The room a container's followers leave for its drag strip, defined with the strip below.
-local stripRoom
+-- The room a container's own strip and label take on its before side, and the room its parent's
+-- take that a side follower clears (batch 10 F2, F4), defined with the strip below.
+local furnitureRoom, sideRoom
 
 --- Whether attaching container `fromId` to container `toId` would close a loop.
 --- @return boolean
@@ -407,21 +408,35 @@ local function ownScale(cfg)
     return math.max(0.1, tonumber(cfg.layout and cfg.layout.scale) or 1)
 end
 
---- The seam's y offset `gy`, widened when the parent's strip needs more room than the seam leaves
---- (`room`, in the parent's screen units: stripRoom). Along the chain's growth, only by the shortfall,
---- so a seam with room enough is the locked one (SS-3) and no two strips in a chain overlap (EO-2).
-local function clearStrip(L, cfg, gy, room)
+--- The seam's y offset `gy`, moved on along the chain's growth by `room` (in the child's own units).
+local function alongGrowth(L, gy, room)
     if room <= 0 then return gy end
-    local extra = math.max(0, room / ownScale(cfg) - math.abs(gy))
-    return (L.growV == "up") and gy + extra or gy - extra
+    return (L.growV == "up") and gy + room or gy - room
+end
+
+--- The room along the chain a follower on `side` takes past its seam (batch 10 F2, F4): an after
+--- follower spreads the chain by its OWN before-side furniture (its strip while it shows, its label
+--- while it shows), which sits between its parent's block and its own, and records it on `container`
+--- so a visibility pass that shows or hides either re-places it (Anchors.RefreshSeam). An ahead
+--- follower moves past its parent's strip and label while that strip runs over its column
+--- (sideRoom, in the parent's units until converted here). A behind follower takes none: the parent's
+--- strip runs away from it.
+local function seamRoom(container, cfg, side, target)
+    if side == "after" then
+        local room = furnitureRoom(container)
+        container.placedRoom = room
+        return room
+    end
+    if side == "ahead" and target then return sideRoom(target) / ownScale(cfg) end
+    return 0
 end
 
 --- The points and offsets container `cfg` attaches with. Attached to a container: its side's points
 --- under the flow it continues (ResolvedEdge), one of its own gaps across the seam with the stored X/Y
---- on top as a nudge (SS-1, SS-2, AP-2), widened along the chain for the parent's strip (EO-2). Attached to
---- a named frame: the stored points and offsets as they are.
+--- on top as a nudge (SS-1, SS-2, AP-2), moved on along the chain by the furniture in the way
+--- (seamRoom, batch 10 F2, F4). Attached to a named frame: the stored points and offsets as they are.
 --- @return string point, string relativePoint, number x, number y
-local function attachSpec(cfg, at, mode, target)
+local function attachSpec(container, cfg, at, mode, target)
     local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
     if mode == "container" then
         local L = Anchors.EffectiveLayout(cfg) or {}
@@ -429,8 +444,7 @@ local function attachSpec(cfg, at, mode, target)
         local point, relativePoint = Anchors.EdgePoints(L, edge)
         local side = Anchors.ParseEdge(edge)
         local gx, gy = Anchors.SeamOffset(L, side)
-        -- Only along the chain: a side seam runs across it, so a parent's strip is not in its way.
-        if side == "after" then gy = clearStrip(L, cfg, gy, target and stripRoom(target) or 0) end
+        gy = alongGrowth(L, gy, seamRoom(container, cfg, side, target))
         return point, relativePoint, gx + x, gy + y
     end
     return at.point or D.attach.point, at.relativePoint or D.attach.relativePoint, x, y
@@ -448,11 +462,12 @@ function Anchors.Place(container)
     anchor:SetSize(w, h)
     anchor:ClearAllPoints()
     pending[container.id] = nil
+    container.placedRoom = nil   -- set again by an after-side placement (seamRoom)
 
     local at = cfg.attach or {}
     local target, mode, owner = targetFor(container, at)
     if target then
-        local point, relativePoint, x, y = attachSpec(cfg, at, mode, owner)
+        local point, relativePoint, x, y = attachSpec(container, cfg, at, mode, owner)
         local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint, x, y)
         if ok then return mode end
         anchor:ClearAllPoints()
@@ -464,15 +479,27 @@ function Anchors.Place(container)
     return "screen"
 end
 
+--- Re-place container `container` itself once the room its own strip and label take on its before
+--- side (furnitureRoom) differs from what its after-side seam was placed with (batch 10 F2): an
+--- unlock shows its strip, a lock hides it, a label turns on. Called on every visibility pass after
+--- the strip and the label are shown or hidden, so a pass that changes nothing re-places nothing and
+--- allocates nothing. Layout work beside an aura engine, so never under lockdown: the first pass
+--- after combat catches up.
+function Anchors.RefreshSeam(container)
+    local room = container.placedRoom
+    if room == nil or room == furnitureRoom(container) or InCombatLockdown() then return end
+    container.placedAs = Anchors.Place(container)
+end
+
 --- Re-place every container attached to `target` once what they hang from has changed since they
 --- were last placed: its hang mode (Anchors.HangMode; test mode, lock, unlock and the empty
---- prediction: L-4, HG-1) or the
---- room its strip needs (stripRoom, EO-2). Called on every visibility pass
+--- prediction: L-4, HG-1) or the room its strip and label take over a side follower's column
+--- (sideRoom, batch 10 F4). Called on every visibility pass
 --- (ContainerClass:ApplyVisibility), so a pass that changes nothing re-places nothing. Layout work
 --- beside an aura engine, so never under lockdown: the last placement stands, unrecorded, and the
 --- first pass after combat catches up.
 function Anchors.PlaceAttached(target)
-    local mode, room = Anchors.HangMode(target), stripRoom(target)
+    local mode, room = Anchors.HangMode(target), sideRoom(target)
     if (target.attachedPlacedFor == mode and target.attachedPlacedRoom == room) or InCombatLockdown() then
         return
     end
@@ -561,9 +588,6 @@ local DRAG = KW and KW.DRAG_HANDLE
 -- second set to keep in step. This number is OURS, because nothing in the widget knows what an aura
 -- engine stacks above its anchor.
 local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
-
--- A read-only empty table: what a scan walks when there is nothing to walk, with no allocation.
-local EMPTY = {}
 
 -- The strip's height and gap as the name label (batch 8 NL-2) reads them: the label takes the strip's
 -- spot and is as tall as the strip, and it still draws on a build without the widget, so the widget's
@@ -730,8 +754,8 @@ end
 --- below when they grow up, its edge lined up with the edge they start from so it runs along the
 --- first line. At least as wide as one element, and as its label with room for the help mark. The
 --- growth is the effective one: an attached container's auras grow the way its parent's do (L-6).
---- A container attached to another is the exception: that side faces the parent across the seam,
---- so its strip sits beside its first element instead (placeBeside, SS-3).
+--- A container attached to another puts it there too, in its own column (batch 10 F1): its seam
+--- makes the room (seamRoom).
 --- The strip's frame level, set wherever it is placed, since the first apply sets its anchor's level
 --- after BuildHandle ran: HANDLE_LEVEL above its anchor. A container attached to another also clears
 --- that one's placeholders (L-4), which its strip can still meet where the two blocks sit side by
@@ -750,17 +774,17 @@ local function handleLevel(container, cfg)
 end
 
 -- ---------------------------------------------------------------------------
--- The side of its first element a container's strip sits on (batch 9 SEP-3, design section 4)
+-- The strip and the label in each container's own column (batch 10 F1-F5)
 -- ---------------------------------------------------------------------------
--- The first side nothing occupies:
---   root (follows nothing)     before: above its first element growing down, as it always was;
---   after-* follower           behind, the side its lines start from (the side before faces the
---                              parent across the seam, SS-3); ahead when a behind follower holds
---                              that side and it is one aura wide with no ahead follower; else inside;
---   ahead-* / behind-* follower  before: its parent sits beside it, so that side is free.
--- `inside` overlays the top band of its own first element, HANDLE_LEVEL above it, and never covers
--- the parent. A side is occupied by a DIRECT follower on it, found by one scan that allocates nothing,
--- since this runs on every visibility pass. The name label takes the strip's spot, so it follows.
+-- Every container's strip and name label sit on its BEFORE side, the side its auras start from
+-- (above its block growing down, below it growing up), in one order: the strip outermost, then the
+-- label, then the block. A root, an after follower and a side follower alike, so a chain reads
+-- strip, block, strip, block down one column (the owner's mockup). This replaces batch 9's SEP-3,
+-- which put an after follower's strip beside the column, behind or ahead of its first element or
+-- inside its top band. An after follower makes the room itself: its seam is moved on along the chain
+-- by its own furniture (seamRoom, F2). A side follower's parent sits beside it, so it needs no
+-- spread, but it is moved on past its parent's strip and label while that strip runs over its column
+-- (sideRoom, F4).
 
 --- Whether container `c`, whose chain root is `root` (nil: itself), holds more than one element
 --- across: extendsH over its effective layout, read without copying it (EffectiveLayout allocates).
@@ -771,126 +795,66 @@ local function wideIn(c, root)
     return axis ~= "vertical" or perLine > 0
 end
 
---- The side container `c` actually sits on in its chain, as ResolvedEdge answers it but with no
---- allocation and no debug line: its stored side, behind only while it is one aura wide.
-local function sideOf(c)
-    local parts = EDGE_PARTS[c.attach and c.attach.edge]
+--- The side container `cfg` sits on in its chain, as ResolvedEdge answers it but with no allocation
+--- and no debug line: nil for a container that follows none, else its stored side, behind only while
+--- it is one aura wide.
+local function ownSide(cfg)
+    local root = cfg and Anchors.FlowRoot(cfg)
+    if not root then return nil end
+    local parts = EDGE_PARTS[cfg.attach.edge]
     if not parts then return "after" end
-    if parts[1] == "behind" and wideIn(c, Anchors.FlowRoot(c)) then return "after" end
+    if parts[1] == "behind" and wideIn(cfg, root) then return "after" end
     return parts[1]
 end
 
---- Whether container `id` has a direct follower sitting on `side`. Walks the stored containers
---- themselves, since Database.GetContainers builds a new list on every call.
-local function hasFollowerOn(id, side)
-    local p = NS.db and NS.db.profile
-    for _, c in pairs(p and p.containers or EMPTY) do
-        local at = c.attach
-        if at and at.mode == "container" and c.id ~= id and tonumber(at.container) == id and sideOf(c) == side then
-            return true
-        end
-    end
-    return false
-end
-
---- The strip's side for `cfg`, and the side `cfg` itself sits on in its chain (nil for a root).
---- @return string strip, string|nil own
-local function stripSides(cfg)
-    local root = cfg and Anchors.FlowRoot(cfg)
-    if not root then return "before", nil end
-    local own = sideOf(cfg)
-    if own ~= "after" then return "before", own end
-    if not hasFollowerOn(cfg.id, "behind") then return "behind", own end
-    if not wideIn(cfg, root) and not hasFollowerOn(cfg.id, "ahead") then return "ahead", own end
-    return "inside", own
-end
-
---- Which side of its first element container `cfg`'s strip sits on: "before" (a root, or a follower
---- on a side), "behind" or "ahead" (beside it, a follower on the after side) or "inside" (over its
---- top band). Replaces batch 8's besideSeam.
---- @return string "before"|"behind"|"ahead"|"inside"
-function Anchors.StripSide(cfg)
-    return (stripSides(cfg))
-end
-
---- How tall the block a follower of `target` hangs from is, in `target`'s units: its preview extent
---- in test mode (Preview.Extent records it), otherwise one element, its anchor.
-local function hangHeight(target, cfg)
-    local _, h = NS.Style.ElementSize(cfg)
-    local extent = target.previewExtent
-    if Anchors.HangMode(target) == "preview" and extent and extent.height then return extent.height end
-    return h
-end
-
---- The room, in screen units before the Master scale, that a container attached to `target` leaves
---- for `target`'s own strip (EO-2): only while that strip shows, and only when it sits beside or
---- inside `target`'s first element (StripSide), where it runs down along the block the follower
---- hangs from; a strip before it sits on the far side, away from its followers. Enough that the
---- follower's strip, level with its own edge, starts one strip gap past the end of `target`'s. 0 when
---- the block is already that tall.
---- A shown name label beside that element counts too (NL-3): the strip moves on past it, so the room
---- is for both.
-stripRoom = function(target)
-    local n = ((DRAG and target.stripShown) and 1 or 0) + (target.labelShown and 1 or 0)
-    if n == 0 then return 0 end
-    local cfg = target.Cfg and target:Cfg()
-    if not cfg or Anchors.StripSide(cfg) == "before" then return 0 end
-    return math.max(0, n * (STRIP_H + STRIP_GAP) - hangHeight(target, cfg)) * ownScale(cfg)
-end
-
---- How far out an ahead follower's before strip moves past its parent's rows: the parent sits beside
---- it with its own strip before it too, whose label can run on over this container's column. The
---- parent's strip row while a handle exists and its label's row while it is on, whether or not they
---- show right now: the label is placed on Apply, not on a lock, so it must clear them either way.
-local function parentRows(cfg, own)
-    if own ~= "ahead" then return 0 end
-    local parent = NS.Database.FindContainer(tonumber(cfg.attach.container))
-    if not parent or Anchors.StripSide(parent) ~= "before" then return 0 end
-    local label = parent.label
-    local rows = (DRAG and 1 or 0) + ((label and label.show) and 1 or 0)
+--- The room, in container `c`'s own units, that its strip and label take on its before side: one
+--- strip row (the strip's height and its gap) for the strip while it shows, one for the label while
+--- it shows. The strip and the label are frames under its anchor, in its scale, so no conversion.
+furnitureRoom = function(c)
+    local rows = ((DRAG and c.stripShown) and 1 or 0) + (c.labelShown and 1 or 0)
     return rows * (STRIP_H + STRIP_GAP)
 end
 
---- Where the strip sits, and the name label with it (NL-2), on its StripSide. V0 is the edge the
---- auras start from (TOP growing down), H0 the side their lines start from (LEFT growing right):
----   before   out past V0, lined up with H0; a behind follower's lined up with H1 instead, so a
----            strip wider than the element runs away from the parent beside it; an ahead
----            follower's pushed out past its parent's rows (parentRows), so strips never stack;
----   behind   out past H0, level with V0;   ahead  out past H1, level with V0;
----   inside   on the element's own V0/H0 corner, over its top band.
---- @return string point, string relativePoint, number x, number y, string growH, string growV, string side
+--- The room, in screen units before the Master scale, that an ahead follower of `target` clears
+--- (F4): `target`'s whole furniture while its strip shows and runs past its element (the width the
+--- last placement measured, `stripOverhang`), since a strip that long reaches over the column beside
+--- it; 0 otherwise, the label being only one element wide.
+sideRoom = function(target)
+    if not (DRAG and target.stripShown and (target.stripOverhang or 0) > 0) then return 0 end
+    local cfg = target.Cfg and target:Cfg()
+    if not cfg then return 0 end
+    return furnitureRoom(target) * ownScale(cfg)
+end
+
+--- Where the strip sits, and the name label with it (NL-2): out past V0, the edge the auras start
+--- from (TOP growing down), one strip gap from the block, lined up with H0, the side their lines
+--- start from (LEFT growing right). A behind follower's is lined up with H1 instead, the edge that
+--- faces its parent, so a strip wider than the element runs away from the parent beside it.
+--- @return string point, string relativePoint, number x, number y, string growH, string growV
 function Anchors.StripPoints(cfg)
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    local side, own = stripSides(cfg)
     local V0, V1 = "TOP", "BOTTOM"
     if growV ~= "down" then V0, V1 = "BOTTOM", "TOP" end
     local H0, H1 = "LEFT", "RIGHT"
     if growH == "left" then H0, H1 = "RIGHT", "LEFT" end
-    local out = (growH == "left") and -STRIP_GAP or STRIP_GAP   -- toward H1
-    if side == "behind" then return V0 .. H1, V0 .. H0, -out, 0, growH, growV, side end
-    if side == "ahead" then return V0 .. H0, V0 .. H1, out, 0, growH, growV, side end
-    if side == "inside" then return V0 .. H0, V0 .. H0, 0, 0, growH, growV, side end
-    local h = (own == "behind") and H1 or H0
-    local y = STRIP_GAP + parentRows(cfg, own)
-    return V1 .. h, V0 .. h, 0, (growV == "down") and y or -y, growH, growV, side
+    local h = (ownSide(cfg) == "behind") and H1 or H0
+    return V1 .. h, V0 .. h, 0, (growV == "down") and STRIP_GAP or -STRIP_GAP, growH, growV
 end
 
---- How far the strip moves to clear a shown name label (D6, NL-3): the label's height and the gap,
---- out on the far side of the anchor for a strip before it, or on along the growth for one beside or
---- inside its first element.
-local function labelPush(container, growV, side)
+--- How far the strip moves out to clear a shown name label (D6, NL-3, F3): the label's height and
+--- the gap, further out past V0, so the order reads strip, label, block.
+local function labelPush(container, growV)
     if not container.labelShown then return 0 end
-    local out = (growV == "down") == (side == "before")
-    return out and (STRIP_H + STRIP_GAP) or -(STRIP_H + STRIP_GAP)
+    return (growV == "down") and (STRIP_H + STRIP_GAP) or -(STRIP_H + STRIP_GAP)
 end
 
 local LABEL_JUSTIFY = { LEFT = true, CENTER = true, RIGHT = true }
 
---- The name label's justify in effect (B9 LJ-1, E7): the player's pick, or with none (AUTO, nil or
---- anything unknown) the style's own. Bars and Text center it. Icons justify it toward the element it
---- names: LEFT, RIGHT when the auras grow left, mirrored where the strip's spot runs the other way:
---- behind a follower's first element (SS-3), and before a behind follower, lined up with the edge
---- that faces its parent (SEP-3). The Label tab's Justify row shows this.
+--- The name label's justify in effect (B9 LJ-1, E7), inside its own block's width: the player's
+--- pick, or with none (AUTO, nil or anything unknown) the style's own. Bars and Text center it.
+--- Icons justify it toward the element it names: LEFT, RIGHT when the auras grow left, mirrored for
+--- a behind follower, whose label lines up with the edge that faces its parent. The Label tab's
+--- Justify row shows this.
 --- @return string "LEFT"|"CENTER"|"RIGHT"
 function Anchors.LabelJustify(cfg)
     if not cfg then return "CENTER" end
@@ -898,17 +862,17 @@ function Anchors.LabelJustify(cfg)
     if LABEL_JUSTIFY[pick] then return pick end
     if NS.Style.StyleKey(cfg) ~= "icons" then return "CENTER" end
     local growH = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    local side, own = stripSides(cfg)
-    local mirror = side == "behind" or (side == "before" and own == "behind")
+    local mirror = ownSide(cfg) == "behind"
     return ((growH == "left") ~= mirror) and "RIGHT" or "LEFT"
 end
 
 --- How far the label's text sits in from its host's edge, by justify: none when centered.
 local LABEL_INSET = { LEFT = 4, CENTER = 0, RIGHT = -4 }
 
---- Place a container's name label on the strip's spot, nudged by its X/Y (NL-2): one element wide and
---- one strip tall, its text on one line, justified per Anchors.LabelJustify. Layout work, so run
---- from Container:Apply (kept out of lockdown) and once on a first show (Container:ApplyLabelShown).
+--- Place a container's name label on its block's before side, nudged by its X/Y (NL-2, F3): one
+--- element wide and one strip tall, its text on one line, justified per Anchors.LabelJustify. Layout
+--- work, so run from Container:Apply (kept out of lockdown) and once on a first show
+--- (Container:ApplyLabelShown).
 function Anchors.PlaceLabel(container, cfg)
     local host, fs = container.label, container.labelText
     if not (host and fs and cfg) then return end
@@ -926,26 +890,24 @@ function Anchors.PlaceLabel(container, cfg)
     host.placed = true
 end
 
---- The strip goes where Anchors.StripPoints says, moved past a shown name label (D6). Beside the
---- anchor (behind or ahead) it runs into the child's own rows and never back over the parent, as
---- wide as its label with room for the help mark, not the element: it sits beside it, not along it.
---- @return number, string, number  how far the strip runs past the anchor (along the line, or out
----                          from its side, its gap included), its StripSide, and how far out past the
----                          anchor's edge it reaches (a before strip only; 0 otherwise)
+--- The strip goes where Anchors.StripPoints says, moved out past a shown name label (D6). Records
+--- how far it runs past the element (`stripOverhang`), which an ahead follower clears (sideRoom).
+--- @return number, number  how far the strip runs past the element along its line, and how far out
+---                          past the anchor's V0 edge it reaches, its gap included
 local function placeHandle(container, cfg)
     local handle = container.handle
     handle:SetFrameLevel(handleLevel(container, cfg))
     handle:ClearAllPoints()
     handle.placed = true
-    local point, rel, x, y, _, growV, side = Anchors.StripPoints(cfg)
-    local push = labelPush(container, growV, side)
+    local point, rel, x, y, _, growV = Anchors.StripPoints(cfg)
+    local push = labelPush(container, growV)
     handle:SetPoint(point, container.anchor, rel, x, y + push)
-    if side == "behind" or side == "ahead" then return handle:ApplyWidth(0) + DRAG.GAP, side, 0 end
     local w = NS.Style.ElementSize(cfg)
     -- The widget measures its own label on a detached string of its own and floors the width at the
     -- element, which is the arithmetic this file used to carry (labelWidth + HANDLE_PAD + …).
-    local reach = (side == "before") and (DRAG.HEIGHT + math.abs(y + push)) or 0
-    return handle:ApplyWidth(w) - w, side, reach
+    local overhang = handle:ApplyWidth(w) - w
+    container.stripOverhang = overhang
+    return overhang, DRAG.HEIGHT + math.abs(y + push)
 end
 
 --- Set the anchor's clamp insets only when they change. This runs on every visibility pass, and a
@@ -961,27 +923,17 @@ local function setClamp(container, l, r, t, b)
     container.anchor:SetClampRectInsets(l, r, t, b)
 end
 
---- A strip beside the anchor sits behind it (the side its lines start from, SS-3) or ahead of it
---- (SEP-3), so the clamp reaches out from that side only, by the strip's width and gap.
-local function clampBeside(container, growH, reach, side)
-    if (growH == "left") == (side == "ahead") then return setClamp(container, -reach, 0, 0, 0) end
-    setClamp(container, 0, reach, 0, 0)
-end
-
 --- The anchor is clamped to the screen; while its handle shows, the clamp rect reaches over the strip
---- too, so the handle cannot be dragged off-screen. Out of combat only (Anchors.UpdateHandle). A
---- strip beside the anchor reaches out from its side only; one before or inside it reaches along
---- its line by the overhang, toward H1, or toward H0 for a behind follower's (lined up with H1),
---- and a before strip reaches out past V0 by `reach` too.
-local function clampToHandle(container, cfg, overhang, side, reach)
+--- too, so the handle cannot be dragged off-screen. Out of combat only (Anchors.UpdateHandle). The
+--- strip reaches along its line by the overhang, toward H1, or toward H0 for a behind follower's
+--- (lined up with H1), and out past V0 by `reach`.
+local function clampToHandle(container, cfg, overhang, reach)
     if not overhang then
         setClamp(container, 0, 0, 0, 0)
         return
     end
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    if side == "behind" or side == "ahead" then return clampBeside(container, growH, overhang, side) end
-    local _, own = stripSides(cfg)
-    local toRight = (growH == "right") ~= (own == "behind")
+    local toRight = (growH == "right") ~= (ownSide(cfg) == "behind")
     local left = toRight and 0 or -overhang
     local right = toRight and overhang or 0
     local top = (growV == "down") and reach or 0
@@ -1048,7 +1000,7 @@ function Anchors.UpdateHandle(container, show)
     local cfg = container:Cfg()
     show = (show and cfg) and true or false
     handle:SetLabel(handleText(cfg))
-    container.stripShown = show   -- what a follower leaves room for (stripRoom)
+    container.stripShown = show   -- the room its own seam makes (furnitureRoom)
     updatePin(container, cfg, show)
     if not InCombatLockdown() then
         if show then

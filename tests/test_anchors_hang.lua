@@ -116,25 +116,27 @@ end)
 -- ── strips never stack (EO-2) ─────────────────────────────────────────────────────────────────
 
 --- Where each container's strip spans vertically, in screen units from container 1's top (down is
---- negative), for a chain growing down whose followers' strips sit beside their first element,
---- level with their top (SS-3). Worked out from the recorded offsets, the element heights and the
---- widget's strip height, since the mock has no geometry.
+--- negative), for a chain growing down whose strips all sit above their own block, one strip gap
+--- off it (batch 10 F1). Worked out from the recorded offsets, the element heights and the widget's
+--- strip height, since the mock has no geometry. Also answers each block's top and bottom.
 local function stripSpans(NS, mocks, CM)
     local DRAG = mocks.LibStub("LibKa0s-Widgets-1.0").DRAG_HANDLE
     local spans, top = {}, 0
     local _, h1 = NS.Style.ElementSize(NS.Database.FindContainer(1))
     spans[1] = { DRAG.GAP, DRAG.GAP + DRAG.HEIGHT }            -- the root's strip sits above it
     local bottom = top - h1
+    local blocks = { { top = top, bottom = bottom } }
     for id = 2, 3 do
         local rec = recordAnchor(CM.instances[id])
         NS.Anchors.Place(CM.instances[id])
         local _, p = lastTarget(rec)
         top = bottom + p[5]
-        spans[id] = { top - DRAG.HEIGHT, top }
+        spans[id] = { top + DRAG.GAP, top + DRAG.GAP + DRAG.HEIGHT }
         local _, h = NS.Style.ElementSize(NS.Database.FindContainer(id))
         bottom = top - h
+        blocks[id] = { top = top, bottom = bottom }
     end
-    return spans, DRAG.GAP
+    return spans, DRAG.GAP, blocks
 end
 
 --- No two strips overlap, and each pair leaves at least the widget's strip gap between them:
@@ -150,16 +152,20 @@ local function assertNoOverlap(spans, gap, what)
     end
 end
 
-test("hang: three empty Text containers chained and unlocked: no two strips overlap, and each sits a strip gap past the one before", function()
+test("hang: three empty Text containers chained and unlocked: no two strips overlap, and each sits between its parent's block and its own", function()
     local NS, mocks, CM = unlockedChain("text")
-    local spans, gap = stripSpans(NS, mocks, CM)
-    -- red under: the engine target (every link about 5px under the last) or a seam that leaves a
-    -- follower of a follower no room for its parent's strip (16px lines, 2px apart, 18px strips)
+    local spans, gap, blocks = stripSpans(NS, mocks, CM)
+    -- red under: the engine target (every link about 5px under the last) or a seam that leaves no
+    -- room for the follower's own strip (batch 10 F2)
     assertNoOverlap(spans, gap, "unlocked")
-    assertEqual(spans[2][1] - spans[3][2], gap, "3's strip exactly one strip gap under 2's")
+    for id = 2, 3 do
+        local seam = NS.Database.FindContainer(id).layout.spacing
+        assertEqual(blocks[id - 1].bottom - spans[id][2], seam, id .. "'s strip one seam under its parent's block")
+        assertEqual(spans[id][1] - blocks[id].top, gap, id .. "'s strip one strip gap over its own block")
+    end
 end)
 
-test("hang: the room for a strip is the parent's: a follower of the screen root keeps the locked seam (SS-3)", function()
+test("hang: the room for a strip is the follower's own: unlocked it adds its strip's row to the seam, locked the seam alone (F2)", function()
     local NS, mocks, CM = unlockedChain("text")
     local rec = recordAnchor(CM.instances[2])
     NS.Anchors.Place(CM.instances[2])
@@ -168,10 +174,10 @@ test("hang: the room for a strip is the parent's: a follower of the screen root 
     mocks.__fireTimers()
     NS.Anchors.Place(CM.instances[2])
     local _, locked = lastTarget(rec)
-    -- red under: a handle reach added to every follower while unlocked (the root's strip is above
-    -- the root, away from its follower, so there is nothing to make room for)
-    assertEqual(unlocked[5], locked[5], "the same seam locked and unlocked")
-    assertEqual(locked[5], -NS.Database.FindContainer(2).layout.spacing)
+    local spacing = NS.Database.FindContainer(2).layout.spacing
+    -- red under: the batch 9 seam (the follower's strip beside its column, so no room made)
+    assertEqual(unlocked[5], -(spacing + 20), "unlocked: the seam and the strip's row")
+    assertEqual(locked[5], -spacing, "locked: the seam alone (SS-3)")
 end)
 
 test("hang: locked, a follower of a follower keeps its own seam: no strip shows, so none needs room", function()

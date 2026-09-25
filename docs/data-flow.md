@@ -199,14 +199,18 @@ size unless test mode's placeholders are there. `ApplyVisibility` runs after eve
 apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test mode switch) and whenever a row whose
 `effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
 container's own enable). The handle
-(`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into, so it
-covers no element and nothing moves to make room for it; on a container attached below another it
-runs beside the first element instead, behind it or ahead of it, whichever no follower of its own
-holds, or over its top band when both are taken (`Anchors.StripSide`, batch 9 SEP-3), so it covers
-none of the parent's. While unlocked a small gold diamond (the join pin) marks the point where a
-container attached to another joins it, and the strip's tooltip names that side and the parent. A shown name label
-(`Anchors.PlaceLabel`) takes the strip's spot, locked or unlocked, and while unlocked the strip moves
-out past it (D6). The strip's close mark (X) writes `container.enabled = false` through
+(`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into (the
+before side: above the block growing down), so it covers no element. Every container's strip sits
+there, a follower's included, in its own column (batch 10 F1, `Anchors.StripPoints`). A shown name
+label (`Anchors.PlaceLabel`) sits on the block's before side too, locked or unlocked, and while
+unlocked the strip moves out past it (D6), so the order is always strip, label, block (F3). A
+follower attached on the after side makes the room itself: its seam is moved on along the chain by
+its own strip's row while the strip shows and its label's row while the label shows (F2), and the
+visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`, after
+`UpdateHandle`). A follower on the parent's ahead side (Right, growing right) is moved on the same way past the parent's strip
+and label while the parent's strip runs past its element (F4). While unlocked a small gold diamond
+(the join pin) marks the point where a container attached to another joins it, and the strip's
+tooltip names that side and the parent. The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview

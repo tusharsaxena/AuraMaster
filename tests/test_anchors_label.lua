@@ -301,10 +301,14 @@ test("label justify: LabelJustify answers the style default for nil, AUTO and an
     assertFalse(NS.SetByPath("container.label.justifyH", "SIDEWAYS", 1), "the seam refuses an unknown value")
 end)
 
---- Container 2 attached to container 1, the label on 2, unlocked.
+--- Container 2 (icons) attached to container 1 (a column growing right and down), the label on 2,
+--- unlocked.
 local function follower()
     local NS, mocks = fresh()
     recordFrames(mocks)
+    local L = NS.Database.FindContainer(1).layout
+    L.axis, L.growH, L.growV = "vertical", "right", "down"
+    NS.SetByPath("container.style", "icons", 2)
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
     NS.SetByPath("container.label.show", true, 2)
@@ -313,20 +317,20 @@ local function follower()
     return NS, mocks, NS.ContainerManager.instances[2]
 end
 
-test("label: a container attached to another puts its label beside its first element, like its strip; the strip moves down past it", function()
+test("label: a container attached to another puts its label on its own block's before side, like a root's; the strip moves out past it", function()
     local NS, _, inst = follower()
     local p = lastPointOn(inst.label, inst.anchor)
-    -- red under: the label on the side that faces the parent across the seam
-    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "TOPLEFT"); assertEqual(p[4], -STRIP_GAP)
-    assertEqual(last(inst.labelText, "SetJustifyH")[1], "RIGHT", "hugging the element it names")
+    -- red under: batch 9's label beside the first element (TOPRIGHT on TOPLEFT, far left of the column)
+    assertEqual(p[1], "BOTTOMLEFT"); assertEqual(p[3], "TOPLEFT"); assertEqual(p[4], 0); assertEqual(p[5], STRIP_GAP)
+    assertEqual(last(inst.labelText, "SetJustifyH")[1], "LEFT", "an icons label toward the element it names")
     local rec = recordPoints(inst.handle)
     NS.Anchors.UpdateHandle(inst, true)
     local h = rec[#rec]
-    assertEqual(h[1], "TOPRIGHT"); assertEqual(h[3], "TOPLEFT")
-    assertEqual(h[5], -(STRIP_H + STRIP_GAP), "along the growth, past the label")
+    assertEqual(h[1], "BOTTOMLEFT"); assertEqual(h[3], "TOPLEFT")
+    assertEqual(h[5], STRIP_GAP + STRIP_H + STRIP_GAP, "out past the label: strip, label, block")
 end)
 
-test("label: a follower's follower leaves room for its parent's label and strip beside the seam", function()
+test("label: a follower's follower makes room for its own strip, not for its parent's label and strip", function()
     local NS, mocks = follower()
     NS.SetByPath("container.attach.x", 0, 3)
     NS.SetByPath("container.attach.y", 0, 3)
@@ -340,9 +344,9 @@ test("label: a follower's follower leaves room for its parent's label and strip 
         rec[n + 1] = { ... }
     end)
     NS.Anchors.Place(three)
-    local _, h = NS.Style.ElementSize(NS.Database.FindContainer(2))
-    -- red under: the room counting the strip alone (the label pushed it further along)
-    assertEqual(rec[#rec][5], -(2 * (STRIP_H + STRIP_GAP) - h), "the shortfall past one element")
+    local spacing = NS.Database.FindContainer(3).layout.spacing
+    -- red under: batch 9's room for the parent's label and strip beside the seam
+    assertEqual(rec[#rec][5], -(spacing + STRIP_H + STRIP_GAP), "its seam and its own strip's row")
 end)
 
 -- ── the name, the class color and the rest of the wiring ──────────────────────────────────────

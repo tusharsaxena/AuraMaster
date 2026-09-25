@@ -517,7 +517,7 @@ end
 --- Show or hide the name label: shown whenever the container is, locked or unlocked, whatever it holds
 --- (its contents are secret), and while unlocked beside the strip, which moves out past it (D6). Our
 --- own unprotected frame, so combat-legal; it moves only on a first show, having no points before.
---- `labelShown` is what the strip (Anchors.UpdateHandle) and a follower's seam (stripRoom) read.
+--- `labelShown` is what the strip (Anchors.UpdateHandle) and this container's own seam (Anchors.RefreshSeam) read.
 --- `show` is whether the container shows at all (ShouldShow).
 function ContainerClass:ApplyLabelShown(cfg, show)
     local host = self.label
@@ -594,6 +594,8 @@ function ContainerClass:ApplyVisibility()
     -- Before the strip, which moves out past a shown label (D6).
     self:ApplyLabelShown(cfg, show)
     NS.Anchors.UpdateHandle(self, unlocked)
+    -- After the strip and the label: a follower's own seam makes their room (batch 10 F2).
+    NS.Anchors.RefreshSeam(self)
     NS.Anchors.PlaceAttached(self)
     return show, previewing, deferred
 end

@@ -1074,15 +1074,17 @@ test("anchors: the engine's flow, the placeholders and the handle all read the i
     assertEqual(y, h + c2.layout.spacing, "the second placeholder stacks up the column")
     local inst = NS.ContainerManager.instances[2]
     local hdl = recordedHandle(mocks, NS, inst)
-    local left, right
-    rawset(inst.anchor, "SetClampRectInsets", function(_, l, r) left, right = l, r end)
+    local left, right, bottom
+    rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, _, b) left, right, bottom = l, r, b end)
     NS.Anchors.UpdateHandle(inst, true)
     local p = last(hdl, "SetPoint")
     -- red under: placeHandle reading cfg.layout (2's own rows grow left and down: the strip would be
-    -- level with its top). Beside its first element, level with its bottom edge (SS-3).
-    assertEqual(p[1], "BOTTOMLEFT"); assertEqual(p[3], "BOTTOMRIGHT")
-    -- red under: clampToHandle reading cfg.layout (2's own growth reaches left)
-    assertEqual(left, 0); assertTrue(right > 0, "the strip beside it reaches right")
+    -- above it). Before its own block in its own column (batch 10 F1): below it, growing up, lined
+    -- up with the right edge its lines start from.
+    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
+    -- red under: clampToHandle reading cfg.layout (2's own growth runs right and reaches up)
+    assertEqual(right, 0, "never right: its lines run left"); assertTrue(left <= 0)
+    assertTrue(bottom < 0, "it reaches down over the strip")
 end)
 
 --- The anchor point the engine was last told for container `id`.

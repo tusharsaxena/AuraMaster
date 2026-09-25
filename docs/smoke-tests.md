@@ -56,9 +56,10 @@ suite covers what only the client can show.
     screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
     its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
     **Attached container.** Attach one container to another (Layout → Anchor), unlock and `/am test` → the
-    attached container's placeholders start one of its own Spacings past the target's last placeholder,
-    and its handle sits beside its own first placeholder, on the side away from its growth, covering
-    none of the target's placeholders (check 41, SS-3).
+    attached container's handle sits above its own first placeholder (below it growing up), in its
+    own column, one of its own Spacings past the target's last placeholder, and its placeholders
+    start one strip row further on, covering none of the target's placeholders (check 41, batch 10
+    F1, F2).
 15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
     the help mark moves it too. Right-click a handle, then its **?** → each time the settings open on
     the **Containers** page with that container selected in the band's picker (feedback #9); in combat
@@ -208,10 +209,11 @@ suite covers what only the client can show.
 
 41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
     as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked and in
-    test mode, with B attached to A → B's placeholders start one of B's Spacings past A's last placeholder, below A's block, rather
-    than on top of A, and B's handle sits beside B's first placeholder, level with B's top edge, over
-    none of A's placeholders (SS-3); `/am test off` → B moves back to one element past A (A's
-    outline) while unlocked (check 191), and follows A's real auras again once locked.
+    test mode, with B attached to A → B's handle sits one of B's Spacings below A's block, and B's
+    placeholders start right under it (strip, block, strip, block in one column), rather than on top
+    of A, with B's handle over none of A's placeholders (batch 10 F1, F2); `/am test off` → B moves
+    back to one element and one strip row past A (A's outline) while unlocked (check 191), and
+    follows A's real auras again once locked, one Spacing past them.
     **Growth conflict (GC-1, E3).** Set B to grow Up and A to grow Down, then B → Another container
     → pick A → a popup names B, A and the changed growth; **Cancel** → the dropdown shows None again
     and nothing moves. Pick A again → **Attach** → B attaches and grows down; its Growth tab shows
@@ -1193,9 +1195,9 @@ predicted empty (`modules/EmptyWatch.lua`). Test mode is off throughout unless a
      not knowable, and that container never shows the placeholder).
 192. **An empty chain unlocked.** Chain three Text containers (B attached to A, C attached to B),
      none with a matching aura. `/am unlock` → each faint placeholder outline sits in its own slot
-     under the one before, one Spacing apart (a few pixels more between B and C, so B's strip clears
-     C's); A's strip sits above A, B's and C's beside their own outlines, and no strip covers another
-     strip or another container's outline.
+     under the one before, with its own strip between them: A's strip, A's outline, B's strip, B's
+     outline, C's strip, C's outline in one column (batch 10 F1, F2), one Spacing between each
+     outline and the next strip, and no strip covers another strip or another container's outline.
 193. **It fills and empties.** Target Debuffs (Mine) with a follower, unlocked, no target → its
      placeholder shows, the follower below it. Target something and apply a DoT → within a moment
      the placeholder hides and the follower sits past the last aura. Let it expire, or clear the
@@ -1299,10 +1301,11 @@ on the same branch.
      past it on the same side, by the label's height plus the strip gap, never covering it;
      `/am lock` → the strip goes and the label stays where it was. `/am test` locked and unlocked →
      the placeholders, the label and (unlocked) the strip with its TEST tag, none overlapping. A
-     container attached to another with its label on → the label sits beside its first element,
-     level with its top and right-aligned against it, over none of the parent's elements, and the
-     strip (unlocked) sits past the label along the growth (below it growing down); note anything
-     else the label runs over, which the offsets fix.
+     container attached to another with its label on → the label sits right on its own block's
+     before side (above it growing down), justified inside the block's width, never out at the far
+     left; unlocked, the strip sits past the label, so the order is strip, label, block (batch 10
+     F3), and the follower sits one more row further from its parent to make the room (F2), locked
+     too while the label is on.
 205. **The label with the rest (NL-1, NL-4).** Rename the container, in combat too → the label
      changes at once. On a target container with the label's class color on, target a warrior then
      a mage → the color follows; an NPC falls back to the swatch. Scale 2.0, Opacity 0.5 and Master
@@ -1408,8 +1411,8 @@ batch 10 on the same branch.
      Justify reads Right; set Player debuffs' to Right → it reads Left. Put both back. `/am get
      container.label.justifyH` on each → `AUTO`. Pick Left on the Bars container → `/am get` reads `LEFT`; `/am reset
      container.label.justifyH` → back to `AUTO`, and the dropdown reads Center again. An Icons
-     container attached below another with its label on → the name sits beside its first element,
-     lined up with the edge that faces it (check 204).
+     container attached below another with its label on → the name sits above its own first icon,
+     lined up with it as a root's is (check 204, batch 10 F3).
 216. **The Side list (AP-1, AP-3).** A bars parent A filling columns growing down and right, bars
      child B attached to it (Per row or column 0, so it is one bar wide): B's Layout → Anchor → **Side** lists Bottom left, Bottom, Bottom right,
      Right, top / middle / bottom and Left, top / middle / bottom, and no Top entry. Pick each in turn
@@ -1448,21 +1451,25 @@ batch 10 on the same branch.
      container; hover B's strip → the tooltip adds "Joined to the *point* of 'A'. Change the side on
      Layout > Anchor." `/am lock` → every diamond goes. A container on the screen or on a named frame
      never shows one.
-223. **Strips find a free side (SEP-3).** Unlocked, test mode on and off:
-     - a Bottom-attached follower's strip sits beside its first element, over none of the parent's
-       elements;
-     - a Right-attached follower's strip sits above it and overlaps neither the parent nor the
-       parent's strip;
-     - a chain where B is on A's Left and C is below B: B's strip sits above B, and C's strip sits
-       beside C's first element on a side no follower holds (or inside it) and covers none of B's
-       elements;
-     - no two strips stack, each label sits where its strip sits, and on `/am lock` no strip is left.
+223. **Every strip in its own column (batch 10 F1, F4; replaces SEP-3's free side).** Unlocked, test
+     mode on and off:
+     - a Bottom-attached follower's strip sits above its own first element, between the parent's
+       block and its own, over none of the parent's elements;
+     - a Right-attached follower's strip sits above it; when the parent's strip is wider than the
+       parent's element (a short name on a single icon is not), the follower sits one strip row
+       lower (two with the parent's label on), so it overlaps neither the parent's strip nor its
+       label; `/am lock` → it moves back level with the parent;
+     - a chain where B is on A's Left and C is below B: B's strip sits above B, lined up with its
+       edge that faces A, and C's strip sits above C, covering none of B's elements;
+     - no two strips stack, each label sits between its strip and its block, and on `/am lock` no
+       strip is left and each follower closes up to one Spacing (plus its label row).
 224. **Weapon enchant placeholders (SEP-4).** A container showing only Weapon enchants, `/am test`
      → it previews weapon enchants (Windfury Weapon, Flametongue Weapon running out, Instant Poison
      with no timer), not buffs; a Player Buffs container with Weapon enchants also on
      still previews buffs. A Text container of enchants under Size to fit sizes to those names.
 225. **One geometry (E1, E2).** With B on each of Bottom, Right, middle and Left, top in turn and A
-     showing live auras: locked and unlocked → B sits in the same place (unlocked, A is not empty, so
-     B hangs from A's engine); in test mode → B sits on the same side of A's placeholder block; with A
+     showing live auras: locked and unlocked → B sits on the same side of A (unlocked, A is not
+     empty, so B hangs from A's engine; on Bottom B sits one strip row further down while its strip
+     shows, batch 10 F2); in test mode → B sits on the same side of A's placeholder block; with A
      empty and unlocked → B sits on that side of A's one-element outline. No Lua error, taint or
      ADDON_ACTION_BLOCKED in any of them, and entering combat unlocked puts B back on A's engine.
