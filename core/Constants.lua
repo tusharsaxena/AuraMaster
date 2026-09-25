@@ -184,6 +184,12 @@ C.DEFAULT_DISPEL_COLORS = {
 -- layoutStack); TEXT_ROW_GAP is the space between two rows, in pixels.
 C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
 C.TEXT_ROW_GAP = 2
+-- Size to fit (batch 8, AS-2, modules/Style_Text.lua's Text.AutoSize): the space above and below a
+-- line's font, so a 12pt line is 16 tall, the old default height; and the width range a line is
+-- clamped to, which the Text page's Width row offers too (settings/Text.lua).
+C.TEXT_AUTOSIZE_PAD = 2
+C.TEXT_WIDTH_MIN = 40
+C.TEXT_WIDTH_MAX = 600
 C.TEXT_JUSTIFY_V = { "TOP", "MIDDLE", "BOTTOM" }
 C.TEXT_JUSTIFY_V_LABELS = { TOP = "Top", MIDDLE = "Middle", BOTTOM = "Bottom" }
 

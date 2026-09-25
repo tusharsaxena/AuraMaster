@@ -674,3 +674,157 @@ function Text.PreviewLine(s, aura)
     end
     return table.concat(parts, stacked and "\n" or "")
 end
+
+--- A literal `|` in the player's own template text would start a color escape it never asked for and
+--- can leave a string unable to render past it -- PrettyChat's convention (`../PrettyChat/settings/Panel.lua`)
+--- is to double it. The only LIVE codes in `Text.PreviewLine`'s own output are dispel's
+--- `|cffRRGGBB...|r` wraps (`dispelWord`), so those are pulled out and restored around the doubling,
+--- rather than doubled themselves. The Text page's Preview box and Size to fit's measure both use it.
+function Text.EscapeStrayPipes(text)
+    local saved, n = {}, 0
+    local guarded = text:gsub("|cff%x%x%x%x%x%x.-|r", function(run)
+        n = n + 1
+        saved[n] = run
+        return "\1" .. n .. "\1"
+    end)
+    guarded = guarded:gsub("|", "||")
+    return (guarded:gsub("\1(%d+)\1", function(i) return saved[tonumber(i)] end))
+end
+
+-- ---------------------------------------------------------------------------
+-- Size to fit (batch 8, AS-2)
+-- ---------------------------------------------------------------------------
+-- A line's box sized to its content. NOT to a live aura's text: every engine-written piece is secret
+-- and auto-sized, so its width is never readable, and the engine lays a group out at ONE element size
+-- anyway. The size comes from the settings at dress time instead: the height from the font, the icon,
+-- a stacked Center's rows and the bounce; the width from the widest line the placeholders draw (the
+-- preview set of the aura type, the Text page's sample, and a worst case of the longest name, 99
+-- stacks and each of Style.TIME_SAMPLES), measured on our own hidden string (Style.WidestLine), which
+-- is never secret. A live name longer than those is cut at the box's edge, as with a hand-set width.
+
+-- The headroom a bounce needs, in bounce heights, per vertical justify: centered, the text gets half
+-- the added room above it; at the bottom all of it; at the top none helps (it is pinned to the edge).
+local BOUNCE_ROOM = { TOP = 0, MIDDLE = 2, BOTTOM = 1 }
+
+-- [style signature] = { width, height }: a good measure, remembered. Cleared past FIT_CAP entries. A
+-- failed measure is never remembered, so a later dress measures again.
+local fitted, fittedCount = {}, 0
+local FIT_CAP = 64
+
+local function iconSide(s)
+    local pos = s.icon or D.icon
+    return pos == "LEFT" or pos == "RIGHT"
+end
+
+--- The box's height: a line of the font with its padding, raised to a set icon size, to a stacked
+--- Center's rows, then the bounce's headroom.
+local function fitHeight(s, fs)
+    local h = fs + 2 * C.TEXT_AUTOSIZE_PAD
+    local iconSet = number(s.iconSize, D.iconSize)
+    if iconSide(s) and iconSet > 0 then h = math.max(h, iconSet) end
+    h = math.max(h, Text.StackHeight(s))
+    if (s.anim or D.anim) == "bounce" then
+        h = h + (BOUNCE_ROOM[s.justifyV or D.justifyV] or 0) * number(s.animBounce, D.animBounce)
+    end
+    return h
+end
+
+--- The dispel type of `auras` whose word is the longest, or nil when none has one.
+local function widestDispel(auras)
+    local best, most = nil, 0
+    for _, a in ipairs(auras) do
+        local label = a.dispel and C.TEXT_DISPEL_LABELS[a.dispel]
+        local n = label and label:len() or 0
+        if n > most then best, most = a.dispel, n end
+    end
+    return best
+end
+
+--- `a` under the client's own name for its spell id, as the preview draws it, or nil when the client
+--- has none or it is the literal. Asked here, never through modules/Preview.lua's once-per-session
+--- cache: a dress at login would otherwise fix a name the client had not loaded yet for the session.
+local function clientNamed(a)
+    local name = NS.Compat.GetSpellInfo(a.spellId)
+    if type(name) ~= "string" or name == "" or name == a.name then return nil end
+    return { name = name, remaining = a.remaining, duration = a.duration, stacks = a.stacks, dispel = a.dispel }
+end
+
+--- The auras a line is measured on for `auraType`: the placeholders (under the fixed name and the
+--- client's own), the Text page's sample, and the worst cases.
+local function fitAuras(auraType)
+    local out = {}
+    for _, a in ipairs(C.PREVIEW_AURAS[auraType] or C.PREVIEW_AURAS.HELPFUL) do
+        local n = #out
+        out[n + 1] = a
+        out[n + 2] = clientNamed(a)
+    end
+    local count = #out
+    out[count + 1] = C.TEXT_SAMPLE_AURAS[auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
+    local longest = ""
+    for _, a in ipairs(out) do
+        if a.name:len() > longest:len() then longest = a.name end
+    end
+    local dispel = widestDispel(out)
+    for _, secs in ipairs(Style.TIME_SAMPLES) do
+        count = #out
+        out[count + 1] = { name = longest, stacks = 99, remaining = secs, duration = secs, dispel = dispel }
+        out[count + 2] = { name = longest, stacks = 99, remaining = 0, duration = secs, dispel = dispel }
+    end
+    return out
+end
+
+--- Every row the line draws over the fit auras, as plain strings: a stacked Center's rows split apart
+--- (the widest ROW is the width, not the rows added up), a stray `|` doubled.
+local function fitLines(s, auraType)
+    local lines = {}
+    for _, a in ipairs(fitAuras(auraType)) do
+        for row in (Text.PreviewLine(s, a) .. "\n"):gmatch("(.-)\n") do
+            local n = #lines
+            lines[n + 1] = Text.EscapeStrayPipes(row)
+        end
+    end
+    return lines
+end
+
+--- The box's width: the widest line, the icon beside it (sized from the FINAL height, as
+--- layoutIconAndArea sizes a line-height icon from the element's), the offset and 2 for the outline
+--- and shadow, clamped to the Width row's range; nil when the line cannot be measured.
+local function fitWidth(s, auraType, fs, h)
+    local textW = Style.WidestLine(s.font or D.font, D.font, fitLines(s, auraType))
+    if not textW then return nil end
+    local inset = 0
+    if iconSide(s) then
+        local lineHeight = Text.Stacked(s, Text.Compiled(s)) and fs or h
+        inset = Style.IconSizeFor(s, D, lineHeight) + number(s.iconGap, D.iconGap)
+    end
+    local w = math.ceil(textW + inset + math.abs(number(s.x, D.x)) + 2)
+    return math.max(C.TEXT_WIDTH_MIN, math.min(C.TEXT_WIDTH_MAX, w))
+end
+
+--- Everything the fitted size depends on, as one string.
+local function fitKey(s, auraType)
+    local f = s.font or D.font
+    return table.concat({ Style.Fetch("font", f.font, C.FALLBACK_FONT), tostring(f.fontSize), tostring(f.fontFlags),
+        tostring(s.template), tostring(s.justifyH), tostring(s.justifyV), tostring(s.timeFormat),
+        tostring(s.icon), tostring(s.iconSize), tostring(s.iconGap), tostring(s.x), tostring(s.anim),
+        tostring(s.animBounce), tostring(auraType) }, "|")
+end
+
+--- The size text block `s` fits for a container of `auraType`: width, height; nil when the line cannot
+--- be measured (Style.ElementSize keeps the stored size then). Remembered per style signature, since
+--- Style.ElementSize runs for every dressed button and every layout read.
+--- @return number|nil width, number|nil height
+function Text.AutoSize(s, auraType)
+    s = s or {}
+    local key = fitKey(s, auraType)
+    local hit = fitted[key]
+    if hit then return hit[1], hit[2] end
+    local fs = fontSize(s)
+    local h = fitHeight(s, fs)
+    local w = fitWidth(s, auraType, fs, h)
+    if not w then return nil end
+    if fittedCount >= FIT_CAP then fitted, fittedCount = {}, 0 end
+    fitted[key] = { w, h }
+    fittedCount = fittedCount + 1
+    return w, h
+end

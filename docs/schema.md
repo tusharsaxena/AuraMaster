@@ -151,7 +151,9 @@ with no dispel type takes the surface's own color instead (feedback #7); schema 
 
 ### `text`
 
-The Text style (issue #2). `width` (220), `height` (16); `template`
+The Text style (issue #2). `autoSize` (true: Size to fit, batch 8 AS-1..AS-3 -- the size follows
+the line's content, `Style.Text.AutoSize`, and `width`/`height` stand only when it cannot be measured;
+schema v8 stamps `false` on every container stored before it), `width` (220), `height` (16); `template`
 (`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
 refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` on a template of more
 than one piece STACKS it, one centered row per field, text outside `[ ]` not drawn — feedback #1,
@@ -177,7 +179,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:261`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:265`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -207,9 +209,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **242** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **243** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 43, Layout 26, Bars 72, Icons 42 and Text 36. The
+out of General's own tab), Filters 43, Layout 26, Bars 72, Icons 42 and Text 37. The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
 `container.filter.categories.<key>` row at runtime (`NS.RegisterSchemaRows(rows, beforePath)` inserts
@@ -502,7 +504,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:943`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:965`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -674,8 +676,12 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   container in the `container` mode whose offsets are still the old template default `0` / `-4` has
   them reset to `0` / `0`. An absent offset counts as that old default. Any other value is the
   player's own and is kept, and a `frame` or `screen` container keeps its offsets whatever they are.
-  Idempotent: a second run finds `0` / `0` and resets nothing. It is unreleased, so the later batch 8
-  tasks extend this same step (D8).
+  The same step stamps `text.autoSize = false` (Size to fit off, AS-3/D7) on every stored container
+  that has no value of its own, creating a missing or non-table `text` block for it, so a
+  hand-sized layout does not move when the backfill would hand it the template's `true`; a fresh
+  install walks no containers, so its starters and every later container read `true`.
+  Idempotent: a second run finds `0` / `0` and a stored `autoSize`, and changes nothing. It is
+  unreleased, so the later batch 8 tasks extend this same step (D8).
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string

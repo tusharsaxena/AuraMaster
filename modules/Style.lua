@@ -197,8 +197,10 @@ end
 -- (never secret) and measured. The ems budget (C.TIME_TEXT_EMS) guessed, and guessed short: 2.5 ems
 -- of an 11pt font cut a Blizzard-format "59 m" to "59...".
 
--- The seconds sampled: the largest value before each unit or digit count changes.
+-- The seconds sampled: the largest value before each unit or digit count changes. Published for a
+-- Text line's Size to fit (modules/Style_Text.lua's Text.AutoSize), which measures the same worst cases.
 local TIME_SAMPLES = { 59, 599, 3599, 35999, 86399, 863999 }
+Style.TIME_SAMPLES = TIME_SAMPLES
 local measureFS             -- the hidden FontString, built on first use
 local measuredWidths = {}   -- ["path|size|flags|format"] = width; a failed measure is never cached
 
@@ -247,6 +249,35 @@ function Style.TimeTextWidth(t, tdef, fmt)
     w = most + 2
     measuredWidths[key] = w
     return w
+end
+
+--- The widest of `lines` in one font; nil when any cannot be measured. Called guarded.
+local function widestLine(path, size, flags, lines)
+    local fs = Style.__measurer()
+    if not fs then return nil end
+    if not fs:SetFont(path, size, flags) and not fs:SetFont(C.FALLBACK_FONT, size, flags) then return nil end
+    local most
+    for _, line in ipairs(lines) do
+        fs:SetText(line)
+        local w = fs:GetStringWidth()
+        if not NS.Secrets.IsReadableNumber(w) then return nil end
+        if not most or w > most then most = w end
+    end
+    return most
+end
+
+--- The width, in pixels, of the widest of the plain strings `lines` in font block `t` (`tdef` the
+--- template's block), measured on the same hidden string as a time text; nil when it cannot be
+--- measured: a raise, a width that is not a readable number, or none above 0 (a font the client has
+--- not loaded yet). Nothing is cached here: the caller (a Text line's Size to fit) remembers its
+--- whole answer, and only a good one.
+function Style.WidestLine(t, tdef, lines)
+    local size = tonumber(t.fontSize) or tdef.fontSize
+    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
+    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local ok, most = pcall(widestLine, path, size, flags, lines)
+    if not (ok and most and most > 0) then return nil end
+    return most
 end
 
 -- ---------------------------------------------------------------------------
@@ -691,8 +722,16 @@ function Style.ElementSize(cfg)
     local key = Style.StyleKey(cfg)
     local s, sdef = cfg[key] or {}, D[key]
     local w, h = tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
-    -- A Text line stacked by Center grows to its rows (feedback #1, modules/Style_Text.lua).
-    if key == "text" and Style.Text then h = math.max(h, Style.Text.StackHeight(s)) end
+    if key == "text" and Style.Text then
+        -- Size to fit (batch 8, AS-2): the size the line's content needs, when it can be measured;
+        -- the stored size stands when it cannot. It already holds a stacked Center's rows.
+        if Style.OrTemplate(s.autoSize, sdef.autoSize) then
+            local aw, ah = Style.Text.AutoSize(s, cfg.auraType)
+            if aw then return aw, ah end
+        end
+        -- A Text line stacked by Center grows to its rows (feedback #1, modules/Style_Text.lua).
+        h = math.max(h, Style.Text.StackHeight(s))
+    end
     return w, h
 end
 

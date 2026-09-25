@@ -239,7 +239,7 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:943`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:965`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure

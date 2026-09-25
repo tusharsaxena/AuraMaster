@@ -237,3 +237,59 @@ test("migrations: a new container's attach offset is 0/0", function()
     assertEqual(NS.CONTAINER_TEMPLATE.attach.x, 0)
     assertEqual(NS.CONTAINER_TEMPLATE.attach.y, 0)
 end)
+
+-- ── v8 (batch 8 AS-3, D7): Size to fit stamped off on every existing container ─────────────────
+
+test("migrations: v8 stamps Size to fit off on every stored container, and keeps a stored value", function()
+    local NS = fresh()
+    local p = v7profile()
+    p.containers[2].text = { width = 180 }
+    p.containers[3].text = "junk"
+    p.containers[4].text = { autoSize = true }
+    local reset, stamped = NS.Database.MigrateV8(p)
+    assertEqual(reset, 2, "the seam reset still counts first")
+    -- red under: v8 without the autosize stamp (the backfill after the ladder turns it ON and moves
+    -- every hand-sized layout)
+    assertEqual(stamped, 6)
+    for id = 1, 7 do
+        local want = (id == 4)
+        assertEqual(p.containers[id].text.autoSize, want, "container " .. id)
+    end
+    assertEqual(p.containers[2].text.width, 180, "the rest of the block kept")
+    local before = NS.Database.DeepCopy(p)
+    local _, again = NS.Database.MigrateV8(p)
+    assertEqual(again, 0, "a second run stamps nothing")
+    assertNil(diff(p, before))
+end)
+
+test("migrations: a v7 account keeps its hand-set text size; a fresh install's starters fit their content", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
+        global = { schemaVersion = 7 } } })
+    for _, name in ipairs({ "Default", "Raid" }) do
+        -- red under: the step touching the active profile only
+        assertEqual(NS.db.sv.profiles[name].containers[2].text.autoSize, false, name)
+    end
+    local c = NS.Database.FindContainer(2)
+    c.style = "text"
+    c.text.width, c.text.height = 250, 18
+    local w, h = NS.Style.ElementSize(c)
+    assertEqual(w, 250); assertEqual(h, 18)
+    local fresh2 = fresh()
+    for _, k in ipairs(fresh2.Database.GetContainers()) do
+        -- red under: a template default of false (Size to fit off on a new install, against D7)
+        assertEqual(k.text.autoSize, true, k.name)
+    end
+end)
+
+test("migrations: after v8 a new container and a new profile start with Size to fit on; a duplicate keeps its source's", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v7profile() }, global = { schemaVersion = 7 } } })
+    local id = NS.ContainerManager.Create({ name = "New" })
+    -- red under: v8 stamping false on containers made after the ladder ran
+    assertEqual(NS.Database.FindContainer(id).text.autoSize, true)
+    local dup = NS.ContainerManager.Duplicate(2)
+    assertEqual(NS.Database.FindContainer(dup).text.autoSize, false, "the copy keeps the source's off")
+    NS.db:SetProfile("Brand new")
+    local all = NS.Database.GetContainers()
+    assertTrue(#all > 0, "the new profile is seeded")
+    for _, k in ipairs(all) do assertEqual(k.text.autoSize, true, k.name) end
+end)

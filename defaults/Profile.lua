@@ -233,6 +233,10 @@ NS.CONTAINER_TEMPLATE = {
     -- modules/TextTemplate.lua and drawn as a chain of font strings (modules/Style_Text.lua).
     text = {
         width = 220, height = 16,
+        -- Size to fit (batch 8, AS-1): the size follows the line's content (Style.ElementSize), and
+        -- width/height stand only when it cannot be measured. On for a new profile or container;
+        -- core/Database.lua's v8 stamps it off on every container stored before it (D7).
+        autoSize = true,
         template = "$spellname$[ x$stacks$][ - $remainingduration$]",
         justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,
         font = font(12),

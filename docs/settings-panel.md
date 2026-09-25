@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 242 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 243 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -729,7 +729,7 @@ disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
+| General | Size: `autoSize` (Size to fit; `width` and `height` dim under a note while it is on, batch 8 AS-1), `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |

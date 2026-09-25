@@ -196,7 +196,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:511`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:542`), and then adds again
 (`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -360,7 +360,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:452`):
+`modules/Style.lua:483`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -561,7 +561,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:849`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:888`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

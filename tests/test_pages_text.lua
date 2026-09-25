@@ -650,3 +650,40 @@ test("text page: Font carries the three dispel-type options, all off, each dimme
         assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live")
     end
 end)
+
+-- ── Size to fit (batch 8, AS-1) ────────────────────────────────────────────────────────────────
+
+test("text page: Size to fit leads Size; while it is on Width and Height dim under a note, and say why", function()
+    local NS, _, P, ws = textPage()
+    local L = NS.L
+    local note = L["Width and height follow the font, the icon and the template while Size to fit is on. They still apply if the size cannot be measured."]
+    assertEqual(NS.db.profile.containers[1].text.autoSize, true, "a starter fits its content")
+    local fit = P.row(ws, P_ .. "autoSize")
+    -- red under: no Size to fit row
+    assertTrue(fit ~= nil, "the row is drawn")
+    local at = {}
+    for i, w in ipairs(ws) do
+        if w == fit then at.fit = i end
+        if w == P.row(ws, P_ .. "width") then at.width = i end
+    end
+    assertTrue(at.fit < at.width, "Size to fit, then Width")
+    -- red under: Width and Height live while the size follows the content (a slider that does nothing)
+    assertTrue(P.row(ws, P_ .. "width").disabled, "width dims")
+    assertTrue(P.row(ws, P_ .. "height").disabled, "height dims")
+    assertTrue(P.hasText(ws, note), "the note")
+    assertTrue(NS.FindSchemaRow(P_ .. "width").desc:find(L["Size to fit"], 1, true) ~= nil, "the tooltip names why")
+    assertTrue(NS.FindSchemaRow(P_ .. "height").desc:find(L["Size to fit"], 1, true) ~= nil, "the tooltip names why")
+    -- red under: the row without its structural redraw (the dim and the note outlive the change)
+    assertTrue(NS.FindSchemaRow(P_ .. "autoSize").onChange ~= nil)
+    NS.SetByPath(P_ .. "autoSize", false, 1)
+    ws = P.rerender("Text")
+    assertFalse(P.row(ws, P_ .. "width").disabled and true or false, "width live when off")
+    assertFalse(P.row(ws, P_ .. "height").disabled and true or false, "height live when off")
+    assertFalse(P.hasText(ws, note), "no note when off")
+end)
+
+test("text page: /am set container.text.autoSize reaches the same seam", function()
+    local NS = textPage()
+    assertTrue(NS.SetByPath(P_ .. "autoSize", false, 1))
+    assertEqual(NS.Database.FindContainer(1).text.autoSize, false)
+end)

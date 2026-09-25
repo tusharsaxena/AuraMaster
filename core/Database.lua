@@ -880,9 +880,20 @@ end
 --- 0/0. An ABSENT offset is that same old default (the template carried it when the container was
 --- stored, and the backfill after the ladder would otherwise hand it the new template's 0 without
 --- the step saying so), so it is stamped 0 too. Any other value is the player's own and is kept, and
---- a named-frame or screen container keeps its offsets whatever they are. IDEMPOTENT: a second run
---- finds 0/0 and resets nothing. Unreleased, so later batch 8 tasks extend this same step (D8).
+--- a named-frame or screen container keeps its offsets whatever they are.
+---
+--- The same step (D8) turns Size to fit OFF on every container stored before it (AS-3, D7): the
+--- template's `text.autoSize` is true, and the backfill after the ladder would otherwise hand that to
+--- every existing container and move every hand-sized layout. Every container, not only one drawn as
+--- text, so a bars or icons container switched to Text later keeps the size it is given. A text block
+--- that is missing or not a table is created for the stamp; a stored value is the player's own and is
+--- kept. A fresh install walks no containers (the starters are seeded after the ladder), so they, and
+--- every container made later, read the template's true.
+---
+--- IDEMPOTENT: a second run finds 0/0 and a stored autoSize, and changes nothing. Unreleased, so later
+--- batch 8 tasks extend this same step (D8).
 --- @return number  the containers whose offsets it reset
+--- @return number  the containers Size to fit was stamped off on
 local V8_OLD_X, V8_OLD_Y = 0, -4
 
 local function resetOldSeam(at)
@@ -895,13 +906,24 @@ local function resetOldSeam(at)
     return true
 end
 
+--- Stamp Size to fit off on container `c` unless it holds a value of its own; whether it stamped.
+local function stampFitOff(c)
+    if type(c.text) ~= "table" then c.text = {} end
+    if c.text.autoSize ~= nil then return false end
+    c.text.autoSize = false
+    return true
+end
+
 function Database.MigrateV8(p)
-    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
-    local reset = 0
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    local reset, stamped = 0, 0
     for _, c in pairs(p.containers) do
-        if type(c) == "table" and resetOldSeam(c.attach) then reset = reset + 1 end
+        if type(c) == "table" then
+            if resetOldSeam(c.attach) then reset = reset + 1 end
+            if stampFitOff(c) then stamped = stamped + 1 end
+        end
     end
-    return reset
+    return reset, stamped
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -1005,9 +1027,9 @@ local SCHEMA_STEPS = {
     end },
     { to = 8, apply = function(db)
         eachProfile(db, function(p, name)
-            local n = Database.MigrateV8(p)
+            local n, fit = Database.MigrateV8(p)
             if NS.Debug then
-                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another", name, n)
+                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another; Size to fit stamped off on %s", name, n, fit)
             end
         end)
     end },
