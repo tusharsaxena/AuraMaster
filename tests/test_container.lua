@@ -171,7 +171,8 @@ test("container: unlocked, a container shows whatever its visibility rule, its e
     -- red under: ApplyVisibility without the outline (an empty container has nothing to grab)
     assertTrue(inst.outline ~= nil and inst.outline:IsShown(), "an outline marks even an empty container")
     NS.Preview.SetTestMode(true)
-    assertFalse(inst.outline:IsShown(), "test mode: the placeholders are there instead")
+    -- batch 9 SEP-1: in test mode the outline encloses the placeholder block instead
+    assertTrue(inst.outline:IsShown(), "test mode: around the placeholder block")
     NS.Preview.SetTestMode(false)
     NS.SetByPath("locked", true)
     assertFalse(inst.outline:IsShown(), "locked: no outline")

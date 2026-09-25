@@ -188,10 +188,17 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   sits below the parent at the same alignment (`Anchors.ResolvedEdge`) until it is one wide again; the
   stored side is kept and a gray note on the Anchor tab says so. A Side picked before the attachment
   is made (Another container with no Container yet) is remembered for this session only; after a
-  reload the new attachment starts on its style's default side (E5). Until the strip learns which
-  sides are taken (batch 9 SEP-3), a follower's drag strip and label still sit beside its first
-  element on the side its lines start from, so on a Right-attached follower they cover the parent's
-  edge while unlocked.
+  reload the new attachment starts on its style's default side (E5).
+- **A follower's drag strip moves to whichever side of its first element is free** (batch 9 SEP-3,
+  `Anchors.StripSide`). Below its parent it sits beside the element on the side its lines start from,
+  or on the other side when a Left-attached follower holds that one and it is one aura wide, or
+  otherwise over the element's own top band (inside), where it hides the top of that element while
+  unlocked. A follower on the parent's Right or Left keeps its strip above its first element; on the
+  Right it is pushed up past the parent's strip row and, when the parent's label is on, its label
+  row, locked or not, so the two never stack (the label is placed on Apply, not on a lock, so a
+  locked label sits one strip row higher than it needs to). Only a direct follower on a side counts
+  as taking it, a disabled one included. A strip on the far side of a grandparent can still meet
+  that grandparent's elements, since only the parent is kept clear.
 - **The strip's X turns a container off at once, with no confirmation.** One left click writes
   `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enabled
   checkbox on the Containers page (`/am set container.enabled true`, with it selected, works too). There is
@@ -200,9 +207,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **The name label is not clamped to the screen.** Only the drag strip is (batch 8 NL-2). Clamping the
   label would move the container whenever the label is turned on, so a locked container flush with
   the edge on the label's side can show its label partly off screen. On a container attached to
-  another the label sits beside the first element, outside the container's side edge and level with
-  its top (as the strip does, SS-3), so it covers none of the parent's elements but can run over
-  whatever lies to that side; its X/Y offsets move it clear. A long name overruns a narrow element,
+  another the label takes its strip's spot (batch 9 SEP-3): beside the first element, over its top
+  band, or above it for a follower on a side, so it covers none of the parent's elements but can run
+  over whatever lies to that side; its X/Y offsets move it clear. A long name overruns a narrow element,
   since the label does not wrap: past both edges when centered (the Bars and Text default, batch 9
   E7), otherwise away from the edge it is justified to.
 - **Size to fit sizes a Text container once, not per aura** (batch 8 AS-2). The engine draws every
@@ -238,7 +245,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   placeholder over a new first aura, or past an aura that just ended. It relies on `C_UnitAuras`
   reading a filter string as the engine does (smoke check 191). Combat moves every follower onto its
   engine at the pull (PLAYER_REGEN_DISABLED, before lockdown) and back after it. Where the parent is
-  itself attached, its strip runs beside its first element, and a parent shorter than the strip
+  itself attached below its own parent, its strip runs beside or inside its first element, and a
+  parent shorter than the strip
   (a 16px Text line) pushes its follower a few pixels further while the strips show, so no two
   strips in a chain overlap (EO-2); locked, the seam is the follower's own spacing again. A lock or
   unlock in combat re-places nothing until combat ends.

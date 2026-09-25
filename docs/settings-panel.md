@@ -627,12 +627,15 @@ composed font block on `container.label.font.` (gold Friz 12 OUTLINE by default,
 look; class color from the container's unit). Ten rows. Justify is stored `"AUTO"` until the player
 picks one, and the dropdown shows the justify in effect (the row's `panelGet`,
 `Anchors.LabelJustify`): Bars and Text center the name, Icons line it up with the first icon (Left,
-Right when the icons grow left, mirrored beside a follower's first element). The row's reset writes
+Right when the icons grow left, mirrored where the strip's spot runs the other way: behind a
+follower's first element, or above a Left-attached follower, lined up with the edge that faces its
+parent). The row's reset writes
 `"AUTO"` back. The text is always the container's name, so
 a rename redraws it. Every row but Show is dimmed while the label is off, except the color swatch,
 which is never dimmed (anti-pattern #74). The label sits where the drag strip sits, outside the first
-element on the side the auras do not grow into, or beside the first element on a container attached
-to another; it shows locked or unlocked, and while unlocked the strip moves out past it by the label's
+element on the side the auras do not grow into, or on a container attached to another wherever its
+strip sits (`Anchors.StripSide`: beside or inside the first element, or above it for a follower on
+a side); it shows locked or unlocked, and while unlocked the strip moves out past it by the label's
 height plus the strip gap (D6, `Anchors.PlaceLabel`). The rows carry no `effect`: a write re-applies
 the selected container.
 

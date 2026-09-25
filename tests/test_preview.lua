@@ -526,3 +526,38 @@ test("preview: the debuff set covers every dispel type plus one with none, and r
         end
     end
 end)
+
+test("preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)", function()
+    local P = NS.Constants.PREVIEW_AURAS
+    local enchantsOnly = { style = "icons", unit = "player", auraType = "HELPFUL",
+        filter = { categories = NS.Categories.EnchantOnlyStates() } }
+    -- red under: no enchant set (a Weapon Enchants container previewed Power Word: Fortitude)
+    assertTrue(P.ENCHANT ~= nil and #P.ENCHANT >= 3, "one per weapon slot")
+    assertTrue(NS.Preview.AurasFor(cfg(enchantsOnly)) == P.ENCHANT)
+    local k = container(cfg(enchantsOnly))
+    NS.Preview.Show(k)
+    local got = iconTextures(k)
+    assertEqual(#got, 3, "capped to the enchant slots")
+    for i = 1, 3 do assertEqual(got[i], P.ENCHANT[i].icon, "enchant " .. i) end
+    local both = cfg({ unit = "player", filter = { categories = { weaponEnchants = "show" } } })
+    assertTrue(NS.Preview.AurasFor(both) == P.HELPFUL, "a buff container that also has enchants keeps the buffs")
+    assertTrue(NS.Preview.AurasFor(cfg({ auraType = "HARMFUL" })) == P.HARMFUL)
+end)
+
+test("preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box", function()
+    local NS2 = fresh()
+    local P = NS2.Constants.PREVIEW_AURAS
+    local seen = {}
+    local widest = NS2.Style.WidestLine
+    NS2.Style.WidestLine = function(font, def, lines)
+        for _, l in ipairs(lines) do seen[l] = true end
+        return widest(font, def, lines)
+    end
+    NS2.Style.Text.AutoSize({ template = "$spellname$ (fit probe)" }, "HELPFUL")
+    -- red under: fitAuras reading the buff set alone
+    local found = false
+    for l in pairs(seen) do
+        if l:find(P.ENCHANT[1].name, 1, true) then found = true end
+    end
+    assertTrue(found, "measured: " .. P.ENCHANT[1].name)
+end)

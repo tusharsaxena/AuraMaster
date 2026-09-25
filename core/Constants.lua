@@ -173,6 +173,9 @@ C.NOTICE_COLOR = "ffcc6666"
 -- "|c" escape.
 C.TEST_TAG_COLOR = "ffff8000"
 
+-- The join pin's color (batch 9 SEP-2): the drag handle's gold, the strip tooltip's attached line.
+C.JOIN_PIN_COLOR = { 1, 0.82, 0, 1 }
+
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
 C.TIME_FORMAT_LABELS = { blizzard = "Blizzard (1 unit, 90 s -> 1 m)", short = "Short (1 unit)",
@@ -305,5 +308,12 @@ C.PREVIEW_AURAS = {
         { spellId = 2818,   name = "Deadly Poison", icon = 132290, remaining = 9,  duration = 12, stacks = 3, dispel = "Poison" },
         { spellId = 1943,   name = "Rupture",       icon = 132302, remaining = 4,  duration = 24, stacks = 0, dispel = "Bleed" },
         { spellId = 115804, name = "Mortal Wounds", icon = 132355, remaining = 0,  duration = 0,  stacks = 0 },
+    },
+    -- A container showing only Weapon enchants (batch 9 SEP-4, E4): one per weapon slot, in slot
+    -- order (main hand, off hand, ranged), so it previews enchants, not its parent's buffs.
+    ENCHANT = {
+        { spellId = 33757,  name = "Windfury Weapon",    icon = 462329, remaining = 1740, duration = 3600, stacks = 0 },
+        { spellId = 318038, name = "Flametongue Weapon", icon = 135814, remaining = 4,    duration = 3600, stacks = 0 },
+        { spellId = 315584, name = "Instant Poison",     icon = 132273, remaining = 0,    duration = 0,    stacks = 0 },
     },
 }

@@ -765,15 +765,24 @@ local function clientNamed(a)
     return { name = name, remaining = a.remaining, duration = a.duration, stacks = a.stacks, dispel = a.dispel }
 end
 
---- The auras a line is measured on for `auraType`: the placeholders (under the fixed name and the
---- client's own), the Text page's sample, and the worst cases.
-local function fitAuras(auraType)
-    local out = {}
-    for _, a in ipairs(C.PREVIEW_AURAS[auraType] or C.PREVIEW_AURAS.HELPFUL) do
+--- Add each aura of `set` to `out`, under its fixed name and the client's own.
+local function addFitSet(out, set)
+    for _, a in ipairs(set) do
         local n = #out
         out[n + 1] = a
         out[n + 2] = clientNamed(a)
     end
+end
+
+--- The auras a line is measured on for `auraType`: the placeholders (under the fixed name and the
+--- client's own; a buff container's include the weapon enchants, which one showing only Weapon
+--- enchants previews, batch 9 SEP-4), the Text page's sample, and the worst cases.
+local function fitAuras(auraType)
+    local out = {}
+    local P = C.PREVIEW_AURAS
+    local set = (auraType == "HARMFUL") and P.HARMFUL or P.HELPFUL
+    addFitSet(out, set)
+    if set == P.HELPFUL then addFitSet(out, P.ENCHANT) end
     local count = #out
     out[count + 1] = C.TEXT_SAMPLE_AURAS[auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
     local longest = ""

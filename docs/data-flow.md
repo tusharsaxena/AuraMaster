@@ -200,20 +200,25 @@ apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test 
 `effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
 container's own enable). The handle
 (`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into, so it
-covers no element and nothing moves to make room for it; on a container attached to another it runs
-beside the first element instead, so it covers none of the parent's (SS-3). A shown name label
+covers no element and nothing moves to make room for it; on a container attached below another it
+runs beside the first element instead, behind it or ahead of it, whichever no follower of its own
+holds, or over its top band when both are taken (`Anchors.StripSide`, batch 9 SEP-3), so it covers
+none of the parent's. While unlocked a small gold diamond (the join pin) marks the point where a
+container attached to another joins it, and the strip's tooltip names that side and the parent. A shown name label
 (`Anchors.PlaceLabel`) takes the strip's spot, locked or unlocked, and while unlocked the strip moves
 out past it (D6). The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:162`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:173`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
-`engine = false`, fills in the placeholder set for the container's aura type (`Preview.AurasFor`:
-debuffs of every dispel type for a debuff container, buffs otherwise; the client's own names and icons
-by spell id, invented times and stacks), and positions it with
-`Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders
+`engine = false`, fills in the placeholder set for the container (`Preview.AurasFor`: weapon enchants,
+one per slot, for a container showing only Weapon enchants (batch 9 SEP-4); debuffs of every dispel
+type for a debuff container; buffs otherwise; the client's own names and icons by spell id, invented
+times and stacks), and positions it with `Preview.Offset`'s copy of the flow rules. In test mode the
+container's outline encloses the whole placeholder block (`ContainerClass:ApplyOutline` on the preview
+extent, SEP-1), locked or unlocked, so each block of a chain reads as its own. Bars in preview size their fill directly. The placeholders
 are dressed again only after an apply of the container's settings (which marks the preview dirty) or
 after they were hidden; a visibility pass alone leaves them as they are.
 

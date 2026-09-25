@@ -457,17 +457,20 @@ function ContainerClass:ApplyAlpha(cfg, p)
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
 end
 
---- The unlocked container's OUTLINE (B1), its empty-only PLACEHOLDER (batch 9 HG-1): a faint
---- one-pixel box, one element's size, at the corner its flow starts from, so an EMPTY container can
---- still be seen while unlocked and its followers hang from it. Shown only while the container is
---- predicted empty (modules/EmptyWatch.lua) and hung as `slot`; hidden when it holds auras or that is
---- not knowable, when locked, and in test mode (the placeholders are there then). A frame of ours
---- under the anchor, never the engine's. It takes no mouse: the drag handle does the grabbing. A PLAIN frame
+--- The container's OUTLINE: a faint one-pixel box, a frame of ours under the anchor, never the
+--- engine's. Two shapes:
+---   the empty-only PLACEHOLDER (B1, batch 9 HG-1): one element's size, at the corner its flow starts
+---     from, so an EMPTY container can still be seen while unlocked and its followers hang from it.
+---     Shown only while unlocked, predicted empty (modules/EmptyWatch.lua) and hung as `slot`;
+---   the test-mode BLOCK (batch 9 SEP-1, E4): around its whole placeholder block, the preview extent
+---     (`block`), locked or not, so each container of a chain reads as its own even at a seam of 0.
+--- Hidden otherwise: when it holds auras or that is not knowable, and locked outside test mode. The
+--- outline is not an attach target, so showing it moves nothing. It takes no mouse: the drag handle does the grabbing. A PLAIN frame
 --- with its edge drawn as strips (Style.DrawEdge), never a BackdropTemplate: under an anchor attached
 --- to another frame or container its size can read secret, and the Backdrop does arithmetic on the
 --- size on every SetBackdrop and resize (docs/midnight-quirks.md, "A backdrop on an engine button
 --- reads a secret size").
-function ContainerClass:ApplyOutline(cfg, on)
+function ContainerClass:ApplyOutline(cfg, on, block)
     local o = self.outline
     if not on then
         if o then o:Hide() end
@@ -479,11 +482,15 @@ function ContainerClass:ApplyOutline(cfg, on)
         o:EnableMouse(false)
         self.outline = o
     end
-    local w, h = NS.Style.ElementSize(cfg)
-    local point = NS.Preview.Offset(cfg, 1)
     o:ClearAllPoints()
-    o:SetPoint(point, self.anchor, point, 0, 0)
-    o:SetSize(w, h)
+    if block then
+        o:SetAllPoints(block)
+    else
+        local w, h = NS.Style.ElementSize(cfg)
+        local point = NS.Preview.Offset(cfg, 1)
+        o:SetPoint(point, self.anchor, point, 0, 0)
+        o:SetSize(w, h)
+    end
     o:Show()
 end
 
@@ -544,7 +551,8 @@ function ContainerClass:PredictEmpty()
     return NS.EmptyWatch.Predict(self)
 end
 
---- Record what this container's followers hang from and show its placeholder outline to match. The
+--- Record what this container's followers hang from and show its outline to match: around its
+--- placeholder block while it previews (SEP-1), its one-element placeholder while hung as `slot`. The
 --- prediction is read only while it can matter: shown, unlocked and not previewing (`watchEmpty`,
 --- which EmptyWatch's re-evaluation pass reads).
 function ContainerClass:ApplyHang(cfg, show, previewing, unlocked)
@@ -553,7 +561,8 @@ function ContainerClass:ApplyHang(cfg, show, previewing, unlocked)
     if watch then empty = self:PredictEmpty() end
     self.watchEmpty, self.predictedEmpty = watch, empty
     self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg, empty)
-    self:ApplyOutline(cfg, watch and self.hangMode == "slot")
+    local block = (show and cfg and previewing) and self.previewExtent or nil
+    self:ApplyOutline(cfg, block ~= nil or (watch and self.hangMode == "slot"), block)
 end
 
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
@@ -606,6 +615,7 @@ function ContainerClass:Park()
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
+    if self.joinPin then self.joinPin:Hide() end
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false   -- re-evaluated by the next visibility pass
     self.watchEmpty, self.predictedEmpty = false, nil
     self.parked = true
@@ -620,6 +630,7 @@ function ContainerClass:Destroy()
     if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
+    if self.joinPin then self.joinPin:Hide() end
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false
     self.watchEmpty, self.predictedEmpty = false, nil
     self.anchor:Hide()

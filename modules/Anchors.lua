@@ -562,6 +562,9 @@ local DRAG = KW and KW.DRAG_HANDLE
 -- engine stacks above its anchor.
 local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
 
+-- A read-only empty table: what a scan walks when there is nothing to walk, with no allocation.
+local EMPTY = {}
+
 -- The strip's height and gap as the name label (batch 8 NL-2) reads them: the label takes the strip's
 -- spot and is as tall as the strip, and it still draws on a build without the widget, so the widget's
 -- own figures stand in when it is missing.
@@ -579,6 +582,18 @@ local function openSettings(container)
         if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
     end
     if NS.OpenOptionsPage then NS.OpenOptionsPage("containers") end
+end
+
+--- The join the strip's tooltip names (SEP-2) for a container placed on another container: the side
+--- it sits on by its absolute name for the growth in effect, and the parent's name. Nil for any other
+--- placement (a frame, or a target it could not use), which keeps the general attached line.
+--- @return string|nil
+function Anchors.JoinText(container, cfg)
+    if container.placedAs ~= "container" or cfg.attach.mode ~= "container" then return nil end
+    local parent = NS.Database.FindContainer(tonumber(cfg.attach.container))
+    if not parent then return nil end
+    local side = Anchors.EdgeLabel(Anchors.EffectiveLayout(cfg) or {}, Anchors.ResolvedEdge(cfg))
+    return NS.L["Joined to the %s of '%s'. Change the side on Layout > Anchor."]:format(side, tostring(parent.name or ""))
 end
 
 --- The tooltip descriptor the strip and its help mark share: the container's name, how to use the
@@ -599,9 +614,8 @@ end
 local function tooltipSpec(container)
     local function attached()
         local cfg = container:Cfg()
-        if cfg and cfg.attach and cfg.attach.mode ~= "screen" then
-            return NS.L["Attached — set its offsets on the Layout page."]
-        end
+        if not (cfg and cfg.attach and cfg.attach.mode ~= "screen") then return nil end
+        return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets on the Layout page."]
     end
     return {
         title = function()
@@ -735,11 +749,68 @@ local function handleLevel(container, cfg)
     return level
 end
 
---- A container that follows another's flow stacks against it across the seam, so the side away
---- from its growth faces the parent's last aura: its strip goes beside its first element instead
---- (SS-3). One that follows nothing keeps the strip above or below.
-local function besideSeam(cfg)
-    return Anchors.FlowRoot(cfg) ~= nil
+-- ---------------------------------------------------------------------------
+-- The side of its first element a container's strip sits on (batch 9 SEP-3, design section 4)
+-- ---------------------------------------------------------------------------
+-- The first side nothing occupies:
+--   root (follows nothing)     before: above its first element growing down, as it always was;
+--   after-* follower           behind, the side its lines start from (the side before faces the
+--                              parent across the seam, SS-3); ahead when a behind follower holds
+--                              that side and it is one aura wide with no ahead follower; else inside;
+--   ahead-* / behind-* follower  before: its parent sits beside it, so that side is free.
+-- `inside` overlays the top band of its own first element, HANDLE_LEVEL above it, and never covers
+-- the parent. A side is occupied by a DIRECT follower on it, found by one scan that allocates nothing,
+-- since this runs on every visibility pass. The name label takes the strip's spot, so it follows.
+
+--- Whether container `c`, whose chain root is `root` (nil: itself), holds more than one element
+--- across: extendsH over its effective layout, read without copying it (EffectiveLayout allocates).
+local function wideIn(c, root)
+    local from = (root or c).layout
+    local axis = from and from.axis
+    local perLine = c.layout and tonumber(c.layout.perLine) or 0
+    return axis ~= "vertical" or perLine > 0
+end
+
+--- The side container `c` actually sits on in its chain, as ResolvedEdge answers it but with no
+--- allocation and no debug line: its stored side, behind only while it is one aura wide.
+local function sideOf(c)
+    local parts = EDGE_PARTS[c.attach and c.attach.edge]
+    if not parts then return "after" end
+    if parts[1] == "behind" and wideIn(c, Anchors.FlowRoot(c)) then return "after" end
+    return parts[1]
+end
+
+--- Whether container `id` has a direct follower sitting on `side`. Walks the stored containers
+--- themselves, since Database.GetContainers builds a new list on every call.
+local function hasFollowerOn(id, side)
+    local p = NS.db and NS.db.profile
+    for _, c in pairs(p and p.containers or EMPTY) do
+        local at = c.attach
+        if at and at.mode == "container" and c.id ~= id and tonumber(at.container) == id and sideOf(c) == side then
+            return true
+        end
+    end
+    return false
+end
+
+--- The strip's side for `cfg`, and the side `cfg` itself sits on in its chain (nil for a root).
+--- @return string strip, string|nil own
+local function stripSides(cfg)
+    local root = cfg and Anchors.FlowRoot(cfg)
+    if not root then return "before", nil end
+    local own = sideOf(cfg)
+    if own ~= "after" then return "before", own end
+    if not hasFollowerOn(cfg.id, "behind") then return "behind", own end
+    if not wideIn(cfg, root) and not hasFollowerOn(cfg.id, "ahead") then return "ahead", own end
+    return "inside", own
+end
+
+--- Which side of its first element container `cfg`'s strip sits on: "before" (a root, or a follower
+--- on a side), "behind" or "ahead" (beside it, a follower on the after side) or "inside" (over its
+--- top band). Replaces batch 8's besideSeam.
+--- @return string "before"|"behind"|"ahead"|"inside"
+function Anchors.StripSide(cfg)
+    return (stripSides(cfg))
 end
 
 --- How tall the block a follower of `target` hangs from is, in `target`'s units: its preview extent
@@ -752,9 +823,9 @@ local function hangHeight(target, cfg)
 end
 
 --- The room, in screen units before the Master scale, that a container attached to `target` leaves
---- for `target`'s own strip (EO-2): only while that strip shows, and only when it sits beside
---- `target`'s first element (a follower's, SS-3), where it runs down along the block the follower
---- hangs from; a root's strip sits on the far side, away from its followers. Enough that the
+--- for `target`'s own strip (EO-2): only while that strip shows, and only when it sits beside or
+--- inside `target`'s first element (StripSide), where it runs down along the block the follower
+--- hangs from; a strip before it sits on the far side, away from its followers. Enough that the
 --- follower's strip, level with its own edge, starts one strip gap past the end of `target`'s. 0 when
 --- the block is already that tall.
 --- A shown name label beside that element counts too (NL-3): the strip moves on past it, so the room
@@ -763,32 +834,53 @@ stripRoom = function(target)
     local n = ((DRAG and target.stripShown) and 1 or 0) + (target.labelShown and 1 or 0)
     if n == 0 then return 0 end
     local cfg = target.Cfg and target:Cfg()
-    if not (cfg and besideSeam(cfg)) then return 0 end
+    if not cfg or Anchors.StripSide(cfg) == "before" then return 0 end
     return math.max(0, n * (STRIP_H + STRIP_GAP) - hangHeight(target, cfg)) * ownScale(cfg)
 end
 
---- Where the strip sits, and the name label with it (NL-2): on the side the auras do not grow into,
---- its edge lined up with the edge they start from; beside the first element for a container that
---- follows another (SS-3), level with the edge that faces the parent.
---- @return string point, string relativePoint, number x, number y, string growH, string growV, boolean beside
+--- How far out an ahead follower's before strip moves past its parent's rows: the parent sits beside
+--- it with its own strip before it too, whose label can run on over this container's column. The
+--- parent's strip row while a handle exists and its label's row while it is on, whether or not they
+--- show right now: the label is placed on Apply, not on a lock, so it must clear them either way.
+local function parentRows(cfg, own)
+    if own ~= "ahead" then return 0 end
+    local parent = NS.Database.FindContainer(tonumber(cfg.attach.container))
+    if not parent or Anchors.StripSide(parent) ~= "before" then return 0 end
+    local label = parent.label
+    local rows = (DRAG and 1 or 0) + ((label and label.show) and 1 or 0)
+    return rows * (STRIP_H + STRIP_GAP)
+end
+
+--- Where the strip sits, and the name label with it (NL-2), on its StripSide. V0 is the edge the
+--- auras start from (TOP growing down), H0 the side their lines start from (LEFT growing right):
+---   before   out past V0, lined up with H0; a behind follower's lined up with H1 instead, so a
+---            strip wider than the element runs away from the parent beside it; an ahead
+---            follower's pushed out past its parent's rows (parentRows), so strips never stack;
+---   behind   out past H0, level with V0;   ahead  out past H1, level with V0;
+---   inside   on the element's own V0/H0 corner, over its top band.
+--- @return string point, string relativePoint, number x, number y, string growH, string growV, string side
 function Anchors.StripPoints(cfg)
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    if besideSeam(cfg) then
-        local v = (growV == "down") and "TOP" or "BOTTOM"
-        local right = (growH ~= "left")
-        return v .. (right and "RIGHT" or "LEFT"), v .. (right and "LEFT" or "RIGHT"),
-            right and -STRIP_GAP or STRIP_GAP, 0, growH, growV, true
-    end
-    local toward = NS.Container.AnchorPoint(growH, growV)       -- the corner the auras start from
-    local away = NS.Container.AnchorPoint(growH, (growV == "down") and "up" or "down")
-    return away, toward, 0, (growV == "down") and STRIP_GAP or -STRIP_GAP, growH, growV, false
+    local side, own = stripSides(cfg)
+    local V0, V1 = "TOP", "BOTTOM"
+    if growV ~= "down" then V0, V1 = "BOTTOM", "TOP" end
+    local H0, H1 = "LEFT", "RIGHT"
+    if growH == "left" then H0, H1 = "RIGHT", "LEFT" end
+    local out = (growH == "left") and -STRIP_GAP or STRIP_GAP   -- toward H1
+    if side == "behind" then return V0 .. H1, V0 .. H0, -out, 0, growH, growV, side end
+    if side == "ahead" then return V0 .. H0, V0 .. H1, out, 0, growH, growV, side end
+    if side == "inside" then return V0 .. H0, V0 .. H0, 0, 0, growH, growV, side end
+    local h = (own == "behind") and H1 or H0
+    local y = STRIP_GAP + parentRows(cfg, own)
+    return V1 .. h, V0 .. h, 0, (growV == "down") and y or -y, growH, growV, side
 end
 
 --- How far the strip moves to clear a shown name label (D6, NL-3): the label's height and the gap,
---- out on the far side of the anchor, or on along the growth when it sits beside the first element.
-local function labelPush(container, growV, beside)
+--- out on the far side of the anchor for a strip before it, or on along the growth for one beside or
+--- inside its first element.
+local function labelPush(container, growV, side)
     if not container.labelShown then return 0 end
-    local out = (growV == "down") ~= beside
+    local out = (growV == "down") == (side == "before")
     return out and (STRIP_H + STRIP_GAP) or -(STRIP_H + STRIP_GAP)
 end
 
@@ -796,8 +888,9 @@ local LABEL_JUSTIFY = { LEFT = true, CENTER = true, RIGHT = true }
 
 --- The name label's justify in effect (B9 LJ-1, E7): the player's pick, or with none (AUTO, nil or
 --- anything unknown) the style's own. Bars and Text center it. Icons justify it toward the element it
---- names: LEFT, RIGHT when the auras grow left, mirrored for a label beside a follower's first
---- element (SS-3), which sits on the far side of it. The Label tab's Justify row shows this.
+--- names: LEFT, RIGHT when the auras grow left, mirrored where the strip's spot runs the other way:
+--- behind a follower's first element (SS-3), and before a behind follower, lined up with the edge
+--- that faces its parent (SEP-3). The Label tab's Justify row shows this.
 --- @return string "LEFT"|"CENTER"|"RIGHT"
 function Anchors.LabelJustify(cfg)
     if not cfg then return "CENTER" end
@@ -805,7 +898,9 @@ function Anchors.LabelJustify(cfg)
     if LABEL_JUSTIFY[pick] then return pick end
     if NS.Style.StyleKey(cfg) ~= "icons" then return "CENTER" end
     local growH = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    return ((growH == "left") ~= besideSeam(cfg)) and "RIGHT" or "LEFT"
+    local side, own = stripSides(cfg)
+    local mirror = side == "behind" or (side == "before" and own == "behind")
+    return ((growH == "left") ~= mirror) and "RIGHT" or "LEFT"
 end
 
 --- How far the label's text sits in from its host's edge, by justify: none when centered.
@@ -832,24 +927,25 @@ function Anchors.PlaceLabel(container, cfg)
 end
 
 --- The strip goes where Anchors.StripPoints says, moved past a shown name label (D6). Beside the
---- anchor (a container attached to another) it runs into the child's own rows and never back over
---- the parent, as wide as its label with room for the help mark, not the element: it sits beside it,
---- not along it.
---- @return number, boolean  how far the strip runs past the anchor (along the line, or out from its
----                          side, its gap included), and whether it sits beside the anchor rather
----                          than above or below
+--- anchor (behind or ahead) it runs into the child's own rows and never back over the parent, as
+--- wide as its label with room for the help mark, not the element: it sits beside it, not along it.
+--- @return number, string, number  how far the strip runs past the anchor (along the line, or out
+---                          from its side, its gap included), its StripSide, and how far out past the
+---                          anchor's edge it reaches (a before strip only; 0 otherwise)
 local function placeHandle(container, cfg)
     local handle = container.handle
     handle:SetFrameLevel(handleLevel(container, cfg))
     handle:ClearAllPoints()
     handle.placed = true
-    local point, rel, x, y, _, growV, beside = Anchors.StripPoints(cfg)
-    handle:SetPoint(point, container.anchor, rel, x, y + labelPush(container, growV, beside))
-    if beside then return handle:ApplyWidth(0) + DRAG.GAP, true end
+    local point, rel, x, y, _, growV, side = Anchors.StripPoints(cfg)
+    local push = labelPush(container, growV, side)
+    handle:SetPoint(point, container.anchor, rel, x, y + push)
+    if side == "behind" or side == "ahead" then return handle:ApplyWidth(0) + DRAG.GAP, side, 0 end
     local w = NS.Style.ElementSize(cfg)
     -- The widget measures its own label on a detached string of its own and floors the width at the
     -- element, which is the arithmetic this file used to carry (labelWidth + HANDLE_PAD + …).
-    return handle:ApplyWidth(w) - w, false
+    local reach = (side == "before") and (DRAG.HEIGHT + math.abs(y + push)) or 0
+    return handle:ApplyWidth(w) - w, side, reach
 end
 
 --- Set the anchor's clamp insets only when they change. This runs on every visibility pass, and a
@@ -865,29 +961,78 @@ local function setClamp(container, l, r, t, b)
     container.anchor:SetClampRectInsets(l, r, t, b)
 end
 
---- A strip beside the anchor (SS-3) sits on the side its lines do not grow into, so the clamp reaches
---- out from that side only, by the strip's width and gap.
-local function clampBeside(container, growH, reach)
-    if growH == "left" then return setClamp(container, 0, reach, 0, 0) end
-    setClamp(container, -reach, 0, 0, 0)
+--- A strip beside the anchor sits behind it (the side its lines start from, SS-3) or ahead of it
+--- (SEP-3), so the clamp reaches out from that side only, by the strip's width and gap.
+local function clampBeside(container, growH, reach, side)
+    if (growH == "left") == (side == "ahead") then return setClamp(container, -reach, 0, 0, 0) end
+    setClamp(container, 0, reach, 0, 0)
 end
 
 --- The anchor is clamped to the screen; while its handle shows, the clamp rect reaches over the strip
 --- too, so the handle cannot be dragged off-screen. Out of combat only (Anchors.UpdateHandle). A
---- strip beside the anchor (SS-3) reaches out from that side only.
-local function clampToHandle(container, cfg, overhang, beside)
+--- strip beside the anchor reaches out from its side only; one before or inside it reaches along
+--- its line by the overhang, toward H1, or toward H0 for a behind follower's (lined up with H1),
+--- and a before strip reaches out past V0 by `reach` too.
+local function clampToHandle(container, cfg, overhang, side, reach)
     if not overhang then
         setClamp(container, 0, 0, 0, 0)
         return
     end
     local growH, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
-    if beside then return clampBeside(container, growH, overhang) end
-    local reach = DRAG.HEIGHT + DRAG.GAP + math.abs(labelPush(container, growV, false))
-    local left = (growH == "left") and -overhang or 0
-    local right = (growH == "right") and overhang or 0
+    if side == "behind" or side == "ahead" then return clampBeside(container, growH, overhang, side) end
+    local _, own = stripSides(cfg)
+    local toRight = (growH == "right") ~= (own == "behind")
+    local left = toRight and 0 or -overhang
+    local right = toRight and overhang or 0
     local top = (growV == "down") and reach or 0
     local bottom = (growV == "up") and -reach or 0
     setClamp(container, left, right, top, bottom)
+end
+
+-- The join pin's size, and its diamond's side before the 45 degree turn (its diagonal is the size).
+local PIN_SIZE, PIN_SIDE = 10, 7
+
+--- The JOIN PIN (batch 9 SEP-2, E4): a small gold diamond at the point where a container attached to
+--- another joins it, so a strip beside the block no longer reads as the attachment. A plain frame of
+--- ours under the anchor, built once, the first time it is needed out of combat, taking no mouse and
+--- never a backdrop; its diamond is WHITE8X8 turned 45 degrees in the handle's gold.
+local function buildPin(container)
+    local pin = CreateFrame("Frame", nil, container.anchor)
+    pin:EnableMouse(false)
+    pin:SetSize(PIN_SIZE, PIN_SIZE)
+    local tex = pin:CreateTexture(nil, "OVERLAY")
+    tex:SetTexture("Interface\\Buttons\\WHITE8X8")
+    local c = C.JOIN_PIN_COLOR
+    tex:SetVertexColor(c[1], c[2], c[3], c[4])
+    tex:SetSize(PIN_SIDE, PIN_SIDE)
+    tex:SetPoint("CENTER", pin, "CENTER", 0, 0)
+    tex:SetRotation(math.pi / 4)
+    container.joinPin = pin
+    return pin
+end
+
+--- Show the join pin while `show` (unlocked) and the container is placed on another container, at
+--- its own point of the side it sits on (ResolvedEdge) and the strip's level; hide it otherwise.
+--- Placing it is layout work beside an aura engine's parent, so under lockdown a placed pin only
+--- shows or hides and one never built waits for the next pass after combat.
+local function updatePin(container, cfg, show)
+    local pin = container.joinPin
+    local on = show and cfg and container.placedAs == "container"
+    if not on then
+        if pin then pin:Hide() end
+        return
+    end
+    if InCombatLockdown() then
+        if pin and pin.placed then pin:Show() end
+        return
+    end
+    pin = pin or buildPin(container)
+    local point = Anchors.EdgePoints(Anchors.EffectiveLayout(cfg) or {}, Anchors.ResolvedEdge(cfg))
+    pin:SetFrameLevel(handleLevel(container, cfg) + 1)
+    pin:ClearAllPoints()
+    pin:SetPoint("CENTER", container.anchor, point, 0, 0)
+    pin.placed = true
+    pin:Show()
 end
 
 --- Show or hide a container's handle, with its current name, re-placed each time it is shown: the
@@ -904,6 +1049,7 @@ function Anchors.UpdateHandle(container, show)
     show = (show and cfg) and true or false
     handle:SetLabel(handleText(cfg))
     container.stripShown = show   -- what a follower leaves room for (stripRoom)
+    updatePin(container, cfg, show)
     if not InCombatLockdown() then
         if show then
             clampToHandle(container, cfg, placeHandle(container, cfg))

@@ -71,11 +71,23 @@ function Preview.Offset(cfg, index)
     return point, right and dx or -dx, down and -dy or dy
 end
 
---- The placeholder set for `cfg`'s aura type: its buffs or its debuffs, and the buffs when the type
---- is missing or unknown (batch 8 TD-1).
+--- `cfg`'s compiled plan, as the engine would get it.
+local function compilePlan(cfg)
+    local FC = NS.FilterCompiler
+    return FC.Compile(cfg, FC.ProfileContext())
+end
+
+--- The placeholder set for `cfg`: the weapon enchants for a container whose plan has enchant slots
+--- and no aura group (one showing only Weapon enchants, batch 9 SEP-4), else its buffs or its
+--- debuffs by aura type, and the buffs when the type is missing or unknown (batch 8 TD-1). `plan`
+--- is its compiled plan when the caller has one; it is compiled here when not.
 --- @return table  a list from C.PREVIEW_AURAS, never to be written to
-function Preview.AurasFor(cfg)
-    return C.PREVIEW_AURAS[cfg and cfg.auraType] or C.PREVIEW_AURAS.HELPFUL
+function Preview.AurasFor(cfg, plan)
+    local P = C.PREVIEW_AURAS
+    if not cfg then return P.HELPFUL end
+    plan = plan or compilePlan(cfg)
+    if plan.enchants and not plan.groups[1] then return P.ENCHANT end
+    return (cfg.auraType == "HARMFUL") and P.HARMFUL or P.HELPFUL
 end
 
 -- [placeholder entry] = a plain copy of it with the client's own name and icon, built once per session
@@ -133,17 +145,16 @@ local function poolFor(container, style)
     return pool
 end
 
---- How many placeholders `cfg` shows: every placeholder aura of its type, under the per-group cap,
+--- How many placeholders `cfg` shows: every placeholder aura of its set, under the per-group cap,
 --- and no more than its enchant slots for a container whose plan has no aura group (one showing only Weapon
---- enchants, schema v5: the engine draws those slots and nothing else). The plan is compiled here,
---- not read off the container: Show runs only when the preview is dirty, and a container that has
---- never built an engine has no plan to read.
-local function placeholderCount(cfg)
-    local count = #Preview.AurasFor(cfg)
+--- enchants, schema v5: the engine draws those slots and nothing else). The plan is compiled here
+--- when the caller has none, not read off the container: Show runs only when the preview is dirty,
+--- and a container that has never built an engine has no plan to read.
+local function placeholderCount(cfg, plan)
+    plan = plan or compilePlan(cfg)
+    local count = #Preview.AurasFor(cfg, plan)
     local cap = tonumber(cfg.filter and cfg.filter.maxAuras) or 0
     if cap > 0 and cap < count then count = cap end
-    local FC = NS.FilterCompiler
-    local plan = FC.Compile(cfg, FC.ProfileContext())
     if plan.enchants and not plan.groups[1] then
         local slots = #plan.enchants.slots
         if slots < count then count = slots end
@@ -165,11 +176,12 @@ function Preview.Show(container)
     if container.previewShown and not container.previewDirty then return end
     local style = NS.Style.StyleKey(cfg)
     local pool = poolFor(container, style)
-    local count = placeholderCount(cfg)
+    local plan = compilePlan(cfg)
+    local count = placeholderCount(cfg, plan)
     local styler = NS.Style.Styler(cfg)
     local make = container.previewFactory or factory(container.anchor)
     container.previewFactory = make
-    local auras = Preview.AurasFor(cfg)
+    local auras = Preview.AurasFor(cfg, plan)
     for i = 1, count do
         local f = NS.Pool.Acquire(pool, make)
         NS.Style.Element(f, cfg, false, container.classColor)

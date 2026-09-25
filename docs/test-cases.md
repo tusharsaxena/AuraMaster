@@ -741,6 +741,26 @@ badge and any count quoted in the docs must agree with it.
 - label: its class color makes a tracked container re-apply on a unit swap, only while the label shows
 - label: ApplyFont paints an explicit class, falls back to the swatch for none, and keeps its three-argument path
 
+### test_anchors_strip.lua (17)
+
+- strip: a root's strip is before its first element; an after follower's behind it
+- strip: an after follower whose behind side holds a follower moves ahead, or inside when that side is taken too
+- strip: an after follower wider than one aura with its behind side taken puts the strip inside
+- strip: a follower on a side puts its strip before, the side its parent leaves free
+- strip: StripSide allocates nothing, so a repeat visibility pass costs nothing
+- strip: StripPoints puts each side's strip where the design says, mirrored by the growth
+- strip: a behind follower's strip sits before it, lined up with the edge that faces its parent, so it runs away from it
+- strip: an ahead follower of a root is pushed out past its parent's strip and label rows, so strips never stack
+- strip: the clamp reaches out from whichever side the strip is on
+- strip: a behind follower's before strip clamps over its own column, not toward its parent
+- strip: an icons label mirrors wherever its strip sits on the far side of the element
+- strip: a follower of a side follower keeps its own seam unlocked: the side follower's strip is before it
+- strip: unlocked, a gold diamond marks the join at the child's attach point; locked, screen and frame show none
+- strip: Park and Destroy hide the join pin
+- strip: the tooltip of a container joined to another names the side and the parent
+- strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none
+- strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
+
 ### test_texttemplate.lua (26)
 
 - template: an unknown token is refused, naming it and every known token (rule 1)
@@ -1047,7 +1067,7 @@ badge and any count quoted in the docs must agree with it.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
-### test_preview.lua (26)
+### test_preview.lua (28)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders
@@ -1075,6 +1095,8 @@ badge and any count quoted in the docs must agree with it.
 - preview: switching a previewed container's aura type re-dresses it with the other set (TD-1)
 - preview: a placeholder's name and icon come from its spell id when the client answers, the literals when not (TD-3)
 - preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
+- preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)
+- preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box
 
 ### test_render_coverage.lua (3)
 
@@ -1789,6 +1811,7 @@ badge and any count quoted in the docs must agree with it.
 | test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
+| test_anchors_strip.lua | 17 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -1797,7 +1820,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 55 |
 | test_style_text_autosize.lua | 18 |
-| test_preview.lua | 26 |
+| test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
@@ -1832,4 +1855,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1554** |
+| **Total** | **1573** |
