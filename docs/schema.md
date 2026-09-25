@@ -435,6 +435,10 @@ A few row fields are this addon's own, beyond the library's row shape. Each has 
 - `panelGet`: the value the panel shows instead of the stored one (`panelRead` in
   `settings/OptionsSetup.lua`). Fill and both growth rows use it to show the inherited flow of a
   container attached to another. `/am get` and every module read the stored value.
+- `confirmWrite(value, id)`: a panel write that must be confirmed first (`confirmFirst` in
+  `settings/OptionsSetup.lua`). Answering a StaticPopup key and its text hands the write to that
+  popup instead of storing it; nil writes at once. The Attach to and Container rows use it for a
+  growth conflict (`AURAMASTER_ATTACH_FLOW`, batch 9 GC-1). `/am set` and the resets never ask.
 - `userCategory`: the row belongs to a category the player made, so `NS.UnregisterSchemaRows` can
   find again exactly the rows `Cat.SyncUserCategories` owns. A shipped row carries the field as nil,
   never false.
