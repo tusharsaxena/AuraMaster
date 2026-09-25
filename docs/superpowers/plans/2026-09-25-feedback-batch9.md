@@ -51,3 +51,4 @@ Tasks run one at a time: they share `Anchors.lua`, `Container.lua` and the migra
 | When | Milestone | Evidence |
 |---|---|---|
 | 2026-09-25 | N1 | tests 1492 passed / 0 failed / 0 skipped (16 shards); luacheck 0 warnings / 0 errors in 130 files; lizard 0 over CCN 15 (3917 functions); head ba1219e |
+| 2026-09-25 | N2 | tests 1554 passed / 0 failed / 0 skipped (16 shards), v9 migration tests included; luacheck 0 warnings / 0 errors in 133 files; lizard 0 over CCN 15 (4100 functions); head 34b902b |
