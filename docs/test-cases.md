@@ -740,7 +740,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a client without the aura API learns nothing and raises nothing
 - timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, and the rest loads
 
-### test_style_bars.lua (62)
+### test_style_bars.lua (63)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -803,6 +803,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: preview text shows the name, whole seconds left, and stacks only above one
 - bars: a preview fill drains from the configured side, spark at its leading edge
 - bars: a dispel-colored placeholder paints its own type's palette color, and one with no type the surface's (TD-4)
+- bars: an untyped dispel-colored placeholder keeps the container's class snapshot, not the player's (TD-4)
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
 ### test_style_icons.lua (29)
@@ -1581,7 +1582,7 @@ badge and any count quoted in the docs must agree with it.
 | test_style.lua | 59 |
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
-| test_style_bars.lua | 62 |
+| test_style_bars.lua | 63 |
 | test_style_icons.lua | 29 |
 | test_style_text.lua | 55 |
 | test_preview.lua | 26 |
@@ -1618,4 +1619,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1372** |
+| **Total** | **1373** |

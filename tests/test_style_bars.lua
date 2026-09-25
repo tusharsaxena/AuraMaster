@@ -924,6 +924,23 @@ test("bars: a dispel-colored placeholder paints its own type's palette color, an
     assertEqual(am.fill:__count("SetVertexColor"), painted, "a static fill is left as the dress painted it")
 end)
 
+test("bars: an untyped dispel-colored placeholder keeps the container's class snapshot, not the player's (TD-4)", function()
+    local snap = { r = 0.11, g = 0.22, b = 0.33 }
+    local c = cfg({ bars = { colorMode = "dispel", barColor = { r = 0.9, g = 0.1, b = 0.2, a = 1 },
+        useClassColorBar = true, bgColorMode = "dispel", bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 1 },
+        useClassColorBg = true } })
+    local frame, am = dressed(c, false, snap)
+    local typeless
+    for _, a in ipairs(NS.Constants.PREVIEW_AURAS.HARMFUL) do
+        if not a.dispel then typeless = a end
+    end
+    NS.Style.Bars.FillPreview(frame, typeless, c)
+    -- red under: FillPreview building the None fallback after the dress, when the snapshot is gone
+    -- (a target container's untyped placeholder painted in the player's class, unlike its live bars)
+    assertEqual(am.fill:__joined("SetVertexColor"), "0.11,0.22,0.33,1", "fill: the snapshot class")
+    assertEqual(am.bg:__joined("SetVertexColor"), "0.11,0.22,0.33,1", "background: the snapshot class")
+end)
+
 test("bars: filling a preview element that was never dressed does nothing and raises nothing", function()
     local ok, err = pcall(NS.Style.Bars.FillPreview, R(), NS.Constants.PREVIEW_AURAS.HELPFUL[1], cfg())
     -- red under: FillPreview without its missing-regions guard

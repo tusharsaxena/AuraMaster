@@ -44,7 +44,7 @@ A task has been **reviewed** when a later commit `B8-<task>R: ` exists, or when 
 | Task | Req | Repo | Depends | Status | Commit | Notes |
 |---|---|---|---|---|---|---|
 | P1 spark neutral ADD | SP-1 SP-2 | AM | — | done | this commit | spark ADD + desaturated per dress in applySurfaces; SP-1 BLEND tests replaced; KL + check 85 rewritten |
-| P2 test-mode debuffs | TD-1…4 | AM | — | done | this commit | PREVIEW_AURAS keyed HELPFUL/HARMFUL, names/icons by spell id, preview icon ring via Compat.SetAuraBorderAtlas (P3 must move it to its strips), bars repaint per type |
+| P2 test-mode debuffs | TD-1…4 | AM | — | done | 055a04f | PREVIEW_AURAS keyed HELPFUL/HARMFUL, names/icons by spell id, preview icon ring via Compat.SetAuraBorderAtlas (P3 must move it to its strips), bars repaint per type; review (B8-P2R): untyped bar keeps the class snapshot |
 | P3 dispel border shape | DB-1 DB-2 | AM | — | todo | | |
 | P4 icon attach points | IA-1 IA-2 | AM | — | todo | | |
 | P5 seam spacing + v8 (offsets) | SS-1…3 | AM | P4 | todo | | creates the v8 step |

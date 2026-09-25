@@ -212,6 +212,12 @@ local function applySurfaces(am, b, preview)
     paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview,
         tonumber(b.bgAlpha) or D.bars.bgAlpha)
     am.bg:Show()
+    -- The color an untyped placeholder keeps (previewDispelPaint), taken HERE, inside the dress, where
+    -- the container's class snapshot is set: FillPreview runs after Style.Element has cleared it.
+    if preview then
+        am.fillNone = Style.CurveColor(b.barColor, b.useClassColorBar)
+        am.bgNone = Style.CurveColor(b.bgColor, b.useClassColorBg)
+    end
 
     -- Guarded (B2-3): a refused border costs the border, never Bars.Bind after it.
     Style.GuardedBorder("bar border", am.border, b.borderShow, b.borderStyle,
@@ -339,10 +345,10 @@ end
 
 --- Repaint a PREVIEW surface colored by dispel type in its placeholder's own color, from the same map
 --- the engine is handed (Bars.Bind's dispelTint), so the preview and a live bar cannot disagree: a
---- typed aura takes its palette color, an untyped one the surface's own (TD-4). The region's alpha is
---- left as paintSurface set it.
-local function previewDispelPaint(tex, stored, useClass, aura)
-    local map = Style.DispelColorMap(Style.ProfileDispelColors(), Style.CurveColor(stored, useClass))
+--- typed aura takes its palette color, an untyped one the surface's own `none` (TD-4), as the dress
+--- resolved it in the container's class (applySurfaces). The region's alpha is left as paintSurface set it.
+local function previewDispelPaint(tex, none, aura)
+    local map = Style.DispelColorMap(Style.ProfileDispelColors(), none)
     local c = map[aura.dispel or "None"]
     if c then tex:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1) end
 end
@@ -361,8 +367,8 @@ function Bars.FillPreview(frame, aura, cfg)
     if not am then return end
     local b = cfg.bars or {}
     previewText(am, aura, b)
-    if b.colorMode == "dispel" then previewDispelPaint(am.fill, b.barColor, b.useClassColorBar, aura) end
-    if b.bgColorMode == "dispel" then previewDispelPaint(am.bg, b.bgColor, b.useClassColorBg, aura) end
+    if b.colorMode == "dispel" then previewDispelPaint(am.fill, am.fillNone, aura) end
+    if b.bgColorMode == "dispel" then previewDispelPaint(am.bg, am.bgNone, aura) end
 
     -- Preview draws the fill directly, as the fraction of the bar area the engine's timer would.
     local frac = aura.duration > 0 and (aura.remaining / aura.duration) or 1
