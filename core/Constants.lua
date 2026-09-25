@@ -260,11 +260,26 @@ C.TEXT_SAMPLE_AURAS = {
     HARMFUL = { name = "Shadow Word: Pain", icon = 136207, remaining = 11, duration = 16, stacks = 0, dispel = "Magic" },
 }
 
--- Placeholder auras for preview mode (preview-mode): real render path, invented data.
+-- Placeholder auras for preview mode (preview-mode), per aura type: real render path, invented data.
+-- `name` and `icon` are fallbacks: modules/Preview.lua asks the client for its own by `spellId`, once
+-- per session. HARMFUL covers every C.DISPEL_TYPES entry plus one with no type, so the dispel border,
+-- the bar tint and the Text dispel word can all be checked (batch 8 TD-1, TD-2). Enrage stays out: it
+-- is on enemy buffs, not in the palette, and no debuff container shows it. Each set has one aura under
+-- the default running-out threshold, one with stacks and one with no timer.
 C.PREVIEW_AURAS = {
-    { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },
-    { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0, dispel = "Magic" },
-    { name = "Shield Wall",           icon = 132362, remaining = 4,    duration = 8,    stacks = 0 },
-    { name = "Ignore Pain",           icon = 1377132, remaining = 11,  duration = 12,   stacks = 3 },
-    { name = "Well Fed",              icon = 136000, remaining = 0,    duration = 0,    stacks = 0 },
+    HELPFUL = {
+        { spellId = 21562,  name = "Power Word: Fortitude", icon = 135987,  remaining = 3540, duration = 3600, stacks = 0 },
+        { spellId = 2825,   name = "Bloodlust",   icon = 136012,  remaining = 28, duration = 40, stacks = 0, dispel = "Magic" },
+        { spellId = 871,    name = "Shield Wall", icon = 132362,  remaining = 4,  duration = 8,  stacks = 0 },
+        { spellId = 190456, name = "Ignore Pain", icon = 1377132, remaining = 11, duration = 12, stacks = 3 },
+        { spellId = 19705,  name = "Well Fed",    icon = 136000,  remaining = 0,  duration = 0,  stacks = 0 },
+    },
+    HARMFUL = {
+        { spellId = 589,    name = "Shadow Word: Pain", icon = 136207, remaining = 11, duration = 16, stacks = 0, dispel = "Magic" },
+        { spellId = 51514,  name = "Hex",           icon = 237579, remaining = 42, duration = 60, stacks = 0, dispel = "Curse" },
+        { spellId = 55095,  name = "Frost Fever",   icon = 237522, remaining = 18, duration = 24, stacks = 0, dispel = "Disease" },
+        { spellId = 2818,   name = "Deadly Poison", icon = 132290, remaining = 9,  duration = 12, stacks = 3, dispel = "Poison" },
+        { spellId = 1943,   name = "Rupture",       icon = 132302, remaining = 4,  duration = 24, stacks = 0, dispel = "Bleed" },
+        { spellId = 115804, name = "Mortal Wounds", icon = 132355, remaining = 0,  duration = 0,  stacks = 0 },
+    },
 }

@@ -151,7 +151,7 @@ test("container: test mode previews placeholders through the style code and disa
     local enabled = inst.engine:__callsTo("SetEnabled")
     assertEqual(enabled[#enabled][2], false, "real auras do not draw over the placeholders")
     local _, active = NS.Pool.Counts(inst.previewPools.bars)
-    assertEqual(active, #NS.Constants.PREVIEW_AURAS)
+    assertEqual(active, #NS.Constants.PREVIEW_AURAS.HELPFUL)
     assertTrue(inst.previewPools.bars.active[1].__am ~= nil, "dressed by the same Style code")
     NS.Preview.SetTestMode(false)
     local _, after = NS.Pool.Counts(inst.previewPools.bars)

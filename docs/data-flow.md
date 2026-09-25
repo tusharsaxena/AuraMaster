@@ -204,9 +204,11 @@ covers no element and nothing moves to make room for it.
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:135`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:162`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
-`engine = false`, fills in invented names, times and stacks, and positions it with
+`engine = false`, fills in the placeholder set for the container's aura type (`Preview.AurasFor`:
+debuffs of every dispel type for a debuff container, buffs otherwise; the client's own names and icons
+by spell id, invented times and stacks), and positions it with
 `Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders
 are dressed again only after an apply of the container's settings (which marks the preview dirty) or
 after they were hidden; a visibility pass alone leaves them as they are.

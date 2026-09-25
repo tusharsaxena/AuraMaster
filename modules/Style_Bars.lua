@@ -171,8 +171,9 @@ end
 
 --- Paint one surface (the fill or the background) its color and its `opacity`. A live surface colored
 --- by dispel type takes its own color here and the engine's tint over it; a PREVIEW one stands in with
---- the profile's Magic color, since no placeholder names a type. The tint is part of the dress, so a
---- later static dress is never left tinted. A static surface keeps its color's alpha on the color and
+--- the profile's Magic color only until Bars.FillPreview repaints it in its placeholder's own type
+--- (previewDispelPaint). The tint is part of the dress, so a later static dress is never left tinted.
+--- A static surface keeps its color's alpha on the color and
 --- the opacity on the region. A dispel-colored one paints its color opaque and carries the opacity
 --- times the color's alpha on the region (smoke batch 2, item 4): the engine's tint paints the map's
 --- RGB at alpha 1 (Style.DispelColorMap), so an alpha on the color would be lost. Both are plain
@@ -336,6 +337,16 @@ local function previewText(am, aura, b)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
 end
 
+--- Repaint a PREVIEW surface colored by dispel type in its placeholder's own color, from the same map
+--- the engine is handed (Bars.Bind's dispelTint), so the preview and a live bar cannot disagree: a
+--- typed aura takes its palette color, an untyped one the surface's own (TD-4). The region's alpha is
+--- left as paintSurface set it.
+local function previewDispelPaint(tex, stored, useClass, aura)
+    local map = Style.DispelColorMap(Style.ProfileDispelColors(), Style.CurveColor(stored, useClass))
+    local c = map[aura.dispel or "None"]
+    if c then tex:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1) end
+end
+
 --- Whether a placeholder's spark shows. Its duration is readable, so `sparkTimeless` is honored
 --- directly: a timeless placeholder shows none when the option is off.
 local function previewSparkShown(b, aura)
@@ -350,6 +361,8 @@ function Bars.FillPreview(frame, aura, cfg)
     if not am then return end
     local b = cfg.bars or {}
     previewText(am, aura, b)
+    if b.colorMode == "dispel" then previewDispelPaint(am.fill, b.barColor, b.useClassColorBar, aura) end
+    if b.bgColorMode == "dispel" then previewDispelPaint(am.bg, b.bgColor, b.useClassColorBg, aura) end
 
     -- Preview draws the fill directly, as the fraction of the bar area the engine's timer would.
     local frac = aura.duration > 0 and (aura.remaining / aura.duration) or 1

@@ -1127,3 +1127,28 @@ nothing. Nothing in the client can answer the mapping, so the addon carries it i
      aura, has no trigger edge, and the probe found nothing to observe — it reads as a proc that
      fires and vanishes. Left in place so the record that the slow exists is not lost. If you ever
      see a lasting Fatal Flourish debuff on a target, note its id and it can be settled.
+
+## X. Test mode previews debuffs (batch 8 item 4, owner to run)
+
+186. **Each container previews its own kind.** `/am test` on the default profile → *Player debuffs*
+     and *Target debuffs (mine)* show Shadow Word: Pain, Hex, Frost Fever, Deadly Poison (3 stacks),
+     Rupture (running out, 4 s) and Mortal Wounds (no timer), each with its real icon and no
+     question-mark icon. *Player buffs* still shows Power Word: Fortitude, Bloodlust, Shield Wall,
+     Ignore Pain and Well Fed.
+187. **The icon dispel border.** An icons debuff container with Border → **Color the border by
+     dispel type** on → Blizzard's colored border on SW:P (Magic), Hex (Curse), Frost Fever (Disease),
+     Deadly Poison (Poison) and Rupture (Bleed art, or the default art if the client has none), and
+     none on Mortal Wounds. Turn it off → every one goes at once. An icons buff container never shows
+     one, Bloodlust included.
+188. **Bars colored by dispel type.** A bars debuff container with **Color by** dispel type → each
+     bar takes its type's color from General → Dispel Colors, and Mortal Wounds keeps the bar color.
+     Change the Poison swatch → the Deadly Poison bar recolors while test mode is on. On a buff
+     container only Bloodlust is Magic-colored and the others keep the bar color (before this every
+     bar was Magic). Repeat with the background's color set to dispel type.
+189. **Text.** A Text debuff container on the name, type, time template with the dispel backdrop and
+     edge on → each line shows its type word, tinted when **Color the dispel type** is on; Mortal
+     Wounds shows no type and no tint.
+190. **Switching kind while previewing.** Switch a container's **Shows** between Buffs and Debuffs in
+     test mode → the placeholders swap without a `/reload`, and a container attached to it still sits
+     just past the last placeholder (six for debuffs, five for buffs). **Max auras** 3 on a debuff
+     container → only SW:P, Hex and Frost Fever.

@@ -422,8 +422,33 @@ test("icons: a timeless preview icon clears its cooldown and shows no time", fun
 end)
 
 test("icons: filling a preview icon that was never dressed does nothing and raises nothing", function()
-    local ok, err = pcall(NS.Style.Icons.FillPreview, R(), NS.Constants.PREVIEW_AURAS[1])
+    local ok, err = pcall(NS.Style.Icons.FillPreview, R(), NS.Constants.PREVIEW_AURAS.HELPFUL[1])
     -- red under: FillPreview without its missing-regions guard
     assertTrue(ok, tostring(err))
     assertNil(err)
+end)
+
+test("icons: a debuff placeholder shows Blizzard's dispel art for its type; a buff, an untyped one or the option off shows none (TD-4)", function()
+    local POISON = { name = "Deadly Poison", icon = 1, remaining = 9, duration = 12, stacks = 3, dispel = "Poison" }
+    local harmful = cfg({ auraType = "HARMFUL", icons = { dispelBorder = true } })
+    local frame, am = dressed(harmful, false)
+    NS.Style.Icons.FillPreview(frame, POISON, harmful)
+    -- red under: FillPreview leaving the dispel border to an engine a placeholder does not have
+    assertEqual(am.dispel:__joined("SetAtlas"), "ui-debuff-border-poison-noicon,true", "the type's art")
+    assertEqual(am.dispel:__joined("SetVertexColor"), "1,1,1,1", "untinted, as the engine's Border style")
+    assertTrue(am.dispel:IsShown(), "shown")
+    NS.Style.Icons.FillPreview(frame, { name = "Mortal Wounds", icon = 1, remaining = 0, duration = 0, stacks = 0 }, harmful)
+    -- red under: a re-used placeholder keeping the last aura's ring
+    assertFalse(am.dispel:IsShown(), "no dispel type: no ring")
+    local helpful = cfg({ auraType = "HELPFUL", icons = { dispelBorder = true } })
+    frame, am = dressed(helpful, false)
+    NS.Style.Icons.FillPreview(frame, { name = "Bloodlust", icon = 1, remaining = 28, duration = 40, stacks = 0,
+        dispel = "Magic" }, helpful)
+    -- red under: a buff ringed (the live binding is showWhenHelpful = false)
+    assertFalse(am.dispel:IsShown(), "a buff never shows the ring")
+    local off = cfg({ auraType = "HARMFUL", icons = { dispelBorder = false } })
+    frame, am = dressed(off, false)
+    NS.Style.Icons.FillPreview(frame, POISON, off)
+    assertFalse(am.dispel:IsShown(), "the option off")
+    assertEqual(am.dispel:__count("SetAtlas"), 0)
 end)

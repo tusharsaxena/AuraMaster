@@ -887,7 +887,7 @@ end)
 test("bars: a preview fill drains from the configured side, spark at its leading edge", function()
     local c = cfg({ bars = { drain = "right" } })
     local frame, am = dressed(c, false)
-    NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS[2], c)
+    NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS.HELPFUL[2], c)
     local pts = am.fill:__calls("SetPoint")
     local n = #pts
     -- red under: FillPreview anchoring the fill left whatever the drain
@@ -895,17 +895,37 @@ test("bars: a preview fill drains from the configured side, spark at its leading
     assertEqual(am.spark:__last("SetPoint")[3], "LEFT")
 end)
 
-test("bars: a dispel-colored preview paints the Magic color, since no real aura names a type", function()
-    local c = cfg({ bars = { colorMode = "dispel" } })
+test("bars: a dispel-colored placeholder paints its own type's palette color, and one with no type the surface's (TD-4)", function()
+    local red, dark = { r = 0.9, g = 0.1, b = 0.2, a = 0.5 }, { r = 0.1, g = 0.2, b = 0.3, a = 1 }
+    local c = cfg({ bars = { colorMode = "dispel", barColor = red, useClassColorBar = false, barAlpha = 0.8,
+        bgColorMode = "dispel", bgColor = dark, useClassColorBg = false } })
     local frame, am = dressed(c, false)
-    NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS[1], c)
-    local m = NS.db.profile.dispelColors.Magic
-    -- red under: FillPreview ignoring colorMode (the preview then looks unlike the engine's tint)
-    assertEqual(am.fill:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 1 }, ","))
+    local P = NS.Constants.PREVIEW_AURAS.HARMFUL
+    local poison, typeless
+    for _, a in ipairs(P) do
+        if a.dispel == "Poison" then poison = a elseif not a.dispel then typeless = a end
+    end
+    local p = NS.db.profile.dispelColors.Poison
+    NS.Style.Bars.FillPreview(frame, poison, c)
+    -- red under: every placeholder standing in with Magic (the preview then disagrees with the live tint)
+    assertEqual(am.fill:__joined("SetVertexColor"), table.concat({ p.r, p.g, p.b, 1 }, ","), "fill: Poison")
+    assertEqual(am.bg:__joined("SetVertexColor"), table.concat({ p.r, p.g, p.b, 1 }, ","), "background: Poison")
+    NS.Style.Bars.FillPreview(frame, typeless, c)
+    -- red under: an untyped placeholder painted a palette color (live, "None" keeps the surface color)
+    assertEqual(am.fill:__joined("SetVertexColor"), "0.9,0.1,0.2,1", "fill: no type, the bar color")
+    assertEqual(am.bg:__joined("SetVertexColor"), "0.1,0.2,0.3,1", "background: no type, its own color")
+    -- the opacity times the color's alpha still rides the region (paintSurface, smoke batch 2 item 4)
+    T.assertNear(am.fill:__last("SetAlpha")[1], 0.8 * 0.5, 1e-9)
+    local static = cfg({ bars = { colorMode = "static", barColor = red, useClassColorBar = false } })
+    frame, am = dressed(static, false)
+    local painted = am.fill:__count("SetVertexColor")
+    NS.Style.Bars.FillPreview(frame, poison, static)
+    -- red under: FillPreview repainting a surface that is not colored by dispel type
+    assertEqual(am.fill:__count("SetVertexColor"), painted, "a static fill is left as the dress painted it")
 end)
 
 test("bars: filling a preview element that was never dressed does nothing and raises nothing", function()
-    local ok, err = pcall(NS.Style.Bars.FillPreview, R(), NS.Constants.PREVIEW_AURAS[1], cfg())
+    local ok, err = pcall(NS.Style.Bars.FillPreview, R(), NS.Constants.PREVIEW_AURAS.HELPFUL[1], cfg())
     -- red under: FillPreview without its missing-regions guard
     assertTrue(ok, tostring(err))
     assertNil(err)

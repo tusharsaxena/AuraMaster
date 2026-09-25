@@ -548,3 +548,43 @@ test("compat: without LibKa0s spell info is the major's absent answer, one nil",
     assertNil((NS2.Compat.GetSpellInfo(774)))
     assertNil((NS2.Compat.GetSpellInfo("774")))
 end)
+
+-- ── the debuff border art (batch 8 TD-4) ─────────────────────────────────────────────────────
+
+--- A texture that records its atlas and vertex color.
+local function borderRegion()
+    local r = {}
+    function r:SetAtlas(name, useSize) self.atlas, self.useSize = name, useSize end
+    function r:SetVertexColor(...) self.color = table.concat({ ... }, ",") end
+    return r
+end
+
+test("compat: debuff border art goes through AuraUtil as the engine's Border style does, then white", function()
+    local seen
+    local AU = { SetAuraBorderAtlas = function(region, t, isHelpful) seen = { region, t, isHelpful } end }
+    with({ { "AuraUtil", AU } }, function(NS)
+        local r = borderRegion()
+        -- red under: no such wrapper
+        assertTrue(NS.Compat.SetAuraBorderAtlas(r, "Poison"))
+        assertTrue(seen[1] == r); assertEqual(seen[2], "Poison"); assertEqual(seen[3], false)
+        assertEqual(r.color, "1,1,1,1", "the art is already colored: no tint on it")
+        assertNil(r.atlas, "AuraUtil set it")
+    end)
+end)
+
+test("compat: without AuraUtil debuff border art is the type's atlas, the default one when the client has none", function()
+    local known = { ["ui-debuff-border-poison-noicon"] = {} }
+    local CT = { GetAtlasInfo = function(name) return known[name] end }
+    with({ { "AuraUtil", nil }, { "C_Texture", CT } }, function(NS)
+        local r = borderRegion()
+        assertTrue(NS.Compat.SetAuraBorderAtlas(r, "Poison"))
+        assertEqual(r.atlas, "ui-debuff-border-poison-noicon"); assertEqual(r.useSize, true)
+        assertEqual(r.color, "1,1,1,1")
+        r = borderRegion()
+        assertTrue(NS.Compat.SetAuraBorderAtlas(r, "Bleed"))
+        -- red under: drawing an atlas the client does not have (nothing shows)
+        assertEqual(r.atlas, "ui-debuff-border-default-noicon", "a type with no art of its own")
+        assertFalse(NS.Compat.SetAuraBorderAtlas({}, "Poison"), "a region that takes no atlas")
+        assertFalse(NS.Compat.SetAuraBorderAtlas(borderRegion(), nil), "no dispel type")
+    end)
+end)

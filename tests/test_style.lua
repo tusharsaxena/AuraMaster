@@ -954,12 +954,14 @@ test("style: a placeholder running out takes the running-out color, as the engin
 end)
 
 test("style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)", function()
-    local seen = 0
-    for _, a in ipairs(NS.Constants.PREVIEW_AURAS) do
-        if a.duration > 0 and a.remaining < D.bars.expiringThreshold then seen = seen + 1 end
+    for kind, set in pairs(NS.Constants.PREVIEW_AURAS) do
+        local seen = 0
+        for _, a in ipairs(set) do
+            if a.duration > 0 and a.remaining < D.bars.expiringThreshold then seen = seen + 1 end
+        end
+        -- red under: every placeholder above the default threshold (the setting would show no change)
+        assertTrue(seen >= 1, kind .. ": a placeholder under the default running-out threshold")
     end
-    -- red under: every placeholder above the default threshold (the setting would show no change)
-    assertTrue(seen >= 1, "a placeholder under the default running-out threshold")
     assertEqual(D.icons.expiringThreshold, D.bars.expiringThreshold, "one default for both styles")
 end)
 

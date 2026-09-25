@@ -462,7 +462,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (27)
+### test_compat.lua (29)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -491,6 +491,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
 - compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
 - compat: without LibKa0s spell info is the major's absent answer, one nil
+- compat: debuff border art goes through AuraUtil as the engine's Border style does, then white
+- compat: without AuraUtil debuff border art is the type's atlas, the default one when the client has none
 
 ### test_secrets.lua (6)
 
@@ -751,10 +753,10 @@ badge and any count quoted in the docs must agree with it.
 - bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region
 - bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge
 - bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered
-- bars: with the timeless spark off, the live clipped spark blends normally, not additively
-- bars: with the timeless spark on, the live spark stays additive over the opaque fill
-- bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says
-- bars: the clip-mode blend switch leaves the player's own spark color alone
+- bars: with the timeless spark off, the live clipped spark stays additive
+- bars: the spark's blend never depends on sparkTimeless or engine
+- bars: the spark art is desaturated so its hue is the player's sparkColor
+- bars: the neutral additive spark leaves the player's own spark color alone
 - bars: a missing timeless-spark setting reads the template's
 - bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it
 - bars: the texts sit above the spark's clip frame, which sits above the bar
@@ -800,10 +802,10 @@ badge and any count quoted in the docs must agree with it.
 - bars: a timeless preview aura draws a full bar with no time text, and an expired one keeps one pixel
 - bars: preview text shows the name, whole seconds left, and stacks only above one
 - bars: a preview fill drains from the configured side, spark at its leading edge
-- bars: a dispel-colored preview paints the Magic color, since no real aura names a type
+- bars: a dispel-colored placeholder paints its own type's palette color, and one with no type the surface's (TD-4)
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (28)
+### test_style_icons.lua (29)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -833,8 +835,9 @@ badge and any count quoted in the docs must agree with it.
 - icons: a preview icon's cooldown starts as long ago as its placeholder has run
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
+- icons: a debuff placeholder shows Blizzard's dispel art for its type; a buff, an untyped one or the option off shows none (TD-4)
 
-### test_style_text.lua (54)
+### test_style_text.lua (55)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -890,8 +893,9 @@ badge and any count quoted in the docs must agree with it.
 - text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)
 - text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)
 - text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
+- text style: a debuff placeholder's dispel word and tints follow its own type, and the untyped one shows neither (TD-4)
 
-### test_preview.lua (21)
+### test_preview.lua (26)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders
@@ -904,7 +908,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
-- preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)
+- preview: a background colored by dispel type paints each placeholder's own type, its alpha on the region (feedback #7, item 4; TD-4)
 - preview: switching a previewed container from bars to icons re-dresses without error
 - preview: switching a previewed container from icons to bars re-dresses without error
 - preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
@@ -914,6 +918,11 @@ badge and any count quoted in the docs must agree with it.
 - preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
 - preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
 - preview: a text container's placeholders read its template, each bracket's text hidden with its value
+- preview: a HARMFUL container draws the debuff placeholders, a HELPFUL one the buffs (TD-1)
+- preview: Preview.AurasFor answers the set for the aura type, and the buffs for anything else (TD-1)
+- preview: switching a previewed container's aura type re-dresses it with the other set (TD-1)
+- preview: a placeholder's name and icon come from its spell id when the client answers, the literals when not (TD-3)
+- preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
 
 ### test_render_coverage.lua (3)
 
@@ -1483,7 +1492,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 158 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 159 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1562,7 +1571,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler_categories.lua | 9 |
 | test_container.lua | 51 |
 | test_containermanager.lua | 53 |
-| test_compat.lua | 27 |
+| test_compat.lua | 29 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -1573,9 +1582,9 @@ badge and any count quoted in the docs must agree with it.
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 62 |
-| test_style_icons.lua | 28 |
-| test_style_text.lua | 54 |
-| test_preview.lua | 21 |
+| test_style_icons.lua | 29 |
+| test_style_text.lua | 55 |
+| test_preview.lua | 26 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
@@ -1609,4 +1618,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1363** |
+| **Total** | **1372** |

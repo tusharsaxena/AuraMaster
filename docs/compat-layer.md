@@ -1,10 +1,10 @@
 # Compat layer
 
-`core/Compat.lua` publishes **21** shims on `NS.Compat`, counted with the command documentation-§3
+`core/Compat.lua` publishes **22** shims on `NS.Compat`, counted with the command documentation-§3
 fixes:
 
 ```sh
-grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 21
+grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 22
 ```
 
 A shim is the one entry point a feature module calls in place of a new-in-12.x, version-variant or
@@ -36,12 +36,13 @@ their library-absent arm.
 | 13 | `CreateSecondsFormatter(format)` | `C_StringUtil.CreateSecondsFormatter` plus its setup (pcall); Blizzard's step curve from `C_CurveUtil.CreateCurve` | `nil` (the engine's own format); no curve → a `Days` maximum | The engine formats a secret duration the addon never sees | `modules/Style.lua` |
 | 14 | `ExpiringTextColor(threshold, expiring, normal)` | `C_CurveUtil.CreateColorCurve` step curve over `DurationTextBindingProperty.RemainingDuration` | `nil` (text keeps its font color) | Recolor the time text in the last seconds without comparing a secret | `modules/Style.lua` |
 | 15 | `GetMouseFocus()` | `GetMouseFoci()[1]` | `nil` | `GetMouseFocus` was removed in 11.0 | `modules/FramePicker.lua` |
-| 16 | `GetSpellInfo(id)` | `LibKa0s-Compat-1.0`'s `GetSpellInfo` (`C_Spell.GetSpellInfo`, then the old global with its rank dropped): `name, iconID, castTime, minRange, maxRange, spellID`, callers read `name`; a non-number id answers `nil` here, before the library | `nil` (also the answer without the library: the major's documented no-rung value) | Spell names for the spell lists' sort and the cast-aura and overlap messages | `settings/GeneralSpells.lua`, `modules/CastAura.lua` |
+| 16 | `GetSpellInfo(id)` | `LibKa0s-Compat-1.0`'s `GetSpellInfo` (`C_Spell.GetSpellInfo`, then the old global with its rank dropped): `name, iconID, castTime, minRange, maxRange, spellID`, callers read `name`; a non-number id answers `nil` here, before the library | `nil` (also the answer without the library: the major's documented no-rung value) | Spell names for the spell lists' sort and the cast-aura and overlap messages, and the test-mode placeholders' names and icons | `settings/GeneralSpells.lua`, `modules/CastAura.lua`, `modules/Preview.lua` |
 | 17 | `EnsureAuraContainer()` | `C_AddOns.LoadAddOn("Blizzard_AuraContainer")` when it is not loaded (pcall), then `HasAuraContainer()` | `HasAuraContainer()` | `Blizzard_AuraContainer` is load-on-demand: until it loads, neither `CustomAuraContainerTemplate` nor the enums shims 3–7 read exist (`docs/midnight-quirks.md`) | `modules/ContainerManager.lua` (`CM.Init`) |
 | 18 | `DurationProperty(member)` | `Enum.DurationTextBindingProperty[member]` | `nil` | Each `{}` of a Text-style duration run names the property it reads | `modules/Style.lua` |
 | 19 | `CreateRuleFormatter(breakpoints)` | `C_StringUtil.CreateNumericRuleFormatter` + `SetBreakpoints` (pcall) | `nil` | The Text style's stack count (hidden below 2) and its percent components (`%d`, rounded by `step = 1`; a client refusing `step` gets plain `%d`) | `modules/Style.lua`, `modules/Style_Text.lua` |
 | 20 | `CreateDurationBinding(interval)` | `C_DurationUtil.CreateDurationTextBinding` + `SetZeroDurationText("")`, `SetExpiredText("")`, `SetUpdateInterval` only for a blink (pcall) | `nil` | A timeless or expired aura writes no duration text, bracket text included | `modules/Style_Text.lua` |
 | 21 | `BlinkTextColor(threshold, blink, normal)` | `C_CurveUtil.CreateColorCurve` step curve over `RemainingDuration`, alternating alpha every 0.25 s | `nil` | Blink the Text style's duration run in the last seconds without reading a secret | `modules/Style.lua` |
+| 22 | `SetAuraBorderAtlas(region, dispelType)` | `AuraUtil.SetAuraBorderAtlas(region, type, false)` then white, as the engine's `Border` style; without `AuraUtil`, the type's `ui-debuff-border-<type>-noicon` atlas (the default one when `C_Texture.GetAtlasInfo` knows no such art) | `false` (no region atlas, or no type) | A test-mode icon has no engine to draw its dispel border (batch 8 TD-4) | `modules/Style_Icons.lua` |
 
 ## Rules for this file
 

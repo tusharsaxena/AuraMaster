@@ -161,7 +161,8 @@ function Icons.Bind(frame, am, cfg, ic)
         -- Blizzard's own colored border art, with no customDispelColorMap: the engine would multiply
         -- the map onto that already colored atlas, a tint rather than a recolor
         -- (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q2), and the owner kept the stock
-        -- art (2026-09-13). General → Dispel Colors drives bars only.
+        -- art (2026-09-13). General → Dispel Colors drives bars only. A placeholder takes the same
+        -- art from Icons.FillPreview.
         Style.Bind(frame, "AddDispelTypeTexture", am.dispel, {
             showWhenHarmful = true, showWhenHelpful = false,
             style = Compat.DispelStyle("Border"),
@@ -172,11 +173,20 @@ function Icons.Bind(frame, am, cfg, ic)
     Style.ApplyBehavior(frame, cfg)
 end
 
+--- Whether a placeholder shows the dispel border, setting its art when it does: by the live binding's
+--- rules (Icons.Bind), the option on, a debuff container and an aura with a dispel type (TD-4).
+local function previewDispel(am, aura, cfg)
+    if not (cfg and cfg.auraType == "HARMFUL" and aura.dispel) then return false end
+    if not Style.OrTemplate((cfg.icons or {}).dispelBorder, D.icons.dispelBorder) then return false end
+    return NS.Compat.SetAuraBorderAtlas(am.dispel, aura.dispel)
+end
+
 --- Fill a PREVIEW icon with placeholder values (modules/Preview.lua), the time in the icon's own
---- format (Style.PreviewTime).
+--- format (Style.PreviewTime). A placeholder has no engine, so its dispel border's art is set here.
 function Icons.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not am then return end
+    am.dispel:SetShown(previewDispel(am, aura, cfg) and true or false)
     am.icon:SetTexture(aura.icon)
     Style.PreviewTime(am.time, aura, (cfg and cfg.icons) or {}, D.icons)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")

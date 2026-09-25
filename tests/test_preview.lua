@@ -36,7 +36,7 @@ test("preview: every placeholder aura is drawn, each where Preview.Offset puts i
     local c = cfg({ style = "bars", layout = { axis = "vertical", spacing = 3 } })
     local k = container(c)
     NS.Preview.Show(k)
-    local count = #NS.Constants.PREVIEW_AURAS
+    local count = #NS.Constants.PREVIEW_AURAS.HELPFUL
     assertEqual(active(k), count)
     for i = 1, count do
         local f = k.previewPools.bars.active[i]
@@ -58,7 +58,7 @@ test("preview: the per-group cap limits the placeholders", function()
     assertEqual(active(k), 2, "capped")
     k = container(cfg({ filter = { maxAuras = 0 } }))
     NS.Preview.Show(k)
-    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "0 means no cap")
+    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS.HELPFUL, "0 means no cap")
 end)
 
 test("preview: a container showing only Weapon enchants previews one placeholder per enchant slot, and its extent agrees (feedback #6)", function()
@@ -80,13 +80,13 @@ test("preview: a container showing only Weapon enchants previews one placeholder
     assertEqual(active(k), 2, "the per-group cap still applies")
     k = container(cfg({ unit = "player", filter = { categories = { weaponEnchants = "show" } } }))
     NS.Preview.Show(k)
-    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS, "a buff container that also has enchants keeps every placeholder")
+    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS.HELPFUL, "a buff container that also has enchants keeps every placeholder")
 end)
 
 test("preview: a shown preview with nothing applied is left alone; an applied one is dressed again in the same frames", function()
     local k = container(cfg())
     NS.Preview.Show(k)
-    local count = #NS.Constants.PREVIEW_AURAS
+    local count = #NS.Constants.PREVIEW_AURAS.HELPFUL
     assertEqual(k.built, count)
     local first = k.frames[1]
     local sizes = first:__count("SetSize")
@@ -109,7 +109,7 @@ test("preview: a lower cap hides the extra placeholders rather than leaving them
     NS.Preview.Show(k)
     local free, used = NS.Pool.Counts(k.previewPools.bars)
     assertEqual(used, 2)
-    assertEqual(free, #NS.Constants.PREVIEW_AURAS - 2)
+    assertEqual(free, #NS.Constants.PREVIEW_AURAS.HELPFUL - 2)
     -- red under: Preview.Show acquiring without releasing the last dress's elements first
     for _, f in ipairs(k.previewPools.bars.free) do assertFalse(f:IsShown(), "a released placeholder still draws") end
 end)
@@ -123,9 +123,9 @@ test("preview: Hide releases every placeholder, and the next Show dresses them a
     local sizes = k.frames[1]:__count("SetSize")
     NS.Preview.Show(k)
     -- red under: Preview.Hide leaving previewShown set, so the next Show returns early
-    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS)
+    assertEqual(active(k), #NS.Constants.PREVIEW_AURAS.HELPFUL)
     assertTrue(k.frames[1]:__count("SetSize") > sizes, "dressed again after being hidden")
-    assertEqual(k.built, #NS.Constants.PREVIEW_AURAS, "from the pool, not new frames")
+    assertEqual(k.built, #NS.Constants.PREVIEW_AURAS.HELPFUL, "from the pool, not new frames")
 end)
 
 test("preview: a container whose settings are gone draws nothing and raises nothing", function()
@@ -151,7 +151,7 @@ test("preview: placeholders paint with the container's class snapshot, as its re
     k.classColor = { r = 0.1, g = 0.2, b = 0.3 }
     NS2.Preview.Show(k)
     NS2.Style.Element = element
-    assertEqual(#seen, #NS2.Constants.PREVIEW_AURAS)
+    assertEqual(#seen, #NS2.Constants.PREVIEW_AURAS.HELPFUL)
     -- red under: Preview.Show dressing without container.classColor (a target container previews in the player's class)
     for i, cc in ipairs(seen) do assertTrue(cc == k.classColor, "element " .. i) end
 end)
@@ -197,16 +197,20 @@ test("preview: switching Color by from dispel type back to static leaves no disp
     NS.Preview.Show(k)
     local m = NS.db.profile.dispelColors.Magic
     local magic = table.concat({ m.r, m.g, m.b, 1 }, ",")
-    for i, got in ipairs(fills()) do assertEqual(got, magic, "dispel: placeholder " .. i .. " stands in with Magic") end
+    local own = table.concat({ NS.Style.Color(c.bars.barColor, false) }, ",")
+    for i, got in ipairs(fills()) do
+        local a = NS.Constants.PREVIEW_AURAS.HELPFUL[i]
+        -- red under: every placeholder standing in with Magic (a live untyped buff keeps the bar color)
+        assertEqual(got, a.dispel and magic or own, "dispel: placeholder " .. i .. " paints its own type's color")
+    end
     c.bars.colorMode = "static"
     k.previewDirty = true
     NS.Preview.Show(k)
-    local own = table.concat({ NS.Style.Color(c.bars.barColor, false) }, ",")
     -- red under: the dress painting the Magic stand-in whatever the colorMode
     for i, got in ipairs(fills()) do assertEqual(got, own, "static: placeholder " .. i .. " paints the bar color") end
 end)
 
-test("preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)", function()
+test("preview: a background colored by dispel type paints each placeholder's own type, its alpha on the region (feedback #7, item 4; TD-4)", function()
     local c = cfg({ style = "bars", bars = { bgColorMode = "dispel", useClassColorBg = false,
         bgColor = { r = 0, g = 0, b = 0, a = 0.5 } } })
     local k = container(c)
@@ -218,8 +222,9 @@ test("preview: a background colored by dispel type stands in with Magic, its alp
     NS.Preview.Show(k)
     local m = NS.db.profile.dispelColors.Magic
     for i, f in ipairs(k.previewPools.bars.active) do
+        local want = NS.Constants.PREVIEW_AURAS.HELPFUL[i].dispel and { m.r, m.g, m.b, 1 } or { 0, 0, 0, 1 }
         -- red under: the preview painting the background its static color whatever its Color by
-        assertEqual(f.__am.bg:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 1 }, ","), "placeholder " .. i)
+        assertEqual(f.__am.bg:__joined("SetVertexColor"), table.concat(want, ","), "placeholder " .. i)
         -- red under: the color's alpha dropped in dispel mode (it rides the region: item 4)
         assertEqual(f.__am.bg:__last("SetAlpha")[1], NS.CONTAINER_TEMPLATE.bars.bgAlpha * 0.5, "placeholder " .. i .. " alpha")
     end
@@ -244,7 +249,7 @@ test("preview: switching a previewed container from bars to icons re-dresses wit
     assertTrue(ok, tostring(err))
     assertTrue(inst.previewShown, "the preview re-drew as icons")
     local _, n = NS2.Pool.Counts(inst.previewPools.icons)
-    assertEqual(n, #NS2.Constants.PREVIEW_AURAS, "every placeholder drawn as an icon")
+    assertEqual(n, #NS2.Constants.PREVIEW_AURAS.HELPFUL, "every placeholder drawn as an icon")
 end)
 
 test("preview: switching a previewed container from icons to bars re-dresses without error", function()
@@ -258,7 +263,7 @@ test("preview: switching a previewed container from icons to bars re-dresses wit
     assertTrue(ok, tostring(err))
     assertTrue(inst.previewShown, "the preview re-drew as bars")
     local _, n = NS2.Pool.Counts(inst.previewPools.bars)
-    assertEqual(n, #NS2.Constants.PREVIEW_AURAS)
+    assertEqual(n, #NS2.Constants.PREVIEW_AURAS.HARMFUL, "a debuff container previews the debuff set")
 end)
 
 test("preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)", function()
@@ -283,7 +288,7 @@ test("preview: each style keeps its own pool, and a switch parks the other style
     local c = cfg({ style = "bars" })
     local k = container(c)
     NS.Preview.Show(k)
-    local count = #NS.Constants.PREVIEW_AURAS
+    local count = #NS.Constants.PREVIEW_AURAS.HELPFUL
     local bars = {}
     for i, f in ipairs(k.previewPools.bars.active) do bars[i] = f end
     c.style = "icons"
@@ -332,7 +337,7 @@ test("preview: the extent covers the placeholder block from the corner it starts
         layout = { axis = "vertical", perLine = 2, spacing = 1, lineSpacing = 5, growH = "left", growV = "up" } })
     local k = container(c)
     k.previewExtent = R()
-    assertEqual(#NS.Constants.PREVIEW_AURAS, 5, "five placeholders")
+    assertEqual(#NS.Constants.PREVIEW_AURAS.HELPFUL, 5, "five placeholders")
     NS.Preview.Show(k)
     local p = k.previewExtent:__last("SetPoint")
     -- red under: the extent hung from a corner other than the one the placeholders start from
@@ -408,4 +413,116 @@ test("preview: a text container's placeholders read its template, each bracket's
     assertEqual(lines[4], "Ignore Pain x3 - 11s", "stacks from two up, with their bracket text")
     -- red under: the duration piece writing " - " for a timeless placeholder
     assertEqual(lines[5], "Well Fed", "a timeless aura: the name alone")
+end)
+
+-- ── the placeholder set per aura type (batch 8 TD-1..TD-3) ───────────────────────────────────────
+
+--- The icons pool's drawn placeholders' textures, in order.
+local function iconTextures(k)
+    local out = {}
+    for i, f in ipairs(k.previewPools.icons.active) do out[i] = f.__am.icon:__last("SetTexture")[1] end
+    return out
+end
+
+test("preview: a HARMFUL container draws the debuff placeholders, a HELPFUL one the buffs (TD-1)", function()
+    local P = NS.Constants.PREVIEW_AURAS
+    local k = container(cfg({ style = "icons", auraType = "HARMFUL" }))
+    NS.Preview.Show(k)
+    local _, n = NS.Pool.Counts(k.previewPools.icons)
+    -- red under: Preview.Show reading one list of buffs whatever the container shows
+    assertEqual(n, #P.HARMFUL, "every debuff placeholder")
+    local got = iconTextures(k)
+    for i, a in ipairs(P.HARMFUL) do assertEqual(got[i], a.icon, "debuff " .. i) end
+    k = container(cfg({ style = "icons", auraType = "HELPFUL" }))
+    NS.Preview.Show(k)
+    got = iconTextures(k)
+    assertEqual(#got, #P.HELPFUL)
+    for i, a in ipairs(P.HELPFUL) do assertEqual(got[i], a.icon, "buff " .. i) end
+end)
+
+test("preview: Preview.AurasFor answers the set for the aura type, and the buffs for anything else (TD-1)", function()
+    local P = NS.Constants.PREVIEW_AURAS
+    -- red under: no per-type lookup
+    assertTrue(NS.Preview.AurasFor({ auraType = "HARMFUL" }) == P.HARMFUL)
+    assertTrue(NS.Preview.AurasFor({ auraType = "HELPFUL" }) == P.HELPFUL)
+    assertTrue(NS.Preview.AurasFor({}) == P.HELPFUL, "no aura type")
+    assertTrue(NS.Preview.AurasFor({ auraType = "BOGUS" }) == P.HELPFUL, "an unknown aura type")
+    assertTrue(NS.Preview.AurasFor(nil) == P.HELPFUL, "no settings")
+end)
+
+test("preview: switching a previewed container's aura type re-dresses it with the other set (TD-1)", function()
+    local P = NS.Constants.PREVIEW_AURAS
+    local c = cfg({ style = "icons" })
+    local k = container(c)
+    NS.Preview.Show(k)
+    assertEqual(#iconTextures(k), #P.HELPFUL)
+    c.auraType = "HARMFUL"
+    k.previewDirty = true   -- as ContainerClass:Apply marks it
+    NS.Preview.Show(k)
+    local got = iconTextures(k)
+    -- red under: the placeholder set chosen once, not per dress
+    assertEqual(#got, #P.HARMFUL)
+    for i, a in ipairs(P.HARMFUL) do assertEqual(got[i], a.icon, "debuff " .. i) end
+end)
+
+test("preview: a placeholder's name and icon come from its spell id when the client answers, the literals when not (TD-3)", function()
+    local NS2 = fresh()
+    local P = NS2.Constants.PREVIEW_AURAS
+    local before = NS2.Database.DeepCopy(P)
+    local seen = {}
+    NS2.Style.Bars.FillPreview = function(_, aura)
+        local n = #seen
+        seen[n + 1] = aura
+    end
+    NS2.Compat.GetSpellInfo = function(id)
+        if id == P.HELPFUL[1].spellId then return "Localized", 999 end
+        if id == P.HELPFUL[2].spellId then return "", nil end
+        return nil
+    end
+    local k = container(cfg({ style = "bars" }, NS2))
+    NS2.Preview.Show(k)
+    -- red under: the fixed English literals handed over whatever the client knows
+    assertEqual(seen[1].name, "Localized"); assertEqual(seen[1].icon, 999)
+    assertEqual(seen[2].name, P.HELPFUL[2].name, "an empty name falls back")
+    assertEqual(seen[2].icon, P.HELPFUL[2].icon, "no icon falls back")
+    assertEqual(seen[3].name, P.HELPFUL[3].name, "an unknown spell falls back")
+    assertEqual(seen[2].dispel, P.HELPFUL[2].dispel); assertEqual(seen[4].stacks, P.HELPFUL[4].stacks)
+    -- red under: the resolved copy written back into the constant
+    assertEqual(P.HELPFUL[1].name, before.HELPFUL[1].name, "the constant is untouched")
+    assertEqual(P.HELPFUL[1].icon, before.HELPFUL[1].icon)
+    local calls = 0
+    NS2.Compat.GetSpellInfo = function() calls = calls + 1 end
+    k.previewDirty = true
+    NS2.Preview.Show(k)
+    -- red under: asking the client on every dress rather than once per session
+    assertEqual(calls, 0, "resolved once per session")
+    local firstOfRedress = #seen - #P.HELPFUL + 1
+    assertEqual(seen[firstOfRedress].name, "Localized")
+end)
+
+test("preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)", function()
+    local C, P = NS.Constants, NS.Constants.PREVIEW_AURAS
+    local types, typeless, running, stacked, timeless = {}, 0, 0, 0, 0
+    for _, a in ipairs(P.HARMFUL) do
+        if a.dispel then types[a.dispel] = true else typeless = typeless + 1 end
+        if a.duration > 0 and a.remaining > 0 and a.remaining < D.bars.expiringThreshold then running = running + 1 end
+        if a.stacks >= 2 then stacked = stacked + 1 end
+        if a.duration == 0 then timeless = timeless + 1 end
+    end
+    -- red under: a buff list standing in for debuffs (the dispel border and colors cannot be checked)
+    for _, t in ipairs(C.DISPEL_TYPES) do assertTrue(types[t], "a " .. t .. " debuff") end
+    assertEqual(typeless, 1, "one debuff with no type")
+    assertFalse(types.Enrage, "Enrage stays out")
+    assertTrue(running >= 1, "one running out"); assertTrue(stacked >= 1, "one with stacks")
+    assertTrue(timeless >= 1, "one with no timer")
+    for kind, set in pairs(P) do
+        for i, a in ipairs(set) do
+            local where = kind .. " " .. i
+            assertEqual(type(a.spellId), "number", where .. " spellId")
+            assertEqual(type(a.name), "string", where .. " name")
+            for _, f in ipairs({ "icon", "remaining", "duration", "stacks" }) do
+                assertEqual(type(a[f]), "number", where .. " " .. f)
+            end
+        end
+    end
 end)

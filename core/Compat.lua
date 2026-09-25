@@ -315,6 +315,29 @@ function Compat.GetMouseFocus()
     return nil
 end
 
+--- Blizzard's debuff border art for `dispelType` on `region`, as the aura engine's Border style draws
+--- it: AuraUtil.SetAuraBorderAtlas, then untinted white, because the art is already colored
+--- (docs/superpowers/research/2026-09-13-aura-engine-notes.md). Without AuraUtil it sets the per-type
+--- `-noicon` atlas itself, or the default one when the client has no art for that type (as
+--- DEBUFF_DISPLAY_INFO's None does). For a PREVIEW icon, which has no engine to draw it (TD-4).
+--- @return boolean  whether the art was set
+function Compat.SetAuraBorderAtlas(region, dispelType)
+    if type(dispelType) ~= "string" or type(region) ~= "table" then return false end
+    local AU = _G.AuraUtil
+    if AU and AU.SetAuraBorderAtlas then
+        AU.SetAuraBorderAtlas(region, dispelType, false)
+    elseif region.SetAtlas then
+        local atlas = "ui-debuff-border-" .. string.lower(dispelType) .. "-noicon"
+        local CT = _G.C_Texture
+        if CT and CT.GetAtlasInfo and not CT.GetAtlasInfo(atlas) then atlas = "ui-debuff-border-default-noicon" end
+        region:SetAtlas(atlas, true)
+    else
+        return false
+    end
+    region:SetVertexColor(1, 1, 1, 1)
+    return true
+end
+
 --- A spell's name and icon first, or one nil. LibKa0s-Compat-1.0's reader: C_Spell on Retail, the
 --- pre-11.0 global (its rank dropped) as the fallback. A hit answers six values, `name, iconID,
 --- castTime, minRange, maxRange, spellID`, and every caller here reads the first. This addon keeps

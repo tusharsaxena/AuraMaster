@@ -197,7 +197,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:490`), and then adds again
-(`modules/Style_Bars.lua:322-329`, `modules/Style_Icons.lua:165-170`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:166-169`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same

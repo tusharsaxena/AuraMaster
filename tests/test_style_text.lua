@@ -975,3 +975,22 @@ test("text style: a placeholder's and the Preview box's dispel word take its pal
     assertEqual(out[2], " (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
     assertEqual(NS.Style.Text.PreviewLine(s, AURA), "Bloodlust (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
 end)
+
+test("text style: a debuff placeholder's dispel word and tints follow its own type, and the untyped one shows neither (TD-4)", function()
+    local NS = E()
+    local curse, typeless
+    for _, a in ipairs(NS.Constants.PREVIEW_AURAS.HARMFUL) do
+        if a.dispel == "Curse" then curse = a elseif not a.dispel then typeless = a end
+    end
+    -- red under: no debuff placeholders (the buff list names Magic alone)
+    assertTrue(curse ~= nil and typeless ~= nil, "a Curse and an untyped debuff placeholder")
+    local over = { template = "$spellname$[ ($dispeltype$)]", dispelBackdrop = true }
+    local out, am = filled(over, curse)
+    local k = NS.db.profile.dispelColors.Curse
+    assertEqual(out[2], " (" .. NS.L["Curse"] .. ")")
+    assertTrue(am.backdrop:IsShown())
+    assertEqual(am.backdrop:__joined("SetVertexColor"), table.concat({ k.r, k.g, k.b, 1 }, ","))
+    out, am = filled(over, typeless)
+    assertEqual(out[2], "", "no type, no word")
+    assertFalse(am.backdrop:IsShown(), "no type, no tint")
+end)
