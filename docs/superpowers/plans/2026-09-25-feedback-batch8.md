@@ -75,6 +75,7 @@ Record each checkpoint as a row in the checkpoint log below, in the same commit 
 | When | Milestone | Evidence |
 |---|---|---|
 | 2026-09-25 | M2 | tests 1422 passed / 0 failed / 0 skipped (16 shards); luacheck 0 warnings / 0 errors in 126 files; lizard 3703 functions, 0 above CCN 15; migrations cover v7->v8 and v1 (stamped and unstamped) through v8; head 90922b9 |
+| 2026-09-25 | M3 | tests 1448 passed / 0 failed / 0 skipped (16 shards); luacheck 0 warnings / 0 errors in 128 files; lizard 3768 functions, 0 above CCN 15; LibKa0s local tag v1.59.0 (53c141a, not pushed), libs/LibKa0s byte-identical to it, feat/2026-09-25-draghandle-close pushed; head 3a40323 |
 
 ## Task notes
 
