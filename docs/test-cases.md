@@ -1295,7 +1295,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (37)
+### test_diagnostics.lua (38)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1330,6 +1330,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: a failing section is reported and the next container still reports
 - diag: the report is capped below the console buffer and says it was truncated
 - diag: predictions stop at the id cap and the report says it was truncated
+- diag: a report's aura reads are its own, even when a spec passes the sections
 - diag: QueueSnapshot hands out copies, never the live queue
 - diag: a disabled login says so in the header, and each [Plan] not built line says why
 - diag: a stood-down addon names its holds; built containers read hidden, not unbuilt
@@ -1909,7 +1910,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 37 |
+| test_diagnostics.lua | 38 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
@@ -1938,4 +1939,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1636** |
+| **Total** | **1637** |

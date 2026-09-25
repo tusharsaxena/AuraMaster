@@ -45,9 +45,10 @@ Diag.MAX_IDS = 40
 
 local FILTERS = { "HELPFUL", "HARMFUL" }
 
--- The auras read this run, keyed "unit:FILTER", so the predictions reuse what the aura section read.
--- Reset by Diag.Sections, which the helper calls once per report.
-local auraCache = {}
+-- The auras each run read, keyed "unit:FILTER", so the predictions reuse what the aura section read.
+-- Keyed weakly by the run's writer (`out`), so a cache lives exactly as long as its report and a run
+-- can never see another's reads, however its sections were handed to the helper.
+local auraCaches = setmetatable({}, { __mode = "k" })
 
 local function str(v)
     return NS.SafeToString(v)
@@ -95,11 +96,16 @@ end
 
 --- readAuras, remembered for this run, so the predictions reuse what the aura section read.
 local function cachedAuras(out, unit, filter)
+    local cache = auraCaches[out]
+    if not cache then
+        cache = {}
+        auraCaches[out] = cache
+    end
     local key = unit .. ":" .. filter
-    local hit = auraCache[key]
+    local hit = cache[key]
     if hit then return hit.list, hit.why end
     local list, why = readAuras(out, unit, filter)
-    auraCache[key] = { list = list, why = why }
+    cache[key] = { list = list, why = why }
     return list, why
 end
 
@@ -693,10 +699,9 @@ end
 -- ---------------------------------------------------------------------------
 
 --- The report's sections, in order, for the descriptor's `diagnostics` (core/DebugLogSetup.lua).
---- The helper calls this once per report, at run time, so it starts that run's aura cache afresh.
+--- The helper calls this once per report, at run time.
 --- @return table  { { name, fn(out) }, ... }
 function Diag.Sections()
-    auraCache = {}
     return {
         { "state",          Diag.Header },
         { "profile config", Diag.ProfileConfig },

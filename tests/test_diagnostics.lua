@@ -620,6 +620,20 @@ test("diag: predictions stop at the id cap and the report says it was truncated"
     assertTrue(has(lines, "[Diag] truncated:") ~= nil, "no truncated line: " .. dump(lines))
 end)
 
+test("diag: a report's aura reads are its own, even when a spec passes the sections", function()
+    local NS, mocks = fresh()
+    local spec = { sections = { { "auras", NS.Diagnostics.Auras } } }
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(1, 1459, "Arcane Intellect") } })
+    NS.DebugLog:BuildDiagnostics(spec)
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(2, 774, "Rejuvenation") } })
+    local lines = {}
+    for i, l in ipairs(NS.DebugLog:BuildDiagnostics(spec).lines) do lines[i] = "[" .. l[1] .. "] " .. l[2] end
+    -- red under: a module-level cache that only Diag.Sections() resets, so a report built from a
+    -- spec's sections prints the auras an earlier report read
+    assertTrue(has(lines, "Rejuvenation") ~= nil, dump(lines))
+    assertTrue(has(lines, "Arcane Intellect") == nil, dump(lines))
+end)
+
 test("diag: QueueSnapshot hands out copies, never the live queue", function()
     local NS, mocks = fresh()
     mocks.__aurasSecret = true
