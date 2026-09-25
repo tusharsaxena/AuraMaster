@@ -730,3 +730,64 @@ A new tests/test_anchors_edges.lua, plus changes to existing suites.
 10. **Diamond pin, or just the specific tooltip line?** Recommendation: both. The pin costs one texture per container, is shown only while unlocked, and removes the ambiguity from the beside strip.
 
 Files: `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/modules/Anchors.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/settings/Layout.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/settings/OptionsSetup.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/modules/ContainerManager.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/modules/Container.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/core/Database.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/defaults/Profile.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/settings/Containers.lua`, `/mnt/d/Profile/Users/Tushar/Documents/GIT/AuraMaster/docs/superpowers/specs/2026-09-25-feedback-batch8-design.md`
+
+## Addendum (2026-09-25): an empty-only placeholder for unlocked chains (owner amendment to E1)
+
+**Owner, 2026-09-25:** "When unlocked and empty, create a placeholder block and have anchors attach to that. Do this only if that container is empty. If it's not empty, hide that placeholder block." (#13-15 had Size to fit ticked by hand, so no migration bug is left there.)
+
+**Feasibility (a read-only investigation, which fetched Blizzard's AuraContainer source):**
+- **The engine can't tell us whether it is empty.** `GetAuraGroupFrameCount` is the created-button pool (FrameProviders:56-58) and never shrinks. Released buttons stay anchored on purpose, to hide which ones are in use (:121-125). The engine's size is set through secretwrap in OnLayoutComplete (CustomAuraContainer:679-681). There are no callbacks.
+- **Anchors can't express max(engine, placeholder).** Writing min-size fields onto the forbidden engine would taint it.
+- **One readable fast path exists:** a pool of 0, or a unit that doesn't exist with no enchants, means certainly empty.
+- **Enchants:** `GetWeaponEnchantInfo()` is readable and predicts an enchant-only container exactly, once `plan.enchants.hidePermanent` is applied.
+
+**Design (adopted):**
+- **The signal.** `Container:PredictEmpty()` returns true, false or nil.
+  - true when the pool is 0, or when the unit doesn't exist and there are no enchants.
+  - Per `plan.groups` entry:
+    - A token-only group checks `select('#', C_UnitAuras.GetAuraSlots(unit, g.filter, 1)) > 1`, which means "has an aura" and allocates no table.
+    - A group with candidateFilters loops `GetAuraDataBySlot` and tests include/excludeSpellIDs, dispel types, maxDuration (against the full duration, so a permanent aura drops out) and the boolean flags. It mirrors the identity rule through FC.IdsHonored (FilterCompiler.lua:369).
+  - Enchants come from GetWeaponEnchantInfo.
+  - nil when auras are secret, a read raises, a flag isn't on AuraData, or a filter token is rejected.
+  - Don't use FC.ExplainSpell or the Diagnostics predictions: they don't cover Blizzard tokens, castBy, duration or enchants.
+- **The bias.** nil counts as not empty, so followers hang from the engine. A wrong "not empty" only costs the cosmetic #9 collapse. A wrong "empty" would bring back the shot-30 overlap.
+- **Hang mode.** `hangModeFor(previewing, unlocked, empty)`: "preview" in test mode, "slot" only when `unlocked and empty == true`, otherwise "engine". The slot target is `target.anchor` (the one-element rect, the same as the outline box). PlaceAttached's memo on the mode means an unchanged answer re-places nothing.
+- **The placeholder.** `ApplyOutline(cfg, unlocked and not previewing and hangMode == "slot")` shows the one-element white box only while the container is predicted empty. The test-mode block outline (SEP-1, Q8) is separate. The drag strip is always shown.
+- **Re-evaluation.** This follows the TimedSpells carve-out pattern (modules/TimedSpells.lua:13-27).
+  - Use RegisterUnitEvent("UNIT_AURA") only for the units of containers that have followers. It allows two units per frame, so use a second frame for target and focus.
+  - Register only while unlocked, not in test mode, out of lockdown and while auras aren't secret. Unregister on lock and on stand-down.
+  - The handler only sets a dirty flag. One coalesced pass (C_Timer, about 0.2 s) runs PredictEmpty on followed parents only, then ApplyVisibility for any parent whose answer changed.
+  - Also re-check on PLAYER_TARGET_CHANGED, PLAYER_FOCUS_CHANGED, UNIT_PET, UNIT_INVENTORY_CHANGED("player"), a timer set at the enchant's expiry, and on every Apply (filter writes).
+  - Nothing is allocated per event.
+- **Combat.** PLAYER_REGEN_DISABLED fires before lockdown. At that point force empty = nil, which puts every follower on the engine and hides the placeholders. PLAYER_REGEN_ENABLED re-predicts. While auras are secret outside lockdown, the answer is nil. PlaceAttached never runs under lockdown.
+
+**Headless tests:**
+- PredictEmpty against a C_UnitAuras mock:
+  - a token group with an aura returns false;
+  - no unit returns true;
+  - a readable pool of 0 returns true;
+  - an include id hits and misses;
+  - ids are ignored on a hostile HELPFUL target;
+  - maxDuration drops a permanent aura;
+  - an unknown flag returns nil;
+  - a secret or raising read returns nil;
+  - enchant present, absent, and permanent with hidePermanent.
+- Hang mode and outline:
+  - unlocked and empty gives slot with the outline shown;
+  - not empty or nil gives engine with the outline hidden;
+  - REGEN_DISABLED gives engine;
+  - nothing is re-placed under lockdown.
+- Throttling and registration:
+  - 50 UNIT_AURA events cause one pass;
+  - lock unregisters, and nothing registers while locked.
+- A perf scenario: a UNIT_AURA burst allocates nothing in the handler.
+
+**Smoke checks:**
+1. Spike: `/dump C_UnitAuras.GetAuraSlots("player","HELPFUL|BIG_DEFENSIVE",1)` for each category token, compared with what the engine shows.
+2. Target Debuffs (Mine) with followers, unlocked, test mode off, no target. The placeholder shows, with the followers below it. Apply a DoT: the placeholder hides and the followers sit past the last aura. It expires: back to the placeholder.
+3. The shot-30 setup: no placeholder and no overlap. Lock and unlock: nothing moves.
+4. A Weapon Enchants parent: apply an oil, then let it expire.
+5. Unlocked into combat: the followers go to the engine at the pull, with no ADDON_ACTION_BLOCKED, and they return after combat.
+6. Locked, then a perf capture: no UNIT_AURA cost.
+
+**Residual:** accuracy depends on C_UnitAuras parsing filter strings the same way the engine does (spike 1). Within one coalesced pass the prediction can briefly lag behind what is drawn.
