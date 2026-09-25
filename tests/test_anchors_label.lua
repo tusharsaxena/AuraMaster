@@ -41,7 +41,8 @@ end
 --- text at the host: on one record in the kit).
 local function lastPointOn(f, relativeTo)
     local log = calls(f, "SetPoint")
-    for i = #log, 1, -1 do
+    local n = #log
+    for i = n, 1, -1 do
         if log[i][2] == relativeTo then return log[i] end
     end
     return nil
@@ -50,7 +51,10 @@ end
 --- Record SetPoint on an existing frame (the strip, built before any case can hook CreateFrame).
 local function recordPoints(f)
     local rec = {}
-    rawset(f, "SetPoint", function(_, ...) rec[#rec + 1] = { ... } end)
+    rawset(f, "SetPoint", function(_, ...)
+        local n = #rec
+        rec[n + 1] = { ... }
+    end)
     return rec
 end
 
@@ -262,7 +266,10 @@ test("label: a follower's follower leaves room for its parent's label and strip 
     mocks.__fireTimers()
     local three = NS.ContainerManager.instances[3]
     local rec = {}
-    rawset(three.anchor, "SetPoint", function(_, ...) rec[#rec + 1] = { ... } end)
+    rawset(three.anchor, "SetPoint", function(_, ...)
+        local n = #rec
+        rec[n + 1] = { ... }
+    end)
     NS.Anchors.Place(three)
     local _, h = NS.Style.ElementSize(NS.Database.FindContainer(2))
     -- red under: the room counting the strip alone (the label pushed it further along)
