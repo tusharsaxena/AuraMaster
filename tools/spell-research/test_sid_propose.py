@@ -534,9 +534,27 @@ class SuggestRuleTest(unittest.TestCase):
         got = sid_propose.suggest(shape(self_=95, single=5, recast=15.0), set(), True, False)
         self.assertNotEqual(got[1], "R7")
 
-    def test_r8_outside_the_player_pool_is_a_consumable(self):
+    def test_r8_outside_the_player_pool_has_no_category(self):
+        # An item or consumable effect: no shipped category takes those since Consumables was
+        # dropped (owner, 2026-09-25), so R8 names the reason and suggests nothing.
         got = sid_propose.suggest(shape(self_=100, recast=300.0), set(), False, False)
-        self.check(got, "consumables", "R8", "high", "player-castable", "Consumables")
+        self.check(got, None, "R8", "high", "player-castable", "no category")
+
+    def test_r0_a_racial_is_racials(self):
+        got = sid_propose.suggest(shape(self_=100, recast=180.0), set(), False, False,
+                                  race="Racial - Troll")
+        self.check(got, "racials", "R0", "high", "Racial - Troll", "Racials")
+
+    def test_r0_wins_before_r1_and_r3(self):
+        # Stoneform reduces damage taken, Berserking raises haste: both are racials first.
+        for signals in ({"damage_taken_down"}, {"haste_up"}):
+            got = sid_propose.suggest(shape(self_=100, recast=180.0), signals, True, False,
+                                      race="Racial - Dwarf")
+            self.assertEqual(got[:2], ("racials", "R0"))
+
+    def test_no_race_is_no_r0(self):
+        got = sid_propose.suggest(shape(self_=100, recast=180.0), {"haste_up"}, True, False)
+        self.assertEqual(got[:2], ("offensiveCDs", "R3"))
 
     def test_r9_nothing_else_is_utility(self):
         got = sid_propose.suggest(shape(self_=50, single=50), set(), True, False)
@@ -564,7 +582,8 @@ def rows_st(apps, players, self_=0, single=0, group=0, recast=None, tag="", name
 
 RULE_SHIPPED = SHIPPED + [
     {"key": k, "label": k, "aura": "BUFF", "classes": {}}
-    for k in ("activeMitigation", "raidCDs", "healing", "support", "movement", "utility", "consumables")
+    for k in ("activeMitigation", "raidCDs", "healing", "support", "movement", "utility",
+              "groupBuffs", "stances", "racials")
 ]
 POOL = {871, 1719, 900001, 900100, 900101, 900200, 900300, 900400}
 
@@ -720,13 +739,12 @@ class AdditionsTest(unittest.TestCase):
                                                           name="Ascendance"))]
         self.assertEqual(self.additions(rows), [])
 
-    def test_outside_the_pool_is_a_consumable(self):
+    def test_outside_the_pool_is_no_addition(self):
         # No DB2 signal: a stat-raising potion would match R3 first (the table order), so R8 is
-        # pinned on a buff no earlier rule claims.
+        # pinned on a buff no earlier rule claims. R8 names no category, so nothing is proposed.
         rows = [("WARRIOR", ARMS, "BUFF", 900300,
                  rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
-        props = self.additions(rows, pool=set())
-        self.assertEqual([(p.category, p.rule) for p in props], [("consumables", "R8")])
+        self.assertEqual(self.additions(rows, pool=set()), [])
 
     def test_an_aura_whose_cast_is_in_the_pool_is_player_castable(self):
         # Shield Block's aura (132404) is not in the pool; its cast (2565) is. CastToAura links them.
@@ -747,7 +765,7 @@ class AdditionsTest(unittest.TestCase):
         rows = [("WARRIOR", ARMS, "BUFF", 900300,
                  rows_st(40, 4, self_=40, recast=300.0, name="Well Fed"))]
         props = self.additions(rows, pool=set(), pool_names={"ROGUE": {"well fed"}})
-        self.assertEqual([(p.category, p.rule) for p in props], [("consumables", "R8")])
+        self.assertEqual(props, [])
 
     def test_tank_only_uses_the_spec_roles(self):
         rows = [("WARRIOR", PROT, "BUFF", 900400,
@@ -1042,19 +1060,25 @@ FOLD_SPEC_MAP = {**SPEC_MAP, ARCANE: {"class": "MAGE", "name": "Arcane", "role":
 
 
 class Sid12FilterFoldTest(unittest.TestCase):
-    """Additions are proposed only at high or medium confidence; an item effect (R8) applied by
-    several classes becomes one class-neutral ALL proposal with the classes' evidence summed."""
+    """Additions are proposed only at high or medium confidence; a racial (R0) is one class-neutral
+    ALL proposal, whatever the classes that applied it, with their evidence summed (the addon's
+    `ALL` class key means a racial)."""
 
-    NAMES = {**NAMES, **{900300: "Well Fed", 900500: "Battle Stance", 900200: "Sprint"}}
-    SIGNALS = {900300: set(), 900500: set(), 900200: {"speed_up"}}
+    NAMES = {**NAMES, **{900300: "Berserking", 900500: "Battle Stance", 900200: "Sprint",
+                         900600: "Well Fed"}}
+    SIGNALS = {900300: {"haste_up"}, 900500: set(), 900200: {"speed_up"}, 900600: set()}
     POOL = {900200, 900500}
+    RACIALS = {900300: "Racial - Troll"}
 
-    def additions(self, rows, decisions=None, summary=None, json_path=False):
+    def additions(self, rows, decisions=None, summary=None, json_path=False, shipped=None,
+                  names=None):
         agg = agg_of(rows)
         if json_path:
             agg = via_evidence_json(agg)
-        return sid_propose.additions(agg, FOLD_SPEC_MAP, self.NAMES, RULE_SHIPPED, self.SIGNALS,
-                                     self.POOL, decisions=decisions or {}, summary=summary)
+        return sid_propose.additions(agg, FOLD_SPEC_MAP, names or self.NAMES,
+                                     shipped or RULE_SHIPPED, self.SIGNALS, self.POOL,
+                                     decisions=decisions or {}, summary=summary,
+                                     racials=self.RACIALS)
 
     # Half self, half onto one other player, no DB2 signal: R9 Utility at low confidence.
     LOW = ("WARRIOR", ARMS, "BUFF", 900500,
@@ -1062,9 +1086,9 @@ class Sid12FilterFoldTest(unittest.TestCase):
     SPRINT = ("WARRIOR", ARMS, "BUFF", 900200, rows_st(60, 4, self_=60, recast=60.0, tag="s",
                                                        name="Sprint"))
 
-    def well_fed(self, cls, spec, apps, players):
+    def berserking(self, cls, spec, apps, players):
         return (cls, spec, "BUFF", 900300,
-                rows_st(apps, players, self_=apps, recast=300.0, tag=cls, name="Well Fed"))
+                rows_st(apps, players, self_=apps, recast=180.0, tag=cls, name="Berserking"))
 
     def test_a_low_confidence_addition_is_not_proposed_but_is_in_the_dictionary(self):
         summary = {}
@@ -1075,9 +1099,9 @@ class Sid12FilterFoldTest(unittest.TestCase):
         self.assertEqual(summary, {"raw": 2, "low": 1, "folded": 0, "all": 0, "ruled": 0,
                                    "proposed": 1})
 
-    def test_an_item_effect_of_three_classes_is_one_all_proposal_with_summed_evidence(self):
-        rows = [self.well_fed("WARRIOR", ARMS, 40, 4), self.well_fed("SHAMAN", RESTO, 30, 3),
-                self.well_fed("MAGE", ARCANE, 10, 2)]
+    def test_a_racial_of_three_classes_is_one_all_proposal_with_summed_evidence(self):
+        rows = [self.berserking("WARRIOR", ARMS, 40, 4), self.berserking("SHAMAN", RESTO, 30, 3),
+                self.berserking("MAGE", ARCANE, 10, 2)]
         for json_path in (False, True):
             summary = {}
             props = self.additions(rows, summary=summary, json_path=json_path)
@@ -1085,42 +1109,81 @@ class Sid12FilterFoldTest(unittest.TestCase):
             p = props[0]
             self.assertEqual((p.type, p.category, p.klass, p.name, p.listed, p.proposed, p.rule,
                               p.confidence, p.applications),
-                             ("addition", "consumables", "ALL", "Well Fed", [], [900300], "R8",
+                             ("addition", "racials", "ALL", "Berserking", [], [900300], "R0",
                               "high", 80))
             self.assertEqual(p.evidence, {900300: {"WARRIOR Arms": (40, 4),
                                                    "SHAMAN Restoration": (30, 3),
                                                    "MAGE Arcane": (10, 2)}})
             self.assertIn("3 classes", p.reason)
             self.assertIn("80 applications / 9 players", p.reason)
-            self.assertTrue(p.reason.endswith("→ Consumables."), p.reason)
-            self.assertEqual(sid_propose.proposal_key(p), "addition|consumables|ALL|well fed|900300")
+            self.assertIn("Racial - Troll", p.reason)
+            self.assertTrue(p.reason.endswith("→ Racials."), p.reason)
+            self.assertEqual(sid_propose.proposal_key(p), "addition|racials|ALL|berserking|900300")
             # WARRIOR and SHAMAN were candidates on their own; MAGE (10 applications) was not.
             self.assertEqual(summary, {"raw": 2, "low": 0, "folded": 2, "all": 1, "ruled": 0,
                                        "proposed": 1})
 
     def test_classes_under_the_bar_alone_fold_into_one_above_it(self):
-        rows = [self.well_fed("WARRIOR", ARMS, 12, 2), self.well_fed("SHAMAN", RESTO, 12, 2)]
+        rows = [self.berserking("WARRIOR", ARMS, 12, 2), self.berserking("SHAMAN", RESTO, 12, 2)]
         props = self.additions(rows)
         self.assertEqual([(p.klass, p.applications) for p in props], [("ALL", 24)])
         self.assertIn("24 applications / 4 players", props[0].reason)
 
-    def test_an_item_effect_of_one_class_stays_with_that_class(self):
-        props = self.additions([self.well_fed("WARRIOR", ARMS, 40, 4)])
-        self.assertEqual([(p.klass, p.rule) for p in props], [("WARRIOR", "R8")])
+    def test_a_racial_of_one_class_is_still_an_all_proposal(self):
+        # A racial is class-neutral whoever happened to apply it in the logs.
+        props = self.additions([self.berserking("WARRIOR", ARMS, 40, 4)])
+        self.assertEqual([(p.klass, p.category, p.rule) for p in props], [("ALL", "racials", "R0")])
+
+    def test_an_item_effect_of_several_classes_is_no_proposal(self):
+        rows = [("WARRIOR", ARMS, "BUFF", 900600, rows_st(40, 4, self_=40, recast=300.0, tag="w",
+                                                          name="Well Fed")),
+                ("SHAMAN", RESTO, "BUFF", 900600, rows_st(30, 3, self_=30, recast=300.0, tag="s",
+                                                          name="Well Fed"))]
+        summary = {}
+        self.assertEqual(self.additions(rows, summary=summary), [])
+        self.assertEqual(summary, {"raw": 0, "low": 0, "folded": 0, "all": 0, "ruled": 0,
+                                   "proposed": 0})
 
     def test_a_ruled_all_proposal_is_not_returned_and_is_counted(self):
-        rows = [self.well_fed("WARRIOR", ARMS, 40, 4), self.well_fed("SHAMAN", RESTO, 30, 3)]
+        rows = [self.berserking("WARRIOR", ARMS, 40, 4), self.berserking("SHAMAN", RESTO, 30, 3)]
         summary = {}
-        decisions = {"addition|consumables|ALL|well fed|900300": {"ruling": "reject"}}
+        decisions = {"addition|racials|ALL|berserking|900300": {"ruling": "reject"}}
         self.assertEqual(self.additions(rows, decisions, summary), [])
         self.assertEqual(summary["ruled"], 1)
         self.assertEqual(summary["proposed"], 0)
 
-    def test_an_item_effect_listed_under_all_by_name_is_left_to_corrections(self):
-        shipped = RULE_SHIPPED + [{"key": "consumables2", "label": "c", "aura": "BUFF",
+    def test_a_racial_listed_under_all_by_name_is_left_to_corrections(self):
+        shipped = RULE_SHIPPED + [{"key": "racials2", "label": "r", "aura": "BUFF",
                                    "classes": {"ALL": [900301]}}]
-        names = {**self.NAMES, 900301: "Well Fed"}
-        rows = [self.well_fed("WARRIOR", ARMS, 40, 4), self.well_fed("SHAMAN", RESTO, 30, 3)]
-        props = sid_propose.additions(agg_of(rows), FOLD_SPEC_MAP, names, shipped, self.SIGNALS,
-                                      self.POOL)
+        names = {**self.NAMES, 900301: "Berserking"}
+        rows = [self.berserking("WARRIOR", ARMS, 40, 4), self.berserking("SHAMAN", RESTO, 30, 3)]
+        self.assertEqual(self.additions(rows, shipped=shipped, names=names), [])
+
+    def test_the_aura_of_a_racial_cast_is_racial(self):
+        # CastToAura: the racial skill line holds the cast; the logs see the aura it lands.
+        rows = [self.berserking("WARRIOR", ARMS, 40, 4)]
+        props = sid_propose.additions(agg_of(rows), FOLD_SPEC_MAP, self.NAMES, RULE_SHIPPED,
+                                      self.SIGNALS, self.POOL, cast_candidates={26297: [900300]},
+                                      racials={26297: "Racial - Troll"})
+        self.assertEqual([(p.klass, p.category, p.rule) for p in props], [("ALL", "racials", "R0")])
+
+    def test_the_dictionary_suggests_racials(self):
+        got = sid_propose.suggestions(agg_of([self.berserking("WARRIOR", ARMS, 40, 4)]),
+                                      FOLD_SPEC_MAP, self.SIGNALS, self.POOL,
+                                      racials=self.RACIALS)
+        self.assertEqual(got[("WARRIOR", 900300)][:3], ("racials", "R0", "high"))
+
+
+class RacialsNeverMovedTest(unittest.TestCase):
+    """DB2's racial skill lines do not reach every racial's aura (Stoneform 65116 and Fireblood
+    273104 are on none in build 12.1.0.69875), so a listed racial the rule cannot see is not
+    contradicted: nothing is ever moved out of Racials."""
+
+    def test_a_listed_racial_without_a_race_stays(self):
+        shipped = [{"key": "racials", "label": "R", "aura": "BUFF", "classes": {"ALL": [900100]}},
+                   {"key": "defensives", "label": "D", "aura": "BUFF", "classes": {}}]
+        rows = [("WARRIOR", ARMS, "BUFF", 900100,
+                 rows_st(100, 5, self_=100, recast=120.0, name="Stoneform"))]
+        props = sid_propose.moves(agg_of(rows), SPEC_MAP, {**NAMES, 900100: "Stoneform"}, shipped,
+                                  {900100: {"damage_taken_down"}}, POOL)
         self.assertEqual(props, [])

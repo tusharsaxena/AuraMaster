@@ -19,10 +19,10 @@ spell names, CastToAura families) and the shipped `spells`-kind categories. Outp
 - flags(): Flag objects, report only, never proposals: unverified, stale, below_bar (a sighting of a
   listed spell under the evidence bar) and cc_unlisted (a player-applied crowd-control debuff in
   neither hardCC nor softCC).
-- suggest(): the spec's category rules R1-R9, first match wins, over one aura's class-wide target
-  shape, recast and DB2 signals. moves() applies it to listed BUFF entries (a move is medium
-  confidence at most, and never from a debuff category); additions() to above-bar player BUFFs in
-  no `spells` category.
+- suggest(): the category rules R0-R9, first match wins, over one aura's class-wide target
+  shape, recast, DB2 signals and racial skill line. moves() applies it to listed BUFF entries (a
+  move is medium confidence at most, never from a debuff category and never out of Racials);
+  additions() to above-bar player BUFFs in no `spells` category, a racial as one ALL proposal.
 
 Anything already ruled in decisions.json is not proposed again: its proposal_key() is there (a
 `logs.py decide` ruling), or the row_key() of every one of its review-sheet rows is (`logs.py
@@ -53,8 +53,9 @@ LEVELLING_SPEC_NAME = "Initial"
 
 UNKNOWN_SPEC = "unknown"
 
-# A Categories.lua class key that lists the id for every class (racials, flasks): its evidence is the
-# union of every class's, each spec named with its class ("SHAMAN Restoration").
+# A Categories.lua class key that lists the id for every class (racials, the odd class-neutral item
+# such as Void-touched Drums): its evidence is the union of every class's, each spec named with its
+# class ("SHAMAN Restoration").
 ALL_CLASSES = "ALL"
 
 
@@ -75,7 +76,7 @@ class Proposal:
     listed: list           # ids currently listed (replace/add/move)
     proposed: list         # ids to put in
     evidence: dict         # spell_id -> {spec_name: (applications, players)}
-    rule: str              # "evidence" for replace/add; R1..R9 for move/addition
+    rule: str              # "evidence" for replace/add; R0..R9 for move/addition
     reason: str            # one plain sentence
     confidence: str        # "high" | "medium" | "low"
     applications: int      # total, for ordering
@@ -499,7 +500,7 @@ def flags(agg, spec_map, names, shipped, aura_to_family, cc_ids=frozenset(), thr
                                                f.spell_id))
 
 
-# --- SID-6: category rules R1-R9, moves and additions ---------------------------------------------
+# --- SID-6: category rules R0-R9, moves and additions ---------------------------------------------
 
 # Rule thresholds (the spec's table). Shares are of the aura's applications across every spec of
 # the class. The scanner counts a burst ONCE in `group` and absorbs its companions, so `group` is a
@@ -537,9 +538,14 @@ _SIGNAL_WORDS = {
 CATEGORY_LABELS = {
     "defensives": "Defensive cooldowns", "raidCDs": "Raid cooldowns",
     "offensiveCDs": "Offensive cooldowns", "movement": "Movement", "support": "Support",
-    "healing": "Healing", "activeMitigation": "Active mitigation", "consumables": "Consumables",
-    "utility": "Utility",
+    "healing": "Healing", "activeMitigation": "Active mitigation", "utility": "Utility",
+    "groupBuffs": "Group buffs", "stances": "Stances", "racials": "Racials",
 }
+
+# The category nothing is ever moved out of. R0 sees a racial only through DB2's racial skill lines,
+# and those do not reach every racial's aura (Stoneform 65116 and Fireblood 273104 are on none in
+# build 12.1.0.69875), so a listed racial R0 cannot see is not evidence that it is misfiled.
+NEVER_CONTRADICTED = frozenset({"racials"})
 
 _CONFIDENCE_RANK = {"low": 0, "medium": 1, "high": 2}
 
@@ -555,6 +561,7 @@ class _Facts:
     signals: Set[str]
     in_pool: bool
     tank_only: bool
+    race: Optional[str]   # the "Racial - <race>" skill line DB2 puts the aura on, or None
 
 
 def _pct(share):
@@ -572,6 +579,9 @@ def _recast(f):
 # (rule id, predicate, category, confidence, reason) in the spec's table order; the first match
 # wins. Each reason names the evidence it rests on, in plain words, and ends with the category.
 _RULES = (
+    ("R0", lambda f: f.race is not None,
+     "racials", "high",
+     lambda f: "DB2 puts it on the %s skill line" % f.race),
     ("R1", lambda f: f.signals & DEFENSIVE_SIGNALS and f.self_ >= SELF_SHARE,
      "defensives", "high",
      lambda f: "%s self-applied and DB2 says it %s" % (_pct(f.self_), _says(f, DEFENSIVE_SIGNALS))),
@@ -600,14 +610,17 @@ _RULES = (
                       and f.recast is not None and f.recast < SHORT_RECAST),
      "activeMitigation", "medium",
      lambda f: "only tank specs apply it, %s self-applied, %s" % (_pct(f.self_), _recast(f))),
+    # R8 names no category: item and consumable effects have none since the owner dropped
+    # Consumables (2026-09-25). It stays a rule so the dictionary still says why there is no
+    # suggestion, and so R9 never files an item effect under Utility.
     ("R8", lambda f: not f.in_pool,
-     "consumables", "high",
+     None, "high",
      lambda f: "not in the player-castable spell pool, so an item or consumable effect"),
 )
 
 
-def _facts(stats, signals, in_pool, tank_only):
-    # type: (dict, Set[str], bool, bool) -> Optional[_Facts]
+def _facts(stats, signals, in_pool, tank_only, race=None):
+    # type: (dict, Set[str], bool, bool, Optional[str]) -> Optional[_Facts]
     """suggest()'s inputs as shares; None when there are no applications."""
     apps = stats.get("applications", 0)
     if apps <= 0:
@@ -619,43 +632,46 @@ def _facts(stats, signals, in_pool, tank_only):
         signals.add("group_haste_up")
     return _Facts(apps=apps, self_=self_ / apps, single=single / apps, group=group,
                   bursts=stats.get("group", 0), recast=stats.get("recast"), signals=signals,
-                  in_pool=in_pool, tank_only=tank_only)
+                  in_pool=in_pool, tank_only=tank_only, race=race)
 
 
-def meets_category(category, stats, signals, in_pool, tank_only):
-    # type: (str, dict, Set[str], bool, bool) -> bool
+def meets_category(category, stats, signals, in_pool, tank_only, race=None):
+    # type: (str, dict, Set[str], bool, bool, Optional[str]) -> bool
     """Whether one aura's evidence meets its OWN category's rule, whatever rule would win first.
 
     The spec moves an entry only when its behaviour contradicts its category's rule; the first
     match of the table is not that test (Rejuvenation meets R6 Healing, though R5 Support is met
     first; Avatar meets R3 though R1 is). Utility's rule is R9, "none of the above". A category no
-    rule names (or an aura with no applications) is never contradicted.
+    rule names (or an aura with no applications) is never contradicted, and neither is anything in
+    NEVER_CONTRADICTED.
     """
-    f = _facts(stats, signals, in_pool, tank_only)
-    if f is None:
+    f = _facts(stats, signals, in_pool, tank_only, race)
+    if f is None or category in NEVER_CONTRADICTED:
         return True
     if category == "utility":
-        return not any(predicate(f) for _r, predicate, _c, _conf, _why in _RULES)
+        return not any(predicate(f) for _r, predicate, cat, _conf, _why in _RULES if cat)
     own = [predicate for _r, predicate, cat, _conf, _why in _RULES if cat == category]
     return not own or any(predicate(f) for predicate in own)
 
 
-def suggest(stats, signals, in_pool, tank_only):
-    # type: (dict, Set[str], bool, bool) -> Tuple[Optional[str], str, str, str]
-    """(category key or None, rule id, confidence, reason sentence) for one aura, by rules R1-R9.
+def suggest(stats, signals, in_pool, tank_only, race=None):
+    # type: (dict, Set[str], bool, bool, Optional[str]) -> Tuple[Optional[str], str, str, str]
+    """(category key or None, rule id, confidence, reason sentence) for one aura, by rules R0-R9.
 
     stats: {"applications", "self", "single", "group" (bursts), "other" (onto a unit that is no
     player; optional), "recast" (median seconds or None)},
     summed over every spec of the class. signals: sid_db2.aura_signals' names for the aura.
     in_pool: the aura (or the cast it comes from) is player-castable. tank_only: every spec that
-    applied it is a tank spec.
+    applied it is a tank spec. race: the racial skill line DB2 puts the aura (or its cast) on.
     """
-    f = _facts(stats, signals, in_pool, tank_only)
+    f = _facts(stats, signals, in_pool, tank_only, race)
     if f is None:
         return None, "R9", "low", "No applications, so no suggestion."
     self_, single = stats.get("self", 0), stats.get("single", 0)
     for rule, predicate, category, confidence, reason in _RULES:
         if predicate(f):
+            if category is None:
+                return None, rule, confidence, "%s; no category takes those." % reason(f)
             return category, rule, confidence, "%s → %s." % (reason(f), CATEGORY_LABELS[category])
     shape_words = "%s self, %s single, %s group" % (_pct(f.self_), _pct(f.single), _pct(f.group))
     other = stats.get("other", 0)
@@ -728,14 +744,28 @@ def _castable(pool, cast_candidates):
     return out
 
 
+def _racial(racials, cast_candidates):
+    # type: (Optional[Dict[int, str]], Optional[Dict[int, List[int]]]) -> Dict[int, str]
+    """{aura id: racial skill line}: sid_db2.racial_auras plus every aura a racial cast lands
+    (CastToAura), as _castable does for the pool."""
+    out = dict(racials or {})
+    for cast, auras in (cast_candidates or {}).items():
+        if cast in out:
+            for aura in auras:
+                out.setdefault(aura, out[cast])
+    return out
+
+
 class _Ruled:
     """Shared state of moves() and additions(): evidence per (class, id), the bar, the rules."""
 
-    def __init__(self, agg, spec_map, names, signals, pool, cast_candidates, th, pool_names=None):
+    def __init__(self, agg, spec_map, names, signals, pool, cast_candidates, th, pool_names=None,
+                 racials=None):
         self.spec_map = spec_map
         self.names = names
         self.signals = signals or {}
         self.castable = _castable(pool, cast_candidates)
+        self.racials = _racial(racials, cast_candidates)
         self.pool_names = pool_names or {}
         self.th = th
         self.rows = _class_rows(agg, "BUFF")
@@ -754,7 +784,7 @@ class _Ruled:
     def suggest(self, klass, sid):
         rows = self.rows[(klass, sid)]
         return suggest(_stats_of(rows), self.signals.get(sid, set()), self.in_pool(klass, sid),
-                       _tank_only(rows, self.spec_map))
+                       _tank_only(rows, self.spec_map), self.racials.get(sid))
 
     def in_pool(self, klass, sid):
         """A class spell: in the castable ids, or named like a pool spell of the same class."""
@@ -770,7 +800,8 @@ class _Ruled:
         """The listed aura meets its own category's rule (meets_category)."""
         rows = self.rows[(klass, sid)]
         return meets_category(category, _stats_of(rows), self.signals.get(sid, set()),
-                              self.in_pool(klass, sid), _tank_only(rows, self.spec_map))
+                              self.in_pool(klass, sid), _tank_only(rows, self.spec_map),
+                              self.racials.get(sid))
 
     def evidence(self, klass, sid):
         return {spec_name(self.spec_map, spec): (st.applications, len(st.players))
@@ -803,17 +834,18 @@ def _ordered(props, decisions):
 
 
 def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
-          thresholds=None, pool_names=None):
+          thresholds=None, pool_names=None, racials=None):
     """Move proposals: a listed BUFF entry whose evidence contradicts its category's rule.
 
     The entry must fail its own category's rule (meets_category); the target is then what the
     table suggests.
     Only above-bar entries, only a suggestion of at least medium confidence, only into a category
     the file has and that does not already list the id; the move itself is medium at most (the
-    spec). Debuff categories are never moved: log evidence only cross-checks them.
+    spec). Debuff categories are never moved: log evidence only cross-checks them. racials:
+    sid_db2.racial_auras, for rule R0.
     """
     ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds(),
-                   pool_names)
+                   pool_names, racials)
     listed_in = _category_ids(shipped)
     out = []  # type: List[Proposal]
     for cat in shipped:
@@ -839,28 +871,31 @@ def moves(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, de
 
 
 def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None, decisions=None,
-              thresholds=None, pool_names=None, summary=None):
+              thresholds=None, pool_names=None, summary=None, racials=None):
     """Addition proposals: above-bar player BUFFs in no `spells` category, with a category by rule.
 
     An aura named like a spell the class (or an ALL line) already lists (in a BUFF category) is left
     to corrections(), which proposes it as a replace or an add. No proposal when the rules give no
-    category, or one the file lacks.
+    category (R8's item effects among them), or one the file lacks.
 
     SID-12 (the owner's ruling after the SID-10 dry run):
     - Only high- or medium-confidence suggestions are proposed. A low one (R9 Utility) stays in the
       dictionary's suggested_category column (suggestions()) and is only counted here.
-    - Item effects fold: an aura R8 calls an item or consumable effect for two or more classes is
-      ONE proposal under class ALL (the addon's class-neutral key), its evidence the union of those
-      classes' specs (named "CLASS Spec") and its players the per-class sum, exact because a
-      character has one class. The bar is met by the sum, so classes under it alone still count.
+    - Racials fold: an aura R0 calls a racial is ONE proposal under class ALL (the addon's
+      class-neutral key, which in Categories.lua means a racial), whatever classes applied it, its
+      evidence the union of those classes' specs (named "CLASS Spec") and its players the per-class
+      sum, exact because a character has one class. The bar is met by the sum, so classes under it
+      alone still count. (The fold once served R8's item effects, into the Consumables category the
+      owner dropped on 2026-09-25.)
 
     `summary`, when a dict, is filled with the before/after counts PROPOSED_ADDITIONS.md shows:
     raw (per-class candidates above the bar, the pre-SID-12 output), low (of those, dropped as low
-    confidence), folded (of those, merged into an ALL proposal), all (ALL proposals made), ruled
-    (proposals already in decisions.json) and proposed (returned).
+    confidence), folded (of those, merged into an ALL racial proposal), all (ALL proposals made),
+    ruled (proposals already in decisions.json) and proposed (returned). racials:
+    sid_db2.racial_auras, for rule R0.
     """
     ruled = _Ruled(agg, spec_map, names, signals, pool, cast_candidates, thresholds or Thresholds(),
-                   pool_names)
+                   pool_names, racials)
     listed = set().union(*_category_ids(shipped).values()) if shipped else set()
     keys = _spells_keys(shipped)
     listed_names = set()  # type: Set[Tuple[str, str]]
@@ -869,7 +904,7 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
             for klass, ids in cat["classes"].items():
                 listed_names.update((klass, names[sid].lower()) for sid in ids if names.get(sid))
     per_class = []  # type: List[Proposal]
-    items = OrderedDict()  # type: Dict[int, List[Tuple[str, _Total, str]]]
+    folds = OrderedDict()  # type: Dict[int, List[Tuple[str, _Total, str]]]
     for (klass, sid) in sorted(ruled.rows):
         if sid in listed:
             continue
@@ -882,18 +917,16 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
         if target is None or target not in keys:
             continue
         total = ruled.total(klass, sid)
-        if rule == "R8":
-            items.setdefault(sid, []).append((klass, total, name))
+        if rule == "R0":
+            folds.setdefault(sid, []).append((klass, total, name))
         if not ruled.meets(total):
             continue
         per_class.append(Proposal(
             type="addition", category=target, from_category="", klass=klass, name=name, listed=[],
             proposed=[sid], evidence={sid: ruled.evidence(klass, sid)}, rule=rule, reason=reason,
             confidence=confidence, applications=total.apps))
-    folds = {sid: seen for sid, seen in items.items() if len(seen) >= 2}
     out = [p for p in per_class
-           if not (p.rule == "R8" and p.proposed[0] in folds)
-           and _CONFIDENCE_RANK[p.confidence] >= _CONFIDENCE_RANK["medium"]]
+           if p.rule != "R0" and _CONFIDENCE_RANK[p.confidence] >= _CONFIDENCE_RANK["medium"]]
     made = []  # type: List[Proposal]
     for sid, seen in folds.items():
         total = _Total(sum(t.apps for _k, t, _n in seen), sum(t.players for _k, t, _n in seen), "")
@@ -904,7 +937,7 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
         summary.update({
             "raw": len(per_class),
             "low": sum(1 for p in per_class if p.confidence == "low"),
-            "folded": sum(1 for p in per_class if p.rule == "R8" and p.proposed[0] in folds),
+            "folded": sum(1 for p in per_class if p.rule == "R0"),
             "all": len(made),
             "ruled": len(out) + len(made) - len(result),
             "proposed": len(result)})
@@ -913,7 +946,7 @@ def additions(agg, spec_map, names, shipped, signals, pool, cast_candidates=None
 
 def _folded(ruled, sid, seen, total):
     # type: (_Ruled, int, List[Tuple[str, _Total, str]], _Total) -> Proposal
-    """One class-neutral (ALL) Consumables proposal for an item effect several classes applied."""
+    """One class-neutral (ALL) Racials proposal for a racial aura, whichever classes applied it."""
     classes = [klass for klass, _t, _n in seen]
     evidence = {}  # type: Dict[str, Tuple[int, int]]
     for klass in classes:
@@ -923,19 +956,19 @@ def _folded(ruled, sid, seen, total):
     for _k, t, n in seen:
         spellings[n] += t.apps
     name = ruled.names.get(sid) or _top_name(spellings)
-    reason = ("Applied by %s (%s) with %s / %s; not in any of their player-castable spell pools, "
-              "so an item or consumable effect → %s."
+    reason = ("Applied by %s (%s) with %s / %s; DB2 puts it on the %s skill line, so a racial → %s."
               % (plural(len(classes), "class"), ", ".join(classes),
                  plural(total.apps, "application"), plural(total.players, "player"),
-                 CATEGORY_LABELS["consumables"]))
-    return Proposal(type="addition", category="consumables", from_category="", klass=ALL_CLASSES,
-                    name=name, listed=[], proposed=[sid], evidence={sid: evidence}, rule="R8",
+                 ruled.racials[sid], CATEGORY_LABELS["racials"]))
+    return Proposal(type="addition", category="racials", from_category="", klass=ALL_CLASSES,
+                    name=name, listed=[], proposed=[sid], evidence={sid: evidence}, rule="R0",
                     reason=reason, confidence="high", applications=total.apps)
 
 
-def suggestions(agg, spec_map, signals, pool, cast_candidates=None, pool_names=None, names=None):
+def suggestions(agg, spec_map, signals, pool, cast_candidates=None, pool_names=None, names=None,
+                racials=None):
     """{(class, spell_id): suggest()'s (category or None, rule, confidence, reason)} for every
     player BUFF, whatever its count: the dictionary's suggested-category column."""
     ruled = _Ruled(agg, spec_map, names or {}, signals, pool, cast_candidates, Thresholds(),
-                   pool_names)
+                   pool_names, racials)
     return {key: ruled.suggest(*key) for key in sorted(ruled.rows)}

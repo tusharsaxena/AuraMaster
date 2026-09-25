@@ -179,6 +179,39 @@ def castable(cache: Dict[str, Path]) -> Tuple[Set[int], Dict[str, Set[str]]]:
     return ids, dict(by_class)
 
 
+# The prefix of a race's skill line in SkillLine.DisplayName_lang ("Racial - Dwarf"); the ids are
+# read out of the export, like research.load_class_skill_lines does for the class lines.
+RACIAL_LINE_PREFIX = "Racial - "
+
+
+def racial_auras(cache: Dict[str, Path]) -> Dict[int, str]:
+    """{spell id: "Racial - <race>"}: what rule R0 calls a racial.
+
+    Every SkillLineAbility spell on a racial skill line, closed over SpellEffect.EffectTriggerSpell
+    with research.close_over_triggers (the aura a racial cast triggers). The propose step adds the
+    auras CastToAura lands. DB2 does not reach every racial's aura this way: in build 12.1.0.69875
+    Stoneform (65116) and Fireblood (273104) are on no racial line and no trigger edge from one,
+    which is why sid_propose never moves anything out of Racials (NEVER_CONTRADICTED).
+    """
+    lines = {}  # type: Dict[int, str]
+    for row in research.iter_csv(cache["SkillLine"]):
+        name = (row.get("DisplayName_lang") or "").strip()
+        if name.startswith(RACIAL_LINE_PREFIX):
+            lines[research.as_int(row.get("ID"))] = name
+    pool = set()  # type: Set[int]
+    races = defaultdict(set)  # type: Dict[int, Set[str]]
+    for row in research.iter_csv(cache["SkillLineAbility"]):
+        spell = research.as_int(row.get("Spell"))
+        line = lines.get(research.as_int(row.get("SkillLine")))
+        if spell and line:
+            pool.add(spell)
+            races[spell].add(line)
+    _mechanics, triggers = research.read_spell_effect(cache["SpellEffect"])
+    research.close_over_triggers(pool, races, triggers)
+    # A spell on two race lines (none in 12.1.0.69875) names the first alphabetically, stably.
+    return {spell: sorted(races[spell])[0] for spell in pool if races.get(spell)}
+
+
 def player_pool(cache: Dict[str, Path]) -> Set[int]:
     """castable()'s ids: every class spell id, for rule R8."""
     return castable(cache)[0]

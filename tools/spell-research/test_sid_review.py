@@ -30,12 +30,12 @@ SHIPPED = [
     {"key": "offensiveCDs", "label": "Offensive cooldowns", "aura": "BUFF",
      "classes": {"SHAMAN": [114051, 201633]}},
     {"key": "externals", "label": "External defensives", "aura": "BUFF", "classes": {}},
-    {"key": "consumables", "label": "Consumables", "aura": "BUFF", "classes": {}},
+    {"key": "racials", "label": "Racials", "aura": "BUFF", "classes": {}},
 ]
 
 NAMES = {114051: "Ascendance", 114052: "Ascendance", 1219480: "Ascendance",
          201633: "Earthen Wall", 201634: "Earthen Wall", 900500: "Fixture Guard",
-         900600: "Fixture Shield", 900300: "Well Fed", 108271: "Astral Shift"}
+         900600: "Fixture Shield", 900300: "Berserking", 108271: "Astral Shift"}
 
 
 def P(ptype, category, klass, name, listed, proposed, evidence, apps, rule="evidence",
@@ -49,9 +49,9 @@ def P(ptype, category, klass, name, listed, proposed, evidence, apps, rule="evid
 def proposals():
     return [
         # Given out of order: the sheet sorts corrections by applications, additions by category.
-        P("addition", "consumables", "ALL", "Well Fed", [], [900300],
-          {900300: {"WARRIOR Arms": (40, 4), "SHAMAN Restoration": (30, 3)}}, 70, rule="R8",
-          reason="Applied by 2 classes; an item effect."),
+        P("addition", "racials", "ALL", "Berserking", [], [900300],
+          {900300: {"WARRIOR Arms": (40, 4), "SHAMAN Restoration": (30, 3)}}, 70, rule="R0",
+          reason="Applied by 2 classes; a racial."),
         P("add", "offensiveCDs", "SHAMAN", "Earthen Wall", [201633], [201634],
           {201633: {"Restoration": (50, 5)}, 201634: {"Restoration": (25, 4)}}, 25),
         P("replace", "offensiveCDs", "SHAMAN", "Ascendance", [114051], [114052, 1219480],
@@ -117,7 +117,7 @@ class ReviewRowsTest(unittest.TestCase):
             ("deletion", 114051), ("correction-add", 114052), ("correction-add", 1219480),
             ("move", 108271), ("correction-add", 201634),
             ("addition", 900600), ("addition", 900500),  # defensives, most-applied first
-            ("addition", 900300),                         # consumables
+            ("addition", 900300),                         # racials
         ])
 
     def test_row_ids_are_sequential_and_unique(self):
@@ -140,7 +140,7 @@ class ReviewRowsTest(unittest.TestCase):
         self.assertEqual(row["specs"], "WARRIOR Arms 40/4; SHAMAN Restoration 30/3")
 
     def test_all_players_sum_only_the_folded_classes(self):
-        # MAGE also applied 900300 but its own suggestion was not folded (not R8, or ruled out):
+        # MAGE also applied 900300 but its own suggestion was not folded (not R0, or ruled out):
         # its players must not be added, or `players` disagrees with the row's specs and context.
         extra = dict(CLASS_PLAYERS)
         extra[("MAGE", "BUFF", 900300)] = 50
@@ -215,7 +215,7 @@ class ReviewFilesTest(unittest.TestCase):
             self.assertIn("`%s`" % col, md)
         for value in ("Approve", "Reject", "`A`", "`R`", "`Y`", "`N`"):
             self.assertIn(value, md)
-        for key in ("defensives", "offensiveCDs", "externals", "consumables"):
+        for key in ("defensives", "offensiveCDs", "externals", "racials"):
             self.assertIn("`%s`" % key, md)
         self.assertIn("apply", md)
         self.assertIn("8 rows", md)

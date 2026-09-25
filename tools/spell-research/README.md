@@ -389,8 +389,32 @@ or `ingest` changes nothing. Run the addon's green gate after it, as for any `Ca
 Below the bar an aura is still in the dictionary, and reported in `FLAGS.md` when it is listed; it
 is never proposed. A key already in `decisions.json`, accepted or rejected, is never proposed
 again; a sheet row ruled by `ingest` (keyed `<proposal key>#<spell id>#<row type>`) is never put on
-the sheet again, and a proposal whose rows are all ruled is not proposed again. The category suggestion rules R1 to R9 are the spec's table, implemented in
-`sid_propose.py`.
+the sheet again, and a proposal whose rows are all ruled is not proposed again.
+
+### Category rules
+
+`sid_propose.suggest` reads one aura's class-wide evidence and DB2 facts; the first rule that
+matches wins. R1 to R9 are the spec's table; R0 was added, and R8 lost its category, when the owner
+dropped Consumables and added Group buffs, Stances and Racials (2026-09-25).
+
+| Rule | When | Category | Confidence |
+|---|---|---|---|
+| R0 | DB2 puts the aura (or the cast that lands it: trigger edge or CastToAura) on a `Racial - <race>` skill line (`sid_db2.racial_auras`) | Racials | high |
+| R1 | ≥ 90% self-applied, and DB2 says it reduces damage taken, absorbs or grants immunity | Defensive cooldowns | high |
+| R2 | ≥ 30% of applications land in group bursts, and DB2 says it reduces damage taken, absorbs, heals over time or raises the group's haste | Raid cooldowns | high |
+| R3 | ≥ 90% self-applied, DB2 says it raises damage, haste, critical strike or a stat, recast ≥ 60 s | Offensive cooldowns | high |
+| R4 | DB2 says it raises movement speed | Movement | high |
+| R5 | ≥ 70% of applications go to one other player | Support | medium |
+| R6 | DB2 says it heals over time or absorbs, more than 50% onto others, recast < 30 s | Healing | medium |
+| R7 | only tank specs apply it, ≥ 90% self-applied, recast < 30 s | Active mitigation | medium |
+| R8 | not in the player-castable pool: an item or consumable effect | none (no proposal) | high |
+| R9 | none of the above, with some self or single evidence | Utility | low |
+
+The shares and recasts are `sid_propose`'s constants (`SELF_SHARE`, `GROUP_SHARE`, `SINGLE_SHARE`,
+`OTHERS_SHARE`, `LONG_RECAST`, `SHORT_RECAST`). No rule proposes into Group buffs or Stances: their
+lists are the owner's. Nothing is ever moved out of Racials, because the racial skill lines do not
+reach every racial's aura (Stoneform 65116 and Fireblood 273104 are on none in build
+12.1.0.69875), so R0 not matching a listed racial is no evidence it is misfiled.
 
 ### The artifacts
 
@@ -409,10 +433,11 @@ the sheet again, and a proposal whose rows are all ruled is not proposed again. 
 - `CORRECTIONS.md`: replace, add and move proposals for listed ids.
 - `PROPOSED_ADDITIONS.md`: new auras above the bar, grouped by recommended category, each with a
   rule and a one-sentence reason. Only high- and medium-confidence suggestions are proposed; a
-  low-confidence one (R9 Utility) stays in the dictionary's `suggested_category` column. An item
-  effect (R8) applied by two or more classes is one proposal under class `ALL`, its evidence and
-  player counts summed across the classes. The summary line gives the counts before and after:
-  candidates, dropped as low confidence, folded, already ruled, proposed.
+  low-confidence one (R9 Utility) stays in the dictionary's `suggested_category` column. A racial
+  (R0) is one proposal under class `ALL`, whichever classes applied it, its evidence and player
+  counts summed across the classes; an item effect (R8) is never proposed. The summary line gives
+  the counts before and after: candidates, dropped as low confidence, folded, already ruled,
+  proposed.
 - `FLAGS.md`: unverified and stale ids, below-the-bar sightings, and the crowd-control debuff
   cross-check (report only, never proposed).
 - `SOURCES.md`: logs scanned, date range, bytes, skipped lines, DB2 build and thresholds.

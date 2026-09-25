@@ -322,12 +322,13 @@ def _corrections_md(date, corr, label, th):
 
 def _addition_counts_line(c):
     # type: (dict) -> str
-    """SID-12's before/after: raw candidates, the low-confidence drop, the fold, ruled, proposed."""
+    """SID-12's before/after: raw candidates, the low-confidence drop, the racial fold, ruled,
+    proposed."""
     return ("%s above the bar in no category: %s dropped as low confidence (R9 Utility; they stay in "
             "the dictionary's suggested_category and rule columns); %s folded into %s; %s; %s."
             % (_n(c.get("raw", 0), "candidate"), c.get("low", 0),
-               _n(c.get("folded", 0), "item-effect candidate"),
-               _n(c.get("all", 0), "class-neutral (ALL) proposal"),
+               _n(c.get("folded", 0), "racial candidate"),
+               _n(c.get("all", 0), "class-neutral (ALL) racial proposal"),
                "%d already ruled" % c.get("ruled", 0), "%d proposed" % c.get("proposed", 0)))
 
 
@@ -340,7 +341,7 @@ def _additions_md(date, adds, label, shipped, th, counts=None):
     out = ["# Proposed additions — %s" % date, "",
            "Buffs that players applied, above the evidence bar (%s from %s) that are in no `spells` "
            "category, grouped by the recommended category. Each names the rule that chose it "
-           "(R1-R9, the spec's table), a reason in plain words and a confidence."
+           "(R0-R9: the spec's table plus R0 Racials), a reason in plain words and a confidence."
            % (_n(th["min_applications"], "application"), _n(th["min_players"], "player")), "",
            "%s in %s." % (_n(len(adds), "addition"), _n(len(keys), "category")), ""]
     if counts:

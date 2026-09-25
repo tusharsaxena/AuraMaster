@@ -505,11 +505,11 @@ class Sid12AdditionCountsTest(unittest.TestCase):
         tmp = Path(tempfile.mkdtemp(prefix="sid-counts-"))
         self.addCleanup(shutil.rmtree, str(tmp), True)
         p = sid_propose.Proposal(
-            type="addition", category="consumables", from_category="", klass="ALL", name="Well Fed",
+            type="addition", category="racials", from_category="", klass="ALL", name="Berserking",
             listed=[], proposed=[900300], evidence={900300: {"WARRIOR Arms": (40, 4),
                                                              "SHAMAN Restoration": (30, 3)}},
-            rule="R8", reason="A reason.", confidence="high", applications=70)
-        shipped = [{"key": "consumables", "label": "Consumables", "aura": "BUFF", "classes": {}}]
+            rule="R0", reason="A reason.", confidence="high", applications=70)
+        shipped = [{"key": "racials", "label": "Racials", "aura": "BUFF", "classes": {}}]
         sid_artifacts.write_bundle(tmp, "2026-09-24", [], [p], [], shipped,
                                    {"thresholds": {"min_applications": 20, "min_players": 3}},
                                    addition_counts=counts)
@@ -520,20 +520,20 @@ class Sid12AdditionCountsTest(unittest.TestCase):
                            "proposed": 285})
         self.assertIn("2046 candidates above the bar", text)
         self.assertIn("1500 dropped as low confidence", text)
-        self.assertIn("300 item-effect candidates folded into 40 class-neutral (ALL) proposals",
+        self.assertIn("300 racial candidates folded into 40 class-neutral (ALL) racial proposals",
                       text)
         self.assertIn("1 already ruled", text)
         self.assertIn("285 proposed", text)
         self.assertIn("\n\n1 addition in 1 category.\n\n2046 candidates", text)
         self.assertIn("285 proposed.\n\n## ", text)
         self.assertIn("suggested_category", text)
-        self.assertIn("- **Well Fed** (900300) · ALL — WARRIOR Arms 40 apps / 4 players; "
-                      "SHAMAN Restoration 30 apps / 3 players — R8 — high", text)
+        self.assertIn("- **Berserking** (900300) · ALL — WARRIOR Arms 40 apps / 4 players; "
+                      "SHAMAN Restoration 30 apps / 3 players — R0 — high", text)
 
     def test_the_counts_read_singular(self):
         text = self.write({"raw": 1, "low": 1, "folded": 1, "all": 1, "ruled": 0, "proposed": 1})
         self.assertIn("1 candidate above the bar", text)
-        self.assertIn("1 item-effect candidate folded into 1 class-neutral (ALL) proposal", text)
+        self.assertIn("1 racial candidate folded into 1 class-neutral (ALL) racial proposal", text)
 
     def test_no_counts_no_line(self):
         self.assertNotIn("candidates above the bar", self.write(None))
@@ -545,7 +545,8 @@ class Sid12AdditionCountsTest(unittest.TestCase):
                          r"\d+ candidates? above the bar in no category: \d+ dropped as low "
                          r"confidence")
         self.assertRegex(run.out, r"Additions from \d+ candidates?: \d+ low confidence "
-                                  r"\(dictionary only\), \d+ folded into \d+ ALL proposals?")
+                                  r"\(dictionary only\), \d+ racial candidates? folded into \d+ "
+                                  r"ALL racial proposals?")
 
 
 if __name__ == "__main__":

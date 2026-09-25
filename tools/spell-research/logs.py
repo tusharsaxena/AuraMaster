@@ -126,6 +126,7 @@ def cmd_propose(args):
     decisions = load_decisions(args.decisions)
     signals = sid_db2.aura_signals(tables["SpellEffect"], _aura_ids(agg, "BUFF"))
     pool, pool_names = sid_db2.castable(tables)
+    racials = sid_db2.racial_auras(tables)
     cc_ids = sid_db2.cc_spell_ids(tables["SpellEffect"], tables["SpellCategories"],
                                   _aura_ids(agg, "DEBUFF"))
     th = sid_propose.Thresholds(min_applications=args.min_apps, min_players=args.min_players)
@@ -134,15 +135,15 @@ def cmd_propose(args):
     proposals = (sid_propose.corrections(agg, spec_map, names, shipped, family, decisions, th,
                                          cc_ids=cc_ids)
                  + sid_propose.moves(agg, spec_map, names, shipped, signals, pool, candidates,
-                                     decisions, th, pool_names=pool_names)
+                                     decisions, th, pool_names=pool_names, racials=racials)
                  + sid_propose.additions(agg, spec_map, names, shipped, signals, pool, candidates,
                                          decisions, th, pool_names=pool_names,
-                                         summary=addition_counts))
+                                         summary=addition_counts, racials=racials))
     flags = sid_propose.flags(agg, spec_map, names, shipped, family, cc_ids, th)
     rows = sid_artifacts.dictionary_rows(
         agg, spec_map, names, shipped,
         sid_propose.suggestions(agg, spec_map, signals, pool, candidates, pool_names=pool_names,
-                                names=names))
+                                names=names, racials=racials))
 
     bundle.mkdir(parents=True, exist_ok=True)
     in_bundle = bundle / "evidence.json"
@@ -166,10 +167,11 @@ def cmd_propose(args):
     corr = sum(1 for p in proposals if p.type in sid_artifacts.CORRECTION_TYPES)
     print("Proposed into %s: corrections %d, additions %d, flags %d; dictionary rows %d"
           % (bundle, corr, len(proposals) - corr, len(flags), len(rows)))
-    print("Additions from %s: %d low confidence (dictionary only), %d folded into %s"
+    print("Additions from %s: %d low confidence (dictionary only), %s folded into %s"
           % (sid_propose.plural(addition_counts.get("raw", 0), "candidate"),
-             addition_counts.get("low", 0), addition_counts.get("folded", 0),
-             sid_propose.plural(addition_counts.get("all", 0), "ALL proposal")))
+             addition_counts.get("low", 0),
+             sid_propose.plural(addition_counts.get("folded", 0), "racial candidate"),
+             sid_propose.plural(addition_counts.get("all", 0), "ALL racial proposal")))
     print("Review sheet: %s (explained in %s)" % (bundle / "REVIEW.csv", bundle / "REVIEW.md"))
     print("Review: %s, %s; queue: %s; dictionary: %s"
           % (bundle / "CORRECTIONS.md", bundle / "PROPOSED_ADDITIONS.md",

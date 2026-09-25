@@ -396,7 +396,7 @@ ALL_CLASS_THRESHOLD = 7
 NO_SPELL_FAMILY = 0
 
 # The class-key order `defaults/Categories.lua` writes its `spells({ ... })` tables in. `ALL` goes
-# last there too (see `consumables`), so the emitted fragment drops straight in.
+# last there too (see its `ALL` lines), so the emitted fragment drops straight in.
 CLASS_EMIT_ORDER = (
     "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN",
     "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER", "ALL",

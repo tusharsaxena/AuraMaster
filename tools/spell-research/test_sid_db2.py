@@ -285,7 +285,7 @@ class PlayerPoolTest(unittest.TestCase):
 
     def test_castable_closes_over_trigger_edges(self):
         # SID-10, the real run: the bare build_pool left 1,532 class procs (Bone Shield, Dancing
-        # Rune Weapon's aura, Touch of Karma, ...) outside the pool, and R8 filed them as consumables.
+        # Rune Weapon's aura, Touch of Karma, ...) outside the pool, and R8 filed them as items.
         ids, _names = self.castable(effects=["1,0,6,81256,49028"])
         self.assertIn(81256, ids)
 
@@ -302,6 +302,35 @@ class PlayerPoolTest(unittest.TestCase):
                                     names=["49028,Dancing Rune Weapon", "81256,Dancing Rune Weapon",
                                            "431971,Tempered Potion"])
         self.assertEqual(names, {"DEATHKNIGHT": {"dancing rune weapon"}})
+
+
+class RacialAurasTest(unittest.TestCase):
+    """racial_auras: every spell on a "Racial - <race>" skill line, closed over EffectTriggerSpell,
+    mapped to its line (rule R0)."""
+
+    def racial(self, effects=()):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            write_csv(d / "SkillLine.csv", "ID,DisplayName_lang,CategoryID,ParentSkillLineID",
+                      ["733,Racial - Troll,9,0", "101,Racial - Dwarf,9,0", "960,Death Knight,7,0",
+                       "777,Mounts,7,0"])
+            write_csv(d / "SkillLineAbility.csv", "ID,Spell,ClassMask,SkillLine",
+                      ["1,26297,0,733", "2,20594,0,101", "3,49028,0,960", "4,458,0,777"])
+            write_csv(d / "SpellEffect.csv", "ID,DifficultyID,Effect,EffectTriggerSpell,SpellID",
+                      list(effects))
+            cache = {p.stem: p for p in d.glob("*.csv")}
+            with redirect_stderr(io.StringIO()):
+                return sid_db2.racial_auras(cache)
+
+    def test_racial_lines_only(self):
+        # A class line (Death Knight) and a non-racial line (Mounts) contribute nothing.
+        self.assertEqual(self.racial(), {26297: "Racial - Troll", 20594: "Racial - Dwarf"})
+
+    def test_the_aura_a_racial_triggers_is_racial(self):
+        # Stoneform's cast 20594 triggering its aura 65116, as the pool's closure reads it.
+        got = self.racial(effects=["1,0,6,65116,20594", "2,0,6,81256,49028"])
+        self.assertEqual(got.get(65116), "Racial - Dwarf")
+        self.assertNotIn(81256, got)
 
 
 class CcSpellIdsTest(unittest.TestCase):
