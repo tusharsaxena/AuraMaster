@@ -42,7 +42,8 @@ goes away while it has auras to show. Your live auras keep drawing while you're 
 (or its **?**) opens the Containers page with that container already selected, and the **X** beside
 the **?** turns that container off (tick its **Enabled** box on Containers to bring it back). If you
 want a container's name on screen all the time, tick **Show name label** on Layout → Label: the
-name sits where the handle does, locked or unlocked, and the handle moves out past it. **Justify**
+name sits just outside its own container, on the side the handle uses, locked or unlocked, and
+while unlocked the handle moves out past it, so it reads handle, name, container. **Justify**
 on the same tab lines the name up left, center or right; until you pick one it is centered on bars
 and text and lined up with the first icon on icons.
 
@@ -81,7 +82,8 @@ wide. It never sits on the side the other grows away from. If the container you 
 different way from this one, a dialog asks first: this one then grows like the chain it joins, and
 gets its own growth back if you detach it. While unlocked, every handle sits just outside its own
 container, so a chain reads handle, container, handle, container down one column; the chain spreads
-out to make room for the handles and closes up again when you lock. A small gold diamond marks each
+out to make room for the handles (and for names you show) and closes up again when you lock. A
+container beside another sits clear of that one's handle and name. A small gold diamond marks each
 spot where one container joins another. The same page covers growth direction,
 spacing, scale and tooltips, and right-clicking one of your own buffs cancels it unless you switch
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
@@ -172,7 +174,8 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 3. If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output,
    and paste it into a [GitHub issue](https://github.com/tusharsaxena/AuraMaster/issues).
 
-The report is added after the debug trace in the same window, so one copy carries both.
+The report is added after the debug trace in the same window, so one copy carries both. It works
+while Aura Master is switched off too, and then says so at the top.
 
 ## Issues and feature requests
 

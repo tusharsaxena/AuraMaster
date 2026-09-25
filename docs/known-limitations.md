@@ -235,7 +235,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   DX-1), so a group can read `shown=?` or `shown=2+1?` and a button be listed as `shown=?`; and a
   button's aura id may still be out of reach, so a shown line can carry only the name or the icon, and the `predicted:` verdict is the addon's own
   reading of its spell lists, not the engine's answer. The report appends to the console, whose
-  1500-line buffer can push older trace lines out.
+  1500-line buffer can push older trace lines out. While the addon is disabled or stood down it
+  builds no container, so after a login made while off the `[Plan]` lines are predictions only,
+  and once built they are from the last apply; the header says which (batch 10 F8).
 - **While unlocked (and not in test mode), an empty chain is laid out from a prediction, and still
   collapses where that cannot be made.** The engine cannot say whether it is empty (its frame count
   is a pool that never shrinks, its size is secret), so the addon predicts it from `C_UnitAuras` and

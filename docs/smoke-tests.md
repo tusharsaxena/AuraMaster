@@ -1475,3 +1475,84 @@ batch 10 on the same branch.
      shows, batch 10 F2); in test mode → B sits on the same side of A's placeholder block; with A
      empty and unlocked → B sits on that side of A's one-element outline. No Lua error, taint or
      ADDON_ACTION_BLOCKED in any of them, and entering combat unlocked puts B back on A's engine.
+
+## AB. Feedback batch 10 sign-off (owner to run)
+
+The in-game checks for feedback batch 10 (`docs/superpowers/specs/2026-09-25-feedback-batch10-design.md`,
+owner decisions F1-F8). None of them has been run: each is for the owner, and none is marked passed
+here. Checks above that batch 10 rewrote are listed beside the new ones. Run on a build carrying
+schema v10, first on the owner's own SavedVariables (stamped v9 by the batch 9 build) for check 234,
+then on the owner's setup: the Text chain *Text (Offensive Cooldowns)* (#13) → *Text (Defensive
+Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **Bottom**, growing down.
+
+| Requirement | Check |
+|---|---|
+| F1 every strip in its own container's column, on its before side (the mockup) | 226, 227 (and 41, 192, 223) |
+| F2 the chain spreads while strips show, and closes up on lock | 226-228 (and 225) |
+| F3 strip, label, block; the label justified inside its block, locked and unlocked | 229, 230 (and 203, 204, 215) |
+| F1, F3 growth up mirrors all of it | 231 |
+| F4 a side follower clears its parent's strip and label | 232 (and 223) |
+| F5 the join diamond, the test-mode block outline and the tooltip line stay | 226, 227 (and 221, 222) |
+| F6 the inherited-growth note | 233 (and 67) |
+| F7 schema v10 on the owner's v9 profile | 234 |
+| F8 diagnostics while disabled or stood down | 235 |
+
+226. **The mockup, unlocked (F1, F2, F5).** Labels off on all three, test mode off, `/am unlock` →
+     one column reading, top to bottom: #13's strip, #13's block, #14's strip, #14's block, #15's
+     strip, #15's block, as in the owner's mockup. No strip sits beside the column or over another
+     container's block, each strip is lined up with its own block, and each strip sits one Spacing
+     past the block before it. A small gold diamond sits on each of the two joins; hover #14's strip
+     → the tooltip carries "Joined to the *point* of 'Text (Offensive Cooldowns)'. Change the side on
+     Layout > Anchor."
+227. **The mockup in test mode (F1, F2, F5).** Still unlocked, `/am test` → the same order around
+     the placeholder blocks: strip, block, strip, block, strip, block, each block enclosed by its own
+     outline, no placeholder under another container's strip. `/am lock` with test mode still on →
+     the strips and diamonds go, each follower closes up to one Spacing past the block before it,
+     and each block keeps its outline. `/am test off`.
+228. **Collapse on lock (F2).** From 226, `/am lock` → every strip and diamond goes and the chain
+     closes up: #14 sits one Spacing below #13's last line, #15 one Spacing below #14's, plus any
+     X/Y nudge, where they sat locked on the batch 9 build. `/am unlock` → it spreads again at once,
+     with no `/reload`. Toggle three times; no Lua error, taint or ADDON_ACTION_BLOCKED, and entering
+     combat unlocked raises none either.
+229. **Label order, unlocked (F3, F2).** Tick **Show name label** on all three, `/am unlock` → each
+     container reads strip, label, block, top to bottom, the root included: the label between its
+     own strip and its own block, never above its strip and never at the far left of the screen.
+     Each label is centered inside its block's width (Text, Justify Center), and each follower sits
+     one label row further down to make the room, so no label touches the block above it.
+230. **Label order and justify, locked (F3).** `/am lock` → each label sits directly on top of its
+     own block, centered inside the block's width; none floats to the left of the column (the
+     owner's batch 9 screenshot). #14's Justify Left, then Right → its name moves to that edge of
+     #14's block (4px in); its X and Y offsets move it on top of that; put Center back. Untick #14's
+     label → #15 moves up by one label row; untick all three → the chain matches check 228.
+231. **Growth up mirrors it (F1, F3).** Labels on, set #13's **Grow vertically** to Up → the whole
+     chain mirrors: #14 sits above #13 and #15 above #14, and unlocked each container reads, bottom to
+     top, strip, label, block (the strip below its block, the label between them). `/am lock` → each
+     label sits directly below its own block, centered, and the followers close up. `/am test` → the
+     same around the placeholders. Set it back to Down.
+232. **A side follower (F4).** An Icons A (one icon wide, a long name such as "Player buffs (All)",
+     label on) with an Icons B attached on **Right, top**, label on: unlocked → B's strip and label
+     sit on B's own before side, above B, and B is pushed down past A's strip and label rows, so B's
+     strip and label overlap neither A's strip nor A's label; `/am lock` → B stays one label row
+     lower while A's label shows, so A's name never runs over B's name; untick A's label → B sits
+     level with A. Set B to **Left, top** → B is never pushed, and its strip is lined up with its
+     edge that faces A, over none of A's elements. No Lua error in any of them.
+233. **The inherited note (F6).** Open #14's Layout → **Growth** → above the dimmed Fill, Grow
+     horizontally and Grow vertically rows it reads "Fill and growth follow 'Text (Offensive
+     Cooldowns)' because this container is attached to it." in dim gold, the same gold as "(yours)"
+     on General → Spell Categories, with a row's gap below it before Fill. #13's Growth tab still
+     shows its follower-count line, unchanged.
+234. **Schema v10 on the owner's v9 profile (F7).** Back up `WTF/…/SavedVariables/AuraMaster.lua`,
+     log in with it on the batch 10 build, then `/am debug` → the console holds one
+     `[Migrate] v10 profile '<name>'` line per profile, and no v9 line. `/am diagnostics` → the header
+     reads schema v10, and no screen container lists `attach.y=-4` on its `non-default:` or `inert:`
+     line (check 211). `/am select` a screen container, `/am get container.attach.y` → `0`. `/am
+     select` each attached container, `/am get container.attach.edge` → `after-start`, or the side
+     picked since; its Side dropdown matches. Every chain sits where it did before the login, locked
+     and in test mode. `/reload` → no `[Migrate]` line at all.
+235. **Diagnostics while disabled (F8).** `/am disable`, then `/am diagnostics` → after the state
+     flags the header adds "addon disabled: containers are hidden and not updated; the plan lines are
+     from the last apply", with no Lua error. `/reload` while still disabled, `/am diagnostics` →
+     the line reads "addon disabled: containers are not built; predictions only", and each
+     container's `[Plan]` line reads `not built (addon disabled)`, with the `Shown` section holding
+     only `predicted:` lines. `/am enable`, `/am diagnostics` → no such line, and the plan verdicts
+     read as they did before the disable.

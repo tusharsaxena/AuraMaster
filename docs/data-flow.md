@@ -296,6 +296,12 @@ container the registry holds at that moment and draws them in the same turn. A p
 while down is remembered and passed to that sync, so a stand-up in combat parks every id the switch
 reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it.
 
+**`/am diagnostics` still answers while down, and says so** (batch 10 F8). Its header adds one plain
+line, `addon disabled: containers are not built; predictions only` after a login made while off,
+the `... hidden and not updated; the plan lines are from the last apply` form once containers were
+built, or `addon stood down (holds: ...)` for another hold, and each `[Plan] #N not built` names
+its reason (`docs/debug.md`).
+
 **Not a draw gate.** A handler that early-returns has not stopped watching, it has stopped reacting,
 and the client still walks the registration list and still enters Lua on every event
 (anti-pattern #85). `tests/test_disabled.lua` therefore asserts on the registration set, the live
