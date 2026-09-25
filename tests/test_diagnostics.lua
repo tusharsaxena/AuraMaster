@@ -297,14 +297,17 @@ test("diag: a row scoped to an aura type is not listed for a container of the ot
         if r.path == "container.icons.width" then row = r end
     end
     assertTrue(row ~= nil, "no icons.width row")
-    row.auraTypes = { HELPFUL = true }
+    row.auraTypes = { HARMFUL = true }
+    -- #2 is an icons debuff container; the new one is an icons buff container.
+    local buffsId = NS.ContainerManager.Create({ unit = "player", auraType = "HELPFUL", style = "icons" })
     NS.SetByPath("container.icons.width", 50, 2)
-    NS.SetByPath("container.icons.width", 50, 1)
+    NS.SetByPath("container.icons.width", 50, buffsId)
     local lines = build(NS)
-    assertTrue(has(lines, "[Cfg] #1 non-default:"):find("icons.width=50", 1, true) ~= nil, dump(lines))
-    local two = has(lines, "[Cfg] #2 non-default:") or ""
+    assertTrue(has(lines, "[Cfg] #2 non-default:"):find("icons.width=50", 1, true) ~= nil, dump(lines))
+    local other = (has(lines, "[Cfg] #" .. buffsId .. " non-default:") or "")
+        .. (has(lines, "[Cfg] #" .. buffsId .. " inert:") or "")
     -- red under: cfgLines ignoring NS.RowApplies
-    assertTrue(two:find("icons.width", 1, true) == nil, two)
+    assertTrue(other:find("icons.width", 1, true) == nil, other)
 end)
 
 test("diag: the plan verdict reads in sync, PENDING, DRIFT or not built", function()
@@ -379,6 +382,122 @@ test("diag: predictions come from ExplainSpell over the unit's readable auras", 
     assertTrue(has(lines, "[Shown] #1 predicted: 1459 Arcane Intellect -> hidden (rank 2") ~= nil, dump(lines))
     -- The debuff container reads the HARMFUL set, which is empty here.
     assertTrue(has(lines, "[Shown] #2 predicted: 774") == nil, dump(lines))
+end)
+
+-- ── secret-safe button reads and isolation (batch 9 DX-1) ─────────────────────────────────────
+
+--- A secret BOOLEAN, the value an engine button's IsShown answers out of combat (B9 Problem D). Lua
+--- 5.1 calls __eq only between two tables, so `v == true` cannot raise headlessly: the planted
+--- issecretvalue names it instead, and the assert that tells is `shown=?`.
+local function secretBoolean(mocks)
+    local secret = setmetatable({}, {
+        __eq = function() error("attempt to compare local 'v' (a secret boolean value)", 2) end,
+        __tostring = function() return "<secret boolean>" end,
+    })
+    mocks.issecretvalue = function(v) return rawequal(v, secret) or rawequal(v, mocks.__SECRET) end
+    return secret
+end
+
+test("diag: an engine button whose IsShown is secret out of combat costs no section", function()
+    local NS, mocks = fresh()
+    local secret = secretBoolean(mocks)
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(1, 774, "Rejuvenation") } })
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    local f = mocks.__stubFrame()
+    rawset(f, "IsShown", function() return secret end)
+    inst.engine.__frames[key] = { f }
+    local lines = build(NS)
+    assertTrue(has(lines, "failed") == nil, dump(lines))
+    -- red under: `ok and v == true` outside the pcall (a secret counts as hidden headlessly: shown=0)
+    local g = has(lines, "[Plan] #1 " .. key)
+    assertTrue(g ~= nil and g:find("frames=1 shown=?", 1, true) ~= nil, dump(lines))
+    assertTrue(has(lines, "[Shown] #1 " .. key .. " btn1 shown=?") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Shown] #1 predicted: 774 Rejuvenation") ~= nil, dump(lines))
+end)
+
+test("diag: a partly secret group counts the readable buttons and the unknowable ones apart", function()
+    local NS, mocks = fresh()
+    local secret = secretBoolean(mocks)
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    local a, b, c = mocks.__stubFrame(), mocks.__stubFrame(), mocks.__stubFrame()
+    rawset(c, "IsShown", function() return secret end)
+    inst.engine.__frames[key] = { a, b, c }
+    local g = has(build(NS), "[Plan] #1 " .. key)
+    assertTrue(g ~= nil and g:find("frames=3 shown=2+1?", 1, true) ~= nil, tostring(g))
+end)
+
+--- A button every member read of which raises: the engine's forbidden-object answer.
+local function forbiddenButton(shown)
+    return setmetatable({ IsShown = function() return shown end }, {
+        __index = function(_, k) error("attempt to access forbidden object: " .. tostring(k)) end,
+    })
+end
+
+test("diag: a raising button probe costs one line, never the predictions", function()
+    local NS, mocks = fresh()
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(1, 774, "Rejuvenation") } })
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    inst.engine.__frames[key] = { forbiddenButton(true) }
+    local lines = build(NS)
+    -- red under: identify() indexing the button outside any pcall (the whole shown section is lost)
+    assertTrue(has(lines, "section shown #1 failed") == nil, dump(lines))
+    assertTrue(has(lines, "[Shown] #1 " .. key .. " btn1") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Shown] #1 predicted: 774 Rejuvenation") ~= nil, dump(lines))
+end)
+
+test("diag: a plan group that raises keeps later groups and the warnings", function()
+    local NS, mocks = fresh()
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(1, 774, "Rejuvenation") } })
+    local inst = NS.ContainerManager.instances[1]
+    local good = inst.plan.groups[1]
+    local bad = setmetatable({ key = "gBad" }, {
+        __index = function(_, k) error("broken group field " .. tostring(k)) end,
+    })
+    inst.plan.groups = { bad, good }
+    inst.warnings = { "a planted warning" }
+    local lines = build(NS)
+    -- red under: one pcall for the whole plan section (the raise costs every later line)
+    assertTrue(has(lines, "[Plan] #1 " .. good.key) ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #1 warning: a planted warning") ~= nil, dump(lines))
+    assertTrue(has(lines, "gBad") ~= nil, "the raising group left no line: " .. dump(lines))
+    assertTrue(has(lines, "[Shown] #1 predicted: 774 Rejuvenation") ~= nil, dump(lines))
+end)
+
+-- ── inert rows (batch 9 DX-2) ─────────────────────────────────────────────────────────────────
+
+test("diag: [Cfg] lists only the settings in use; the rest go on an inert line", function()
+    local NS = fresh()
+    -- #1 is a bars container on the screen: an attach offset and target do nothing there.
+    NS.SetByPath("container.attach.y", -4, 1)
+    NS.SetByPath("container.attach.container", 2, 1)
+    NS.SetByPath("container.text.autoSize", false, 1)
+    NS.SetByPath("container.bars.width", 250, 1)
+    -- #2 follows #1: its screen position does nothing.
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.position.y", -120, 2)
+    -- #4 is a Text container: Size to fit off is in use.
+    NS.SetByPath("container.text.autoSize", false, 4)
+    local lines = build(NS)
+    local one = has(lines, "[Cfg] #1 non-default:") or ""
+    -- red under: cfgLines filtering on NS.RowApplies (aura types) alone
+    for _, gone in ipairs({ "attach.y", "attach.container", "text.autoSize" }) do
+        assertTrue(one:find(gone, 1, true) == nil, gone .. " listed as in use: " .. one)
+    end
+    assertTrue(one:find("bars.width=250", 1, true) ~= nil, one)
+    local inert = has(lines, "[Cfg] #1 inert:") or ""
+    for _, kept in ipairs({ "attach.y=", "attach.container=", "text.autoSize=" }) do
+        assertTrue(inert:find(kept, 1, true) ~= nil, kept .. " missing from the inert line: " .. dump(lines))
+    end
+    local two = has(lines, "[Cfg] #2 non-default:") or ""
+    assertTrue(two:find("attach.mode=", 1, true) ~= nil and two:find("attach.container=", 1, true) ~= nil, two)
+    assertTrue(two:find("position.y", 1, true) == nil, two)
+    assertTrue((has(lines, "[Cfg] #2 inert:") or ""):find("position.y=", 1, true) ~= nil, dump(lines))
+    assertTrue((has(lines, "[Cfg] #4 non-default:") or ""):find("text.autoSize=", 1, true) ~= nil, dump(lines))
+    assertTrue(has(lines, "[Cfg] #3 inert:") == nil, "an inert line with nothing on it: " .. dump(lines))
 end)
 
 -- ── robustness and the caps (DG-3, DG-4) ──────────────────────────────────────────────────────

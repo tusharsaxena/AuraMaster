@@ -77,6 +77,25 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 - **Guards every binding** with `pcall` (`Style.Bind`, `callEngine`), so a refusal costs one binding,
   not the engine's frame batch.
 
+## An engine button's shown state is secret out of combat
+
+**What was seen.** Out of combat, with `Compat.AurasAreSecret()` false, `/am diagnostics` raised
+"attempt to compare local 'v' (a secret boolean value)" in the `frameShown` helper of
+`modules/Diagnostics.lua` (owner smoke run of batch 8, 2026-09-25, test mode on). The pcall covered
+the `IsShown` call, which succeeded; the comparison of its answer ran outside it and raised.
+
+**The restriction.** "Auras are not secret" does not mean "an engine button is readable". The engine
+drives each aura button's Shown aspect from aura data, so `IsShown` on a button from
+`GetAuraGroupFrame` can answer a SECRET boolean out of combat, like the button's size and frame level
+(the two sections below). In combat the same call raises outright (Text chains and animations,
+below). Not yet settled in game: whether it is secret on every button, or only on buttons a disabled
+engine hid (test mode disables every engine).
+
+**What this addon does.** Nothing compares a value read off an engine button without testing it with
+`NS.Secrets.CanAccess` first. The diagnostic report's `frameShown` answers true, false or nil (not
+knowable), prints `shown=?` or `shown=<n>+<k>?` for a group, and lists a button it cannot judge as
+`shown=?` rather than dropping it (batch 9, DX-1).
+
 ## Anchoring an aura container
 
 **The restriction.** Once an engine has an aura group, it forbids untrusted layout scripts, and an
@@ -493,7 +512,7 @@ values was secret.
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:301`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:309`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
   page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header

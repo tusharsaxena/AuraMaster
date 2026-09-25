@@ -14,12 +14,16 @@ local _, NS = ...
 -- diagnostic English, not routed through NS.L, like every trace and the [Init] summary; the one chat
 -- line that says where the report went is routed.
 --
--- SECRET-SAFE (DG-3). While auras are secret (Compat.AurasAreSecret: any combat, an encounter, a key,
--- a match) every aura read raises and so does touching an engine button, so the report makes NO aura
--- API call and NO per-button call then; it reads the engine's per-group frame count alone. Every
--- field is stringified through NS.SafeToString before a format sees it, every number is tested with
--- Secrets.IsReadableNumber before arithmetic, and every section runs under pcall, so one failure
--- costs one line.
+-- SECRET-SAFE (DG-3, B9 DX-1). While auras are secret (Compat.AurasAreSecret: any combat, an
+-- encounter, a key, a match) every aura read raises and so does touching an engine button, so the
+-- report makes NO aura API call and NO per-button call then; it reads the engine's per-group frame
+-- count alone. "Auras are not secret" does NOT mean "an engine button is readable": out of combat a
+-- button's IsShown can still answer a SECRET boolean (docs/midnight-quirks.md, "An engine button's
+-- shown state is secret out of combat"), so every value read off a button is tested with
+-- Secrets.CanAccess before it is compared, and an unknowable one prints `?`. Every field is
+-- stringified through NS.SafeToString before a format sees it, every number is tested with
+-- Secrets.IsReadableNumber before arithmetic, and every section, every plan group, every group's
+-- button listing and the predictions each run under their own pcall, so one failure costs one line.
 --
 -- CAPPED (DG-4). The console keeps the newest MAX_BUFFER lines and Copy copies only those, so the
 -- report stops short of it: MAX_LINES in all, MAX_AURAS per unit and filter, MAX_IDS per id list. A
@@ -448,9 +452,26 @@ local function candSummary(cand)
     return "{" .. table.concat(parts, ",") .. "}"
 end
 
+--- `frame:method()`, the member index included, so a pcall around this covers a button whose
+--- every index raises (a forbidden object), not the call alone.
+local function callMethod(frame, method)
+    return frame[method](frame)
+end
+
+--- Whether an engine button is shown: true, false, or nil when that cannot be known. Out of combat
+--- an engine button's IsShown can answer a SECRET boolean even while auras are not secret, and
+--- comparing one raises in tainted code, so the answer is tested before it meets `==`.
 local function frameShown(frame)
-    local ok, v = pcall(frame.IsShown, frame)
-    return ok and v == true
+    local ok, v = pcall(callMethod, frame, "IsShown")
+    if not ok or not NS.Secrets.CanAccess(v) then return nil end
+    return v == true
+end
+
+--- The `shown=` text: the count, `?` when no button could be read, else `<shown>+<unknowable>?`.
+local function shownText(n, shown, unknown)
+    if unknown == 0 then return shown end
+    if unknown >= n then return "?" end
+    return str(shown) .. "+" .. str(unknown) .. "?"
 end
 
 --- The group's frame count and how many of them are shown. While secret only the count is read.
@@ -460,12 +481,22 @@ local function frameCounts(x, key)
     local ok, n = pcall(engine.GetAuraGroupFrameCount, engine, key)
     if not ok or not NS.Secrets.IsReadableNumber(n) then return "?", "?" end
     if x.secret then return n, "?" end
-    local shown = 0
+    local shown, unknown = 0, 0
     for i = 1, n do
         local okF, frame = pcall(engine.GetAuraGroupFrame, engine, key, i)
-        if okF and type(frame) == "table" and frameShown(frame) then shown = shown + 1 end
+        local s = okF and type(frame) == "table" and frameShown(frame)
+        if s == true then
+            shown = shown + 1
+        elseif s == nil then
+            unknown = unknown + 1
+        end
     end
-    return n, shown
+    return n, shownText(n, shown, unknown)
+end
+
+--- A plan group's key for a section name, read raw: the name is built outside the section's pcall.
+local function groupKey(g)
+    return type(g) == "table" and str(rawget(g, "key")) or "?"
 end
 
 local function groupLine(out, x, g)
@@ -481,7 +512,9 @@ local function planLines(out, x)
     out:add("Plan", "#%s %s", x.id, verdictOf(x, fresh))
     local plan = x.inst and x.inst.plan
     if not plan then return end
-    for _, g in ipairs(plan.groups or {}) do groupLine(out, x, g) end
+    for _, g in ipairs(plan.groups or {}) do
+        section(out, "plan #" .. str(x.id) .. " " .. groupKey(g), groupLine, x, g)
+    end
     for _, w in ipairs(x.inst.warnings or {}) do out:add("Plan", "#%s warning: %s", x.id, w) end
 end
 
@@ -497,18 +530,49 @@ local function isContainerRow(row, c)
     return NS.RowApplies(row, c)
 end
 
+--- Whether a row's `shownWhen` selector holds for container `c`, read the way the options library's
+--- shownNow reads it: `equals` is a value or a list of them, and a read that raises counts as held.
+local function selectorHolds(sw, c)
+    if type(sw) ~= "table" or sw.path == nil then return true end
+    local ok, value = pcall(NS.GetSetting, sw.path, c.id)
+    if not ok then return true end
+    local want = sw.equals
+    if type(want) ~= "table" then return value == want end
+    for _, w in ipairs(want) do
+        if value == w then return true end
+    end
+    return false
+end
+
+--- Whether a row's stored value does anything for container `c` (B9 DX-2): its switched subsection
+--- is the one drawn (a screen position on an attached container is not), and its page is not one
+--- the container's style disables (the Text page on a bars container). The page gate is each page's
+--- own `disabledFor`, recorded by NS.RegisterContainerPage.
+local function inUse(row, c)
+    if not selectorHolds(row.shownWhen, c) then return false end
+    local gates = NS.ContainerPageDisabledFor or {}
+    local disabledFor = gates[row.page]
+    if type(disabledFor) ~= "function" then return true end
+    local ok, off = pcall(disabledFor, c)
+    return not (ok and off)
+end
+
+--- The non-default rows in use, then the inert ones on their own line (only when there are any):
+--- a stale attach offset comes back into use on a mode switch, so it is shown, not dropped.
 local function cfgLines(out, x)
-    local parts = {}
+    local parts, inert = {}, {}
     for _, row in ipairs(NS.Schema) do
         if isContainerRow(row, x.c) then
             local changed, v = differs(row.path, x.id)
             if changed then
-                local n = #parts
-                parts[n + 1] = row.path:sub(11) .. "=" .. formatValue(row, v)
+                local into = inUse(row, x.c) and parts or inert
+                local n = #into
+                into[n + 1] = row.path:sub(11) .. "=" .. formatValue(row, v)
             end
         end
     end
     joined(out, "Cfg", "#" .. str(x.id) .. " non-default:", parts)
+    if inert[1] then joined(out, "Cfg", "#" .. str(x.id) .. " inert:", inert) end
 end
 
 -- ---------------------------------------------------------------------------
@@ -545,10 +609,19 @@ local function probeRegions(frame)
     return nil
 end
 
-local function identify(frame)
+local function probe(frame)
     return probeInstance(frame) or probeRegions(frame) or "id=?"
 end
 
+--- The button's name for a [Shown] line; a probe that raises (a forbidden object) says so instead.
+local function identify(frame)
+    local ok, text = pcall(probe, frame)
+    if ok then return text end
+    return "id=? (probe failed: " .. str(text) .. ")"
+end
+
+--- One [Shown] line per shown button, and per button whose shown state cannot be known (`shown=?`,
+--- so a secret IsShown loses no button from the listing).
 local function groupButtons(out, x, g)
     local engine = x.inst.engine
     local ok, n = pcall(engine.GetAuraGroupFrameCount, engine, g.key)
@@ -556,13 +629,14 @@ local function groupButtons(out, x, g)
     local listed = 0
     for i = 1, n do
         local okF, frame = pcall(engine.GetAuraGroupFrame, engine, g.key, i)
-        if okF and type(frame) == "table" and frameShown(frame) then
+        local shown = okF and type(frame) == "table" and frameShown(frame)
+        if shown ~= false then
             listed = listed + 1
             if listed > Diag.MAX_IDS then
                 out.capped = true
                 return
             end
-            out:add("Shown", "#%s %s btn%s %s", x.id, g.key, i, identify(frame))
+            out:add("Shown", "#%s %s btn%s %s%s", x.id, g.key, i, shown and "" or "shown=? ", identify(frame))
         end
     end
 end
@@ -606,9 +680,11 @@ local function shownLines(out, x)
     end
     local inst = x.inst
     if inst and inst.engine and inst.plan then
-        for _, g in ipairs(inst.plan.groups or {}) do groupButtons(out, x, g) end
+        for _, g in ipairs(inst.plan.groups or {}) do
+            section(out, "shown #" .. str(x.id) .. " " .. groupKey(g), groupButtons, x, g)
+        end
     end
-    predictions(out, x)
+    section(out, "predictions #" .. str(x.id), predictions, x)
 end
 
 local CONTAINER_SECTIONS = {

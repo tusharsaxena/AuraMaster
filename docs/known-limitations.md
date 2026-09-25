@@ -200,8 +200,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   to fit on (the template's value); containers stored before schema v8 keep it off (D7).
 - **`/am diagnostics` cannot always name what a container shows** (batch 8 DG-2, DG-3). While auras are
   secret it reads no aura and calls nothing on an engine button, so `shown=?` and the per-group
-  frame count are all it prints. Out of combat a button's aura id may still be out of reach, so a
-  shown line can carry only the name or the icon, and the `predicted:` verdict is the addon's own
+  frame count are all it prints. Out of combat a button's shown state can itself be secret (batch 9
+  DX-1), so a group can read `shown=?` or `shown=2+1?` and a button be listed as `shown=?`; and a
+  button's aura id may still be out of reach, so a shown line can carry only the name or the icon, and the `predicted:` verdict is the addon's own
   reading of its spell lists, not the engine's answer. The report appends to the console, whose
   1500-line buffer can push older trace lines out.
 - **While unlocked (and not in test mode), a container attached to another sits one element past

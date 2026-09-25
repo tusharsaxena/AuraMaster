@@ -36,7 +36,7 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 | Tag | What it holds |
 |---|---|
 | `Diag` | Begin and end markers, the version and schema, the state flags, the apply queue, counts, and any `truncated` or `section ... failed` line |
-| `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full |
+| `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
 | `Cont` | One container: id, name, unit, aura type, style, enabled, attach, then its live flags (engine, shows, parked, staleData, classStale, retired engines, enchant frames, dormant, retiring) |
@@ -80,26 +80,46 @@ and checks the apply queue:
 ### `frames=`, `shown=`, `id=?` and `predicted`
 
 - `frames=` is how many buttons the engine made for the group and `shown=` is how many of them are
-  showing. `?` means the value could not be read.
+  showing. `?` means the value could not be read. Out of combat an engine button can still answer
+  its shown state as a secret (docs/midnight-quirks.md), so `shown=2+1?` means two buttons are
+  showing and one could not be judged; `shown=?` means none could. A button that cannot be judged
+  is still listed in `Shown`, as `btn<n> shown=? ...`.
 - A shown button is named by the aura instance the engine exposes, if it does. Otherwise it is named
   by the name or icon our own regions display, and `id=?` when neither can be read (an Icons
   container shows no name).
+- `id=? (probe failed: ...)` means reading the button raised; the report goes on.
 - `predicted` runs `FilterCompiler.ExplainSpell` over each readable aura. It is approximate: it
   reasons only about spell-list categories and the whitelist and blacklist. Cast by, duration,
   token, flag and dispel categories, and the friend or foe id rule, are decided by the engine.
 
+### `non-default:` and `inert:`
+
+A container's `Cfg` lines list only the settings that differ from the defaults. A value that does
+nothing for that container right now is kept off the `non-default:` line and printed on an `inert:`
+line of its own, which is left out when there is none:
+
+- a setting in a Layout > Anchor subsection that is not the one in use: the screen position of a
+  container attached to another, or the attach target and offsets of a container on the screen;
+- a setting on a style page that is not the container's style: the Text page's Size to fit on a bars
+  or icons container.
+
+Inert values are listed rather than dropped because some come back into use: a stale attach offset
+applies again once the container is attached.
+
 ## Combat and secret auras
 
 While auras are secret (any combat, an encounter, a keystone, a PvP match), every aura read raises
-and so does touching an engine button. So while they are secret:
+and so does touching an engine button. Out of combat, with auras readable, an engine button's shown
+state can still be secret; the report tests every value it reads off a button before comparing it,
+and prints `?` for one it cannot read. So while auras are secret:
 
 - no aura API is called: each unit that exists prints `unreadable`;
 - no button is touched: `shown=?`, and the `Shown` section prints one `skipped` line;
 - only the engine's per-group frame count is read.
 
 Every field is stringified through `NS.SafeToString`, `left` is computed only from readable
-numbers, and each section runs under `pcall`, so one failure prints `section ... failed` and the
-report goes on. For the full picture, run it out of combat.
+numbers, and each section runs under `pcall`, as does each plan group, each group's button listing
+and the predictions, so one failure prints `section ... failed` and the report goes on. For the full picture, run it out of combat.
 
 ## Caps
 

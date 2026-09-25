@@ -26,7 +26,7 @@ Resume at the first task, in order, that has no commit. A dirty tree is that tas
 | Task | Req | Depends | Status | Commit | Notes |
 |---|---|---|---|---|---|
 | P0 tab rename, smoke record | E7 | — | done | 73e44b5 515474b 73c72e4 | |
-| Q1 diagnostics secret-safe + inert rows | DX-1 DX-2 | — | todo | | |
+| Q1 diagnostics secret-safe + inert rows | DX-1 DX-2 | — | done | this commit (subject `B9-Q1: `; a commit cannot hold its own hash) | frameShown tri-state via CanAccess, shown=?/n+k?, per-group/per-listing/predictions pcall, probe pcall; [Cfg] `#N inert:` line from shownWhen + page disabledFor (NS.ContainerPageDisabledFor); attach.edge needs only CONTAINER_ONLY in Q6; quirks + debug.md + KL updated |
 | Q2 Size to fit Text-only; creates v9 | E6 MG-1 (autoSize half) | Q1 | todo | | |
 | Q3 live Size to fit never clips | TX-1 E8 | Q2 | todo | | |
 | Q4 label Justify | LJ-1 E7 | Q3 | todo | | |
