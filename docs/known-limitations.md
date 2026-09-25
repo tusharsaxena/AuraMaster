@@ -185,8 +185,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   centered, as before. That a zero-duration bar leaves the region empty is still an in-game check
   (`docs/smoke-tests.md`, checks 26 and 63). Moving the spark off the fill onto the elapsed
   background also moves it onto a different backdrop — the elapsed side's background defaults to
-  half-opaque and lets whatever sits behind the frame bleed through — so `wireSpark`
-  (`modules/Style_Bars.lua`) blends the spark normally there instead of additively, or that bleed-
-  through reads as "a random yellow-golden spark" (owner report 2026-09-14, `SP-1`); centered mode
-  keeps the additive blend, since its backdrop is the opaque fill. Verified in-game only
-  (`docs/smoke-tests.md`, check 85).
+  half-opaque and lets whatever sits behind the frame bleed through. So the bar dress
+  (`modules/Style_Bars.lua`) keeps the spark additive and desaturates its art in both modes, and
+  over the elapsed side it reads as the player's spark color, not the art's native gold (owner
+  report 2026-09-14, batch 7 `SP-1`). Normal blending was tried for the clipped spark and painted
+  the art's black matte as a box taller than the bar (feedback batch 8 `SP-1`), so the blend is
+  never BLEND. Verified in-game only (`docs/smoke-tests.md`, check 85).

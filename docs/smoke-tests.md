@@ -535,7 +535,7 @@ one. None of this is reproducible headlessly; these checks are.
     and that turning **Click-through** on restores mouseover targeting everywhere under the
     container, padding included.
 85. **A timed bar's spark reads the same with the timeless option on or off (owner report
-    2026-09-14, `SP-1`).** Put two live, timed auras of the same kind side by side on one bar
+    2026-09-14, batch 7 `SP-1`; re-fixed in feedback batch 8 `SP-1`/`SP-2`).** Put two live, timed auras of the same kind side by side on one bar
     container — say, two casts of the same buff so their sparks share a color and position along the
     bar. On **General** tick **Show the spark on auras without a duration**, screenshot or eyeball
     one bar's spark, then untick it and compare the same bar's spark again → the spark should look
@@ -545,11 +545,14 @@ one. None of this is reproducible headlessly; these checks are.
     comparison at a CUSTOM spark color, not the default gold: on Bars → General set **Spark color**
     to something saturated (pure red or pure green) and, separately, something low-alpha (drop the
     color's own alpha to roughly 25%) → the spark must still read the same with the option on and
-    off at BOTH custom colors. ADD and normal blending are genuinely different operations (ADD sums
-    channel values onto the backdrop, normal blending replaces them), so a saturated or low-alpha
-    custom color is the case most likely to still expose a leftover difference between the two modes
-    even if the default gold looks fixed; report it and cite this check if either custom color still
-    visibly differs between on and off. Then, without changing anything else, confirm the other half
+    off at BOTH custom colors. The spark is additive and desaturated in both modes, so its hue comes
+    only from **Spark color** and the two modes differ only in position (centered on the edge when
+    ticked, just inside it when unticked); report it and cite this check if either custom color still
+    visibly differs between on and off. With the option unticked there must be no dark or black
+    rectangle around the spark, and nothing sticking out above or below the bar as a box, at the
+    default color, at the low-alpha color and at **Spark width** 32. A black-and-gold box is the
+    batch 8 regression (the clipped spark drawn with normal blending, which paints the art's black
+    matte); report it and cite this check. Then, without changing anything else, confirm the other half
     still holds — a permanent (no-duration) aura's bar still
     shows NO spark with the option off (check 26/63): if unticking the option makes every spark
     uniform by also restoring the permanent aura's spark, that is a regression of B-3, not a fix of

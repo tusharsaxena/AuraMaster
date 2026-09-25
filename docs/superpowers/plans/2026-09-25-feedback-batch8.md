@@ -43,7 +43,7 @@ A task has been **reviewed** when a later commit `B8-<task>R: ` exists, or when 
 
 | Task | Req | Repo | Depends | Status | Commit | Notes |
 |---|---|---|---|---|---|---|
-| P1 spark neutral ADD | SP-1 SP-2 | AM | — | todo | | |
+| P1 spark neutral ADD | SP-1 SP-2 | AM | — | done | this commit | spark ADD + desaturated per dress in applySurfaces; SP-1 BLEND tests replaced; KL + check 85 rewritten |
 | P2 test-mode debuffs | TD-1…4 | AM | — | todo | | |
 | P3 dispel border shape | DB-1 DB-2 | AM | — | todo | | |
 | P4 icon attach points | IA-1 IA-2 | AM | — | todo | | |

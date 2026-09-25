@@ -337,7 +337,7 @@ handle's label is measured on a detached font string the strip's own widget keep
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
-readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:66`
+readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:68`
 and `modules/Style_Icons.lua:61`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
 created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
 

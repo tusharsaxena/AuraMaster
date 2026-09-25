@@ -176,33 +176,44 @@ test("bars: with the timeless spark on, and in every preview, nothing is clipped
     assertEqual(am.sparkClip:__joined("SetClipsChildren"), "false")
 end)
 
--- ── spark blend mode matches its backdrop (SP-1) ─────────────────────────────────────────────────
+-- ── the spark is neutral and additive in every mode (batch 8 SP-1/SP-2, reverting batch 7's BLEND) ──
 
-test("bars: with the timeless spark off, the live clipped spark blends normally, not additively", function()
+test("bars: with the timeless spark off, the live clipped spark stays additive", function()
     local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), true)
-    -- red under: the clip-mode spark still summing onto its (partly transparent) backdrop, which
-    -- reads as a random wash rather than the spark's own authored color (feedback batch 7 SP-1)
-    assertEqual(am.spark:__joined("SetBlendMode"), "BLEND")
-end)
-
-test("bars: with the timeless spark on, the live spark stays additive over the opaque fill", function()
-    local _, am = dressed(cfg({ bars = { sparkTimeless = true } }), true)
+    -- red under: batch 7's clip-mode BLEND, which paints the casting-bar art's black matte as a box
+    -- taller than the bar (feedback batch 8 #1)
     assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
 end)
 
-test("bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says", function()
-    local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), false)
-    -- red under: wireSpark keying the blend mode off sparkTimeless alone instead of `engine and not sparkTimeless`
-    assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
+test("bars: the spark's blend never depends on sparkTimeless or engine", function()
+    for _, timeless in ipairs({ true, false }) do
+        for _, engine in ipairs({ true, false }) do
+            local _, am = dressed(cfg({ bars = { sparkTimeless = timeless } }), engine)
+            local calls = am.spark:__calls("SetBlendMode")
+            -- red under: the blend set only in build() (unrecordable, so it is not per dress), or
+            -- switched to BLEND for any mode
+            assertTrue(#calls >= 1, "SetBlendMode called on every dress")
+            for _, args in ipairs(calls) do assertEqual(args[1], "ADD") end
+        end
+    end
 end)
 
-test("bars: the clip-mode blend switch leaves the player's own spark color alone", function()
+test("bars: the spark art is desaturated so its hue is the player's sparkColor", function()
+    for _, engine in ipairs({ true, false }) do
+        local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), engine)
+        -- red under: raw gold casting-bar art showing over the dark elapsed side (batch 7 SP-1's
+        -- original report); the call must be per dress, since dressed() swaps regions after build
+        assertEqual(am.spark:__joined("SetDesaturated"), "true")
+    end
+end)
+
+test("bars: the neutral additive spark leaves the player's own spark color alone", function()
     local _, am = dressed(cfg({ bars = { sparkTimeless = false,
         sparkColor = { r = 0.1, g = 0.2, b = 0.9, a = 0.4 } } }), true)
-    -- red under: neutralizing the backdrop by overriding sparkColor instead of the blend mode, which
+    -- red under: neutralizing the art by overriding sparkColor instead of desaturating it, which
     -- would silently discard a custom color the player chose
     assertEqual(am.spark:__joined("SetVertexColor"), "0.1,0.2,0.9,0.4")
-    assertEqual(am.spark:__joined("SetBlendMode"), "BLEND")
+    assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
 end)
 
 test("bars: a missing timeless-spark setting reads the template's", function()
