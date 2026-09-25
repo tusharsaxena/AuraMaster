@@ -63,6 +63,7 @@ P8 is in another repo and runs alongside P1–P7.
 
 | M | After | Checkpoint |
 |---|---|---|
+| 2026-09-25 | M2 | tests 1422 passed / 0 failed / 0 skipped (16 shards); luacheck 0 warnings / 0 errors in 126 files; lizard 3703 functions, 0 above CCN 15; migrations cover v7->v8 and v1 (stamped and unstamped) through v8; head 90922b9 |
 | M1 | P1–P3 | green gate; push the AuraMaster branch |
 | M2 | P4–P7 | green gate; migration tests cover v8 from v7; push |
 | M3 | P8–P10 | the LibKa0s gate is green and the tag is local; AuraMaster is green; push both branches (not the tag) |
@@ -74,6 +75,7 @@ Record each checkpoint as a row in the checkpoint log below, in the same commit 
 
 | When | Milestone | Evidence |
 |---|---|---|
+| 2026-09-25 | M2 | tests 1422 passed / 0 failed / 0 skipped (16 shards); luacheck 0 warnings / 0 errors in 126 files; lizard 3703 functions, 0 above CCN 15; migrations cover v7->v8 and v1 (stamped and unstamped) through v8; head 90922b9 |
 
 ## Task notes
 
