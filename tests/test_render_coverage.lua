@@ -53,6 +53,10 @@ local function env()
         E.StatusBarTimerDirection = { ElapsedTime = 11, RemainingTime = 12 }
         E.StatusBarInterpolation = { Immediate = 21, ExponentialEaseOut = 22 }
         E.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+        -- The client's dispel palette, so a debuff placeholder can tint its dispel edge
+        -- (NS.Compat.SetAuraBorderColor) and the Icons dispel toggle reaches the preview.
+        m.DebuffTypeColor = { Magic = { r = 0.2, g = 0.6, b = 1 }, Curse = { r = 0.6, g = 0, b = 1 },
+            Disease = { r = 0.6, g = 0.4, b = 0 }, Poison = { r = 0, g = 0.6, b = 0 } }
         E.SecondsFormatterInterval = { Seconds = 1, Minutes = 2, Hours = 3, Days = 4 }
         E.SecondsFormatterAbbreviation = { OneLetter = 1 }
         E.SecondsFormatterRounding = { RoundUp = 0, Truncate = 1 }

@@ -181,7 +181,7 @@ suite covers what only the client can show.
     a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
     nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
     **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
-    Magic dispel border keeps Blizzard's own blue art.
+    Magic dispel border keeps Blizzard's own blue.
 37. **Overrides.** Opens with the same five-rank priority sentence as Categories. Add a buff to the
     *Blacklist* → gone; add a buff to the *Whitelist* by name on a container whose categories exclude
     it → it is listed with its icon and id, and it shows; a name the game does not know → nothing
@@ -368,12 +368,12 @@ listed here too, so the batch can be signed off in one pass.
     after the engine's dispel tint holds while auras are secret.
 60. **Icon border color (I-1, question Q3).** On an icon container showing a buff, set Icons →
     Border's color to bright red and its thickness to 2 → every icon's border turns red at once. With
-    **Dispel border** on, a debuff with a dispel type shows Blizzard's colored border art over yours;
-    a debuff without one, and every buff, keeps yours. If a border does not change, `/fstack` over
+    **Dispel border** on, a debuff with a dispel type shows a square edge in Blizzard's dispel color
+    over yours, the same shape and thickness; a debuff without one, and every buff, keeps yours. If a border does not change, `/fstack` over
     that icon and report the frame it names.
-61. **Icons keep Blizzard's dispel art; bars take the colors (G-3, owner 2026-09-13).** On
+61. **Icons keep Blizzard's dispel colors; bars take the palette (G-3, owner 2026-09-13).** On
     General → Dispel Colors set Magic to pure red. An icon container with **Dispel border** on,
-    showing a Magic debuff → the border is Blizzard's stock blue Magic art, untinted. A bar container
+    showing a Magic debuff → the edge is Blizzard's blue, the same shape as your border. A bar container
     with **Color by** set to dispel type, showing the same debuff → the fill is red. The tab's line
     and each swatch's tooltip say the colors drive bars only.
 62. **Countdown and time text agree (I-2, question Q4).** Check 27. Also note the cooldown's own
@@ -412,11 +412,15 @@ listed here too, so the batch can be signed off in one pass.
     added with its icon and name. Do the same on Filters → Overrides → Whitelist. If the shift-click
     goes to the chat box instead, report it: the list reads spell links, but the client decides
     which box a shift-click fills.
-71. **Dispel border sits on the icon's edge (owner report 2026-09-13).** On an icon container
-    showing debuffs with a dispel type (your own DoTs on a target), with Icons → Border →
-    **Color the border by dispel type** on → Blizzard's colored border art frames each icon at its
-    edge, with no second ring inside the icon's art. The art reaches a sixth of the icon past each
-    edge, as Blizzard's buff frame sizes it; if the ring lands a pixel in or out, report which.
+71. **Dispel border has the Solid border's shape (batch 8 DB-1, DB-2).** On an icon container
+    showing debuffs with a dispel type and one without (Target Debuffs, a Solid 1 px black border),
+    with Icons → Border → **Color the border by dispel type** on → each typed icon shows a square
+    edge in Blizzard's type color exactly where its neighbors show black: no beveled corners,
+    nothing drawn into the icon spacing. Set Border thickness to 4, then 8 → the colored edge always
+    matches the black edge's thickness. Turn **Show border** off (or style None) → the typed icons
+    still show a 1 px colored edge. Pick a non-Solid border style → the colored edge is flat strips
+    at the border's thickness; report whether that looks acceptable. A Bleed debuff: report the color
+    Blizzard gives it (it may have none).
 72. **Suggestions while typing (#31).** On General → Spell Categories type `rej` into **Add a
     spell** → a dropdown opens under the box listing Rejuvenation with its icon and id, plus any
     matching spell in your spellbook; a spell the client gives a rank shows it ("Rank 2") beside
@@ -1136,9 +1140,9 @@ nothing. Nothing in the client can answer the mapping, so the addon carries it i
      question-mark icon. *Player buffs* still shows Power Word: Fortitude, Bloodlust, Shield Wall,
      Ignore Pain and Well Fed.
 187. **The icon dispel border.** An icons debuff container with Border → **Color the border by
-     dispel type** on → Blizzard's colored border on SW:P (Magic), Hex (Curse), Frost Fever (Disease),
-     Deadly Poison (Poison) and Rupture (Bleed art, or the default art if the client has none), and
-     none on Mortal Wounds. Turn it off → every one goes at once. An icons buff container never shows
+     dispel type** on → a square edge in Blizzard's color, the same shape as the Solid border, on
+     SW:P (Magic), Hex (Curse), Frost Fever (Disease), Deadly Poison (Poison) and Rupture (Bleed, if
+     the client gives it a color), and none on Mortal Wounds. Turn it off → every one goes at once. An icons buff container never shows
      one, Bloodlust included.
 188. **Bars colored by dispel type.** A bars debuff container with **Color by** dispel type → each
      bar takes its type's color from General → Dispel Colors, and Mortal Wounds keeps the bar color.

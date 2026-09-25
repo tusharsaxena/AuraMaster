@@ -352,6 +352,18 @@ local function isSolid(styleKey, edge)
     return styleKey == "Solid" or (type(edge) == "string" and edge:lower() == SOLID_EDGE)
 end
 
+--- Lay one strip as the `i`th of BORDER_STRIPS on `frame`, `size` thick: the one shape every edge of
+--- ours takes (the Solid border, Style.DrawEdge, Style.TintEdge), so none can drift from another.
+local function layStrip(frame, i, strip, size)
+    local e = BORDER_STRIPS[i]
+    local from, to = 0, 0
+    if e[4] then from, to = -size, size end
+    strip:ClearAllPoints()
+    strip:SetPoint(e[1], frame, e[1], 0, from)
+    strip:SetPoint(e[2], frame, e[2], 0, to)
+    strip[e[3]](strip, size)
+end
+
 --- Lay `frame`'s strips at thickness `size` and paint them (r, g, b, a), or hide them (`show` false).
 local function drawStrips(frame, show, size, r, g, b, a)
     local strips = frame.__amStrips
@@ -362,14 +374,8 @@ local function drawStrips(frame, show, size, r, g, b, a)
         return
     end
     strips = borderStrips(frame)
-    for i, e in ipairs(BORDER_STRIPS) do
-        local strip = strips[i]
-        local from, to = 0, 0
-        if e[4] then from, to = -size, size end
-        strip:ClearAllPoints()
-        strip:SetPoint(e[1], frame, e[1], 0, from)
-        strip:SetPoint(e[2], frame, e[2], 0, to)
-        strip[e[3]](strip, size)
+    for i, strip in ipairs(strips) do
+        layStrip(frame, i, strip, size)
         strip:SetColorTexture(r, g, b, a)
         strip:Show()
     end
@@ -382,6 +388,21 @@ end
 --- the strips hang from the frame's corners and follow every later resize on their own.
 function Style.DrawEdge(frame, size, r, g, b, a)
     drawStrips(frame, true, size, r, g, b, a)
+end
+
+--- Lay four caller-owned strips (top, bottom, left, right) on `frame` in the Solid border's shape,
+--- `size` thick, and leave them white, untinted and HIDDEN, for the engine to show and tint (an
+--- AddDispelTypeTexture binding with style PreserveAsset). Hidden on every dress, because the engine's
+--- ClearDispelTypeTextures restores nothing: a strip it last showed would stay drawn (B-4). The white
+--- goes on with SetTexture, not SetColorTexture, as the text style's dispel edge does in-game.
+function Style.TintEdge(frame, size, top, bottom, left, right)
+    for i = 1, 4 do
+        local strip = select(i, top, bottom, left, right)
+        layStrip(frame, i, strip, size)
+        strip:SetTexture(C.WHITE_TEXTURE)
+        strip:SetVertexColor(1, 1, 1, 1)
+        strip:Hide()
+    end
 end
 
 --- Whether `f`'s width and height both read as plain numbers now (a laid-out button's do not).

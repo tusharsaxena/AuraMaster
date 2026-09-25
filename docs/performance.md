@@ -55,7 +55,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:47`), each bracketed 
 | `applyPass` | — | `modules/ContainerManager.lua:307-311` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:350-393` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:328` | The show ladder over every container, on combat transitions, world entry and the master rows |
-| `styleElement` | — | `modules/Style.lua:774-784` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `styleElement` | — | `modules/Style.lua:795-805` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path; absent from a capture with no "without a duration" container |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children

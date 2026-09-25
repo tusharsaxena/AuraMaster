@@ -315,26 +315,23 @@ function Compat.GetMouseFocus()
     return nil
 end
 
---- Blizzard's debuff border art for `dispelType` on `region`, as the aura engine's Border style draws
---- it: AuraUtil.SetAuraBorderAtlas, then untinted white, because the art is already colored
---- (docs/superpowers/research/2026-09-13-aura-engine-notes.md). Without AuraUtil it sets the per-type
---- `-noicon` atlas itself, or the default one when the client has no art for that type (as
---- DEBUFF_DISPLAY_INFO's None does). For a PREVIEW icon, which has no engine to draw it (TD-4).
---- @return boolean  whether the art was set
-function Compat.SetAuraBorderAtlas(region, dispelType)
-    if type(dispelType) ~= "string" or type(region) ~= "table" then return false end
+--- Tint `region` in Blizzard's own border color for `dispelType`, as the engine's PreserveAsset style
+--- does with no customDispelColorMap: AuraUtil.SetAuraBorderColor
+--- (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q1). Without AuraUtil it reads the
+--- client's DebuffTypeColor. For a PREVIEW icon's dispel strips, which have no engine to paint them
+--- (TD-4, DB-1).
+--- @return boolean  whether a color was set
+function Compat.SetAuraBorderColor(region, dispelType)
+    if type(dispelType) ~= "string" or type(region) ~= "table" or not region.SetVertexColor then return false end
     local AU = _G.AuraUtil
-    if AU and AU.SetAuraBorderAtlas then
-        AU.SetAuraBorderAtlas(region, dispelType, false)
-    elseif region.SetAtlas then
-        local atlas = "ui-debuff-border-" .. string.lower(dispelType) .. "-noicon"
-        local CT = _G.C_Texture
-        if CT and CT.GetAtlasInfo and not CT.GetAtlasInfo(atlas) then atlas = "ui-debuff-border-default-noicon" end
-        region:SetAtlas(atlas, true)
-    else
-        return false
+    if AU and AU.SetAuraBorderColor then
+        AU.SetAuraBorderColor(region, dispelType)
+        return true
     end
-    region:SetVertexColor(1, 1, 1, 1)
+    local palette = _G.DebuffTypeColor
+    local c = type(palette) == "table" and palette[dispelType]
+    if type(c) ~= "table" then return false end
+    region:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1)
     return true
 end
 

@@ -45,7 +45,7 @@ A task has been **reviewed** when a later commit `B8-<task>R: ` exists, or when 
 |---|---|---|---|---|---|---|
 | P1 spark neutral ADD | SP-1 SP-2 | AM | — | done | this commit | spark ADD + desaturated per dress in applySurfaces; SP-1 BLEND tests replaced; KL + check 85 rewritten |
 | P2 test-mode debuffs | TD-1…4 | AM | — | done | 055a04f | PREVIEW_AURAS keyed HELPFUL/HARMFUL, names/icons by spell id, preview icon ring via Compat.SetAuraBorderAtlas (P3 must move it to its strips), bars repaint per type; review (B8-P2R): untyped bar keeps the class snapshot |
-| P3 dispel border shape | DB-1 DB-2 | AM | — | todo | | |
+| P3 dispel border shape | DB-1 DB-2 | AM | — | done | this commit | dispel edge = 4 white strips in the Solid shape (Style.TintEdge), PreserveAsset with no map; 1 px when border hidden/None/0; preview tints via Compat.SetAuraBorderColor (replaces SetAuraBorderAtlas) |
 | P4 icon attach points | IA-1 IA-2 | AM | — | todo | | |
 | P5 seam spacing + v8 (offsets) | SS-1…3 | AM | P4 | todo | | creates the v8 step |
 | P6 empty-container overlap | EO-1 EO-2 | AM | P5 | todo | | |

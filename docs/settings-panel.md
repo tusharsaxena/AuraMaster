@@ -363,7 +363,7 @@ a Text line's dispel type word, backdrop and edge when those are on (Text → Fo
 feedback #7). An aura with no dispel type — every buff and many debuffs, class debuffs such as
 Judgment or Consecration included (`docs/midnight-quirks.md`) — keeps a bar's own color and draws no
 text type word, backdrop or edge, so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
-colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
+colors on our Solid shape (owner, 2026-09-13; batch 8 DB-2), and the tab line and each row's tooltip say so. Profile-wide, so a
 write re-applies every container.
 
 ### Containers (5 rows, `settings/Containers.lua`)

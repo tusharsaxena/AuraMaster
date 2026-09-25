@@ -491,8 +491,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
 - compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
 - compat: without LibKa0s spell info is the major's absent answer, one nil
-- compat: debuff border art goes through AuraUtil as the engine's Border style does, then white
-- compat: without AuraUtil debuff border art is the type's atlas, the default one when the client has none
+- compat: a dispel border color goes through AuraUtil, as the engine's PreserveAsset style paints it (DB-1)
+- compat: without AuraUtil a dispel border color is DebuffTypeColor's, and nothing without either
 
 ### test_secrets.lua (6)
 
@@ -643,7 +643,7 @@ badge and any count quoted in the docs must agree with it.
 - template: every built-in compiles, and each aura type's list is the pinned one
 - template: a stored template matches a built-in by its text and its justify rule, else none
 
-### test_style.lua (59)
+### test_style.lua (60)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -675,6 +675,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a missing color paints opaque white rather than raising
 - style: a border is hidden when off, styled None, or without a positive size
 - style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
+- style: a tint edge lays the Solid border's four strips, white, untinted and hidden, for the engine to show (DB-1)
 - style: a Solid border takes the class color through its companion (B2-3)
 - style: a Solid border under a secret size draws and never raises (B2-3)
 - style: another style draws a backdrop on a frame of its own, with its edge, size and color (B2-3)
@@ -806,7 +807,7 @@ badge and any count quoted in the docs must agree with it.
 - bars: an untyped dispel-colored placeholder keeps the container's class snapshot, not the player's (TD-4)
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (29)
+### test_style_icons.lua (31)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -820,11 +821,13 @@ badge and any count quoted in the docs must agree with it.
 - icons: the time and stack texts are laid against the icon's frame and show on their own settings
 - icons: the time and stack texts are boxed to the icon's width less their offsets
 - icons: a hidden text is never handed to the engine; a shown one is, as its own region
-- icons: the dispel border is the engine's debuff art on harmful auras only
-- icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)
+- icons: the dispel border is our four strips, tinted by the engine (PreserveAsset), on harmful auras only (DB-1)
+- icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, DB-2)
 - icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
-- icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge
-- icons: a non-square icon's dispel art reaches past it by a sixth of each side
+- icons: the dispel strips take our Solid border's exact shape and thickness (DB-1)
+- icons: the dispel strips follow Border thickness on every dress (DB-1)
+- icons: a hidden border, the None style or 0 thickness draws the dispel edge at 1 px (DB-2)
+- icons: a non-Solid border style still takes flat dispel strips at its thickness (DB-2)
 - icons: the dispel border turned off is hidden and never bound
 - icons: turning the dispel border off on a live button keeps it hidden (B-4)
 - icons: the refresh-window highlight is bound only when on, in the pandemic color
@@ -836,7 +839,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: a preview icon's cooldown starts as long ago as its placeholder has run
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
-- icons: a debuff placeholder shows Blizzard's dispel art for its type; a buff, an untyped one or the option off shows none (TD-4)
+- icons: a debuff placeholder tints its dispel strips in Blizzard's color for its type; a buff, an untyped one or the option off shows none (TD-4, DB-1)
 
 ### test_style_text.lua (55)
 
@@ -1579,11 +1582,11 @@ badge and any count quoted in the docs must agree with it.
 | test_lifecycle.lua | 15 |
 | test_anchors.lua | 74 |
 | test_texttemplate.lua | 26 |
-| test_style.lua | 59 |
+| test_style.lua | 60 |
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 63 |
-| test_style_icons.lua | 29 |
+| test_style_icons.lua | 31 |
 | test_style_text.lua | 55 |
 | test_preview.lua | 26 |
 | test_render_coverage.lua | 3 |
@@ -1619,4 +1622,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1373** |
+| **Total** | **1376** |
