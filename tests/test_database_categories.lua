@@ -158,7 +158,7 @@ test("v7: a v6 profile climbs to v7 with every schema row still resolving", func
         }
     end
     local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 6 } } })
-    assertEqual(NS.db.global.schemaVersion, 7)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local cats = NS.db.sv.profiles[name].containers[1].filter.categories
         -- red under: the step touching the active profile only

@@ -3,8 +3,8 @@
 -- page's Defaults. How an attachment is resolved is tests/test_anchors.lua's.
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
@@ -17,13 +17,9 @@ local function layout(opts)
     return NS, m, P, P.tab("layout", NS.L["Anchor"])
 end
 
---- The attach-target dropdown. The banner is labeled "Container" too, so it is excluded by identity.
+--- The attach-target dropdown, labeled "Parent container" (the banner keeps "Container").
 local function targetDropdown(NS, P, ws)
-    local banner = P.banner(NS.Helpers.__pageCtx.layout)
-    for _, w in ipairs(P.all(ws, "Dropdown", NS.L["Container"])) do
-        if w ~= banner then return w end
-    end
-    return nil
+    return P.find(ws, "Dropdown", NS.L["Parent container"])
 end
 
 --- layout(), with container 1 attached in `mode` first, so the Anchor tab draws that mode's
@@ -41,14 +37,15 @@ end
 local SUBSECTIONS = {
     { key = "Screen", paths = { "container.position.point", "container.position.relativePoint",
                                 "container.position.x", "container.position.y" } },
-    { key = "Another container", paths = { "container.attach.container" } },
+    { key = "Another container", paths = { "container.attach.container", "container.attach.relPoint",
+                                           "container.attach.childPoint" } },
     { key = "Named frame", paths = { "container.attach.frame", "container.attach.point",
                                      "container.attach.relativePoint" } },
     { key = "Offset", paths = { "container.attach.x", "container.attach.y" } },
 }
 
---- How many widgets a render drew under each label, the banner's excepted (it is a second
---- "Container" dropdown). Counts, because Screen and Named frame both have a Point and a Relative point.
+--- How many widgets a render drew under each label, the banner's excepted (the page's Container
+--- picker). Counts, because a label can be drawn more than once.
 local function drawnLabels(NS, P, ws)
     local banner = P.banner(NS.Helpers.__pageCtx.layout)
     local out = {}
@@ -94,12 +91,64 @@ local ON = {
     frame     = { ["Named frame"] = true, Offset = true },
 }
 
-test("layout: the tabs are Frame, Anchor, Growth, Mouse, in that order", function()
+test("layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order", function()
     local NS, _, P = layout()
     local L = NS.L
     -- red under: the Position rows declared before the Frame rows (tab order is first-seen group order)
     assertEqual(table.concat(P.tabKeys("layout"), ","),
-        table.concat({ L["Frame"], L["Anchor"], L["Growth"], L["Mouse"] }, ","))
+        table.concat({ L["Frame"], L["Anchor"], L["Growth"], L["Mouse"], L["Label"] }, ","))
+end)
+
+test("layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)", function()
+    local NS, m, P = layout()
+    local ws = P.tab("layout", NS.L["Label"])
+    assertTrue(P.row(ws, "container.label.x").disabled, "X is dimmed while the label is off")
+    assertTrue(P.row(ws, "container.label.font.fontSize").disabled, "and the font")
+    assertFalse(P.row(ws, "container.label.font.fontColor").disabled and true or false, "a swatch is never grayed")
+    P.row(ws, "container.label.show"):__fire("OnValueChanged", true)
+    m.__fireTimers()
+    P.tab("layout", NS.L["Frame"])
+    ws = P.tab("layout", NS.L["Label"])
+    assertFalse(P.row(ws, "container.label.x").disabled and true or false, "live once it is on")
+    P.row(ws, "container.label.y"):__fire("OnMouseUp", 6)
+    local c1 = NS.Database.FindContainer(1)
+    assertTrue(c1.label.show); assertEqual(c1.label.y, 6)
+    assertFalse(NS.Database.FindContainer(2).label.show, "another container is untouched")
+end)
+
+test("layout: Label > Justify shows the justify in effect with no pick, stores a pick, and Defaults clears it (B9 LJ-1)", function()
+    local NS, m, P = layout()
+    local L, AUTO = NS.L, NS.Constants.LABEL_JUSTIFY_AUTO
+    NS.SetByPath("container.label.show", true, 1)
+    m.__fireTimers()
+    local ws = P.tab("layout", L["Label"])
+    local dd = P.row(ws, "container.label.justifyH")
+    -- red under: no Justify row on the Label tab
+    assertTrue(dd ~= nil, "a Justify dropdown")
+    assertEqual(table.concat(dd.order, ","), "LEFT,CENTER,RIGHT", "Left, Center, Right and nothing else")
+    -- red under: the panel showing the stored AUTO (a blank dropdown) instead of what is in effect
+    assertEqual(dd.value, "CENTER", "container 1 draws as Bars: centered")
+    assertEqual(NS.GetSetting("container.label.justifyH", 1), AUTO, "while nothing is picked")
+    dd:__fire("OnValueChanged", "RIGHT")
+    m.__fireTimers()
+    assertEqual(NS.Database.FindContainer(1).label.justifyH, "RIGHT")
+    NS.SetByPath("container.label.justifyH", AUTO, 1)
+    NS.SetByPath("container.style", "icons", 1)
+    NS.SetByPath("container.layout.growH", "left", 1)
+    m.__fireTimers()
+    P.tab("layout", L["Frame"])
+    ws = P.tab("layout", L["Label"])
+    assertEqual(P.row(ws, "container.label.justifyH").value, "RIGHT", "icons growing left, no pick")
+    NS.SetByPath("container.label.justifyH", "CENTER", 1)
+    -- red under: the row with no default (Defaults could never go back to the style's own)
+    assertTrue(NS.ApplyDefault(NS.FindSchemaRow("container.label.justifyH")))
+    assertEqual(NS.Database.FindContainer(1).label.justifyH, AUTO, "the reset is back to no pick")
+end)
+
+test("layout: the Label Justify row is dimmed while the label is off", function()
+    local NS, _, P = layout()
+    local ws = P.tab("layout", NS.L["Label"])
+    assertTrue(P.row(ws, "container.label.justifyH").disabled)
 end)
 
 test("layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)", function()
@@ -206,8 +255,9 @@ test("layout: a target that would close a loop is refused; any other, or None, i
     dd:__fire("OnValueChanged", 2)
     -- red under: dropping the row's WouldCycle validate (1 follows 2 follows 1)
     assertEqual(NS.Database.FindContainer(1).attach.container, 0, "the loop was refused")
-    dd:__fire("OnValueChanged", 3)
-    assertEqual(NS.Database.FindContainer(1).attach.container, 3)
+    -- 4 flows as 1 does, so no growth-conflict popup (GC-1) stands between the pick and the store.
+    dd:__fire("OnValueChanged", 4)
+    assertEqual(NS.Database.FindContainer(1).attach.container, 4)
     dd:__fire("OnValueChanged", 0)
     assertEqual(NS.Database.FindContainer(1).attach.container, 0, "None is always allowed")
 end)
@@ -364,7 +414,7 @@ test("layout: an attached container's Fill and growth are dimmed and show its pa
         assertFalse(P.row(ws, "container.layout." .. key).disabled and true or false, key .. " stays live")
     end
     -- red under: the Growth tab without its follow line
-    assertTrue(P.hasText(ws, NS.L["Fill and growth follow '%s'"]:format("Player buffs")), "the follow line")
+    assertTrue(P.hasText(ws, NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")), "the follow line")
     -- red under: panelGet reached by every reader (/am get and the apply path read what is stored)
     assertEqual(NS.GetSetting("container.layout.axis"), "horizontal")
     assertEqual(NS.Database.FindContainer(2).layout.growH, "left")
@@ -380,13 +430,34 @@ test("layout: a screen or frame container's growth rows are its own and live, wi
         -- red under: the inherited-row predicate dimming every attached mode
         assertFalse(axis.disabled and true or false, mode .. ": Fill is live")
         assertEqual(axis.value, "horizontal", mode .. ": 2's own rows")
-        assertFalse(P.hasText(ws, NS.L["Fill and growth follow '%s'"]:format("Player buffs")), mode .. ": no line")
+        assertFalse(P.hasText(ws, NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")), mode .. ": no line")
     end
+end)
+
+test("layout: the follow line is dim gold, says why, and has a gap below it (F6)", function()
+    local NS, _, P = attachedChild()
+    local H = NS.Helpers
+    P.tab("layout", NS.L["Growth"])
+    local want = "|c" .. NS.Constants.SECONDARY_GOLD
+        .. NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs") .. "|r"
+    -- red under: the gold as the addon's muted secondary gold, not the bright heading gold
+    assertEqual(NS.Constants.SECONDARY_GOLD, "ffd9b861")
+    local kids = H.EnsureScroll(H.__pageCtx.layout).children
+    local at
+    for i, w in ipairs(kids) do
+        if w.type == "Label" and w.text == want then at = i end
+    end
+    -- red under: the line drawn plain, or in the old words without the reason
+    assertTrue(at ~= nil, "the follow line in dim gold")
+    local spacer = kids[at + 1]
+    -- red under: the line followed straight by the first Growth row
+    assertEqual(spacer and spacer.type, "SimpleGroup")
+    assertEqual(spacer and spacer.height, H.ROW_VSPACER)
 end)
 
 test("layout: the follow line is drawn on the Growth tab only", function()
     local NS, _, P = attachedChild()
-    local line = NS.L["Fill and growth follow '%s'"]:format("Player buffs")
+    local line = NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")
     for _, key in ipairs({ NS.L["Frame"], NS.L["Anchor"], NS.L["Mouse"] }) do
         local ws = (NS.Helpers.__pageCtx.layout.activeTab == key) and P.rerender("Layout") or P.tab("layout", key)
         assertTrue(#ws > 0, key .. " drew")
@@ -404,11 +475,14 @@ test("layout: Another container names the derived points and the container it is
     local ws = P.rerender("Layout")
     assertTrue(#ws > 0, "the Anchor tab drew")
     local PL = NS.Constants.POINT_LABELS
-    local want = NS.L["Attached by its %s to the %s of '%s'"]
+    local want = NS.L["Its %s joins the %s of '%s'"]
     -- 1 fills columns growing right and up: 2 sits on top of it.
     -- red under: the Container dropdown without its pairWith line
     assertTrue(P.hasText(ws, want:format(PL.BOTTOMLEFT, PL.TOPLEFT, "Player buffs")), "the derived line")
     NS.Helpers.__pageCtx.layout.panel:Show()   -- a hidden kit panel only marks itself dirty
+    -- 2's own flow made 3's (rows growing right and down), so no growth-conflict popup (GC-1) stands
+    -- between the pick and the store.
+    NS.SetByPath("container.layout.growH", "right", 2)
     -- Run any refresh the setup queued now, so the only one left to run is the target row's own.
     local settled = P.during(function() m.__fireTimers() end)
     local settledCount = #settled
@@ -416,13 +490,138 @@ test("layout: Another container names the derived points and the container it is
     dd:__fire("OnValueChanged", 3)
     -- red under: the target row without its structural onChange (the line would name the old target)
     local redrawn = P.during(function() m.__fireTimers() end)
-    assertTrue(P.hasText(redrawn, want:format(PL.TOPLEFT, PL.TOPRIGHT, "Target debuffs (mine)")),
-        "3 fills rows growing right and down: 2 continues beside it")
+    assertTrue(P.hasText(redrawn, want:format(PL.TOPLEFT, PL.BOTTOMLEFT, "Target debuffs (mine)")),
+        "3 fills rows growing right and down: 2 stacks below it")
     NS.SetByPath("container.attach.mode", "frame", 2)
     ws = P.during(function() NS.Helpers.RefreshAllPanels() end)
     assertTrue(#ws > 0, "the open page drew again")
     -- red under: the line drawn for a container that follows nothing
     assertFalse(P.hasText(ws, "Target debuffs (mine)"), "no line outside container mode")
+end)
+
+test("layout: the attachment line names the points in effect, picked or Automatic (batch 11 G2)", function()
+    local NS, m, P = attachedChild()
+    local at = NS.Database.FindContainer(2).attach
+    at.childPoint, at.relPoint = "LEFT", "RIGHT"
+    m.__fireTimers()
+    local ws = P.rerender("Layout")
+    local PL = NS.Constants.POINT_LABELS
+    -- red under: attachedText reading the side rather than the points
+    assertTrue(P.hasText(ws, NS.L["Its %s joins the %s of '%s'"]:format(PL.LEFT, PL.RIGHT, "Player buffs")))
+end)
+
+-- ── the two anchor-point rows (batch 11 G1, G2, G7) ──────────────────────────────────────────
+
+local PARENT_ROW, CHILD_ROW = "container.attach.relPoint", "container.attach.childPoint"
+
+--- The nine points' values after Automatic's, as the dropdowns order them.
+local function pointOrder(NS)
+    return "auto," .. table.concat(NS.Constants.POINTS, ",")
+end
+
+test("layout: Another container draws the two anchor-point dropdowns, each Automatic (<in effect>) then the nine points (G1)", function()
+    local NS, _, P = attachedChild()
+    local L, PL = NS.L, NS.Constants.POINT_LABELS
+    local ws = P.rerender("Layout")
+    local rel, own = P.row(ws, PARENT_ROW), P.row(ws, CHILD_ROW)
+    -- red under: no rows (batch 9's Side row retired with nothing in its place)
+    assertTrue(rel ~= nil and own ~= nil, "both dropdowns drawn")
+    assertEqual(rel.labelText, L["Parent container anchor point"])
+    assertEqual(own.labelText, L["This container anchor point"])
+    assertEqual(table.concat(rel.order, ","), pointOrder(NS))
+    assertEqual(table.concat(own.order, ","), pointOrder(NS))
+    -- 1 fills columns growing up: 2 sits on top of it, its Bottom left on 1's Top left.
+    assertEqual(rel.list.auto, L["Automatic (%s)"]:format(L[PL.TOPLEFT]))
+    assertEqual(own.list.auto, L["Automatic (%s)"]:format(L[PL.BOTTOMLEFT]))
+    assertEqual(rel.list.TOP, L[PL.TOP])
+    -- red under: the panel showing the stored nil (a blank dropdown)
+    assertEqual(rel.value, "auto")
+    assertEqual(own.value, "auto")
+end)
+
+test("layout: an anchor-point pick stores the point, any pair is allowed, and Automatic stores nil (G1, G2)", function()
+    local NS, m, P = attachedChild()
+    local L, PL = NS.L, NS.Constants.POINT_LABELS
+    local at = NS.Database.FindContainer(2).attach
+    local ws = P.rerender("Layout")
+    NS.Helpers.__pageCtx.layout.panel:Show()
+    P.row(ws, CHILD_ROW):__fire("OnValueChanged", "TOP")
+    assertEqual(at.childPoint, "TOP")
+    assertNil(at.relPoint, "the other stays Automatic")
+    -- red under: the rows without their structural onChange (the line would name the old points)
+    local redrawn = P.during(function() m.__fireTimers() end)
+    local want = L["Its %s joins the %s of '%s'"]
+    assertTrue(P.hasText(redrawn, want:format(L[PL.TOP], L[PL.TOPLEFT], "Player buffs")), "the line reads the pick")
+    -- A pair that looks odd is still stored: "if it looks weird, it's on the user".
+    P.row(redrawn, PARENT_ROW):__fire("OnValueChanged", "TOP")
+    assertEqual(at.relPoint, "TOP", "nothing is refused")
+    redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(P.hasText(redrawn, want:format(L[PL.TOP], L[PL.TOP], "Player buffs")))
+    P.row(redrawn, CHILD_ROW):__fire("OnValueChanged", "auto")
+    -- red under: the sentinel stored instead of nil
+    assertNil(at.childPoint, "Automatic stores nil")
+    assertEqual(NS.GetSetting(CHILD_ROW, 2), "auto", "and reads as auto")
+    -- Defaults puts each back to Automatic.
+    assertTrue(NS.ApplyDefault(NS.FindSchemaRow(PARENT_ROW)))
+    assertNil(at.relPoint, "the reset is Automatic")
+end)
+
+test("layout: a picked point's Automatic entry still names what Automatic would give, not the pick (G2)", function()
+    local NS, _, P = attachedChild()
+    local L, PL = NS.L, NS.Constants.POINT_LABELS
+    NS.SetByPath(CHILD_ROW, "TOP", 2)
+    NS.SetByPath(PARENT_ROW, "CENTER", 2)
+    local ws = P.rerender("Layout")
+    local rel, own = P.row(ws, PARENT_ROW), P.row(ws, CHILD_ROW)
+    assertEqual(own.value, "TOP")
+    assertEqual(rel.value, "CENTER")
+    -- red under: the Automatic entry naming the pick ("Automatic (Top)"), which is not what picking it gives
+    assertEqual(own.list.auto, L["Automatic (%s)"]:format(L[PL.BOTTOMLEFT]))
+    assertEqual(rel.list.auto, L["Automatic (%s)"]:format(L[PL.TOPLEFT]))
+end)
+
+test("layout: /am set takes the nine point names in any case or auto; attach.edge is no longer a path (G7)", function()
+    local NS, _, P = attachedChild()
+    local chat = P.chat()
+    local at = NS.Database.FindContainer(2).attach
+    NS.Slash:OnSlash("set container.attach.relPoint bottomright")
+    -- red under: the library's exact-match string parser (lower case refused)
+    assertEqual(at.relPoint, "BOTTOMRIGHT", table.concat(chat, " | "))
+    NS.Slash:OnSlash("set container.attach.childPoint Top")
+    assertEqual(at.childPoint, "TOP")
+    NS.Slash:OnSlash("set container.attach.childPoint AUTO")
+    assertNil(at.childPoint, "auto stores nil")
+    NS.Slash:OnSlash("set container.attach.relPoint auto")
+    assertNil(at.relPoint)
+    NS.Slash:OnSlash("set container.attach.childPoint middle")
+    assertNil(at.childPoint, "a name that is not a point is refused")
+    local n = #chat
+    NS.Slash:OnSlash("get container.attach.childPoint")
+    local got = chat[n + 1]:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertTrue(got:find("container.attach.childPoint = auto", 1, true) ~= nil, got)
+    n = #chat
+    NS.Slash:OnSlash("set container.attach.edge after-end")
+    assertTrue(chat[n + 1]:find(NS.L["Setting not found: %s"]:format("container.attach.edge"), 1, true) ~= nil, chat[n + 1])
+    assertNil(at.edge)
+end)
+
+test("layout: a write to either anchor point re-places the container on its parent (G1)", function()
+    local NS, m = attachedChild()
+    m.__fireTimers()
+    local inst = NS.ContainerManager.instances[2]
+    local rec = {}
+    rawset(inst.anchor, "SetPoint", function(_, ...) table.insert(rec, { ... }) end)
+    rawset(inst.anchor, "ClearAllPoints", function() end)
+    NS.Slash:OnSlash("set container.attach.childPoint center")
+    NS.Slash:OnSlash("set container.attach.relPoint right")
+    m.__fireTimers()
+    local last = rec[#rec]
+    -- red under: no row, so no CONFIG_CHANGED re-apply
+    assertTrue(last ~= nil, "placed again")
+    assertEqual(last[1], "CENTER")
+    -- T9: a one-column parent's RIGHT is held steady as its start side plus its width
+    assertEqual(last[3], "LEFT")
+    assertEqual(last[4], NS.Style.ElementSize(NS.Database.FindContainer(1)))
 end)
 
 -- ── the Point rows and the facing-growth hint (smoke feedback 2, item 1, D-3) ────────────────────
@@ -503,4 +702,182 @@ test("layout: choosing a facing Point redraws the tab with the hint on the next 
     local redrawn = P.during(function() m.__fireTimers() end)
     -- red under: Point without its structural onChange (the tab keeps its old hint state)
     assertTrue(P.hasText(redrawn, "grow back over"))
+end)
+
+test("layout: the Container row's help names no Side row, which batch 11 retired (G1)", function()
+    local NS = fresh()
+    local desc = NS.FindSchemaRow("container.attach.container").desc
+    assertTrue(desc:find("points are set for you", 1, true) == nil, desc)
+    -- red under: the help still pointing at the retired Side row
+    assertTrue(desc:find("Side", 1, true) == nil, desc)
+end)
+
+-- ── growth conflicts on attach (batch 9 GC-1, E3) ─────────────────────────────────────────────
+
+--- Container 2 (rows growing left and down) in container mode with no target yet, selected, the
+--- Layout page drawn on its Anchor tab and open; popups recorded. Answers what the tab drew too.
+local function conflictPage()
+    local NS, m, P = layout()
+    NS.SetByPath("container.attach.mode", "container", 2)
+    m.__fireTimers()
+    NS.Helpers.SelectContainer(2)
+    local ws = P.show("Layout")
+    NS.Helpers.__pageCtx.layout.panel:Show()
+    m.__fireTimers()
+    return NS, m, P, ws, P.popups()
+end
+
+--- The popup text for 2 attaching to 1: 1 fills columns growing right.
+local function promptFor(NS, followers)
+    local L, C = NS.L, NS.Constants
+    local flow = L["Fill"] .. ": " .. L[C.AXIS_LABELS.vertical] .. ", "
+        .. L["Grow horizontally"] .. ": " .. L[C.GROW_H_LABELS.right]
+    local text = L["Attach '%s' to '%s'? '%s' will fill and grow like '%s' (%s). Its own Growth settings are kept and come back if you detach it."]
+        :format("Player debuffs", "Player buffs", "Player debuffs", "Player buffs", flow)
+    if followers then text = text .. L[" %d container(s) attached to it follow too."]:format(followers) end
+    return text
+end
+
+test("layout: a Container pick whose chain flows differently asks first and stores nothing (GC-1)", function()
+    local NS, m, P, ws, popups = conflictPage()
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    -- red under: no confirmWrite intercept (the write is stored at once)
+    assertEqual(#popups, 1, "one popup")
+    assertEqual(popups[1].which, "AURAMASTER_ATTACH_FLOW")
+    assertEqual(popups[1].text, promptFor(NS), "names both, and the flow it takes")
+    assertEqual(NS.Database.FindContainer(2).attach.container, 0, "nothing stored yet")
+    local data = popups[1].data
+    assertEqual(data.path .. "|" .. tostring(data.value) .. "|" .. tostring(data.id), "container.attach.container|1|2")
+    -- red under: no refresh (the dropdown would keep showing the unconfirmed pick)
+    local redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(#redrawn > 0, "the page is drawn again, back on the stored value")
+    assertEqual(P.row(redrawn, "container.attach.mode").value, "container")
+end)
+
+test("layout: accepting the attach popup attaches and keeps the child's own Growth settings (E3)", function()
+    local NS, m, _, ws, popups = conflictPage()
+    local P = pages(NS, m)
+    local chat = P.chat()
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    local dialog = m.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW
+    -- red under: no AURAMASTER_ATTACH_FLOW dialog
+    assertEqual(dialog.button1, NS.L["Attach"])
+    assertEqual(dialog.button2, NS.L["Cancel"])
+    dialog.OnAccept(popups[1], popups[1].data)
+    local cfg = NS.Database.FindContainer(2)
+    assertEqual(cfg.attach.container, 1, "attached")
+    assertEqual(cfg.layout.axis .. cfg.layout.growH, "horizontalleft", "its own flow is kept")
+    assertEqual(NS.Anchors.FlowRoot(cfg).id, 1, "and it follows 1")
+    -- red under: the /am set chat line printed for a write the player just confirmed
+    assertEqual(#chat, 0, "the popup said it; no chat line")
+end)
+
+test("layout: canceling the attach popup stores nothing, and accepting it in combat is refused", function()
+    local NS, m, P, ws, popups = conflictPage()
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    local dialog = m.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW
+    m.__fireTimers()
+    dialog.OnCancel(popups[1], popups[1].data)
+    assertEqual(NS.Database.FindContainer(2).attach.container, 0, "cancel stores nothing")
+    local redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(#redrawn > 0, "cancel redraws the page")
+    local chat = P.chat()
+    m.__lockdown = true
+    dialog.OnAccept(popups[1], popups[1].data)
+    -- red under: OnAccept without its InCombatLockdown gate
+    assertEqual(NS.Database.FindContainer(2).attach.container, 0, "refused in combat")
+    assertEqual(#chat, 1, "one refusal")
+    assertTrue(chat[1]:find("|cff808080", 1, true) ~= nil, "gray: " .. chat[1])
+    m.__lockdown = false
+end)
+
+test("layout: the attach popup counts the containers attached to the child", function()
+    local NS, _, P, ws, popups = conflictPage()
+    NS.SetByPath("container.attach.container", 2, 3)
+    NS.SetByPath("container.attach.mode", "container", 3)
+    targetDropdown(NS, P, ws):__fire("OnValueChanged", 1)
+    -- red under: the followers sentence left out
+    assertEqual(popups[1].text, promptFor(NS, 1))
+end)
+
+test("layout: no popup when the flow matches, for None, or outside container mode", function()
+    local NS, m, P, ws, popups = conflictPage()
+    local dd = targetDropdown(NS, P, ws)
+    dd:__fire("OnValueChanged", 0)
+    assertEqual(#popups, 0, "None")
+    -- 4 already fills columns growing right and down, as 1 does.
+    NS.Helpers.SelectContainer(4)
+    NS.SetByPath("container.attach.mode", "container", 4)
+    m.__fireTimers()
+    local redraw = function() return P.during(function() NS.Helpers.RefreshAllPanels() end) end
+    dd = targetDropdown(NS, P, redraw())
+    dd:__fire("OnValueChanged", 1)
+    assertEqual(#popups, 0, "the same flow")
+    assertEqual(NS.Database.FindContainer(4).attach.container, 1, "stored at once")
+    -- Screen mode: the Attach to row with no usable target stored.
+    NS.Helpers.SelectContainer(3)
+    local ws3 = redraw()
+    P.row(ws3, "container.attach.mode"):__fire("OnValueChanged", "container")
+    assertEqual(#popups, 0, "a mode write with container None")
+    assertEqual(NS.Database.FindContainer(3).attach.mode, "container")
+end)
+
+test("layout: switching Attach to into container mode with a differing target stored asks first", function()
+    local NS, m, P = layout()
+    NS.SetByPath("container.attach.container", 1, 2)   -- stored while 2 sits on the screen
+    NS.Helpers.SelectContainer(2)
+    local ws = P.show("Layout")
+    local popups = P.popups()
+    P.row(ws, "container.attach.mode"):__fire("OnValueChanged", "container")
+    -- red under: the mode row without its confirmWrite (the stale target attaches unasked)
+    assertEqual(#popups, 1, "one popup")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "nothing stored yet")
+    m.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW.OnAccept(popups[1], popups[1].data)
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "container", "accepted")
+end)
+
+test("layout: /am set attaches without asking and prints one line; a differing detach prints one", function()
+    local NS, _, P = layout()
+    local popups = P.popups()
+    local chat = P.chat()
+    NS.SetByPath("container.attach.mode", "container", 2)
+    NS.SetByPath("container.attach.container", 1, 2)
+    assertEqual(#popups, 0, "no popup off the panel")
+    assertEqual(NS.Database.FindContainer(2).attach.container, 1, "written")
+    -- red under: no chat line for a written growth change
+    assertEqual(#chat, 1, "one line")
+    assertTrue(chat[1]:find(NS.L["'%s' now grows like '%s'; its own Growth settings are kept."]
+        :format("Player debuffs", "Player buffs"), 1, true) ~= nil, chat[1])
+    NS.SetByPath("container.attach.container", 1, 4)   -- 4 flows like 1: nothing to say
+    NS.SetByPath("container.attach.mode", "container", 4)
+    assertEqual(#chat, 1, "a matching flow prints nothing")
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    -- red under: no detach line
+    assertEqual(#chat, 2, "the detach line")
+    assertTrue(chat[2]:find(NS.L["'%s' is no longer attached to '%s' and fills and grows by its own Growth settings again."]
+        :format("Player debuffs", "Player buffs"), 1, true) ~= nil, chat[2])
+end)
+
+test("layout: a chain root's Growth tab says how many containers follow its fill and growth", function()
+    local NS, _, P = layout()
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    local ws = P.tab("layout", NS.L["Growth"])
+    -- red under: growthIntro silent on a root
+    assertTrue(P.hasText(ws, NS.L["%d container(s) attached to this one follow its fill and growth."]:format(1)))
+end)
+
+test("layout: Named frame reads Named frame anchor point on the left and This container anchor point on the right (owner, 2026-09-26)", function()
+    local NS, _, P, ws = layoutIn("frame")
+    local rel, own = P.row(ws, "container.attach.relativePoint"), P.row(ws, "container.attach.point")
+    -- red under: the rows still labeled Relative point and Point
+    assertEqual(rel.labelText, NS.L["Named frame anchor point"])
+    assertEqual(own.labelText, NS.L["This container anchor point"])
+    local line
+    for _, w in ipairs(ws) do
+        if w.children and (w.children[1] == rel or w.children[2] == rel) then line = w end
+    end
+    assertTrue(line ~= nil, "the two share a line")
+    -- red under: Point drawn first (this container on the left)
+    assertTrue(line.children[1] == rel and line.children[2] == own, "the named frame's point on the left")
 end)

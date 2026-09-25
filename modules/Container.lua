@@ -381,6 +381,9 @@ function ContainerClass:Apply()
         end
         self:ApplyBlocker(cfg)
     end
+    -- After SnapshotClass (its class color is the tracked unit's) and outside the engine branch: the
+    -- label is our own frame and draws on a client without the engine too.
+    self:ApplyLabel(cfg)
 
     -- The look may have changed, so the next visibility pass re-dresses the preview (Preview.Show).
     self.previewDirty = true
@@ -454,15 +457,20 @@ function ContainerClass:ApplyAlpha(cfg, p)
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
 end
 
---- The unlocked container's OUTLINE (B1): a faint one-pixel box, one element's size, at the corner
---- its flow starts from, so an EMPTY container can still be seen and grabbed while unlocked. A frame
---- of ours under the anchor, never the engine's; hidden when locked, and in test mode (the
---- placeholders are there then). It takes no mouse: the drag handle does the grabbing. A PLAIN frame
+--- The container's OUTLINE: a faint one-pixel box, a frame of ours under the anchor, never the
+--- engine's. Two shapes:
+---   the empty-only PLACEHOLDER (B1, batch 9 HG-1): one element's size, at the corner its flow starts
+---     from, so an EMPTY container can still be seen while unlocked and its followers hang from it.
+---     Shown only while unlocked, predicted empty (modules/EmptyWatch.lua) and hung as `slot`;
+---   the test-mode BLOCK (batch 9 SEP-1, E4): around its whole placeholder block, the preview extent
+---     (`block`), locked or not, so each container of a chain reads as its own even at a seam of 0.
+--- Hidden otherwise: when it holds auras or that is not knowable, and locked outside test mode. The
+--- outline is not an attach target, so showing it moves nothing. It takes no mouse: the drag handle does the grabbing. A PLAIN frame
 --- with its edge drawn as strips (Style.DrawEdge), never a BackdropTemplate: under an anchor attached
 --- to another frame or container its size can read secret, and the Backdrop does arithmetic on the
 --- size on every SetBackdrop and resize (docs/midnight-quirks.md, "A backdrop on an engine button
 --- reads a secret size").
-function ContainerClass:ApplyOutline(cfg, on)
+function ContainerClass:ApplyOutline(cfg, on, block)
     local o = self.outline
     if not on then
         if o then o:Hide() end
@@ -474,12 +482,87 @@ function ContainerClass:ApplyOutline(cfg, on)
         o:EnableMouse(false)
         self.outline = o
     end
-    local w, h = NS.Style.ElementSize(cfg)
-    local point = NS.Preview.Offset(cfg, 1)
     o:ClearAllPoints()
-    o:SetPoint(point, self.anchor, point, 0, 0)
-    o:SetSize(w, h)
+    if block then
+        o:SetAllPoints(block)
+    else
+        local w, h = NS.Style.ElementSize(cfg)
+        local point = NS.Preview.Offset(cfg, 1)
+        o:SetPoint(point, self.anchor, point, 0, 0)
+        o:SetSize(w, h)
+    end
     o:Show()
+end
+
+--- The optional NAME LABEL (batch 8 NL-1..NL-3): the container's name where its strip sits
+--- (Anchors.PlaceLabel), built on the first apply that turns it on. A PLAIN frame under the anchor,
+--- taking no mouse and never a backdrop, like the outline: it inherits the anchor's scale, alpha and
+--- stand-down. Its font, text and place are set here, in Apply, which is kept out of lockdown; the
+--- visibility pass only shows or hides it (ApplyLabelShown). Its class color is the snapshot's, or the
+--- player's for a player container (Style.ColorWith).
+function ContainerClass:ApplyLabel(cfg)
+    local lc = cfg.label
+    if not (lc and lc.show) then return end
+    if not self.label then
+        local host = CreateFrame("Frame", nil, self.anchor)
+        host:EnableMouse(false)
+        self.label, self.labelText = host, host:CreateFontString(nil, "OVERLAY")
+    end
+    local fs = self.labelText
+    NS.Style.ApplyFont(fs, lc.font or D.label.font, D.label.font, self.classColor or false)
+    fs:SetText(tostring(cfg.name or ""))
+    NS.Anchors.PlaceLabel(self, cfg)
+end
+
+--- Show or hide the name label: shown whenever the container is, locked or unlocked, whatever it holds
+--- (its contents are secret), and while unlocked beside the strip, which moves out past it (D6). Our
+--- own unprotected frame, so combat-legal; it moves only on a first show, having no points before.
+--- `labelShown` is what the strip (Anchors.UpdateHandle) and this container's own seam (Anchors.RefreshSeam) read.
+--- `show` is whether the container shows at all (ShouldShow).
+function ContainerClass:ApplyLabelShown(cfg, show)
+    local host = self.label
+    local lc = cfg and cfg.label
+    local on = (show and host and lc and lc.show) and true or false
+    self.labelShown = on
+    if not host then return end
+    if on and not host.placed then NS.Anchors.PlaceLabel(self, cfg) end
+    host:SetShown(on)
+end
+
+--- Set a renamed container's label text (CM.NotifyRenamed): a rename applies nothing else.
+function ContainerClass:RefreshLabelText()
+    local cfg = self.labelText and self:Cfg()
+    if cfg then self.labelText:SetText(tostring(cfg.name or "")) end
+end
+
+--- What a container attached to this one hangs from (Anchors.HangMode): the placeholder block in test
+--- mode (L-4); the one-element anchor its outline marks while unlocked, ONLY when predicted empty
+--- (`empty == true`, batch 9 HG-1 as amended 2026-09-25); else the engine. Nil, not knowable, counts
+--- as not empty: a wrong "not empty" costs the #9 collapse, a wrong "empty" an overlap.
+local function hangModeFor(previewing, unlocked, empty)
+    if previewing then return "preview" end
+    return (unlocked and empty == true) and "slot" or "engine"
+end
+
+--- Whether this container is empty right now: true, false, or nil when that is not knowable
+--- (modules/EmptyWatch.lua).
+--- @return boolean|nil
+function ContainerClass:PredictEmpty()
+    return NS.EmptyWatch.Predict(self)
+end
+
+--- Record what this container's followers hang from and show its outline to match: around its
+--- placeholder block while it previews (SEP-1), its one-element placeholder while hung as `slot`. The
+--- prediction is read only while it can matter: shown, unlocked and not previewing (`watchEmpty`,
+--- which EmptyWatch's re-evaluation pass reads).
+function ContainerClass:ApplyHang(cfg, show, previewing, unlocked)
+    local watch = (unlocked and cfg and not previewing) and true or false
+    local empty = nil
+    if watch then empty = self:PredictEmpty() end
+    self.watchEmpty, self.predictedEmpty = watch, empty
+    self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg, empty)
+    local block = (show and cfg and previewing) and self.previewExtent or nil
+    self:ApplyOutline(cfg, block ~= nil or (watch and self.hangMode == "slot"), block)
 end
 
 --- Enable or disable the engine and show or hide the preview and the handle. Uses the engine's own
@@ -507,9 +590,12 @@ function ContainerClass:ApplyVisibility()
         NS.Preview.Hide(self)
     end
     local unlocked = (show and p and not p.locked) and true or false
-    self:ApplyOutline(cfg, unlocked and not previewing)
+    self:ApplyHang(cfg, show, previewing, unlocked)
+    -- Before the strip, which moves out past a shown label (D6).
+    self:ApplyLabelShown(cfg, show)
     NS.Anchors.UpdateHandle(self, unlocked)
-    -- Containers attached to this one hang from its preview extent while it previews (L-4).
+    -- After the strip and the label: a follower's own seam makes their room (batch 10 F2).
+    NS.Anchors.RefreshSeam(self)
     NS.Anchors.PlaceAttached(self)
     return show, previewing, deferred
 end
@@ -530,6 +616,9 @@ function ContainerClass:Park()
     if self.outline then self.outline:Hide() end
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
+    if self.label then self.label:Hide() end
+    self.hangMode, self.stripShown, self.labelShown = "engine", false, false   -- re-evaluated by the next visibility pass
+    self.watchEmpty, self.predictedEmpty = false, nil
     self.parked = true
 end
 
@@ -541,6 +630,9 @@ function ContainerClass:Destroy()
     NS.Preview.Hide(self)
     if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
+    if self.label then self.label:Hide() end
+    self.hangMode, self.stripShown, self.labelShown = "engine", false, false
+    self.watchEmpty, self.predictedEmpty = false, nil
     self.anchor:Hide()
     self.anchor:ClearAllPoints()
 end

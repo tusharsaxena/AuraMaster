@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1363%2F1363_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1626%2F1626_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -37,15 +37,23 @@ the screen, your debuffs as a row of icons just above them, the debuffs you've p
 icons a little below the middle of the screen, and your offensive cooldowns and defensives as a line
 of text near the middle of the screen. They start locked. Type `/am unlock` and each one gets a
 gold-edged handle with its name, placed just outside the first bar or icon so it never covers one,
-and a faint outline, so even an empty container can be found. Your live auras keep drawing while
-you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
-(or its **?**) opens the Containers page with that container already selected.
+and an empty one gets a faint outline one bar or icon in size, so it can still be found; the outline
+goes away while it has auras to show. Your live auras keep drawing while you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
+(or its **?**) opens the Containers page with that container already selected, and the **X** beside
+the **?** turns that container off (tick its **Enabled** box on Containers to bring it back). If you
+want a container's name on screen all the time, tick **Show name label** on Layout → Label: the
+name sits just outside its own container, on the side the handle uses, locked or unlocked, and
+while unlocked the handle moves out past it, so it reads handle, name, container. **Justify**
+on the same tab lines the name up left, center or right; until you pick one it is centered on bars
+and text and lined up with the first icon on icons.
 
 Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
-waiting for a real buff to turn up. Turn it on with the Test mode checkbox under General → Master
+waiting for a real buff to turn up. A debuff container gets sample debuffs, one of each dispel type,
+so you can check the dispel border and colors. Turn it on with the Test mode checkbox under General → Master
 controls, with `/am test`, or from the minimap button's right-click menu; you don't have to unlock
-first. Real auras stay hidden while it's on. It ends by itself when combat starts, and it can't be
-started during combat.
+first. Real auras stay hidden while it's on, and each container's samples get an outline of their
+own, so you can tell where one container ends and the next begins. It ends by itself when combat
+starts, and it can't be started during combat.
 
 Containers is where you create, rename, duplicate and delete containers, change a
 container's unit, aura type or style, or copy another container's settings onto it. Its own Container
@@ -67,7 +75,17 @@ notice says so and the controls are dimmed.
 
 Layout decides where a container lives. It can sit on the screen, follow another container as that
 one grows (carrying on in the same direction), or attach to any named frame, like your unit frame or an action bar; **Pick a frame…**
-closes the settings so you can just click the frame you want. The same page covers growth direction,
+closes the settings so you can just click the frame you want. A container that follows another sits
+below it by default (above it when it grows up), lined up to suit the two: a text container by its
+own justify, icons or bars centered under centered text, anything else on the side the other's
+lines start from. Which point of each one joins the other is yours to change, and any pair is
+allowed. If the container you attach to grows a
+different way from this one, a dialog asks first: this one then grows like the chain it joins, and
+gets its own growth back if you detach it. While unlocked, every handle sits just outside its own
+container, so a chain reads handle, container, handle, container down one column; the chain spreads
+out to make room for the handles (and for names you show) and closes up again when you lock. A
+container beside another sits clear of that one's handle and name, and hovering a handle names the
+spot where it joins the other. The same page covers growth direction,
 spacing, scale and tooltips, and right-clicking one of your own buffs cancels it unless you switch
 that off. General → Display can hide Blizzard's own buff and debuff frames. Most of this works from
 chat too: `/am new target debuffs icons` makes a container, `/am select` changes which one you're
@@ -86,8 +104,11 @@ with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s`
 duration). The page lists them all, and a line
 can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
 Font tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
-tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. A new
-profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
+tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. **Size to fit**, on
+the Text page, sizes each line to its content instead of a fixed width and height, so a long aura
+name is never cut off; it is on for new Text containers, and containers you made before it existed
+keep the size you gave them. A new
+profile starts with one Text container: **Player cooldowns**, which shows only your offensive and defensive
 cooldowns.
 
 Everything else is on the addon's page under Settings → AddOns, which `/am` on its own opens.
@@ -144,6 +165,18 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default); `/am new enchants` makes one that shows nothing else. Which weapon slots count is General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
+| A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enabled** box on the Containers page to bring it back; its settings were kept. |
+| Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
+
+## Reporting a bug
+
+1. Type `/am debug on` and reproduce the bug.
+2. Type `/am diagnostics`.
+3. If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output,
+   and paste it into a [GitHub issue](https://github.com/tusharsaxena/AuraMaster/issues).
+
+The report is added after the debug trace in the same window, so one copy carries both. It works
+while Aura Master is switched off too, and then says so at the top.
 
 ## Issues and feature requests
 

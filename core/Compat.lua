@@ -315,6 +315,26 @@ function Compat.GetMouseFocus()
     return nil
 end
 
+--- Tint `region` in Blizzard's own border color for `dispelType`, as the engine's PreserveAsset style
+--- does with no customDispelColorMap: AuraUtil.SetAuraBorderColor
+--- (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q1). Without AuraUtil it reads the
+--- client's DebuffTypeColor. For a PREVIEW icon's dispel strips, which have no engine to paint them
+--- (TD-4, DB-1).
+--- @return boolean  whether a color was set
+function Compat.SetAuraBorderColor(region, dispelType)
+    if type(dispelType) ~= "string" or type(region) ~= "table" or not region.SetVertexColor then return false end
+    local AU = _G.AuraUtil
+    if AU and AU.SetAuraBorderColor then
+        AU.SetAuraBorderColor(region, dispelType)
+        return true
+    end
+    local palette = _G.DebuffTypeColor
+    local c = type(palette) == "table" and palette[dispelType]
+    if type(c) ~= "table" then return false end
+    region:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1)
+    return true
+end
+
 --- A spell's name and icon first, or one nil. LibKa0s-Compat-1.0's reader: C_Spell on Retail, the
 --- pre-11.0 global (its rank dropped) as the fallback. A hit answers six values, `name, iconID,
 --- castTime, minRange, maxRange, spellID`, and every caller here reads the first. This addon keeps

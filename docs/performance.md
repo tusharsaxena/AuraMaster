@@ -9,15 +9,30 @@ schema and the step panel belong to `LibKa0s-Perf-1.0` and are documented with t
 Most of the work of showing auras is **not this addon's code**. Every container is a Blizzard aura
 engine that handles `UNIT_AURA` for its unit, gathers and sorts auras, lays out buttons and animates
 every bar, countdown and swipe in Blizzard's own code. The addon has **no per-aura Lua path while
-auras are secret**: no ticker and no `OnUpdate` driving a display. Its one aura-driven path is the
-readable-state timed-spell scan, bracketed `timedScan` (below). What remains is configuration work,
-and one path that runs on ordinary play (a target, focus or pet change).
+auras are secret**: no ticker and no `OnUpdate` driving a display. Its one aura-driven path while locked is the
+readable-state timed-spell scan, bracketed `timedScan` (below). A second runs only while containers
+are unlocked out of combat: the empty-container prediction, bracketed `emptyPass`. What remains is
+configuration work, and one path that runs on ordinary play (a target, focus or pet change).
 
 Other timers and frames of the addon's own: a next-frame `C_Timer.NewTimer(0)` that coalesces applies
 (`modules/ContainerManager.lua:187`), the half-second timed-spell scan timer, armed by a player or pet
 `UNIT_AURA` only while a container uses "only auras without a duration" and auras are readable, and
-the frame picker's `OnUpdate`, which runs only while a pick is in progress. Both
-timers keep their handle, and a stand-down cancels them rather than leaving them armed.
+the frame picker's `OnUpdate`, which runs only while a pick is in progress. While containers are
+unlocked out of combat and test mode, `modules/EmptyWatch.lua` adds a 0.2 s pass timer, armed by a
+`UNIT_AURA` on a watched container's units, and one timer at the soonest weapon enchant's expiry.
+Every timer keeps its handle, and a stand-down cancels it rather than leaving it armed.
+
+### The empty-container watcher's cost
+
+`modules/EmptyWatch.lua` hears `UNIT_AURA` on two private frames (player and pet, target and focus),
+through `RegisterUnitEvent`, only while unlocked, out of test mode, out of combat and while auras are
+readable, and only for the units of a shown container. Locked, which is how the addon is played, it
+registers nothing, so its cost is **zero**. Registered, each event costs one `OnEvent` call that marks
+a pass due, with no allocation; the first arms the 0.2 s pass and the rest fall on its latch. A
+target or focus switch runs the pass at once instead, one per switch. Offline
+(`emptyWatchAura`): 0 B/iter. The pass itself (`emptyPass`) reads each watched container's auras
+through `C_UnitAuras`, which allocates the client's `AuraData` tables for a group with candidate
+filters, and re-runs the visibility pass of a container whose answer changed.
 
 ### The timed-spell listener's cost
 
@@ -46,17 +61,18 @@ members and nameplates included, before any Lua runs.
 
 ## Buckets
 
-Declared in report order in `buckets` (`core/PerfSetup.lua:47`), each bracketed with the inline gated form
+Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed with the inline gated form
 (`local t0 = Perf.on and debugprofilestop()`, performance-§2) at a load-time `local Perf = NS.Perf`.
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:113`, `:121` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:307-311` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
-| `applyContainer` | `applyPass` | `modules/Container.lua:350-393` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:328` | The show ladder over every container, on combat transitions, world entry and the master rows |
-| `styleElement` | — | `modules/Style.lua:774-784` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
-| `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path; absent from a capture with no "without a duration" container |
+| `unitSwap` | — | `core/AuraMaster.lua:116`, `:124` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:324-331` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `applyContainer` | `applyPass` | `modules/Container.lua:350-396` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
+| `visibilityPass` | — | `modules/ContainerManager.lua:350` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `styleElement` | — | `modules/Style.lua:849-859` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path while locked; absent from a capture with no "without a duration" container |
+| `emptyPass` | — | `modules/EmptyWatch.lua` `runPass` | One re-prediction of every unlocked container, 0.2 s after its units' auras changed, and the visibility pass of any whose answer changed. Only while unlocked, out of test mode and out of combat; absent from a capture taken locked |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children
 (performance-§3). **`styleElement` is declared at the root because its callers differ**, and it
@@ -108,7 +124,7 @@ own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopLi
 `FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:103`) re-registers the events, subscribes again, builds any container
+(`core/LifecycleSetup.lua:105`) re-registers the events, subscribes again, builds any container
 the addon never built while down, and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
 field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.
@@ -151,12 +167,14 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `compile` | `FilterCompiler.Compile` over a representative container |
 | `applyPass` | One coalesced apply over the registry (`ContainerManager.FlushPending`) |
 | `restyle` | Re-dressing every button of a live engine (`Container:Restyle`) |
+| `restyleText` | A same-shape re-dress of the Text starter with ten live buttons: it must build no frame, and its Size to fit (batch 8, AS-2) must answer from the memo, measuring no string. The runner's hidden measuring string answers a readable width, as the client's does, so the loops measure the steady path rather than a failed measure that is never remembered |
 | `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`) |
 | `unitSwap` | A target change refreshing the containers on that unit |
 | `probeOverheadOff` | The hottest bracketed path with capture off |
 | `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
 | `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9) |
 | `unitAuraFiltered` | TimedSpells' unit frame, dispatched as the client does from its `RegisterUnitEvent` unit list: a `nameplate1` `UNIT_AURA` must never reach the handler, which must be registered for exactly `player,pet`; the measured loop is a player `UNIT_AURA` with its scan already queued, which must allocate 0 B/iter and arm no further timer |
+| `emptyWatchAura` | EmptyWatch's player frame: nothing registered while locked; unlocked, a player `UNIT_AURA` with the pass already queued must allocate 0 B/iter and arm no further timer |
 
 **What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
 makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it

@@ -222,7 +222,10 @@ end
 --- strip's natural width is the measured label plus twice this. It replaced this file's own
 --- `HANDLE_PAD + HANDLE_HELP * 2` (24 + 28 = 52), and it is 58: the mark's click target grew to the
 --- strip's full height while its art shrank to 8px, which is the widget's correction, not a drift.
-local RESERVE2 = 58
+--- It is 94 since batch 8 CX-3: the strip carries a close mark left of the "?", and the widget grows
+--- the reserve by that mark's frame (HELP_HIT, 18) on BOTH sides so the label stays centered:
+--- 2 * (29 + 18). The widget answers it as handle:Reserve().
+local RESERVE2 = 94
 
 test("handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
@@ -337,7 +340,12 @@ test("handle: at least as wide as its container's element, and as its label with
     assertEqual(last(h, "SetWidth")[1], math.max(RESERVE2, w), "an empty label")
     measureAs(mocks, w + 100)
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "a label wider than the element")
+    -- B11-T11: a bar wide enough for the marks and a readable label caps the strip at its width (the
+    -- name is shortened, tests/test_anchors_width.lua); a narrower element keeps the natural width
+    assertEqual(last(h, "SetWidth")[1], w, "a label wider than the element: capped at it")
+    cfg.bars.width = 100
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "too narrow to cap: the label with its marks")
 end)
 
 test("handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone", function()
@@ -347,6 +355,7 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     local h = recordedHandle(mocks, NS, inst)
     local insets
     rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, t, b) insets = table.concat({ l, r, t, b }, ",") end)
+    cfg.bars.width = 100   -- too narrow to cap (B11-T11), so the strip runs past it
     local w = NS.Style.ElementSize(cfg)
     measureAs(mocks, w + 100)
     local over = 100 + RESERVE2
@@ -653,8 +662,9 @@ test("anchors: a container attaches to its target's engine frame at the derived 
     -- Container 1 fills columns growing right and down, so 2 continues below it (L-6).
     -- red under: Place handing SetPoint the stored attach.point in container mode
     assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "BOTTOMLEFT")
-    -- red under: the derived points dropping the stored offsets
-    assertEqual(p[4], -3); assertEqual(p[5], 4)
+    -- red under: the derived points dropping the stored offsets (they nudge on top of one of 2's
+    -- spacings below 1's block: SS-1, SS-2)
+    assertEqual(p[4], -3); assertEqual(p[5], 4 - c2.layout.spacing)
     local engine = CM.instances[1].engine
     CM.instances[1].engine = nil
     rec = recordAnchor(CM.instances[2])
@@ -855,8 +865,11 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     h:__fire("OnEnter")
     assertEqual(#lines, 1, "a screen container: how to drag, nothing more")
     NS.Database.FindContainer(1).attach.mode = "frame"
+    NS.Database.FindContainer(1).attach.frame = "PlayerFrame"
     lines = {}
     h:__fire("OnEnter")
+    -- red under: "Drag to move" on a container a drag cannot move (owner, 2026-09-26)
+    assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format("PlayerFrame"))
     -- red under: showTooltip without its attached line (the player drags and nothing moves)
     assertEqual(lines[2], NS.L["Attached — set its offsets on the Layout page."])
 end)
@@ -912,27 +925,65 @@ end)
 
 -- ── inherited flow (L-6) ──────────────────────────────────────────────────────────────────────
 
--- Every parent axis and growth, and the points that continue it: a column parent stacks its child
--- below (or above), a row parent beside it.
+-- Every parent axis and growth, and the points that attach its child: the child stacks below (or
+-- above, growing up) its parent whatever the parent fills (IA-1).
 local DERIVED = {
     { axis = "vertical",   growH = "right", growV = "down", p = "TOPLEFT",     rp = "BOTTOMLEFT" },
     { axis = "vertical",   growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "BOTTOMRIGHT" },
     { axis = "vertical",   growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "TOPLEFT" },
     { axis = "vertical",   growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "TOPRIGHT" },
-    { axis = "horizontal", growH = "right", growV = "down", p = "TOPLEFT",     rp = "TOPRIGHT" },
-    { axis = "horizontal", growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "BOTTOMRIGHT" },
-    { axis = "horizontal", growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "TOPLEFT" },
-    { axis = "horizontal", growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "BOTTOMLEFT" },
+    { axis = "horizontal", growH = "right", growV = "down", p = "TOPLEFT",     rp = "BOTTOMLEFT" },
+    { axis = "horizontal", growH = "right", growV = "up",   p = "BOTTOMLEFT",  rp = "TOPLEFT" },
+    { axis = "horizontal", growH = "left",  growV = "down", p = "TOPRIGHT",    rp = "BOTTOMRIGHT" },
+    { axis = "horizontal", growH = "left",  growV = "up",   p = "BOTTOMRIGHT", rp = "TOPRIGHT" },
 }
 for _, c in ipairs(DERIVED) do
     test(("anchors: derived points continue a %s/%s/%s parent"):format(c.axis, c.growH, c.growV), function()
         local NS = fresh()
         local p, rp = NS.Anchors.DerivedPoints({ axis = c.axis, growH = c.growH, growV = c.growV })
-        -- red under: a table that ignores the parent's axis (a row parent stacking its child below)
+        -- red under: the old axis branch putting a row parent's child beside it
         assertEqual(p, c.p)
         assertEqual(rp, c.rp)
     end)
 end
+
+test("anchors: derived points do not depend on the parent's fill axis", function()
+    local NS = fresh()
+    for _, h in ipairs({ "right", "left" }) do
+        for _, v in ipairs({ "down", "up" }) do
+            local cp, crp = NS.Anchors.DerivedPoints({ axis = "vertical", growH = h, growV = v })
+            local rowP, rowRp = NS.Anchors.DerivedPoints({ axis = "horizontal", growH = h, growV = v })
+            local noP, noRp = NS.Anchors.DerivedPoints({ growH = h, growV = v })
+            -- red under: the old axis branch (a row parent's child beside it, not below)
+            assertEqual(rowP, cp, h .. "/" .. v .. " rows: the column point")
+            assertEqual(rowRp, crp, h .. "/" .. v .. " rows: the column relative point")
+            assertEqual(noP, cp, h .. "/" .. v .. " no axis")
+            assertEqual(noRp, crp, h .. "/" .. v .. " no axis")
+        end
+    end
+end)
+
+test("anchors: a container attached to an icon row stacks below it, on the side its rows start from", function()
+    local NS = fresh()
+    local CM = NS.ContainerManager
+    local L3 = NS.Database.FindContainer(3).layout
+    L3.axis, L3.growH, L3.growV = "horizontal", "right", "down"
+    local c2 = NS.Database.FindContainer(2)
+    c2.attach = { mode = "container", container = 3, x = 0, y = -4 }
+    local rec = recordAnchor(CM.instances[2])
+    assertEqual(NS.Anchors.Place(CM.instances[2]), "container")
+    local p = rec.points[1]
+    -- red under: rows placing the child beside the parent (TOPLEFT to TOPRIGHT)
+    assertEqual(p[1], "TOPLEFT"); assertTrue(p[2] == CM.instances[3].engine, "3's engine")
+    -- The chain stacks vertically, so the seam is one of 2's line spacings, the stored -4 on top.
+    assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], 0); assertEqual(p[5], -4 - c2.layout.lineSpacing)
+    L3.growH = "left"
+    rec = recordAnchor(CM.instances[2])
+    NS.Anchors.Place(CM.instances[2])
+    p = rec.points[1]
+    -- red under: a left-growing row putting its child to its left
+    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
+end)
 
 --- Container 1 set to fill columns growing left and up: a flow no starter container has, so an
 --- inherited value can never be mistaken for a container's own.
@@ -999,7 +1050,8 @@ test("anchors: a container attached to another takes derived points from the par
     local p = rec.points[1]
     -- red under: Place reading the stored attach points in container mode
     assertEqual(p[1], "BOTTOMRIGHT"); assertEqual(p[3], "TOPRIGHT")
-    assertEqual(p[4], 6); assertEqual(p[5], -2)
+    -- Growing up, the seam gap (2's spacing) is upward and the stored -2 nudges on top of it.
+    assertEqual(p[4], 6); assertEqual(p[5], -2 + c2.layout.spacing)
 end)
 
 test("anchors: a frame-attached container keeps its stored points", function()
@@ -1031,14 +1083,17 @@ test("anchors: the engine's flow, the placeholders and the handle all read the i
     assertEqual(y, h + c2.layout.spacing, "the second placeholder stacks up the column")
     local inst = NS.ContainerManager.instances[2]
     local hdl = recordedHandle(mocks, NS, inst)
-    local top, bottom
-    rawset(inst.anchor, "SetClampRectInsets", function(_, _, _, t, b) top, bottom = t, b end)
+    local left, right, bottom
+    rawset(inst.anchor, "SetClampRectInsets", function(_, l, r, _, b) left, right, bottom = l, r, b end)
     NS.Anchors.UpdateHandle(inst, true)
     local p = last(hdl, "SetPoint")
-    -- red under: placeHandle reading cfg.layout (2's own flow grows down: the strip would sit above)
+    -- red under: placeHandle reading cfg.layout (2's own rows grow left and down: the strip would be
+    -- above it). Before its own block in its own column (batch 10 F1): below it, growing up, lined
+    -- up with the right edge its lines start from.
     assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
-    -- red under: clampToHandle reading cfg.layout
-    assertEqual(top, 0); assertEqual(bottom, -20)
+    -- red under: clampToHandle reading cfg.layout (2's own growth runs right and reaches up)
+    assertEqual(right, 0, "never right: its lines run left"); assertTrue(left <= 0)
+    assertTrue(bottom < 0, "it reaches down over the strip")
 end)
 
 --- The anchor point the engine was last told for container `id`.
@@ -1090,7 +1145,8 @@ test("anchors: a write that moves a container's flow re-applies every container 
     -- red under: MovesFollowers answering true for every path
     assertEqual(run("container.layout.spacing", 5, 1), "1", "spacing moves no follower")
     -- red under: FLOW_PATHS without the attach paths (a detach would leave 3 on 1's flow)
-    assertEqual(run("container.attach.mode", "screen", 2), "2,3", "3 now follows 2's own flow")
+    -- 1 too since batch 9 AP-4: a parent's strip side depends on which sides its followers take.
+    assertEqual(run("container.attach.mode", "screen", 2), "1,2,3", "3 now follows 2's own flow, and 1 lost 2")
     CM.RequestApply = real
     mocks.__fireTimers()
     assertEqual(engineAnchorPoint(NS, 3), "TOPRIGHT", "3 follows 2's rows growing left and down")
@@ -1166,14 +1222,15 @@ test("anchors: while its parent previews, an attached container hangs from the p
     assertTrue(two.previewExtent ~= nil and lastTarget(rec3) == two.previewExtent, "a chain: 3 hangs from 2's extent")
 end)
 
-test("anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)", function()
+test("anchors: ending test mode re-anchors an attached container off the extent, and starting it back to the extent (L-4)", function()
     local NS, mocks, CM = previewPair()
     local one, two = CM.instances[1], CM.instances[2]
     local rec = recordAnchor(two)
     NS.Preview.SetTestMode(false)
     mocks.__fireTimers()
     -- red under: ApplyVisibility leaving the followers where the preview put them
-    assertTrue(lastTarget(rec) == one.engine, "test mode off: the engine, which lays out the real auras again")
+    -- previewPair is unlocked, so 1's followers hang from its one-element anchor (EO-1)
+    assertTrue(lastTarget(rec) == one.anchor, "test mode off, unlocked: the anchor its outline marks")
     NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     assertTrue(lastTarget(rec) == one.previewExtent, "test mode on: the extent again")
@@ -1195,7 +1252,7 @@ test("anchors: under lockdown ending test mode leaves an attached container wher
     mocks.__lockdown = false
     NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
     -- red under: recording the followers as placed when lockdown skipped them
-    assertTrue(lastTarget(rec) == CM.instances[1].engine, "combat over: onto the engine")
+    assertTrue(lastTarget(rec) == CM.instances[1].anchor, "combat over, unlocked: onto the anchor (EO-1)")
 end)
 
 test("handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)", function()
@@ -1237,6 +1294,7 @@ test("handle: the width comes from a detached measuring string, never the label,
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
+    NS.Database.FindContainer(1).bars.width = 100   -- natural width, not capped (B11-T11)
     local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
     -- The label is the strip in the kit (a font string comes back as its frame).
     rawset(h, "GetStringWidth", function() error("attempt to perform arithmetic on a secret number value") end)
@@ -1381,4 +1439,41 @@ test("handle: under combat lockdown the right-click is refused in gray and selec
     -- red under: the selection moved by a click that opened nothing
     assertEqual(NS.State.activeContainerId, 1)
     assertTrue(table.concat(lines, "\n"):find("cannot open settings during combat", 1, true) ~= nil, table.concat(lines, " | "))
+end)
+
+test("handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[2]
+    local h = recordedHandle(mocks, NS, inst)
+    local texts = {}
+    rawset(h, "SetText", function(_, s)
+        local n = #texts
+        texts[n + 1] = s
+    end)
+    local name = NS.Database.FindContainer(2).name
+    local dim = "|c" .. NS.Constants.ATTACHED_NAME_COLOR .. name .. "|r"
+    -- red under: the dim gold of the first cut, which the owner found not muted enough
+    assertEqual(NS.Constants.ATTACHED_NAME_COLOR, "ff8c8a84", "a warm gray, not a gold")
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], name, "on the screen: the name as it was")
+    NS.SetByPath("container.attach.container", 1, 2)
+    NS.SetByPath("container.attach.mode", "container", 2)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    -- red under: handleText writing the bare name whatever the attachment
+    assertEqual(texts[#texts], dim, "attached to another container: gray")
+    NS.SetByPath("container.attach.mode", "frame", 2)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], dim, "attached to a named frame: gray")
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], dim .. "  |c" .. NS.Constants.TEST_TAG_COLOR .. NS.L["TEST"] .. "|r",
+        "the TEST tag still follows in orange")
+    NS.Preview.SetTestMode(false)
+    NS.SetByPath("container.attach.mode", "screen", 2)
+    mocks.__fireTimers()
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(texts[#texts], name, "back on the screen: plain again")
 end)

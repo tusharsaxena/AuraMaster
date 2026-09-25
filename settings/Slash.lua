@@ -75,8 +75,10 @@ NS.COMMANDS = {
         function() runResetPosition() end},
     {"forgettimed",   L["Forget which buffs were learned to have a duration"],
         function() runForgetTimed() end},
-    {"debug",         L["Toggle the debug console — on/off enable or disable logging"],
+    {"debug",         L["Toggle the debug console - on/off enable or disable logging"],
         function(rest) runDebug(rest) end},
+    {"diagnostics",   L["Write a diagnostic report to the debug console (also /am debug diagnostics)"],
+        function() NS.Diagnostics.Run() end},
     {"perf",          L["Measure performance — try /am perf for the workflow"],
         function(rest) runPerf(rest) end},
     {"version",       L["Print the addon version"],
@@ -93,7 +95,7 @@ NS.COMMANDS = {
 -- one host writes backwards -- which is precisely what happened the last time the rule moved.
 --
 -- WHAT ANSWERS WHILE DISABLED: everything. `help`, `config`, `version`, `enable`, `disable`, `debug`,
--- `perf` and the whole schema CLI -- `get`, `set`, `list`, `reset`, `resetall` -- and the BARE `/am`,
+-- `diagnostics`, `perf` and the whole schema CLI -- `get`, `set`, `list`, `reset`, `resetall` -- and the BARE `/am`,
 -- which opens the settings panel. That last one is the case that settled it: the panel is the one
 -- surface a player switches the addon back on from by hand, and a rule that answers it with a
 -- refusal has hidden the off switch. Reading and repairing settings is what a player needs from an
@@ -112,15 +114,18 @@ NS.COMMANDS = {
 --- and it is named rather than copied, so a change upstream arrives with the re-vendor instead of
 --- being missed here.
 ---
---- TWO MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
+--- THREE MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
 --- path here is container-relative (`container.bars.width`) and resolves against the SELECTED
 --- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
 --- container they mean -- they are part of reading and repairing settings, not features. Neither
 --- draws, hides, creates or deletes anything: `containers` prints a list, and `select` moves one
 --- integer of session state. slash-commands-§2's list is what a refusal may never be turned on, not a ceiling on
 --- what stays live.
+---
+--- AND `diagnostics`, the third, for the same reason `debug` is live: it is a diagnostic, not a
+--- feature, and the report is most wanted when something is misbehaving (owner, 2026-09-25).
 local function liveVerbs()
-    local out = { "containers", "select" }
+    local out = { "containers", "select", "diagnostics" }
     for _, verb in ipairs((SlashLib and SlashLib.LIVE_VERBS) or {
         "help", "config", "version", "enable", "disable", "debug", "perf",
         "get", "set", "list", "reset", "resetall",
@@ -337,8 +342,15 @@ end
 
 -- /am debug        toggles the console WINDOW (the logging flag is untouched).
 -- /am debug on|off enables or disables session logging through the one SetEnabled seam.
+-- /am debug diagnostics  writes the diagnostic report (modules/Diagnostics.lua), the same as the
+--                  top-level /am diagnostics; first, so it never falls through to the window toggle.
+--                  There is no `diag` alias (owner, 2026-09-25): that word toggles like any other.
 function runDebug(rest)
     local word = firstWord(rest)
+    if word == "diagnostics" then
+        NS.Diagnostics.Run()
+        return
+    end
     if word == "on" or word == "off" then
         NS.DebugLog:SetEnabled(word == "on")
         return
@@ -451,6 +463,16 @@ local function formatValue(row, v)
     end
     return SlashLib.FormatValue(row, v)
 end
+-- Published for modules/Diagnostics.lua, which strips its color escapes before the Copy text.
+Sl.FormatValue = formatValue
+
+--- `/am set`'s parser: the library's, after a row's own `cliParse(text)` has rewritten what was
+--- typed. The anchor-point rows fold case there (batch 11 G7: `top`, `Top` and `TOP` are one
+--- point), so the library's exact match against the row's values still names what is allowed.
+local function parseValue(row, text)
+    if type(row) == "table" and type(row.cliParse) == "function" then text = row.cliParse(text) end
+    return SlashLib.ParseValue(row, text)
+end
 
 cli = SlashLib:New({
     slash        = "/am",
@@ -496,6 +518,7 @@ cli = SlashLib:New({
     bulkBegin    = function(...) NS.Bulk.Begin(...) end,
     bulkEnd      = function(...) NS.Bulk.End(...) end,
 
+    parse       = parseValue,
     colorDecode = colorDecode,
     colorEncode = function(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end,
     format      = formatValue,

@@ -53,6 +53,10 @@ local function env()
         E.StatusBarTimerDirection = { ElapsedTime = 11, RemainingTime = 12 }
         E.StatusBarInterpolation = { Immediate = 21, ExponentialEaseOut = 22 }
         E.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+        -- The client's dispel palette, so a debuff placeholder can tint its dispel edge
+        -- (NS.Compat.SetAuraBorderColor) and the Icons dispel toggle reaches the preview.
+        m.DebuffTypeColor = { Magic = { r = 0.2, g = 0.6, b = 1 }, Curse = { r = 0.6, g = 0, b = 1 },
+            Disease = { r = 0.6, g = 0.4, b = 0 }, Poison = { r = 0, g = 0.6, b = 0 } }
         E.SecondsFormatterInterval = { Seconds = 1, Minutes = 2, Hours = 3, Days = 4 }
         E.SecondsFormatterAbbreviation = { OneLetter = 1 }
         E.SecondsFormatterRounding = { RoundUp = 0, Truncate = 1 }
@@ -205,6 +209,16 @@ local function rig(style)
     local inst = NS.ContainerManager.instances[c.id]
     local k = { NS = NS, c = c, inst = inst, style = style, names = {}, button = R() }
     inst.previewFactory = function() return R() end
+    if style == "text" then
+        -- A measurer that reads, so Size to fit can size the line (the harness's own font string
+        -- answers no width, and every autosize would fall back to the stored size).
+        local fs = R()
+        fs.__answer.GetStringWidth = function(self)
+            local last = self:__last("SetText")
+            return (last and tostring(last[1]):len() or 0) * 6 + 2
+        end
+        NS.Style.__measurer = function() return fs end
+    end
     return k
 end
 
@@ -300,8 +314,9 @@ local GATES = {
     icons = { borderShow = true, expiringColorOn = true },
     -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
     -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
-    -- (feedback #7).
-    text = { icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
+    -- (feedback #7). Size to fit off, so Width and Height reach the element; turning it on then shows
+    -- through the measurer rig() installs (batch 8, AS-1).
+    text = { autoSize = false, icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
 

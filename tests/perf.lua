@@ -46,6 +46,15 @@ local NS = {}
 rawset(_G, "AuraMasterDB", nil)
 Loader.loadAll(Loader.xmlFiles("libs/LibKa0s/LibKa0s.xml"), NS, mocks)
 Loader.loadAll(Loader.tocFiles("AuraMaster.toc"), NS, mocks)
+-- The hidden measuring string answers a readable width, as the client's does once its font is in.
+-- A stub answers none, and every measure would then fail and never be remembered, so each pass would
+-- re-measure: a text starter's Size to fit (batch 8, AS-2) most of all, with a line per placeholder
+-- and time sample. The loops below measure the path a player runs, not that login-only one.
+local measured = 0
+local measureFS = { SetFont = function() return true end,
+    SetText = function(self, t) measured = measured + 1; self.text = t end,
+    GetStringWidth = function(self) return tostring(self.text):len() * 6 + 2 end }
+NS.Style.__measurer = function() return measureFS end
 NS.addon:OnInitialize()
 NS.addon:OnEnable()
 mocks.__fireTimers()
@@ -153,8 +162,12 @@ if textCfg then
     local frames = 0
     local create = mocks.CreateFrame
     mocks.CreateFrame = function(...) frames = frames + 1; return create(...) end
+    local measuredBefore = measured
     measure("restyleText", 200, function() instText:Restyle(textCfg) end)
     mocks.CreateFrame = create
+    -- red under: Size to fit without its memo (every dressed button re-measures every sample line)
+    assert_(measured == measuredBefore,
+        ("restyleText: a same-settings re-dress measured %d string(s)"):format(measured - measuredBefore))
     -- red under: useChain rebuilding the chain on every dress
     assert_(frames == 0, ("restyleText: a same-shape re-dress built %d frame(s)"):format(frames))
 end
@@ -228,6 +241,36 @@ if auraUnits then
         ("unitAuraFiltered: a player UNIT_AURA allocated %.1f B/iter"):format(filtered.bytesPerIter))
     mocks.__fireTimers()
 end
+
+-- 9. EmptyWatch hears UNIT_AURA on its own two frames (player and pet, target and focus), only while
+--    unlocked and out of test mode and combat. The handler only marks its coalesced pass due, so a
+--    burst with that pass already queued must allocate nothing and arm no further timer; a locked
+--    addon registers nothing at all.
+NS.SetByPath("container.filter.durationMode", "any", 1)
+mocks.__fireTimers()
+local EW = NS.EmptyWatch
+local lockedFrame = EW.unitFrames[1]
+assert_(not (lockedFrame and lockedFrame.__unitEvents.UNIT_AURA),
+    "emptyWatchAura: UNIT_AURA registered while locked")
+NS.SetByPath("locked", false)
+mocks.__fireTimers()
+local watchFrame = EW.unitFrames[1]
+local watchUnits = watchFrame and watchFrame.__unitEvents.UNIT_AURA
+assert_(watchUnits ~= nil, "emptyWatchAura: EmptyWatch did not register UNIT_AURA while unlocked")
+if watchUnits then
+    local onEvent = watchFrame.__scripts.OnEvent
+    onEvent(watchFrame, "UNIT_AURA", "player")   -- queue the one pass; the loop measures the latched path
+    local queued = #mocks.__timers
+    local burst = measure("emptyWatchAura", 1000, function() onEvent(watchFrame, "UNIT_AURA", "player") end)
+    assert_(#mocks.__timers == queued,
+        ("emptyWatchAura: a UNIT_AURA burst armed %d more timer(s)"):format(#mocks.__timers - queued))
+    -- red under: a table or closure built in EmptyWatch's handler, or a pass run per event.
+    assert_(burst.bytesPerIter == 0,
+        ("emptyWatchAura: a UNIT_AURA allocated %.1f B/iter"):format(burst.bytesPerIter))
+    mocks.__fireTimers()
+end
+NS.SetByPath("locked", true)
+mocks.__fireTimers()
 
 for _, r in ipairs(results) do
     assert_(r.bytesPerIter >= 0, ("%s reports negative bytes per iteration (%.1f)"):format(r.name, r.bytesPerIter))

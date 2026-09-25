@@ -112,6 +112,25 @@ local function panelRead(path)
     return NS.GetSetting(path)
 end
 
+--- A write from the panel that must be confirmed first (batch 9 GC-1). A row may carry
+--- `confirmWrite(value, id)`, handed the value and the selected container's id, answering nil to write
+--- at once, or the StaticPopupDialogs key of the popup to ask with and its text. Then nothing is
+--- written here: the popup carries { path, value, id } as its data and its OnAccept writes through the
+--- seam, and the panel is redrawn on the next frame, so the widget shows the stored value again until
+--- the player answers. Panel only: `/am set` and the resets write through NS.SetByPath unasked.
+--- @return boolean  true when the write was handed to a popup
+local function confirmFirst(path, value)
+    local row = NS.FindSchemaRow(path)
+    if not (row and row.confirmWrite) then return false end
+    local _, id = NS.ActiveContainer()
+    local which, text = row.confirmWrite(value, id)
+    if not which then return false end
+    local popup = StaticPopup_Show(which, text)
+    if popup then popup.data = { path = path, value = value, id = id } end
+    NS.RequestPanelRefresh()
+    return true
+end
+
 local descriptor = {
     parentTitle   = PARENT_TITLE,
     mainPanelName = "AuraMasterMainPanel",
@@ -123,8 +142,9 @@ local descriptor = {
     -- A refusal that carries its row's own reason (the Text template's parser) is printed, the same
     -- two lines `/am set` prints: the panel's EditBox re-reads the stored value on refresh, so the
     -- reason is the only trace of why the typed one did not stick. A bare refusal stays silent, as it
-    -- always has.
+    -- always has. A row's confirmWrite may hand the write to a popup instead (confirmFirst).
     set          = function(path, value)
+        if confirmFirst(path, value) then return end
         local ok, err, why = NS.SetByPath(path, value)
         if not ok and why then
             print(err)
@@ -195,6 +215,14 @@ local descriptor = {
 -- through a row (route (a)); `/am set` on any composed path answers the library-absent line.
 -- tests/test_surface_parity.lua pins the member set against the live instance;
 -- tests/test_optionssetup.lua pins the full count, the library-absent count and the named delta.
+-- Each per-container page's style gate (`spec.disabledFor`), by page key, recorded on both arms so
+-- a library-less build still knows it: modules/Diagnostics.lua reads it to tell a stored value the
+-- container's style leaves unused from one in use (B9 DX-2). One source: the page's own predicate.
+NS.ContainerPageDisabledFor = NS.ContainerPageDisabledFor or {}
+local function recordContainerPage(pageKey, spec)
+    NS.ContainerPageDisabledFor[pageKey] = type(spec) == "table" and spec.disabledFor or nil
+end
+
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
@@ -261,7 +289,7 @@ if not lib then
     NS.CreateOptionsPanel  = function() sayMissing() end
     NS.OpenOptionsPanel    = function() sayMissing() end
     NS.OpenOptionsPage     = function() sayMissing() end
-    NS.RegisterContainerPage = function() end
+    NS.RegisterContainerPage = function(pageKey, _, _, spec) recordContainerPage(pageKey, spec) end
     return
 end
 
@@ -505,6 +533,7 @@ Helpers.__pageCtx = {}
 --- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
 --- tree entry only, never the page's own name.
 function NS.RegisterContainerPage(pageKey, title, frameName, spec)
+    recordContainerPage(pageKey, spec)
     NS.RegisterOptionsPage(pageKey, title, function(mainCategory)
         if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
         local ctx = Helpers.CreatePanel(frameName, title, {

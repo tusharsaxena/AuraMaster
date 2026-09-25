@@ -21,6 +21,8 @@ read_globals = {
     "debugprofilestop",   -- the perf bracket's clock (performance-§2)
     "debugstack",         -- a failing styler's stack, kept for the error handler (modules/Style.lua)
     "geterrorhandler",    -- a failing container's apply is reported, not raised (modules/ContainerManager.lua)
+    -- whether a container is predicted empty (modules/EmptyWatch.lua)
+    "UnitExists", "UnitIsFriend", "GetWeaponEnchantInfo",
 }
 
 globals = {

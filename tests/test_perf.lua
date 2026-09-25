@@ -14,6 +14,8 @@ local function exercise(NS, mocks)
     NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
     NS.ContainerManager.RequestApply()
     mocks.__fireTimers()
+    NS.SetByPath("locked", false)   -- EmptyWatch listens and queues its pass...
+    mocks.__fireTimers()            -- ...which emptyPass brackets
     NS.ContainerManager.ApplyVisibility()
     NS.Preview.SetTestMode(true)    -- preview: dresses placeholder elements through Style.Element
     mocks.__fireTimers()
@@ -40,7 +42,8 @@ test("perf: every declared bucket is reached by a real bracket", function()
     for _, key in ipairs(NS.Perf.BUCKET_ORDER) do
         assertTrue((seen[key] or 0) > 0, "bucket '" .. key .. "' was never noted")
     end
-    assertTrue(#NS.Perf.BUCKET_ORDER == 6, "the six declared buckets")
+    local declared = #NS.Perf.BUCKET_ORDER
+    assertTrue(declared == 7, "the seven declared buckets")
 end)
 
 test("perf: a dormant probe notes nothing", function()
@@ -91,7 +94,7 @@ test("perf: the buckets are declared in report order, and only the per-container
     local NS = fresh()
     -- red under: a bucket reordered, renamed or dropped from core/PerfSetup.lua
     assertEqual(table.concat(NS.Perf.BUCKET_ORDER, ","),
-        "unitSwap,applyPass,applyContainer,visibilityPass,styleElement,timedScan")
+        "unitSwap,applyPass,applyContainer,visibilityPass,styleElement,timedScan,emptyPass")
     local nested = {}
     for key, parent in pairs(NS.Perf.BUCKET_WITHIN) do
         nested[#nested + 1] = key .. "<" .. parent

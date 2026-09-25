@@ -53,8 +53,10 @@ local function build(frame)
     -- (wireSpark).
     am.sparkClip = CreateFrame("Frame", nil, am.bar)
     am.spark = am.sparkClip:CreateTexture(nil, "OVERLAY")
+    -- This art is a glow on a black field and must be drawn additively: BLEND paints its black matte
+    -- as a box (feedback batch 8, a regression from batch 7 SP-1). applySurfaces pins the blend and
+    -- the desaturation on every dress.
     am.spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
-    am.spark:SetBlendMode("ADD")
 
     -- Text sits in its own frame above the bar, so it is never under the fill and never inherits an
     -- alpha set on the bar.
@@ -124,18 +126,13 @@ end
 --- on). The clip frame reaches half the bar's height past each edge, so the double-height spark is
 --- not cut. A preview has no timer driving that region; FillPreview hides a timeless spark itself.
 ---
---- The two modes also paint the spark differently, and must (feedback batch 7, SP-1). Centered mode
---- sits on the FILL — an opaque texture, painted from the profile's own bar color, that always backs
---- it the same way — so ADD blending there is a deliberate highlight: it washes toward the fill's own
---- color and reads as "the spark," which is the look the owner already signed off on. Clipped mode
---- sits on the ELAPSED side instead, whose background texture defaults to only half-opaque
---- (defaults/Profile.lua bgColor alpha 0.5) and lets whatever sits behind the frame show through. ADD
---- there sums the spark's texture on top of THAT — unpredictable, and reported as "a random
---- yellow-golden spark" once the fill's steadying backdrop was gone. Swapping to normal alpha
---- blending in clip mode stops the backdrop from having a vote: the spark renders as its own
---- authored (and player-colorable, via `sparkColor`) translucent texture, the same every time,
---- instead of summing with whatever is behind it. Do not "simplify" this back to one blend mode for
---- both — the two backdrops are not alike, so the blending cannot be either.
+--- The two modes differ only in position and clip; the spark is painted the same in both (feedback
+--- batch 8 SP-1/SP-2). UI-CastingBar-Spark is additive art, a gold glow on a black field whose black
+--- has alpha. Batch 7 SP-1 switched clip mode to normal (BLEND) blending to stop raw gold showing
+--- over the half-transparent elapsed side, but BLEND paints that black field as a box taller than the
+--- bar. So the blend is ADD in every mode, and the gold is taken out of the art instead: the texture
+--- is desaturated, and its hue comes only from the player's `sparkColor`. Both are set per dress in
+--- applySurfaces. Do not reintroduce BLEND.
 local function wireSpark(am, b, edge, engine, h)
     local clip = am.sparkClip
     local right = b.drain == "right"
@@ -147,12 +144,10 @@ local function wireSpark(am, b, edge, engine, h)
         clip:SetClipsChildren(true)
         local side = right and "RIGHT" or "LEFT"
         am.spark:SetPoint(side, edge, side, 0, 0)
-        am.spark:SetBlendMode("BLEND")
     else
         clip:SetAllPoints(am.bar)
         clip:SetClipsChildren(false)
         am.spark:SetPoint("CENTER", am.fill, right and "LEFT" or "RIGHT", 0, 0)
-        am.spark:SetBlendMode("ADD")
     end
 end
 
@@ -176,8 +171,9 @@ end
 
 --- Paint one surface (the fill or the background) its color and its `opacity`. A live surface colored
 --- by dispel type takes its own color here and the engine's tint over it; a PREVIEW one stands in with
---- the profile's Magic color, since no placeholder names a type. The tint is part of the dress, so a
---- later static dress is never left tinted. A static surface keeps its color's alpha on the color and
+--- the profile's Magic color only until Bars.FillPreview repaints it in its placeholder's own type
+--- (previewDispelPaint). The tint is part of the dress, so a later static dress is never left tinted.
+--- A static surface keeps its color's alpha on the color and
 --- the opacity on the region. A dispel-colored one paints its color opaque and carries the opacity
 --- times the color's alpha on the region (smoke batch 2, item 4): the engine's tint paints the map's
 --- RGB at alpha 1 (Style.DispelColorMap), so an alpha on the color would be lost. Both are plain
@@ -216,6 +212,12 @@ local function applySurfaces(am, b, preview)
     paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview,
         tonumber(b.bgAlpha) or D.bars.bgAlpha)
     am.bg:Show()
+    -- The color an untyped placeholder keeps (previewDispelPaint), taken HERE, inside the dress, where
+    -- the container's class snapshot is set: FillPreview runs after Style.Element has cleared it.
+    if preview then
+        am.fillNone = Style.CurveColor(b.barColor, b.useClassColorBar)
+        am.bgNone = Style.CurveColor(b.bgColor, b.useClassColorBg)
+    end
 
     -- Guarded (B2-3): a refused border costs the border, never Bars.Bind after it.
     Style.GuardedBorder("bar border", am.border, b.borderShow, b.borderStyle,
@@ -223,6 +225,8 @@ local function applySurfaces(am, b, preview)
 
     am.spark:SetShown(b.spark ~= false)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))
+    am.spark:SetDesaturated(true)   -- a neutral glow: the hue comes only from sparkColor
+    am.spark:SetBlendMode("ADD")    -- one blend for every mode; never BLEND (see wireSpark)
 end
 
 --- The width of the bar area: the element (`w` x `h`) minus the icon and its gap.
@@ -339,6 +343,16 @@ local function previewText(am, aura, b)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")
 end
 
+--- Repaint a PREVIEW surface colored by dispel type in its placeholder's own color, from the same map
+--- the engine is handed (Bars.Bind's dispelTint), so the preview and a live bar cannot disagree: a
+--- typed aura takes its palette color, an untyped one the surface's own `none` (TD-4), as the dress
+--- resolved it in the container's class (applySurfaces). The region's alpha is left as paintSurface set it.
+local function previewDispelPaint(tex, none, aura)
+    local map = Style.DispelColorMap(Style.ProfileDispelColors(), none)
+    local c = map[aura.dispel or "None"]
+    if c then tex:SetVertexColor(c.r or 1, c.g or 1, c.b or 1, 1) end
+end
+
 --- Whether a placeholder's spark shows. Its duration is readable, so `sparkTimeless` is honored
 --- directly: a timeless placeholder shows none when the option is off.
 local function previewSparkShown(b, aura)
@@ -353,6 +367,8 @@ function Bars.FillPreview(frame, aura, cfg)
     if not am then return end
     local b = cfg.bars or {}
     previewText(am, aura, b)
+    if b.colorMode == "dispel" then previewDispelPaint(am.fill, am.fillNone, aura) end
+    if b.bgColorMode == "dispel" then previewDispelPaint(am.bg, am.bgNone, aura) end
 
     -- Preview draws the fill directly, as the fraction of the bar area the engine's timer would.
     local frac = aura.duration > 0 and (aura.remaining / aura.duration) or 1

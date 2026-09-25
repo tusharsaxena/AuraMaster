@@ -154,38 +154,52 @@ test("icons: a hidden text is never handed to the engine; a shown one is, as its
     assertTrue(frame:__last("SetIcon")[1] == am.icon)
 end)
 
--- ── dispel border and pandemic ────────────────────────────────────────────────────────────────
+-- ── dispel border and pandemic ────────────────────────────────────────────────────────────────────────────
 
-test("icons: the dispel border is the engine's debuff art on harmful auras only", function()
-    local NS2 = dofile("tests/fresh_env.lua")({ before = function(m)
+-- The dispel border's four strips, in BORDER_STRIPS order (top, bottom, left, right).
+local DISPEL_EDGES = { "dispelTop", "dispelBottom", "dispelLeft", "dispelRight" }
+
+--- A fresh environment whose client has the dispel-style enum (Border 31, PreserveAsset 32).
+local function enumEnv(extra)
+    return fresh({ before = function(m)
         m.Enum = m.Enum or {}
         m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+        if extra then extra(m) end
     end })
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
-        icons = { dispelBorder = true } })
-    local frame, am = dressed(c, true, nil, NS2)
-    local add = frame:__last("AddDispelTypeTexture")
-    assertTrue(add[1] == am.dispel)
-    -- red under: the icon asking for PreserveAsset, which tints the whole icon instead of its border
-    assertEqual(add[2].style, 31, "Blizzard's border art")
-    assertTrue(add[2].showWhenHarmful, "debuffs show their type")
-    assertFalse(add[2].showWhenHelpful, "buffs do not")
+end
+
+local function enumCfg(NS2, icons)
+    return NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons", icons = icons })
+end
+
+test("icons: the dispel border is our four strips, tinted by the engine (PreserveAsset), on harmful auras only (DB-1)", function()
+    local NS2 = enumEnv()
+    local frame, am = dressed(enumCfg(NS2, { dispelBorder = true }), true, nil, NS2)
+    local adds = frame:__calls("AddDispelTypeTexture")
+    -- red under: one binding of Blizzard's beveled border art (style Border, 31)
+    assertEqual(#adds, 4, "one binding per strip")
+    for i, k in ipairs(DISPEL_EDGES) do
+        assertTrue(adds[i][1] == am[k], k .. " bound")
+        assertEqual(adds[i][2].style, 32, k .. ": our white strip kept, only its color set")
+        assertTrue(adds[i][2].showWhenHarmful, k .. ": debuffs show their type")
+        assertFalse(adds[i][2].showWhenHelpful, k .. ": buffs do not")
+        assertFalse(adds[i][2].showWithoutDispelType, k .. ": a typeless debuff keeps our border")
+    end
 end)
 
-test("icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)", function()
-    local NS2 = dofile("tests/fresh_env.lua")({ before = function(m)
-        m.Enum = m.Enum or {}
-        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
-    end })
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
-        icons = { dispelBorder = true } })
+test("icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, DB-2)", function()
+    local NS2 = enumEnv()
+    local c = enumCfg(NS2, { dispelBorder = true })
     NS2.db.profile.dispelColors.Magic = { r = 1, g = 0, b = 0, a = 1 }
     local frame = dressed(c, true, nil, NS2)
-    local opts = frame:__last("AddDispelTypeTexture")[2]
-    -- red under: Icons.Bind passing the profile's customDispelColorMap (a tint over Blizzard's colored
-    -- border art, which the owner turned down: icons show the stock art)
-    assertNil(opts.customDispelColorMap, "no custom color map on an icon's dispel border")
-    assertEqual(opts.style, 31, "still Blizzard's border art")
+    local adds = frame:__calls("AddDispelTypeTexture")
+    assertEqual(#adds, 4)
+    for _, add in ipairs(adds) do
+        -- red under: Icons.Bind passing a customDispelColorMap (the profile's, or our defaults): with
+        -- none, PreserveAsset paints AuraUtil.SetAuraBorderColor, Blizzard's own color
+        assertNil(add[2].customDispelColorMap, "no custom color map on an icon's dispel border")
+        assertEqual(add[2].style, 32, "PreserveAsset")
+    end
 end)
 
 test("icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)", function()
@@ -205,10 +219,11 @@ test("icons: our border draws above the swipe, the dispel border above ours, the
     local frame = R()
     NS2.Style.Element(frame, cfg(), false)
     local am = frame.__am
-    local host = am.dispel.__owner
-    -- red under: the dispel texture made on the button itself, whose regions draw below every child
-    -- frame, so our border covers Blizzard's art instead of the art replacing it
-    assertTrue(host ~= nil and host ~= frame, "the dispel texture lives on a frame of its own")
+    local host = am.dispelTop.__owner
+    -- red under: the dispel strips made on the button itself, whose regions draw below every child
+    -- frame, so our border covers them
+    assertTrue(host ~= nil and host ~= frame, "the dispel strips live on a frame of their own")
+    for _, k in ipairs(DISPEL_EDGES) do assertTrue(am[k].__owner == host, k .. " on the dispel frame") end
     assertTrue(host.__parent == frame, "a child of the button, so the engine's region rules hold")
     -- red under: build leaving the cooldown, border and text frames at one level (their order unset)
     assertTrue(am.border:GetFrameLevel() > am.cd:GetFrameLevel(), "our border above the cooldown swipe")
@@ -216,57 +231,97 @@ test("icons: our border draws above the swipe, the dispel border above ours, the
     assertTrue(am.text:GetFrameLevel() > host:GetFrameLevel(), "the texts above the dispel border")
 end)
 
-test("icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge", function()
-    -- Blizzard draws its debuff border art larger than the icon: a 40x40 border over a 30x30 icon
-    -- (Blizzard_BuffFrame/BuffFrameTemplates.xml), a sixth of the icon's size past each edge. The
-    -- art is transparent padding round a ring, so drawn at the icon's own size the ring lands INSIDE
-    -- the icon (the owner's report, 2026-09-13).
+--- Assert the dispel strips on `am` lie exactly where `am.border`'s Solid strips lie, `size` thick:
+--- the same corners and offsets, on the dispel frame rather than the border frame.
+local function assertSameShape(am, size, what)
+    local solid = BS.strips(am.border)
+    for i, k in ipairs(DISPEL_EDGES) do
+        local got, want = am[k]:__calls("SetPoint"), solid[i]:__calls("SetPoint")
+        local n = #got
+        local m = #want
+        assertEqual(n % 2, 0, what .. ": " .. k .. " two anchors a lay")
+        for j = 1, 2 do
+            local g, w = got[n - 2 + j], want[m - 2 + j]
+            assertEqual(g[1], w[1], what .. ": " .. k .. " point " .. j)
+            assertTrue(g[2] == am.dispelHost, what .. ": " .. k .. " anchored to the dispel frame")
+            assertEqual(g[3], w[3], what .. ": " .. k .. " relative point " .. j)
+            assertEqual(g[4], w[4], what .. ": " .. k .. " x " .. j)
+            assertEqual(g[5], w[5], what .. ": " .. k .. " y " .. j)
+        end
+    end
+    assertEqual(am.dispelTop:__last("SetHeight")[1], size, what .. ": top thickness")
+    assertEqual(am.dispelBottom:__last("SetHeight")[1], size, what .. ": bottom thickness")
+    assertEqual(am.dispelLeft:__last("SetWidth")[1], size, what .. ": left thickness")
+    assertEqual(am.dispelRight:__last("SetWidth")[1], size, what .. ": right thickness")
+end
+
+test("icons: the dispel strips take our Solid border's exact shape and thickness (DB-1)", function()
     local _, am = dressed(cfg({ icons = { width = 32, height = 32, borderShow = true, borderStyle = "Solid",
-        borderSize = 1, dispelBorder = true } }), true)
-    local p = am.dispel:__calls("SetPoint")
-    local o = 30 / 6    -- the art: 32 less a 1 px border each side
-    -- red under: the dispel texture left at SetAllPoints(frame) (the ring drawn inside the icon)
-    assertEqual(p[1][1], "TOPLEFT"); assertTrue(p[1][2] == am.icon); assertEqual(p[1][3], "TOPLEFT")
-    assertEqual(p[1][4], -o); assertEqual(p[1][5], o)
-    assertEqual(p[2][1], "BOTTOMRIGHT"); assertTrue(p[2][2] == am.icon); assertEqual(p[2][3], "BOTTOMRIGHT")
-    assertEqual(p[2][4], o); assertEqual(p[2][5], -o)
+        borderSize = 3, dispelBorder = true } }), true)
+    -- red under: Blizzard's atlas stretched a sixth of the icon past each edge, anchored to the icon
+    assertSameShape(am, 3, "3 px")
+    for _, k in ipairs(DISPEL_EDGES) do
+        assertEqual(am[k]:__joined("SetTexture"), NS.Constants.WHITE_TEXTURE, k .. ": white, for the engine to tint")
+        assertEqual(am[k]:__joined("SetVertexColor"), "1,1,1,1", k .. ": untinted until the engine paints it")
+    end
 end)
 
-test("icons: a non-square icon's dispel art reaches past it by a sixth of each side", function()
-    local _, am = dressed(cfg({ icons = { width = 50, height = 26, borderShow = true, borderStyle = "Solid",
-        borderSize = 1, dispelBorder = true } }), true)
-    local p = am.dispel:__calls("SetPoint")
-    -- red under: one outset for both axes (a wide icon's ring off its top and bottom edges)
-    assertEqual(p[1][4], -48 / 6); assertEqual(p[1][5], 24 / 6)
-    assertEqual(p[2][4], 48 / 6); assertEqual(p[2][5], -24 / 6)
+test("icons: the dispel strips follow Border thickness on every dress (DB-1)", function()
+    local c = cfg({ icons = { borderShow = true, borderStyle = "Solid", borderSize = 1, dispelBorder = true } })
+    local frame, am = dressed(c, true)
+    c.icons.borderSize = 4
+    NS.Style.Element(frame, c, true)
+    -- red under: the strips laid once, at build (a thicker border leaves a thin colored edge)
+    assertSameShape(am, 4, "re-dressed at 4 px")
+end)
+
+test("icons: a hidden border, the None style or 0 thickness draws the dispel edge at 1 px (DB-2)", function()
+    for _, icons in ipairs({
+        { borderShow = false, borderStyle = "Solid", borderSize = 3 },
+        { borderShow = true, borderStyle = "None", borderSize = 3 },
+        { borderShow = true, borderStyle = "Solid", borderSize = 0 },
+    }) do
+        icons.dispelBorder = true
+        local _, am = dressed(cfg({ icons = icons }), true)
+        -- red under: the stored thickness (a 3 px edge over art no border insets) or 0 (nothing drawn)
+        assertEqual(am.dispelTop:__last("SetHeight")[1], 1, tostring(icons.borderStyle) .. " " .. tostring(icons.borderShow))
+        assertEqual(am.dispelLeft:__last("SetWidth")[1], 1, "the sides too")
+    end
+end)
+
+test("icons: a non-Solid border style still takes flat dispel strips at its thickness (DB-2)", function()
+    local _, am = dressed(cfg({ icons = { borderShow = true, borderStyle = "Blizzard Tooltip", borderSize = 5,
+        dispelBorder = true } }), true)
+    -- red under: the dispel edge following the backdrop's art instead of our strips
+    assertEqual(am.dispelTop:__last("SetHeight")[1], 5)
+    assertEqual(am.dispelRight:__last("SetWidth")[1], 5)
+    assertEqual(am.dispelTop:__joined("SetTexture"), NS.Constants.WHITE_TEXTURE)
 end)
 
 test("icons: the dispel border turned off is hidden and never bound", function()
     local frame, am = dressed(cfg({ icons = { dispelBorder = false } }), true)
     -- red under: Icons.Apply leaving a previously shown dispel border drawn
-    assertFalse(am.dispel:IsShown())
-    assertEqual(am.dispel:__count("Hide"), 1)
+    for _, k in ipairs(DISPEL_EDGES) do
+        assertFalse(am[k]:IsShown(), k)
+        assertEqual(am[k]:__count("Hide"), 1, k .. " hidden once per dress")
+    end
     assertEqual(frame:__count("AddDispelTypeTexture"), 0)
     assertEqual(frame:__count("ClearDispelTypeTextures"), 1, "an earlier binding is cleared")
 end)
 
 test("icons: turning the dispel border off on a live button keeps it hidden (B-4)", function()
-    local NS2 = fresh({ before = function(m)
-        m.Enum = m.Enum or {}
-        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
-    end })
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
-        icons = { dispelBorder = true } })
+    local NS2 = enumEnv()
+    local c = enumCfg(NS2, { dispelBorder = true })
     local frame = R()
     NS2.Style.Element(frame, c, true)
     for k in pairs(frame.__am) do frame.__am[k] = R() end
     dofile("tests/engine_recorder.lua")(frame, { tint = { 1, 1, 1, 1 }, aura = true })
     NS2.Style.Element(frame, c, true)
-    assertTrue(frame.__am.dispel:IsShown(), "on: the engine shows it")
+    for _, k in ipairs(DISPEL_EDGES) do assertTrue(frame.__am[k]:IsShown(), "on: the engine shows " .. k) end
     c.icons.dispelBorder = false
     NS2.Style.Element(frame, c, true)
-    -- red under: Icons.Bind clearing the dispel texture after SetIcon, whose apply pass shows it again
-    assertFalse(frame.__am.dispel:IsShown())
+    -- red under: Icons.Bind clearing the dispel strips after SetIcon, whose apply pass shows them again
+    for _, k in ipairs(DISPEL_EDGES) do assertFalse(frame.__am[k]:IsShown(), "off: " .. k .. " hidden") end
 end)
 
 test("icons: the refresh-window highlight is bound only when on, in the pandemic color", function()
@@ -422,8 +477,47 @@ test("icons: a timeless preview icon clears its cooldown and shows no time", fun
 end)
 
 test("icons: filling a preview icon that was never dressed does nothing and raises nothing", function()
-    local ok, err = pcall(NS.Style.Icons.FillPreview, R(), NS.Constants.PREVIEW_AURAS[1])
+    local ok, err = pcall(NS.Style.Icons.FillPreview, R(), NS.Constants.PREVIEW_AURAS.HELPFUL[1])
     -- red under: FillPreview without its missing-regions guard
     assertTrue(ok, tostring(err))
     assertNil(err)
+end)
+
+test("icons: a debuff placeholder tints its dispel strips in Blizzard's color for its type; a buff, an untyped one or the option off shows none (TD-4, DB-1)", function()
+    local seen = {}
+    local NS2 = enumEnv(function(m)
+        m.AuraUtil = { SetAuraBorderColor = function(region, t)
+            seen[#seen + 1] = t
+            region:SetVertexColor(0.1, 0.2, 0.3, 1)
+        end }
+    end)
+    local POISON = { name = "Deadly Poison", icon = 1, remaining = 9, duration = 12, stacks = 3, dispel = "Poison" }
+    local harmful = enumCfg(NS2, { dispelBorder = true })
+    harmful.auraType = "HARMFUL"
+    local frame, am = dressed(harmful, false, nil, NS2)
+    NS2.Style.Icons.FillPreview(frame, POISON, harmful)
+    -- red under: FillPreview setting Blizzard's beveled atlas on one texture
+    for _, k in ipairs(DISPEL_EDGES) do
+        assertEqual(am[k]:__joined("SetVertexColor"), "0.1,0.2,0.3,1", k .. ": Blizzard's color for the type")
+        assertTrue(am[k]:IsShown(), k .. " shown")
+        assertEqual(am[k]:__count("SetAtlas"), 0, k .. ": no atlas art")
+    end
+    assertEqual(seen[1], "Poison")
+    NS2.Style.Icons.FillPreview(frame, { name = "Mortal Wounds", icon = 1, remaining = 0, duration = 0, stacks = 0 }, harmful)
+    -- red under: a re-used placeholder keeping the last aura's edge
+    for _, k in ipairs(DISPEL_EDGES) do assertFalse(am[k]:IsShown(), "no dispel type: no edge on " .. k) end
+    local helpful = enumCfg(NS2, { dispelBorder = true })
+    helpful.auraType = "HELPFUL"
+    frame, am = dressed(helpful, false, nil, NS2)
+    NS2.Style.Icons.FillPreview(frame, { name = "Bloodlust", icon = 1, remaining = 28, duration = 40, stacks = 0,
+        dispel = "Magic" }, helpful)
+    -- red under: a buff edged (the live binding is showWhenHelpful = false)
+    for _, k in ipairs(DISPEL_EDGES) do assertFalse(am[k]:IsShown(), "a buff never shows the edge: " .. k) end
+    local off = enumCfg(NS2, { dispelBorder = false })
+    off.auraType = "HARMFUL"
+    frame, am = dressed(off, false, nil, NS2)
+    local before = #seen
+    NS2.Style.Icons.FillPreview(frame, POISON, off)
+    for _, k in ipairs(DISPEL_EDGES) do assertFalse(am[k]:IsShown(), "the option off: " .. k) end
+    assertEqual(#seen, before, "no color asked for")
 end)

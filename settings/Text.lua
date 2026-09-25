@@ -5,7 +5,8 @@ local _, NS = ...
 --
 --     band   [Container ▾]
 --     [ General ][ Font ][ Icon ][ Pandemic ][ Animation ]
---     General   Size, then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
+--     General   Size (Size to fit, then Width and Height, dimmed under a note while it is on),
+--               then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
@@ -96,6 +97,12 @@ local function noIcon()
     return (textBlock().icon or D.icon) == "NONE"
 end
 
+--- A `disabledIf` predicate: Width and Height dim while Size to fit is on (batch 8, AS-1); they stay
+--- stored, and stand whenever the size cannot be measured.
+local function sizedToFit()
+    return textBlock().autoSize == true
+end
+
 --- A `disabledIf` predicate: the row is dimmed while the selected container's toggle `key` is off.
 local function unlessOn(key)
     return function() return not textBlock()[key] end
@@ -104,10 +111,16 @@ end
 -- ── General ───────────────────────────────────────────────────────────────────────────────────
 
 NS.RegisterSchemaRows({
-    { path = P .. "width", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 40, max = 600, step = 1,
-      label = L["Width (px)"], desc = L["The width of one line, icon included. Text past the edge is cut off."] },
+    -- Size to fit (batch 8, AS-1): first in Size, a structural write so Width and Height dim (and
+    -- the note under them shows) on the redraw. The size itself is modules/Style_Text.lua's.
+    { path = P .. "autoSize", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "bool", startsLine = true,
+      label = L["Size to fit"], desc = L["Size each line's box to its content: the height from the font, the icon, a stacked Center's rows and the bounce, the width from the widest line the placeholders draw. A live aura name longer than those is drawn in full past the edge, from where it is justified. Turn off to set the size by hand, and cut longer text at the edge."], onChange = structural },
+    { path = P .. "width", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number",
+      min = C.TEXT_WIDTH_MIN, max = C.TEXT_WIDTH_MAX, step = 1, disabledIf = sizedToFit, startsLine = true,
+      label = L["Width (px)"], desc = L["The width of one line, icon included. Text past the edge is cut off. Grayed out while Size to fit is on: the width then follows the content, and this value is used only if it cannot be measured."] },
     { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 8, max = 80, step = 1,
-      label = L["Height (px)"], desc = L["The height of one line. Center stacks a line of several fields in rows, and the box grows to fit them."] },
+      disabledIf = sizedToFit,
+      label = L["Height (px)"], desc = L["The height of one line. Center stacks a line of several fields in rows, and the box grows to fit them. Grayed out while Size to fit is on: the height then follows the content, and this value is used only if it cannot be measured."] },
     { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["Text Template"], type = "string",
       dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Custom template"],
       desc = L["What each line says, built from the tokens listed below. Press Enter to apply."],
@@ -271,22 +284,6 @@ local function templatePicker(cfg, id)
     end }
 end
 
---- A literal `|` in the player's own template text would start a color escape it never asked for and
---- can leave the box unable to render past it -- PrettyChat's convention (`../PrettyChat/settings/Panel.lua`) is to
---- double it. The only LIVE codes in `Text.PreviewLine`'s own output are dispel's `|cffRRGGBB...|r`
---- wraps (`Style_Text.lua`'s `dispelWord`), so those are pulled out and restored around the doubling,
---- rather than doubled themselves.
-local function escapeStrayPipes(text)
-    local saved, n = {}, 0
-    local guarded = text:gsub("|cff%x%x%x%x%x%x.-|r", function(run)
-        n = n + 1
-        saved[n] = run
-        return "\1" .. n .. "\1"
-    end)
-    guarded = guarded:gsub("|", "||")
-    return (guarded:gsub("\1(%d+)\1", function(i) return saved[tonumber(i)] end))
-end
-
 --- The Preview box's text: `Text.PreviewLine` on the aura type's sample aura, a stray `|` doubled,
 --- the whole line wrapped in the container's own font color (`Style.ApplyFont`'s own call) so the box
 --- reads as the live line would -- with a Task 12 colored dispel word still riding inside it, since a
@@ -300,7 +297,7 @@ end
 --- gray instead: the container's own bright font color on an inert tab was the loudest thing on it.
 local function previewText(cfg, sample, gray)
     local raw = (NS.Style.Text.PreviewLine(cfg.text, sample):gsub("\n", " / "))
-    raw = escapeStrayPipes(raw)
+    raw = NS.Style.Text.EscapeStrayPipes(raw)
     if gray then return GRAY:format(raw) end
     local font = (cfg.text and cfg.text.font) or D.font
     local r, g, b = NS.Style.Color(font.fontColor, font.useClassColorFont)
@@ -352,6 +349,12 @@ local function renderTemplate(ctx, cfg, row)
     cheatSheet(ctx)
 end
 
+--- Under Size, while Size to fit is on: why Width and Height are dimmed, and when they still count.
+local function fitNote(ctx)
+    if not sizedToFit() then return end
+    H.TextRow(ctx, GRAY:format(L["Width and height follow the font, the icon and the template while Size to fit is on. They still apply if the size cannot be measured."]), SMALL)
+end
+
 -- The Placement rows drawn above the Justify note (the justify pair); the offsets follow it.
 local JUSTIFY_ROWS = { [P .. "justifyH"] = true, [P .. "justifyV"] = true }
 
@@ -370,6 +373,7 @@ local function renderGeneral(ctx, cfg, rows)
         end
     end
     H.RenderRows(ctx, size, nil, nil, { noHeadings = true })
+    fitNote(ctx)
     renderTemplate(ctx, cfg, templateRow)
     H.RenderRows(ctx, justify, nil, nil, { noHeadings = true })
     justifyNote(ctx)

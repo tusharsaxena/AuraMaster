@@ -548,3 +548,39 @@ test("compat: without LibKa0s spell info is the major's absent answer, one nil",
     assertNil((NS2.Compat.GetSpellInfo(774)))
     assertNil((NS2.Compat.GetSpellInfo("774")))
 end)
+
+-- ── the dispel border color (batch 8 TD-4, DB-1) ──────────────────────────────────────────────
+
+--- A texture that records its vertex color.
+local function borderRegion()
+    local r = {}
+    function r:SetVertexColor(...) self.color = table.concat({ ... }, ",") end
+    return r
+end
+
+test("compat: a dispel border color goes through AuraUtil, as the engine's PreserveAsset style paints it (DB-1)", function()
+    local seen
+    local AU = { SetAuraBorderColor = function(region, t) seen = { region, t }; region:SetVertexColor(0.2, 0.6, 1, 1) end }
+    with({ { "AuraUtil", AU } }, function(NS)
+        local r = borderRegion()
+        -- red under: no such wrapper
+        assertTrue(NS.Compat.SetAuraBorderColor(r, "Poison"))
+        assertTrue(seen[1] == r); assertEqual(seen[2], "Poison")
+        assertEqual(r.color, "0.2,0.6,1,1", "Blizzard's color for the type")
+    end)
+end)
+
+test("compat: without AuraUtil a dispel border color is DebuffTypeColor's, and nothing without either", function()
+    local DTC = { Curse = { r = 0.6, g = 0, b = 1 } }
+    with({ { "AuraUtil", nil }, { "DebuffTypeColor", DTC } }, function(NS)
+        local r = borderRegion()
+        assertTrue(NS.Compat.SetAuraBorderColor(r, "Curse"))
+        assertEqual(r.color, "0.6,0,1,1")
+        assertFalse(NS.Compat.SetAuraBorderColor(borderRegion(), "Bleed"), "a type with no color")
+        assertFalse(NS.Compat.SetAuraBorderColor({}, "Curse"), "a region that takes no color")
+        assertFalse(NS.Compat.SetAuraBorderColor(borderRegion(), nil), "no dispel type")
+    end)
+    with({ { "AuraUtil", nil }, { "DebuffTypeColor", nil } }, function(NS)
+        assertFalse(NS.Compat.SetAuraBorderColor(borderRegion(), "Curse"), "no palette on the client")
+    end)
+end)

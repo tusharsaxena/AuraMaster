@@ -7,7 +7,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:132`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:139`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:39`).
 - **Two aura types:** buffs (`HELPFUL`) and debuffs (`HARMFUL`). The player's temporary weapon
   enchants are a buff category, not an aura type (schema v5, feedback #6): a player-buff container
@@ -94,7 +94,7 @@ These are not declined; the game forbids them, and a request for one is answered
   friendly units and debuffs on hostile units. The addon warns per container
   (`identityWarning`, `modules/FilterCompiler.lua:417`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
-  (`CM.MustDefer`, `modules/ContainerManager.lua:196`).
+  (`CM.MustDefer`, `modules/ContainerManager.lua:213`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
   addon's own frames.
 - **Which aura a spell applies.** The addon filters on the id the aura carries, and a great many

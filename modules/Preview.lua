@@ -7,7 +7,8 @@ local _, NS = ...
 -- to hand it a fake one. So preview elements are Buttons of our own, dressed by the SAME Style code the
 -- engine's buttons are (modules/Style*.lua, with `engine` false) and laid out by the same flow rules
 -- the engine uses, with invented values filled in. Everything a player changes on the Bars, Icons or
--- Text page therefore shows up here exactly as it will on a real aura.
+-- Text page therefore shows up here exactly as it will on a real aura. A container showing debuffs
+-- previews debuffs of every dispel type, one showing buffs previews buffs (C.PREVIEW_AURAS, TD-1).
 --
 -- Preview is on while TEST MODE is (NS.State.testMode, switched only by Preview.SetTestMode below);
 -- while it is, each container's engine is disabled so real auras do not draw on top of the
@@ -70,6 +71,44 @@ function Preview.Offset(cfg, index)
     return point, right and dx or -dx, down and -dy or dy
 end
 
+--- `cfg`'s compiled plan, as the engine would get it.
+local function compilePlan(cfg)
+    local FC = NS.FilterCompiler
+    return FC.Compile(cfg, FC.ProfileContext())
+end
+
+--- The placeholder set for `cfg`: the weapon enchants for a container whose plan has enchant slots
+--- and no aura group (one showing only Weapon enchants, batch 9 SEP-4), else its buffs or its
+--- debuffs by aura type, and the buffs when the type is missing or unknown (batch 8 TD-1). `plan`
+--- is its compiled plan when the caller has one; it is compiled here when not.
+--- @return table  a list from C.PREVIEW_AURAS, never to be written to
+function Preview.AurasFor(cfg, plan)
+    local P = C.PREVIEW_AURAS
+    if not cfg then return P.HELPFUL end
+    plan = plan or compilePlan(cfg)
+    if plan.enchants and not plan.groups[1] then return P.ENCHANT end
+    return (cfg.auraType == "HARMFUL") and P.HARMFUL or P.HELPFUL
+end
+
+-- [placeholder entry] = a plain copy of it with the client's own name and icon, built once per session
+-- and never written back into the constant (TD-3). No secret name can reach it: the preview draws only
+-- in test mode, which cannot start or stay on in combat (SetTestMode above; core/AuraMaster.lua).
+local resolved = {}
+
+--- `a` with the client's name and icon for its spell id, the fixed literals where the client has none.
+local function resolve(a)
+    local r = resolved[a]
+    if r then return r end
+    local name, icon = NS.Compat.GetSpellInfo(a.spellId)
+    r = {
+        name = (type(name) == "string" and name ~= "") and name or a.name,
+        icon = (type(icon) == "number") and icon or a.icon,
+        remaining = a.remaining, duration = a.duration, stacks = a.stacks, dispel = a.dispel,
+    }
+    resolved[a] = r
+    return r
+end
+
 local function factory(parent)
     return function()
         return CreateFrame("Button", nil, parent)
@@ -106,17 +145,16 @@ local function poolFor(container, style)
     return pool
 end
 
---- How many placeholders `cfg` shows: every placeholder aura, under the per-group cap, and no more
---- than its enchant slots for a container whose plan has no aura group (one showing only Weapon
---- enchants, schema v5: the engine draws those slots and nothing else). The plan is compiled here,
---- not read off the container: Show runs only when the preview is dirty, and a container that has
---- never built an engine has no plan to read.
-local function placeholderCount(cfg)
-    local count = #C.PREVIEW_AURAS
+--- How many placeholders `cfg` shows: every placeholder aura of its set, under the per-group cap,
+--- and no more than its enchant slots for a container whose plan has no aura group (one showing only Weapon
+--- enchants, schema v5: the engine draws those slots and nothing else). The plan is compiled here
+--- when the caller has none, not read off the container: Show runs only when the preview is dirty,
+--- and a container that has never built an engine has no plan to read.
+local function placeholderCount(cfg, plan)
+    plan = plan or compilePlan(cfg)
+    local count = #Preview.AurasFor(cfg, plan)
     local cap = tonumber(cfg.filter and cfg.filter.maxAuras) or 0
     if cap > 0 and cap < count then count = cap end
-    local FC = NS.FilterCompiler
-    local plan = FC.Compile(cfg, FC.ProfileContext())
     if plan.enchants and not plan.groups[1] then
         local slots = #plan.enchants.slots
         if slots < count then count = slots end
@@ -138,14 +176,16 @@ function Preview.Show(container)
     if container.previewShown and not container.previewDirty then return end
     local style = NS.Style.StyleKey(cfg)
     local pool = poolFor(container, style)
-    local count = placeholderCount(cfg)
+    local plan = compilePlan(cfg)
+    local count = placeholderCount(cfg, plan)
     local styler = NS.Style.Styler(cfg)
     local make = container.previewFactory or factory(container.anchor)
     container.previewFactory = make
+    local auras = Preview.AurasFor(cfg, plan)
     for i = 1, count do
         local f = NS.Pool.Acquire(pool, make)
         NS.Style.Element(f, cfg, false, container.classColor)
-        styler.FillPreview(f, C.PREVIEW_AURAS[i], cfg)
+        styler.FillPreview(f, resolve(auras[i]), cfg)
         setMouse(f, cfg)
         local point, x, y = Preview.Offset(cfg, i)
         f:ClearAllPoints()
@@ -184,6 +224,9 @@ function Preview.Extent(container, count)
     extent:ClearAllPoints()
     extent:SetPoint(corner, container.anchor, corner, 0, 0)
     extent:SetSize(farX + w, farY + h)
+    -- Kept as a plain number: what a follower's strip room reads (Anchors, EO-2). The frame's own
+    -- height can read secret under an attached anchor.
+    extent.height = farY + h
     extent.placed = true
     return extent
 end

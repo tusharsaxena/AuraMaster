@@ -41,6 +41,17 @@ test("slash: the reserved verbs are all present", function()
     end
 end)
 
+test("slash: NS.COMMANDS carries 23 verbs, diagnostics right after debug, and no diag verb", function()
+    local n = #NS.COMMANDS
+    -- red under: the count claims in docs/ARCHITECTURE.md, docs/slash-dispatch.md and
+    -- docs/module-map.md left behind a verb added or removed (owner, 2026-09-25: 22 -> 23)
+    assertEqual(n, 23)
+    local at = {}
+    for i, e in ipairs(NS.COMMANDS) do at[e[1]] = i end
+    assertEqual(at.diagnostics, at.debug + 1, "diagnostics follows debug")
+    assertTrue(at.diag == nil, "diag is not a verb")
+end)
+
 test("slash: /am new creates the described container and selects it", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("new target debuffs icons")

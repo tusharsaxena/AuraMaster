@@ -15,17 +15,17 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:821
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:846
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:576
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:618
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:284
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:301
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -43,7 +43,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:774
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:849
         │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -188,7 +188,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:425`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:428`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
@@ -199,15 +199,39 @@ size unless test mode's placeholders are there. `ApplyVisibility` runs after eve
 apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test mode switch) and whenever a row whose
 `effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
 container's own enable). The handle
-(`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into, so it
-covers no element and nothing moves to make room for it.
+(`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into (the
+before side: above the block growing down), so it covers no element. Every container's strip sits
+there, a follower's included, in its own column (batch 10 F1, `Anchors.StripPoints`). A shown name
+label (`Anchors.PlaceLabel`) sits on the block's before side too, locked or unlocked, and while
+unlocked the strip moves out past it (D6), so the order is always strip, label, block (F3). A
+follower attached on the after side makes the room itself: its seam is moved on along the chain by
+its own strip's row while the strip shows and its label's row while the label shows (F2), and the
+visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`, after
+`UpdateHandle`). A follower on the parent's ahead side (Right, growing right) is moved on the same way past the parent's label
+while it shows, locked or not, and its strip while that runs past its element (F4). The strip is as
+wide as the element (batch 11 T11): `Anchors.UpdateHandle` hands the widget a label whose name is
+shortened with "..." to fit between the marks (the TEST tag kept whole), measured through the
+widget's `SetLabel` and `Measure` and cached per name and width, and `placeHandle` sets the element's
+width, so `stripOverhang` is 0. Only an element too narrow for both reserves and 40 px of label
+keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
+marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
+pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
+container is attached to another container or a named frame, which it follows and cannot be dragged
+away from, its strip name is a warm gray (`C.ATTACHED_NAME_COLOR`) and the tooltip's first line says
+so instead of "Drag to move": "Anchored to '*parent or frame*', so it cannot be dragged" (the owner,
+2026-09-26). The strip's close mark (X) writes `container.enabled = false` through
+`NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:135`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:173`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
-`engine = false`, fills in invented names, times and stacks, and positions it with
-`Preview.Offset`'s copy of the flow rules. Bars in preview size their fill directly. The placeholders
+`engine = false`, fills in the placeholder set for the container (`Preview.AurasFor`: weapon enchants,
+one per slot, for a container showing only Weapon enchants (batch 9 SEP-4); debuffs of every dispel
+type for a debuff container; buffs otherwise; the client's own names and icons by spell id, invented
+times and stacks), and positions it with `Preview.Offset`'s copy of the flow rules. In test mode the
+container's outline encloses the whole placeholder block (`ContainerClass:ApplyOutline` on the preview
+extent, SEP-1), locked or unlocked, so each block of a chain reads as its own. Bars in preview size their fill directly. The placeholders
 are dressed again only after an apply of the container's settings (which marks the preview dirty) or
 after they were hidden; a visibility pass alone leaves them as they are.
 
@@ -244,6 +268,7 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 |---|---|
 | The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
+| `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
 | `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
@@ -280,6 +305,12 @@ container the registry holds at that moment and draws them in the same turn. A p
 while down is remembered and passed to that sync, so a stand-up in combat parks every id the switch
 reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it.
 
+**`/am diagnostics` still answers while down, and says so** (batch 10 F8). Its header adds one plain
+line, `addon disabled: containers are not built; predictions only` after a login made while off,
+the `... hidden and not updated; the plan lines are from the last apply` form once containers were
+built, or `addon stood down (holds: ...)` for another hold, and each `[Plan] #N not built` names
+its reason (`docs/debug.md`).
+
 **Not a draw gate.** A handler that early-returns has not stopped watching, it has stopped reacting,
 and the client still walks the registration list and still enters Lua on every event
 (anti-pattern #85). `tests/test_disabled.lua` therefore asserts on the registration set, the live
@@ -314,6 +345,33 @@ Create and delete are refused in combat on every surface this addon owns. Reset 
 combat it takes the same parked path. `CONTAINERS_CHANGED` re-renders an open panel, because every
 banner lists containers.
 
+## Predicting an empty container
+
+While unlocked and out of test mode, a container's followers hang from its one-element anchor, and its
+placeholder outline shows, only while `Container:PredictEmpty()` (`EmptyWatch.Predict`) answers
+true (batch 9 HG-1, E1 as amended by the owner on 2026-09-25). The engine cannot say whether it is
+empty: its frame count is a pool that never shrinks, and its size is secret. So the prediction asks
+`C_UnitAuras` the engine's question, per compiled group: a group with no candidate filters asks
+`GetAuraSlots(unit, filter, 1)` whether any slot comes back; one with candidate filters reads each
+slot's `AuraData` and tests the spell-id lists (only where the engine honors them: buffs of a friendly
+unit, debuffs of a hostile one), the dispel types, the max duration (a permanent aura never passes)
+and the boolean flags. Weapon enchants come from `GetWeaponEnchantInfo`, with Hide permanent applied.
+A group whose engine pool reads 0, or a unit that does not exist, needs no read. The answer is nil
+(counted as not empty) in combat, while auras are secret, on a secret or raising read, and for a flag
+the aura data does not carry.
+
+`ContainerClass:ApplyHang` reads the prediction on every visibility pass that finds the container
+shown, unlocked and not previewing, and marks it `watchEmpty`. `EW.Sync`, run after every visibility
+pass and every apply pass, registers `UNIT_AURA` on the module's two frames only for the units of
+watched containers, and only while unlocked, out of test mode, out of combat and while auras are
+readable. An event marks one pass due 0.2 s later (a target or focus switch runs it at once,
+folding in one already due, since the engine redraws for the new unit in that same frame); that pass re-predicts every watched container and
+re-runs the visibility pass of each whose answer changed, which re-places its followers through
+`Anchors.PlaceAttached`. A timer at the soonest enchant's expiry does the same, since a lapsing
+enchant fires no `UNIT_AURA`. `PLAYER_REGEN_DISABLED` reaches `EW.SetCombat` before the combat
+visibility pass, so that pass predicts nil and moves every follower onto its engine while that is
+still allowed; `PLAYER_REGEN_ENABLED` predicts again.
+
 ## Learning timed buffs
 
 `modules/TimedSpells.lua` listens only while an enabled buff container uses "only auras without a
@@ -337,9 +395,13 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:213`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:598`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
-previews, its preview extent, because the disabled engine keeps a stale rect), unless that would loop;
+previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
+not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
+1x1 rect: the three-state `Anchors.HangMode`, recorded as `hangMode` by `ContainerClass:ApplyHang`,
+batch 9 HG-1 and "Predicting an empty container" below),
+unless that would loop;
 to a named frame, if it exists and is not forbidden (one that does not exist yet marks the container
 pending, re-placed on the next `ADDON_LOADED`; a forbidden one is never waited on, since no add-on
 loading makes it a target); else to the screen at `container.position`. A pending resolve
@@ -349,3 +411,34 @@ line, and so does a skipped resolve. Positions are stored, never read back off a
 geometry can be secret; the only position read is the anchor's own after a drag, saved through the
 write seam against that container's id. The client never saves an anchor's position itself
 (`SetDontSavePosition`), so a login cannot restore one over the stored position.
+
+Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
+own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.AttachPoints`, batch
+11 G2). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
+vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
+a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
+classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free
+pair, one of none of them, is placed at its X/Y alone, with no seam, no spread and no push.
+Along the chain the gap across the seam is the child's own gap between consecutive elements in the
+direction the chain stacks, its Spacing or, when it fills rows, its Line spacing (`Anchors.SeamOffset`,
+SS-1); on a side it is the child's gap across (AP-2); the stored `attach.x` / `.y` add on top as a
+nudge (SS-2). The seam is the same locked, unlocked and in test mode.
+
+A join on the parent's center or end holds still while the parent's engine is empty (batch 11 T9).
+An empty engine is a 1x1 rect at its start corner, so a relative point on the parent's center or far
+side landed on that corner, and a centered chain shifted sideways by half an element whenever a middle
+link had no aura. On each axis where the parent is exactly one element across (it fills columns with
+no per-line limit, so one element wide; or rows, so one element tall; or lines of one) and the join
+does not run along that axis, `attachSpec` moves the relative point to the parent's start side on
+that axis and adds the offset back: half the parent's one-element size from the center, all of it
+from the end, toward the growth, converted from the parent's scale to the child's. Both come from the
+parent's own config (`Style.ElementSize`, its Scale), never the engine's geometry. The slot and the
+preview block are one element across there too, so every hang mode lands in the same place. The
+classification, the seam, the spread and the push read the points in effect, not the moved one. On
+the axis the join runs along, an empty parent still closes the chain up, as before.
+
+One element's size is `Style.ElementSize`. On a Text container with Size to fit on
+(`container.text.autoSize`), it comes from the content instead of the stored width and height:
+`Style.Text.AutoSize` measures the widest line over the placeholders, the sample and the worst-case
+durations with the container's font, icon, gap and bounce, clamps the width, memoizes it per style
+signature and falls back to the stored size when nothing can be measured (AS-2).

@@ -18,8 +18,9 @@ local addonName, NS = ...
 local Media = LibStub and LibStub("LibKa0s-Media-1.0", true)
 
 --- The texture path for one shipped icon (extensionless, by the library's contract), or nil. The
---- addon's own draws use one mark: "help", the unlock handle's help icon (modules/Anchors.lua), which
---- falls back to a Blizzard texture when this answers nil.
+--- addon's own draws use two marks, both on the unlock handle (modules/Anchors.lua): "help", its help
+--- icon, and "close", the X that disables the container. Each falls back to a Blizzard texture when
+--- this answers nil.
 --- @param name string  an entry of the library's ICONS catalog, e.g. "help"
 --- @return string|nil
 function NS.Icon(name)

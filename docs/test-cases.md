@@ -123,7 +123,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v7: the current schema version is 7
+- v11: the current schema version is 11
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -168,7 +168,7 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (6)
+### test_migrations.lua (28)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -176,6 +176,28 @@ badge and any count quoted in the docs must agree with it.
 - migrations: every step is idempotent on a fresh default profile
 - migrations: a step that raises leaves the stamp where it was and the addon loads
 - migrations: an inactive profile is migrated too
+- migrations: v8 zeroes the old 0/-4 offset on a container attached to another, and nothing else
+- migrations: a v7 account climbs to v8 in every profile
+- migrations: a new container's attach offset is 0/0
+- migrations: v8 stamps Size to fit off on every stored Text container only, and keeps a stored value
+- migrations: a v7 account keeps its hand-set text size; a fresh install's starters fit their content
+- migrations: after v8 a new container and a new profile start with Size to fit on; a duplicate keeps its source's
+- migrations: v9 removes Size to fit from bars and icons containers, and keeps every Text one
+- migrations: a v8 account climbs through v9 in every profile
+- migrations: a v1 account reaches v9 with Size to fit off on Text only
+- migrations: v9 stamps attach.edge after-start where it is missing or unknown, and keeps a known one
+- migrations: v9 resets a screen container's old 0/-4 to 0/0, and leaves frame and container offsets
+- migrations: a v7 and a v8 account climb past v9 with every chain on after-start, Automatic since v11, and no screen 0/-4
+- migrations: v10 stamps the attach side and resets a screen 0/-4 that an early v9 left
+- migrations: v10 changes nothing on a profile a full v9 already migrated
+- migrations: a v9 account missing both climbs through v10 in every profile
+- migrations: a v8 account reaches v11 with the same result as one that climbed through a full v9
+- migrations: v11 drops the default side and converts every other to the points it resolved to
+- migrations: v11 converts to the very points ResolvedEdge and EdgePoints gave at v10
+- migrations: v11 keeps points already stored and still removes the side
+- migrations: a v10 account reaches v11 in every profile, each converted under its own chain
+- migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
+- migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
 
 ### test_schema.lua (33)
 
@@ -352,7 +374,7 @@ badge and any count quoted in the docs must agree with it.
 - categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility
 - categories: a user category shown beside a shipped one gets its own group, after it and minus its ids
 
-### test_container.lua (51)
+### test_container.lua (52)
 
 - container: the engine is anchored before its first group and given its unit last
 - container: a player buff container with enchants adds all three enchant slots
@@ -405,6 +427,7 @@ badge and any count quoted in the docs must agree with it.
 - container: a hidden container hides its blocker along with its engine, and Park hides it too
 - container: on a client without the aura engine a container is deleted without error
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
+- container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
 ### test_containermanager.lua (53)
 
@@ -462,7 +485,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (27)
+### test_compat.lua (29)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -491,6 +514,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: spell info answers name then icon on a hit, and exactly one nil on a C_Spell miss
 - compat: with LibKa0s a spell info hit is the major's six values, and a legacy miss one nil
 - compat: without LibKa0s spell info is the major's absent answer, one nil
+- compat: a dispel border color goes through AuraUtil, as the engine's PreserveAsset style paints it (DB-1)
+- compat: without AuraUtil a dispel border color is DebuffTypeColor's, and nothing without either
 
 ### test_secrets.lua (6)
 
@@ -535,7 +560,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
 
-### test_anchors.lua (74)
+### test_anchors.lua (77)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -591,6 +616,8 @@ badge and any count quoted in the docs must agree with it.
 - anchors: derived points continue a horizontal/right/up parent
 - anchors: derived points continue a horizontal/left/down parent
 - anchors: derived points continue a horizontal/left/up parent
+- anchors: derived points do not depend on the parent's fill axis
+- anchors: a container attached to an icon row stacks below it, on the side its rows start from
 - anchors: an attached container flows as its parent does, and its own flow stays stored
 - anchors: a chain inherits its root's flow; a broken or looping chain stops where it breaks
 - anchors: a container attached to another takes derived points from the parent's flow
@@ -600,7 +627,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a write that moves a container's flow re-applies every container following it
 - anchors: a parent's growth flip rebuilds its follower's engine, pinned at the derived corner, and re-anchors it to the parent's new engine
 - anchors: while its parent previews, an attached container hangs from the parent's preview extent, not its engine (L-4)
-- anchors: ending test mode re-anchors an attached container to its parent's engine, and starting it back to the extent (L-4)
+- anchors: ending test mode re-anchors an attached container off the extent, and starting it back to the extent (L-4)
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 - handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)
@@ -611,6 +638,185 @@ badge and any count quoted in the docs must agree with it.
 - handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)
 - handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
+- handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
+
+### test_anchors_seam.lua (10)
+
+- seam: SeamOffset leaves one of the child's gaps in the direction the chain stacks
+- seam: a child attached below a column leaves its own spacing, and its X/Y nudge on top
+- seam: a chain growing up leaves the gap upward, so the child never overlaps its parent
+- seam: a child attached below an icon row leaves its own line spacing
+- seam: the gap is the child's spacing, never the parent's
+- seam: a frame-attached container keeps its stored offsets and takes no gap
+- seam: a container whose target cannot be used sits at its screen position, with no gap
+- seam: while the parent previews, the child hangs from its extent with the same gap as locked
+- seam: an attached child's strip sits before its own block, in its own column (batch 10 F1)
+- seam: a screen container's strip keeps its place above or below its auras
+
+### test_anchors_edges.lua (15)
+
+- edges: EDGES lists the nine tokens, after then ahead then behind, and no before or center side
+- edges: EdgePoints gives the design table's pair for every token and growth
+- edges: EdgePoints(L, 'after-start') is exactly the old DerivedPoints for all 8 axis, growH and growV combinations
+- edges: every one of the nine is allowed, behind on a wide child too; only a non-token is not (G5)
+- edges: SeamOffset leaves the child's own gap across for a side, and after is unchanged (AP-2)
+- edges: a side-attached child is placed at its edge's points with its gap across and the nudge on top
+- edges: flipping the root's growth mirrors an Automatic child; an explicit pair stays and takes the seam of the side it now is
+- edges: a side-attached follower of a follower takes no strip room; an after one does (AP-2)
+- edges: the default side follows a Text container's justify; a bars child under a bars parent is after-start (E5, G3)
+- edges: an attachment writes no points: a centered Text container attaches Automatic, on after-center (G2, G3)
+- edges: picked points survive an attach, a retarget and a detach and re-attach
+- edges: a write to either point, the mode or the container re-applies the followers and the parents (AP-4)
+- anchors: FlowChangeOnAttach is nil when nothing would change or nothing is usable
+- anchors: FlowChangeOnAttach names the keys that change and the followers that re-flow too
+- anchors: FlowChangeOnAttach compares with the target's chain root, not the target
+
+### test_anchors_hang.lua (11)
+
+- hang: unlocked and not in test mode, an attached container hangs from its parent's one-element anchor, not its empty engine
+- hang: a chain 3 -> 2 -> 1 unlocked: 3 hangs from 2's anchor, 2 from 1's
+- hang: locking re-anchors followers onto the parent's engine, unlocking puts them back; a pass that changes nothing re-places nothing
+- hang: unlocked, ending test mode moves followers from the preview extent to the parent's anchor, and starting it moves them back
+- hang: under lockdown a lock leaves a follower where it is; the pass after combat moves it
+- hang: three empty Text containers chained and unlocked: no two strips overlap, and each sits between its parent's block and its own
+- hang: the room for a strip is the follower's own: unlocked it adds its strip's row to the seam, locked the seam alone (F2)
+- hang: locked, a follower of a follower keeps its own seam: no strip shows, so none needs room
+- hang: in test mode a chain leaves the same room for its strips (EO-2)
+- hang: a test-mode chain locked shows no strips and keeps its own seams
+- hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
+
+### test_emptywatch.lua (25)
+
+- empty: a token-only group holding an aura is not empty, asked with a count of one
+- empty: a token-only group with nothing to show is empty
+- empty: a unit that does not exist is empty without reading an aura
+- empty: a readable pool of 0 is empty without reading an aura
+- empty: an include id hits and misses
+- empty: spell ids are ignored on a hostile target's buffs, as the engine ignores them
+- empty: a max duration drops a permanent aura and one that runs longer
+- empty: dispel types include and exclude
+- empty: a flag the aura data does not carry is not knowable
+- empty: a read that raises, a secret field and secret auras are not knowable
+- empty: weapon enchants present, absent, and permanent under Hide permanent
+- empty: an enchant on a container with no aura is not empty even when its unit's auras are unknowable
+- empty: unlocked and predicted empty, the follower hangs from the slot and the placeholder shows
+- empty: a parent that gains an aura moves its follower onto the engine and hides its placeholder; losing it moves it back
+- empty: a prediction that is not knowable hangs from the engine with the placeholder hidden
+- empty: 50 UNIT_AURA events cost one pass
+- empty: PLAYER_REGEN_DISABLED puts every follower on the engine before lockdown, and combat's end brings the slot back
+- empty: under lockdown nothing is re-placed, whatever the prediction
+- empty: an oil on the weapon arms one pass at its expiry, and the lapse brings the placeholder back
+- empty: UNIT_AURA is heard only while unlocked, and a lock drops it
+- empty: target and focus are heard on a second frame only while a target or focus container shows
+- empty: test mode, secret auras and a stand-down each drop UNIT_AURA
+- empty: the player frame filters UNIT_AURA alone; pet and inventory changes ride AceEvent
+- empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
+- empty: a target switch folds a pass already due into its own, leaving no timer behind
+
+### test_anchors_close.lua (6)
+
+- close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
+- close: with no media catalog the X falls back to the library's Blizzard stop button
+- close: a left click disables THIS container through the write seam and says how to bring it back
+- close: a right click on the X opens the settings like the strip and the ?, and disables nothing
+- close: in combat the X still disables the container, raising nothing and moving no anchor
+- close: the X's tooltip names the container (following a rename) and says how to turn it back on
+
+### test_anchors_label.lua (23)
+
+- label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Friz 12 OUTLINE }
+- label: a stored container without a label gains the whole block, and a stored one survives the backfill
+- label: off by default, no label frame is ever built
+- label: on and locked, the name shows in a plain, mouse-less frame; turned off it hides
+- label: unlocked, the label AND the strip both show, the strip moved out past the label (D6)
+- label: the strip's clamp reaches over the label too while both show
+- label: test mode shows it, locked or not; visibility never, disabled and the stand-down hide it
+- label: Park and Destroy hide it
+- label: a visibility pass under lockdown moves a placed label not at all; a never-placed one is placed once
+- label: growing right and down it sits where the strip does, plus its X/Y, text justified LEFT
+- label: growing left and down it sits where the strip does, plus its X/Y, text justified RIGHT
+- label: growing right and up it sits where the strip does, plus its X/Y, text justified LEFT
+- label: growing left and up it sits where the strip does, plus its X/Y, text justified RIGHT
+- label justify: with no pick, Bars and Text center the name on its host, whatever the growth
+- label justify: a pick wins over the style default, Left and Right inset 4, Center none
+- label justify: an icons pick holds when the growth flips; AUTO goes back to the style default
+- label justify: LabelJustify answers the style default for nil, AUTO and an unknown stored value
+- label: a container attached to another puts its label on its own block's before side, like a root's; the strip moves out past it
+- label: a follower's follower makes room for its own strip, not for its parent's label and strip
+- label: a rename lands on the label at once, also under lockdown, with no apply queued
+- label: Copy settings copies the label section and not the name; Everything includes it
+- label: its class color makes a tracked container re-apply on a unit swap, only while the label shows
+- label: ApplyFont paints an explicit class, falls back to the swatch for none, and keeps its three-argument path
+
+### test_anchors_strip.lua (7)
+
+- strip: a behind follower's strip sits before it, lined up with the edge that faces its parent, so it runs away from it
+- strip: a behind follower's before strip clamps over its own column, not toward its parent
+- strip: an icons label mirrors only for a behind follower, whose strip lines up with the edge facing its parent
+- strip: no join dot is built for a container joined to another, unlocked or in test mode
+- strip: the tooltip of a container joined to another names the parent's point and the parent
+- strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none
+- strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
+
+### test_anchors_column.lua (19)
+
+- column: an after follower's strip sits before its own block, like a root's, mirrored by the growth
+- column: a follower's strip stays before it whatever other followers hold its sides
+- column: unlocked with the label on, a follower reads strip, label, block before its own block
+- column: locked with the label on, a follower's label sits on its block's before side, not beside the column
+- column: a label is justified inside its own block per LJ-1, with no mirror for an after follower
+- column: an after follower sits past its parent by its own strip's room while unlocked, and by the seam alone locked
+- column: the label's row counts locked and unlocked, the strip's only while it shows
+- column: growing up, the chain spreads upward, the furniture below each block
+- column: the X/Y nudge adds on top of the spread seam
+- column: a lock or unlock re-places a follower through its own visibility pass, and a repeat pass re-places nothing
+- column: under lockdown the seam waits; the first pass after combat catches up
+- column: RefreshSeam allocates nothing when the seam already fits
+- column: test mode, unlocked, spreads the chain the same way and hangs from the preview block
+- column: the owner's Text chain reads strip, block, strip, block, strip, block in one column
+- column: an ahead follower is pushed along the growth past its parent's strip and label while that strip runs over it
+- column: an ahead follower clears its parent's label row, locked or not, since a long name runs on over its column
+- column: an ahead follower stays level when its parent's strip fits its own block, and growing up it is pushed upward
+- column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
+- column: a follower of a side follower spreads by its own strip, as any after follower does
+
+### test_anchors_points.lua (16)
+
+- points: a bars or icons child under a bars or icons parent defaults to after-start, under every growth
+- points: an icons or bars child under a Text parent justified CENTER is centered; LEFT or RIGHT is not
+- points: a Text child lines up with its own justify, whatever the parent, and flips with growH
+- points: the default follows the chain root's growth, not the child's own stored growth
+- points: an explicit pair is used as stored, and does not mirror when the growth flips
+- points: one explicit point keeps the other automatic, as the matching half of the default pair
+- points: a stored point that is not one of the nine reads as Automatic
+- points: a stored attach.edge is not read outside the migration
+- points: AttachEdge classifies the pair in effect as one of the nine tokens, or nil when free
+- points: a classified explicit pair is placed exactly as batch 10 places its token
+- points: behind is no longer refused: a child several auras wide sits on its behind pair
+- points: a free pair is placed at X/Y alone: no seam, no spread, no push
+- points: an after pair spreads by the child's furniture while unlocked; the free pair beside it does not
+- points: a free follower's strip and label sit on its own before side, lined up with H0
+- points: a write to either point, a style or a text justify re-applies the followers
+- points: AttachPoints and AttachEdge allocate nothing
+
+### test_anchors_steady.lua (7)
+
+- steady: the owner's centered chain growing up lands on the same x with its parent's engine empty as populated
+- steady: an end join (right) holds too, and growth left mirrors both
+- steady: hanging from the parent's one-element anchor (slot) or its preview gives the same place
+- steady: a parent one row across (icons filling a row) is steady on y for a side join centered
+- steady: a parent more than one element across is not rewritten on that axis
+- steady: parent and child at different scales convert the offset to the child's scale
+- steady: start-aligned pairs are placed as before, along the chain and across it
+
+### test_anchors_width.lua (6)
+
+- width: a long name on a wide Bars container gives a strip exactly as wide as its bar, the name shortened with ...
+- width: in test mode the name is shortened, never the TEST tag, which stays after it
+- width: a name that fits is drawn whole, the strip still the bar's width
+- width: the full name stays the strip's tooltip title
+- width: a one-icon container too narrow for the marks and a readable label keeps its natural width
+- width: the label is worked out once per name and width, not on every pass
 
 ### test_texttemplate.lua (26)
 
@@ -641,7 +847,7 @@ badge and any count quoted in the docs must agree with it.
 - template: every built-in compiles, and each aura type's list is the pinned one
 - template: a stored template matches a built-in by its text and its justify rule, else none
 
-### test_style.lua (59)
+### test_style.lua (60)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -673,6 +879,7 @@ badge and any count quoted in the docs must agree with it.
 - style: a missing color paints opaque white rather than raising
 - style: a border is hidden when off, styled None, or without a positive size
 - style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
+- style: a tint edge lays the Solid border's four strips, white, untinted and hidden, for the engine to show (DB-1)
 - style: a Solid border takes the class color through its companion (B2-3)
 - style: a Solid border under a secret size draws and never raises (B2-3)
 - style: another style draws a backdrop on a frame of its own, with its edge, size and color (B2-3)
@@ -738,7 +945,7 @@ badge and any count quoted in the docs must agree with it.
 - timed: a client without the aura API learns nothing and raises nothing
 - timed: a client that refuses UNIT_AURA leaves TimedSpells not listening, and the rest loads
 
-### test_style_bars.lua (62)
+### test_style_bars.lua (63)
 
 - bars: the element takes its configured size, and a left icon is a square of the bar's height
 - bars: a right icon pins to the right edge and the bar stops short of it by the icon and its gap
@@ -751,10 +958,10 @@ badge and any count quoted in the docs must agree with it.
 - bars: with the timeless spark off, the live spark rides a clip frame bounded by the elapsed region
 - bars: draining right, the clipped spark sits wholly on the elapsed side of the right-hand edge
 - bars: with the timeless spark on, and in every preview, nothing is clipped and the spark stays centered
-- bars: with the timeless spark off, the live clipped spark blends normally, not additively
-- bars: with the timeless spark on, the live spark stays additive over the opaque fill
-- bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says
-- bars: the clip-mode blend switch leaves the player's own spark color alone
+- bars: with the timeless spark off, the live clipped spark stays additive
+- bars: the spark's blend never depends on sparkTimeless or engine
+- bars: the spark art is desaturated so its hue is the player's sparkColor
+- bars: the neutral additive spark leaves the player's own spark color alone
 - bars: a missing timeless-spark setting reads the template's
 - bars: a timeless preview aura hides its spark when the option is off; a timed one keeps it
 - bars: the texts sit above the spark's clip frame, which sits above the bar
@@ -800,10 +1007,11 @@ badge and any count quoted in the docs must agree with it.
 - bars: a timeless preview aura draws a full bar with no time text, and an expired one keeps one pixel
 - bars: preview text shows the name, whole seconds left, and stacks only above one
 - bars: a preview fill drains from the configured side, spark at its leading edge
-- bars: a dispel-colored preview paints the Magic color, since no real aura names a type
+- bars: a dispel-colored placeholder paints its own type's palette color, and one with no type the surface's (TD-4)
+- bars: an untyped dispel-colored placeholder keeps the container's class snapshot, not the player's (TD-4)
 - bars: filling a preview element that was never dressed does nothing and raises nothing
 
-### test_style_icons.lua (28)
+### test_style_icons.lua (31)
 
 - icons: the art sits inside a shown border, inset by the border's size
 - icons: a hidden border, or the None style, leaves the art edge to edge
@@ -817,11 +1025,13 @@ badge and any count quoted in the docs must agree with it.
 - icons: the time and stack texts are laid against the icon's frame and show on their own settings
 - icons: the time and stack texts are boxed to the icon's width less their offsets
 - icons: a hidden text is never handed to the engine; a shown one is, as its own region
-- icons: the dispel border is the engine's debuff art on harmful auras only
-- icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, owner 2026-09-13)
+- icons: the dispel border is our four strips, tinted by the engine (PreserveAsset), on harmful auras only (DB-1)
+- icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, DB-2)
 - icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
-- icons: the dispel border's art reaches past the icon, as Blizzard sizes it, so its ring sits on the icon's edge
-- icons: a non-square icon's dispel art reaches past it by a sixth of each side
+- icons: the dispel strips take our Solid border's exact shape and thickness (DB-1)
+- icons: the dispel strips follow Border thickness on every dress (DB-1)
+- icons: a hidden border, the None style or 0 thickness draws the dispel edge at 1 px (DB-2)
+- icons: a non-Solid border style still takes flat dispel strips at its thickness (DB-2)
 - icons: the dispel border turned off is hidden and never bound
 - icons: turning the dispel border off on a live button keeps it hidden (B-4)
 - icons: the refresh-window highlight is bound only when on, in the pandemic color
@@ -833,8 +1043,9 @@ badge and any count quoted in the docs must agree with it.
 - icons: a preview icon's cooldown starts as long ago as its placeholder has run
 - icons: a timeless preview icon clears its cooldown and shows no time
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
+- icons: a debuff placeholder tints its dispel strips in Blizzard's color for its type; a buff, an untyped one or the option off shows none (TD-4, DB-1)
 
-### test_style_text.lua (54)
+### test_style_text.lua (55)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -890,8 +1101,30 @@ badge and any count quoted in the docs must agree with it.
 - text style: a placeholder with a dispel type shows the backdrop and edge in its palette color; one without shows neither (feedback #7)
 - text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)
 - text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
+- text style: a debuff placeholder's dispel word and tints follow its own type, and the untyped one shows neither (TD-4)
 
-### test_preview.lua (21)
+### test_style_text_autosize.lua (18)
+
+- autosize: off, the element keeps its stored size, and a stacked Center still grows (AS-3)
+- autosize: the template turns it on; a new container reads the template's true (AS-1, AS-3)
+- autosize: on, the width is the widest placeholder line plus |x| and 2, the height the font plus padding (AS-2)
+- autosize: the width is clamped to the Width row's range
+- autosize: a debuff container measures the debuff placeholders, a buff one the buffs
+- autosize: a placeholder's name is the client's own when it has one
+- autosize: the worst case carries the longest dispel type word, not only the ones the placeholders show
+- autosize: the worst-case duration is measured, not only the placeholders' short ones
+- autosize: an icon beside the line sets the height at its size and widens the box by it and its gap
+- autosize: bounce headroom follows the vertical justify, and a line-height icon is inset by the FINAL height
+- autosize: a stacked Center is its rows tall and as wide as its widest ROW
+- autosize: a measure that fails keeps the stored size, is not remembered, and a later one autosizes
+- autosize: the size is remembered per style signature; a changed font size measures again
+- autosize: the dressed element, the flow layout and the preview offset all take the autosized size
+- autosize: on, a live name longer than the budget draws in full at its justify point (TX-1, E8)
+- autosize: a stacked Center's long name row is not cut either
+- autosize: a placeholder with the long name is not cut in test mode
+- autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
+
+### test_preview.lua (28)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders
@@ -904,7 +1137,7 @@ badge and any count quoted in the docs must agree with it.
 - preview: a vertical layout wraps into a new column one element's width plus the line spacing across
 - preview: a missing layout block grows down and right from the top left with no spacing
 - preview: switching Color by from dispel type back to static leaves no dispel tint on a placeholder (B-4)
-- preview: a background colored by dispel type stands in with Magic, its alpha on the region (feedback #7, item 4)
+- preview: a background colored by dispel type paints each placeholder's own type, its alpha on the region (feedback #7, item 4; TD-4)
 - preview: switching a previewed container from bars to icons re-dresses without error
 - preview: switching a previewed container from icons to bars re-dresses without error
 - preview: a bar container duplicated in test mode, then switched to icons, re-dresses (the owner's steps)
@@ -914,6 +1147,13 @@ badge and any count quoted in the docs must agree with it.
 - preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
 - preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
 - preview: a text container's placeholders read its template, each bracket's text hidden with its value
+- preview: a HARMFUL container draws the debuff placeholders, a HELPFUL one the buffs (TD-1)
+- preview: Preview.AurasFor answers the set for the aura type, and the buffs for anything else (TD-1)
+- preview: switching a previewed container's aura type re-dresses it with the other set (TD-1)
+- preview: a placeholder's name and icon come from its spell id when the client answers, the literals when not (TD-3)
+- preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
+- preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)
+- preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box
 
 ### test_render_coverage.lua (3)
 
@@ -971,10 +1211,11 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (27)
+### test_slash.lua (28)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
+- slash: NS.COMMANDS carries 23 verbs, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1053,6 +1294,44 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: while disabled the live set still answers — settings stay readable and repairable
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
+
+### test_diagnostics.lua (35)
+
+- diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
+- diag: /am diagnostics answers while the addon is disabled, and the state line says so
+- diag: /am debug diagnostics writes the report to the console ungated, opens it, and says so once
+- diag: /am debug diagnostics answers while the addon is disabled, and the state line says so
+- diag: /am debug diag no longer runs the report; it falls through to the window toggle
+- diag: bare /am debug and /am debug on|off keep their meaning; the forms are read in any case
+- diag: without LibKa0s it prints the unavailable line and raises nothing
+- diag: the header names version, schema, profile, state and the apply queue
+- diag: the profile section lists non-default rows only, with no color escape
+- diag: auras on the player are dumped per filter with every field
+- diag: a secret aura field prints as secret, never compares, and is left out of predictions
+- diag: while auras are secret no aura API is called and no button is touched
+- diag: a raising aura read is reported and the containers still report
+- diag: absent units read none, and a pet that exists is dumped
+- diag: every container gets a line and a full filter block, lists sorted and named
+- diag: a container's non-default rows are listed, with no color escape, untouched rows absent
+- diag: a row scoped to an aura type is not listed for a container of the other type
+- diag: the plan verdict reads in sync, PENDING, DRIFT or not built
+- diag: plan groups report the engine's frame and shown counts, or ? when unreadable
+- diag: shown buttons are identified by instance, then by our own regions, else id=?
+- diag: predictions come from ExplainSpell over the unit's readable auras
+- diag: an engine button whose IsShown is secret out of combat costs no section
+- diag: a partly secret group counts the readable buttons and the unknowable ones apart
+- diag: a raising button probe costs one line, never the predictions
+- diag: a plan group that raises keeps later groups and the warnings
+- diag: [Cfg] lists only the settings in use; the rest go on an inert line
+- diag: [Cfg] prints no attach.edge: v11 made it two points, and no row stores it (batch 11 G4)
+- diag: [Cont] prints both points in effect, whether each is automatic, and the classification (batch 11 G7)
+- diag: a failing section is reported and the next container still reports
+- diag: the report is capped below the console buffer and says it was truncated
+- diag: predictions stop at the id cap and the report says it was truncated
+- diag: QueueSnapshot hands out copies, never the live queue
+- diag: a disabled login says so in the header, and each [Plan] not built line says why
+- diag: a stood-down addon names its holds; built containers read hidden, not unbuilt
+- diag: a container with no instance while running is not built for want of one
 
 ### test_bulklog.lua (20)
 
@@ -1228,7 +1507,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
 
-### test_pages_filters.lua (48)
+### test_pages_filters.lua (49)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1275,13 +1554,17 @@ badge and any count quoted in the docs must agree with it.
 - filters: an entry with a verdict keeps its place in the two-column grid
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
-- filters: Show all and Hide all head the Blizzard and Spell Categories sections, and no other (feedback #10)
+- filters: Show all and Hide all head every Categories section, one pair each (feedback #10, B11-T10)
+- filters: Show all / Hide all on Dispel Types and Who Cast It set exactly their own section, for this container only (B11-T10)
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (27)
+### test_pages_layout.lua (47)
 
-- layout: the tabs are Frame, Anchor, Growth, Mouse, in that order
+- layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
+- layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
+- layout: Label > Justify shows the justify in effect with no pick, stores a pick, and Defaults clears it (B9 LJ-1)
+- layout: the Label Justify row is dimmed while the label is off
 - layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)
 - layout: Pick a frame sits beside Frame name in Named frame, and there is no Attach to the screen
 - layout: in screen mode only the subsections that apply are drawn (feedback #4)
@@ -1301,13 +1584,30 @@ badge and any count quoted in the docs must agree with it.
 - layout: after the banner moves, the page draws the newly selected container's values
 - layout: an attached container's Fill and growth are dimmed and show its parent's
 - layout: a screen or frame container's growth rows are its own and live, with no follow line
+- layout: the follow line is dim gold, says why, and has a gap below it (F6)
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
+- layout: the attachment line names the points in effect, picked or Automatic (batch 11 G2)
+- layout: Another container draws the two anchor-point dropdowns, each Automatic (<in effect>) then the nine points (G1)
+- layout: an anchor-point pick stores the point, any pair is allowed, and Automatic stores nil (G1, G2)
+- layout: a picked point's Automatic entry still names what Automatic would give, not the pick (G2)
+- layout: /am set takes the nine point names in any case or auto; attach.edge is no longer a path (G7)
+- layout: a write to either anchor point re-places the container on its parent (G1)
 - layout: every Point and Relative point row places the first aura, since the container's full size is secret
 - layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
 - layout: the hint names the growth to pick instead, one line per facing axis
 - layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
 - layout: choosing a facing Point redraws the tab with the hint on the next frame
+- layout: the Container row's help names no Side row, which batch 11 retired (G1)
+- layout: a Container pick whose chain flows differently asks first and stores nothing (GC-1)
+- layout: accepting the attach popup attaches and keeps the child's own Growth settings (E3)
+- layout: canceling the attach popup stores nothing, and accepting it in combat is refused
+- layout: the attach popup counts the containers attached to the child
+- layout: no popup when the flow matches, for None, or outside container mode
+- layout: switching Attach to into container mode with a differing target stored asks first
+- layout: /am set attaches without asking and prints one line; a differing detach prints one
+- layout: a chain root's Growth tab says how many containers follow its fill and growth
+- layout: Named frame reads Named frame anchor point on the left and This container anchor point on the right (owner, 2026-09-26)
 
 ### test_pages_bars.lua (14)
 
@@ -1337,7 +1637,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (29)
+### test_pages_text.lua (31)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: a bars or icons container sees every row disabled under the note naming its style
@@ -1368,6 +1668,8 @@ badge and any count quoted in the docs must agree with it.
 - text page: an already-doubled || in a custom template still doubles each pipe (final review)
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
 - text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
+- text page: Size to fit leads Size; while it is on Width and Height dim under a note, and say why
+- text page: /am set container.text.autoSize reaches the same seam
 
 ### test_pages_tabs.lua (7)
 
@@ -1483,7 +1785,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 158 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 175 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1555,44 +1857,57 @@ badge and any count quoted in the docs must agree with it.
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 22 |
-| test_migrations.lua | 6 |
+| test_migrations.lua | 28 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
-| test_container.lua | 51 |
+| test_container.lua | 52 |
 | test_containermanager.lua | 53 |
-| test_compat.lua | 27 |
+| test_compat.lua | 29 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 15 |
-| test_anchors.lua | 74 |
+| test_anchors.lua | 77 |
+| test_anchors_seam.lua | 10 |
+| test_anchors_edges.lua | 15 |
+| test_anchors_hang.lua | 11 |
+| test_emptywatch.lua | 25 |
+| test_anchors_close.lua | 6 |
+| test_anchors_label.lua | 23 |
+| test_anchors_strip.lua | 7 |
+| test_anchors_column.lua | 19 |
+| test_anchors_points.lua | 16 |
+| test_anchors_steady.lua | 7 |
+| test_anchors_width.lua | 6 |
 | test_texttemplate.lua | 26 |
-| test_style.lua | 59 |
+| test_style.lua | 60 |
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
-| test_style_bars.lua | 62 |
-| test_style_icons.lua | 28 |
-| test_style_text.lua | 54 |
-| test_preview.lua | 21 |
+| test_style_bars.lua | 63 |
+| test_style_icons.lua | 31 |
+| test_style_text.lua | 55 |
+| test_style_text_autosize.lua | 18 |
+| test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 27 |
+| test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
+| test_diagnostics.lua | 35 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
-| test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 27 |
+| test_pages_filters.lua | 49 |
+| test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
-| test_pages_text.lua | 29 |
+| test_pages_text.lua | 31 |
 | test_pages_tabs.lua | 7 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
@@ -1609,4 +1924,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1363** |
+| **Total** | **1626** |

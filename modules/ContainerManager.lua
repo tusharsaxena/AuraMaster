@@ -141,10 +141,10 @@ local function destroyParked()
     end
 end
 
---- The parked instances, by id (a test seam; production never reads it).
+--- The parked instances, by id (a test seam; Diagnostics reads it too).
 function CM.__retiring() return retiring end
 
---- The destroyed instances kept for their id's return, by id (a test seam; production never reads it).
+--- The destroyed instances kept for their id's return, by id (a test seam; Diagnostics reads it too).
 function CM.__dormant() return dormant end
 
 --- The registry changed: follow it, re-apply everything, and tell whoever is listening.
@@ -189,6 +189,23 @@ function CM.RequestApply(id, system)
             CM.FlushPending()
         end)
     end
+end
+
+--- A read-only copy of the apply queue, for modules/Diagnostics.lua: the pending ids (sorted, and as
+--- a set), whether everything is pending, whether a flush is scheduled, the cause the deferral
+--- notice last named, and whether an apply would have to wait right now. Copies, never the live
+--- tables.
+--- @return table  { all, ids, idSet, scheduled, notice, mustDefer }
+function CM.QueueSnapshot()
+    local ids, idSet = {}, {}
+    for id in pairs(pending) do
+        local n = #ids
+        ids[n + 1] = id
+        idSet[id] = true
+    end
+    table.sort(ids, function(a, b) return tostring(a) < tostring(b) end)
+    return { all = pendingAll, ids = ids, idSet = idSet, scheduled = scheduled, notice = shownReason,
+             mustDefer = CM.MustDefer() }
 end
 
 --- Whether an apply has to wait: aura buttons are locked while auras are secret, and an aura engine's
@@ -308,6 +325,9 @@ function CM.FlushPending(edge)
     pending, pendingAll, userPending = {}, false, false
     local applied, failed = applyDirty(all, which)
     replaceAttached()
+    -- A unit or filter write can change which units are watched, and a new plan's engine has not
+    -- gathered yet: a pass re-predicts once it has (modules/EmptyWatch.lua).
+    if NS.EmptyWatch then NS.EmptyWatch.Sync() end
     if t0 then Perf.Note("applyPass", debugprofilestop() - t0) end
     if NS.Debug then NS.Debug("Apply", "applied %s container(s)", applied) end
     if failed ~= nil then error(failed, 0) end
@@ -325,6 +345,8 @@ function CM.ApplyVisibility()
         local _, _, deferred = inst:ApplyVisibility()
         if deferred then done = false end
     end
+    -- Listen for aura changes, or stop, from the lock, test mode and combat state this pass saw.
+    if NS.EmptyWatch then NS.EmptyWatch.Sync() end
     if t0 then Perf.Note("visibilityPass", debugprofilestop() - t0) end
     return done
 end
@@ -462,9 +484,10 @@ function CM.Rename(id, name)
     return NS.SetByPath("container.name", name, id)
 end
 
---- A container's name changed: every picker and handle lists names.
+--- A container's name changed: every picker, handle and name label shows names.
 function CM.NotifyRenamed()
     for _, inst in pairs(CM.instances) do
+        inst:RefreshLabelText()
         if inst.handle and inst.handle:IsShown() then NS.Anchors.UpdateHandle(inst, true) end
     end
     NS.bus:SendMessage(NS.MSG.CONTAINERS_CHANGED)
@@ -486,7 +509,7 @@ end
 
 -- What "copy settings from" copies. Identity (name), placement (position, attach) and the registry's
 -- own id are never copied: copying a container onto another is about how it looks and what it shows.
-CM.COPY_SECTIONS = { "filter", "layout", "behavior", "bars", "icons", "text" }
+CM.COPY_SECTIONS = { "filter", "layout", "behavior", "label", "bars", "icons", "text" }
 -- What "everything" copies: what the container IS, then every section. Identity first, because the
 -- Style row's onChange resets Fill (B5, settings/Containers.lua): the copied layout lands after that
 -- reset, so the copy keeps the source's Fill.
@@ -565,6 +588,25 @@ local function requestFollowers(p)
     for _, id in ipairs(NS.Anchors.Followers(p.containerId)) do CM.RequestApply(id) end
 end
 
+-- The writes that change where on its parent a container joins (batch 9 AP-4; batch 11 G2).
+local PARENT_PATHS = {
+    ["container.attach.childPoint"] = true,
+    ["container.attach.relPoint"] = true,
+    ["container.attach.mode"] = true,
+    ["container.attach.container"] = true,
+}
+
+--- A write to a container's points, attach mode or target re-applies the container it names too: a
+--- parent's strip and label sit on a side its followers leave free. The parent it LEFT on a target
+--- change is re-applied by the target row's own onChange (settings/Layout.lua), which is handed the
+--- old value; the one named now is re-applied here, attached or not, so a detach reaches it as well.
+local function requestParents(p)
+    if not (p.containerId and PARENT_PATHS[p.path]) then return end
+    local cfg = NS.Database.FindContainer(p.containerId)
+    local id = cfg and cfg.attach and tonumber(cfg.attach.container)
+    if id and id ~= p.containerId and CM.instances[id] then CM.RequestApply(id) end
+end
+
 --- Subscribe to the bus. Separate from CM.Init because the stand-down UNREGISTERS these three
 --- (slash-commands-§7) and the stand-up has to put them back -- a handler left registered and gated
 --- on a flag is the draw gate the section exists to end (anti-pattern #85).
@@ -581,6 +623,7 @@ function CM.StartListening()
             elseif effect ~= "none" then
                 CM.RequestApply(p.containerId)
                 requestFollowers(p)
+                requestParents(p)
             end
         end)
         ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, function() CM.ApplyVisibility() end)

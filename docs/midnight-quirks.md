@@ -68,14 +68,47 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 - **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:42`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:196`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:213`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
 - **Creates every region as a descendant of the button**, once, in `initializeFrame`, stored on
-  `frame.__am` (`modules/Style_Bars.lua:32`, `modules/Style_Icons.lua:22`).
+  `frame.__am` (`modules/Style_Bars.lua:32`, `modules/Style_Icons.lua:25`).
 - **Guards every binding** with `pcall` (`Style.Bind`, `callEngine`), so a refusal costs one binding,
   not the engine's frame batch.
+
+## An engine button's shown state is secret out of combat
+
+**What was seen.** Out of combat, with `Compat.AurasAreSecret()` false, `/am diagnostics` raised
+"attempt to compare local 'v' (a secret boolean value)" in the `frameShown` helper of
+`modules/Diagnostics.lua` (owner smoke run of batch 8, 2026-09-25, test mode on). The pcall covered
+the `IsShown` call, which succeeded; the comparison of its answer ran outside it and raised.
+
+**The restriction.** "Auras are not secret" does not mean "an engine button is readable". The engine
+drives each aura button's Shown aspect from aura data, so `IsShown` on a button from
+`GetAuraGroupFrame` can answer a SECRET boolean out of combat, like the button's size and frame level
+(the two sections below). In combat the same call raises outright (Text chains and animations,
+below). Not yet settled in game: whether it is secret on every button, or only on buttons a disabled
+engine hid (test mode disables every engine).
+
+**What this addon does.** Nothing compares a value read off an engine button without testing it with
+`NS.Secrets.CanAccess` first. The diagnostic report's `frameShown` answers true, false or nil (not
+knowable), prints `shown=?` or `shown=<n>+<k>?` for a group, and lists a button it cannot judge as
+`shown=?` rather than dropping it (batch 9, DX-1).
+
+## An engine cannot say whether it is empty
+
+**The restriction.** `GetAuraGroupFrameCount` answers the pool of buttons the engine has created,
+which never shrinks: a released button is kept, and stays anchored, so which ones are in use is not
+revealed. The engine sets its own size through a secret after each layout, and there is no callback
+when it fills or empties. Anchors cannot express "the larger of the engine and a placeholder", and
+writing a minimum size onto the engine would taint it.
+
+**What this addon does.** It predicts emptiness instead (`modules/EmptyWatch.lua`, batch 9 HG-1): a
+readable pool of 0, or a unit that does not exist, is certainly empty; otherwise it asks `C_UnitAuras`
+the engine's question per compiled group, and `GetWeaponEnchantInfo` for enchant slots. Anything
+secret, raising or outside what it can check answers nil, which counts as not empty. Only a parent
+predicted empty hangs its followers from its one-element placeholder while unlocked.
 
 ## Anchoring an aura container
 
@@ -135,7 +168,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:160`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:158`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -146,7 +179,7 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:147`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:141`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
@@ -196,8 +229,8 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text pa
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:490`), and then adds again
-(`modules/Style_Bars.lua:322-329`, `modules/Style_Icons.lua:165-170`). The order matters: every `Set*` /
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
+(`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -210,7 +243,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:112-124`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:115-127`).
 
 ## Weapon enchants
 
@@ -234,7 +267,7 @@ enchants with it, and the setting's description says so.
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:447`).
+  aura buttons (`modules/Container.lua:450`).
 
 ## An unknown event name raises
 
@@ -337,8 +370,8 @@ handle's label is measured on a detached font string the strip's own widget keep
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
-readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:66`
-and `modules/Style_Icons.lua:61`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
+readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:68`
+and `modules/Style_Icons.lua:66`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
 created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
 
 ## A backdrop on an engine button reads a secret size (B2-3)
@@ -360,7 +393,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:431`):
+`modules/Style.lua:498`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -486,14 +519,14 @@ values was secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:225-227`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:196`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:213`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:447`).
+  button's ancestry (`modules/Container.lua:450`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:301`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:329`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
   page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header
@@ -561,7 +594,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:828`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:903`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

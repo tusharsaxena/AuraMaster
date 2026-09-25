@@ -216,8 +216,23 @@ local function resolveRoot(parts, containerId)
     return NS.db and NS.db.profile or nil, 1, nil
 end
 
+-- AN AUTOMATIC ROW (`nilAs`). A row may store nil for "no pick" and name, as `nilAs`, the value that
+-- nil reads as everywhere a row is shown or written: the panel and `/am get` read `nilAs` for a
+-- stored nil, the row's default IS `nilAs` (so Defaults and `/am reset` answer), and the row's own
+-- normalize turns `nilAs` back into nil on the way in. The template declares no key, because a
+-- backfilled value would be a pick; the two anchor-point rows are the ones (settings/Layout.lua,
+-- batch 11 G2), where nil is Automatic and modules/Anchors.lua reads the store directly.
+
+--- A row's `nilAs`, or nil. Before NS.FindSchemaRow is defined only RegisterSchemaRows asks, and it
+--- reads the row it holds.
+local function nilAsFor(path)
+    local row = NS.FindSchemaRow and NS.FindSchemaRow(path)
+    return row and row.nilAs
+end
+
 --- The shipped default for `path` — from the container template for a `container.` path, from the
---- profile defaults otherwise. A deep copy, so a caller can never mutate the template.
+--- profile defaults otherwise, and an automatic row's `nilAs` where the template declares nothing.
+--- A deep copy, so a caller can never mutate the template.
 function NS.DefaultFor(path)
     -- Inverted off the ONE declaration, defaults/Profile.lua's stored `global.minimap.hide = false`,
     -- rather than typed as `true` here: one hardcoded default, as for every other row.
@@ -228,10 +243,14 @@ function NS.DefaultFor(path)
         return not t.hide
     end
     local parts = splitPath(path)
+    local d
     if parts[1] == CONTAINER then
-        return copy(readFrom(NS.CONTAINER_TEMPLATE, parts, 2))
+        d = readFrom(NS.CONTAINER_TEMPLATE, parts, 2)
+    else
+        d = readFrom(NS.defaults and NS.defaults.profile, parts, 1)
     end
-    return copy(readFrom(NS.defaults and NS.defaults.profile, parts, 1))
+    if d == nil then return nilAsFor(path) end
+    return copy(d)
 end
 
 -- ---------------------------------------------------------------------------
@@ -289,6 +308,7 @@ function NS.RegisterSchemaRows(rows, beforePath)
     for _, row in ipairs(rows) do
         if not row.sessionOnly and type(row.path) == "string" then
             local d = NS.DefaultFor(row.path)
+            if d == nil then d = row.nilAs end
             if d ~= nil then row.default = d end
         end
     end
@@ -352,6 +372,8 @@ local function rowApplies(row, cfg)
     end
     return true
 end
+-- Published for modules/Diagnostics.lua's non-default listing.
+NS.RowApplies = rowApplies
 
 --- The rows of one page, in declaration order, as they apply to the active container. `filter` is
 --- the options library's ctx.unit, passed through and unused: this addon does not filter rows per
@@ -385,7 +407,9 @@ function NS.GetSetting(path, containerId)
     local parts = splitPath(path)
     local root, first = resolveRoot(parts, containerId)
     if not root then return nil end
-    return readFrom(root, parts, first)
+    local v = readFrom(root, parts, first)
+    if v == nil and row then return row.nilAs end
+    return v
 end
 
 -- ---------------------------------------------------------------------------
@@ -606,6 +630,7 @@ local SECTIONS = {
     ["container.filter"]   = "filters",
     ["container.layout"]   = "layout",
     ["container.behavior"] = "layout",
+    ["container.label"]    = "layout",
     ["container.position"] = "layout",
     ["container.bars"]     = "bars",
     ["container.icons"]    = "icons",
@@ -929,11 +954,16 @@ local VALID_TYPES = { bool = true, number = true, string = true, color = true }
 --- for a `container.` row, the global defaults for a `global.` row, the profile defaults otherwise.
 --- The minimap row answers through NS.DefaultFor, because its path is a name and not the stored key
 --- (the stored key is LibDBIcon's inverted `hide`), so it is handed a one-key root holding the
---- inverted default, read at the path's last segment.
+--- inverted default, read at the path's last segment. An automatic row (`nilAs`) is handed the same
+--- one-key root holding its `nilAs`: the template declares no key for it, by design.
 local function defaultsRoot(parts, row)
     if row.path == MINIMAP_PATH then
         local last = #parts
         return { [parts[last]] = NS.DefaultFor(MINIMAP_PATH) }, last
+    end
+    if row.nilAs ~= nil then
+        local last = #parts
+        return { [parts[last]] = row.nilAs }, last
     end
     local defaults = NS.defaults
     if parts[1] == CONTAINER then return NS.CONTAINER_TEMPLATE, 2 end

@@ -496,7 +496,7 @@ test("containers: the copy block offers every other container and copies only th
     -- red under: the source list including the selected container (a copy onto itself)
     -- by name (B2-2): Player cooldowns, Player debuffs, Target debuffs (mine)
     assertEqual(table.concat(source.order, ","), "4,2,3")
-    assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,bars,icons,text")
+    assertEqual(table.concat(what.order, ","), "all,filter,layout,behavior,label,bars,icons,text")
     source:__fire("OnValueChanged", 2)
     what:__fire("OnValueChanged", "bars")
     P.find(ws, "Button", NS.L["Copy onto this container"]):__fire("OnClick")

@@ -10,7 +10,7 @@ local _, NS = ...
 --                   Spell Categories      [Show all][Hide all], the same grid, plus a `See spells`
 --                                         link; hidePermanentEnchants beneath it (buffs), and the
 --                                         hostile-unit note beneath it (debuffs)
---                   Dispel Types · Who Cast It  (debuffs)
+--                   Dispel Types · Who Cast It  (debuffs) [Show all][Hide all], the same grid
 --     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
 --
@@ -508,26 +508,21 @@ local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     end
 end
 
---- The Blizzard Categories grid: heading, bulk buttons, then the grid with its extra column.
-local function renderBlizzardGrid(ctx, g, mine)
-    -- Its heading drawn here rather than by ChoiceGrid, so Show all / Hide all sit
-    -- between the heading and the grid (feedback #10). N-5: only this grid gets the
-    -- extra column.
+--- Every other grid: heading, bulk buttons, then the grid. Its heading is drawn here rather than by
+--- ChoiceGrid, so Show all / Hide all sit between the heading and the grid (feedback #10; Dispel
+--- Types and Who Cast It too since B11-T10). N-5: only Blizzard Categories gets the extra column;
+--- Dispel Types and Who Cast It pass no extraColumn at all, so they draw no 4th cell, blank or
+--- otherwise (unlike passing CATEGORY_EXTRA and letting every cell() call answer nil), which keeps
+--- their rows the width they always were.
+local function renderPlainGrid(ctx, g, mine)
     H.Section(ctx, g.heading)
     bulkButtons(ctx, mine, g.key)
-    H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
-end
-
---- Every other grid: the grid alone, its heading drawn by ChoiceGrid.
-local function renderPlainGrid(ctx, g, mine)
-    -- Dispel Types and Who Cast It: no bulk buttons, and no extraColumn at all, so they
-    -- draw no 4th cell, blank or otherwise (unlike passing CATEGORY_EXTRA and letting
-    -- every cell() call answer nil), which keeps their rows the width they always were.
-    H.ChoiceGrid(ctx, { heading = g.heading, rows = mine, columns = COLUMNS, labelHeader = L["Category"] })
+    H.ChoiceGrid(ctx, { rows = mine, columns = COLUMNS, labelHeader = L["Category"],
+        extraColumn = g.key == "blizzard" and CATEGORY_EXTRA or nil })
 end
 
 --- Grid key -> its drawer; a key not listed draws as `renderPlainGrid`.
-local GRID_RENDER = { custom = renderCustomGrid, blizzard = renderBlizzardGrid }
+local GRID_RENDER = { custom = renderCustomGrid }
 
 --- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell Categories grid (kind
 --- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three

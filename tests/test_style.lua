@@ -188,7 +188,8 @@ test("style: an icon binds the cooldown and the dispel border", function()
     local b = engineButton()
     NS.Style.Element(b, cfg({ style = "icons" }), true)
     assertEqual(b:__count("SetDurationCooldown"), 1)
-    assertEqual(b:__count("AddDispelTypeTexture"), 1)
+    -- red under: one binding of Blizzard's border art (DB-1: one per strip of our own shape)
+    assertEqual(b:__count("AddDispelTypeTexture"), 4)
 end)
 
 test("style: right-click cancel is offered only on your own buffs, and never click-through", function()
@@ -619,6 +620,36 @@ test("style: a Solid border is four strips between the frame's corners, never a 
     assertEqual(left[2][1], "BOTTOMLEFT"); assertEqual(left[2][5], 3, "and stops above the bottom")
 end)
 
+test("style: a tint edge lays the Solid border's four strips, white, untinted and hidden, for the engine to show (DB-1)", function()
+    local solid, tint = R(), R()
+    NS.Style.DrawEdge(solid, 3, 1, 0, 0, 1)
+    local s = { R(), R(), R(), R() }
+    -- red under: no Style.TintEdge (the icon's dispel border drawn in a shape of its own)
+    NS.Style.TintEdge(tint, 3, s[1], s[2], s[3], s[4])
+    local want = strips(solid)
+    local setters = { "SetHeight", "SetHeight", "SetWidth", "SetWidth" }
+    for i = 1, 4 do
+        local got, exp = s[i]:__calls("SetPoint"), want[i]:__calls("SetPoint")
+        assertEqual(#got, 2, "strip " .. i .. ": two anchors")
+        for j = 1, 2 do
+            assertEqual(got[j][1], exp[j][1], "strip " .. i .. " point " .. j)
+            assertTrue(got[j][2] == tint, "strip " .. i .. " hangs from the tint frame")
+            assertEqual(got[j][3], exp[j][3], "strip " .. i .. " relative point " .. j)
+            assertEqual(got[j][4], exp[j][4], "strip " .. i .. " x " .. j)
+            assertEqual(got[j][5], exp[j][5], "strip " .. i .. " y " .. j)
+        end
+        assertEqual(s[i]:__last(setters[i])[1], 3, "strip " .. i .. " thickness")
+        assertEqual(s[i]:__joined("SetTexture"), NS.Constants.WHITE_TEXTURE, "strip " .. i .. " white")
+        assertEqual(s[i]:__joined("SetVertexColor"), "1,1,1,1", "strip " .. i .. " untinted")
+        assertTrue(s[i]:IsShown() == false, "strip " .. i .. " hidden until the engine shows it")
+        assertEqual(s[i]:__count("SetColorTexture"), 0, "strip " .. i .. " keeps a texture the engine can tint")
+    end
+    -- DrawEdge's own shape, unchanged by the shared layout
+    local left = want[3]:__calls("SetPoint")
+    assertEqual(left[1][5], -3); assertEqual(left[2][5], 3)
+    assertEqual(want[1]:__joined("SetColorTexture"), "1,0,0,1")
+end)
+
 test("style: a Solid border takes the class color through its companion (B2-3)", function()
     local f = R()
     NS.Style.ApplyBorder(f, true, "Solid", 1, { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, true)
@@ -954,12 +985,14 @@ test("style: a placeholder running out takes the running-out color, as the engin
 end)
 
 test("style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)", function()
-    local seen = 0
-    for _, a in ipairs(NS.Constants.PREVIEW_AURAS) do
-        if a.duration > 0 and a.remaining < D.bars.expiringThreshold then seen = seen + 1 end
+    for kind, set in pairs(NS.Constants.PREVIEW_AURAS) do
+        local seen = 0
+        for _, a in ipairs(set) do
+            if a.duration > 0 and a.remaining < D.bars.expiringThreshold then seen = seen + 1 end
+        end
+        -- red under: every placeholder above the default threshold (the setting would show no change)
+        assertTrue(seen >= 1, kind .. ": a placeholder under the default running-out threshold")
     end
-    -- red under: every placeholder above the default threshold (the setting would show no change)
-    assertTrue(seen >= 1, "a placeholder under the default running-out threshold")
     assertEqual(D.icons.expiringThreshold, D.bars.expiringThreshold, "one default for both styles")
 end)
 
@@ -984,7 +1017,7 @@ test("style: a style leaf left nil draws the template's value, never a literal o
     assertEqual(iam.cd:__joined("SetDrawEdge"), tostring(D.icons.cooldownEdge), "icon: cooldown edge")
     assertEqual(iam.border:IsShown(), D.icons.borderShow, "icon: border")
     assertEqual(iam.icon:__calls("SetPoint")[1][4], D.icons.borderShow and D.icons.borderSize or 0, "icon: art inset")
-    assertEqual(frame:__count("AddDispelTypeTexture"), D.icons.dispelBorder and 1 or 0, "icon: dispel border")
+    assertEqual(frame:__count("AddDispelTypeTexture"), D.icons.dispelBorder and 4 or 0, "icon: dispel border")
     -- red under: cancelEnabled reading a nil cancelOnRightClick as off
     assertEqual(frame:__last("SetCancelAuraButtons")[1], D.behavior.cancelOnRightClick and "RightButtonUp" or nil,
         "behavior: right-click cancel")

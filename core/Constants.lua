@@ -109,6 +109,16 @@ C.POINT_LABELS = {
 C.ATTACH_MODES = { "screen", "container", "frame" }
 C.ATTACH_MODE_LABELS = { screen = "Screen", container = "Another container", frame = "Named frame" }
 
+-- The nine sides of batch 9's edge model (E2), relative to the chain's flow, in order. Since batch
+-- 11 a container joins its parent by two absolute points, and a pair that is one of these under the
+-- parent's growth keeps that side's seam and spread (modules/Anchors.lua's AttachEdge, G5); schema
+-- v11 converted the stored side to points (core/Database.lua).
+C.ATTACH_EDGES = {
+    "after-start", "after-center", "after-end",
+    "ahead-start", "ahead-center", "ahead-end",
+    "behind-start", "behind-center", "behind-end",
+}
+
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
 C.AXIS_LABELS = { horizontal = "Rows (fill left to right first)", vertical = "Columns (fill top to bottom first)" }
@@ -135,6 +145,11 @@ C.DRAIN_DIRECTION_LABELS = { left = "Toward the left", right = "Toward the right
 
 C.JUSTIFY = { "LEFT", "CENTER", "RIGHT" }
 C.JUSTIFY_LABELS = { LEFT = "Left", CENTER = "Center", RIGHT = "Right" }
+-- The name label's stored "no pick" (B9 E7): its justify is then its style's default
+-- (modules/Anchors.lua's LabelJustify). A value rather than nil because every schema row's path
+-- must resolve against the template (architecture-5). Never offered in the dropdown, which shows the
+-- justify in effect; a reset writes it back.
+C.LABEL_JUSTIFY_AUTO = "AUTO"
 
 C.TOOLTIP_ANCHORS = { "ANCHOR_BOTTOMLEFT", "ANCHOR_BOTTOMRIGHT", "ANCHOR_TOPLEFT", "ANCHOR_TOPRIGHT",
     "ANCHOR_LEFT", "ANCHOR_RIGHT", "ANCHOR_CURSOR" }
@@ -154,6 +169,15 @@ C.NOTICE_COLOR = "ffcc6666"
 -- handleText): orange, so the placeholders cannot be mistaken for live auras. The AARRGGBB body of a
 -- "|c" escape.
 C.TEST_TAG_COLOR = "ffff8000"
+
+-- The panel's muted gold for secondary text (batch 10 F6): the drag handle's gold dimmed toward its
+-- help mark, the same (0.85, 0.72, 0.38) settings/GeneralSpells.lua marks a player's own category
+-- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.
+C.SECONDARY_GOLD = "ffd9b861"
+-- The strip name of a container attached to another container or a named frame: a warm gray, the
+-- strip's gold with the color drained out, so at a glance it reads as not draggable on its own (the
+-- owner, 2026-09-26; the dim SECONDARY_GOLD of the first cut was not muted enough).
+C.ATTACHED_NAME_COLOR = "ff8c8a84"
 
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }
@@ -184,6 +208,12 @@ C.DEFAULT_DISPEL_COLORS = {
 -- layoutStack); TEXT_ROW_GAP is the space between two rows, in pixels.
 C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
 C.TEXT_ROW_GAP = 2
+-- Size to fit (batch 8, AS-2, modules/Style_Text.lua's Text.AutoSize): the space above and below a
+-- line's font, so a 12pt line is 16 tall, the old default height; and the width range a line is
+-- clamped to, which the Text page's Width row offers too (settings/Text.lua).
+C.TEXT_AUTOSIZE_PAD = 2
+C.TEXT_WIDTH_MIN = 40
+C.TEXT_WIDTH_MAX = 600
 C.TEXT_JUSTIFY_V = { "TOP", "MIDDLE", "BOTTOM" }
 C.TEXT_JUSTIFY_V_LABELS = { TOP = "Top", MIDDLE = "Middle", BOTTOM = "Bottom" }
 
@@ -260,11 +290,33 @@ C.TEXT_SAMPLE_AURAS = {
     HARMFUL = { name = "Shadow Word: Pain", icon = 136207, remaining = 11, duration = 16, stacks = 0, dispel = "Magic" },
 }
 
--- Placeholder auras for preview mode (preview-mode): real render path, invented data.
+-- Placeholder auras for preview mode (preview-mode), per aura type: real render path, invented data.
+-- `name` and `icon` are fallbacks: modules/Preview.lua asks the client for its own by `spellId`, once
+-- per session. HARMFUL covers every C.DISPEL_TYPES entry plus one with no type, so the dispel border,
+-- the bar tint and the Text dispel word can all be checked (batch 8 TD-1, TD-2). Enrage stays out: it
+-- is on enemy buffs, not in the palette, and no debuff container shows it. Each set has one aura under
+-- the default running-out threshold, one with stacks and one with no timer.
 C.PREVIEW_AURAS = {
-    { name = "Power Word: Fortitude", icon = 135987, remaining = 3540, duration = 3600, stacks = 0 },
-    { name = "Bloodlust",             icon = 136012, remaining = 28,   duration = 40,   stacks = 0, dispel = "Magic" },
-    { name = "Shield Wall",           icon = 132362, remaining = 4,    duration = 8,    stacks = 0 },
-    { name = "Ignore Pain",           icon = 1377132, remaining = 11,  duration = 12,   stacks = 3 },
-    { name = "Well Fed",              icon = 136000, remaining = 0,    duration = 0,    stacks = 0 },
+    HELPFUL = {
+        { spellId = 21562,  name = "Power Word: Fortitude", icon = 135987,  remaining = 3540, duration = 3600, stacks = 0 },
+        { spellId = 2825,   name = "Bloodlust",   icon = 136012,  remaining = 28, duration = 40, stacks = 0, dispel = "Magic" },
+        { spellId = 871,    name = "Shield Wall", icon = 132362,  remaining = 4,  duration = 8,  stacks = 0 },
+        { spellId = 190456, name = "Ignore Pain", icon = 1377132, remaining = 11, duration = 12, stacks = 3 },
+        { spellId = 19705,  name = "Well Fed",    icon = 136000,  remaining = 0,  duration = 0,  stacks = 0 },
+    },
+    HARMFUL = {
+        { spellId = 589,    name = "Shadow Word: Pain", icon = 136207, remaining = 11, duration = 16, stacks = 0, dispel = "Magic" },
+        { spellId = 51514,  name = "Hex",           icon = 237579, remaining = 42, duration = 60, stacks = 0, dispel = "Curse" },
+        { spellId = 55095,  name = "Frost Fever",   icon = 237522, remaining = 18, duration = 24, stacks = 0, dispel = "Disease" },
+        { spellId = 2818,   name = "Deadly Poison", icon = 132290, remaining = 9,  duration = 12, stacks = 3, dispel = "Poison" },
+        { spellId = 1943,   name = "Rupture",       icon = 132302, remaining = 4,  duration = 24, stacks = 0, dispel = "Bleed" },
+        { spellId = 115804, name = "Mortal Wounds", icon = 132355, remaining = 0,  duration = 0,  stacks = 0 },
+    },
+    -- A container showing only Weapon enchants (batch 9 SEP-4, E4): one per weapon slot, in slot
+    -- order (main hand, off hand, ranged), so it previews enchants, not its parent's buffs.
+    ENCHANT = {
+        { spellId = 33757,  name = "Windfury Weapon",    icon = 462329, remaining = 1740, duration = 3600, stacks = 0 },
+        { spellId = 318038, name = "Flametongue Weapon", icon = 135814, remaining = 4,    duration = 3600, stacks = 0 },
+        { spellId = 315584, name = "Instant Poison",     icon = 132273, remaining = 0,    duration = 0,    stacks = 0 },
+    },
 }

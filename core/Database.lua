@@ -176,6 +176,31 @@ local function seedStarters(p)
     return seeded
 end
 
+-- The attach sides v9 and v10 stamped and v11 converts (batch 9 E2), as a set. Read by the ladder
+-- alone: since v11 nothing else reads `attach.edge`.
+local KNOWN_EDGE = {}
+for _, token in ipairs(NS.Constants.ATTACH_EDGES) do KNOWN_EDGE[token] = true end
+local DEFAULT_EDGE = "after-start"
+
+-- The nine WoW points, as a set.
+local KNOWN_POINT = {}
+for _, point in ipairs(NS.Constants.POINTS) do KNOWN_POINT[point] = true end
+local POINT_KEYS = { "childPoint", "relPoint" }
+
+--- Drop a stored attach point on container `c` that is not one of the nine WoW points (batch 11
+--- G2): hand-edited or imported data reads as Automatic rather than reaching SetPoint.
+local function normalizeAttach(c)
+    local at = c.attach
+    if type(at) ~= "table" then return end
+    for _, key in ipairs(POINT_KEYS) do
+        local v = at[key]
+        if v ~= nil and not KNOWN_POINT[v] then
+            if NS.Debug then NS.Debug("Migrate", "container %s: unknown attach %s '%s' read as Automatic", c.id, key, tostring(v)) end
+            at[key] = nil
+        end
+    end
+end
+
 --- Backfill every stored container from the template and stamp its id from its key. An entry that
 --- is not a table is dropped: clearing a key while `pairs` walks the table is allowed in Lua, only
 --- adding one is not.
@@ -186,6 +211,7 @@ local function backfillContainers(p)
         if type(c) == "table" then
             Database.Backfill(c, NS.CONTAINER_TEMPLATE, true)
             c.id = id
+            normalizeAttach(c)
             if id > maxId then maxId = id end
         else
             p.containers[id] = nil
@@ -843,6 +869,18 @@ local function moveEdits(edits)
     end
 end
 
+--- One container's category states: Consumables dropped, the new keys seeded from where their
+--- auras used to fall.
+local function seedV7(cats)
+    cats.consumables = nil
+    for key, from in pairs(V7_SEEDS) do
+        if cats[key] == nil and cats[from] ~= nil then cats[key] = cats[from] end
+    end
+    if cats.racialDebuffs == nil and (cats.hardCC ~= nil or cats.softCC ~= nil) then
+        cats.racialDebuffs = (cats.hardCC == "hide" or cats.softCC == "hide") and "hide" or "show"
+    end
+end
+
 function Database.MigrateV7(p)
     if type(p) ~= "table" then return 0 end
     if type(p.categorySpells) == "table" then
@@ -854,17 +892,249 @@ function Database.MigrateV7(p)
     for _, c in pairs(p.containers) do
         local cats = type(c) == "table" and type(c.filter) == "table" and c.filter.categories
         if type(cats) == "table" then
-            cats.consumables = nil
-            for key, from in pairs(V7_SEEDS) do
-                if cats[key] == nil and cats[from] ~= nil then cats[key] = cats[from] end
-            end
-            if cats.racialDebuffs == nil and (cats.hardCC ~= nil or cats.softCC ~= nil) then
-                cats.racialDebuffs = (cats.hardCC == "hide" or cats.softCC == "hide") and "hide" or "show"
-            end
+            seedV7(cats)
             walked = walked + 1
         end
     end
     return walked
+end
+
+--- v8 (batch 8, owner 2026-09-25, D5/D8): the seam between a container and the container it is
+--- attached to is now the child's own spacing (Anchors.SeamOffset, SS-1), and `attach.x`/`attach.y`
+--- add on top as a nudge (SS-2). A container attached to another whose offsets are still the old
+--- template default, 0/-4, would otherwise sit 4px further off than its own gaps, so they become
+--- 0/0. An ABSENT offset is that same old default (the template carried it when the container was
+--- stored, and the backfill after the ladder would otherwise hand it the new template's 0 without
+--- the step saying so), so it is stamped 0 too. Any other value is the player's own and is kept, and
+--- a named-frame or screen container keeps its offsets whatever they are.
+---
+--- The same step (D8) turns Size to fit OFF on every Text container stored before it (AS-3, D7): the
+--- template's `text.autoSize` is true, and the backfill after the ladder would otherwise hand that to
+--- every existing Text container and move every hand-sized layout. Text containers only (batch 9 E6:
+--- Size to fit is Text-only; a bars or icons container carries no value of its own, and one switched
+--- to Text later reads the template's true, and v9 removes what the earlier style-blind stamp wrote).
+--- A text block that is missing or not a table is created for the stamp; a stored value is the
+--- player's own and is kept. A fresh install walks no containers (the starters are seeded after the
+--- ladder), so they, and every container made later, read the template's true.
+---
+--- IDEMPOTENT: a second run finds 0/0 and a stored autoSize, and changes nothing. Unreleased, so later
+--- batch 8 tasks extend this same step (D8).
+--- @return number  the containers whose offsets it reset
+--- @return number  the containers Size to fit was stamped off on
+local V8_OLD_X, V8_OLD_Y = 0, -4
+
+local function resetOldSeam(at, mode)
+    if type(at) ~= "table" or at.mode ~= (mode or "container") then return false end
+    local x, y = at.x, at.y
+    if x == nil then x = V8_OLD_X end
+    if y == nil then y = V8_OLD_Y end
+    if x ~= V8_OLD_X or y ~= V8_OLD_Y then return false end
+    at.x, at.y = 0, 0
+    return true
+end
+
+--- Stamp Size to fit off on Text container `c` unless it holds a value of its own; whether it stamped.
+local function stampFitOff(c)
+    if c.style ~= "text" then return false end
+    if type(c.text) ~= "table" then c.text = {} end
+    if c.text.autoSize ~= nil then return false end
+    c.text.autoSize = false
+    return true
+end
+
+function Database.MigrateV8(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    local reset, stamped = 0, 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            if resetOldSeam(c.attach) then reset = reset + 1 end
+            if stampFitOff(c) then stamped = stamped + 1 end
+        end
+    end
+    return reset, stamped
+end
+
+--- v9 (batch 9, owner 2026-09-25, MG-1). Unreleased, so later batch 9 tasks extend this same step.
+---
+--- 1. Size to fit is Text-only (E6). The style-blind v8 stamp that shipped on this branch wrote
+---    `text.autoSize = false` on bars and icons containers too, where the Text page is disabled and
+---    nothing reads it, so it is removed from every container whose style is not Text (no stored
+---    style is the template's bars). The backfill after the ladder then hands it the template's
+---    value, the same as a container that climbed from before v8. A Text container's value is the
+---    player's own and is kept. A text block that is missing is not created.
+--- 2. The attach side (E2, E5). Every container with an attach table whose `edge` is missing or not
+---    one of the nine gets "after-start", exactly the points every attachment had before (a test pins
+---    EdgePoints(L, "after-start") to the old DerivedPoints), so nothing moves. Every container, not
+---    only container-mode ones (the D8 rationale): a later switch to Another container keeps today's
+---    placement even if the template default ever changes. A known side is the player's own.
+--- 3. The latent seam (findings Problem D, fix C). v8 reset the old template's 0/-4 offset only in
+---    container mode; a SCREEN container still holding it reads nothing from it, until a switch to
+---    Another container added the 4px back on top of the seam. The same rule (an absent offset is the
+---    old default) now resets it in screen mode. A named frame reads it as its gap, and keeps it.
+---
+--- IDEMPOTENT: a second run finds no value to remove, every edge known and no screen 0/-4.
+--- @return number  the containers Size to fit was removed from
+--- @return number  the containers the attach side was stamped on
+--- @return number  the screen containers whose offsets it reset
+function Database.MigrateV9(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0, 0 end
+    local removed, stamped, reset = 0, 0, 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            if c.style ~= "text" and type(c.text) == "table" and c.text.autoSize ~= nil then
+                c.text.autoSize = nil
+                removed = removed + 1
+            end
+            local at = c.attach
+            if type(at) == "table" and not KNOWN_EDGE[at.edge] then
+                at.edge = DEFAULT_EDGE
+                stamped = stamped + 1
+            end
+            if resetOldSeam(at, "screen") then reset = reset + 1 end
+        end
+    end
+    return removed, stamped, reset
+end
+
+--- v10 (batch 10, owner 2026-09-25, F7). Two halves of v9 (the attach side and the screen reset)
+--- joined that step after the owner's install had already stamped v9, so that install never ran
+--- them, and a stamped step never runs again. This step re-runs exactly those two halves over every
+--- profile, with v9's rules: an `attach.edge` that is missing or not one of the nine becomes
+--- "after-start", and a screen container's old 0/-4 (absent counts as the old default) becomes 0/0.
+--- Size to fit's removal is not repeated: it was v9's first half and ran everywhere v9 did.
+---
+--- The lesson (plan, F7): a step already pushed to the branch is never extended again; a new step
+--- is added instead. v9 is left exactly as it was.
+---
+--- IDEMPOTENT, and a no-op on a profile a full v9 already migrated.
+--- @return number  the containers the attach side was stamped on
+--- @return number  the screen containers whose offsets it reset
+function Database.MigrateV10(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    local stamped, reset = 0, 0
+    for _, c in pairs(p.containers) do
+        local at = type(c) == "table" and c.attach
+        if type(at) == "table" then
+            if not KNOWN_EDGE[at.edge] then
+                at.edge = DEFAULT_EDGE
+                stamped = stamped + 1
+            end
+            if resetOldSeam(at, "screen") then reset = reset + 1 end
+        end
+    end
+    return stamped, reset
+end
+
+--- v11 (batch 11, owner 2026-09-26, G4). The side a container attached to another sat on, stored as
+--- one flow-relative token (`attach.edge`), becomes two absolute points, `attach.childPoint` and
+--- `attach.relPoint`, each absent for Automatic (G2).
+---
+--- 1. A stored side equal to the old default, after-start, is dropped: the container becomes
+---    Automatic and takes G3's defaults. So is a side that is not one of the nine, which v9 and v10
+---    read as after-start. Accepted consequence: an Automatic Text-under-Text chain may re-center.
+--- 2. Any other stored side is converted to the absolute points it resolved to at v10, exactly as
+---    batch 10's Anchors.ResolvedEdge and Anchors.EdgePoints placed it under its effective layout:
+---    its chain root's axis and growth, its own per-line count, and behind read as after at the same
+---    align while the container was more than one aura wide. So a side the owner picked never moves.
+---    Every container with an attach table, whatever its mode, the same rule as v9 (a later switch to
+---    Another container keeps the side); points already stored are the player's own and are kept.
+--- 3. `attach.edge` is removed. Nothing but this ladder reads it from v11 on.
+---
+--- The conversion is FROZEN here, profile by profile over the raw store (an inactive profile's chain
+--- is not the active one's), and never calls the live anchor code, whose model may move on.
+--- IDEMPOTENT: a second run finds no `attach.edge` and changes nothing.
+--- @return number  the containers whose side was dropped
+--- @return number  the containers whose side was converted to points
+local V11_LAYOUT = { axis = "vertical", growH = "right", growV = "down", perLine = 0 }
+
+--- Container `id` in raw profile `p`, by a numeric or a numeric-string key, or nil.
+local function rawContainer(p, id)
+    id = tonumber(id)
+    if not id then return nil end
+    local c = p.containers[id] or p.containers[tostring(id)]
+    return type(c) == "table" and c or nil
+end
+
+--- Layout key `k` of raw container `c`, the v10 template's value when unstored.
+local function layoutOf(c, k)
+    local L = type(c.layout) == "table" and c.layout or V11_LAYOUT
+    local v = L[k]
+    if v == nil then v = V11_LAYOUT[k] end
+    return v
+end
+
+--- The container whose flow raw container `c` (stored under `key`) followed at v10, as
+--- Anchors.FlowRoot found it: nil when not attached to a usable container (none, itself, a loop).
+local function v10FlowRoot(p, key, c)
+    local at = c.attach
+    local id = at.mode == "container" and tonumber(at.container)
+    if not id or id == tonumber(key) then return nil end
+    local root, hops = rawContainer(p, id), 0
+    while root and hops < 64 do
+        local up = type(root.attach) == "table" and root.attach
+        local nextId = up and up.mode == "container" and tonumber(up.container)
+        if nextId == tonumber(key) then return nil end
+        local nextCfg = nextId and rawContainer(p, nextId)
+        if not nextCfg then return root end
+        root, hops = nextCfg, hops + 1
+    end
+    return nil
+end
+
+--- The v10 point pair for `side`/`align` under growth `growH`/`growV` (the batch 9 design table).
+local function v10Pair(growH, growV, side, align)
+    local V0, V1 = "TOP", "BOTTOM"
+    if growV == "up" then V0, V1 = "BOTTOM", "TOP" end
+    local H0, H1 = "LEFT", "RIGHT"
+    if growH == "left" then H0, H1 = "RIGHT", "LEFT" end
+    if side == "after" then
+        local h = (align == "start" and H0) or (align == "end" and H1) or ""
+        return V0 .. h, V1 .. h
+    end
+    local v = (align == "start" and V0) or (align == "end" and V1) or ""
+    if side == "ahead" then return v .. H0, v .. H1 end
+    return v .. H1, v .. H0
+end
+
+--- The points raw container `c` (stored under `key`) sat at on side `edge` at v10.
+local function v10Points(p, key, c, edge)
+    local side, align = edge:match("^(%a+)%-(%a+)$")
+    local flow = v10FlowRoot(p, key, c) or c
+    local perLine = tonumber(layoutOf(c, "perLine")) or 0
+    if side == "behind" and (layoutOf(flow, "axis") ~= "vertical" or perLine > 0) then
+        side = "after"
+    end
+    local growH = (layoutOf(flow, "growH") == "left") and "left" or "right"
+    local growV = (layoutOf(flow, "growV") == "up") and "up" or "down"
+    return v10Pair(growH, growV, side, align)
+end
+
+--- Convert one container's stored side; answers "dropped", "converted" or nil (nothing stored).
+local function convertEdge(p, key, c)
+    local at = c.attach
+    local edge = at.edge
+    if edge == nil then return nil end
+    at.edge = nil
+    if edge == DEFAULT_EDGE or not KNOWN_EDGE[edge] then return "dropped" end
+    local point, rel = v10Points(p, key, c, edge)
+    if at.childPoint == nil then at.childPoint = point end
+    if at.relPoint == nil then at.relPoint = rel end
+    return "converted"
+end
+
+function Database.MigrateV11(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    -- Every side is read before any is removed: a follower's conversion walks its chain, and the
+    -- walk reads only modes and targets, which this step never writes, so the order cannot matter.
+    local dropped, converted = 0, 0
+    for key, c in pairs(p.containers) do
+        if type(c) == "table" and type(c.attach) == "table" then
+            local did = convertEdge(p, key, c)
+            if did == "dropped" then dropped = dropped + 1 end
+            if did == "converted" then converted = converted + 1 end
+        end
+    end
+    return dropped, converted
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -963,6 +1233,38 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV7(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v7 profile '%s': Consumables retired; Group buffs, Stances and Racials seeded over %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 8, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n, fit = Database.MigrateV8(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another; Size to fit stamped off on %s Text container(s)", name, n, fit)
+            end
+        end)
+    end },
+    { to = 9, apply = function(db)
+        eachProfile(db, function(p, name)
+            local removed, stamped, reset = Database.MigrateV9(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s); attach side stamped after-start on %s; the old 0/-4 offset reset on %s screen container(s)", name, removed, stamped, reset)
+            end
+        end)
+    end },
+    { to = 10, apply = function(db)
+        eachProfile(db, function(p, name)
+            local stamped, reset = Database.MigrateV10(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v10 profile '%s': attach side stamped after-start on %s container(s); the old 0/-4 offset reset on %s screen container(s)", name, stamped, reset)
+            end
+        end)
+    end },
+    { to = 11, apply = function(db)
+        eachProfile(db, function(p, name)
+            local dropped, converted = Database.MigrateV11(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v11 profile '%s': attach side dropped to Automatic on %s container(s); converted to points on %s", name, dropped, converted)
             end
         end)
     end },

@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- modules/Style_Icons.lua — dressing one aura as an ICON.
 --
---     ┌───────────┐  border (ours) · dispel-type border above it (the engine's art replaces ours)
+--     ┌───────────┐  border (ours) · dispel-type edge above it (our shape, the engine's color)
 --     │   icon    │  cooldown swipe driven by the aura's duration
 --     │        3  │  stack count
 --     └───────────┘
@@ -16,6 +16,9 @@ local D = NS.CONTAINER_TEMPLATE
 
 Style.Icons = Style.Icons or {}
 local Icons = Style.Icons
+
+-- The dispel edge's four strips on `am`, in Style.TintEdge's order: top, bottom, left, right.
+local DISPEL_EDGES = { "dispelTop", "dispelBottom", "dispelLeft", "dispelRight" }
 
 local function build(frame)
     local am = {}
@@ -34,14 +37,16 @@ local function build(frame)
     am.border = Style.NewBorder(frame)
     am.border:SetAllPoints(frame)
 
-    -- The dispel-type border: a texture the engine sets to Blizzard's own debuff border art for the
-    -- aura's dispel type, and hides for an aura without one. It lives on a frame of its own ABOVE our
-    -- border: a region of the button draws below every child frame, so drawn there our border would
-    -- cover the art. Above it, the art replaces ours where the aura has a dispel type, and ours shows
-    -- wherever it has none (I-1; docs/superpowers/research/2026-09-13-aura-engine-notes.md Q3).
+    -- The dispel-type edge: four white strips in our Solid border's shape (Style.TintEdge), which the
+    -- engine shows and tints in Blizzard's own color for the aura's dispel type, and hides for an
+    -- aura without one (DB-1). They live on a frame of their own ABOVE our border: a region of the
+    -- button draws below every child frame, so drawn there our border would cover them. Above it, the
+    -- colored edge lies exactly over ours where the aura has a dispel type, and ours shows wherever it
+    -- has none (I-1; docs/superpowers/research/2026-09-13-aura-engine-notes.md Q3). Each strip is its
+    -- own key on `am`: a region never hides in a list the style suites cannot see.
     am.dispelHost = CreateFrame("Frame", nil, frame)
     am.dispelHost:SetAllPoints(frame)
-    am.dispel = am.dispelHost:CreateTexture(nil, "OVERLAY")   -- placed per dress (layoutDispel)
+    for _, k in ipairs(DISPEL_EDGES) do am[k] = am.dispelHost:CreateTexture(nil, "OVERLAY") end
 
     -- Text above the cooldown swipe, so the countdown is never shaded by it.
     am.text = CreateFrame("Frame", nil, frame)
@@ -90,19 +95,26 @@ local function layoutIcon(am, frame, ic, w, h)
     return inset
 end
 
--- Blizzard draws its debuff border art LARGER than the icon it frames: a 40x40 border over a 30x30
--- icon (Blizzard_BuffFrame/BuffFrameTemplates.xml, DebuffBorder), a sixth of the icon past each
--- edge. The art is a ring inside transparent padding, so stretched to the icon's own size the ring
--- lands inside the icon, an inner border across the art (owner report 2026-09-13).
-local DISPEL_ART_DIVISOR = 6
+--- The dispel edge's thickness: our border's, so the colored edge lies exactly over it; 1 px when our
+--- border is hidden, styled None or 0 thick, so a typed debuff still shows its color (DB-2).
+local function dispelSizeOf(ic)
+    local shown = Style.OrTemplate(ic.borderShow, D.icons.borderShow)
+    local size = borderSizeOf(ic)
+    if shown and ic.borderStyle ~= "None" and size > 0 then return size end
+    return 1
+end
 
---- Size the dispel border's art to the icon the way Blizzard does, so its ring sits on the icon's edge.
---- Per dress, because it follows the icon's size and the border's inset.
-local function layoutDispel(am, iconW, iconH)
-    local ox, oy = iconW / DISPEL_ART_DIVISOR, iconH / DISPEL_ART_DIVISOR
-    am.dispel:ClearAllPoints()
-    am.dispel:SetPoint("TOPLEFT", am.icon, "TOPLEFT", -ox, oy)
-    am.dispel:SetPoint("BOTTOMRIGHT", am.icon, "BOTTOMRIGHT", ox, -oy)
+-- AddDispelTypeTexture's options for the dispel edge, built on first use (the enum may not exist at
+-- load): debuffs with a dispel type only, our white strip kept and tinted (PreserveAsset), and NO
+-- customDispelColorMap, so the engine paints AuraUtil.SetAuraBorderColor, Blizzard's own color for
+-- the type (DB-2; owner 2026-09-13: General -> Dispel Colors do not drive icons).
+local dispelOptions
+local function dispelOptionsFor()
+    if not dispelOptions then
+        dispelOptions = { showWhenHarmful = true, showWhenHelpful = false, showWithoutDispelType = false,
+            style = NS.Compat.DispelStyle("PreserveAsset") }
+    end
+    return dispelOptions
 end
 
 --- The cooldown swipe's look.
@@ -125,8 +137,7 @@ function Icons.Apply(frame, cfg, engine)
     if engine then Style.ClearAdditiveBindings(frame) end
 
     frame:SetSize(w, h)
-    local inset = layoutIcon(am, frame, ic, w, h)
-    layoutDispel(am, w - 2 * inset, h - 2 * inset)
+    layoutIcon(am, frame, ic, w, h)
     -- Guarded (B2-3): a border the client refuses costs the border, never Icons.Bind below, which
     -- re-adds the pandemic highlight and the time color the Clear above removed.
     Style.GuardedBorder("icon border", am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow),
@@ -140,7 +151,8 @@ function Icons.Apply(frame, cfg, engine)
     am.stacks:SetShown(ic.stacks == nil or ic.stacks.show ~= false)
 
     am.pandemic:SetVertexColor(Style.Color(ic.pandemicColor, false))
-    if not Style.OrTemplate(ic.dispelBorder, D.icons.dispelBorder) then am.dispel:Hide() end
+    -- Every dress, the option on or off: laid, white and hidden before any binding (B-4).
+    Style.TintEdge(am.dispelHost, dispelSizeOf(ic), am.dispelTop, am.dispelBottom, am.dispelLeft, am.dispelRight)
 
     if engine then
         Icons.Bind(frame, am, cfg, ic)
@@ -151,32 +163,40 @@ end
 --- cleared them, before any binding, so a restyle neither stacks a second border or highlight nor
 --- lets a binding's apply pass show a border just turned off (Style.ClearAdditiveBindings).
 function Icons.Bind(frame, am, cfg, ic)
-    local Compat = NS.Compat
     Style.Bind(frame, "SetIcon", am.icon)
     if ic.cooldown ~= false then Style.Bind(frame, "SetDurationCooldown", am.cd) end
     if ic.time == nil or ic.time.show ~= false then Style.BindDurationText(frame, am.time, ic, D.icons) end
     if ic.stacks == nil or ic.stacks.show ~= false then Style.Bind(frame, "SetApplicationCount", am.stacks, {}) end
 
     if Style.OrTemplate(ic.dispelBorder, D.icons.dispelBorder) then
-        -- Blizzard's own colored border art, with no customDispelColorMap: the engine would multiply
-        -- the map onto that already colored atlas, a tint rather than a recolor
-        -- (docs/superpowers/research/2026-09-13-aura-engine-notes.md Q2), and the owner kept the stock
-        -- art (2026-09-13). General → Dispel Colors drives bars only.
-        Style.Bind(frame, "AddDispelTypeTexture", am.dispel, {
-            showWhenHarmful = true, showWhenHelpful = false,
-            style = Compat.DispelStyle("Border"),
-        })
+        -- Our strips, in Blizzard's own colors (dispelOptionsFor). A placeholder takes the same
+        -- color from Icons.FillPreview.
+        local opts = dispelOptionsFor()
+        for _, k in ipairs(DISPEL_EDGES) do Style.Bind(frame, "AddDispelTypeTexture", am[k], opts) end
     end
     if ic.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end
 
     Style.ApplyBehavior(frame, cfg)
 end
 
+--- Show a placeholder's dispel edge in Blizzard's color for its aura's type, or hide it, by the live
+--- binding's rules (Icons.Bind): the option on, a debuff container and an aura with a dispel type
+--- (TD-4, DB-1).
+local function previewDispel(am, aura, cfg)
+    local on = cfg and cfg.auraType == "HARMFUL" and aura.dispel
+        and Style.OrTemplate((cfg.icons or {}).dispelBorder, D.icons.dispelBorder)
+    for _, k in ipairs(DISPEL_EDGES) do
+        local strip = am[k]
+        strip:SetShown((on and NS.Compat.SetAuraBorderColor(strip, aura.dispel)) and true or false)
+    end
+end
+
 --- Fill a PREVIEW icon with placeholder values (modules/Preview.lua), the time in the icon's own
---- format (Style.PreviewTime).
+--- format (Style.PreviewTime). A placeholder has no engine, so its dispel edge is tinted here.
 function Icons.FillPreview(frame, aura, cfg)
     local am = frame.__am
     if not am then return end
+    previewDispel(am, aura, cfg)
     am.icon:SetTexture(aura.icon)
     Style.PreviewTime(am.time, aura, (cfg and cfg.icons) or {}, D.icons)
     am.stacks:SetText(aura.stacks > 1 and tostring(aura.stacks) or "")

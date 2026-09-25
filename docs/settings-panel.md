@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 242 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 258 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -51,7 +51,7 @@ only the tree entry is marked.
   General and Containers are both addon-wide and render through `Helpers.RenderPage`; General draws
   no banner, and Containers' one tab edits the selected container's identity.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:350`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:370`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -363,7 +363,7 @@ a Text line's dispel type word, backdrop and edge when those are on (Text → Fo
 feedback #7). An aura with no dispel type — every buff and many debuffs, class debuffs such as
 Judgment or Consecration included (`docs/midnight-quirks.md`) — keeps a bar's own color and draws no
 text type word, backdrop or edge, so there is no None swatch. Icons do not read them: an icon's dispel border keeps Blizzard's own
-colored art (owner, 2026-09-13), and the tab line and each row's tooltip say so. Profile-wide, so a
+colors on our Solid shape (owner, 2026-09-13; batch 8 DB-2), and the tab line and each row's tooltip say so. Profile-wide, so a
 write re-applies every container.
 
 ### Containers (5 rows, `settings/Containers.lua`)
@@ -388,9 +388,9 @@ source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
-Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
+Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (43 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Filters (46 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
@@ -444,10 +444,11 @@ for them; the tab is bespoke
 `Show · Hide · Category` and then a line of two cells (an ordinary checkbox check on the lit one,
 LibKa0s v1.36.0's `O.ChoiceGrid`, the yellow fill withdrawn in v1.36.2) and the category's label
 (hover it for its description). A grid
-with no row for the aura type is not drawn. The **Blizzard Categories** and **Spell Categories**
-sections open with **Show all** and **Hide all** (feedback #10): each writes every category of that
-section, and only that section, for the selected container, as one bulk act (`NS.Bulk.Run`: one
-`[Set] show all|hide all <grid> categories of container <id>: N rows` line, one apply pass).
+with no row for the aura type is not drawn. Every section, **Blizzard Categories**, **Spell
+Categories**, **Dispel Types** and **Who Cast It**, opens with **Show all** and **Hide all** (feedback
+#10; the last two since B11-T10): each writes every category of that section, and only that section,
+for the selected container, as one bulk act (`NS.Bulk.Run`: one `[Set] show all|hide all <grid>
+categories of container <id>: N rows` line, one apply pass).
 
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
@@ -515,7 +516,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (26 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (38 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -524,20 +525,22 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
-| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural |
+| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural. Switching to Another container with a target already stored asks first when that target's chain flows differently (GC-1, below) |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; structural. Beside it (`pairWith`) a read-only line, "Attached by its *point* to the *relative point* of '*target*'", names the derived points |
+| *Another container:* Parent container | `container.attach.container` | number (dropdown) | Labeled "Parent container" (the owner, 2026-09-26; the banner picker keeps "Container"). None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the two points in effect, picked or Automatic (`Anchors.AttachPoints`, batch 11 G2) |
+| *Another container:* Parent container anchor point / This container anchor point | `container.attach.relPoint` / `.childPoint` | string (dropdown) | Batch 11 G1, in place of batch 9's Side row. Each offers "Automatic (*the point Automatic gives*)" first, then the nine points; the entry names Automatic's own point (`Anchors.AutoPoints`) even while the row holds a pick, so it says what choosing it would do; Automatic stores nothing (`nilAs = "auto"`, docs/schema.md), a point stores its token, and one picked point leaves the other Automatic. Any pair is stored, with no validate refusal and no fallback note. Structural (the attachment line and the other row's Automatic entry redraw); the write re-places the container, its parent and its followers. `/am set` takes the nine names in any case or `auto`; `container.attach.edge` is not a path |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
-| *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
-| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes |
+| *Named frame:* Named frame anchor point / This container anchor point | `container.attach.relativePoint` / `.point` | string | The corner of the frame, on the left / the corner of the container's **first aura** that is attached, on the right: the same order and names as Another container's two rows (the owner, 2026-09-26); This container anchor point is structural (it redraws the facing-growth hint) |
+| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes: from the named frame's point, or as a nudge on top of the seam gap (SS-2) |
 
 Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
 feedback #4), so only the subsections the mode reads are drawn, each heading with its rows: in
 `screen` mode Screen; in `container` mode Another container and Offset; in `frame` mode Named frame
 and Offset. The hidden rows stay in the schema, so `/am set`, `/am get` and the resets still reach
 them. Changing **Attach to** (from the panel, `/am set` or a reset) redraws the tab once, on the next
-frame, through the library's selector watch; the mode row needs no `onChange` of its own. **Pick a
+frame, through the library's selector watch. The mode row's `onChange` only starts or ends an attachment
+(below). **Pick a
 frame…** (closes the settings, starts the picker, reopens this page) is Frame name's `pairWith`
 partner, so it is drawn with Named frame; a pick still sets the mode to Named frame itself.
 
@@ -551,7 +554,33 @@ point (it sits right of the frame) with Grow horizontally Left, a RIGHT* point w
 "Point is *point* and Grow vertically is *growth*, so the auras grow back over the frame this
 container is attached to. Set Grow vertically to *opposite* on the Growth tab instead." (the
 horizontal line likewise; a corner point can draw both). The screen has no frame to grow over, and a
-follower's derived points never face its flow, so neither mode draws it.
+follower's two points are the user's to pick, odd pairs included (batch 11 G1), so neither mode draws it.
+
+**The points of a new attachment (batch 11 G2, G3).** An attachment writes nothing: while no point
+is picked, both are Automatic, and Automatic follows the parent's growth and the two styles
+(`Anchors.DefaultEdge`: a Text child lines up with its text justify, an icons or bars child under a
+Text parent justified Center is centered, every other pair starts on the side the parent's lines start
+from). Picked points survive an attach, a retarget and a detach. A write to either point, Attach to or
+Container also re-applies the parent, old and new.
+
+**Growth conflicts (batch 9 GC-1, E3).** Attaching keeps inheritance: the container fills and grows
+like its chain root and its own Growth settings are kept, never written, for a detach. When a panel
+pick would attach it to a chain that flows differently from its own Growth settings
+(`Anchors.FlowChangeOnAttach`: the target's chain root, compared on Fill, Grow horizontally and Grow
+vertically), nothing is written: the rows' `confirmWrite` hands the write to the
+`AURAMASTER_ATTACH_FLOW` popup (`settings/OptionsSetup.lua`'s `confirmFirst`) and the page redraws
+on the stored value. The popup reads "Attach '*child*' to '*target*'? '*child*' will fill and grow
+like '*root*' (*the changed settings*). Its own Growth settings are kept and come back if you detach
+it.", plus " *n* container(s) attached to it follow too." when others follow it. **Attach** writes
+through the seam, whose validate checks the loop again; in combat it is refused with a gray line.
+**Cancel** writes nothing. It asks on the Parent container row in container mode, and on Attach to when
+switching to Another container with a target already stored; a matching flow, None and every other
+write attach at once. `/am set` and the resets never ask: an attachment they make that changes the
+flow prints "'*child*' now grows like '*root*'; its own Growth settings are kept.", and a detach
+that brings the container's own flow back prints "'*child*' is no longer attached to '*target*' and
+fills and grows by its own Growth settings again." (from the panel too; a line, not a popup, E9).
+A chain root's Growth tab opens with "*n* container(s) attached to this one follow its fill and
+growth."; changing it there asks nothing, and the chain re-flows.
 
 **Growth** — Fill `container.layout.axis` (rows or columns), Per row or column
 `container.layout.perLine` (0–40, 0 is one line), Grow horizontally `container.layout.growH`, Grow
@@ -560,15 +589,24 @@ vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40)
 
 **Inherited flow (L-6).** A container attached to another container continues that container's
 flow. Its fill axis and both growth directions are its chain root's, resolved up the chain by
-`Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points come from
-`Anchors.DerivedPoints`: a column parent stacks the child below it (above, when growing up), and a
-row parent puts it beside it. `container.attach.point` / `.relativePoint` are read only in `frame`
-mode; the offsets apply in both attached modes. `Container.FlowSettings`, `Preview.Offset` and the
+`Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points are the two
+in effect (`Anchors.AttachPoints`, batch 11 G2): each picked, or Automatic, the matching half of the
+default pair (G3), which for a bars child under a bars parent is `after-start`, the same as
+`Anchors.DerivedPoints`: the child stacks below its parent (above, when growing up), on the side the
+parent's lines start from, whether the parent fills rows or columns (IA-1). A pair that is none of
+batch 9's nine sides is free: placed at X/Y alone, with no seam (G5). `container.attach.point` / `.relativePoint` are read only in `frame`
+mode. The gap across the seam is the child's own gap between consecutive elements in the direction
+the chain stacks: its Spacing when it fills columns, its Line spacing when it fills rows
+(`Anchors.SeamOffset`, SS-1), upward when the chain grows up; on a Right or Left side it is the
+child's gap across instead, its Spacing when it fills rows and its Line spacing when it fills columns
+(AP-2), and a parent's strip widens only a seam along the chain. The offsets add on top of it as a
+nudge (SS-2). `Container.FlowSettings`, `Preview.Offset` and the
 handle's placement and clamp all read the effective layout. A write that moves a container's flow or
 attachment re-applies every container following it (`Anchors.Followers`). On this tab, in that mode,
 Fill, Grow horizontally and Grow vertically are dimmed and show the inherited values. They do that
 through a row `panelGet` that only the panel descriptor reads; `/am get` and every module read the
-stored values. The line "Fill and growth follow '*root*'" sits above them. Per row, Spacing and Line
+stored values. The line "Fill and growth follow '*root*' because this container is attached to it."
+sits above them, in the panel's muted secondary gold (`C.SECONDARY_GOLD`), with a row gap below it. Per row, Spacing and Line
 spacing stay the container's own and stay live. The stored flow is never written, so a detach
 restores it at the next apply. A container attached to a missing or looping target sits on the
 screen and keeps its own flow.
@@ -581,6 +619,24 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 `container.behavior.tooltipInCombat`, Tooltip position `container.behavior.tooltipAnchor`,
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
+
+**Label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`,
+Justify `container.label.justifyH` (Left, Center, Right; batch 9 LJ-1, E7), X
+offset `container.label.x` and Y offset `container.label.y` (-200 to 200), then a *Font* subgroup, the
+composed font block on `container.label.font.` (gold Friz 12 OUTLINE by default, the strip's own
+look; class color from the container's unit). Ten rows. Justify is stored `"AUTO"` until the player
+picks one, and the dropdown shows the justify in effect (the row's `panelGet`,
+`Anchors.LabelJustify`): Bars and Text center the name, Icons line it up with the first icon (Left,
+Right when the icons grow left, mirrored above a Left-attached follower, whose label lines up with
+the edge that faces its parent). The row's reset writes
+`"AUTO"` back. The text is always the container's name, so
+a rename redraws it. Every row but Show is dimmed while the label is off, except the color swatch,
+which is never dimmed (anti-pattern #74). The label sits on its block's before side, outside the
+first element on the side the auras do not grow into, on a container attached to another as on a
+root (batch 10 F3); it shows locked or unlocked, and while unlocked the strip moves out past it by
+the label's height plus the strip gap (D6, `Anchors.PlaceLabel`), so the order is strip, label,
+block. A follower's seam makes room for both (F2). The rows carry no `effect`: a write re-applies
+the selected container.
 
 ### Bars (72 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -603,7 +659,7 @@ The tabs and the container picker stay live.
 | Pandemic (5) | *Time color:* `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` 1–60 (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color); *Highlight:* `pandemic` (Highlight the pandemic window), `pandemicColor` (Pandemic-window highlight color). Once the Highlights tab's *Running out* and *Refresh window* (smoke batch 2, B2-1: labels only, paths unchanged). The dispel type colors are the profile's, on General → Dispel Colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:163`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:158`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
@@ -653,11 +709,14 @@ settings." — and every control is drawn disabled, as on the Bars page.
 | Stack text (11) | The same on `stacks.` without the countdown |
 | Pandemic (5) | *Time color:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Highlight:* `pandemic`, `pandemicColor` — the Bars page's labels (smoke batch 2, B2-1; once Highlights) |
 
-`dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
-harmful auras with a dispel type only. The art sits above your border and replaces it there; every
-other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
+`dispelBorder` has the engine tint four white strips in Blizzard's own dispel color, on harmful
+auras with a dispel type only (batch 8 DB-1, DB-2). The strips have the Solid border's shape: flat,
+square-cornered, inside the icon at the stored Border thickness, or 1 px when the border is hidden,
+None or 0, whatever the border style. They sit above your border and replace it there; every other
+icon shows your border. In test mode the placeholders are tinted the same way
+(`Compat.SetAuraBorderColor`). `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
 
-### Text (36 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Text (37 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
 built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **Text
@@ -726,7 +785,7 @@ disabled, as on the Bars and Icons pages.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|
-| General | Size: `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
+| General | Size: `autoSize` (Size to fit; `width` and `height` dim under a note while it is on, batch 8 AS-1), `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
 | Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |

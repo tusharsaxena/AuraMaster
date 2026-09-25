@@ -89,6 +89,9 @@ function addon:OnEnterWorld()
 end
 
 function addon:OnCombatChanged(event)
+    -- First, so the visibility pass below predicts nothing at the pull: PLAYER_REGEN_DISABLED fires
+    -- before lockdown, the last moment every follower can still move onto its engine (batch 9 HG-1).
+    if NS.EmptyWatch then NS.EmptyWatch.SetCombat(event == "PLAYER_REGEN_DISABLED") end
     -- Test mode ends when combat starts, while secure writes are still allowed (preview-mode): no
     -- placeholder covers real auras in a fight.
     if event == "PLAYER_REGEN_DISABLED" and NS.State.testMode then NS.Preview.SetTestMode(false) end
@@ -134,6 +137,9 @@ function addon:OnRestrictionChanged()
         NS.ContainerManager.FlushPending()
         NS.ContainerManager.ReapplyStaleClass()
     end
+    -- Secret auras make every prediction nil, so followers move onto their engines; readable again,
+    -- they are predicted again.
+    if NS.EmptyWatch then NS.EmptyWatch.Refresh() end
 end
 
 -- The three AceDB profile callbacks (core/Database.lua). Each prepares the new profile's registry,

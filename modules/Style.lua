@@ -56,10 +56,17 @@ local dressClass
 --- container reads the player's class. The stored alpha always survives. The in-combat staleness
 --- after a unit swap is the residual ratified in docs/ARCHITECTURE.md → Documented deviations.
 function Style.Color(stored, useClass)
-    if useClass and dressClass then
+    return Style.ColorWith(dressClass, stored, useClass)
+end
+
+--- Style.Color with the class named rather than read off the dress in progress, for a surface drawn
+--- outside Style.Element (the name label, modules/Container.lua): `classColor` is a container's
+--- snapshot, or nil / false for the player's own class.
+function Style.ColorWith(classColor, stored, useClass)
+    if useClass and classColor then
         local r, g, b, a = NS.ResolveColor(stored, false)
-        if dressClass.r == nil then return r, g, b, a end
-        return dressClass.r, dressClass.g, dressClass.b, a
+        if classColor.r == nil then return r, g, b, a end
+        return classColor.r, classColor.g, classColor.b, a
     end
     return NS.ResolveColor(stored, useClass, "player")
 end
@@ -85,9 +92,12 @@ local function styleBlock(cfg)
     return cfg[Style.StyleKey(cfg)]
 end
 
---- Whether the container's active style block (or one of its text blocks) turns a class color on.
---- Allocation-free: it runs on every unit swap for each container tracking the swapped unit.
+--- Whether the container's active style block (or one of its text blocks), or its shown name label,
+--- turns a class color on. Allocation-free: it runs on every unit swap for each container tracking
+--- the swapped unit.
 function Style.UsesClassColor(cfg)
+    local lb = cfg.label
+    if lb and lb.show and lb.font and lb.font.useClassColorFont then return true end
     local s = styleBlock(cfg)
     if type(s) ~= "table" then return false end
     if anyClassFlag(s) then return true end
@@ -109,13 +119,18 @@ end
 
 --- Apply the six canonical font leaves of `t` (options-ui-§16) to a FontString: face, size, flags,
 --- color (with its class-color companion) and shadow. `tdef` is the template's block for the same
---- text, which the size falls back to.
-function Style.ApplyFont(fs, t, tdef)
+--- text, which the size falls back to. `classColor`, when given (a snapshot, or false for the
+--- player), names the class outright instead of reading the dress in progress (Style.ColorWith).
+function Style.ApplyFont(fs, t, tdef, classColor)
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
     local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
-    fs:SetTextColor(Style.Color(t.fontColor, t.useClassColorFont))
+    if classColor ~= nil then
+        fs:SetTextColor(Style.ColorWith(classColor, t.fontColor, t.useClassColorFont))
+    else
+        fs:SetTextColor(Style.Color(t.fontColor, t.useClassColorFont))
+    end
     if t.fontShadow then
         fs:SetShadowColor(0, 0, 0, 1)
         fs:SetShadowOffset(1, -1)
@@ -197,8 +212,10 @@ end
 -- (never secret) and measured. The ems budget (C.TIME_TEXT_EMS) guessed, and guessed short: 2.5 ems
 -- of an 11pt font cut a Blizzard-format "59 m" to "59...".
 
--- The seconds sampled: the largest value before each unit or digit count changes.
+-- The seconds sampled: the largest value before each unit or digit count changes. Published for a
+-- Text line's Size to fit (modules/Style_Text.lua's Text.AutoSize), which measures the same worst cases.
 local TIME_SAMPLES = { 59, 599, 3599, 35999, 86399, 863999 }
+Style.TIME_SAMPLES = TIME_SAMPLES
 local measureFS             -- the hidden FontString, built on first use
 local measuredWidths = {}   -- ["path|size|flags|format"] = width; a failed measure is never cached
 
@@ -247,6 +264,35 @@ function Style.TimeTextWidth(t, tdef, fmt)
     w = most + 2
     measuredWidths[key] = w
     return w
+end
+
+--- The widest of `lines` in one font; nil when any cannot be measured. Called guarded.
+local function widestLine(path, size, flags, lines)
+    local fs = Style.__measurer()
+    if not fs then return nil end
+    if not fs:SetFont(path, size, flags) and not fs:SetFont(C.FALLBACK_FONT, size, flags) then return nil end
+    local most
+    for _, line in ipairs(lines) do
+        fs:SetText(line)
+        local w = fs:GetStringWidth()
+        if not NS.Secrets.IsReadableNumber(w) then return nil end
+        if not most or w > most then most = w end
+    end
+    return most
+end
+
+--- The width, in pixels, of the widest of the plain strings `lines` in font block `t` (`tdef` the
+--- template's block), measured on the same hidden string as a time text; nil when it cannot be
+--- measured: a raise, a width that is not a readable number, or none above 0 (a font the client has
+--- not loaded yet). Nothing is cached here: the caller (a Text line's Size to fit) remembers its
+--- whole answer, and only a good one.
+function Style.WidestLine(t, tdef, lines)
+    local size = tonumber(t.fontSize) or tdef.fontSize
+    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
+    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local ok, most = pcall(widestLine, path, size, flags, lines)
+    if not (ok and most and most > 0) then return nil end
+    return most
 end
 
 -- ---------------------------------------------------------------------------
@@ -352,6 +398,18 @@ local function isSolid(styleKey, edge)
     return styleKey == "Solid" or (type(edge) == "string" and edge:lower() == SOLID_EDGE)
 end
 
+--- Lay one strip as the `i`th of BORDER_STRIPS on `frame`, `size` thick: the one shape every edge of
+--- ours takes (the Solid border, Style.DrawEdge, Style.TintEdge), so none can drift from another.
+local function layStrip(frame, i, strip, size)
+    local e = BORDER_STRIPS[i]
+    local from, to = 0, 0
+    if e[4] then from, to = -size, size end
+    strip:ClearAllPoints()
+    strip:SetPoint(e[1], frame, e[1], 0, from)
+    strip:SetPoint(e[2], frame, e[2], 0, to)
+    strip[e[3]](strip, size)
+end
+
 --- Lay `frame`'s strips at thickness `size` and paint them (r, g, b, a), or hide them (`show` false).
 local function drawStrips(frame, show, size, r, g, b, a)
     local strips = frame.__amStrips
@@ -362,14 +420,8 @@ local function drawStrips(frame, show, size, r, g, b, a)
         return
     end
     strips = borderStrips(frame)
-    for i, e in ipairs(BORDER_STRIPS) do
-        local strip = strips[i]
-        local from, to = 0, 0
-        if e[4] then from, to = -size, size end
-        strip:ClearAllPoints()
-        strip:SetPoint(e[1], frame, e[1], 0, from)
-        strip:SetPoint(e[2], frame, e[2], 0, to)
-        strip[e[3]](strip, size)
+    for i, strip in ipairs(strips) do
+        layStrip(frame, i, strip, size)
         strip:SetColorTexture(r, g, b, a)
         strip:Show()
     end
@@ -382,6 +434,21 @@ end
 --- the strips hang from the frame's corners and follow every later resize on their own.
 function Style.DrawEdge(frame, size, r, g, b, a)
     drawStrips(frame, true, size, r, g, b, a)
+end
+
+--- Lay four caller-owned strips (top, bottom, left, right) on `frame` in the Solid border's shape,
+--- `size` thick, and leave them white, untinted and HIDDEN, for the engine to show and tint (an
+--- AddDispelTypeTexture binding with style PreserveAsset). Hidden on every dress, because the engine's
+--- ClearDispelTypeTextures restores nothing: a strip it last showed would stay drawn (B-4). The white
+--- goes on with SetTexture, not SetColorTexture, as the text style's dispel edge does in-game.
+function Style.TintEdge(frame, size, top, bottom, left, right)
+    for i = 1, 4 do
+        local strip = select(i, top, bottom, left, right)
+        layStrip(frame, i, strip, size)
+        strip:SetTexture(C.WHITE_TEXTURE)
+        strip:SetVertexColor(1, 1, 1, 1)
+        strip:Hide()
+    end
 end
 
 --- Whether `f`'s width and height both read as plain numbers now (a laid-out button's do not).
@@ -670,8 +737,16 @@ function Style.ElementSize(cfg)
     local key = Style.StyleKey(cfg)
     local s, sdef = cfg[key] or {}, D[key]
     local w, h = tonumber(s.width) or sdef.width, tonumber(s.height) or sdef.height
-    -- A Text line stacked by Center grows to its rows (feedback #1, modules/Style_Text.lua).
-    if key == "text" and Style.Text then h = math.max(h, Style.Text.StackHeight(s)) end
+    if key == "text" and Style.Text then
+        -- Size to fit (batch 8, AS-2): the size the line's content needs, when it can be measured;
+        -- the stored size stands when it cannot. It already holds a stacked Center's rows.
+        if Style.OrTemplate(s.autoSize, sdef.autoSize) then
+            local aw, ah = Style.Text.AutoSize(s, cfg.auraType)
+            if aw then return aw, ah end
+        end
+        -- A Text line stacked by Center grows to its rows (feedback #1, modules/Style_Text.lua).
+        h = math.max(h, Style.Text.StackHeight(s))
+    end
     return w, h
 end
 

@@ -16,7 +16,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## AceDB setup
 
-`NS.InitDB` (`core/Database.lua:243`), called from `OnInitialize`:
+`NS.InitDB` (`core/Database.lua:269`), called from `OnInitialize`:
 
 - `AceDB:New("AuraMasterDB", NS.defaults, true)` — `true` puts every character on the shared
   `Default` profile until the player picks a per-character, per-class or per-realm one.
@@ -27,8 +27,8 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:179`,
-`core/AuraMaster.lua:190`, `core/AuraMaster.lua:197`):
+`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:185`,
+`core/AuraMaster.lua:196`, `core/AuraMaster.lua:203`):
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)

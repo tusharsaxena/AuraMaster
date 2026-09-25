@@ -51,7 +51,9 @@ end
 -- ── the frames ─────────────────────────────────────────────────────────────────────────────────
 
 test("text style: the element takes its size; clip, animation and text-area frames nest inside it", function()
-    local frame, am = dressed(text({ width = 250, height = 18 }))
+    -- A hand-set size (Size to fit off): the frames clip. Under Size to fit they do not (batch 9 TX-1,
+    -- tests/test_style_text_autosize.lua).
+    local frame, am = dressed(text({ autoSize = false, width = 250, height = 18 }))
     assertEqual(frame:__joined("SetSize"), "250,18")
     -- red under: build without the clip frame (a bounce or a long line drawn over a neighbor)
     assertTrue(am.clip.parent == frame)
@@ -974,4 +976,23 @@ test("text style: a placeholder's and the Preview box's dispel word take its pal
     -- red under: the preview fill ignoring the option (the live line colored, the placeholder not)
     assertEqual(out[2], " (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
     assertEqual(NS.Style.Text.PreviewLine(s, AURA), "Bloodlust (" .. MAGIC_CODE .. NS.L["Magic"] .. "|r)")
+end)
+
+test("text style: a debuff placeholder's dispel word and tints follow its own type, and the untyped one shows neither (TD-4)", function()
+    local NS = E()
+    local curse, typeless
+    for _, a in ipairs(NS.Constants.PREVIEW_AURAS.HARMFUL) do
+        if a.dispel == "Curse" then curse = a elseif not a.dispel then typeless = a end
+    end
+    -- red under: no debuff placeholders (the buff list names Magic alone)
+    assertTrue(curse ~= nil and typeless ~= nil, "a Curse and an untyped debuff placeholder")
+    local over = { template = "$spellname$[ ($dispeltype$)]", dispelBackdrop = true }
+    local out, am = filled(over, curse)
+    local k = NS.db.profile.dispelColors.Curse
+    assertEqual(out[2], " (" .. NS.L["Curse"] .. ")")
+    assertTrue(am.backdrop:IsShown())
+    assertEqual(am.backdrop:__joined("SetVertexColor"), table.concat({ k.r, k.g, k.b, 1 }, ","))
+    out, am = filled(over, typeless)
+    assertEqual(out[2], "", "no type, no word")
+    assertFalse(am.backdrop:IsShown(), "no type, no tint")
 end)

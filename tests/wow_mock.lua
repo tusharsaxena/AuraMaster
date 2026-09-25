@@ -217,6 +217,12 @@ return function()
     M.__aurasSecret = false
     M.C_Secrets = { ShouldAurasBeSecret = function() return M.__aurasSecret end }
 
+    -- ── weapon enchants: none, as on a client with bare weapons ────────────────────────────
+    -- modules/EmptyWatch.lua reads GetWeaponEnchantInfo to predict an enchant container empty; a
+    -- suite that needs an oil on a weapon replaces it. Twelve returns: has, expiration (ms left),
+    -- charges and enchant id for the main hand, the off hand and the ranged slot.
+    M.GetWeaponEnchantInfo = function() return false, 0, 0, 0, false, 0, 0, 0, false, 0, 0, 0 end
+
     -- ── combat lockdown, settable (the base answers false forever) ─────────────────────────
     M.__lockdown = false
     M.InCombatLockdown = function() return M.__lockdown end

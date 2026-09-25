@@ -151,7 +151,7 @@ test("container: test mode previews placeholders through the style code and disa
     local enabled = inst.engine:__callsTo("SetEnabled")
     assertEqual(enabled[#enabled][2], false, "real auras do not draw over the placeholders")
     local _, active = NS.Pool.Counts(inst.previewPools.bars)
-    assertEqual(active, #NS.Constants.PREVIEW_AURAS)
+    assertEqual(active, #NS.Constants.PREVIEW_AURAS.HELPFUL)
     assertTrue(inst.previewPools.bars.active[1].__am ~= nil, "dressed by the same Style code")
     NS.Preview.SetTestMode(false)
     local _, after = NS.Pool.Counts(inst.previewPools.bars)
@@ -171,7 +171,8 @@ test("container: unlocked, a container shows whatever its visibility rule, its e
     -- red under: ApplyVisibility without the outline (an empty container has nothing to grab)
     assertTrue(inst.outline ~= nil and inst.outline:IsShown(), "an outline marks even an empty container")
     NS.Preview.SetTestMode(true)
-    assertFalse(inst.outline:IsShown(), "test mode: the placeholders are there instead")
+    -- batch 9 SEP-1: in test mode the outline encloses the placeholder block instead
+    assertTrue(inst.outline:IsShown(), "test mode: around the placeholder block")
     NS.Preview.SetTestMode(false)
     NS.SetByPath("locked", true)
     assertFalse(inst.outline:IsShown(), "locked: no outline")
@@ -870,4 +871,33 @@ test("container: an engine whose frame level reads secret leaves the blocker at 
     local ok, err = pcall(inst.ApplyBlocker, inst, inst:Cfg())
     assertTrue(ok, tostring(err))
     assertEqual(inst.blocker:GetFrameLevel(), 0)
+end)
+
+-- What a container attached to this one hangs from (batch 8 EO-1, feedback #9): its preview extent in
+-- test mode, its one-element anchor while unlocked, its engine otherwise.
+test("container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it", function()
+    local NS = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    NS.db.profile.visibility = "always"
+    NS.db.profile.locked = true
+    inst:ApplyVisibility()
+    assertEqual(inst.hangMode, "engine", "locked")
+    NS.db.profile.locked = false
+    inst:ApplyVisibility()
+    -- red under: ApplyVisibility recording no hang mode (a follower hung from the 1x1 empty engine)
+    assertEqual(inst.hangMode, "slot", "unlocked, not previewing")
+    assertTrue(inst.stripShown, "the strip shows while unlocked")
+    NS.State.testMode = true
+    inst:ApplyVisibility()
+    assertEqual(inst.hangMode, "preview", "test mode")
+    NS.State.testMode = false
+    inst:Park()
+    assertEqual(inst.hangMode, "engine", "parked")
+    assertFalse(inst.stripShown, "parked: no strip")
+    inst.parked = false
+    inst:ApplyVisibility()
+    assertEqual(inst.hangMode, "slot")
+    inst:Destroy()
+    assertEqual(inst.hangMode, "engine", "destroyed")
+    assertFalse(inst.stripShown, "destroyed: no strip")
 end)

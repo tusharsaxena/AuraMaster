@@ -176,33 +176,44 @@ test("bars: with the timeless spark on, and in every preview, nothing is clipped
     assertEqual(am.sparkClip:__joined("SetClipsChildren"), "false")
 end)
 
--- ── spark blend mode matches its backdrop (SP-1) ─────────────────────────────────────────────────
+-- ── the spark is neutral and additive in every mode (batch 8 SP-1/SP-2, reverting batch 7's BLEND) ──
 
-test("bars: with the timeless spark off, the live clipped spark blends normally, not additively", function()
+test("bars: with the timeless spark off, the live clipped spark stays additive", function()
     local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), true)
-    -- red under: the clip-mode spark still summing onto its (partly transparent) backdrop, which
-    -- reads as a random wash rather than the spark's own authored color (feedback batch 7 SP-1)
-    assertEqual(am.spark:__joined("SetBlendMode"), "BLEND")
-end)
-
-test("bars: with the timeless spark on, the live spark stays additive over the opaque fill", function()
-    local _, am = dressed(cfg({ bars = { sparkTimeless = true } }), true)
+    -- red under: batch 7's clip-mode BLEND, which paints the casting-bar art's black matte as a box
+    -- taller than the bar (feedback batch 8 #1)
     assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
 end)
 
-test("bars: a non-engine dress (preview) always keeps the additive, centered spark, whatever sparkTimeless says", function()
-    local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), false)
-    -- red under: wireSpark keying the blend mode off sparkTimeless alone instead of `engine and not sparkTimeless`
-    assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
+test("bars: the spark's blend never depends on sparkTimeless or engine", function()
+    for _, timeless in ipairs({ true, false }) do
+        for _, engine in ipairs({ true, false }) do
+            local _, am = dressed(cfg({ bars = { sparkTimeless = timeless } }), engine)
+            local calls = am.spark:__calls("SetBlendMode")
+            -- red under: the blend set only in build() (unrecordable, so it is not per dress), or
+            -- switched to BLEND for any mode
+            assertTrue(#calls >= 1, "SetBlendMode called on every dress")
+            for _, args in ipairs(calls) do assertEqual(args[1], "ADD") end
+        end
+    end
 end)
 
-test("bars: the clip-mode blend switch leaves the player's own spark color alone", function()
+test("bars: the spark art is desaturated so its hue is the player's sparkColor", function()
+    for _, engine in ipairs({ true, false }) do
+        local _, am = dressed(cfg({ bars = { sparkTimeless = false } }), engine)
+        -- red under: raw gold casting-bar art showing over the dark elapsed side (batch 7 SP-1's
+        -- original report); the call must be per dress, since dressed() swaps regions after build
+        assertEqual(am.spark:__joined("SetDesaturated"), "true")
+    end
+end)
+
+test("bars: the neutral additive spark leaves the player's own spark color alone", function()
     local _, am = dressed(cfg({ bars = { sparkTimeless = false,
         sparkColor = { r = 0.1, g = 0.2, b = 0.9, a = 0.4 } } }), true)
-    -- red under: neutralizing the backdrop by overriding sparkColor instead of the blend mode, which
+    -- red under: neutralizing the art by overriding sparkColor instead of desaturating it, which
     -- would silently discard a custom color the player chose
     assertEqual(am.spark:__joined("SetVertexColor"), "0.1,0.2,0.9,0.4")
-    assertEqual(am.spark:__joined("SetBlendMode"), "BLEND")
+    assertEqual(am.spark:__joined("SetBlendMode"), "ADD")
 end)
 
 test("bars: a missing timeless-spark setting reads the template's", function()
@@ -876,7 +887,7 @@ end)
 test("bars: a preview fill drains from the configured side, spark at its leading edge", function()
     local c = cfg({ bars = { drain = "right" } })
     local frame, am = dressed(c, false)
-    NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS[2], c)
+    NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS.HELPFUL[2], c)
     local pts = am.fill:__calls("SetPoint")
     local n = #pts
     -- red under: FillPreview anchoring the fill left whatever the drain
@@ -884,17 +895,54 @@ test("bars: a preview fill drains from the configured side, spark at its leading
     assertEqual(am.spark:__last("SetPoint")[3], "LEFT")
 end)
 
-test("bars: a dispel-colored preview paints the Magic color, since no real aura names a type", function()
-    local c = cfg({ bars = { colorMode = "dispel" } })
+test("bars: a dispel-colored placeholder paints its own type's palette color, and one with no type the surface's (TD-4)", function()
+    local red, dark = { r = 0.9, g = 0.1, b = 0.2, a = 0.5 }, { r = 0.1, g = 0.2, b = 0.3, a = 1 }
+    local c = cfg({ bars = { colorMode = "dispel", barColor = red, useClassColorBar = false, barAlpha = 0.8,
+        bgColorMode = "dispel", bgColor = dark, useClassColorBg = false } })
     local frame, am = dressed(c, false)
-    NS.Style.Bars.FillPreview(frame, NS.Constants.PREVIEW_AURAS[1], c)
-    local m = NS.db.profile.dispelColors.Magic
-    -- red under: FillPreview ignoring colorMode (the preview then looks unlike the engine's tint)
-    assertEqual(am.fill:__joined("SetVertexColor"), table.concat({ m.r, m.g, m.b, 1 }, ","))
+    local P = NS.Constants.PREVIEW_AURAS.HARMFUL
+    local poison, typeless
+    for _, a in ipairs(P) do
+        if a.dispel == "Poison" then poison = a elseif not a.dispel then typeless = a end
+    end
+    local p = NS.db.profile.dispelColors.Poison
+    NS.Style.Bars.FillPreview(frame, poison, c)
+    -- red under: every placeholder standing in with Magic (the preview then disagrees with the live tint)
+    assertEqual(am.fill:__joined("SetVertexColor"), table.concat({ p.r, p.g, p.b, 1 }, ","), "fill: Poison")
+    assertEqual(am.bg:__joined("SetVertexColor"), table.concat({ p.r, p.g, p.b, 1 }, ","), "background: Poison")
+    NS.Style.Bars.FillPreview(frame, typeless, c)
+    -- red under: an untyped placeholder painted a palette color (live, "None" keeps the surface color)
+    assertEqual(am.fill:__joined("SetVertexColor"), "0.9,0.1,0.2,1", "fill: no type, the bar color")
+    assertEqual(am.bg:__joined("SetVertexColor"), "0.1,0.2,0.3,1", "background: no type, its own color")
+    -- the opacity times the color's alpha still rides the region (paintSurface, smoke batch 2 item 4)
+    T.assertNear(am.fill:__last("SetAlpha")[1], 0.8 * 0.5, 1e-9)
+    local static = cfg({ bars = { colorMode = "static", barColor = red, useClassColorBar = false } })
+    frame, am = dressed(static, false)
+    local painted = am.fill:__count("SetVertexColor")
+    NS.Style.Bars.FillPreview(frame, poison, static)
+    -- red under: FillPreview repainting a surface that is not colored by dispel type
+    assertEqual(am.fill:__count("SetVertexColor"), painted, "a static fill is left as the dress painted it")
+end)
+
+test("bars: an untyped dispel-colored placeholder keeps the container's class snapshot, not the player's (TD-4)", function()
+    local snap = { r = 0.11, g = 0.22, b = 0.33 }
+    local c = cfg({ bars = { colorMode = "dispel", barColor = { r = 0.9, g = 0.1, b = 0.2, a = 1 },
+        useClassColorBar = true, bgColorMode = "dispel", bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 1 },
+        useClassColorBg = true } })
+    local frame, am = dressed(c, false, snap)
+    local typeless
+    for _, a in ipairs(NS.Constants.PREVIEW_AURAS.HARMFUL) do
+        if not a.dispel then typeless = a end
+    end
+    NS.Style.Bars.FillPreview(frame, typeless, c)
+    -- red under: FillPreview building the None fallback after the dress, when the snapshot is gone
+    -- (a target container's untyped placeholder painted in the player's class, unlike its live bars)
+    assertEqual(am.fill:__joined("SetVertexColor"), "0.11,0.22,0.33,1", "fill: the snapshot class")
+    assertEqual(am.bg:__joined("SetVertexColor"), "0.11,0.22,0.33,1", "background: the snapshot class")
 end)
 
 test("bars: filling a preview element that was never dressed does nothing and raises nothing", function()
-    local ok, err = pcall(NS.Style.Bars.FillPreview, R(), NS.Constants.PREVIEW_AURAS[1], cfg())
+    local ok, err = pcall(NS.Style.Bars.FillPreview, R(), NS.Constants.PREVIEW_AURAS.HELPFUL[1], cfg())
     -- red under: FillPreview without its missing-regions guard
     assertTrue(ok, tostring(err))
     assertNil(err)

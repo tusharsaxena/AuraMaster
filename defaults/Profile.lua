@@ -121,6 +121,13 @@ local function font(size)
     }
 end
 
+--- The name label's font: the six leaves, gold at 12 (the strip's own look).
+local function labelFont()
+    local t = font(12)
+    t.fontColor = color(1, 0.82, 0, 1)
+    return t
+end
+
 --- The font block every Bars and Icons text element carries: the six font leaves, then where the
 --- text sits.
 local function text(show, size, point, x, y, justify)
@@ -158,10 +165,16 @@ NS.CONTAINER_TEMPLATE = {
     position = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },
 
     -- What the container is attached to (modules/Anchors.lua). `container` is a container id; `frame`
-    -- is a global frame name, re-resolved when the add-on that owns it loads.
+    -- is a global frame name, re-resolved when the add-on that owns it loads. `x`/`y` are a nudge: on
+    -- a container attached to another they add to the seam gap, which is the child's own spacing
+    -- (batch 8 SS-1, SS-2); the old default 0/-4 is reset to 0/0 there by schema v8, and on a screen
+    -- container by v9. `point`/`relativePoint` are a named frame's. Attached to another container it
+    -- joins it by `childPoint` (its own) and `relPoint` (the parent's), absolute WoW points, each
+    -- absent for Automatic, so neither is declared here: a backfill never stamps a pick (batch 11
+    -- G2, modules/Anchors.lua's AttachPoints). Schema v11 turned the old `edge` side into them.
     attach = {
         mode = "screen", container = 0, frame = "",
-        point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = -4,
+        point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = 0,
     },
 
     -- How elements are arranged.
@@ -176,6 +189,13 @@ NS.CONTAINER_TEMPLATE = {
         tooltips = true, tooltipAnchor = "ANCHOR_BOTTOMLEFT", tooltipInCombat = true,
         clickThrough = false, cancelOnRightClick = true,
     },
+
+    -- The optional name label (batch 8 NL-1): off by default. Its text is always `name`; it sits
+    -- where the unlock strip does (modules/Anchors.lua's StripPoints), nudged by x/y, locked or not,
+    -- and while unlocked the strip moves out past it (D6). Gold, like the strip's own label.
+    -- justifyH "AUTO" is no pick: Bars and Text center the name, Icons justify it toward the
+    -- element (B9 E7, modules/Anchors.lua's LabelJustify).
+    label = { show = false, justifyH = "AUTO", x = 0, y = 0, font = labelFont() },
 
     bars = {
         width = 220, height = 18,
@@ -231,6 +251,10 @@ NS.CONTAINER_TEMPLATE = {
     -- modules/TextTemplate.lua and drawn as a chain of font strings (modules/Style_Text.lua).
     text = {
         width = 220, height = 16,
+        -- Size to fit (batch 8, AS-1): the size follows the line's content (Style.ElementSize), and
+        -- width/height stand only when it cannot be measured. On for a new profile or container;
+        -- core/Database.lua's v8 stamps it off on every container stored before it (D7).
+        autoSize = true,
         template = "$spellname$[ x$stacks$][ - $remainingduration$]",
         justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,
         font = font(12),
