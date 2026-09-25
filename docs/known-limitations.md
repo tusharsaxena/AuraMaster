@@ -197,7 +197,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   placeholders, the sample names and the worst-case durations; a live name longer than those is cut at
   the box edge. A font that has not loaded yet measures nothing, so the first apply after login can
   use the stored Width and Height and the next one sizes to fit. Defaults on the Text page turns Size
-  to fit on (the template's value); containers stored before schema v8 keep it off (D7).
+  to fit on (the template's value); Text containers stored before schema v8 keep it off (D7). Size to
+  fit is Text-only (batch 9 E6): a bars or icons container stores no value of its own (schema v9
+  removes the one an early v8 build stamped), so one switched to Text later starts with it on.
 - **`/am diagnostics` cannot always name what a container shows** (batch 8 DG-2, DG-3). While auras are
   secret it reads no aura and calls nothing on an engine button, so `shown=?` and the per-group
   frame count are all it prints. Out of combat a button's shown state can itself be secret (batch 9

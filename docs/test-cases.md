@@ -123,7 +123,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v8: the current schema version is 8
+- v9: the current schema version is 9
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -168,7 +168,7 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (12)
+### test_migrations.lua (15)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -179,9 +179,12 @@ badge and any count quoted in the docs must agree with it.
 - migrations: v8 zeroes the old 0/-4 offset on a container attached to another, and nothing else
 - migrations: a v7 account climbs to v8 in every profile
 - migrations: a new container's attach offset is 0/0
-- migrations: v8 stamps Size to fit off on every stored container, and keeps a stored value
+- migrations: v8 stamps Size to fit off on every stored Text container only, and keeps a stored value
 - migrations: a v7 account keeps its hand-set text size; a fresh install's starters fit their content
 - migrations: after v8 a new container and a new profile start with Size to fit on; a duplicate keeps its source's
+- migrations: v9 removes Size to fit from bars and icons containers, and keeps every Text one
+- migrations: a v8 account climbs to v9 in every profile
+- migrations: a v1 account reaches v9 with Size to fit off on Text only
 
 ### test_schema.lua (33)
 
@@ -1152,7 +1155,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (25)
+### test_diagnostics.lua (30)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1175,6 +1178,11 @@ badge and any count quoted in the docs must agree with it.
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
 - diag: predictions come from ExplainSpell over the unit's readable auras
+- diag: an engine button whose IsShown is secret out of combat costs no section
+- diag: a partly secret group counts the readable buttons and the unknowable ones apart
+- diag: a raising button probe costs one line, never the predictions
+- diag: a plan group that raises keeps later groups and the warnings
+- diag: [Cfg] lists only the settings in use; the rest go on an inert line
 - diag: a failing section is reported and the next container still reports
 - diag: the report is capped below the console buffer and says it was truncated
 - diag: predictions stop at the id cap and the report says it was truncated
@@ -1684,7 +1692,7 @@ badge and any count quoted in the docs must agree with it.
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 22 |
-| test_migrations.lua | 12 |
+| test_migrations.lua | 15 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 85 |
@@ -1716,7 +1724,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 25 |
+| test_diagnostics.lua | 30 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 19 |
 | test_options_descriptor.lua | 19 |
@@ -1744,4 +1752,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1474** |
+| **Total** | **1482** |

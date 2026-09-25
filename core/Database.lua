@@ -882,13 +882,14 @@ end
 --- the step saying so), so it is stamped 0 too. Any other value is the player's own and is kept, and
 --- a named-frame or screen container keeps its offsets whatever they are.
 ---
---- The same step (D8) turns Size to fit OFF on every container stored before it (AS-3, D7): the
+--- The same step (D8) turns Size to fit OFF on every Text container stored before it (AS-3, D7): the
 --- template's `text.autoSize` is true, and the backfill after the ladder would otherwise hand that to
---- every existing container and move every hand-sized layout. Every container, not only one drawn as
---- text, so a bars or icons container switched to Text later keeps the size it is given. A text block
---- that is missing or not a table is created for the stamp; a stored value is the player's own and is
---- kept. A fresh install walks no containers (the starters are seeded after the ladder), so they, and
---- every container made later, read the template's true.
+--- every existing Text container and move every hand-sized layout. Text containers only (batch 9 E6:
+--- Size to fit is Text-only; a bars or icons container carries no value of its own, and one switched
+--- to Text later reads the template's true, and v9 removes what the earlier style-blind stamp wrote).
+--- A text block that is missing or not a table is created for the stamp; a stored value is the
+--- player's own and is kept. A fresh install walks no containers (the starters are seeded after the
+--- ladder), so they, and every container made later, read the template's true.
 ---
 --- IDEMPOTENT: a second run finds 0/0 and a stored autoSize, and changes nothing. Unreleased, so later
 --- batch 8 tasks extend this same step (D8).
@@ -906,8 +907,9 @@ local function resetOldSeam(at)
     return true
 end
 
---- Stamp Size to fit off on container `c` unless it holds a value of its own; whether it stamped.
+--- Stamp Size to fit off on Text container `c` unless it holds a value of its own; whether it stamped.
 local function stampFitOff(c)
+    if c.style ~= "text" then return false end
     if type(c.text) ~= "table" then c.text = {} end
     if c.text.autoSize ~= nil then return false end
     c.text.autoSize = false
@@ -924,6 +926,28 @@ function Database.MigrateV8(p)
         end
     end
     return reset, stamped
+end
+
+--- v9 (batch 9, owner 2026-09-25, E6/MG-1): Size to fit is Text-only. The style-blind v8 stamp that
+--- shipped on this branch wrote `text.autoSize = false` on bars and icons containers too, where the
+--- Text page is disabled and nothing reads it, so it is removed from every container whose style is
+--- not Text (no stored style is the template's bars). The backfill after the ladder then hands it the
+--- template's value, the same as a container that climbed from before v8. A Text container's value
+--- is the player's own and is kept. A text block that is missing is not created.
+---
+--- IDEMPOTENT: a second run finds no value to remove. Unreleased, so later batch 9 tasks extend this
+--- same step (MG-1: the attach edge stamp and the screen-mode 0/-4 reset).
+--- @return number  the containers Size to fit was removed from
+function Database.MigrateV9(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local removed = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" and c.style ~= "text" and type(c.text) == "table" and c.text.autoSize ~= nil then
+            c.text.autoSize = nil
+            removed = removed + 1
+        end
+    end
+    return removed
 end
 
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
@@ -1029,7 +1053,15 @@ local SCHEMA_STEPS = {
         eachProfile(db, function(p, name)
             local n, fit = Database.MigrateV8(p)
             if NS.Debug then
-                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another; Size to fit stamped off on %s", name, n, fit)
+                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another; Size to fit stamped off on %s Text container(s)", name, n, fit)
+            end
+        end)
+    end },
+    { to = 9, apply = function(db)
+        eachProfile(db, function(p, name)
+            local removed = Database.MigrateV9(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s)", name, removed)
             end
         end)
     end },

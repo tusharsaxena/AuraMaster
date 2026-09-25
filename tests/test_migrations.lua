@@ -221,8 +221,8 @@ test("migrations: a v7 account climbs to v8 in every profile", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
         global = { schemaVersion = 7 } } })
     -- red under: the v8 row missing from SCHEMA_STEPS
-    assertEqual(NS.SCHEMA_VERSION, 8)
-    assertEqual(NS.db.global.schemaVersion, 8)
+    assertEqual(NS.SCHEMA_VERSION, NS.Database.CurrentSchemaVersion())
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local cs = NS.db.sv.profiles[name].containers
         -- red under: the step touching the active profile only
@@ -238,22 +238,42 @@ test("migrations: a new container's attach offset is 0/0", function()
     assertEqual(NS.CONTAINER_TEMPLATE.attach.y, 0)
 end)
 
--- ── v8 (batch 8 AS-3, D7): Size to fit stamped off on every existing container ─────────────────
+-- ── v8 (batch 8 AS-3, D7; batch 9 E6): Size to fit stamped off on every existing Text container ─
 
-test("migrations: v8 stamps Size to fit off on every stored container, and keeps a stored value", function()
-    local NS = fresh()
+--- Size to fit as stored: nil when there is no text block (an inactive profile is not backfilled).
+local function fitOf(c)
+    return type(c.text) == "table" and c.text.autoSize or nil
+end
+
+--- v7profile with styles mixed: #2 and #3 are Text, #5 is Icons, the rest stay Bars.
+local function v7mixed()
     local p = v7profile()
+    p.containers[2].style = "text"
+    p.containers[3].style = "text"
+    p.containers[5].style = "icons"
+    return p
+end
+
+test("migrations: v8 stamps Size to fit off on every stored Text container only, and keeps a stored value", function()
+    local NS = fresh()
+    local p = v7mixed()
     p.containers[2].text = { width = 180 }
     p.containers[3].text = "junk"
+    p.containers[4].style = "text"
     p.containers[4].text = { autoSize = true }
+    p.containers[1].text = { width = 90 }
     local reset, stamped = NS.Database.MigrateV8(p)
     assertEqual(reset, 2, "the seam reset still counts first")
-    -- red under: v8 without the autosize stamp (the backfill after the ladder turns it ON and moves
-    -- every hand-sized layout)
-    assertEqual(stamped, 6)
-    for id = 1, 7 do
-        local want = (id == 4)
-        assertEqual(p.containers[id].text.autoSize, want, "container " .. id)
+    -- red under: the style-blind stamp (E6: Size to fit is Text-only, so a bars or icons container
+    -- carries no value of its own)
+    assertEqual(stamped, 2)
+    assertEqual(p.containers[2].text.autoSize, false, "a text container: stamped off")
+    assertEqual(p.containers[3].text.autoSize, false, "a junk text block: recreated and stamped")
+    assertEqual(p.containers[4].text.autoSize, true, "a stored value is the player's own")
+    assertNil(p.containers[1].text.autoSize, "a bars container: not stamped")
+    assertEqual(p.containers[1].text.width, 90, "a bars container's text block untouched")
+    for _, id in ipairs({ 5, 6, 7 }) do
+        assertNil(p.containers[id].text, "container " .. id .. ": no text block created")
     end
     assertEqual(p.containers[2].text.width, 180, "the rest of the block kept")
     local before = NS.Database.DeepCopy(p)
@@ -263,14 +283,18 @@ test("migrations: v8 stamps Size to fit off on every stored container, and keeps
 end)
 
 test("migrations: a v7 account keeps its hand-set text size; a fresh install's starters fit their content", function()
-    local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
+    local NS = fresh({ savedVariables = { profiles = { Default = v7mixed(), Raid = v7mixed() },
         global = { schemaVersion = 7 } } })
     for _, name in ipairs({ "Default", "Raid" }) do
+        local cs = NS.db.sv.profiles[name].containers
         -- red under: the step touching the active profile only
-        assertEqual(NS.db.sv.profiles[name].containers[2].text.autoSize, false, name)
+        assertEqual(cs[2].text.autoSize, false, name)
+        -- red under: the style-blind v8 stamp (E6: a bars or icons container reads the template,
+        -- which the backfill hands the active profile only)
+        assertTrue(fitOf(cs[1]) ~= false, name .. " bars")
+        assertTrue(fitOf(cs[5]) ~= false, name .. " icons")
     end
     local c = NS.Database.FindContainer(2)
-    c.style = "text"
     c.text.width, c.text.height = 250, 18
     local w, h = NS.Style.ElementSize(c)
     assertEqual(w, 250); assertEqual(h, 18)
@@ -282,7 +306,7 @@ test("migrations: a v7 account keeps its hand-set text size; a fresh install's s
 end)
 
 test("migrations: after v8 a new container and a new profile start with Size to fit on; a duplicate keeps its source's", function()
-    local NS = fresh({ savedVariables = { profiles = { Default = v7profile() }, global = { schemaVersion = 7 } } })
+    local NS = fresh({ savedVariables = { profiles = { Default = v7mixed() }, global = { schemaVersion = 7 } } })
     local id = NS.ContainerManager.Create({ name = "New" })
     -- red under: v8 stamping false on containers made after the ladder ran
     assertEqual(NS.Database.FindContainer(id).text.autoSize, true)
@@ -292,4 +316,78 @@ test("migrations: after v8 a new container and a new profile start with Size to 
     local all = NS.Database.GetContainers()
     assertTrue(#all > 0, "the new profile is seeded")
     for _, k in ipairs(all) do assertEqual(k.text.autoSize, true, k.name) end
+end)
+
+-- ── v9 (batch 9 E6, MG-1): Size to fit leaves bars and icons containers ─────────────────────────
+
+--- A profile as the style-blind v8 left it: every container stamped off, whatever its style.
+local function v8profile()
+    local function c(name, style, text)
+        return { name = name, unit = "player", auraType = "HELPFUL", style = style, text = text,
+            attach = { mode = "screen", container = 0, x = 0, y = 0 } }
+    end
+    return {
+        seeded = true, nextContainerId = 7, containerOrder = { 1, 2, 3, 4, 5, 6 },
+        userCategories = {}, userCategoryOrder = {},
+        containers = {
+            [1] = c("Bars", "bars", { autoSize = false }),
+            [2] = c("Icons", "icons", { autoSize = false, width = 150 }),
+            [3] = c("Text off", "text", { autoSize = false, width = 250 }),
+            [4] = c("Text on", "text", { autoSize = true }),
+            [5] = c("Unstyled", nil, { autoSize = true }),
+            [6] = c("No text block", "icons", nil),
+        },
+    }
+end
+
+test("migrations: v9 removes Size to fit from bars and icons containers, and keeps every Text one", function()
+    local NS = fresh()
+    local p = v8profile()
+    -- red under: no MigrateV9 (E6's removal)
+    local removed = NS.Database.MigrateV9(p)
+    assertEqual(removed, 3, "bars, icons and an unstyled (bars) container")
+    assertNil(p.containers[1].text.autoSize, "bars")
+    assertNil(p.containers[2].text.autoSize, "icons")
+    assertEqual(p.containers[2].text.width, 150, "the rest of the block kept")
+    assertNil(p.containers[5].text.autoSize, "no style stored reads bars")
+    assertNil(p.containers[6].text, "no text block: nothing created")
+    -- red under: a style-blind removal (a Text container's value is the player's own)
+    assertEqual(p.containers[3].text.autoSize, false)
+    assertEqual(p.containers[3].text.width, 250)
+    assertEqual(p.containers[4].text.autoSize, true)
+    local before = NS.Database.DeepCopy(p)
+    assertEqual(NS.Database.MigrateV9(p), 0, "a second run removes nothing")
+    assertNil(diff(p, before))
+end)
+
+test("migrations: a v8 account climbs to v9 in every profile", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v8profile(), Raid = v8profile() },
+        global = { schemaVersion = 8 } } })
+    -- red under: the v9 row missing from SCHEMA_STEPS
+    assertEqual(NS.SCHEMA_VERSION, 9)
+    assertEqual(NS.db.global.schemaVersion, 9)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local cs = NS.db.sv.profiles[name].containers
+        -- red under: the step touching the active profile only
+        assertTrue(fitOf(cs[1]) ~= false, name .. ": bars reads the template")
+        assertTrue(fitOf(cs[2]) ~= false, name .. ": icons reads the template")
+        assertEqual(cs[3].text.autoSize, false, name .. ": a Text container keeps its off")
+    end
+    local active = NS.Database.FindContainer(1)
+    assertEqual(active.text.autoSize, true, "the active profile's bars container reads the template")
+end)
+
+test("migrations: a v1 account reaches v9 with Size to fit off on Text only", function()
+    local p = v1profile()
+    p.containers[5] = { name = "Lines", unit = "player", auraType = "HELPFUL", style = "text",
+        text = { width = 200 } }
+    p.containerOrder[2] = 5
+    p.nextContainerId = 6
+    local NS = fresh({ savedVariables = { profiles = { Default = p } } })
+    assertEqual(NS.db.global.schemaVersion, 9)
+    local cs = NS.db.sv.profiles.Default.containers
+    -- red under: the style-blind v8 stamp left in place (the bars container would read false)
+    assertEqual(cs[4].text.autoSize, true, "bars reads the template")
+    assertEqual(cs[5].text.autoSize, false, "the Text container keeps its hand-set size")
+    assertEqual(cs[5].text.width, 200)
 end)

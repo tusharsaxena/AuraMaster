@@ -48,7 +48,7 @@ Example (shortened):
 
 ```
 [Diag] ==== Aura Master diagnostic begin ====
-[Diag] Aura Master v0.1.0, schema v8, profile 'Default', client 12.1.0 build 12345 (120100)
+[Diag] Aura Master v0.1.0, schema v9, profile 'Default', client 12.1.0 build 12345 (120100)
 [Diag] state: enabled=true stoodDown=false disabledHold=false locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
 [Unit] player HELPFUL: 7 aura(s)

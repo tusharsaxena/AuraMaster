@@ -27,7 +27,7 @@ Resume at the first task, in order, that has no commit. A dirty tree is that tas
 |---|---|---|---|---|---|
 | P0 tab rename, smoke record | E7 | — | done | 73e44b5 515474b 73c72e4 | |
 | Q1 diagnostics secret-safe + inert rows | DX-1 DX-2 | — | done | this commit (subject `B9-Q1: `; a commit cannot hold its own hash) | frameShown tri-state via CanAccess, shown=?/n+k?, per-group/per-listing/predictions pcall, probe pcall; [Cfg] `#N inert:` line from shownWhen + page disabledFor (NS.ContainerPageDisabledFor); attach.edge needs only CONTAINER_ONLY in Q6; quirks + debug.md + KL updated |
-| Q2 Size to fit Text-only; creates v9 | E6 MG-1 (autoSize half) | Q1 | todo | | |
+| Q2 Size to fit Text-only; creates v9 | E6 MG-1 (autoSize half) | Q1 | done | this commit (subject `B9-Q2: `) | v8 stamps autoSize off only on style=="text"; new MigrateV9 + ladder row {to=9} removes text.autoSize from non-text containers (no stored style = bars), idempotent; ladder tests from v1, v7, v8; schema.md v9 entry, KL, debug.md, test-cases regen + badge 1482 |
 | Q3 live Size to fit never clips | TX-1 E8 | Q2 | todo | | |
 | Q4 label Justify | LJ-1 E7 | Q3 | todo | | |
 | Q5 drop the slot hang | HG-1 E1 | Q4 | todo | | |

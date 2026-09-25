@@ -164,7 +164,8 @@ with no dispel type takes the surface's own color instead (feedback #7); schema 
 
 The Text style (issue #2). `autoSize` (true: Size to fit, batch 8 AS-1..AS-3 -- the size follows
 the line's content, `Style.Text.AutoSize`, and `width`/`height` stand only when it cannot be measured;
-schema v8 stamps `false` on every container stored before it), `width` (220), `height` (16); `template`
+Text-only, batch 9 E6: schema v8 stamps `false` on every Text container stored before it, and v9
+removes the value from bars and icons containers), `width` (220), `height` (16); `template`
 (`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
 refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` on a template of more
 than one piece STACKS it, one centered row per field, text outside `[ ]` not drawn — feedback #1,
@@ -516,7 +517,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:965`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:989`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -689,11 +690,21 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   them reset to `0` / `0`. An absent offset counts as that old default. Any other value is the
   player's own and is kept, and a `frame` or `screen` container keeps its offsets whatever they are.
   The same step stamps `text.autoSize = false` (Size to fit off, AS-3/D7) on every stored container
-  that has no value of its own, creating a missing or non-table `text` block for it, so a
-  hand-sized layout does not move when the backfill would hand it the template's `true`; a fresh
-  install walks no containers, so its starters and every later container read `true`.
+  whose `style` is `"text"` and that has no value of its own (batch 9 E6: Size to fit is Text-only),
+  creating a missing or non-table `text` block for it, so a hand-sized layout does not move when the
+  backfill would hand it the template's `true`; a fresh install walks no containers, so its starters
+  and every later container read `true`.
   Idempotent: a second run finds `0` / `0` and a stored `autoSize`, and changes nothing. It is
   unreleased, so the later batch 8 tasks extend this same step (D8).
+- **Schema v9** (`Database.MigrateV9`, `core/Database.lua`, batch 9, owner 2026-09-25, E6/MG-1) runs over
+  **every** stored profile and logs one `[Migrate] v9 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `9`. It removes `text.autoSize` from every container whose
+  `style` is not `"text"` (no stored style is the template's bars): an early v8 build stamped it on
+  every container whatever its style, and Size to fit is Text-only. The backfill after the ladder then
+  hands such a container the template's `true`, the same as one that climbed from before v8, so every
+  path reaches the same state. A Text container's value is kept, and a missing `text` block is not
+  created. Idempotent: a second run finds nothing to remove. It is unreleased, so the later batch 9
+  tasks extend this same step (MG-1: the attach edge stamp and the screen-mode 0/-4 reset).
 - **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:226`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
