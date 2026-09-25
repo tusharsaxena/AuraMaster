@@ -294,7 +294,7 @@ test("strip: the tooltip of a container joined to another names the side and the
     NS.SetByPath("locked", false)
     mocks.__fireTimers()
     local lines = {}
-    rawset(mocks.GameTooltip, "AddLine", function(_, s) lines[#lines + 1] = s end)
+    rawset(mocks.GameTooltip, "AddLine", function(_, s) table.insert(lines, s) end)
     NS.ContainerManager.instances[2].handle:__fire("OnEnter")
     local want = NS.L["Joined to the %s of '%s'. Change the side on Layout > Anchor."]
         :format(NS.L["Bottom"], NS.Database.FindContainer(1).name)
@@ -313,7 +313,7 @@ test("strip: in test mode the outline encloses the whole placeholder block, lock
     -- red under: ApplyOutline gated off while previewing
     assertTrue(o ~= nil and o:IsShown(), "locked in test mode: the block is outlined")
     local all = {}
-    rawset(o, "SetAllPoints", function(_, f) all[#all + 1] = f end)
+    rawset(o, "SetAllPoints", function(_, f) table.insert(all, f) end)
     NS.SetByPath("locked", false)
     mocks.__fireTimers()
     assertTrue(o:IsShown(), "unlocked in test mode")
