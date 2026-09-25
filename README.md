@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1376%2F1376_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1470%2F1470_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -39,10 +39,14 @@ of text near the middle of the screen. They start locked. Type `/am unlock` and 
 gold-edged handle with its name, placed just outside the first bar or icon so it never covers one,
 and a faint outline, so even an empty container can be found. Your live auras keep drawing while
 you're unlocked. Drag the handles where you want them and type `/am lock`. Right-clicking a handle
-(or its **?**) opens the Containers page with that container already selected.
+(or its **?**) opens the Containers page with that container already selected, and the **X** beside
+the **?** turns that container off (tick its **Enabled** box on Containers to bring it back). If you
+want a container's name on screen all the time, tick **Show name label** on Layout → Name label: the
+name sits where the handle does, locked or unlocked, and the handle moves out past it.
 
 Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
-waiting for a real buff to turn up. Turn it on with the Test mode checkbox under General → Master
+waiting for a real buff to turn up. A debuff container gets sample debuffs, one of each dispel type,
+so you can check the dispel border and colors. Turn it on with the Test mode checkbox under General → Master
 controls, with `/am test`, or from the minimap button's right-click menu; you don't have to unlock
 first. Real auras stay hidden while it's on. It ends by itself when combat starts, and it can't be
 started during combat.
@@ -86,8 +90,10 @@ with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s`
 duration). The page lists them all, and a line
 can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
 Font tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
-tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. A new
-profile starts with one: **Player cooldowns**, which shows only your offensive and defensive
+tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. **Size to fit**, on
+the Text page, sizes each line to its content instead of a fixed width and height; it is on for new
+containers, and containers you made before it existed keep the size you gave them. A new
+profile starts with one Text container: **Player cooldowns**, which shows only your offensive and defensive
 cooldowns.
 
 Everything else is on the addon's page under Settings → AddOns, which `/am` on its own opens.
@@ -144,6 +150,8 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default); `/am new enchants` makes one that shows nothing else. Which weapon slots count is General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
+| A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enabled** box on the Containers page to bring it back; its settings were kept. |
+| Something looks wrong and I want to report it | Type `/am debug diag`. It writes a report of your auras and every container into the debug console; press **Copy** there and paste the text into your GitHub issue. |
 
 ## Issues and feature requests
 

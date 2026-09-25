@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 243 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 255 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -388,9 +388,9 @@ source's.
 
 Then **Duplicate** and **Delete** (asks first), and — with more than one container — **Copy settings
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
-Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
+Name label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (43 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Filters (46 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
@@ -515,7 +515,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (26 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (35 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -584,6 +584,17 @@ the Mouse rows are read per element by the stylers. Neither reads the chain.
 `container.behavior.tooltipInCombat`, Tooltip position `container.behavior.tooltipAnchor`,
 Right-click to cancel `container.behavior.cancelOnRightClick` (only on a player buff or enchant
 container), Click-through `container.behavior.clickThrough` (no tooltips and no clicks).
+
+**Name label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`, X
+offset `container.label.x` and Y offset `container.label.y` (-200 to 200), then a *Font* subgroup, the
+composed font block on `container.label.font.` (gold Friz 12 OUTLINE by default, the strip's own
+look; class color from the container's unit). Nine rows. The text is always the container's name, so
+a rename redraws it. Every row but Show is dimmed while the label is off, except the color swatch,
+which is never dimmed (anti-pattern #74). The label sits where the drag strip sits, outside the first
+element on the side the auras do not grow into, or beside the first element on a container attached
+to another; it shows locked or unlocked, and while unlocked the strip moves out past it by the label's
+height plus the strip gap (D6, `Anchors.PlaceLabel`). The rows carry no `effect`: a write re-applies
+the selected container.
 
 ### Bars (72 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
 
@@ -656,11 +667,14 @@ settings." — and every control is drawn disabled, as on the Bars page.
 | Stack text (11) | The same on `stacks.` without the countdown |
 | Pandemic (5) | *Time color:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Highlight:* `pandemic`, `pandemicColor` — the Bars page's labels (smoke batch 2, B2-1; once Highlights) |
 
-`dispelBorder` asks the engine to draw Blizzard's own debuff border art in the dispel color, on
-harmful auras with a dispel type only. The art sits above your border and replaces it there; every
-other icon shows your border. `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
+`dispelBorder` has the engine tint four white strips in Blizzard's own dispel color, on harmful
+auras with a dispel type only (batch 8 DB-1, DB-2). The strips have the Solid border's shape: flat,
+square-cornered, inside the icon at the stored Border thickness, or 1 px when the border is hidden,
+None or 0, whatever the border style. They sit above your border and replace it there; every other
+icon shows your border. In test mode the placeholders are tinted the same way
+(`Compat.SetAuraBorderColor`). `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
 
-### Text (36 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Text (37 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
 built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **Text

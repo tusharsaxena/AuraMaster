@@ -168,15 +168,41 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`Anchors.UpdateHandle`). A container dragged against the top edge that grows down therefore sits
   20px lower (the 18px strip and its 2px gap) until `/am lock`, and a handle wider than one element
   pushes a container off the side edge it runs toward the same way. Locking puts it back, and the
-  stored position never changes.
+  stored position never changes. The strip's close mark (X, batch 8 CX-3) widens it by the X and a
+  matching reserve on the other side, so the label stays centered, and a shown name label pushes the
+  strip further out by the label's height plus the gap (D6); both count in the clamp, so the push
+  grows with them.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
   previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
   re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as
-  it would beside real auras; ending test mode puts it back on the engine. Its handle lies toward
-  its parent, so the strip is raised above every one of the parent's placeholders. That raise is a frame level:
-  a parent set to a higher strata still draws over it. Test mode ending in combat re-places nothing
+  it would beside real auras; ending test mode puts it back on the engine. Its strip runs beside its
+  own first element (batch 8 SS-3), so it covers none of the parent's placeholders, and it is still
+  raised above them. That raise is a frame level: a parent set to a higher strata still draws over it. Test mode ending in combat re-places nothing
   (events-frames-taint-§2): the attached container stays where it was until the first visibility
   pass after combat.
+- **The strip's X turns a container off at once, with no confirmation.** One left click writes
+  `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enabled
+  checkbox on the Containers page (`/am set container.enabled true`, with it selected, works too). There is
+  no undo on the strip itself, and a container that others are attached to takes its followers with
+  it, as unticking Enabled does. A drag that starts on the X moves nothing.
+- **The name label is not clamped to the screen.** Only the drag strip is (batch 8 NL-2). Clamping the
+  label would move the container whenever the label is turned on, so a locked container flush with
+  the edge on the label's side can show its label partly off screen. On a container attached to
+  another the label sits beside the first element, toward the parent, and can overlap the parent's
+  last line; its X/Y offsets move it clear. A long name overruns a narrow icon toward the growth side,
+  since the label does not wrap.
+- **Size to fit sizes a Text container once, not per aura** (batch 8 AS-2). The engine draws every
+  element of a group at one size and aura names are secret in combat, so the size comes from the
+  placeholders, the sample names and the worst-case durations; a live name longer than those is cut at
+  the box edge. A font that has not loaded yet measures nothing, so the first apply after login can
+  use the stored Width and Height and the next one sizes to fit. Defaults on the Text page turns Size
+  to fit on (the template's value); containers stored before schema v8 keep it off (D7).
+- **`/am debug diag` cannot always name what a container shows** (batch 8 DG-2, DG-3). While auras are
+  secret it reads no aura and calls nothing on an engine button, so `shown=?` and the per-group
+  frame count are all it prints. Out of combat a button's aura id may still be out of reach, so a
+  shown line can carry only the name or the icon, and the `predicted:` verdict is the addon's own
+  reading of its spell lists, not the engine's answer. The report appends to the console, whose
+  1500-line buffer can push older trace lines out.
 - **While unlocked (and not in test mode), a container attached to another sits one element past
   it, whatever that container holds.** It hangs from the parent's anchor, the one-element slot its
   outline marks, instead of its engine, which holds a 1x1 rect while it is empty, so an empty chain

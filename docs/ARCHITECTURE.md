@@ -71,13 +71,15 @@ otherwise from its engine (`Anchors.HangMode`, re-placed by `Anchors.PlaceAttach
 (`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
 auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
 each under its drag handle and a faint outline one element in size, so an empty container can
-still be found and dragged.
+still be found and dragged. The handle's close mark (X) turns that container off through the write
+seam. A container can also show its name as a label where the handle sits, locked or unlocked;
+while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.
 
 ## Settings Schema
 
-`NS.Schema` holds **243** rows across seven pages (General 18, Containers 5, Filters 43, Layout 26,
+`NS.Schema` holds **255** rows across seven pages (General 18, Containers 5, Filters 46, Layout 35,
 Bars 72, Icons 42, Text 37), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 

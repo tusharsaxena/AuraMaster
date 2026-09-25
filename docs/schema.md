@@ -100,6 +100,17 @@ path, never to a number restated in `modules/`.
 | `layout.strata` | `"MEDIUM"` | | | |
 | `layout.level` | `5` | | | |
 
+### `label`
+
+The optional name label (batch 8 NL-1..NL-4, owner feedback #8). Additive: `Database.PrepareProfile`
+backfills it onto every stored container, so it needs no schema step.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `label.show` | `false` | draw the container's `name` where its drag strip sits, locked or unlocked; while unlocked the strip moves out past it (D6) |
+| `label.x` / `.y` | `0` / `0` | pixels, a nudge from that spot (-200 to 200) |
+| `label.font` | the six font leaves, `"Friz Quadrata TT"` 12, gold `{ r=1, g=0.82, b=0, a=1 }`, `"OUTLINE"`, no shadow, no class color | the strip's own look; a class color follows the container's unit |
+
 ### `bars`
 
 | Key | Default | Key | Default |
@@ -209,9 +220,10 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **243** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **255** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 43, Layout 26, Bars 72, Icons 42 and Text 37. The
+out of General's own tab), Filters 46, Layout 35 (the Name label tab's nine among them, batch 8),
+Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
 `container.filter.categories.<key>` row at runtime (`NS.RegisterSchemaRows(rows, beforePath)` inserts
@@ -435,8 +447,8 @@ trimmed name made unique by `ContainerManager.UniqueName`, and that comparison i
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
 `/am set`, `ContainerManager.Rename` or a reset.
 
-The write seam also takes six **whole sections**: `container.filter`, `.layout`, `.behavior`,
-`.position`, `.bars` and `.icons` (`NS.IsSection`). `NS.SetByPath("container.position", tbl, id)`
+The write seam also takes eight **whole sections**: `container.filter`, `.layout`, `.behavior`,
+`.label`, `.position`, `.bars`, `.icons` and `.text` (`NS.IsSection`). `NS.SetByPath("container.position", tbl, id)`
 stores a deep copy of `tbl` in place of the section. First it backfills the copy from the template, so
 no key can be dropped. Then it runs the spell-set carve-outs under that section, and then every row
 `validate` under it. A single rejection refuses the whole write, and nothing gets stored. Once the

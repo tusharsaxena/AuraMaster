@@ -1194,3 +1194,95 @@ nothing. Nothing in the client can answer the mapping, so the addon carries it i
      first icon. A chain growing up → B sits above A, its strip beside it, clear of A's outline.
 196. **Combat.** Unlocked, enter combat and `/am lock` → nothing re-anchors in combat, and there is no
      ADDON_ACTION_BLOCKED or taint report. Leave combat → the followers snap onto the engines.
+
+## Z. Feedback batch 8 sign-off (2026-09-25, owner to run)
+
+The in-game checks for every item of feedback batch 8
+(`docs/superpowers/specs/2026-09-25-feedback-batch8-design.md`). None of them has been run: each is
+for the owner, and none is marked passed here. Items already covered by a check above point at it;
+the rest are new below. Run on a build carrying schema v8, and once on a copy of a pre-v8
+SavedVariables file for the migration lines.
+
+| Item | Requirement | Check |
+|---|---|---|
+| #1 spark | SP-1, SP-2 | 85 |
+| #3 close mark | CX-1..CX-3 | 197-199 |
+| #4 test-mode debuffs | TD-1..TD-4 | 186-190 |
+| #7 Size to fit | AS-1..AS-3 | 200-202 |
+| #8 name label | NL-1..NL-4 | 203-205 |
+| #9 empty unlocked chains | EO-1, EO-2 | 191-196 |
+| #10 dispel border shape | DB-1, DB-2 | 71 (and 60, 61, 187) |
+| #11 icon attach points | IA-1, IA-2 | 67 |
+| #13 seam spacing | SS-1..SS-3 | 68 (and 14, 41) |
+| #16 `/am debug diag` | DG-1..DG-4 | 206-208 |
+
+197. **The X on the strip (CX-1, CX-3).** `/am unlock` → every container's strip shows a gray X
+     immediately left of the **?**, the same size, turning white on hover; the name stays centered
+     and does not run under the X, even for a long name with the orange TEST tag in test mode.
+     Hover the X → the tooltip names the container and says a click disables it, its settings are
+     kept, and Enabled on the Containers page brings it back. No "Anchoring disallowed" error,
+     including on a container attached to another.
+198. **Click it (CX-3).** Left-click the X → that container's auras, placeholders, outline and strip
+     disappear, nothing else changes, and one chat line names it and says how to bring it back.
+     Containers page with that container selected → **Enabled** is unticked; tick it → the container
+     and its strip return at the same stored position. With the Containers page already open on it,
+     click its X → the checkbox unticks live. Close a container others are attached to → the
+     followers re-place exactly as when Enabled is unticked in the panel.
+199. **What the X does not do.** Right-click on the strip and on the **?** still opens the Containers
+     page; a left-drag on the strip or the **?** still moves the container; a left-drag that starts
+     on the X moves nothing, and releasing off the X does not disable it. In combat, unlocked at a
+     target dummy, click an X → the container hides with no Lua error, no taint and no
+     ADDON_ACTION_BLOCKED. A container flush against the screen edge on its strip's side is pushed in
+     a little further than before while unlocked (the wider strip) and returns on `/am lock`.
+200. **Size to fit, migrated and new (AS-1, AS-3).** On a profile made before this build, every
+     Text container keeps its width and height and **Size to fit** is unticked on its Text page. Tick it
+     → the box resizes at once and the handle and outline follow; Width and Height gray out with the
+     note under them, and their tooltips say why. A new profile's *Player cooldowns* starter has it
+     ticked, and a container made in an existing profile and set to Text has it ticked too.
+201. **It follows the content (AS-2).** With it on, change the font size, the template, the countdown
+     format, Icon Left with size 24, and Justify Center with a three-field template → each resizes the
+     box. Icon size 0 with Bounce → neither the icon nor the text is cut at the right, and at Justify
+     vertical Middle or Bottom the bounce is not cut at the top (Top still is, as before). A long-lived
+     aura (hours or days) shows its whole time string.
+202. **Its limits (AS-2).** A live buff with a name longer than the samples (Incarnation: Chosen of
+     Elune) is cut at the box edge and never overlaps its neighbor. In combat gain and lose auras →
+     no error and the size does not change; tick Size to fit in combat → it applies after combat.
+     With a SharedMedia font, log in → at worst one apply at the stored size, then sized to fit; no
+     lasting wrong size. Chain two Text containers, the first empty, unlocked, with Size to fit on and
+     off → the strips and outlines never overlap (check 191).
+203. **The name label, locked (NL-1, NL-2, NL-4).** Layout → **Name label**, tick **Show name label**
+     on *Player buffs* while locked → its name appears in gold Friz 12 just above its first element
+     (growing down), left-aligned, and nothing else moves. Grow vertically Up → the label moves below
+     the first element; Grow horizontally Left → it right-aligns. X/Y offsets and every font leaf
+     (face, size, flags, shadow, color) apply live; with Show off the offsets and the font rows are
+     grayed, but the color swatch is not.
+204. **Unlocked, both show (NL-3, D6).** `/am unlock` → the label stays, and the drag strip sits
+     past it on the same side, by the label's height plus the strip gap, never covering it;
+     `/am lock` → the strip goes and the label stays where it was. `/am test` locked and unlocked →
+     the placeholders, the label and (unlocked) the strip with its TEST tag, none overlapping. A
+     container attached to another with its label on → the label sits beside its first element;
+     note any overlap with the parent's last line, which the offsets fix.
+205. **The label with the rest (NL-1, NL-4).** Rename the container, in combat too → the label
+     changes at once. On a target container with the label's class color on, target a warrior then
+     a mage → the color follows; an NPC falls back to the swatch. Scale 2.0, Opacity 0.5 and Master
+     alpha → the label scales and fades with the container. Visibility *Out of combat only* → entering
+     combat hides container and label together; no ADDON_ACTION_BLOCKED. `/am disable` hides it and
+     `/am enable` brings it back; deleting the container removes it. Containers → Copy settings from,
+     What = *Name label* → the label settings copy and the name does not. Flush against the top edge
+     with the label above → note whether it is cut off (it is not clamped, a known limitation).
+206. **`/am debug diag` out of combat (DG-1, DG-2).** With a target, a focus and a pet,
+     `/am debug diag` → the console opens, one chat line gives the line count, and the report runs
+     from the begin marker to the end marker. Its `[Aura]` names and stacks match Blizzard's own buff
+     and debuff frames; every container has its `[Cont]`, `[Filt]` and `[Plan]` lines. Press **Copy**
+     → the text has no color codes; paste it into a file and check nothing is cut off. Whitelist a
+     spell whose buff is up → `[Shown]` lists a button and `predicted:` reads shown (rank 1); record
+     whether the button line carries the aura's inst/id or only its name or icon.
+207. **In combat and while disabled (DG-1, DG-3).** In combat on a dummy, `/am debug diag` → no Lua
+     error, the units read unreadable, `[Cont]`, `[Filt]` and `[Plan]` still print, `frames=` is a
+     number or `?`, `shown=?`, and no `[Shown]` button lines. Change a container's Cast by in combat
+     and run it again → that container reads PENDING (combat); after combat → plan in sync.
+     `/am disable`, then `/am debug diag` → it still runs and the state line reads enabled=false.
+208. **Caps and the old verbs (DG-4).** With about eight containers and a long whitelist → the report
+     stays under the cap or ends with a `truncated` line, and the console never holds more than 1500
+     lines. Bare `/am debug` still toggles the window, `/am debug on` and `off` still switch logging,
+     and `/am help` shows the new description for `debug`.

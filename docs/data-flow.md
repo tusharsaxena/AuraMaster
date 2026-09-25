@@ -200,7 +200,11 @@ apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test 
 `effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
 container's own enable). The handle
 (`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into, so it
-covers no element and nothing moves to make room for it.
+covers no element and nothing moves to make room for it; on a container attached to another it runs
+beside the first element instead, so it covers none of the parent's (SS-3). A shown name label
+(`Anchors.PlaceLabel`) takes the strip's spot, locked or unlocked, and while unlocked the strip moves
+out past it (D6). The strip's close mark (X) writes `container.enabled = false` through
+`NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview
 
@@ -339,7 +343,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:229`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:267`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked
 and not previewing, its one-element anchor, because an engine holding no aura is a 1x1 rect: the
@@ -354,3 +358,15 @@ line, and so does a skipped resolve. Positions are stored, never read back off a
 geometry can be secret; the only position read is the anchor's own after a drag, saved through the
 write seam against that container's id. The client never saves an anchor's position itself
 (`SetDontSavePosition`), so a login cannot restore one over the stored position.
+
+Attached to another container, the child's points are derived (`Anchors.DerivedPoints`: it stacks on
+the parent's vertical growth side whatever the parent's fill axis, IA-1), and the gap across the seam
+is the child's own gap between consecutive elements in the direction the chain stacks, its Spacing or,
+when it fills rows, its Line spacing (`Anchors.SeamOffset`, SS-1); the stored `attach.x` / `.y` add
+on top as a nudge (SS-2). The seam is the same locked, unlocked and in test mode.
+
+One element's size is `Style.ElementSize`. On a Text container with Size to fit on
+(`container.text.autoSize`), it comes from the content instead of the stored width and height:
+`Style.Text.AutoSize` measures the widest line over the placeholders, the sample and the worst-case
+durations with the container's font, icon, gap and bounce, clamps the width, memoizes it per style
+signature and falls back to the stored size when nothing can be measured (AS-2).
