@@ -20,3 +20,4 @@ global constraints and resume rules apply unchanged, with commit prefix `B10-`.
 
 | When | Milestone | Evidence |
 |---|---|---|
+| 2026-09-25 | B10 | tests 1592/0/0 (16 shards), luacheck 0 warnings / 0 errors (135 files), lizard 0 over CCN 15 (4183 functions, 38459 nloc); head 8da70fc |
