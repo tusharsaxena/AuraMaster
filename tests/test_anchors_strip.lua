@@ -25,7 +25,11 @@ end
 local function join(NS, id, to, edge)
     local c = NS.Database.FindContainer(id)
     c.attach.mode, c.attach.container, c.attach.x, c.attach.y = "container", to, 0, 0
-    c.attach.edge = edge or "after-start"
+    -- batch 11: a side is two absolute points under the chain's growth now; after-start is Automatic
+    c.attach.childPoint, c.attach.relPoint = nil, nil
+    if edge and edge ~= "after-start" then
+        c.attach.childPoint, c.attach.relPoint = NS.Anchors.EdgePoints(NS.Anchors.EffectiveLayout(c), edge)
+    end
     return c
 end
 
@@ -45,6 +49,7 @@ test("strip: a behind follower's strip sits before it, lined up with the edge th
     -- red under: the root's H0-aligned strip (a label wider than 2 would run over 1)
     assertEqual(pointOf(NS, 2), "BOTTOMRIGHT TOPRIGHT 0 2")
     rootFlow(NS, "vertical", "left", "up")
+    join(NS, 2, 1, "behind-start")   -- the points are absolute (batch 11 G2): behind-start growing left and up
     assertEqual(pointOf(NS, 2), "TOPLEFT BOTTOMLEFT 0 -2")
 end)
 
@@ -95,7 +100,8 @@ test("strip: unlocked, a gold diamond marks the join at the child's attach point
     NS.SetByPath("container.attach.y", 0, 2)
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
-    NS.SetByPath("container.attach.edge", "ahead-start", 2)
+    local at = NS.Database.FindContainer(2).attach
+    at.childPoint, at.relPoint = "TOPLEFT", "TOPRIGHT"   -- ahead-start
     NS.SetByPath("locked", false)
     mocks.__fireTimers()
     local two = NS.ContainerManager.instances[2]
@@ -137,12 +143,13 @@ test("strip: Park and Destroy hide the join pin", function()
     assertFalse(two.joinPin:IsShown(), "destroyed")
 end)
 
-test("strip: the tooltip of a container joined to another names the side and the parent", function()
+test("strip: the tooltip of a container joined to another names the parent's point and the parent", function()
     local NS, mocks = fresh()
     rootFlow(NS, "vertical", "right", "down")
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
-    NS.SetByPath("container.attach.edge", "after-center", 2)
+    local at = NS.Database.FindContainer(2).attach
+    at.childPoint, at.relPoint = "TOP", "BOTTOM"   -- after-center
     NS.SetByPath("locked", false)
     mocks.__fireTimers()
     local lines = {}

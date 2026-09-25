@@ -109,17 +109,14 @@ C.POINT_LABELS = {
 C.ATTACH_MODES = { "screen", "container", "frame" }
 C.ATTACH_MODE_LABELS = { screen = "Screen", container = "Another container", frame = "Named frame" }
 
--- The side a container attached to another sits on (batch 9 E2; modules/Anchors.lua's edge model),
--- relative to the chain's flow, in display order. An after side is named by its parent point
--- (POINT_LABELS); a side one by the parent point it sits at, here.
+-- The nine sides of batch 9's edge model (E2), relative to the chain's flow, in order. Since batch
+-- 11 a container joins its parent by two absolute points, and a pair that is one of these under the
+-- parent's growth keeps that side's seam and spread (modules/Anchors.lua's AttachEdge, G5); schema
+-- v11 converted the stored side to points (core/Database.lua).
 C.ATTACH_EDGES = {
     "after-start", "after-center", "after-end",
     "ahead-start", "ahead-center", "ahead-end",
     "behind-start", "behind-center", "behind-end",
-}
-C.EDGE_SIDE_LABELS = {
-    TOPLEFT = "Left, top", LEFT = "Left, middle", BOTTOMLEFT = "Left, bottom",
-    TOPRIGHT = "Right, top", RIGHT = "Right, middle", BOTTOMRIGHT = "Right, bottom",
 }
 
 -- Growth.

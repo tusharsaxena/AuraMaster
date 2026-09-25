@@ -6,7 +6,7 @@ local _, NS = ...
 --     [ Frame ][ Anchor ][ Growth ][ Mouse ][ Label ]
 --     Anchor  [Attach to]
 --             -- Screen --            [Point] [Relative point] / [X] [Y]
---             -- Another container -- [Container] | joins line / [Side]
+--             -- Another container -- [Container] | joins line
 --             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
 --             -- Offset --            [X offset] [Y offset]
 --             (Named frame only: a gray hint when Point faces the growth; growsBackNote, below)
@@ -179,16 +179,11 @@ local function flowNotice(cfg, was, now, oldTarget, newTarget)
 end
 
 -- ---------------------------------------------------------------------------
--- The side a follower sits on (batch 9 AP-3, AP-4, E5)
+-- Attachments starting and ending
 -- ---------------------------------------------------------------------------
--- A NEW attachment starts on its style's default side (Anchors.DefaultEdge: a Text container's lines
--- up with its justify), unless a side was picked for it before it was made. A retarget keeps the
--- side; a detach ends the attachment, and the next one is new again.
-
--- Container ids whose side was picked while in container mode with no usable target yet: the
--- attachment about to be made keeps that pick. Session only: nothing about it is stored.
-local picked = {}
-local stamping = false
+-- A new attachment needs nothing written: its two points are Automatic until the player picks one
+-- (batch 11 G2), and Automatic follows the parent's growth and the two styles (G3). The mode and
+-- target rows only say in chat when an attach or detach changes how the container flows.
 
 --- Whether container `cfg` attached to container `targetId` would follow it: a container, not itself,
 --- not closing a loop.
@@ -198,17 +193,6 @@ local function usable(cfg, targetId)
     return NS.Database.FindContainer(id) ~= nil and not NS.Anchors.WouldCycle(cfg.id, id)
 end
 
---- React to an attachment starting (`now` and not `was`) or ending, for container `cfg`.
-local function attachMoved(cfg, was, now)
-    local id = cfg.id
-    if was and not now then picked[id] = nil return end
-    if not now or was then return end
-    if picked[id] then picked[id] = nil return end
-    stamping = true
-    NS.SetByPath("container.attach.edge", NS.Anchors.DefaultEdge(cfg), id)
-    stamping = false
-end
-
 --- The attach mode row's onChange: a switch into container mode with a usable target stored makes a
 --- new attachment; a switch out of it ends one.
 local function modeChanged(v, id, old)
@@ -216,13 +200,12 @@ local function modeChanged(v, id, old)
     if not cfg then return end
     local target = cfg.attach and cfg.attach.container
     local was, now = old == "container" and usable(cfg, target), v == "container" and usable(cfg, target)
-    attachMoved(cfg, was, now)
     flowNotice(cfg, was, now, target, target)
 end
 
 --- The target row's onChange: redraw the attachment line, re-apply the parent it left (its strip
---- side depends on its followers; ContainerManager re-applies the new one), and a first usable target
---- in container mode makes a new attachment.
+--- side depends on its followers; ContainerManager re-applies the new one), and say in chat when a
+--- first usable target in container mode changes how it flows.
 local function targetChanged(v, id, old)
     structural()
     local cfg = NS.Database.FindContainer(id)
@@ -233,42 +216,7 @@ local function targetChanged(v, id, old)
     end
     local inMode = cfg.attach and cfg.attach.mode == "container"
     local was, now = inMode and usable(cfg, old), inMode and usable(cfg, v)
-    attachMoved(cfg, was, now)
     flowNotice(cfg, was, now, old, v)
-end
-
---- The Side row's onChange: redraw (the attachment line and the fallback note read it), and remember
---- a pick made before there is anything to attach to.
-local function edgeChanged(_, id)
-    structural()
-    local cfg = NS.Database.FindContainer(id)
-    if stamping or not (cfg and cfg.attach and cfg.attach.mode == "container") then return end
-    if not usable(cfg, cfg.attach.container) then picked[id] = true end
-end
-
-local UNAVAILABLE = "|cff808080%s%s|r"
-
---- The Side row's values: every side the selected container may take, by its absolute name for the
---- growth in effect, then its stored side grayed as unavailable when that is not allowed now, so the
---- dropdown never shows blank.
-local function edgeChoices()
-    local cfg = NS.ActiveContainer()
-    local out = {}
-    if not cfg then return out end
-    local A = NS.Anchors
-    local EL = A.EffectiveLayout(cfg) or {}
-    for _, token in ipairs(A.EDGES) do
-        if A.EdgeAllowed(cfg, token, EL) then
-            local n = #out
-            out[n + 1] = { value = token, text = A.EdgeLabel(EL, token) }
-        end
-    end
-    local stored = cfg.attach and cfg.attach.edge
-    if A.IsEdge(stored) and not A.EdgeAllowed(cfg, stored, EL) then
-        local n = #out
-        out[n + 1] = { value = stored, text = UNAVAILABLE:format(A.EdgeLabel(EL, stored), L[" (unavailable)"]) }
-    end
-    return out
 end
 
 NS.RegisterSchemaRows({
@@ -320,7 +268,7 @@ NS.RegisterSchemaRows({
     {
         path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
         shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Container"],
-        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, Side picks which side of it this one sits on, and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
+        desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, it joins it below by default, and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
         onChange = targetChanged,
         -- Asks first when the chain it joins flows differently from its own Growth (GC-1): panel only.
@@ -330,20 +278,6 @@ NS.RegisterSchemaRows({
         validate = function(v, fromId)
             local id = tonumber(v)
             return id ~= nil and (id == 0 or not NS.Anchors.WouldCycle(fromId, id))
-        end,
-    },
-    {
-        -- Offered only the sides the child cannot grow back over (EdgeAllowed); `/am set` is refused
-        -- the rest with the reason. Stored relative to the chain's flow, so a growth flip mirrors it.
-        path = "container.attach.edge", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
-        shownWhen = CONTAINER_ONLY, type = "string", startsLine = true, values = edgeChoices,
-        label = L["Side"],
-        desc = L["Which side of the container it is attached to this one sits on. Only sides it cannot grow back over are listed: never the side the chain grows away from, and the side lines start from only when this container is one aura wide."],
-        onChange = edgeChanged,
-        validate = function(v, id)
-            local cfg = id and NS.Database.FindContainer(id)
-            if not cfg then return false end
-            return NS.Anchors.EdgeAllowed(cfg, v)
         end,
     },
     {
@@ -513,20 +447,19 @@ end
 -- Inherited flow (L-6)
 -- ---------------------------------------------------------------------------
 
---- Where the selected container is attached, in words, while it follows another container: the
---- points of the side it actually sits on (Anchors.ResolvedEdge) and the target's name. Empty in any
---- other case (the line is still drawn, so the dropdown keeps its half).
+--- Where the selected container is attached, in words, while it follows another container: the two
+--- points in effect (Anchors.AttachPoints: each picked or Automatic) and the target's name. Empty in
+--- any other case (the line is still drawn, so the dropdown keeps its half).
 local function attachedText()
     local cfg = NS.ActiveContainer()
     if not NS.Anchors.FlowRoot(cfg) then return "" end
     local target = NS.Database.FindContainer(tonumber(cfg.attach.container))
-    local point, relativePoint = NS.Anchors.EdgePoints(NS.Anchors.EffectiveLayout(cfg), NS.Anchors.ResolvedEdge(cfg))
+    local point, relativePoint = NS.Anchors.AttachPoints(cfg)
     return L["Its %s joins the %s of '%s'"]:format(L[C.POINT_LABELS[point]],
         L[C.POINT_LABELS[relativePoint]], tostring(target and target.name))
 end
 
---- The Container dropdown's right half (pairWith): the read-only attachment line. The points follow
---- from the Side row and the parent's flow, never stored as points, so there is nothing to edit here.
+--- The Container dropdown's right half (pairWith): the read-only attachment line.
 local function attachedLine(_, line)
     local label = NS.AceGUI:Create("Label")
     label:SetRelativeWidth(0.5)
@@ -615,24 +548,9 @@ local function growsBackNote(ctx)
     end
 end
 
---- After growsBackNote: while a follower's stored side is not allowed now (behind, and it has become
---- more than one aura wide), where it sits instead. Nothing is written, so undoing the change
---- restores the side (Anchors.ResolvedEdge).
-local function edgeFallbackNote(ctx)
-    local cfg = NS.ActiveContainer()
-    if not (cfg and NS.Anchors.FlowRoot(cfg)) then return end
-    local A = NS.Anchors
-    local stored, resolved = cfg.attach.edge, A.ResolvedEdge(cfg)
-    if stored == resolved or not A.IsEdge(stored) then return end
-    local EL = A.EffectiveLayout(cfg) or {}
-    H.TextRow(ctx, GRAY:format(L["'%s' needs this container to be one aura wide (Fill: Columns, Per row or column: 0). It sits %s until then."]:format(
-        A.EdgeLabel(EL, stored), A.EdgeLabel(EL, resolved))), SMALL)
-end
-
 --- The Anchor tab's notes, in order.
 local function anchorNotes(ctx)
     growsBackNote(ctx)
-    edgeFallbackNote(ctx)
 end
 
 NS.RegisterContainerPage(PAGE, L["Layout"], "AuraMasterLayoutPanel", {

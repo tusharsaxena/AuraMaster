@@ -588,14 +588,15 @@ local function requestFollowers(p)
     for _, id in ipairs(NS.Anchors.Followers(p.containerId)) do CM.RequestApply(id) end
 end
 
--- The writes that change which side of its parent a container occupies (batch 9 AP-4).
+-- The writes that change where on its parent a container joins (batch 9 AP-4; batch 11 G2).
 local PARENT_PATHS = {
-    ["container.attach.edge"] = true,
+    ["container.attach.childPoint"] = true,
+    ["container.attach.relPoint"] = true,
     ["container.attach.mode"] = true,
     ["container.attach.container"] = true,
 }
 
---- A write to a container's side, attach mode or target re-applies the container it names too: a
+--- A write to a container's points, attach mode or target re-applies the container it names too: a
 --- parent's strip and label sit on a side its followers leave free. The parent it LEFT on a target
 --- change is re-applied by the target row's own onChange (settings/Layout.lua), which is handed the
 --- old value; the one named now is re-applied here, attached or not, so a detach reaches it as well.

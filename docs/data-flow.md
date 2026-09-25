@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:617
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:618
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
@@ -385,7 +385,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:442`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:496`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
@@ -402,9 +402,13 @@ geometry can be secret; the only position read is the anchor's own after a drag,
 write seam against that container's id. The client never saves an anchor's position itself
 (`SetDontSavePosition`), so a login cannot restore one over the stored position.
 
-Attached to another container, the child's points come from its stored side (`attach.edge`, batch 9
-E2), resolved against the chain's growth (`Anchors.EdgePoints` of `Anchors.ResolvedEdge`; the default
-`after-start` stacks it on the parent's vertical growth side whatever the parent's fill axis, IA-1).
+Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
+own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.AttachPoints`, batch
+11 G2). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
+vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
+a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
+classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free
+pair, one of none of them, is placed at its X/Y alone, with no seam, no spread and no push.
 Along the chain the gap across the seam is the child's own gap between consecutive elements in the
 direction the chain stacks, its Spacing or, when it fills rows, its Line spacing (`Anchors.SeamOffset`,
 SS-1); on a side it is the child's gap across (AP-2); the stored `attach.x` / `.y` add on top as a

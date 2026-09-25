@@ -30,7 +30,11 @@ end
 local function join(NS, id, to, edge)
     local c = NS.Database.FindContainer(id)
     c.attach.mode, c.attach.container, c.attach.x, c.attach.y = "container", to, 0, 0
-    c.attach.edge = edge or "after-start"
+    -- batch 11: a side is two absolute points under the chain's growth now; after-start is Automatic
+    c.attach.childPoint, c.attach.relPoint = nil, nil
+    if edge and edge ~= "after-start" then
+        c.attach.childPoint, c.attach.relPoint = NS.Anchors.EdgePoints(NS.Anchors.EffectiveLayout(c), edge)
+    end
     return c
 end
 

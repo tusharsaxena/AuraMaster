@@ -1,14 +1,14 @@
--- tests/test_anchors_edges.lua - the side a container attached to another sits on (batch 9 AP-1..AP-4,
--- E2, E5). The side is stored relative to the chain's flow as one token, `attach.edge` =
--- "<side>-<align>": after (the vertical growth side), ahead (the horizontal growth side) or behind
--- (the side lines start from), and start, center or end along it. The side the chain grows away from
--- is never offered, and behind only to a child one aura wide. `after-start` is exactly the points
--- every attachment had before, so the v9 stamp moves nothing.
+-- tests/test_anchors_edges.lua - the nine sides of batch 9's edge model (AP-1, AP-2, E2), each a token
+-- "<side>-<align>" relative to the chain's flow: after (the vertical growth side), ahead (the
+-- horizontal growth side) or behind (the side lines start from), and start, center or end along it.
+-- Since batch 11 a container joins its parent by two absolute points (tests/test_anchors_points.lua)
+-- and a pair that is one of the nine keeps that side's seam and room; `after-start` is exactly the
+-- points every attachment had before batch 9. Nothing is refused any more (G1, G5).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
 --- The points before batch 9 (565fc38, B8-P4): the only pair an attachment could have. Kept here
@@ -42,6 +42,16 @@ local function recordAnchor(inst)
     return rec
 end
 
+--- Store `edge` on attached container `c` as the explicit pair it gives under the chain's growth now
+--- (batch 11: a side is two absolute points); nil leaves both Automatic.
+local function setEdge(NS, c, edge)
+    if edge == nil then
+        c.attach.childPoint, c.attach.relPoint = nil, nil
+        return
+    end
+    c.attach.childPoint, c.attach.relPoint = NS.Anchors.EdgePoints(NS.Anchors.EffectiveLayout(c), edge)
+end
+
 --- Container 2 attached to container 1 on `edge`, straight into the store, 1 flowing by `axis`,
 --- `growH`, `growV`; 2 one wide (columns, one line) with spacing 3 and line spacing 5.
 local function sided(NS, edge, axis, growH, growV)
@@ -49,8 +59,8 @@ local function sided(NS, edge, axis, growH, growV)
     L1.axis, L1.growH, L1.growV = axis or "vertical", growH or "right", growV or "down"
     local c2 = NS.Database.FindContainer(2)
     c2.attach.mode, c2.attach.container, c2.attach.x, c2.attach.y = "container", 1, 0, 0
-    c2.attach.edge = edge
     c2.layout.perLine, c2.layout.spacing, c2.layout.lineSpacing = 0, 3, 5
+    setEdge(NS, c2, edge)
     return c2
 end
 
@@ -107,45 +117,17 @@ test("edges: EdgePoints(L, 'after-start') is exactly the old DerivedPoints for a
     assertEqual(n, 8)
 end)
 
-test("edges: after and ahead are always allowed; behind only for a child one aura wide, with a reason", function()
+test("edges: every one of the nine is allowed, behind on a wide child too; only a non-token is not (G5)", function()
     local NS = fresh()
     local A = NS.Anchors
     local c2 = sided(NS, "after-start")
-    for _, token in ipairs(A.EDGES) do
-        assertTrue(A.EdgeAllowed(c2, token), token .. " on a one-wide column child")
-    end
     c2.layout.perLine = 3
-    for _, token in ipairs({ "behind-start", "behind-center", "behind-end" }) do
-        local ok, why = A.EdgeAllowed(c2, token)
-        -- red under: behind offered to a child that would grow back into its parent
-        assertFalse(ok, token .. " with perLine 3")
-        assertEqual(why, NS.L["That side needs this container to be one aura wide (Fill: Columns, Per row or column: 0), or it would grow back over the container it is attached to."])
+    NS.Database.FindContainer(1).layout.axis = "horizontal"
+    for _, token in ipairs(A.EDGES) do
+        -- red under: batch 9's behind restriction (E2)
+        assertTrue(A.EdgeAllowed(c2, token), token .. " on a wide child")
     end
-    assertTrue(A.EdgeAllowed(c2, "after-end")); assertTrue(A.EdgeAllowed(c2, "ahead-center"))
-    c2.layout.perLine = 0
-    NS.Database.FindContainer(1).layout.axis = "horizontal"
-    assertFalse(A.EdgeAllowed(c2, "behind-center"), "the inherited axis is rows")
-    assertFalse(A.EdgeAllowed(c2, "behind-center", { axis = "horizontal", perLine = 0 }), "an explicit layout")
-    assertTrue(A.EdgeAllowed(c2, "behind-center", { axis = "vertical", perLine = 0 }))
-    local ok, why = A.EdgeAllowed(c2, "before-start")
-    assertFalse(ok, "no before side exists"); assertTrue(type(why) == "string" and why ~= "", "with a reason")
-end)
-
-test("edges: ResolvedEdge falls back to after-<align> at runtime, never writes, and restores on undo", function()
-    local NS = fresh()
-    local A = NS.Anchors
-    local c2 = sided(NS, "behind-end")
-    assertEqual(A.ResolvedEdge(c2), "behind-end")
-    NS.Database.FindContainer(1).layout.axis = "horizontal"
-    -- red under: a ResolvedEdge that trusts the store
-    assertEqual(A.ResolvedEdge(c2), "after-end")
-    assertEqual(c2.attach.edge, "behind-end", "the stored token kept")
-    NS.Database.FindContainer(1).layout.axis = "vertical"
-    assertEqual(A.ResolvedEdge(c2), "behind-end", "undoing the change restores the side")
-    c2.attach.edge = "sideways"
-    assertEqual(A.ResolvedEdge(c2), "after-start", "an unknown token")
-    c2.attach.edge = nil
-    assertEqual(A.ResolvedEdge(c2), "after-start", "nothing stored")
+    assertFalse(A.EdgeAllowed(c2, "before-start"), "no before side exists")
 end)
 
 test("edges: SeamOffset leaves the child's own gap across for a side, and after is unchanged (AP-2)", function()
@@ -175,38 +157,35 @@ test("edges: a side-attached child is placed at its edge's points with its gap a
     local NS = fresh()
     local c2 = sided(NS, "ahead-start")
     local p = placed(NS)
-    -- red under: attachSpec ignoring the stored edge (TOPLEFT to BOTTOMLEFT)
+    -- red under: attachSpec ignoring the stored points (TOPLEFT to BOTTOMLEFT)
     assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "TOPRIGHT")
     assertEqual(p[4], 5); assertEqual(p[5], 0)
     c2.attach.x, c2.attach.y = 2, -1
     p = placed(NS)
     assertEqual(p[4], 7, "the nudge adds on top (SS-2)"); assertEqual(p[5], -1)
-    c2.attach.edge, c2.attach.x, c2.attach.y = "behind-center", 0, 0
+    c2.attach.x, c2.attach.y = 0, 0
+    setEdge(NS, c2, "behind-center")
     p = placed(NS)
     assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5)
-    c2.attach.edge = "after-center"
+    setEdge(NS, c2, "after-center")
     p = placed(NS)
     assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOM"); assertEqual(p[4], 0); assertEqual(p[5], -3)
 end)
 
-test("edges: flipping the root's growth mirrors a side-attached child and writes nothing", function()
+test("edges: flipping the root's growth mirrors an Automatic child; an explicit pair stays and takes the seam of the side it now is", function()
     local NS = fresh()
-    local c2 = sided(NS, "ahead-start")
+    local c2 = sided(NS, nil)
     NS.Database.FindContainer(1).layout.growH = "left"
     local p = placed(NS)
-    -- red under: absolute stored points (the child would sit on the side the chain grows back over)
-    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "TOPLEFT"); assertEqual(p[4], -5)
-    assertEqual(c2.attach.edge, "ahead-start", "nothing written")
-end)
-
-test("edges: a disallowed stored side is placed at its after fallback", function()
-    local NS = fresh()
-    sided(NS, "behind-end")
-    NS.Database.FindContainer(2).layout.perLine = 4
-    local p = placed(NS)
-    -- red under: attachSpec reading the stored token rather than ResolvedEdge
+    -- red under: an Automatic pair frozen at the growth it was attached under
     assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "BOTTOMRIGHT")
-    assertEqual(p[4], 0); assertEqual(p[5], -3)
+    assertNil(c2.attach.childPoint, "nothing written"); assertNil(c2.attach.relPoint, "nothing written")
+    NS.Database.FindContainer(1).layout.growH = "right"
+    setEdge(NS, c2, "ahead-start")
+    NS.Database.FindContainer(1).layout.growH = "left"
+    p = placed(NS)
+    -- absolute points (G2): TOPLEFT to TOPRIGHT growing left is behind-start, its gap away from growH
+    assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "TOPRIGHT"); assertEqual(p[4], 5)
 end)
 
 test("edges: a side-attached follower of a follower takes no strip room; an after one does (AP-2)", function()
@@ -225,13 +204,13 @@ test("edges: a side-attached follower of a follower takes no strip room; an afte
     NS.Anchors.Place(inst)
     local spacing = NS.Database.FindContainer(3).layout.spacing
     assertTrue(rec[#rec][5] < -spacing, "after: the seam widened for its own strip (batch 10 F2)")
-    NS.Database.FindContainer(3).attach.edge = "ahead-start"
+    setEdge(NS, NS.Database.FindContainer(3), "ahead-start")
     NS.Anchors.Place(inst)
     -- red under: the after room (seamRoom) applied to a side seam: 2's strip fits its own block
     assertEqual(rec[#rec][5], 0, "ahead: no strip room along the chain")
 end)
 
-test("edges: the default side of a new attachment follows a Text container's justify; every other style is after-start (E5)", function()
+test("edges: the default side follows a Text container's justify; a bars child under a bars parent is after-start (E5, G3)", function()
     local NS = fresh()
     local A = NS.Anchors
     local c2 = sided(NS, "after-start")
@@ -260,66 +239,36 @@ local function textChild(justify)
     return NS, mocks, NS.Database.FindContainer(2)
 end
 
-test("edges: attaching a centered Text container sets its side to after-center, by mode or by container (AP-4)", function()
+test("edges: an attachment writes no points: a centered Text container attaches Automatic, on after-center (G2, G3)", function()
     local NS, _, c2 = textChild("CENTER")
     NS.SetByPath("container.attach.container", 1, 2)
-    assertEqual(c2.attach.edge, "after-start", "still on the screen: nothing set")
     NS.SetByPath("container.attach.mode", "container", 2)
-    -- red under: no new-attachment default
-    assertEqual(c2.attach.edge, "after-center", "the mode write made the attachment")
-    NS.SetByPath("container.attach.mode", "screen", 2)
-    NS.SetByPath("container.attach.edge", "after-start", 2)
-    NS.SetByPath("container.attach.container", 0, 2)
-    NS.SetByPath("container.attach.mode", "container", 2)
-    assertEqual(c2.attach.edge, "after-start", "no usable target yet: nothing set")
-    NS.SetByPath("container.attach.container", 3, 2)
-    assertEqual(c2.attach.edge, "after-center", "the container write made the attachment")
+    -- red under: batch 9's new-attachment stamp (AP-4) writing a pick
+    assertNil(c2.attach.childPoint); assertNil(c2.attach.relPoint)
+    local p, rp = NS.Anchors.AttachPoints(c2)
+    assertEqual(p .. ">" .. rp, "TOP>BOTTOM", "Automatic: after-center")
+    assertNil(c2.attach.edge, "no side is stored")
 end)
 
-test("edges: a side picked before the attachment is kept; retargeting keeps the side", function()
+test("edges: picked points survive an attach, a retarget and a detach and re-attach", function()
     local NS, _, c2 = textChild("RIGHT")
-    NS.SetByPath("container.attach.mode", "container", 2)
-    NS.SetByPath("container.attach.edge", "ahead-center", 2)
+    c2.attach.childPoint, c2.attach.relPoint = "LEFT", "RIGHT"
     NS.SetByPath("container.attach.container", 1, 2)
-    -- red under: the default overwriting a side the player chose for this attachment
-    assertEqual(c2.attach.edge, "ahead-center")
+    NS.SetByPath("container.attach.mode", "container", 2)
+    -- red under: an attachment resetting what the player picked
+    assertEqual(c2.attach.childPoint .. ">" .. c2.attach.relPoint, "LEFT>RIGHT")
     NS.SetByPath("container.attach.container", 3, 2)
-    assertEqual(c2.attach.edge, "ahead-center", "a retarget is not a new attachment")
+    assertEqual(c2.attach.childPoint .. ">" .. c2.attach.relPoint, "LEFT>RIGHT", "a retarget")
     NS.SetByPath("container.attach.mode", "screen", 2)
     NS.SetByPath("container.attach.mode", "container", 2)
-    assertEqual(c2.attach.edge, "after-end", "a detach and re-attach is a new attachment")
+    assertEqual(c2.attach.childPoint .. ">" .. c2.attach.relPoint, "LEFT>RIGHT", "a detach and re-attach")
 end)
 
-test("edges: a new attachment of a bars container stays after-start", function()
-    local NS = fresh()
-    local c2 = NS.Database.FindContainer(2)
-    NS.SetByPath("container.attach.edge", "ahead-end", 2)
-    NS.SetByPath("container.attach.container", 1, 2)
-    NS.SetByPath("container.attach.mode", "container", 2)
-    -- red under: a default written only for Text
-    assertEqual(c2.attach.edge, "after-start", "picked on the screen: not a pick for this attachment")
-end)
-
-test("edges: the Side row refuses a side the child cannot take, with the reason, through /am set", function()
-    local NS = fresh()
-    sided(NS, "after-start")
-    NS.Database.FindContainer(2).layout.perLine = 2
-    local ok, err, why = NS.SetByPath("container.attach.edge", "behind-start", 2)
-    -- red under: a Side row with no EdgeAllowed validate
-    assertFalse(ok)
-    assertTrue(type(err) == "string")
-    assertEqual(why, NS.L["That side needs this container to be one aura wide (Fill: Columns, Per row or column: 0), or it would grow back over the container it is attached to."])
-    assertEqual(NS.Database.FindContainer(2).attach.edge, "after-start")
-    assertFalse((NS.SetByPath("container.attach.edge", "before-start", 2)), "no before side")
-    assertTrue((NS.SetByPath("container.attach.edge", "ahead-end", 2)))
-end)
-
-test("edges: a write to the side, per-line count, mode or container re-applies the followers and the parents (AP-4)", function()
+test("edges: a write to either point, the mode or the container re-applies the followers and the parents (AP-4)", function()
     local NS, mocks = fresh()
     local A, CM = NS.Anchors, NS.ContainerManager
-    assertTrue(A.MovesFollowers("container.attach.edge"), "attach.edge")
-    -- red under: FLOW_PATHS without layout.perLine (behind depends on it)
-    assertTrue(A.MovesFollowers("container.layout.perLine"), "layout.perLine")
+    assertTrue(A.MovesFollowers("container.attach.childPoint"), "attach.childPoint")
+    assertTrue(A.MovesFollowers("container.attach.relPoint"), "attach.relPoint")
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
     mocks.__fireTimers()
@@ -334,11 +283,8 @@ test("edges: a write to the side, per-line count, mode or container re-applies t
         for _, v in ipairs(applied) do if v == id then return true end end
         return false
     end
-    NS.SetByPath("container.attach.edge", "ahead-start", 2)
-    -- red under: no requestParents (the parent's strip side depends on its followers' sides)
-    assertTrue(saw(1), "the edge write re-applies the parent")
-    applied = {}
     NS.SetByPath("container.attach.container", 3, 2)
+    -- red under: no requestParents (the parent's strip side depends on its followers' sides)
     assertTrue(saw(1), "the old parent")
     assertTrue(saw(3), "the new parent")
     applied = {}

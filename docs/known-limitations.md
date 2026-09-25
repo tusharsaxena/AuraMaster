@@ -180,15 +180,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   placeholders, and it is still raised above them. That raise is a frame level: a parent set to a higher strata still draws over it. Test mode ending in combat re-places nothing
   (events-frames-taint-§2): the attached container stays where it was until the first visibility
   pass after combat.
-- **A container attached to another never sits on the side the chain grows away from** (batch 9 E2,
-  E9). Layout > Anchor > Side offers Bottom (left, center, right), Right and Left growing down: no Top
-  side, not even for a child one row tall. The Left side (the side the parent's lines start from) is
-  offered only to a child one aura wide (Fill Columns, Per row or column 0), because it inherits the
-  parent's horizontal growth and would grow back over it. A child set to Left that later becomes wider
-  sits below the parent at the same alignment (`Anchors.ResolvedEdge`) until it is one wide again; the
-  stored side is kept and a gray note on the Anchor tab says so. A Side picked before the attachment
-  is made (Another container with no Container yet) is remembered for this session only; after a
-  reload the new attachment starts on its style's default side (E5).
+- **Any pair of anchor points is allowed, and an odd one can overlap** (batch 11 G1, G5). A
+  container attached to another joins it by two absolute points, and nothing is refused: a pair that
+  puts the child over its parent, or has it grow back across it, is drawn as asked ("if it looks
+  weird, it's on the user"). Only a pair that is one of batch 9's nine sides under the parent's growth
+  gets the seam gap, the chain's spread for the strips and labels, and the side push
+  (`Anchors.AttachEdge`); any other pair is placed at its X/Y alone, so its strip and label can overlap
+  its parent's. Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
+  leaves a picked one where it is.
 - **A chain spreads out while its strips show, and closes up when they hide** (batch 10 F1, F2).
   Every strip sits above its own block (below it growing up), in its own column, so a follower
   attached below its parent sits one strip row (20px) further along while unlocked, and one more

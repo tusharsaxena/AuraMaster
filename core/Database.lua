@@ -176,20 +176,29 @@ local function seedStarters(p)
     return seeded
 end
 
--- The attach sides a container may store (batch 9 E2), as a set.
+-- The attach sides v9 and v10 stamped and v11 converts (batch 9 E2), as a set. Read by the ladder
+-- alone: since v11 nothing else reads `attach.edge`.
 local KNOWN_EDGE = {}
 for _, token in ipairs(NS.Constants.ATTACH_EDGES) do KNOWN_EDGE[token] = true end
 local DEFAULT_EDGE = "after-start"
 
---- Map an unknown `attach.edge` on container `c` to after-start (batch 9 MG-1): hand-edited or
---- imported data never reaches the anchor code as a token it cannot place. Whether a KNOWN side is
---- allowed right now is never rewritten here: it depends on the chain, and Anchors.ResolvedEdge falls
---- back at runtime so undoing the change restores the side.
+-- The nine WoW points, as a set.
+local KNOWN_POINT = {}
+for _, point in ipairs(NS.Constants.POINTS) do KNOWN_POINT[point] = true end
+local POINT_KEYS = { "childPoint", "relPoint" }
+
+--- Drop a stored attach point on container `c` that is not one of the nine WoW points (batch 11
+--- G2): hand-edited or imported data reads as Automatic rather than reaching SetPoint.
 local function normalizeAttach(c)
     local at = c.attach
-    if type(at) ~= "table" or KNOWN_EDGE[at.edge] then return end
-    if NS.Debug then NS.Debug("Migrate", "container %s: unknown attach side '%s' read as %s", c.id, at.edge, DEFAULT_EDGE) end
-    at.edge = DEFAULT_EDGE
+    if type(at) ~= "table" then return end
+    for _, key in ipairs(POINT_KEYS) do
+        local v = at[key]
+        if v ~= nil and not KNOWN_POINT[v] then
+            if NS.Debug then NS.Debug("Migrate", "container %s: unknown attach %s '%s' read as Automatic", c.id, key, tostring(v)) end
+            at[key] = nil
+        end
+    end
 end
 
 --- Backfill every stored container from the template and stamp its id from its key. An entry that
@@ -1016,6 +1025,118 @@ function Database.MigrateV10(p)
     return stamped, reset
 end
 
+--- v11 (batch 11, owner 2026-09-26, G4). The side a container attached to another sat on, stored as
+--- one flow-relative token (`attach.edge`), becomes two absolute points, `attach.childPoint` and
+--- `attach.relPoint`, each absent for Automatic (G2).
+---
+--- 1. A stored side equal to the old default, after-start, is dropped: the container becomes
+---    Automatic and takes G3's defaults. So is a side that is not one of the nine, which v9 and v10
+---    read as after-start. Accepted consequence: an Automatic Text-under-Text chain may re-center.
+--- 2. Any other stored side is converted to the absolute points it resolved to at v10, exactly as
+---    batch 10's Anchors.ResolvedEdge and Anchors.EdgePoints placed it under its effective layout:
+---    its chain root's axis and growth, its own per-line count, and behind read as after at the same
+---    align while the container was more than one aura wide. So a side the owner picked never moves.
+---    Every container with an attach table, whatever its mode, the same rule as v9 (a later switch to
+---    Another container keeps the side); points already stored are the player's own and are kept.
+--- 3. `attach.edge` is removed. Nothing but this ladder reads it from v11 on.
+---
+--- The conversion is FROZEN here, profile by profile over the raw store (an inactive profile's chain
+--- is not the active one's), and never calls the live anchor code, whose model may move on.
+--- IDEMPOTENT: a second run finds no `attach.edge` and changes nothing.
+--- @return number  the containers whose side was dropped
+--- @return number  the containers whose side was converted to points
+local V11_LAYOUT = { axis = "vertical", growH = "right", growV = "down", perLine = 0 }
+
+--- Container `id` in raw profile `p`, by a numeric or a numeric-string key, or nil.
+local function rawContainer(p, id)
+    id = tonumber(id)
+    if not id then return nil end
+    local c = p.containers[id] or p.containers[tostring(id)]
+    return type(c) == "table" and c or nil
+end
+
+--- Layout key `k` of raw container `c`, the v10 template's value when unstored.
+local function layoutOf(c, k)
+    local L = type(c.layout) == "table" and c.layout or V11_LAYOUT
+    local v = L[k]
+    if v == nil then v = V11_LAYOUT[k] end
+    return v
+end
+
+--- The container whose flow raw container `c` (stored under `key`) followed at v10, as
+--- Anchors.FlowRoot found it: nil when not attached to a usable container (none, itself, a loop).
+local function v10FlowRoot(p, key, c)
+    local at = c.attach
+    local id = at.mode == "container" and tonumber(at.container)
+    if not id or id == tonumber(key) then return nil end
+    local root, hops = rawContainer(p, id), 0
+    while root and hops < 64 do
+        local up = type(root.attach) == "table" and root.attach
+        local nextId = up and up.mode == "container" and tonumber(up.container)
+        if nextId == tonumber(key) then return nil end
+        local nextCfg = nextId and rawContainer(p, nextId)
+        if not nextCfg then return root end
+        root, hops = nextCfg, hops + 1
+    end
+    return nil
+end
+
+--- The v10 point pair for `side`/`align` under growth `growH`/`growV` (the batch 9 design table).
+local function v10Pair(growH, growV, side, align)
+    local V0, V1 = "TOP", "BOTTOM"
+    if growV == "up" then V0, V1 = "BOTTOM", "TOP" end
+    local H0, H1 = "LEFT", "RIGHT"
+    if growH == "left" then H0, H1 = "RIGHT", "LEFT" end
+    if side == "after" then
+        local h = (align == "start" and H0) or (align == "end" and H1) or ""
+        return V0 .. h, V1 .. h
+    end
+    local v = (align == "start" and V0) or (align == "end" and V1) or ""
+    if side == "ahead" then return v .. H0, v .. H1 end
+    return v .. H1, v .. H0
+end
+
+--- The points raw container `c` (stored under `key`) sat at on side `edge` at v10.
+local function v10Points(p, key, c, edge)
+    local side, align = edge:match("^(%a+)%-(%a+)$")
+    local flow = v10FlowRoot(p, key, c) or c
+    local perLine = tonumber(layoutOf(c, "perLine")) or 0
+    if side == "behind" and (layoutOf(flow, "axis") ~= "vertical" or perLine > 0) then
+        side = "after"
+    end
+    local growH = (layoutOf(flow, "growH") == "left") and "left" or "right"
+    local growV = (layoutOf(flow, "growV") == "up") and "up" or "down"
+    return v10Pair(growH, growV, side, align)
+end
+
+--- Convert one container's stored side; answers "dropped", "converted" or nil (nothing stored).
+local function convertEdge(p, key, c)
+    local at = c.attach
+    local edge = at.edge
+    if edge == nil then return nil end
+    at.edge = nil
+    if edge == DEFAULT_EDGE or not KNOWN_EDGE[edge] then return "dropped" end
+    local point, rel = v10Points(p, key, c, edge)
+    if at.childPoint == nil then at.childPoint = point end
+    if at.relPoint == nil then at.relPoint = rel end
+    return "converted"
+end
+
+function Database.MigrateV11(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0, 0 end
+    -- Every side is read before any is removed: a follower's conversion walks its chain, and the
+    -- walk reads only modes and targets, which this step never writes, so the order cannot matter.
+    local dropped, converted = 0, 0
+    for key, c in pairs(p.containers) do
+        if type(c) == "table" and type(c.attach) == "table" then
+            local did = convertEdge(p, key, c)
+            if did == "dropped" then dropped = dropped + 1 end
+            if did == "converted" then converted = converted + 1 end
+        end
+    end
+    return dropped, converted
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 ---
@@ -1136,6 +1257,14 @@ local SCHEMA_STEPS = {
             local stamped, reset = Database.MigrateV10(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v10 profile '%s': attach side stamped after-start on %s container(s); the old 0/-4 offset reset on %s screen container(s)", name, stamped, reset)
+            end
+        end)
+    end },
+    { to = 11, apply = function(db)
+        eachProfile(db, function(p, name)
+            local dropped, converted = Database.MigrateV11(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v11 profile '%s': attach side dropped to Automatic on %s container(s); converted to points on %s", name, dropped, converted)
             end
         end)
     end },

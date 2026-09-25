@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:263`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:272`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -82,9 +82,10 @@ path, never to a number restated in `modules/`.
 | `attach.mode` | `"screen"` | `screen`, `container`, `frame` |
 | `attach.container` | `0` | target container id (`0` = none) |
 | `attach.frame` | `""` | target global frame name |
-| `attach.point` / `.relativePoint` | `"TOPLEFT"` / `"BOTTOMLEFT"` | corners for the `container` and `frame` modes |
+| `attach.point` / `.relativePoint` | `"TOPLEFT"` / `"BOTTOMLEFT"` | corners for the `frame` mode |
+| `attach.childPoint` / `.relPoint` | absent / absent | the points a container attached to another joins it by, in the `container` mode (batch 11 G2): its own point and the parent's, absolute WoW points (`TOPLEFT` … `BOTTOMRIGHT`), each absent for **Automatic** and never declared in the template, so a backfill never stamps a pick. Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3), so one picked point leaves the other automatic. A pair that is one of batch 9's nine sides under the parent's growth keeps that side's seam and spread; any other is free, placed at X/Y alone (`Anchors.AttachEdge`, G5). A stored value that is not one of the nine points is read as Automatic on load (`normalizeAttach`). Written by schema v11 from the old `attach.edge` |
 | `attach.x` / `.y` | `0` / `0` | offsets for the `frame` mode; in the `container` mode a nudge added on top of the seam gap, which is the child's own `layout.spacing` (its `lineSpacing` when it fills rows) along the chain, and its gap across (`spacing` when it fills rows, `lineSpacing` when it fills columns) on a side (`Anchors.SeamOffset`, batch 8 SS-1/SS-2, batch 9 AP-2). The template's `0` / `-4` before schema v8 |
-| `attach.edge` | `"after-start"` | the side of the container it is attached to that it sits on, in the `container` mode (batch 9 E2): `"<side>-<align>"`, side `after` (the parent's vertical growth side), `ahead` (its horizontal growth side) or `behind` (the side its lines start from; only for a child one aura wide), align `start`, `center` or `end`. Relative to the chain's flow, so a growth flip mirrors it. `after-start` is the only placement before v9. A side not allowed now is kept and placed at `after-<align>` (`Anchors.ResolvedEdge`); an unknown value is read as `after-start` on load. A new attachment starts on `Anchors.DefaultEdge` (E5: a Text container's justify) |
+| `attach.edge` | removed by v11 | batch 9's side, `"<side>-<align>"` relative to the chain's flow (E2). Schema v11 dropped `after-start` and converted every other side to `attach.childPoint` / `.relPoint`; nothing reads it after the ladder |
 
 ### `layout` and `behavior`
 
@@ -140,7 +141,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:196`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:193`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -223,9 +224,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **257** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **256** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 46, Layout 37 (the Label tab's ten and the Anchor tab's Side among them, batch 8 and B9 LJ-1, AP-3),
+out of General's own tab), Filters 46, Layout 36 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row retired by batch 11),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
@@ -273,9 +274,9 @@ it, and none can, since a row is a leaf.
 - **Load pass:** `Database.PrepareProfile` (`core/Database.lua`), run from `NS.RunMigrations` at
   initialization and from `NS.OnProfileChanged` on AceDB's profile changed, copied and reset
   callbacks, and from nowhere else. It runs `seedStarters`, `normalizeKeys`, `backfillContainers`
-  (which also runs `normalizeAttach` on each container: an unknown `attach.edge` is read as
-  `after-start`, with one `[Migrate]` debug line; a known side that is not allowed right now is never
-  rewritten), the `nextContainerId` bump and `rebuildOrder`.
+  (which also runs `normalizeAttach` on each container: a stored `attach.childPoint` or
+  `attach.relPoint` that is not one of the nine WoW points is removed, so it reads as Automatic, with
+  one `[Migrate]` debug line), the `nextContainerId` bump and `rebuildOrder`.
 
 A member field a row addresses goes through `NS.SetByPath` with a container id even when
 ContainerManager is the caller: rename, copy-from, position reset and a delete's fallback to the
@@ -525,7 +526,7 @@ section refuses the whole copy and leaves the target untouched, with no `CONFIG_
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1055`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1176`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -568,7 +569,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
-- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:669`) runs over **every** stored profile,
+- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:678`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
   stamps `global.schemaVersion` to `3`. Only a container whose `auraType` is a known one
   (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
@@ -666,7 +667,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   and how many ids were dropped. `filter.hidePermanentEnchants`, the name, the style, every styling
   block and the position carry over untouched. Such a container compiles to the enchant slots and no
   aura group, and `FC.Compile` does not call it one that can never match. The step also clears the
-  profile's `dispelColors.None` leaf, if present (`core/Database.lua:755`): an aura with no dispel
+  profile's `dispelColors.None` leaf, if present (`core/Database.lua:764`): an aura with no dispel
   type takes the surface's own color now (feedback #7), so nothing reads a None swatch any longer.
   The v3 and v4 steps keep their `ENCHANT` handling, because an old profile climbs them before it
   reaches v5.
@@ -730,6 +731,20 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   build ran. On a profile a full v9 already migrated it changes nothing, and a second run changes
   nothing. Tests climb from v8, from a full v9 and from an early v9 profile missing both halves
   (`tests/test_migrations.lua`).
+- **Schema v11** (`Database.MigrateV11`, `core/Database.lua`, batch 11, owner 2026-09-26, G4) runs
+  over **every** stored profile and logs one `[Migrate] v11 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `11`. It turns batch 9's side into two absolute points:
+  an `attach.edge` equal to `after-start` (or not one of the nine tokens, which v9 and v10 read as
+  `after-start`) is dropped, so the container becomes Automatic and takes G3's default; any other side
+  is converted to the points it resolved to at v10, exactly as `Anchors.ResolvedEdge` and
+  `Anchors.EdgePoints` placed it under the container's effective layout (its chain root's axis and
+  growth read from that profile's own containers, its own per-line count, and `behind` read as
+  `after` at the same align while it was more than one aura wide), and stored as
+  `attach.childPoint` / `attach.relPoint`, so a side the owner picked never moves. Points already
+  stored are kept. `attach.edge` is removed from every container with an `attach` table, whatever its
+  mode. The conversion is frozen inside the step and never calls the live anchor code. Accepted
+  consequence: an Automatic Text chain under a Text parent may re-center under G3. Idempotent: a
+  second run finds no `attach.edge`. Tests climb from v1, v8, v9 and v10 (`tests/test_migrations.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install
@@ -737,7 +752,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
   has been pushed, a new stored-shape change takes a new step with the next version, even when the
   earlier step is unreleased.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:243`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:252`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`

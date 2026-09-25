@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 257 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 256 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -515,7 +515,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (37 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (36 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -527,8 +527,7 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 | Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural. Switching to Another container with a target already stored asks first when that target's chain flows differently (GC-1, below) |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
-| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the points of the side it sits on |
-| *Another container:* Side | `container.attach.edge` | string (dropdown), own line | The side of the target this container sits on (batch 9 AP-3, E2), listed by absolute name for the growth in effect: Bottom left / Bottom / Bottom right, Right, top / middle / bottom, Left, top / middle / bottom growing down and right, mirrored for other growths. Never the side the chain grows away from; the Left (behind) entries only while this container is one aura wide. A stored side not allowed now stays listed, grayed with " (unavailable)". Its validate refuses the rest, `/am set` included, with the reason. Structural |
+| *Another container:* Container | `container.attach.container` | number (dropdown) | None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the two points in effect, picked or Automatic (`Anchors.AttachPoints`, batch 11 G2). Batch 9's Side row is retired: the points are stored as `container.attach.childPoint` / `.relPoint` (docs/schema.md) |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Point / Relative point | `container.attach.point` / `.relativePoint` | string | The corner of the container's **first aura** that is attached / the corner of the frame; Point is structural (it redraws the facing-growth hint) |
 | *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes: from the named frame's point, or as a nudge on top of the seam gap (SS-2) |
@@ -555,16 +554,12 @@ container is attached to. Set Grow vertically to *opposite* on the Growth tab in
 horizontal line likewise; a corner point can draw both). The screen has no frame to grow over, and a
 follower's points never face back over its parent, so neither mode draws it.
 
-**The side of a new attachment (batch 9 AP-4, E5).** A write of Attach to or Container that makes a
-new attachment (container mode with a usable target, where there was none) sets Side to
-`Anchors.DefaultEdge`: a Text container lines up with its text justify (Center: Bottom; Left or Right:
-the end its text sits at under the chain's growth), every other style Bottom left (`after-start`). A
-Side picked in container mode before there was a target is kept instead, for this session. A retarget
-keeps the side; a detach ends the attachment. **The fallback note.** After the facing-growth hint, a
-gray line appears while the stored side is not allowed now (a Left side, and this container has
-become more than one aura wide): "'*side*' needs this container to be one aura wide (Fill: Columns,
-Per row or column: 0). It sits *fallback* until then." Nothing is written, so undoing the change
-restores the side. A write to Side, Attach to or Container also re-applies the parent, old and new.
+**The points of a new attachment (batch 11 G2, G3).** An attachment writes nothing: while no point
+is picked, both are Automatic, and Automatic follows the parent's growth and the two styles
+(`Anchors.DefaultEdge`: a Text child lines up with its text justify, an icons or bars child under a
+Text parent justified Center is centered, every other pair starts on the side the parent's lines start
+from). Picked points survive an attach, a retarget and a detach. A write to either point, Attach to or
+Container also re-applies the parent, old and new.
 
 **Growth conflicts (batch 9 GC-1, E3).** Attaching keeps inheritance: the container fills and grows
 like its chain root and its own Growth settings are kept, never written, for a detach. When a panel
@@ -592,10 +587,12 @@ vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40)
 
 **Inherited flow (L-6).** A container attached to another container continues that container's
 flow. Its fill axis and both growth directions are its chain root's, resolved up the chain by
-`Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points come from
-the Side row (`Anchors.EdgePoints` of `Anchors.ResolvedEdge`): by default (`after-start`, the same
-as `Anchors.DerivedPoints`) the child stacks below its parent (above, when growing up), on the side
-the parent's lines start from, whether the parent fills rows or columns (IA-1). `container.attach.point` / `.relativePoint` are read only in `frame`
+`Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points are the two
+in effect (`Anchors.AttachPoints`, batch 11 G2): each picked, or Automatic, the matching half of the
+default pair (G3), which for a bars child under a bars parent is `after-start`, the same as
+`Anchors.DerivedPoints`: the child stacks below its parent (above, when growing up), on the side the
+parent's lines start from, whether the parent fills rows or columns (IA-1). A pair that is none of
+batch 9's nine sides is free: placed at X/Y alone, with no seam (G5). `container.attach.point` / `.relativePoint` are read only in `frame`
 mode. The gap across the seam is the child's own gap between consecutive elements in the direction
 the chain stacks: its Spacing when it fills columns, its Line spacing when it fills rows
 (`Anchors.SeamOffset`, SS-1), upward when the chain grows up; on a Right or Left side it is the

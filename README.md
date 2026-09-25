@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1592%2F1592_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1604%2F1604_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -76,9 +76,10 @@ notice says so and the controls are dimmed.
 Layout decides where a container lives. It can sit on the screen, follow another container as that
 one grows (carrying on in the same direction), or attach to any named frame, like your unit frame or an action bar; **Pick a frame…**
 closes the settings so you can just click the frame you want. A container that follows another sits
-on the side of it you pick with **Side**: below it (above it when it grows up), at its left, middle
-or right; beside it on the side it grows toward; or on its other side when this one is only one aura
-wide. It never sits on the side the other grows away from. If the container you attach to grows a
+below it by default (above it when it grows up), lined up to suit the two: a text container by its
+own justify, icons or bars centered under centered text, anything else on the side the other's
+lines start from. Which point of each one joins the other is yours to change, and any pair is
+allowed. If the container you attach to grows a
 different way from this one, a dialog asks first: this one then grows like the chain it joins, and
 gets its own growth back if you detach it. While unlocked, every handle sits just outside its own
 container, so a chain reads handle, container, handle, container down one column; the chain spreads

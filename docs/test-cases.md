@@ -123,7 +123,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v10: the current schema version is 10
+- v11: the current schema version is 11
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -168,7 +168,7 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (24)
+### test_migrations.lua (28)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -187,13 +187,17 @@ badge and any count quoted in the docs must agree with it.
 - migrations: a v1 account reaches v9 with Size to fit off on Text only
 - migrations: v9 stamps attach.edge after-start where it is missing or unknown, and keeps a known one
 - migrations: v9 resets a screen container's old 0/-4 to 0/0, and leaves frame and container offsets
-- migrations: a v7 and a v8 account reach v9 with every chain on after-start and no screen 0/-4
-- migrations: a v1 account reaches v9 with its attach edge stamped
-- migrations: an unknown attach edge is repaired on load; a disallowed known one is kept
+- migrations: a v7 and a v8 account climb past v9 with every chain on after-start, Automatic since v11, and no screen 0/-4
 - migrations: v10 stamps the attach side and resets a screen 0/-4 that an early v9 left
 - migrations: v10 changes nothing on a profile a full v9 already migrated
-- migrations: a v9 account missing both reaches v10 in every profile
-- migrations: a v8 account reaches v10 with the same result as one that climbed through a full v9
+- migrations: a v9 account missing both climbs through v10 in every profile
+- migrations: a v8 account reaches v11 with the same result as one that climbed through a full v9
+- migrations: v11 drops the default side and converts every other to the points it resolved to
+- migrations: v11 converts to the very points ResolvedEdge and EdgePoints gave at v10
+- migrations: v11 keeps points already stored and still removes the side
+- migrations: a v10 account reaches v11 in every profile, each converted under its own chain
+- migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
+- migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
 
 ### test_schema.lua (33)
 
@@ -648,24 +652,20 @@ badge and any count quoted in the docs must agree with it.
 - seam: an attached child's strip sits before its own block, in its own column (batch 10 F1)
 - seam: a screen container's strip keeps its place above or below its auras
 
-### test_anchors_edges.lua (19)
+### test_anchors_edges.lua (15)
 
 - edges: EDGES lists the nine tokens, after then ahead then behind, and no before or center side
 - edges: EdgePoints gives the design table's pair for every token and growth
 - edges: EdgePoints(L, 'after-start') is exactly the old DerivedPoints for all 8 axis, growH and growV combinations
-- edges: after and ahead are always allowed; behind only for a child one aura wide, with a reason
-- edges: ResolvedEdge falls back to after-<align> at runtime, never writes, and restores on undo
+- edges: every one of the nine is allowed, behind on a wide child too; only a non-token is not (G5)
 - edges: SeamOffset leaves the child's own gap across for a side, and after is unchanged (AP-2)
 - edges: a side-attached child is placed at its edge's points with its gap across and the nudge on top
-- edges: flipping the root's growth mirrors a side-attached child and writes nothing
-- edges: a disallowed stored side is placed at its after fallback
+- edges: flipping the root's growth mirrors an Automatic child; an explicit pair stays and takes the seam of the side it now is
 - edges: a side-attached follower of a follower takes no strip room; an after one does (AP-2)
-- edges: the default side of a new attachment follows a Text container's justify; every other style is after-start (E5)
-- edges: attaching a centered Text container sets its side to after-center, by mode or by container (AP-4)
-- edges: a side picked before the attachment is kept; retargeting keeps the side
-- edges: a new attachment of a bars container stays after-start
-- edges: the Side row refuses a side the child cannot take, with the reason, through /am set
-- edges: a write to the side, per-line count, mode or container re-applies the followers and the parents (AP-4)
+- edges: the default side follows a Text container's justify; a bars child under a bars parent is after-start (E5, G3)
+- edges: an attachment writes no points: a centered Text container attaches Automatic, on after-center (G2, G3)
+- edges: picked points survive an attach, a retarget and a detach and re-attach
+- edges: a write to either point, the mode or the container re-applies the followers and the parents (AP-4)
 - anchors: FlowChangeOnAttach is nil when nothing would change or nothing is usable
 - anchors: FlowChangeOnAttach names the keys that change and the followers that re-flow too
 - anchors: FlowChangeOnAttach compares with the target's chain root, not the target
@@ -752,7 +752,7 @@ badge and any count quoted in the docs must agree with it.
 - strip: an icons label mirrors only for a behind follower, whose strip lines up with the edge facing its parent
 - strip: unlocked, a gold diamond marks the join at the child's attach point; locked, screen and frame show none
 - strip: Park and Destroy hide the join pin
-- strip: the tooltip of a container joined to another names the side and the parent
+- strip: the tooltip of a container joined to another names the parent's point and the parent
 - strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
 
@@ -778,6 +778,25 @@ badge and any count quoted in the docs must agree with it.
 - column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
 - column: a follower of a side follower spreads by its own strip, as any after follower does
 - column: the join pin stays at the child's attach point while unlocked
+
+### test_anchors_points.lua (16)
+
+- points: a bars or icons child under a bars or icons parent defaults to after-start, under every growth
+- points: an icons or bars child under a Text parent justified CENTER is centered; LEFT or RIGHT is not
+- points: a Text child lines up with its own justify, whatever the parent, and flips with growH
+- points: the default follows the chain root's growth, not the child's own stored growth
+- points: an explicit pair is used as stored, and does not mirror when the growth flips
+- points: one explicit point keeps the other automatic, as the matching half of the default pair
+- points: a stored point that is not one of the nine reads as Automatic
+- points: a stored attach.edge is not read outside the migration
+- points: AttachEdge classifies the pair in effect as one of the nine tokens, or nil when free
+- points: a classified explicit pair is placed exactly as batch 10 places its token
+- points: behind is no longer refused: a child several auras wide sits on its behind pair
+- points: a free pair is placed at X/Y alone: no seam, no spread, no push
+- points: an after pair spreads by the child's furniture while unlocked; the free pair beside it does not
+- points: a free follower's strip and label sit on its own before side, lined up with H0
+- points: a write to either point, a style or a text justify re-applies the followers
+- points: AttachPoints and AttachEdge allocate nothing
 
 ### test_texttemplate.lua (26)
 
@@ -1284,7 +1303,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: a raising button probe costs one line, never the predictions
 - diag: a plan group that raises keeps later groups and the warnings
 - diag: [Cfg] lists only the settings in use; the rest go on an inert line
-- diag: [Cfg] lists attach.edge as in use only for a container attached to another (batch 9 AP-1)
+- diag: [Cfg] prints no attach.edge: v11 made it two points, and no row stores it (batch 11 G4)
 - diag: a failing section is reported and the next container still reports
 - diag: the report is capped below the console buffer and says it was truncated
 - diag: predictions stop at the id cap and the report says it was truncated
@@ -1518,7 +1537,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_layout.lua (45)
+### test_pages_layout.lua (41)
 
 - layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
@@ -1546,17 +1565,13 @@ badge and any count quoted in the docs must agree with it.
 - layout: the follow line is dim gold, says why, and has a gap below it (F6)
 - layout: the follow line is drawn on the Growth tab only
 - layout: Another container names the derived points and the container it is attached to
-- layout: Side lists every allowed side by its absolute name for the chain's growth
-- layout: Side names mirror with the chain's growth, and no entry names the side it grows away from
-- layout: Side offers no behind entry to a child more than one aura wide
-- layout: a stored side not allowed now stays listed as unavailable, with a note saying where the child sits
-- layout: the attachment line names the chosen side's points
+- layout: the attachment line names the points in effect, picked or Automatic (batch 11 G2)
 - layout: every Point and Relative point row places the first aura, since the container's full size is secret
 - layout: the facing-growth hint shows exactly when Point's side and the growth point at each other
 - layout: the hint names the growth to pick instead, one line per facing axis
 - layout: the hint is Named frame's alone — the screen has no frame to grow over, and a follower's points are derived
 - layout: choosing a facing Point redraws the tab with the hint on the next frame
-- layout: the Container row's help points at the Side row, not at points set for you (batch 9 AP-3)
+- layout: the Container row's help names no Side row, which batch 11 retired (G1)
 - layout: a Container pick whose chain flows differently asks first and stores nothing (GC-1)
 - layout: accepting the attach popup attaches and keeps the child's own Growth settings (E3)
 - layout: canceling the attach popup stores nothing, and accepting it in combat is refused
@@ -1814,7 +1829,7 @@ badge and any count quoted in the docs must agree with it.
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 22 |
-| test_migrations.lua | 24 |
+| test_migrations.lua | 28 |
 | test_schema.lua | 33 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 85 |
@@ -1828,13 +1843,14 @@ badge and any count quoted in the docs must agree with it.
 | test_lifecycle.lua | 15 |
 | test_anchors.lua | 76 |
 | test_anchors_seam.lua | 10 |
-| test_anchors_edges.lua | 19 |
+| test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 8 |
 | test_anchors_column.lua | 20 |
+| test_anchors_points.lua | 16 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -1858,7 +1874,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 48 |
-| test_pages_layout.lua | 45 |
+| test_pages_layout.lua | 41 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
@@ -1878,4 +1894,4 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| **Total** | **1592** |
+| **Total** | **1604** |

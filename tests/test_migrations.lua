@@ -364,7 +364,7 @@ test("migrations: a v8 account climbs through v9 in every profile", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v8profile(), Raid = v8profile() },
         global = { schemaVersion = 8 } } })
     -- red under: the v9 row missing from SCHEMA_STEPS
-    assertEqual(NS.SCHEMA_VERSION, 10)
+    assertEqual(NS.SCHEMA_VERSION, 11)
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local cs = NS.db.sv.profiles[name].containers
@@ -435,7 +435,7 @@ test("migrations: v9 resets a screen container's old 0/-4 to 0/0, and leaves fra
     assertNil(diff(p, before))
 end)
 
-test("migrations: a v7 and a v8 account reach v9 with every chain on after-start and no screen 0/-4", function()
+test("migrations: a v7 and a v8 account climb past v9 with every chain on after-start, Automatic since v11, and no screen 0/-4", function()
     for _, from in ipairs({ 7, 8 }) do
         local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
             global = { schemaVersion = from } } })
@@ -443,33 +443,14 @@ test("migrations: a v7 and a v8 account reach v9 with every chain on after-start
         for _, name in ipairs({ "Default", "Raid" }) do
             local cs = NS.db.sv.profiles[name].containers
             -- red under: the step touching the active profile only
-            assertEqual(cs[2].attach.edge, "after-start", from .. " " .. name)
+            assertNil(cs[2].attach.edge, from .. " " .. name .. ": v9's after-start, dropped by v11")
             assertEqual(cs[1].attach.y, 0, from .. " " .. name .. ": screen reset")
             assertEqual(cs[5].attach.y, -4, from .. " " .. name .. ": frame kept")
         end
         local c2 = NS.Database.FindContainer(2)
-        local p, rp = NS.Anchors.EdgePoints(NS.Anchors.EffectiveLayout(c2), NS.Anchors.ResolvedEdge(c2))
+        local p, rp = NS.Anchors.AttachPoints(c2)
         assertEqual(p, "TOPLEFT"); assertEqual(rp, "BOTTOMLEFT")
     end
-end)
-
-test("migrations: a v1 account reaches v9 with its attach edge stamped", function()
-    local p = v1profile()
-    p.containers[4].attach = { mode = "container", container = 9 }
-    local NS = fresh({ savedVariables = { profiles = { Default = p } } })
-    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(NS.db.sv.profiles.Default.containers[4].attach.edge, "after-start")
-end)
-
-test("migrations: an unknown attach edge is repaired on load; a disallowed known one is kept", function()
-    local p = v8profile()
-    p.containers[1].attach.edge = "upward"
-    p.containers[2].attach.edge = "behind-start"
-    p.containers[2].layout = { axis = "horizontal", perLine = 4 }
-    local NS = fresh({ savedVariables = { profiles = { Default = p }, global = { schemaVersion = 10 } } })
-    -- red under: no normalizeAttach in the backfill (the ladder did not run: the stamp is 10)
-    assertEqual(NS.Database.FindContainer(1).attach.edge, "after-start")
-    assertEqual(NS.Database.FindContainer(2).attach.edge, "behind-start", "runtime validity is ResolvedEdge's")
 end)
 
 -- ── v10 (batch 10 F7): the edge stamp and the screen reset again, for a v9 stamped before them ──
@@ -525,16 +506,17 @@ test("migrations: v10 changes nothing on a profile a full v9 already migrated", 
     assertNil(diff(p, before))
 end)
 
-test("migrations: a v9 account missing both reaches v10 in every profile", function()
+test("migrations: a v9 account missing both climbs through v10 in every profile", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v9early(), Raid = v9early() },
         global = { schemaVersion = 9 } } })
     -- red under: no v10 row (the ladder stops at 9 and never re-runs v9's late halves)
-    assertEqual(NS.db.global.schemaVersion, 10)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local cs = NS.db.sv.profiles[name].containers
-        -- red under: the step touching the active profile only (the backfill reaches it alone)
-        assertEqual(cs[2].attach.edge, "after-start", name)
-        assertEqual(cs[5].attach.edge, "after-start", name .. ": a named frame's side too")
+        -- v10 stamped after-start everywhere; v11 dropped it to Automatic
+        assertNil(cs[2].attach.edge, name)
+        assertNil(cs[5].attach.edge, name .. ": a named frame's side too")
+        assertNil(cs[2].attach.childPoint, name .. ": Automatic")
         assertEqual(cs[1].attach.y, 0, name .. ": screen reset")
         assertEqual(cs[8].attach.y, 0, name .. ": screen, absent, reset")
         assertEqual(cs[5].attach.y, -4, name .. ": frame kept")
@@ -542,13 +524,14 @@ test("migrations: a v9 account missing both reaches v10 in every profile", funct
     end
 end)
 
-test("migrations: a v8 account reaches v10 with the same result as one that climbed through a full v9", function()
+test("migrations: a v8 account reaches v11 with the same result as one that climbed through a full v9", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v7profile(), Raid = v7profile() },
         global = { schemaVersion = 8 } } })
-    assertEqual(NS.db.global.schemaVersion, 10)
-    -- stamped 8, so v8 does not run again: the ladder is v9 then v10, the same as v9 alone
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    -- stamped 8, so v8 does not run again: the ladder is v9, v10 and v11, the same as v9 and v11
     local full = v7profile()
     NS.Database.MigrateV9(full)
+    NS.Database.MigrateV11(full)
     -- the inactive profile, read attach by attach (an absent offset reads as the template's 0)
     local cs = NS.db.sv.profiles.Raid.containers
     for id, c in pairs(full.containers) do
@@ -561,4 +544,143 @@ test("migrations: a v8 account reaches v10 with the same result as one that clim
             assertEqual(got.y or 0, want.y or 0, "container " .. id .. " y")
         end
     end
+end)
+
+-- ── v11 (batch 11 G4): the attach side becomes two absolute points ───────────────────────────────
+
+--- A profile as v10 leaves it: container 1 on the screen growing left and up (its axis unstored, so
+--- the template's columns), a chain under it on every kind of side, a named frame, a follower of a
+--- follower, an unknown side, one with no side and one with no attach table.
+local function v10profile(growH, growV)
+    local function c(name, attach, layout)
+        return { name = name, unit = "player", auraType = "HELPFUL", style = "bars", attach = attach, layout = layout }
+    end
+    local function on(to, edge) return { mode = "container", container = to, x = 0, y = 0, edge = edge } end
+    return {
+        seeded = true, nextContainerId = 11, containerOrder = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+        userCategories = {}, userCategoryOrder = {},
+        containers = {
+            [1] = c("Root", { mode = "screen", container = 0, x = 0, y = 0, edge = "after-start" },
+                { growH = growH or "left", growV = growV or "up" }),
+            [2] = c("Default side", on(1, "after-start")),
+            [3] = c("Ahead end", on(1, "ahead-end")),
+            [4] = c("Behind, wide", on(1, "behind-center"), { axis = "vertical", perLine = 3 }),
+            [5] = c("Behind, one wide", on(1, "behind-start"), { axis = "vertical", perLine = 0 }),
+            [6] = c("Named frame", { mode = "frame", frame = "PlayerFrame", x = 0, y = 0, edge = "after-end" }),
+            [7] = c("Follower's follower", on(3, "ahead-start")),
+            [8] = c("No attach", nil),
+            [9] = c("Unknown side", on(1, "sideways")),
+            [10] = c("No side", on(1, nil)),
+        },
+    }
+end
+
+local function pairOf(at) return tostring(at.childPoint) .. ">" .. tostring(at.relPoint) end
+
+test("migrations: v11 drops the default side and converts every other to the points it resolved to", function()
+    local NS = fresh()
+    local p = v10profile()
+    -- red under: no MigrateV11 (G4)
+    local dropped, converted = NS.Database.MigrateV11(p)
+    local at = function(id) return p.containers[id].attach end
+    assertEqual(dropped, 3, "1 and 2 on after-start, and 9's unknown side")
+    assertEqual(converted, 5, "3, 4, 5, 6 and 7")
+    for id = 1, 10 do
+        if id ~= 8 then assertNil(at(id).edge, "container " .. id .. ": attach.edge removed") end
+    end
+    for _, id in ipairs({ 1, 2, 9, 10 }) do
+        assertNil(at(id).childPoint, "container " .. id .. ": Automatic")
+        assertNil(at(id).relPoint, "container " .. id .. ": Automatic")
+    end
+    -- 1 grows left and up; its followers flow by it.
+    assertEqual(pairOf(at(3)), "TOPRIGHT>TOPLEFT", "ahead-end growing left and up")
+    -- red under: a behind side converted as stored rather than as ResolvedEdge placed it
+    assertEqual(pairOf(at(4)), "BOTTOM>TOP", "behind on a wide child sat at after-center")
+    assertEqual(pairOf(at(5)), "BOTTOMLEFT>BOTTOMRIGHT", "behind-start on a one-wide child")
+    assertEqual(pairOf(at(6)), "TOPRIGHT>BOTTOMRIGHT", "a named frame's side, under its own growth")
+    -- red under: a follower's follower converted under its own stored growth, not its root's
+    assertEqual(pairOf(at(7)), "BOTTOMRIGHT>BOTTOMLEFT", "ahead-start under the root's growth")
+    assertNil(p.containers[8].attach, "no attach table: nothing created")
+    local before = NS.Database.DeepCopy(p)
+    local again, again2 = NS.Database.MigrateV11(p)
+    assertEqual(again + again2, 0, "a second run changes nothing")
+    assertNil(diff(p, before))
+end)
+
+test("migrations: v11 converts to the very points ResolvedEdge and EdgePoints gave at v10", function()
+    for _, g in ipairs({ { "right", "down" }, { "left", "down" }, { "right", "up" }, { "left", "up" } }) do
+        local NS = fresh()
+        local p = v10profile(g[1], g[2])
+        NS.Database.MigrateV11(p)
+        local L = { axis = "vertical", growH = g[1], growV = g[2] }
+        local cases = { [3] = "ahead-end", [4] = "after-center", [5] = "behind-start", [7] = "ahead-start" }
+        for id, token in pairs(cases) do
+            local cp, rp = NS.Anchors.EdgePoints(L, token)
+            assertEqual(pairOf(p.containers[id].attach), cp .. ">" .. rp, g[1] .. "/" .. g[2] .. " #" .. id)
+        end
+    end
+end)
+
+test("migrations: v11 keeps points already stored and still removes the side", function()
+    local NS = fresh()
+    local p = v10profile()
+    p.containers[3].attach.childPoint = "CENTER"
+    NS.Database.MigrateV11(p)
+    assertEqual(p.containers[3].attach.childPoint, "CENTER", "the player's own")
+    assertNil(p.containers[3].attach.edge)
+end)
+
+test("migrations: a v10 account reaches v11 in every profile, each converted under its own chain", function()
+    local NS = fresh({ savedVariables = { profiles = { Default = v10profile("left", "up"),
+        Raid = v10profile("right", "down") }, global = { schemaVersion = 10 } } })
+    -- red under: no v11 row in SCHEMA_STEPS
+    assertEqual(NS.SCHEMA_VERSION, 11)
+    assertEqual(NS.db.global.schemaVersion, 11)
+    local d, r = NS.db.sv.profiles.Default.containers, NS.db.sv.profiles.Raid.containers
+    assertEqual(pairOf(d[3].attach), "TOPRIGHT>TOPLEFT", "Default grows left and up")
+    -- red under: the conversion reading the active profile's chain for an inactive one
+    assertEqual(pairOf(r[3].attach), "BOTTOMLEFT>BOTTOMRIGHT", "Raid grows right and down")
+    for _, cs in ipairs({ d, r }) do
+        for id, c in pairs(cs) do
+            if c.attach then assertNil(c.attach.edge, "container " .. id) end
+        end
+    end
+    local c2 = NS.Database.FindContainer(2)
+    local cp, rp = NS.Anchors.AttachPoints(c2)
+    assertEqual(cp .. ">" .. rp, "BOTTOMRIGHT>TOPRIGHT", "Automatic: G3's default, after-start growing left and up")
+end)
+
+test("migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic", function()
+    local cases = {
+        { name = "v9", sv = function() return { profiles = { Default = v9early(), Raid = v9early() }, global = { schemaVersion = 9 } } end },
+        { name = "v8", sv = function() return { profiles = { Default = v7profile(), Raid = v7profile() }, global = { schemaVersion = 8 } } end },
+        { name = "v1", sv = function()
+            local p = v1profile()
+            p.containers[4].attach = { mode = "container", container = 9 }
+            return { profiles = { Default = p } }
+        end },
+    }
+    for _, case in ipairs(cases) do
+        local NS = fresh({ savedVariables = case.sv() })
+        assertEqual(NS.db.global.schemaVersion, 11, case.name)
+        for name, prof in pairs(NS.db.sv.profiles) do
+            for id, c in pairs(prof.containers) do
+                if c.attach then
+                    -- red under: v9/v10's after-start stamp surviving the climb (or backfilled back)
+                    assertNil(c.attach.edge, case.name .. " " .. name .. " #" .. id)
+                    assertNil(c.attach.childPoint, case.name .. " " .. name .. " #" .. id)
+                    assertNil(c.attach.relPoint, case.name .. " " .. name .. " #" .. id)
+                end
+            end
+        end
+    end
+end)
+
+test("migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept", function()
+    local p = v8profile()
+    p.containers[1].attach.childPoint, p.containers[1].attach.relPoint = "upward", "TOPRIGHT"
+    local NS = fresh({ savedVariables = { profiles = { Default = p }, global = { schemaVersion = 11 } } })
+    -- red under: no normalizeAttach for the points (the ladder did not run: the stamp is 11)
+    assertNil(NS.Database.FindContainer(1).attach.childPoint)
+    assertEqual(NS.Database.FindContainer(1).attach.relPoint, "TOPRIGHT")
 end)
