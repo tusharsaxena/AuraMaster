@@ -1,0 +1,1 @@
+clean: I21-05 host ValidateSchema duplicate-path check matches plan; new test red without the fix (degraded expected 1, got 0) in scratch copy; gate 1647/0, luacheck 0/0, lizard clean, CRLF kept, degraded build loads and writes
