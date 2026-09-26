@@ -1684,6 +1684,11 @@ badge and any count quoted in the docs must agree with it.
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
+### test_pages_rail.lua (2)
+
+- sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys
+- sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
+
 ### test_pages_about.lua (3)
 
 - about: the landing page lists every slash command, in /am help's own words
@@ -1923,6 +1928,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
 | test_pages_tabs.lua | 7 |
+| test_pages_rail.lua | 2 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1939,4 +1945,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1637** |
+| **Total** | **1639** |

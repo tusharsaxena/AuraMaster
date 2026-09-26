@@ -501,6 +501,7 @@ local function pandemicNote(ctx)
 end
 
 NS.RegisterContainerPage(PAGE, L["Text"], "AuraMasterTextPanel", {
+    style = "text", tooltip = L["How this container's lines of text look."],
     tabs = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
     afterGroup = { [G_ICON] = iconNote, [G_PANDEMIC] = pandemicNote },
     disabledFor = function(cfg) return cfg.style ~= "text" end,

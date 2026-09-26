@@ -629,6 +629,7 @@ local function anchorNotes(ctx)
 end
 
 NS.RegisterContainerPage(PAGE, L["Layout"], "AuraMasterLayoutPanel", {
+    tooltip = L["Where this container sits, what it attaches to, which way it grows, and how it answers the mouse."],
     intro = growthIntro,
     afterGroup = { [G_ANCHOR] = anchorNotes },
     pairWith = {

@@ -122,6 +122,7 @@ NS.RegisterSchemaRows({
 -- The wording states the condition first ("nothing here is in use") and then the one thing to do
 -- about it, and names the page the style lives on rather than parenthesizing it.
 NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {
+    style = "icons", tooltip = L["How this container's icons look."],
     disabledFor = function(cfg) return cfg.style ~= "icons" end,
     disabledNotice = function(cfg)
         if cfg.style == "text" then

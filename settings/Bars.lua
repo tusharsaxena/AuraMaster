@@ -204,6 +204,7 @@ NS.RegisterSchemaRows({
 })
 
 NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
+    style = "bars", tooltip = L["How this container's bars look."],
     disabledFor = function(cfg) return cfg.style ~= "bars" end,
     disabledNotice = function(cfg)
         if cfg.style == "text" then

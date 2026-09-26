@@ -215,13 +215,38 @@ local descriptor = {
 -- through a row (route (a)); `/am set` on any composed path answers the library-absent line.
 -- tests/test_surface_parity.lua pins the member set against the live instance;
 -- tests/test_optionssetup.lua pins the full count, the library-absent count and the named delta.
--- Each per-container page's style gate (`spec.disabledFor`), by page key, recorded on both arms so
--- a library-less build still knows it: modules/Diagnostics.lua reads it to tell a stored value the
--- container's style leaves unused from one in use (B9 DX-2). One source: the page's own predicate.
+
+-- ---------------------------------------------------------------------------
+-- The Containers page's sections (#6)
+-- ---------------------------------------------------------------------------
+--
+-- One config page per container (docs/superpowers/specs/2026-09-26-settings-redesign-design.md): the
+-- Containers page draws a nav rail whose entries are these sections, and a section renders its own
+-- page key's rows through Helpers.RenderPage exactly as the sub-page it replaced did. A section IS a
+-- former page key, so every row path, /am set and Defaults are unchanged. Each settings/<section>.lua
+-- registers at FILE LOAD, and the registry lives on BOTH arms: a library-absent build still needs the
+-- style gates below.
+local sections = {}
+
+-- Each style section's gate, by page key: modules/Diagnostics.lua reads it to tell a stored value the
+-- container's style leaves unused from one in use (B9 DX-2). Derived from the section's `style` --
+-- the same fact that decides whether the rail lists it -- so the two cannot disagree.
 NS.ContainerPageDisabledFor = NS.ContainerPageDisabledFor or {}
-local function recordContainerPage(pageKey, spec)
-    NS.ContainerPageDisabledFor[pageKey] = type(spec) == "table" and spec.disabledFor or nil
+
+--- Register one section of the Containers page.
+--- @param key string    the section's page key: the `page` its schema rows carry
+--- @param label string  the rail entry's label
+--- @param spec table    Helpers.RenderPage's page spec, plus `style` (listed on the rail only for a
+---                      container drawn in that style) and `tooltip` (the rail entry's)
+function NS.RegisterContainerSection(key, label, spec)
+    spec = spec or {}
+    local style = spec.style
+    sections[key] = { key = key, label = label, spec = spec, style = style, tooltip = spec.tooltip }
+    NS.ContainerPageDisabledFor[key] = style and function(c) return c.style ~= style end or nil
 end
+
+--- The registered section `key`, or nil. Read-only: for the suite and the Containers page.
+function NS.ContainerSection(key) return sections[key] end
 
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
@@ -289,7 +314,7 @@ if not lib then
     NS.CreateOptionsPanel  = function() sayMissing() end
     NS.OpenOptionsPanel    = function() sayMissing() end
     NS.OpenOptionsPage     = function() sayMissing() end
-    NS.RegisterContainerPage = function(pageKey, _, _, spec) recordContainerPage(pageKey, spec) end
+    NS.RegisterContainerPage = function(pageKey, title, _, spec) NS.RegisterContainerSection(pageKey, title, spec) end
     return
 end
 
@@ -533,7 +558,7 @@ Helpers.__pageCtx = {}
 --- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
 --- tree entry only, never the page's own name.
 function NS.RegisterContainerPage(pageKey, title, frameName, spec)
-    recordContainerPage(pageKey, spec)
+    NS.RegisterContainerSection(pageKey, title, spec)
     NS.RegisterOptionsPage(pageKey, title, function(mainCategory)
         if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
         local ctx = Helpers.CreatePanel(frameName, title, {

@@ -746,6 +746,7 @@ local function renderOverrides(ctx, cfg)
 end
 
 NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
+    tooltip = L["Which auras this container shows, and in what order."],
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
     pairWith = {
         ["container.filter.maxDuration"] = maxDurationPresets,
