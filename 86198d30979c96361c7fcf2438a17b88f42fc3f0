@@ -1,0 +1,1 @@
+clean: docs match the shipped code (ENGINE_LEAD/EngineOffset/EnginePadding/engineLead), side-join entry untouched, smoke checks 267-270 owner-run only; gate green 1649/0
