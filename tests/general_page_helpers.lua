@@ -213,7 +213,7 @@ end
 --- The color `id`'s mark was tinted, as a comparable string, or nil when it drew no mark.
 ---
 --- COMPARED, NEVER SPELLED OUT. The library owns the numbers (ID_HELP_TINT and ID_HELP_DIM,
---- libs/LibKa0s/OptionsWidgets.lua:1956-1958, and the severity tints beside them), and a case that
+--- libs/LibKa0s/OptionsWidgets.lua:1991-1993, and the severity tints beside them), and a case that
 --- restated them here would go red on a palette change that broke nothing. What the page promises
 --- is that the three severities do not LOOK alike, so that is what is asserted.
 local function entryHelpTint(ws, id)

@@ -259,7 +259,7 @@ end
 --- AN ID THE CLIENT CANNOT NAME HAS NO NAME TO SORT ON, and the answer is chosen rather than
 --- accidental: it sorts AFTER every named id, and ties there break on the id ascending. Two reasons.
 --- The library draws such an entry as "Unknown spell 12345" (`entryLabel`,
---- `OptionsWidgets.lua:2626-2637`), so it carries no name for a reader to look for and belongs at
+--- `OptionsWidgets.lua:2792-2803`), so it carries no name for a reader to look for and belongs at
 --- the end rather than wedged between two real names; and the id tiebreak makes the whole
 --- comparison a total order over the set, so the sort is deterministic whatever order `pairs`
 --- hands the ids in. A nil name never reaches the comparison — it is resolved once, up front,
@@ -267,7 +267,7 @@ end
 ---
 --- The list does NOT reorder itself a moment later. O.IdList's re-ask-and-redraw (five asks, 0.4 s
 --- a window) is the ITEM path: `loadEntry` returns at once unless the kind declares `loads = true`,
---- which only "item" does (`OptionsWidgets.lua:2674-2679`, and the candidate rule at `:744`). A
+--- which only "item" does (`OptionsWidgets.lua:2840-2845`, and the candidate rule at `:744`). A
 --- spell's name is client data with no load step, so an id that is unnamed at this draw is an id
 --- the client does not know at all, and it stays unnamed and last until a re-render — no visible
 --- settling, and nothing here to mistake for a bug.
@@ -420,7 +420,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
 -- things everywhere a player meets them: the container's own Aura type dropdown
 -- (settings/Containers.lua:79), the gray summary behind every container in the picker
--- (settings/OptionsSetup.lua:411) and the `/am list` line (settings/Slash.lua:180) -- those three
+-- (settings/OptionsSetup.lua:373) and the `/am list` line (settings/Slash.lua:180) -- those three
 -- are its readers, and the Filters page is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
@@ -457,7 +457,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- are not the subject of the row, so each is a dimmed version of its hue rather than the saturated
 -- one a status light would use. The panel already has a register for chrome of this kind -- the
 -- drag handle's gold label at (1, 0.82, 0) and its help mark at (0.7, 0.7, 0.72),
--- libs/LibKa0s/WidgetsDragHandle.lua:133 and :153 -- and these three sit inside it:
+-- libs/LibKa0s/WidgetsDragHandle.lua:492 and :168 -- and these three sit inside it:
 --
 --     Buffs    (0.45, 0.75, 0.50) = 73bf80   muted green
 --     Debuffs  (0.80, 0.45, 0.45) = cc7373   muted red
@@ -598,7 +598,7 @@ end
 -- precisely the half that must survive. So it is not inherited: justify LEFT explicitly, and the
 -- closed box clips like the pullout rows do, tail first, marker last.
 --
--- Both calls are capability-guarded (the same shape as modules/Style.lua:824): the headless widget
+-- Both calls are capability-guarded (the same shape as modules/Style.lua:899): the headless widget
 -- kit is a data recorder with neither method, and it is not ours to extend.
 local CATEGORY_PULLOUT_WIDTH = 320
 
@@ -1165,7 +1165,7 @@ end
 --- The list entry's suffix for `id`, or nil: HOW MANY other categories claim it, in a few gray
 --- words the library draws INSIDE the entry's own label, after the id -- `(X) [icon] Renewing Mist
 --- (119611) (also in 1)` (owner, 2026-09-21; LibKa0s v1.49.0's `entry.suffix`, OptionsWidgets minor
---- 25, `libs/LibKa0s/OptionsWidgets.lua:2603-2637`). It replaces the `note` this used to be: a note
+--- 25, `libs/LibKa0s/OptionsWidgets.lua:2756-2803`). It replaces the `note` this used to be: a note
 --- is a second full-width Label that took the entry out of the two-column grid for the row it landed
 --- on, and the library's own guidance is a sentence in a `note`, a few words in a `suffix`, and the
 --- full story in the TOOLTIP -- which is where the NAMES now are (`overlapLine`).
@@ -1197,7 +1197,7 @@ end
 ---
 --- A host kind with `base = "spell"` is the only hook there is: `O.IdList` builds an entry's tooltip
 --- from the kind's `tooltip` and from nothing else (`entryTooltip`,
---- `libs/LibKa0s/OptionsWidgets.lua:2690-2702`), and a based kind takes the base's `info`, `link`,
+--- `libs/LibKa0s/OptionsWidgets.lua:2874-2886`), and a based kind takes the base's `info`, `link`,
 --- `noun`, `plural` and name color, so the list draws exactly as it did.
 ---
 --- `resolve` DELEGATES back to the library. A based kind does not inherit the client's name lookup
@@ -1346,7 +1346,7 @@ local function renderSpells(ctx)
     --
     -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
     -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:45-83`, and the scalar list at
-    -- `:594-598`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
+    -- `:565-571`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
     -- Matching the number is the honest way to match the look; if the library ever republishes it,
     -- this is the line that takes it.
     local gridScroll = H.EnsureScroll(ctx)
@@ -1358,8 +1358,8 @@ local function renderSpells(ctx)
         -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
         -- long for a 60-id category -- Hard CC alone is most of a screen of scrolling before the
         -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
-        -- `libs/LibKa0s/OptionsWidgets.lua:2899-2906`): the count is floored and clamped into
-        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:1918`), so two is the whole of what it
+        -- `libs/LibKa0s/OptionsWidgets.lua:3344-3354`): the count is floored and clamped into
+        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:1953`), so two is the whole of what it
         -- offers rather than a taste. Each entry's relative width is divided by the count, so a
         -- pair still sums to the width one entry held alone. Row-major is the library's packing
         -- order, which is why the by-name sort above reads left-to-right then down, not down one

@@ -20,8 +20,8 @@ Example: a bar option.
 4. **The behavior.** Read the key in `modules/Style_Bars.lua` (`Bars.Apply` for the look,
    `Bars.Bind` for an engine binding), and paint it on the placeholder too (`Bars.FillPreview`).
    Nothing else: the write seam already sends `CONFIG_CHANGED`, which re-applies that container and
-   restyles its buttons once auras are readable. `tests/test_render_coverage.lua` fails a Bars or
-   Icons row that reaches no drawn region on a live button and on a placeholder. A row that
+   restyles its buttons once auras are readable. `tests/test_render_coverage.lua` fails a Bars, Icons or
+   Text row that reaches no drawn region on a live button and on a placeholder. A row that
    honestly acts on only one of the two declares `coverage = "engine-only"` or `"preview-only"`,
    with a comment saying why.
 5. **Structural?** If the row changes which rows other pages offer, give it
@@ -238,7 +238,7 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 7, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
+2. Append `{ to = 12, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
    `core/Database.lua:1176`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and

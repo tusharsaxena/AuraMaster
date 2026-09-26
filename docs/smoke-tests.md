@@ -23,7 +23,7 @@ suite covers what only the client can show.
 5. `/am` → Settings opens at **Ka0s Aura Master**, the page `/am config` opens; no chat line.
    `/am` followed by only spaces, and `/auramaster` → the same. In combat, `/am` → the gray
    "cannot open settings during combat" line `/am config` prints.
-6. `/am help` → the version line and the 21-command list; each row is a gold `/am verb`, an em dash
+6. `/am help` → the version line and the 23-command list; each row is a gold `/am verb`, an em dash
    and a white description.
 7. `/am wibble` → the unknown-command line, then the help block.
 8. `/am options` → opens the settings (alias of `config`).
