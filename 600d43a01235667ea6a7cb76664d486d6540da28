@@ -1,0 +1,1 @@
+clean: SR-AM-03 matches the plan's code verbatim; gate re-run green (1647/0/0, luacheck 0/0, lizard clean, CRLF); all 8 rail: cases fail with the runtime reverted, and targeted mutations (no stash, no heal, rail before banner, inverted style filter) each turn their own case red
