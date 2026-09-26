@@ -262,7 +262,7 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
             { key = "buffsOnly", label = "Buffs only", auraTypes = { HELPFUL = true }, render = function() end },
         },
     }
-    NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
+    NS2.Helpers.RenderPage(ctx, "bars", spec, NS2.Helpers.ContainerBanner)
     local keys = {}
     for _, t in ipairs(P.drawnTabs(ctx)) do keys[t.key] = true end
     assertTrue(keys.extra)
@@ -280,7 +280,7 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
         onSelect = s.onSelect
         return strip(c, s, ...)
     end
-    NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
+    NS2.Helpers.RenderPage(ctx, "bars", spec, NS2.Helpers.ContainerBanner)
     local renders = table.concat(intro, ",")
     onSelect("extra")
     -- red under: the strip's onSelect without its `key == ctx.activeTab` guard (it re-renders)
@@ -302,7 +302,7 @@ test("options descriptor: with no containers a page draws the one empty-registry
         rows[#rows + 1] = text
         return textRow(c, text, ...)
     end
-    NS2.Helpers.RenderContainerPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end })
+    NS2.Helpers.RenderPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end }, NS2.Helpers.ContainerBanner)
     -- red under: RenderPage handing the library an intro chrome with a nil cfg
     assertEqual(introduced[1], 0)
     assertEqual(table.concat(rows, "|"), "No containers yet. Create one on Containers, or type /am new.")
@@ -319,30 +319,30 @@ test("options descriptor: a page disabled for its container hands the disable to
             seen[#seen + 1] = c.__renderDisabled
         end } } }
     ctx.activeTab = "extra"
-    NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
+    NS2.Helpers.RenderPage(ctx, "bars", spec, NS2.Helpers.ContainerBanner)
     -- red under: RenderPage dropping disabledFor (a page tab rendered outside the page's disable)
     assertTrue(seen[1] == true)
     -- red under: the flag left on the ctx (every later render of the page drawn disabled)
     assertNil(ctx.__renderDisabled)
     spec.tabs[1].render = function() error("boom") end
-    assertFalse(pcall(NS2.Helpers.RenderContainerPage, ctx, "bars", spec), "the raise still surfaces")
+    assertFalse(pcall(NS2.Helpers.RenderPage, ctx, "bars", spec, NS2.Helpers.ContainerBanner), "the raise still surfaces")
     -- red under: the flag restored only on the way out of a render that returned
     assertNil(ctx.__renderDisabled, "even when the tab raises")
 end)
 
-test("options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it", function()
+test("options descriptor: RenderPage draws no banner; a banner hook draws the container band first", function()
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    assertTrue(P.banner(NS2.Helpers.__pageCtx.bars) ~= nil, "a container page draws the banner")
+    NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
+    assertTrue(P.banner(NS2.Helpers.__pageCtx.containers) ~= nil, "the Containers page draws the band")
     local ctx = NS2.Helpers.__pageCtx.general
     local strips = counter(NS2.Helpers, "TabStrip")
     NS2.Helpers.RenderPage(ctx, "general", { addonWide = true })
     -- red under: RenderPage drawing the container banner (General would grow one, against D1)
     assertNil(P.banner(ctx))
     assertEqual(strips[1], 1, "the strip is still drawn")
-    NS2.Helpers.RenderContainerPage(ctx, "general", { addonWide = true })
-    assertTrue(P.banner(ctx) ~= nil, "and the container page draws it")
+    NS2.Helpers.RenderPage(ctx, "general", { addonWide = true }, NS2.Helpers.ContainerBanner)
+    assertTrue(P.banner(ctx) ~= nil, "and a banner hook draws it")
 end)
 
 test("options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place", function()

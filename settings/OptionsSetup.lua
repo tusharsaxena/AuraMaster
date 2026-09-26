@@ -228,6 +228,11 @@ local descriptor = {
 -- style gates below.
 local sections = {}
 
+-- The rail's order: General first (options-ui-§14: the page opens on it), then Filters, Layout and
+-- the one style section the container is drawn in. Not the TOC's order: the page files load in any.
+local GENERAL_SECTION = "containers"
+local SECTION_ORDER = { GENERAL_SECTION, "filters", "layout", "bars", "icons", "text" }
+
 -- Each style section's gate, by page key: modules/Diagnostics.lua reads it to tell a stored value the
 -- container's style leaves unused from one in use (B9 DX-2). Derived from the section's `style` --
 -- the same fact that decides whether the rail lists it -- so the two cannot disagree.
@@ -511,9 +516,9 @@ end
 --- first (the strip reserves its band under it), then the strip over the page's schema groups and
 --- its own tabs, then the active tab's content. The library owns the partition, the stale-tab heal,
 --- the tab-switch re-render, the disabled notice and the release of the banner's widgets; this
---- wrapper owns only what the page spec means for this addon. General and Containers call it
---- directly; every per-container page through RenderContainerPage, which passes the container
---- banner. A per-container page with no container draws the empty registry's one tab and line.
+--- wrapper owns only what the page spec means for this addon. General calls it directly; the
+--- sub-pages with Helpers.ContainerBanner as `banner`, and the Containers page through
+--- RenderContainerPage. A per-container page with no container draws the empty registry's one tab and line.
 ---
 --- `spec` fields, all optional:
 ---   addonWide            the page's tabs do not depend on a container existing (General)
@@ -541,9 +546,82 @@ function Helpers.RenderPage(ctx, pageKey, spec, banner)
     if scroll and scroll.DoLayout then scroll:DoLayout() end
 end
 
---- Render one per-container page: the container banner (options-ui-§14), then the tabbed page.
-function Helpers.RenderContainerPage(ctx, pageKey, spec)
-    Helpers.RenderPage(ctx, pageKey, spec, Helpers.ContainerBanner)
+-- ---------------------------------------------------------------------------
+-- The Containers page: the band, the nav rail, and the selected section's tabs (#6)
+-- ---------------------------------------------------------------------------
+--
+-- The rail lists General, Filters, Layout and the ONE style section the selected container is drawn
+-- in; each section renders through Helpers.RenderPage with its own page key and spec, so every row,
+-- default and slash path is the sub-page's it replaced. The section, and each section's tab, are
+-- session state on the ctx and never persisted (options-ui-§13).
+
+--- The sections the rail lists for container `cfg`, in rail order. General always (it is where a
+--- container is made); the rest only with a container, and a style section only for its own style.
+local function railSections(cfg)
+    local out = {}
+    for _, key in ipairs(SECTION_ORDER) do
+        local s = sections[key]
+        if s and (key == GENERAL_SECTION or (cfg and (s.style == nil or s.style == cfg.style))) then
+            out[#out + 1] = s
+        end
+    end
+    return out
+end
+
+--- The section to draw: the one the page holds while the rail still lists it; else, when it held a
+--- style section, the container's own style section (a Style change renames the entry, spec §3);
+--- else the first.
+local function settleSection(ctx, list)
+    local held = sections[ctx.activeSection]
+    local fallback = list[1]
+    for _, s in ipairs(list) do
+        if s.key == ctx.activeSection then return s end
+        if held and held.style and s.style then fallback = s end
+    end
+    return fallback
+end
+
+--- Keep the tab the page is on for the section it last drew. Called before ANYTHING moves the
+--- section: a strip click is the library's alone (O.RenderTabbedSchema re-renders the strip and the
+--- body without calling back here), so just before leaving is the one moment the host sees the tab.
+local function stashTab(ctx)
+    local drawn = ctx.__renderedSection
+    if drawn then ctx.sectionTabs[drawn] = ctx.activeTab end
+    ctx.__renderedSection = nil
+end
+
+--- Bind the Containers page's ctx (settings/Containers.lua's builder). The page opens on General.
+function Helpers.__bindContainersPage(ctx)
+    ctx.sectionTabs = {}
+    ctx.activeSection = GENERAL_SECTION
+    Helpers.__pageCtx[GENERAL_SECTION] = ctx
+end
+
+--- Render the Containers page: the container band (`band` = ContainerBanner's { tooltip, action }),
+--- then the nav rail, then the selected section's strip and tab -- the library's draw order,
+--- PageBanner, NavRail, TabStrip (options-ui-§13, §14).
+function Helpers.RenderContainerPage(ctx, band)
+    ctx.sectionTabs = ctx.sectionTabs or {}
+    stashTab(ctx)
+    local list = railSections(NS.ActiveContainer())
+    local section = settleSection(ctx, list)
+    ctx.activeSection = section.key
+    ctx.activeTab = ctx.sectionTabs[section.key]
+    local entries = {}
+    for i, s in ipairs(list) do entries[i] = { key = s.key, label = s.label, tooltip = s.tooltip } end
+    Helpers.RenderPage(ctx, section.key, section.spec, function(c)
+        Helpers.ContainerBanner(c, band)
+        Helpers.NavRail(c, {
+            entries  = entries,
+            value    = section.key,
+            onSelect = function(key)
+                stashTab(c)
+                c.activeSection = key
+                Helpers.RefreshPanel(c, true)
+            end,
+        })
+    end)
+    ctx.__renderedSection = section.key
 end
 
 -- Test seam: the ctx each tabbed page built, by page key. The library keeps its registry private,
@@ -567,7 +645,7 @@ function NS.RegisterContainerPage(pageKey, title, frameName, spec)
             defaultsTooltip = L["Restore every setting on this page, for the selected container, to its default."],
         })
         ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
-        Helpers.SetRenderer(ctx, function(c) Helpers.RenderContainerPage(c, pageKey, spec) end)
+        Helpers.SetRenderer(ctx, function(c) Helpers.RenderPage(c, pageKey, spec, Helpers.ContainerBanner) end)
         Helpers.__pageCtx[pageKey] = ctx
         -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
         -- whatever this builder returns (N-3) — no need to set it here too.

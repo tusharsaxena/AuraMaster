@@ -1395,7 +1395,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
 - options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
-- options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it
+- options descriptor: RenderPage draws no banner; a banner hook draws the container band first
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
@@ -1684,10 +1684,18 @@ badge and any count quoted in the docs must agree with it.
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
-### test_pages_rail.lua (2)
+### test_pages_rail.lua (10)
 
 - sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
+- rail: Containers draws General, Filters, Layout and the selected container's own style, in that order
+- rail: the page opens on General, today's one General tab under the band, beside a 120px rail
+- rail: the draw order is PageBanner, NavRail, TabStrip
+- rail: a rail click draws that section's strip and rows under the same band
+- rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke 5)
+- rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke 4)
+- rail: choosing a container of another style in the band moves Bars to Icons
+- rail: with no containers the rail lists General alone, which says how to make one
 
 ### test_pages_about.lua (3)
 
@@ -1928,7 +1936,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
 | test_pages_tabs.lua | 7 |
-| test_pages_rail.lua | 2 |
+| test_pages_rail.lua | 10 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1945,4 +1953,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1639** |
+| **Total** | **1647** |

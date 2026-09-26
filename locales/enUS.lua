@@ -649,6 +649,7 @@ L["Not in use: this container is drawn as text. Set its Style to Bars on the Con
 L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."] = "Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."
 L["Draw each aura as a bar, an icon or a line of text. Bars, Icons and Text each have their own settings page."] = "Draw each aura as a bar, an icon or a line of text. Bars, Icons and Text each have their own settings page."
 L["Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."] = "Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."
+L["Name this container, choose what it shows and how it is drawn, and duplicate, delete or copy settings onto it."] = "Name this container, choose what it shows and how it is drawn, and duplicate, delete or copy settings onto it."
 L["Create a container — /am new [player|target|focus|pet] [buffs|debuffs|enchants] [bars|icons|text]"] = "Create a container — /am new [player|target|focus|pet] [buffs|debuffs|enchants] [bars|icons|text]"
 L["Text style"] = "Text style"
 L["Animation"] = "Animation"

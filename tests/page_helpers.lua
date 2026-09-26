@@ -23,6 +23,21 @@ return function(NS, m)
         return strip(ctx, spec, ...)
     end
 
+    -- The rail each page's last render drew, recorded off the library's NavRail as it is called,
+    -- the way `drawn` records the strip. Weak-keyed, like it.
+    local rails = setmetatable({}, { __mode = "k" })
+    local navRail = NS.Helpers.NavRail
+    NS.Helpers.NavRail = function(ctx, spec, ...)
+        if type(ctx) == "table" and type(spec) == "table" then rails[ctx] = spec end
+        return navRail(ctx, spec, ...)
+    end
+
+    --- The rail `ctx`'s last render drew: `{ entries = { { key, label, tooltip } }, value }`.
+    function P.drawnRail(ctx)
+        local spec = rails[ctx] or {}
+        return { entries = spec.entries or {}, value = spec.value }
+    end
+
     --- The tabs `ctx`'s last render drew, as `{ key, label }` in strip order (empty when none).
     function P.drawnTabs(ctx)
         local out = {}
@@ -171,6 +186,22 @@ return function(NS, m)
         local out = {}
         for i, t in ipairs(P.drawnTabs(NS.Helpers.__pageCtx[pageKey])) do out[i] = t.key end
         return out
+    end
+
+    --- Click the rail entry `key` on the Containers page and answer what the render it asks for drew.
+    --- A kit panel is hidden, so the click marks the page owed a render and the show draws it. The
+    --- button is the library's rail ledger (`ctx.__railKids`, in rail order).
+    function P.rail(key)
+        local ctx = NS.Helpers.__pageCtx.containers
+        for i, e in ipairs(P.drawnRail(ctx).entries) do
+            if e.key == key then
+                return P.during(function()
+                    ctx.__railKids[i]:__fire("OnClick")
+                    ctx.panel:__fire("OnShow")
+                end)
+            end
+        end
+        error("the rail drew no entry " .. tostring(key), 2)
     end
 
     --- The live AceGUI widget of `wtype` whose frame the library's chrome ledger

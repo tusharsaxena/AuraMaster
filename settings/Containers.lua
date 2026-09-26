@@ -235,12 +235,14 @@ NS.Containers = { GROUP = GROUP, rows = ROWS, render = render }
 -- The page
 -- ---------------------------------------------------------------------------
 
-local PAGE_SPEC = {
-    -- Every tab draws whether or not a container exists (the render above handles the empty case
-    -- itself, same as General).
+-- The page's General section (#6): this file's one tab, now the first entry on the Containers
+-- page's nav rail. Every tab draws whether or not a container exists (the render above handles the
+-- empty case itself), which is why it is the rail's one entry when there is none.
+NS.RegisterContainerSection(PAGE, L["General"], {
     addonWide = true,
+    tooltip   = L["Name this container, choose what it shows and how it is drawn, and duplicate, delete or copy settings onto it."],
     tabs      = { { key = GROUP, label = GROUP, render = render } },
-}
+})
 
 -- The band above the strip (options-ui-§14): the container picker every per-container page shares,
 -- with this page's own tooltip, and New container beside it as O.PageBanner's `action` -- the
@@ -255,11 +257,6 @@ local BAND = {
         onClick = doNew,
     },
 }
-local function banner(ctx) H.ContainerBanner(ctx, BAND) end
-
-local function renderPage(ctx)
-    H.RenderPage(ctx, PAGE, PAGE_SPEC, banner)
-end
 
 local function build(mainCategory)
     if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
@@ -269,9 +266,9 @@ local function build(mainCategory)
         defaultsTooltip = L["Restore the selected container's Enabled, Unit, Aura type and Style to its addon default. Its name is kept."],
     })
     ctx.panel.defaultsOnClick = function() H.RestoreDefaults(PAGE, ctx) end
-    H.__pageCtx[PAGE] = ctx
+    H.__bindContainersPage(ctx)
     -- Through SetRenderer, which owns WHEN the page draws and refuses under combat (options-ui-§11).
-    H.SetRenderer(ctx, renderPage)
+    H.SetRenderer(ctx, function(c) H.RenderContainerPage(c, BAND) end)
     return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, L["Containers"])
 end
 
