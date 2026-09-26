@@ -708,7 +708,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
                 -- list moved them there (LibKa0s v1.51.0; modules/CastAura.lua's CA.Help): a note
                 -- is a full-width second line, so the library gives a noted entry a row of ITS
                 -- OWN whatever the column count (`entryNoted`,
-                -- libs/LibKa0s/OptionsWidgets.lua:3167-3174) -- and this list asks for two
+                -- libs/LibKa0s/OptionsWidgets.lua:3340-3342) -- and this list asks for two
                 -- columns, so every entry with a verdict punched a hole through the grid the
                 -- `columns` note above bought. The mark costs a fixed 18px and leaves every row
                 -- the same shape. The SENTENCES are unchanged: each was already a whole statement

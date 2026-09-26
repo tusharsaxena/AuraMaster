@@ -1,6 +1,11 @@
 -- tests/test_diagnostics.lua — modules/Diagnostics.lua: `/am diagnostics` and `/am debug diagnostics`,
 -- the one-shot diagnostic report written to the debug console (batch 8 DG-1..DG-4, docs/debug.md). Driven through the real
--- slash dispatcher where the verb matters, and through NS.Diagnostics.Build where only the lines do.
+-- slash dispatcher where the verb matters, and through NS.DebugLog:BuildDiagnostics where only the lines do.
+--
+-- The report's frame (markers, identity header, cap, per-section pcall, the append) is LibKa0s's
+-- diagnostics helper since DR-AM-02 (debug-logging-§14); this addon writes the sections. The
+-- dispatcher half of the rule is the kit's shared case, tests/_kit/test_diagnostics_contract.lua,
+-- wired in tests/run.lua. The cases here are the sections, and the seams between them and the helper.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse =
@@ -38,9 +43,9 @@ local function aura(inst, id, name, extra)
     return a
 end
 
---- The report's lines as "[Tag] msg", straight from the builder.
+--- The report's lines as "[Tag] msg", straight from the library's builder (it writes nothing).
 local function build(NS)
-    local out = NS.Diagnostics.Build()
+    local out = NS.DebugLog:BuildDiagnostics()
     local lines = {}
     for i, l in ipairs(out.lines) do lines[i] = "[" .. l[1] .. "] " .. l[2] end
     return lines
@@ -88,9 +93,10 @@ for _, form in ipairs(FORMS) do
         local total = #rep
         -- red under: routing through the gated NS.Debug (the flag is off, so nothing would land)
         assertTrue(total > 5, "the report did not reach the buffer")
-        assertTrue(rep[1]:find("[Diag] ==== Aura Master diagnostic begin ====", 1, true) ~= nil, rep[1])
+        -- red under: the short brand, or the end marker that named no addon (STD-08)
+        assertTrue(rep[1]:find("[Diag] ==== Ka0s Aura Master diagnostics begin ====", 1, true) ~= nil, rep[1])
         local last = rep[total]
-        local n = last:match("==== end: (%d+) line%(s%) ====")
+        local n = last:match("==== Ka0s Aura Master diagnostics end: (%d+) line%(s%) ====")
         assertTrue(n ~= nil, "no end marker: " .. last)
         assertEqual(tonumber(n), total, "the end marker counts every line of the report")
         assertTrue(NS.DebugLog:IsShown(), "the console was not revealed")
@@ -117,10 +123,10 @@ test("diag: /am debug diag no longer runs the report; it falls through to the wi
     assertFalse(NS.DebugLog:IsShown())
     -- red under: a `diag` alias kept in runDebug (the owner dropped it, 2026-09-25)
     local rep = reportFrom(NS, "debug diag")
-    assertTrue(has(rep, "diagnostic begin") == nil, dump(rep))
+    assertTrue(has(rep, "diagnostics begin") == nil, dump(rep))
     assertTrue(NS.DebugLog:IsShown(), "an unknown debug word toggles the window, as before")
     rep = reportFrom(NS, "debug DIAG")
-    assertTrue(has(rep, "diagnostic begin") == nil, dump(rep))
+    assertTrue(has(rep, "diagnostics begin") == nil, dump(rep))
     assertFalse(NS.DebugLog:IsShown())
 end)
 
@@ -137,26 +143,69 @@ test("diag: bare /am debug and /am debug on|off keep their meaning; the forms ar
     NS.Slash:OnSlash("debug off")
     assertFalse(NS.State.debug)
     local rep = reportFrom(NS, "debug DIAGNOSTICS")
-    assertTrue(has(rep, "diagnostic begin") ~= nil, "DEBUG DIAGNOSTICS did not run the report")
+    assertTrue(has(rep, "diagnostics begin") ~= nil, "DEBUG DIAGNOSTICS did not run the report")
     rep = reportFrom(NS, "DIAGNOSTICS")
-    assertTrue(has(rep, "diagnostic begin") ~= nil, "DIAGNOSTICS did not run the report")
+    assertTrue(has(rep, "diagnostics begin") ~= nil, "DIAGNOSTICS did not run the report")
 end)
 
-test("diag: without LibKa0s it prints the unavailable line and raises nothing", function()
-    local NS2, mocks2 = loadDegraded()
-    local chat = capture(mocks2)
-    assertEqual(NS2.Diagnostics.Run(), 0)
-    assertTrue(has(chat, "so the diagnostic report is unavailable.") ~= nil, dump(chat))
+test("diag: without LibKa0s both forms print the unavailable line and raise nothing", function()
+    for _, form in ipairs(FORMS) do
+        local NS2, mocks2 = loadDegraded()
+        local chat = capture(mocks2)
+        -- red under: a dispatcher still calling the retired NS.Diagnostics.Run
+        NS2.Slash:OnSlash(form)
+        -- The first slash also prints the once-per-session library-missing notice; the report owes one.
+        assertEqual(count(chat, "/am diagnostics is unavailable: the LibKa0s library did not load."), 1,
+            form .. ": " .. dump(chat))
+        assertEqual(count(chat, "Diagnostic report written"), 0, form .. ": " .. dump(chat))
+    end
+end)
+
+-- ── the helper owns the frame (DR-AM-02, debug-logging-§14) ───────────────────────────────────
+
+test("diag: the module writes sections only; the buffer, markers, cap and Run are the library's", function()
+    local NS = fresh()
+    local Diag = NS.Diagnostics
+    -- red under: the hand-rolled plumbing kept beside the helper (anti-patterns #47, #90)
+    for _, gone in ipairs({ "Build", "Run", "MAX_LINES" }) do
+        assertTrue(Diag[gone] == nil, "NS.Diagnostics." .. gone .. " is still defined")
+    end
+    local names = {}
+    for i, s in ipairs(Diag.Sections()) do
+        assertEqual(type(s[2]), "function", tostring(s[1]))
+        names[i] = s[1]
+    end
+    assertEqual(table.concat(names, ","), "state,profile config,auras,containers")
+end)
+
+test("diag: the library's identity header leads, then the addon's state", function()
+    local NS, mocks = fresh()
+    mocks.GetBuildInfo = function() return "12.0.1", "65000", "Sep 1 2026", 120001 end
+    local lines = build(NS)
+    assertEqual(lines[1], "[Diag] ==== Ka0s Aura Master diagnostics begin ====")
+    -- the host's initSummary, then the client, locale, flag, combat and running minors
+    assertTrue(lines[2]:find("[Diag] AuraMaster v", 1, true) == 1, lines[2])
+    assertTrue(has(lines, "[Diag] client: version=12.0.1 build=65000") ~= nil, dump(lines))
+    local state = has(lines, "[Diag] state: ")
+    assertTrue(state ~= nil and state:find("holds=", 1, true) ~= nil, dump(lines))
+    assertTrue(has(lines, "[Diag] combat: InCombatLockdown=") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Diag] LibKa0s running:") ~= nil, dump(lines))
+    local total = #lines
+    assertEqual(lines[total], "[Diag] ==== Ka0s Aura Master diagnostics end: " .. total .. " line(s) ====")
 end)
 
 -- ── the header and the auras (DG-2, DG-3) ─────────────────────────────────────────────────────
 
-test("diag: the header names version, schema, profile, state and the apply queue", function()
+test("diag: the header names version, schema, profile, state, holds and the apply queue", function()
     local NS = fresh()
     local lines = build(NS)
-    local head = has(lines, "[Diag] Aura Master v")
+    local head = has(lines, "[Diag] AuraMaster v")
     assertTrue(head ~= nil and head:find("schema v", 1, true) ~= nil, dump(lines))
-    assertTrue(has(lines, "state: enabled=true") ~= nil, dump(lines))
+    local state = has(lines, "state: enabled=true")
+    assertTrue(state ~= nil, dump(lines))
+    -- The combat reads are the library header's, pcall'd there (deviation g): not repeated unguarded.
+    assertTrue(state:find("combat=", 1, true) == nil and state:find("lockdown=", 1, true) == nil, state)
+    assertTrue(state:find("holds=-", 1, true) ~= nil, state)
     assertTrue(has(lines, "apply queue: all=false ids=[]") ~= nil, dump(lines))
 end)
 
@@ -535,7 +584,7 @@ test("diag: a failing section is reported and the next container still reports",
     local lines = build(NS)
     assertTrue(has(lines, "section") ~= nil and has(lines, "failed") ~= nil, dump(lines))
     assertTrue(has(lines, "[Filt] #2 castBy=") ~= nil, dump(lines))
-    assertTrue(has(lines, "==== end:") ~= nil, dump(lines))
+    assertTrue(has(lines, "diagnostics end:") ~= nil, dump(lines))
 end)
 
 test("diag: the report is capped below the console buffer and says it was truncated", function()
@@ -545,16 +594,18 @@ test("diag: the report is capped below the console buffer and says it was trunca
     for i = 1, 150 do many[i] = aura(i, 774, "Rejuvenation") end
     withAuras(mocks, { ["player:HELPFUL"] = many, ["player:HARMFUL"] = many })
     local lines = build(NS)
-    local max = NS.Diagnostics.MAX_LINES
-    assertTrue(max <= 1200, "cap above 1200")
+    -- The cap is the library's (LIB-06), never a literal of this addon's: red under a local cap.
+    local lib = mocks.LibStub("LibKa0s-DebugLog-1.0")
+    local max = math.min(lib.DIAG_MAX_LINES, lib.MAX_BUFFER - 100)
     local total = #lines
-    assertTrue(total <= max, "the report ran to " .. total .. " lines")
-    assertTrue(has(lines, "[Diag] truncated:") ~= nil, "no truncated line")
+    assertEqual(total, max, "a capped report fills the cap exactly, markers included")
+    assertTrue(lines[total - 1]:find("[Diag] truncated:", 1, true) == 1, lines[total - 1])
+    assertTrue(lines[total]:find("diagnostics end: " .. total .. " line(s)", 1, true) ~= nil, lines[total])
     assertEqual(count(lines, "[Aura] player+"), NS.Diagnostics.MAX_AURAS, "per-unit aura cap")
     local before = #NS.DebugLog.buffer
-    NS.Diagnostics.Run()
+    NS.DebugLog:RunDiagnostics()
     local copy = NS.DebugLog:CopyText()
-    assertTrue(copy:find("diagnostic begin", 1, true) ~= nil, "the begin marker was evicted")
+    assertTrue(copy:find("diagnostics begin", 1, true) ~= nil, "the begin marker was evicted")
     assertTrue(#NS.DebugLog.buffer - before <= max, "more lines reached the console than the cap")
 end)
 
@@ -567,6 +618,20 @@ test("diag: predictions stop at the id cap and the report says it was truncated"
     assertEqual(count(lines, "[Shown] #1 predicted:"), NS.Diagnostics.MAX_IDS, "prediction cap")
     -- red under: predictions dropping the auras past MAX_IDS without flagging the cap
     assertTrue(has(lines, "[Diag] truncated:") ~= nil, "no truncated line: " .. dump(lines))
+end)
+
+test("diag: a report's aura reads are its own, even when a spec passes the sections", function()
+    local NS, mocks = fresh()
+    local spec = { sections = { { "auras", NS.Diagnostics.Auras } } }
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(1, 1459, "Arcane Intellect") } })
+    NS.DebugLog:BuildDiagnostics(spec)
+    withAuras(mocks, { ["player:HELPFUL"] = { aura(2, 774, "Rejuvenation") } })
+    local lines = {}
+    for i, l in ipairs(NS.DebugLog:BuildDiagnostics(spec).lines) do lines[i] = "[" .. l[1] .. "] " .. l[2] end
+    -- red under: a module-level cache that only Diag.Sections() resets, so a report built from a
+    -- spec's sections prints the auras an earlier report read
+    assertTrue(has(lines, "Rejuvenation") ~= nil, dump(lines))
+    assertTrue(has(lines, "Arcane Intellect") == nil, dump(lines))
 end)
 
 test("diag: QueueSnapshot hands out copies, never the live queue", function()

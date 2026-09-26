@@ -56,7 +56,7 @@ path, never to a number restated in `modules/`.
 | `enabled` | `true` | bool |
 | `unit` | `"player"` | `player`, `target`, `focus`, `pet` |
 | `auraType` | `"HELPFUL"` | `HELPFUL`, `HARMFUL` (`ENCHANT` retired by schema v5) |
-| `style` | `"bars"` | `bars`, `icons` |
+| `style` | `"bars"` | `bars`, `icons`, `text` |
 
 ### `filter`
 
@@ -443,9 +443,9 @@ A few row fields are this addon's own, beyond the library's row shape. Each has 
 - `userCategory`: the row belongs to a category the player made, so `NS.UnregisterSchemaRows` can
   find again exactly the rows `Cat.SyncUserCategories` owns. A shipped row carries the field as nil,
   never false.
-- `coverage = "engine-only" | "preview-only"`: exempts a Bars or Icons row from one half of
+- `coverage = "engine-only" | "preview-only"`: exempts a Bars, Icons or Text row from one half of
   `tests/test_render_coverage.lua`'s walk. Each use carries a comment saying why: `bars.smooth`,
-  `bars.pandemic` and `icons.pandemic` act only through the engine.
+  `bars.pandemic`, `icons.pandemic` and `text.expiringBlink` act only through the engine.
 
 A row's `validate(value, id)` and its optional `normalize(value, id)` hook are both handed the id of
 the container the write targets: the one a caller names, else the selected one. `NS.SetByPath`

@@ -78,7 +78,7 @@ NS.COMMANDS = {
     {"debug",         L["Toggle the debug console - on/off enable or disable logging"],
         function(rest) runDebug(rest) end},
     {"diagnostics",   L["Write a diagnostic report to the debug console (also /am debug diagnostics)"],
-        function() NS.Diagnostics.Run() end},
+        function() NS.DebugLog:RunDiagnostics() end},
     {"perf",          L["Measure performance — try /am perf for the workflow"],
         function(rest) runPerf(rest) end},
     {"version",       L["Print the addon version"],
@@ -342,13 +342,13 @@ end
 
 -- /am debug        toggles the console WINDOW (the logging flag is untouched).
 -- /am debug on|off enables or disables session logging through the one SetEnabled seam.
--- /am debug diagnostics  writes the diagnostic report (modules/Diagnostics.lua), the same as the
---                  top-level /am diagnostics; first, so it never falls through to the window toggle.
+-- /am debug diagnostics  writes the diagnostic report (the library's RunDiagnostics over modules/Diagnostics.lua's
+--                  sections), the same as /am diagnostics; first, so it never falls through to the toggle.
 --                  There is no `diag` alias (owner, 2026-09-25): that word toggles like any other.
 function runDebug(rest)
     local word = firstWord(rest)
     if word == "diagnostics" then
-        NS.Diagnostics.Run()
+        NS.DebugLog:RunDiagnostics()
         return
     end
     if word == "on" or word == "off" then

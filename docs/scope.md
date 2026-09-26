@@ -55,8 +55,6 @@ client. The player-facing contract is the README; the engineering boundary is th
 
 - **Party units 1–5.** The engine can take any unit token; the settings model, the unit dropdown and
   the swap events have not been widened yet. Tracked as a GitHub issue.
-- **A "Text" container style** — aura names and times as lines of text with no bar or icon. Tracked
-  as a GitHub issue.
 
 ### Out of scope by decision
 

@@ -23,7 +23,7 @@ suite covers what only the client can show.
 5. `/am` → Settings opens at **Ka0s Aura Master**, the page `/am config` opens; no chat line.
    `/am` followed by only spaces, and `/auramaster` → the same. In combat, `/am` → the gray
    "cannot open settings during combat" line `/am config` prints.
-6. `/am help` → the version line and the 21-command list; each row is a gold `/am verb`, an em dash
+6. `/am help` → the version line and the 23-command list; each row is a gold `/am verb`, an em dash
    and a white description.
 7. `/am wibble` → the unknown-command line, then the help block.
 8. `/am options` → opens the settings (alias of `config`).
@@ -1330,7 +1330,7 @@ on the same branch.
      `/am disable`, then `/am diagnostics` and `/am debug diagnostics` → each still runs and the
      state line reads enabled=false.
 208. **Caps and the old verbs (DG-4).** With about eight containers and a long whitelist → the report
-     stays under the cap or ends with a `truncated` line, and the console never holds more than 1500
+     stays under the cap or ends with a `truncated` line, and the console never holds more than 3000
      lines. Bare `/am debug` still toggles the window, `/am debug on` and `off` still switch logging,
      and `/am help` shows `diagnostics` right after `debug`, with a `debug` row that no longer
      mentions diag.

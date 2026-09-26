@@ -2,7 +2,7 @@ local addonName, NS = ...
 
 -- core/DebugLogSetup.lua — the LibKa0s-DebugLog-1.0 seam: the on-screen debug console.
 --
--- The console window, the copy window, both formatters, the 1500-line buffer, the scrollbar and the
+-- The console window, the copy window, both formatters, the 3000-line buffer, the scrollbar and the
 -- enable seam are the library's and are NOT in this addon's source (debug-logging). This file supplies
 -- only what is ours: the frame-name prefix, the title, the monospace face, where the flag lives, and
 -- what the [Init] session summary says.
@@ -89,6 +89,9 @@ NS.DebugLog = lib:New({
     -- and clear controls draw the collection's marks. Passed explicitly, never inferred.
     addonName = addonName,
     title     = "Aura Master",
+    -- The diagnostics report's markers name the full brand (debug-logging-§14 STD-08), not the
+    -- console's short title.
+    brandName = "Ka0s Aura Master",
     font      = NS.Constants.FONT_MONO,
     slash     = "/am",
 
@@ -100,6 +103,17 @@ NS.DebugLog = lib:New({
     -- in core/AuraMaster.lua, which loads after this file.
     print        = function(line) NS.Print(line) end,
     safeToString = function(v) return NS.SafeToString(v) end,
+
+    -- The one chat line a report prints, through our locale. A plain table the library rawgets from,
+    -- never NS.L itself: its key-echo fallback would answer every other key with the key.
+    L = {
+        DIAG_WRITTEN = NS.L["Diagnostic report written to the debug console: %s lines. Use Copy to share it."],
+    },
+
+    -- The report's sections (modules/Diagnostics.lua, which loads after this file), fetched per run.
+    diagnostics = function()
+        return NS.Diagnostics and NS.Diagnostics.Sections and NS.Diagnostics.Sections() or {}
+    end,
 
     initSummary = function()
         local schemaVer = NS.db and NS.db.global and NS.db.global.schemaVersion

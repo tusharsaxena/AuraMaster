@@ -423,7 +423,6 @@ L["Forget which buffs were learned to have a duration"] = "Forget which buffs we
 L["Toggle the debug console - on/off enable or disable logging"] = "Toggle the debug console - on/off enable or disable logging"
 L["Write a diagnostic report to the debug console (also /am debug diagnostics)"] = "Write a diagnostic report to the debug console (also /am debug diagnostics)"
 L["Diagnostic report written to the debug console: %s lines. Use Copy to share it."] = "Diagnostic report written to the debug console: %s lines. Use Copy to share it."
-L["%s, so the diagnostic report is unavailable."] = "%s, so the diagnostic report is unavailable."
 L["Measure performance — try /am perf for the workflow"] = "Measure performance — try /am perf for the workflow"
 L["Print the addon version"] = "Print the addon version"
 L["#%s - %s - %s - %s"] = "#%s - %s - %s - %s"

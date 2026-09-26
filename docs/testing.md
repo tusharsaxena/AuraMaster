@@ -48,8 +48,8 @@ code is unchanged. Recording those runs is `docs/automated-tests/README.md`.
 start of a C preprocessor line and drops everything after it up to the newline. In Lua `#` is the
 length operator. A block keyword or an unbalanced brace after it on the same line throws off lizard's
 block count, so every later function in that file goes unmeasured and the gate stays silent without
-having looked. An `and` or `or` after it is left out of the CCN. The last case in
-`tests/test_lintconfig.lua` fails any line where a keyword or an unbalanced brace follows a `#`. Move
+having looked. An `and` or `or` after it is left out of the CCN. The fifth case in
+`tests/test_lintconfig.lua` (`no length operator shares its line with a keyword or brace lizard must see`) fails any line where a keyword or an unbalanced brace follows a `#`. Move
 what follows onto its own line, or take the length into a local first.
 
 ## What the headless suite is
@@ -81,7 +81,8 @@ Suites worth knowing by name:
   addon's events, messages and timers and hides its frames at the source; re-enabling rebuilds from
   the settings as they are then; the `disabled` and `perf` holds release independently. The slash
   step walks every entry in `NS.COMMANDS`: the reserved verbs, the schema CLI, `containers`,
-  `select` and the bare `/am` (which opens the panel) answer normally, and only the feature verbs
+  `select`, `diagnostics` and the bare `/am` (which opens the panel) answer normally, and only the
+  feature verbs
   refuse on the collection's one line with no SavedVariables write. The launcher's left-click still
   opens the panel; its right-click menu grays *Locked* and *Test mode*, and a grayed entry clicked
   anyway writes nothing. The negative steps carry testing-§12
@@ -106,8 +107,9 @@ Suites worth knowing by name:
 - **`tests/_kit/test_layout_cap.lua`** — every authored `.lua` over layout-§1's 1500-line cap is in
   the `### Files over the 1500-line cap` census in `docs/ARCHITECTURE.md`, with a terminal state,
   and no census row outlives its breach.
-- **`tests/_kit/test_diagnostics_contract.lua`** — the shared debug-logging-§14 diagnostics contract.
-  This runner does not set `Kit.diagnostics` yet, so it records a **skip with its reason**, not a pass.
+- **`tests/_kit/test_diagnostics_contract.lua`** — the shared debug-logging-§14 diagnostics contract,
+  run against this addon's own slash dispatcher through `Kit.diagnostics` in `tests/run.lua`: both
+  forms, both while disabled, append, ungated, the branded markers, and no `diag` or `dx`.
 
 ## The degraded environment
 

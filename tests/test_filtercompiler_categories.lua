@@ -178,7 +178,7 @@ end)
 -- The report's own failure was neither: the ids. AuraMaster filters on the id of the AURA sitting on
 -- the unit, never the id of the spell that was cast (tools/spell-research/README.md, "The crux: aura
 -- ids, not cast ids"), and 115151 is Renewing Mist's CAST id -- the shipped monk healing starters
--- carry 119611 for it (defaults/Categories.lua:182), beside the same 124682 and 115175 the report
+-- carry 119611 for it (defaults/Categories.lua:366), beside the same 124682 and 115175 the report
 -- lists. A list built from a cast id draws nothing and reports nothing, which is what was seen.
 
 local OWNER_IDS = { 124682, 115151, 115175 }   -- the report's list, its Renewing Mist a CAST id
