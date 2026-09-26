@@ -542,20 +542,29 @@ NS.Bulk = S and { Begin = S.BulkBegin, End = S.BulkEnd, Run = S.BulkRun } or Bul
 --- Whether a bulk bracket is open: the seam's mute test and its cue to tally.
 local inBulk = S and S.InBulk or function() return bulk.depth > 0 end
 
--- The library's stored-value equality, when present: `==` first, so -0 over 0 is no change, then
--- tables by content. The spell-id sets compare correctly by content because normalizeIdSet has
--- integer-keyed them before any write compares them.
-local SameValue = SchemaLib and SchemaLib.SameValue
+-- Stored-value equality: `==` first, so -0 over 0 is no change, then tables by content, both
+-- directions, recursively. With LibKa0s it is the library's SameValue; the host port below is the
+-- library-absent arm and the same algorithm, so the two builds count the same N on the same act
+-- (#21). The spell-id sets compare correctly by content because normalizeIdSet has integer-keyed
+-- them before any write compares them.
+local function hostSameValue(a, b)
+    if a == b then return true end
+    if type(a) ~= "table" or type(b) ~= "table" then return false end
+    for k, v in pairs(a) do
+        if not hostSameValue(v, b[k]) then return false end
+    end
+    for k in pairs(b) do
+        if a[k] == nil then return false end
+    end
+    return true
+end
+local SameValue = SchemaLib and SchemaLib.SameValue or hostSameValue
 
 --- Whether storing `new` over `old` changes the stored value. This is the bracket's tally test.
---- Numbers compare by `==`, so -0 over 0 is no change; Signature's tostring would call them
---- different, and CM.ResetPositions' stagger writes -0 for the first container. With LibKa0s it is
---- SameValue's answer; the Signature compare below is the library-absent arm.
+--- CM.ResetPositions' stagger writes -0 for the first container, and SameValue's `==` calls that
+--- no change, where FilterCompiler.Signature's tostring would not.
 local function changes(old, new)
-    if SameValue then return not SameValue(old, new) end
-    if type(old) == "number" and type(new) == "number" then return old ~= new end
-    local Sig = NS.FilterCompiler.Signature
-    return Sig(old) ~= Sig(new)
+    return not SameValue(old, new)
 end
 
 --- Whether storing `value` in `row` changes it. A session row reads through its own get().

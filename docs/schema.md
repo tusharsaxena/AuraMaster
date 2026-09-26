@@ -234,7 +234,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:856`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:865`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -476,8 +476,8 @@ is open, the seam's two log sites, the per-write `[Set]` line and the section li
 write instead tallies the rows it changed at the moment it stores them, before any `onChange` runs,
 so the count is what was stored even when an `onChange` raises. The change test is
 LibKa0s-Schema-1.0's `SameValue`: `==` first, so a `-0` over a `0` is no change, then tables by
-content. A library-less build compares numbers by `==` and anything else by
-`FilterCompiler.Signature`. A section write
+content. A library-less build runs a host port of the same `SameValue`, so both builds count the
+same N on the same act (#21). A section write
 counts each row and carve-out under it that changed. The act then logs one
 `[Set] <act> <scope>: N rows` line, such as `[Set] reset bars: 2 rows`,
 `[Set] copy container 2→1 (all): 14 rows` or `[Set] reset positions: 3 rows`. N is the rows actually

@@ -563,3 +563,25 @@ test("schema: the bracket nests, survives a raise and ignores a stray End, the l
         assertEqual(lines[4], "reset returned: 1 rows", build)
     end
 end)
+
+test("schema: a color with a -0 channel over 0 is no change, the library's SameValue and the host's (#21)", function()
+    local zero = 0
+    local negZero = -zero                                -- computed, so the parser cannot fold it
+    assertEqual(tostring(negZero), "-0", "this Lua keeps a negative zero")
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local PATH = "container.bars.expiringColor"
+        assertTrue(NS2.FindSchemaRow(PATH) ~= nil, build .. ": the row exists")
+        assertTrue(NS2.SetByPath(PATH, { r = 1, g = 0, b = 0, a = 1 }, 1), build)
+        local lines = captureSet(NS2)
+        NS2.Bulk.Run("copy", "color", function()
+            NS2.SetByPath(PATH, { r = 1, g = negZero, b = 0, a = 1 }, 1)   -- the same color
+        end)
+        -- red under: the host arm comparing tables by FilterCompiler.Signature, where "-0" ~= "0"
+        assertEqual(table.concat(lines, " | "), "copy color: 0 rows", build)
+        NS2.Bulk.Run("copy", "color", function()
+            NS2.SetByPath(PATH, { r = 1, g = 0, b = 0, a = 0.5 }, 1)
+        end)
+        assertEqual(lines[2], "copy color: 1 rows", build .. ": a real change still counts")
+    end
+end)
