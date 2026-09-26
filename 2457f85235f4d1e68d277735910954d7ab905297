@@ -1,0 +1,1 @@
+clean: hostSameValue is a line-for-line port of libs/LibKa0s/Schema.lua sameValue; new test red without fix (degraded 1 row) in scratch copy, green with it; gate 1646/0, luacheck 0/0, lizard clean; citations :598/:865 verified
