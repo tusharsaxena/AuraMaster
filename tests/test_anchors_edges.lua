@@ -5,6 +5,8 @@
 -- and a pair that is one of the nine keeps that side's seam and room; `after-start` is exactly the
 -- points every attachment had before batch 9. Nothing is refused any more (G1, G5).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
+-- A child hung from its parent's engine takes back the engine's one-unit lead on each start-side
+-- part of the relative point, half a unit on a middle part (the engine lead, tests/test_anchors_collapse.lua).
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -159,19 +161,19 @@ test("edges: a side-attached child is placed at its edge's points with its gap a
     local p = placed(NS)
     -- red under: attachSpec ignoring the stored points (TOPLEFT to BOTTOMLEFT)
     assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "TOPRIGHT")
-    assertEqual(p[4], 5); assertEqual(p[5], 0)
+    assertEqual(p[4], 5); assertEqual(p[5], -1, "TOP is the start side growing down: the lead")
     c2.attach.x, c2.attach.y = 2, -1
     p = placed(NS)
-    assertEqual(p[4], 7, "the nudge adds on top (SS-2)"); assertEqual(p[5], -1)
+    assertEqual(p[4], 7, "the nudge adds on top (SS-2)"); assertEqual(p[5], -2)
     c2.attach.x, c2.attach.y = 0, 0
     setEdge(NS, c2, "behind-center")
     p = placed(NS)
-    assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5)
+    assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5 + 1)
     setEdge(NS, c2, "after-center")
     p = placed(NS)
     -- T9: the parent is one column, so its BOTTOM is held steady as its start side plus half its width
     local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
-    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], w / 2); assertEqual(p[5], -3)
+    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], w / 2 + 1); assertEqual(p[5], -3)
 end)
 
 test("edges: flipping the root's growth mirrors an Automatic child; an explicit pair stays and takes the seam of the side it now is", function()
@@ -187,7 +189,7 @@ test("edges: flipping the root's growth mirrors an Automatic child; an explicit 
     NS.Database.FindContainer(1).layout.growH = "left"
     p = placed(NS)
     -- absolute points (G2): TOPLEFT to TOPRIGHT growing left is behind-start, its gap away from growH
-    assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "TOPRIGHT"); assertEqual(p[4], 5)
+    assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "TOPRIGHT"); assertEqual(p[4], 5 - 1)
 end)
 
 test("edges: a side-attached follower of a follower takes no strip room; an after one does (AP-2)", function()

@@ -182,6 +182,9 @@ test("strip: the test-mode outline moves no follower: the seam is the same locke
     mocks.__fireTimers()
     NS.Anchors.Place(two)
     local previewing = rec[#rec]
-    -- the outline is not an attach target: the seam is the locked one (SS-3)
-    assertEqual(previewing[4], locked[4]); assertEqual(previewing[5], locked[5])
+    -- the outline is not an attach target: the seam is the locked one (SS-3). Locked, 2 hangs from
+    -- 1's engine and takes back its one-unit lead across (the engine lead); the preview block has none, so the
+    -- landing is the same.
+    assertTrue(locked[2] == NS.ContainerManager.instances[1].engine, "locked: the engine")
+    assertEqual(previewing[4], locked[4] - 1); assertEqual(previewing[5], locked[5])
 end)

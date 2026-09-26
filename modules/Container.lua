@@ -107,6 +107,37 @@ local function groupLayout(cfg, index)
     }
 end
 
+-- ---------------------------------------------------------------------------
+-- The engine's lead (the owner's chain residue, 2026-09-26)
+-- ---------------------------------------------------------------------------
+-- An engine that holds no aura is the flow layout's 1x1 minimum rect (AnchorUtil.ApplyFlowLayout
+-- sizes it math.max(size, 1)), and a follower hangs from it whenever its parent is locked or in
+-- combat. Pinned AT its anchor's start corner, that rect's far edge sat one unit past the start, so
+-- every empty link pushed the rest of a chain on by one unit (docs/midnight-quirks.md). So the
+-- engine is pinned ENGINE_LEAD units BEHIND its anchor's start corner on both growth axes, and its
+-- flow layout pads its start sides by the same amount: a populated engine's first element still
+-- starts exactly at the anchor's start and its far edge is start + content, while an empty engine
+-- spans [start - 1, start] and its far edge IS the start. No prediction of emptiness, so it holds in
+-- every hang state and in combat, as the engine resizes. A follower's relative point on the start
+-- side (or the middle) takes the unit back (modules/Anchors.lua, engineLead).
+NS.Container.ENGINE_LEAD = 1
+
+--- The engine's offset from its anchor's start corner: ENGINE_LEAD against the growth on each axis.
+--- @return number x, number y
+function NS.Container.EngineOffset(growH, growV)
+    local lead = NS.Container.ENGINE_LEAD
+    return (growH == "left") and lead or -lead, (growV == "up") and -lead or lead
+end
+
+--- The engine's flow-layout padding: ENGINE_LEAD on the two start sides, none on the far ones.
+--- @return number left, number right, number top, number bottom
+function NS.Container.EnginePadding(growH, growV)
+    local lead = NS.Container.ENGINE_LEAD
+    local left = (growH == "left") and 0 or lead
+    local top = (growV == "up") and 0 or lead
+    return left, lead - left, top, lead - top
+end
+
 local function applyFlow(engine, cfg)
     local Compat = NS.Compat
     local flow = NS.Container.FlowSettings(cfg)
@@ -114,7 +145,7 @@ local function applyFlow(engine, cfg)
     callEngine(engine, "SetFlowLayoutAnchorPoint", flow.anchorPoint)
     callEngine(engine, "SetFlowLayoutGrowthDirection", Compat.FlowDirection(flow.growH),
         Compat.FlowDirection(flow.growV))
-    callEngine(engine, "SetFlowLayoutPadding", 0, 0, 0, 0)
+    callEngine(engine, "SetFlowLayoutPadding", NS.Container.EnginePadding(flow.growH, flow.growV))
     callEngine(engine, "SetFlowLayoutMaximumLineSize", flow.maxLineSize)
     return flow
 end
@@ -220,11 +251,14 @@ function ContainerClass:Build(cfg, plan, structure)
     if not engine then return end
     self.engine = engine
 
+    -- One unit behind the anchor's start corner (ENGINE_LEAD, above), so an empty engine adds
+    -- nothing along a chain; the start padding applyFlow sets brings the first element back.
     -- Anchor the engine BEFORE adding any group: AddAuraGroup forbids untrusted layout scripts on the
     -- container, after which an addon can no longer anchor it (Blizzard_CustomAuraContainer.lua).
     local flow = applyFlow(engine, cfg)
+    local ex, ey = NS.Container.EngineOffset(flow.growH, flow.growV)
     engine:ClearAllPoints()
-    engine:SetPoint(flow.anchorPoint, anchor, flow.anchorPoint, 0, 0)
+    engine:SetPoint(flow.anchorPoint, anchor, flow.anchorPoint, ex, ey)
     -- A provisional size: the engine drains its parse and layout work from an OnUpdate that runs only
     -- while visible, so it needs a renderable rect from its first dirty mark. Every layout pass then
     -- replaces the size with the real one (CustomAuraContainerFlowLayoutMixin:OnLayoutComplete).
