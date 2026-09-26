@@ -153,8 +153,7 @@ Please file reports there rather than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 1.0.0 | 2026-09-27 | - One Containers page for everything: a New container button and a list down the left for General, Filters, Layout and the Bar, Icon or Text style<br>- A container can attach to another and pick which point of each one joins the other; unlocked, every container shows a handle and an optional name label<br>- Text lines can size themselves to fit, so a long aura name is never cut off<br>- Spell category lists reworked from combat-log research and checked against the game build, plus categories of your own on General → Spell Categories<br>- `/am diagnostics` writes a report to copy into a bug report |
-| 0.1.0 | 2026-09-11 | - First release: buff and debuff containers for player, target, focus and pet, with weapon enchants as a buff category, drawn as bars, icons or text, with category filters, spell lists, attach-anywhere placement and a Test mode |
+| 1.0.0 | 2026-09-27 | - First release: build your own buff and debuff displays for yourself, your target, your focus and your pet, drawn as bars, icons or lines of text<br>- Choose what each one shows with spell categories (the built-in ones or your own), who cast it, how long it lasts, and a whitelist and blacklist<br>- Put a container anywhere on screen, or attach it to another container or to any frame; unlocked, each one shows a handle and an optional name label<br>- Test mode fills every container with sample auras, so you can style it before a real buff turns up<br>- Weapon enchants, dispel-type colors, and `/am diagnostics` for bug reports |
 
 ## Credits
 
