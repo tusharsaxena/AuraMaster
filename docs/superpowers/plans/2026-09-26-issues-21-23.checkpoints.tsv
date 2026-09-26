@@ -1,2 +1,3 @@
 when	milestone	head_before_log	evidence
 2026-09-26	M1	d819ee7cfc0d2e1a9ea05b695926b946329df371	1642 passed, 0 failed, 0 skipped (16 shards; -j 1 matches 1642/0/0); luacheck 0 warnings / 0 errors in 139 files; lizard 4290 functions, 0 warnings (-C 15); largest file settings/GeneralSpells.lua 1480 lines; test-cases.md byte-identical, badge 1642/1642
+2026-09-26	M2	4610f43550ddcdaecbff44a56c50103979e6f1ab	1647 passed, 0 failed, 0 skipped (16 shards; -j 1 matches 1647/0/0); luacheck 0 warnings / 0 errors in 139 files; lizard 4306 functions, 0 warnings (-C 15); largest file settings/GeneralSpells.lua 1480 lines; test-cases.md byte-identical, badge 1647/1647
