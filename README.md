@@ -172,11 +172,9 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 
 1. Type `/am debug on` and reproduce the bug.
 2. Type `/am diagnostics`.
-3. If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output,
-   and paste it into a [GitHub issue](https://github.com/tusharsaxena/AuraMaster/issues).
+3. If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 
-The report is added after the debug trace in the same window, so one copy carries both. It works
-while Aura Master is switched off too, and then says so at the top.
+The report is added after the debug trace in the same window, so one copy carries both.
 
 ## Issues and feature requests
 
