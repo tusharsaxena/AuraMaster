@@ -995,10 +995,11 @@ end
 --- shape errors plus its unresolved paths, a duplicate path included); the loop below is the
 --- library-absent arm.
 ---
---- Three checks per row: a known `page` and `type`, a `group` (a row without one belongs to no tab,
+--- Four checks per row: a known `page` and `type`, a `group` (a row without one belongs to no tab,
 --- options-ui-§13), and — unless session-only — a `path` that resolves against the container
 --- template or the profile defaults. A path that does not resolve is a setting whose writes land
 --- on a key nothing reads, and nothing anywhere would say so.
+--- And a path no earlier row holds: NS.FindSchemaRow answers the first of two, so the second is dead.
 --- @return number
 function NS.ValidateSchema()
     if S then
@@ -1013,10 +1014,19 @@ function NS.ValidateSchema()
         failed = failed + 1
         if out then out(("schema error: %s: %s"):format(tostring(row.path), why)) end
     end
-    for _, row in ipairs(NS.Schema) do
+    local seen = {}
+    for i, row in ipairs(NS.Schema) do
         if not VALID_PAGES[row.page] then fail(row, "unknown page " .. tostring(row.page)) end
         if not VALID_TYPES[row.type] then fail(row, "unknown type " .. tostring(row.type)) end
         if type(row.group) ~= "string" or row.group == "" then fail(row, "no group") end
+        local path = row.path
+        if type(path) == "string" and path ~= "" then
+            if seen[path] then
+                fail(row, ("duplicate path (first used by row #%d)"):format(seen[path]))
+            else
+                seen[path] = i
+            end
+        end
         if not row.sessionOnly and NS.DefaultFor(row.path) == nil then
             fail(row, "path does not resolve against defaults/Profile.lua")
         end

@@ -585,3 +585,19 @@ test("schema: a color with a -0 channel over 0 is no change, the library's SameV
         assertEqual(lines[2], "copy color: 1 rows", build .. ": a real change still counts")
     end
 end)
+
+test("schema: a duplicate path fails validation, the library's and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local printed = {}
+        NS2.Print = function(line) table.insert(printed, line) end
+        assertEqual(NS2.ValidateSchema(), 0, build .. ": clean before the duplicate")
+        local dup = { path = "hideBlizzardBuffs", page = "general", group = "Display", type = "bool" }
+        NS2.RegisterSchemaRows({ dup })
+        -- red under: the host loop never comparing paths (LibKa0s-Schema's Validate reports it)
+        assertEqual(NS2.ValidateSchema(), 1, build .. ": " .. table.concat(printed, " | "))
+        assertTrue(table.concat(printed, "\n"):find("duplicate", 1, true) ~= nil, build .. ": the reason is printed")
+        NS2.UnregisterSchemaRows(function(row) return row == dup end)
+        assertEqual(NS2.ValidateSchema(), 0, build .. ": clean again")
+    end
+end)
