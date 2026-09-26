@@ -1677,7 +1677,7 @@ badge and any count quoted in the docs must agree with it.
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
-### test_pages_rail.lua (16)
+### test_pages_rail.lua (20)
 
 - sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
@@ -1695,6 +1695,10 @@ badge and any count quoted in the docs must agree with it.
 - rail: selecting a section is refused in combat and moves nothing
 - rail: Defaults restores only the active section's rows for the selected container (smoke 6)
 - rail: the Defaults tooltip names the section on screen and the kept name
+- new container: from Bars -> Time text, New container lands on General/General on the new container
+- new container: the section left keeps its tab: back to Bars reopens Time text
+- new container: with no containers, New container lands on General/General on the one it made
+- new container: /am new with the page on screen lands on General/General too, and opens nothing
 
 ### test_pages_about.lua (3)
 
@@ -1802,7 +1806,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 176 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 186 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1936,7 +1940,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_icons.lua | 5 |
 | test_pages_text.lua | 29 |
 | test_pages_tabs.lua | 6 |
-| test_pages_rail.lua | 16 |
+| test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1953,4 +1957,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1647** |
+| **Total** | **1651** |

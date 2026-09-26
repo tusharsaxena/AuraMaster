@@ -1803,3 +1803,16 @@ lines, so each check confirms nothing else moved.
 274. **I21-4.** `/am get container` and `/am set container 1`. → Both answer "Setting not found:
      container", and nothing is written: `/am list` reads as before. (#21: the Read and Write edge
      cases) Result:
+
+## New container lands on General (2026-09-26, owner to run)
+
+Owner to run, on `fix/2026-09-26-new-container-general`. Open the panel with `/am`, Containers, with
+#1 (Player buffs as bars) selected.
+
+275. **NC1.** Rail -> Bars -> Time text, then click **New container** in the band. → A new container
+     is made and selected in the band, and the page shows General on the rail and the General tab,
+     with the new container's Name. Then Rail -> Bars: it reopens on Time text. Result:
+276. **NC2.** Go back to Bars -> Time text, keep the panel open, and type `/am new` in chat. → The
+     page moves to General/General on the new container, the same as the button. Then go to
+     Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
+     is on General/General with that container. Result:

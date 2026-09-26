@@ -260,6 +260,7 @@ if not lib then
         "IdList", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
+        "LandOnGeneral",
     }) do
         Helpers[name] = function() end
     end
@@ -577,6 +578,22 @@ function Helpers.SelectSection(key, tabKey)
     if tabKey ~= nil then ctx.sectionTabs[key] = tabKey end
     Helpers.RefreshPanel(ctx, true)
     return true
+end
+
+--- Put the Containers page on General and its General tab, whatever section and tab the player was
+--- on (owner, 2026-09-26): a container just made is named and set up there. The section left keeps
+--- its tab. Draws nothing and has no combat check of its own: its callers, New container and
+--- `/am new`, have just created a container (CM.Create refuses in combat), and their refresh draws
+--- the page, or marks a hidden one owed a render. It never opens the settings window.
+function Helpers.LandOnGeneral()
+    local ctx = containersCtx
+    local general = sections[GENERAL_SECTION]
+    if not (ctx and general) then return end
+    ctx.sectionTabs = ctx.sectionTabs or {}
+    stashTab(ctx)
+    ctx.activeSection = GENERAL_SECTION
+    local tabs = general.spec.tabs
+    ctx.sectionTabs[GENERAL_SECTION] = tabs and tabs[1] and tabs[1].key
 end
 
 -- The library's SelectTab moves one PAGE's tab. A section key is no page any more (#6): it routes to
