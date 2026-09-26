@@ -33,15 +33,15 @@ texts, the addon shows up there as *Ka0s Aura Master*.
 
 **_Live in combat, with each container labeled_**
 
-![Live in combat, with each container labeled](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.01.png)
+![Live in combat, with each container labeled](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.01.jpg)
 
 **_Unlocked: every container shows its drag handle_**
 
-![Unlocked: every container shows its drag handle](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.02.png)
+![Unlocked: every container shows its drag handle](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.02.jpg)
 
 **_Unlocked with test mode on, so every container fills with sample spells_**
 
-![Unlocked with test mode on, so every container fills with sample spells](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.03.png)
+![Unlocked with test mode on, so every container fills with sample spells](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.03.jpg)
 
 **_The Spell Categories tab, where each category's spell list lives_**
 
