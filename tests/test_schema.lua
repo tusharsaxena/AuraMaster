@@ -502,3 +502,24 @@ test("schema: a path with no segment past its root reads nil, the library's Read
         assertEqual(NS2.GetSetting("container.bars.width", 1), NS2.Database.FindContainer(1).bars.width, build)
     end
 end)
+
+test("schema: a duplicate path answers the first row registered, and an appended row answers at once, the library's and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local PATH = "hideBlizzardBuffs"
+        local original = NS2.FindSchemaRow(PATH)
+        assertTrue(original ~= nil, build .. ": the shipped row")
+        local dup = { path = PATH, page = "general", group = "Display", type = "bool" }
+        NS2.RegisterSchemaRows({ dup })
+        -- red under: the host index keeping the LAST row on a path (LibKa0s-Schema keeps the first)
+        assertTrue(NS2.FindSchemaRow(PATH) == original, build .. ": the first row still answers")
+        local late = { path = "container.bars.width.i21", page = "bars", group = "Size", type = "number" }
+        NS2.RegisterSchemaRows({ late })
+        assertTrue(NS2.Schema[#NS2.Schema] == late, build .. ": appended at the end")
+        -- red under: an append that skips the re-index
+        assertTrue(NS2.FindSchemaRow("container.bars.width.i21") == late, build .. ": found at once")
+        assertEqual(NS2.UnregisterSchemaRows(function(row) return row == dup or row == late end), 2, build)
+        assertTrue(NS2.FindSchemaRow(PATH) == original, build .. ": the shipped row after the removal")
+        assertNil(NS2.FindSchemaRow("container.bars.width.i21"), build)
+    end
+end)

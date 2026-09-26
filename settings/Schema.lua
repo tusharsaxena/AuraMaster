@@ -264,11 +264,15 @@ end
 -- ---------------------------------------------------------------------------
 
 -- The host index is the library-absent arm; with LibKa0s the instance's FindRow and Reindex answer.
+-- Like the library's, it keeps the FIRST row on a duplicate path, which NS.ValidateSchema reports.
 local index = {}
 
 local function hostReindex()
     for k in pairs(index) do index[k] = nil end
-    for _, row in ipairs(NS.Schema) do index[row.path] = row end
+    for _, row in ipairs(NS.Schema) do
+        local path = row.path
+        if type(path) == "string" and path ~= "" and index[path] == nil then index[path] = row end
+    end
 end
 
 local function hostFindRow(path)

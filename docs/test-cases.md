@@ -199,7 +199,7 @@ badge and any count quoted in the docs must agree with it.
 - migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
 - migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
 
-### test_schema.lua (34)
+### test_schema.lua (35)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -235,6 +235,7 @@ badge and any count quoted in the docs must agree with it.
 - schema: without LibKa0s the host arm still answers
 - schema: -0 over 0 is still no change under SameValue
 - schema: a path with no segment past its root reads nil, the library's Read and the host's (#21)
+- schema: a duplicate path answers the first row registered, and an appended row answers at once, the library's and the host's (#21)
 
 ### test_schema_paths.lua (36)
 
@@ -1881,7 +1882,7 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 73 |
 | test_database_categories.lua | 22 |
 | test_migrations.lua | 28 |
-| test_schema.lua | 34 |
+| test_schema.lua | 35 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
@@ -1949,4 +1950,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1643** |
+| **Total** | **1644** |

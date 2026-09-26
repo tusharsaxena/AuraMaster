@@ -234,7 +234,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:852`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:856`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.

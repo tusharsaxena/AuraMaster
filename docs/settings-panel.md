@@ -57,7 +57,7 @@ is drawn in, in `SECTION_ORDER`'s order (`settings/OptionsSetup.lua`).
   returns to the tab you left. General, the addon page, is addon-wide, renders through
   `Helpers.RenderPage` and draws no banner.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:376`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:380`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
