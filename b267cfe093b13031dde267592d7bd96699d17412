@@ -1,0 +1,1 @@
+clean: I21-02 hostReindex keeps first row on duplicate path and skips non-string/empty paths, matching LibKa0s-Schema reindex (v1.61.0 Schema.lua:315); new test red on degraded first-row assertion without the fix; citations 589/856/380 verified; gate 1644/0, luacheck 0/0, lizard clean
