@@ -1,0 +1,1 @@
+pass: I23-04 prose-only; all 23 plan edits match word-for-word across README.md and 6 docs, line counts equal, CRLF intact, Step 4 grep hits only docs/smoke-tests.md history, remaining 'sub-page' uses are Profiles (correct); gate re-run 1642/0/0, luacheck 0/0 in 139 files, lizard -C 15 clean; no runtime code so no new test, degraded path untouched
